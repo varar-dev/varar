@@ -182,3 +182,19 @@ test('a step with NO following fence has no docString', () => {
   const result = plan(parse('p.bdd.md', '# P\nWhen I send the payload'), r)
   expect(result.examples[0]?.steps[0]?.docString).toBeUndefined()
 })
+
+test('a keyword-led sentence with no match produces a missing-step diagnostic', () => {
+  const r = createRegistry() // empty
+  const bdd = parse('m.bdd.md', '# Empty\n\nGiven I have 5 cukes in my belly.')
+  const result = plan(bdd, r)
+  expect(result.diagnostics).toHaveLength(1)
+  expect(result.diagnostics[0]?.code).toBe('missing-step')
+  expect(result.diagnostics[0]?.message).toContain('I have {int} cukes in my belly')
+})
+
+test('a sentence WITHOUT a keyword that has no match is silently treated as prose', () => {
+  const r = createRegistry()
+  const bdd = parse('p.bdd.md', '# Prose\n\nI have 5 cukes in my belly.')
+  const result = plan(bdd, r)
+  expect(result.diagnostics).toHaveLength(0)
+})

@@ -1,8 +1,10 @@
 import type { Bdd, Block, Fence, InlineOffset, Table } from './ast.js'
-import { type Diagnostic, ambiguousMatch } from './diagnostics.js'
+import { type Diagnostic, ambiguousMatch, missingStep } from './diagnostics.js'
+import { isKeywordLed } from './keywords.js'
 import { type Hit, findHits, resolveHits } from './matcher.js'
 import type { Registry, StepRegistration } from './registry.js'
 import { splitSentences } from './sentences.js'
+import { generateSnippet } from './snippet.js'
 import { type Span, spanFromOffsets } from './span.js'
 
 export type ExecutionPlan = {
@@ -31,6 +33,7 @@ export function plan(bdd: Bdd, registry: Registry): ExecutionPlan {
   const diagnostics: Diagnostic[] = []
   for (const ex of bdd.examples) {
     let hadAmbiguous = false
+    let hadMissing = false
 
     // Pass 1: plan each text-bearing block and collect steps per body index.
     const stepsByBlock = new Map<number, PlannedStep[]>()
@@ -61,6 +64,16 @@ export function plan(bdd: Bdd, registry: Registry): ExecutionPlan {
           args: hit.args,
         }))
         stepsByBlock.set(idx, blockSteps)
+      }
+      for (const missing of result.missing) {
+        diagnostics.push(
+          missingStep({
+            text: missing.text,
+            span: liftSpan(bdd.source, block, missing.start, missing.end),
+            snippet: generateSnippet(missing.text, registry),
+          }),
+        )
+        hadMissing = true
       }
     })
 
@@ -99,7 +112,7 @@ export function plan(bdd: Bdd, registry: Registry): ExecutionPlan {
       }
     })
 
-    if (finalSteps.length === 0 && !hadAmbiguous) {
+    if (finalSteps.length === 0 && !hadAmbiguous && !hadMissing) {
       // Example has no matches and no diagnostics — drop it (docs).
       continue
     }
@@ -119,6 +132,11 @@ type BlockPlan = {
     readonly matchEnd: number
     readonly candidates: ReadonlyArray<Hit>
   }>
+  readonly missing: ReadonlyArray<{
+    readonly text: string
+    readonly start: number
+    readonly end: number
+  }>
 }
 
 function planBlock(text: string, registry: Registry): BlockPlan {
@@ -128,6 +146,7 @@ function planBlock(text: string, registry: Registry): BlockPlan {
     matchEnd: number
     candidates: ReadonlyArray<Hit>
   }[] = []
+  const allMissing: { text: string; start: number; end: number }[] = []
   let offsetCursor = 0
   for (const sentence of splitSentences(text)) {
     const hits = findHits(sentence.text, registry)
@@ -139,13 +158,15 @@ function planBlock(text: string, registry: Registry): BlockPlan {
     const resolved = resolveHits(adjusted)
     if (resolved.kind === 'ambiguous') {
       for (const c of resolved.collisions) allAmbiguities.push({ ...c })
-    } else {
+    } else if (resolved.steps.length > 0) {
       allSteps.push(...resolved.steps)
+    } else if (isKeywordLed(sentence.text)) {
+      allMissing.push({ text: sentence.text, start: sentence.startOffset, end: sentence.endOffset })
     }
     offsetCursor = sentence.endOffset
     void offsetCursor
   }
-  return { steps: allSteps, ambiguities: allAmbiguities }
+  return { steps: allSteps, ambiguities: allAmbiguities, missing: allMissing }
 }
 
 function liftSpan(source: string, block: Block, blockStart: number, blockEnd: number): Span {
