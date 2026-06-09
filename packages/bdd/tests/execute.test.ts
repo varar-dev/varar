@@ -93,8 +93,16 @@ test('executePlan augments a thrown error with a .bdd.md frame for the failing s
     captured = e as Error
   }
   expect(captured).toBeInstanceOf(Error)
-  expect(captured?.message).toBe('boom')
-  // The synthetic frame points at the .bdd.md line where the step text lives.
+  // Original message preserved (augmentation appends; doesn't replace).
+  expect(captured?.message).toMatch(/^boom/)
+  // The message also gains a markdown snippet pointing at the failing line.
+  expect(captured?.message).toContain('e.bdd.md:3:1')
+  expect(captured?.message).toContain('I throw')
+  // The snippet must NOT use the `    at file:line:col` pattern, which vitest
+  // would parse as a stack frame and use to render its own snippet.
+  expect(captured?.message).not.toMatch(/^\s+at\s/m)
+  // The synthetic stack frame points at the .bdd.md line where the step
+  // text lives, below the handler's `.ts` frame.
   expect(captured?.stack).toContain('e.bdd.md:3:1')
   expect(captured?.stack).toContain('at I throw')
 })
