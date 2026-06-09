@@ -18,9 +18,12 @@ let steps: Entry[] = []
 let context: (() => unknown) | undefined
 let customTypes: CustomTypeDef[] = []
 
-export function step(expression: string, handler: StepHandler): void {
+export function step<Args extends ReadonlyArray<unknown>>(
+  expression: string,
+  handler: (ctx: unknown, ...args: Args) => void | Promise<void>,
+): void {
   const { sourceFile, sourceLine } = callerLocation()
-  steps.push({ expression, sourceFile, sourceLine, handler })
+  steps.push({ expression, sourceFile, sourceLine, handler: handler as StepHandler })
 }
 
 export function defineContext<C>(factory: () => C | Promise<C>): void {

@@ -47,3 +47,16 @@ test('duplicate step() calls throw at buildRegistry()', () => {
   step('I have {int} cukes', () => {})
   expect(() => buildRegistry()).toThrow(/duplicate step definition/)
 })
+
+test('step() type-checks typed handler arguments matching the cucumber expression', () => {
+  // This is a TYPE-LEVEL assertion via a compile check. If `step()` lost its generic,
+  // the typed `name: string` parameter below would error with TS2345.
+  step('I greet {string}', (_ctx, name: string) => {
+    expect(typeof name).toBe('string')
+  })
+  step('I have {int} cukes', (_ctx, count: number) => {
+    expect(typeof count).toBe('number')
+  })
+  const r = buildRegistry()
+  expect(r.steps).toHaveLength(2)
+})
