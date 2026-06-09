@@ -60,3 +60,18 @@ test('step() type-checks typed handler arguments matching the cucumber expressio
   const r = buildRegistry()
   expect(r.steps).toHaveLength(2)
 })
+
+test('defineContext() returns a `step` typed against the context factory output', () => {
+  // The typed step lets handler bodies read/write `ctx.foo` without casts. If
+  // this regresses, the property accesses below fail with TS2339 ("Property
+  // does not exist on type 'unknown'").
+  const { step: typedStep } = defineContext(() => ({ greeting: '' }))
+  typedStep('I greet {string}', (ctx, name: string) => {
+    ctx.greeting = `Hello, ${name}!`
+  })
+  typedStep('the greeting is {string}', (ctx, expected: string) => {
+    if (ctx.greeting !== expected) throw new Error('mismatch')
+  })
+  const r = buildRegistry()
+  expect(r.steps).toHaveLength(2)
+})

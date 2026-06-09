@@ -18,19 +18,35 @@ let steps: Entry[] = []
 let context: (() => unknown) | undefined
 let customTypes: CustomTypeDef[] = []
 
-export function step<Args extends ReadonlyArray<unknown>>(
+// A `step` function bound to a context type `C`. Typed step instances flow `C`
+// into the handler's first arg so users don't have to cast.
+export type Step<C = unknown> = <Args extends ReadonlyArray<unknown>>(
   expression: string,
-  handler: (ctx: unknown, ...args: Args) => void | Promise<void>,
-): void {
+  handler: (ctx: C, ...args: Args) => void | Promise<void>,
+) => void
+
+function registerStep(expression: string, handler: StepHandler): void {
   const { sourceFile, sourceLine } = callerLocation()
-  steps.push({ expression, sourceFile, sourceLine, handler: handler as StepHandler })
+  steps.push({ expression, sourceFile, sourceLine, handler })
 }
 
-export function defineContext<C>(factory: () => C | Promise<C>): void {
+// Generic `step` import: ctx is unknown. Use `defineContext(...).step` for typed ctx.
+export const step: Step<unknown> = (expression, handler) => {
+  registerStep(expression, handler as StepHandler)
+}
+
+// Register the per-example context factory AND return a `step` typed against `C`
+// so handler bodies can use `ctx.foo` without casts. The factory itself is wired
+// into the runtime by runBddSource — every example gets its own fresh context.
+export function defineContext<C>(factory: () => C | Promise<C>): { readonly step: Step<C> } {
   if (context) {
     throw new Error('defineContext() called more than once')
   }
   context = factory as () => unknown
+  const typedStep: Step<C> = (expression, handler) => {
+    registerStep(expression, handler as StepHandler)
+  }
+  return { step: typedStep }
 }
 
 export function defineParameterType<T>(opts: {

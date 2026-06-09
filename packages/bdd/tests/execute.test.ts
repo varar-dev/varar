@@ -66,3 +66,30 @@ test('the sink.example run callback executes the step handlers in order', async 
   await run?.()
   expect(calls).toEqual(['add:5', 'check:5'])
 })
+
+test('executePlan invokes createContext once per example and passes the result to handlers', async () => {
+  const ctxSeen: unknown[] = []
+  const r = addStep(createRegistry(), {
+    expression: 'I record ctx',
+    expressionSourceFile: 's.ts',
+    expressionSourceLine: 1,
+    handler: (ctx) => {
+      ctxSeen.push(ctx)
+    },
+  })
+  const p = plan(parse('e.bdd.md', '# A\n\nI record ctx\n\n# B\n\nI record ctx'), r)
+  let calls = 0
+  const runs: Array<() => void | Promise<void>> = []
+  executePlan(p, {
+    sink: { example: (_n, r) => runs.push(r) },
+    reporter: { diagnostic: () => {} },
+    createContext: () => {
+      calls++
+      return { greeting: '', n: calls }
+    },
+  })
+  for (const r of runs) await r()
+  expect(calls).toBe(2)
+  expect(ctxSeen[0]).toEqual({ greeting: '', n: 1 })
+  expect(ctxSeen[1]).toEqual({ greeting: '', n: 2 })
+})

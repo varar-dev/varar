@@ -1,5 +1,5 @@
 import { type Reporter, type TestSink, executePlan, parse, plan } from '@oselvar/bdd'
-import { buildRegistry } from './api.js'
+import { buildRegistry, contextFactory } from './api.js'
 
 export type RunPorts = {
   readonly sink: TestSink
@@ -10,5 +10,5 @@ export function runBddSource(source: string, path: string, ports: RunPorts): voi
   const bdd = parse(path, source)
   const registry = buildRegistry()
   const p = plan(bdd, registry)
-  executePlan(p, ports)
+  executePlan(p, { ...ports, createContext: contextFactory() })
 }

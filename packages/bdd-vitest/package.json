@@ -3,11 +3,11 @@
   "version": "0.0.0",
   "type": "module",
   "exports": {
-    ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" },
-    "./runtime": { "import": "./dist/runtime.js", "types": "./dist/runtime.d.ts" }
+    ".": { "types": "./src/index.ts", "import": "./dist/index.js" },
+    "./runtime": { "types": "./src/runtime.ts", "import": "./dist/runtime.js" }
   },
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "types": "./src/index.ts",
   "files": ["dist", "README.md"],
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -20,5 +20,12 @@
   "peerDependencies": {
     "vite": "^5.0.0 || ^6.0.0",
     "vitest": "^2.0.0"
+  },
+  "publishConfig": {
+    "exports": {
+      ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" },
+      "./runtime": { "types": "./dist/runtime.d.ts", "import": "./dist/runtime.js" }
+    },
+    "types": "./dist/index.d.ts"
   }
 }

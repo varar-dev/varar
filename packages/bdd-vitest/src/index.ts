@@ -1,5 +1,6 @@
 export type { Bdd } from '@oselvar/bdd'
 export { step, defineContext, defineParameterType } from './api.js'
+export type { Step } from './api.js'
 export { loadBddConfig } from './config.js'
 export type { BddConfig } from './config.js'
 export { runBddSource } from './runtime.js'
