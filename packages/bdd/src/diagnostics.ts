@@ -1,4 +1,5 @@
 import type { Span } from './span.js'
+import type { Snippet } from './snippet.js'
 
 export type Severity = 'error' | 'warning'
 
@@ -9,7 +10,7 @@ export type Diagnostic = {
   readonly span: Span
 }
 
-export type DiagnosticCode = 'ambiguous-match'
+export type DiagnosticCode = 'ambiguous-match' | 'missing-step' | 'orphan-attachment'
 
 export type Candidate = {
   readonly expression: string
@@ -31,6 +32,25 @@ export function ambiguousMatch(input: AmbiguousInput): Diagnostic {
     severity: 'error',
     code: 'ambiguous-match',
     message: `Ambiguous step: "${input.text}"\nMatched by:\n${lines}`,
+    span: input.span,
+  }
+}
+
+export type MissingStepInput = {
+  readonly text: string
+  readonly span: Span
+  readonly snippet: Snippet
+}
+
+export function missingStep(input: MissingStepInput): Diagnostic {
+  const message =
+    `Step missing: "${input.text}"\n` +
+    `Suggested step definition:\n  ${input.snippet.fullCode.replace(/\n/g, '\n  ')}\n` +
+    `Generate it with: bdd stepdef "${input.text}"`
+  return {
+    severity: 'error',
+    code: 'missing-step',
+    message,
     span: input.span,
   }
 }
