@@ -41,3 +41,19 @@ test('structure preserves the source string verbatim', () => {
   expect(bdd.source).toBe(source)
   expect(bdd.path).toBe('p.bdd.md')
 })
+
+test('orphan tables and fences are recorded on the Bdd', () => {
+  const source = '| name | age |\n|------|-----|\n| Bob  | 30  |'
+  const bdd = structure('o.bdd.md', source, scan(source))
+  expect(bdd.orphanAttachments).toHaveLength(1)
+  expect(bdd.orphanAttachments[0]?.kind).toBe('table')
+})
+
+test('table immediately after a paragraph (preceded by a heading) is NOT orphan', () => {
+  const source =
+    '## Example\n\nGiven these users:\n\n| name | age |\n|------|-----|\n| Bob  | 30  |'
+  const bdd = structure('o.bdd.md', source, scan(source))
+  expect(bdd.orphanAttachments).toHaveLength(0)
+  // table should be part of the example body
+  expect(bdd.examples[0]?.body.some((b) => b.kind === 'table')).toBe(true)
+})

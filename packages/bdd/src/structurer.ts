@@ -1,8 +1,9 @@
-import type { Bdd, Block, Example, Heading } from './ast.js'
+import type { Bdd, Block, Example, Fence, Heading, Table } from './ast.js'
 import { type Span, spanFromOffsets } from './span.js'
 
 export function structure(path: string, source: string, blocks: ReadonlyArray<Block>): Bdd {
   const examples: Example[] = []
+  const orphanAttachments: (Table | Fence)[] = []
   let i = 0
   while (i < blocks.length) {
     const block = blocks[i]
@@ -10,11 +11,16 @@ export function structure(path: string, source: string, blocks: ReadonlyArray<Bl
       i++
       continue
     }
+    if (block.kind === 'table' || block.kind === 'fence') {
+      orphanAttachments.push(block)
+      i++
+      continue
+    }
     if (block.kind !== 'heading') {
       i++
       continue
     }
-    const heading: Heading = block
+    const heading = block
     const body: Block[] = []
     let j = i + 1
     while (j < blocks.length) {
@@ -32,7 +38,7 @@ export function structure(path: string, source: string, blocks: ReadonlyArray<Bl
     }
     i = j
   }
-  return { path, source, examples }
+  return { path, source, examples, orphanAttachments }
 }
 
 function makeExample(source: string, heading: Heading, body: ReadonlyArray<Block>): Example {

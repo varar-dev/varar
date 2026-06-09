@@ -70,4 +70,5 @@ export type Bdd = {
   readonly path: string
   readonly source: string
   readonly examples: ReadonlyArray<Example>
+  readonly orphanAttachments: ReadonlyArray<Table | Fence>
 }
