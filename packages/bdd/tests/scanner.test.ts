@@ -110,3 +110,8 @@ test('a line that looks like a row but has no following delimiter is a paragraph
   const blocks = scan('| not | a | table |')
   expect(blocks[0]?.kind).toBe('paragraph')
 })
+
+test.each(['---', '***', '___', '----', '* * *'])('recognizes thematic break: %s', (mark) => {
+  const blocks = scan(`a\n\n${mark}\n\nb`)
+  expect(blocks.map((b) => b.kind)).toEqual(['paragraph', 'thematic_break', 'paragraph'])
+})

@@ -28,6 +28,12 @@ export function scan(source: string): ReadonlyArray<Block> {
       i = tableResult.next
       continue
     }
+    const thematic = tryThematic(source, line)
+    if (thematic) {
+      blocks.push(thematic)
+      i++
+      continue
+    }
     const heading = tryHeading(source, line)
     if (heading) {
       blocks.push(heading)
@@ -60,6 +66,16 @@ function splitLines(source: string): ReadonlyArray<RawLine> {
     out.push({ text: source.slice(start), startOffset: start, endOffset: source.length })
   }
   return out
+}
+
+const THEMATIC_RE = /^\s*([-*_])(\s*\1){2,}\s*$/
+
+function tryThematic(source: string, line: RawLine): Block | undefined {
+  if (!THEMATIC_RE.test(line.text)) return undefined
+  return {
+    kind: 'thematic_break',
+    span: spanFromOffsets(source, line.startOffset, line.endOffset),
+  }
 }
 
 function tryHeading(source: string, line: RawLine): Block | undefined {
