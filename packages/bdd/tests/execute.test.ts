@@ -67,6 +67,38 @@ test('the sink.example run callback executes the step handlers in order', async 
   expect(calls).toEqual(['add:5', 'check:5'])
 })
 
+test('executePlan augments a thrown error with a .bdd.md frame for the failing step', async () => {
+  const r = addStep(createRegistry(), {
+    expression: 'I throw',
+    expressionSourceFile: 's.ts',
+    expressionSourceLine: 1,
+    handler: () => {
+      throw new Error('boom')
+    },
+  })
+  const p = plan(parse('e.bdd.md', '# A\n\nI throw'), r)
+  let captured: Error | undefined
+  let run: (() => void | Promise<void>) | undefined
+  executePlan(p, {
+    sink: {
+      example: (_n, r) => {
+        run = r
+      },
+    },
+    reporter: { diagnostic: () => {} },
+  })
+  try {
+    await run?.()
+  } catch (e) {
+    captured = e as Error
+  }
+  expect(captured).toBeInstanceOf(Error)
+  expect(captured?.message).toBe('boom')
+  // The synthetic frame points at the .bdd.md line where the step text lives.
+  expect(captured?.stack).toContain('e.bdd.md:3:1')
+  expect(captured?.stack).toContain('at I throw')
+})
+
 test('executePlan invokes createContext once per example and passes the result to handlers', async () => {
   const ctxSeen: unknown[] = []
   const r = addStep(createRegistry(), {
