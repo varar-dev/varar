@@ -49,3 +49,5 @@ export { stripInline } from './inline.js'
 export type { StrippedInline } from './inline.js'
 
 export { KEYWORDS } from './keywords-data.js'
+
+export { isKeywordLed, stripLeadingKeyword } from './keywords.js'
