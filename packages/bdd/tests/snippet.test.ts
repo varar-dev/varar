@@ -1,3 +1,4 @@
+import { ParameterType } from '@cucumber/cucumber-expressions'
 import { expect, test } from 'vitest'
 import { createRegistry } from '../src/registry.js'
 import { generateSnippet } from '../src/snippet.js'
@@ -29,4 +30,14 @@ test('multiple parameters infer distinct names', () => {
 test('leading keyword is stripped before snippet generation', () => {
   const s = generateSnippet('Given I have 5 cukes', createRegistry())
   expect(s.expression).toBe('I have {int} cukes')
+})
+
+test('registered custom parameter types are preferred over built-ins', () => {
+  const r = createRegistry()
+  r.parameterTypes.defineParameterType(
+    new ParameterType('color', /red|green|blue/, String, (s: string) => s, true, true),
+  )
+  const s = generateSnippet('the hat is red', r)
+  expect(s.expression).toBe('the hat is {color}')
+  expect(s.handlerSignature).toBe('(ctx, color: string) => {')
 })
