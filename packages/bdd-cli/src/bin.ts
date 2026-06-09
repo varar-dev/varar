@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import { parseArgv } from './argv.js'
+import { runInit } from './init.js'
 import { runLint } from './lint.js'
 import { runStepdef } from './stepdef.js'
 
@@ -49,6 +50,14 @@ async function main(): Promise<void> {
         globs: parsed.positionals.length > 0 ? parsed.positionals : undefined,
         writeStdout: (s) => process.stdout.write(s),
         writeStderr: (s) => process.stderr.write(s),
+      })
+      process.exitCode = result.exitCode
+      break
+    }
+    case 'init': {
+      const result = await runInit({
+        cwd: process.cwd(),
+        writeStdout: (s) => process.stdout.write(s),
       })
       process.exitCode = result.exitCode
       break
