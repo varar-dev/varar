@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { glob as nativeGlob } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import { loadBddConfig } from '@oselvar/bdd'
 import type { Plugin } from 'vite'
-import { loadBddConfig } from './config.js'
 
 const glob = nativeGlob as unknown as (
   pattern: string,

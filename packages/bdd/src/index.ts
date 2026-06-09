@@ -65,3 +65,6 @@ export { executePlan } from './execute.js'
 export type { ExecutePorts } from './execute.js'
 
 export { renderTemplate } from './template.js'
+
+export { loadBddConfig } from './config.js'
+export type { BddConfig } from './config.js'

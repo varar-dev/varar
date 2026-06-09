@@ -29,3 +29,31 @@ test('returns defaults when bdd.config.ts is absent', async () => {
     rmSync(dir, { recursive: true, force: true })
   }
 })
+
+test('loads snippet.template from bdd.config.ts when provided', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'bdd-cfg-snippet-'))
+  try {
+    writeFileSync(
+      join(dir, 'bdd.config.ts'),
+      `export default {
+        bdds: ['**/*.bdd.md'],
+        steps: ['**/*.steps.ts'],
+        snippet: { template: 'CUSTOM: {{expression}}' },
+      }\n`,
+    )
+    const cfg = await loadBddConfig(dir)
+    expect(cfg.snippet.template).toBe('CUSTOM: {{expression}}')
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('defaults snippet.template to DEFAULT_SNIPPET_TEMPLATE when absent', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'bdd-cfg-snippet-default-'))
+  try {
+    const cfg = await loadBddConfig(dir)
+    expect(cfg.snippet.template).toContain("step('{{expression}}'")
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
