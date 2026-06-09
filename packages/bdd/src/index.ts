@@ -16,3 +16,12 @@ export type { Sentence } from './sentences.js'
 
 export { createRegistry, addStep } from './registry.js'
 export type { Registry, StepRegistration, StepInput, StepHandler } from './registry.js'
+
+export { ambiguousMatch } from './diagnostics.js'
+export type {
+  AmbiguousInput,
+  Candidate,
+  Diagnostic,
+  DiagnosticCode,
+  Severity,
+} from './diagnostics.js'
