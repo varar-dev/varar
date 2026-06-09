@@ -10,5 +10,7 @@ export { scan } from './scanner.js'
 
 export type { Bdd, Block, Heading, Paragraph, Example, InlineOffset } from './ast.js'
 
+export { structure } from './structurer.js'
+
 export { splitSentences } from './sentences.js'
 export type { Sentence } from './sentences.js'
