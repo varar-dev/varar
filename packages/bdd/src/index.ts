@@ -12,5 +12,7 @@ export type { Bdd, Block, Heading, Paragraph, Example, InlineOffset } from './as
 
 export { structure } from './structurer.js'
 
+export { parse } from './parse.js'
+
 export { splitSentences } from './sentences.js'
 export type { Sentence } from './sentences.js'
