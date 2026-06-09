@@ -8,6 +8,11 @@
     "packages/bdd-vitest": {
       "entry": ["src/index.ts", "src/runtime.ts"],
       "project": ["src/**/*.ts", "tests/**/*.ts"]
+    },
+    "docs/tutorial": {
+      "entry": ["**/*.bdd.md", "**/*.steps.ts", "vitest.config.ts"],
+      "project": ["**/*.{ts,bdd.md}"]
     }
-  }
+  },
+  "ignore": ["bdd.config.ts"]
 }

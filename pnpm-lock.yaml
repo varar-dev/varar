@@ -30,6 +30,15 @@ importers:
         specifier: ^2.1.5
         version: 2.1.9(@types/node@22.19.20)
 
+  docs/tutorial:
+    devDependencies:
+      '@oselvar/bdd-vitest':
+        specifier: workspace:*
+        version: link:../../packages/bdd-vitest
+      vitest:
+        specifier: ^2.1.5
+        version: 2.1.9(@types/node@22.19.20)
+
   packages/bdd:
     dependencies:
       '@cucumber/cucumber-expressions':
