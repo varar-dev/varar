@@ -1,0 +1,23 @@
+{
+  "name": "@oselvar/bdd-vitest",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": {
+    ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" },
+    "./runtime": { "import": "./dist/runtime.js", "types": "./dist/runtime.d.ts" }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@oselvar/bdd": "workspace:*"
+  },
+  "peerDependencies": {
+    "vite": "^5.0.0 || ^6.0.0",
+    "vitest": "^2.0.0"
+  }
+}

@@ -36,6 +36,18 @@ importers:
         specifier: ^17.1.0
         version: 17.1.0
 
+  packages/bdd-vitest:
+    dependencies:
+      '@oselvar/bdd':
+        specifier: workspace:*
+        version: link:../bdd
+      vite:
+        specifier: ^5.0.0 || ^6.0.0
+        version: 5.4.21(@types/node@22.19.20)
+      vitest:
+        specifier: ^2.0.0
+        version: 2.1.9(@types/node@22.19.20)
+
 packages:
 
   '@babel/helper-string-parser@7.29.7':
