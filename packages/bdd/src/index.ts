@@ -25,3 +25,6 @@ export type {
   DiagnosticCode,
   Severity,
 } from './diagnostics.js'
+
+export { findHits } from './matcher.js'
+export type { Hit } from './matcher.js'
