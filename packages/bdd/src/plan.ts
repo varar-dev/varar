@@ -1,4 +1,4 @@
-import type { Bdd, Block, InlineOffset } from './ast.js'
+import type { Bdd, Block, Fence, InlineOffset, Table } from './ast.js'
 import { type Diagnostic, ambiguousMatch } from './diagnostics.js'
 import { type Hit, findHits, resolveHits } from './matcher.js'
 import type { Registry, StepRegistration } from './registry.js'
@@ -22,17 +22,21 @@ export type PlannedStep = {
   readonly matchSpan: Span
   readonly stepDef: StepRegistration
   readonly args: ReadonlyArray<unknown>
+  readonly dataTable?: Table
+  readonly docString?: { content: string; contentType: string }
 }
 
 export function plan(bdd: Bdd, registry: Registry): ExecutionPlan {
   const examples: PlannedExample[] = []
   const diagnostics: Diagnostic[] = []
   for (const ex of bdd.examples) {
-    const steps: PlannedStep[] = []
     let hadAmbiguous = false
-    for (const block of ex.body) {
+
+    // Pass 1: plan each text-bearing block and collect steps per body index.
+    const stepsByBlock = new Map<number, PlannedStep[]>()
+    ex.body.forEach((block, idx) => {
       if (block.kind !== 'paragraph' && block.kind !== 'list_item' && block.kind !== 'blockquote')
-        continue
+        return
       const result = planBlock(block.text, registry)
       for (const collision of result.ambiguities) {
         const span = liftSpan(bdd.source, block, collision.matchStart, collision.matchEnd)
@@ -49,25 +53,60 @@ export function plan(bdd: Bdd, registry: Registry): ExecutionPlan {
         )
         hadAmbiguous = true
       }
-      if (!hadAmbiguous) {
-        for (const hit of result.steps) {
-          steps.push({
-            text: block.text.slice(hit.matchStart, hit.matchEnd),
-            matchSpan: liftSpan(bdd.source, block, hit.matchStart, hit.matchEnd),
-            stepDef: hit.stepDef,
-            args: hit.args,
-          })
-        }
+      if (!hadAmbiguous && result.steps.length > 0) {
+        const blockSteps: PlannedStep[] = result.steps.map((hit) => ({
+          text: block.text.slice(hit.matchStart, hit.matchEnd),
+          matchSpan: liftSpan(bdd.source, block, hit.matchStart, hit.matchEnd),
+          stepDef: hit.stepDef,
+          args: hit.args,
+        }))
+        stepsByBlock.set(idx, blockSteps)
+      }
+    })
+
+    // Pass 2: look for table/fence immediately after a step-bearing block.
+    const attachments = new Map<
+      number,
+      { dataTable?: Table; docString?: { content: string; contentType: string } }
+    >()
+    for (let idx = 1; idx < ex.body.length; idx++) {
+      const here = ex.body[idx]
+      if (!here) continue
+      if (here.kind === 'table' && stepsByBlock.has(idx - 1)) {
+        attachments.set(idx - 1, { ...(attachments.get(idx - 1) ?? {}), dataTable: here })
+      } else if (here.kind === 'fence' && stepsByBlock.has(idx - 1)) {
+        const fence = here as Fence
+        attachments.set(idx - 1, {
+          ...(attachments.get(idx - 1) ?? {}),
+          docString: { content: fence.body, contentType: fence.info },
+        })
       }
     }
-    if (steps.length === 0 && !hadAmbiguous) {
+
+    // Pass 3: rebuild final step list, applying attachments to the last step of each block.
+    const finalSteps: PlannedStep[] = []
+    ex.body.forEach((_b, idx) => {
+      const stepsAtIdx = stepsByBlock.get(idx) ?? []
+      const attachAt = attachments.get(idx)
+      for (let s = 0; s < stepsAtIdx.length; s++) {
+        const step = stepsAtIdx[s]
+        if (!step) continue
+        if (s === stepsAtIdx.length - 1 && attachAt) {
+          finalSteps.push({ ...step, ...attachAt })
+        } else {
+          finalSteps.push(step)
+        }
+      }
+    })
+
+    if (finalSteps.length === 0 && !hadAmbiguous) {
       // Example has no matches and no diagnostics — drop it (docs).
       continue
     }
     examples.push({
       name: ex.name,
       span: ex.span,
-      steps: hadAmbiguous ? [] : steps,
+      steps: hadAmbiguous ? [] : finalSteps,
     })
   }
   return { bdd, examples, diagnostics }

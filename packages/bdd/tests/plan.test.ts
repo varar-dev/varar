@@ -107,3 +107,46 @@ test('plan walks blockquote content as step-bearing', () => {
   const result = plan(parse('q.bdd.md', source), r)
   expect(result.examples[0]?.steps).toHaveLength(1)
 })
+
+test('a markdown table immediately following a step-bearing block attaches as DataTable', () => {
+  let r = createRegistry()
+  r = addStep(r, {
+    expression: 'these users exist',
+    expressionSourceFile: 's.ts',
+    expressionSourceLine: 1,
+    handler: () => {},
+  })
+  const source = `# Users
+Given these users exist:
+
+| name | age |
+|------|-----|
+| Bob  | 30  |
+| Eve  | 25  |`
+  const result = plan(parse('u.bdd.md', source), r)
+  const step = result.examples[0]?.steps[0]
+  expect(step?.dataTable?.header.cells).toEqual(['name', 'age'])
+  expect(step?.dataTable?.rows).toHaveLength(2)
+})
+
+test('a table not immediately after a step-bearing block does NOT attach', () => {
+  let r = createRegistry()
+  r = addStep(r, {
+    expression: 'these users exist',
+    expressionSourceFile: 's.ts',
+    expressionSourceLine: 1,
+    handler: () => {},
+  })
+  // Paragraph between step and table
+  const source = `# Mid
+Given these users exist:
+
+Some interrupting prose.
+
+| name | age |
+|------|-----|
+| Bob  | 30  |`
+  const result = plan(parse('m.bdd.md', source), r)
+  const step = result.examples[0]?.steps[0]
+  expect(step?.dataTable).toBeUndefined()
+})
