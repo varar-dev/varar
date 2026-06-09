@@ -93,18 +93,19 @@ test('executePlan augments a thrown error with a .bdd.md frame for the failing s
     captured = e as Error
   }
   expect(captured).toBeInstanceOf(Error)
-  // Original message preserved (augmentation appends; doesn't replace).
-  expect(captured?.message).toMatch(/^boom/)
-  // The message also gains a markdown snippet pointing at the failing line.
-  expect(captured?.message).toContain('e.bdd.md:3:1')
-  expect(captured?.message).toContain('I throw')
-  // The snippet must NOT use the `    at file:line:col` pattern, which vitest
-  // would parse as a stack frame and use to render its own snippet.
-  expect(captured?.message).not.toMatch(/^\s+at\s/m)
+  // Original error message is left alone — augmentation only touches the stack.
+  expect(captured?.message).toBe('boom')
   // The synthetic stack frame points at the .bdd.md line where the step
-  // text lives, below the handler's `.ts` frame.
-  expect(captured?.stack).toContain('e.bdd.md:3:1')
-  expect(captured?.stack).toContain('at I throw')
+  // text lives, directly BELOW the handler's `.ts` frame so vitest still
+  // auto-renders the .ts snippet at the top.
+  const stack = captured?.stack ?? ''
+  expect(stack).toContain('e.bdd.md:3:1')
+  expect(stack).toContain('at I throw')
+  const frameLines = stack.split('\n').filter((l) => /^\s+at\s/.test(l))
+  const handlerIdx = frameLines.findIndex((l) => !l.includes('e.bdd.md'))
+  const bddIdx = frameLines.findIndex((l) => l.includes('e.bdd.md'))
+  expect(handlerIdx).toBeGreaterThanOrEqual(0)
+  expect(bddIdx).toBeGreaterThan(handlerIdx)
 })
 
 test('executePlan invokes createContext once per example and passes the result to handlers', async () => {
