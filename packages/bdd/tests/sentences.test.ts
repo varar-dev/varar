@@ -45,3 +45,18 @@ test('the final sentence does not require a terminator', () => {
   const result = splitSentences(text)
   expect(result.map((s) => s.text)).toEqual(['Alpha.', 'Beta'])
 })
+
+test('does not split on terminators inside a double-quoted string', () => {
+  const text = 'Given I greet "world"\nThen the greeting is "Hello, world!"'
+  const result = splitSentences(text)
+  // The `!` is inside the `"Hello, world!"` literal — it must not break the sentence.
+  expect(result.map((s) => s.text)).toEqual([
+    'Given I greet "world"\nThen the greeting is "Hello, world!"',
+  ])
+})
+
+test('splits between terminators outside quoted strings, ignoring those inside', () => {
+  const text = 'Alpha "with ! inside". Beta "and ? inside"!'
+  const result = splitSentences(text)
+  expect(result.map((s) => s.text)).toEqual(['Alpha "with ! inside".', 'Beta "and ? inside"!'])
+})

@@ -12,10 +12,18 @@ export function splitSentences(text: string): ReadonlyArray<Sentence> {
   let segmentStart = 0
   const skip = new Array(text.length).fill(false)
 
-  // Mark backtick code spans as no-split zones.
+  // Mark backtick code spans and double-quoted strings as no-split zones.
+  // This keeps terminators like `!` and `?` inside `"Hello, world!"` from
+  // breaking up a sentence the matcher needs as a whole `{string}` token.
   for (let j = 0; j < text.length; j++) {
-    if (text.charCodeAt(j) === 0x60 /* ` */) {
+    const c = text.charCodeAt(j)
+    if (c === 0x60 /* ` */) {
       const close = text.indexOf('`', j + 1)
+      if (close === -1) break
+      for (let k = j; k <= close; k++) skip[k] = true
+      j = close
+    } else if (c === 0x22 /* " */) {
+      const close = text.indexOf('"', j + 1)
       if (close === -1) break
       for (let k = j; k <= close; k++) skip[k] = true
       j = close
