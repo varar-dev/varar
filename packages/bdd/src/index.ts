@@ -28,3 +28,6 @@ export type {
 
 export { findHits, resolveHits } from './matcher.js'
 export type { Hit, ResolvedSteps, AmbiguityCollision } from './matcher.js'
+
+export { plan } from './plan.js'
+export type { ExecutionPlan, PlannedExample, PlannedStep } from './plan.js'
