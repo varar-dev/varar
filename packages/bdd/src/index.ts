@@ -26,5 +26,5 @@ export type {
   Severity,
 } from './diagnostics.js'
 
-export { findHits } from './matcher.js'
-export type { Hit } from './matcher.js'
+export { findHits, resolveHits } from './matcher.js'
+export type { Hit, ResolvedSteps, AmbiguityCollision } from './matcher.js'
