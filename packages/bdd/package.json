@@ -1,0 +1,16 @@
+{
+  "name": "@oselvar/bdd",
+  "version": "0.0.0",
+  "type": "module",
+  "exports": { ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" } },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@cucumber/cucumber-expressions": "^17.1.0"
+  }
+}
