@@ -5,13 +5,23 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, test } from 'vitest'
 
-const BIN = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'dist', 'bin.js')
+// Drive the source bin.ts through tsx — no `pnpm build` required. The published
+// package resolves the `bdd` binary to `./dist/bin.js`; locally we exercise the
+// same source via tsx so the dev loop stays fast.
+const HERE = dirname(fileURLToPath(import.meta.url))
+const BIN_TS = resolve(HERE, '..', 'src', 'bin.ts')
+const WORKSPACE_ROOT = resolve(HERE, '..', '..', '..')
+const TSX = resolve(WORKSPACE_ROOT, 'node_modules', '.bin', 'tsx')
 
 function run(args: ReadonlyArray<string>, cwd: string) {
-  return spawnSync('node', [BIN, ...args], { cwd, encoding: 'utf8' })
+  // Scrub NODE_OPTIONS so we don't drag the parent's `--import tsx` into the
+  // spawned process — that flag would re-resolve `tsx` from the temp cwd
+  // (which has no node_modules) and crash before the CLI ever runs.
+  const { NODE_OPTIONS: _drop, ...env } = process.env
+  return spawnSync(TSX, [BIN_TS, ...args], { cwd, encoding: 'utf8', env })
 }
 
-describe('bdd CLI (built bin)', () => {
+describe('bdd CLI (source via tsx)', () => {
   test('stepdef --print emits the templated snippet to stdout', () => {
     const dir = mkdtempSync(join(tmpdir(), 'bdd-e2e-'))
     try {

@@ -9,8 +9,8 @@
   "packageManager": "pnpm@9.12.0",
   "scripts": {
     "build": "pnpm -r build",
-    "test": "pnpm build && vitest run",
-    "test:watch": "pnpm build && vitest",
+    "test": "NODE_OPTIONS=\"--import tsx\" vitest run",
+    "test:watch": "NODE_OPTIONS=\"--import tsx\" vitest",
     "lint": "biome check .",
     "format": "biome format --write .",
     "knip": "knip",

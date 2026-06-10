@@ -2,8 +2,8 @@
   "name": "@oselvar/bdd",
   "version": "0.0.0",
   "type": "module",
-  "exports": { ".": { "types": "./src/index.ts", "import": "./dist/index.js" } },
-  "main": "./dist/index.js",
+  "exports": { ".": { "types": "./src/index.ts", "import": "./src/index.ts" } },
+  "main": "./src/index.ts",
   "types": "./src/index.ts",
   "files": ["dist", "README.md"],
   "scripts": {
@@ -16,6 +16,7 @@
   },
   "publishConfig": {
     "exports": { ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" } },
+    "main": "./dist/index.js",
     "types": "./dist/index.d.ts"
   }
 }
