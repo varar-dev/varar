@@ -7,7 +7,7 @@
   "type": "module",
   "engines": { "vscode": "^1.92.0", "node": ">=22" },
   "categories": ["Programming Languages", "Linters", "Testing"],
-  "main": "./src/extension.ts",
+  "main": "./dist/extension.js",
   "activationEvents": [
     "onLanguage:markdown",
     "onLanguage:typescript",
