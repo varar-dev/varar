@@ -51,6 +51,15 @@ importers:
         specifier: workspace:*
         version: link:../bdd
 
+  packages/bdd-language:
+    dependencies:
+      '@oselvar/bdd':
+        specifier: workspace:*
+        version: link:../bdd
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+
   packages/bdd-vitest:
     dependencies:
       '@cucumber/cucumber-expressions':

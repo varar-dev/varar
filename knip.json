@@ -13,6 +13,10 @@
       "entry": ["src/index.ts", "src/runtime.ts"],
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
+    "packages/bdd-language": {
+      "entry": ["src/index.ts"],
+      "project": ["src/**/*.ts", "tests/**/*.ts"]
+    },
     "docs/tutorial": {
       "entry": ["**/*.bdd.md", "**/*.steps.ts", "vitest.config.ts"],
       "project": ["**/*.{ts,bdd.md}"]
