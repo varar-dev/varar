@@ -15,6 +15,7 @@
     "format": "biome format --write .",
     "knip": "knip",
     "jscpd": "jscpd packages",
+    "install:vscode": "pnpm -r --filter @oselvar/bdd-lsp --filter oselvar-bdd build && node scripts/install-vscode.mjs",
     "check": "pnpm lint && pnpm test && pnpm knip && pnpm jscpd"
   },
   "devDependencies": {
