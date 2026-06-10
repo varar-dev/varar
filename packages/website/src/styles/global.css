@@ -2,31 +2,35 @@
   --cream: #faf5e9;
   --ink: #1a1a1a;
   --yellow: #ffd60a;
-  --orange: #f5a524;
+  --orange: #e67d00;
   --accent: #ff2e88;
 
-  --inset-1: 14px;
-  --inset-2: 20px;
-  --inset-3: 30px;
-  --inset-4: 36px;
-  --radius-1: 42px;
-  --radius-2: 36px;
-  --radius-3: 26px;
-  --radius-4: 20px;
+  --inset-1: 8px;
+  --inset-2: 22px;
+  --inset-3: 32px;
+  --inset-4: 46px;
+  --inset-5: 56px;
+  --radius-1: 62px;
+  --radius-2: 48px;
+  --radius-3: 38px;
+  --radius-4: 24px;
+  --radius-5: 14px;
 
   --content-max: 960px;
 }
 
 @media (max-width: 720px) {
   :root {
-    --inset-1: 7px;
-    --inset-2: 10px;
-    --inset-3: 15px;
-    --inset-4: 18px;
-    --radius-1: 21px;
-    --radius-2: 18px;
-    --radius-3: 13px;
-    --radius-4: 10px;
+    --inset-1: 4px;
+    --inset-2: 11px;
+    --inset-3: 16px;
+    --inset-4: 23px;
+    --inset-5: 28px;
+    --radius-1: 31px;
+    --radius-2: 24px;
+    --radius-3: 19px;
+    --radius-4: 12px;
+    --radius-5: 7px;
   }
 }
 
@@ -43,7 +47,7 @@ body {
 }
 
 body {
-  background: var(--yellow);
+  background: var(--cream);
   color: var(--ink);
   font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 18px;
@@ -64,32 +68,38 @@ body {
 
 .frame-layer--1 {
   inset: var(--inset-1);
-  background: var(--orange);
+  background: var(--yellow);
   border-radius: var(--radius-1);
 }
 
 .frame-layer--2 {
   inset: var(--inset-2);
-  background: var(--yellow);
+  background: var(--orange);
   border-radius: var(--radius-2);
 }
 
 .frame-layer--3 {
   inset: var(--inset-3);
-  background: var(--orange);
+  background: var(--yellow);
   border-radius: var(--radius-3);
 }
 
 .frame-layer--4 {
   inset: var(--inset-4);
-  background: var(--cream);
+  background: var(--orange);
   border-radius: var(--radius-4);
+}
+
+.frame-layer--5 {
+  inset: var(--inset-5);
+  background: var(--cream);
+  border-radius: var(--radius-5);
 }
 
 main {
   position: relative;
   z-index: 101;
-  padding: calc(var(--inset-4) + 32px) calc(var(--inset-4) + 32px);
+  padding: calc(var(--inset-5) + 32px) calc(var(--inset-5) + 32px);
   max-width: var(--content-max);
   margin: 0 auto;
 }
