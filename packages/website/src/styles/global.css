@@ -30,7 +30,7 @@ body {
 body {
   background: var(--cream);
   color: var(--ink);
-  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 18px;
   line-height: 1.5;
   min-height: 100vh;
@@ -57,7 +57,7 @@ main {
 }
 
 .wordmark {
-  font-family: 'Monoton', cursive;
+  font-family: "Monoton", cursive;
   font-weight: 400;
   font-size: clamp(72px, 18vw, 220px);
   line-height: 0.95;
@@ -93,7 +93,7 @@ main {
 }
 
 .pitch h2 {
-  font-family: 'Monoton', cursive;
+  font-family: "Monoton", cursive;
   font-weight: 400;
   font-size: clamp(28px, 4vw, 40px);
   margin: 0 0 12px;
@@ -122,7 +122,7 @@ main {
 }
 
 .install pre::before {
-  content: '$ ';
+  content: "$ ";
   color: var(--accent);
 }
 
@@ -131,7 +131,7 @@ main {
 }
 
 .quotes h2 {
-  font-family: 'Monoton', cursive;
+  font-family: "Monoton", cursive;
   font-weight: 400;
   font-size: clamp(32px, 5vw, 56px);
   text-align: center;
@@ -156,7 +156,7 @@ main {
 }
 
 .quotes li::before {
-  content: '“';
+  content: "“";
   font-size: 36px;
   line-height: 0;
   vertical-align: -10px;
