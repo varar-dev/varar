@@ -1,0 +1,182 @@
+:root {
+  --cream: #faf5e9;
+  --ink: #1a1a1a;
+  --frame: #f5a524;
+  --accent: #ff2e88;
+  --frame-thickness: 14px;
+  --frame-gap: 4px;
+  --content-max: 960px;
+}
+
+@media (max-width: 720px) {
+  :root {
+    --frame-thickness: 8px;
+    --frame-gap: 2px;
+  }
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--cream);
+  color: var(--ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-size: 18px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+.frame {
+  position: fixed;
+  inset: var(--frame-gap);
+  border: var(--frame-thickness) solid var(--frame);
+  pointer-events: none;
+  z-index: 100;
+}
+
+main {
+  padding: calc(var(--frame-thickness) + var(--frame-gap) + 32px)
+    calc(var(--frame-thickness) + var(--frame-gap) + 24px);
+  max-width: var(--content-max);
+  margin: 0 auto;
+}
+
+.hero {
+  text-align: center;
+  padding: 48px 0 24px;
+}
+
+.wordmark {
+  font-family: 'Monoton', cursive;
+  font-weight: 400;
+  font-size: clamp(72px, 18vw, 220px);
+  line-height: 0.95;
+  letter-spacing: 0.02em;
+  margin: 0;
+  color: var(--ink);
+}
+
+.tagline {
+  font-size: clamp(18px, 2.4vw, 24px);
+  font-style: italic;
+  margin: 16px 0 0;
+  color: var(--ink);
+}
+
+.pitch {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  padding: 48px 0;
+}
+
+@media (max-width: 720px) {
+  .pitch {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pitch article {
+  border: 2px solid var(--ink);
+  padding: 24px;
+  background: var(--cream);
+}
+
+.pitch h2 {
+  font-family: 'Monoton', cursive;
+  font-weight: 400;
+  font-size: clamp(28px, 4vw, 40px);
+  margin: 0 0 12px;
+  letter-spacing: 0.02em;
+}
+
+.pitch p {
+  margin: 0;
+  font-size: 17px;
+}
+
+.install {
+  padding: 24px 0 48px;
+  text-align: center;
+}
+
+.install pre {
+  display: inline-block;
+  margin: 0;
+  padding: 16px 24px;
+  background: var(--ink);
+  color: var(--cream);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 17px;
+  border-radius: 4px;
+}
+
+.install pre::before {
+  content: '$ ';
+  color: var(--accent);
+}
+
+.quotes {
+  padding: 48px 0;
+}
+
+.quotes h2 {
+  font-family: 'Monoton', cursive;
+  font-weight: 400;
+  font-size: clamp(32px, 5vw, 56px);
+  text-align: center;
+  margin: 0 0 32px;
+  letter-spacing: 0.02em;
+}
+
+.quotes ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+
+.quotes li {
+  border: 2px solid var(--ink);
+  padding: 20px;
+  font-style: italic;
+  font-size: 18px;
+}
+
+.quotes li::before {
+  content: '“';
+  font-size: 36px;
+  line-height: 0;
+  vertical-align: -10px;
+  margin-right: 4px;
+  color: var(--accent);
+}
+
+footer {
+  padding: 48px 0 24px;
+  text-align: center;
+  font-size: 14px;
+  border-top: 1px solid var(--ink);
+  margin-top: 24px;
+}
+
+footer a {
+  color: var(--ink);
+  text-decoration: underline;
+}
+
+footer a:hover {
+  color: var(--accent);
+}

@@ -1,0 +1,57 @@
+---
+import Base from '../layouts/Base.astro'
+
+const quotes = [
+  'Move over vibeslop, here comes bididi',
+  'BDD without the BS',
+  'Like therapy for your test suite',
+  'Specs you’d actually read',
+  'Plain English in, working tests out',
+  'Your team’s shared brain, in markdown',
+]
+---
+
+<Base
+  title="bididi — Behaviour-Driven Development that doesn’t make you cry"
+  description="bididi turns plain-English examples into runnable specs. Discover misunderstandings, clear your head."
+>
+  <main>
+    <section class="hero">
+      <h1 class="wordmark">bididi</h1>
+      <p class="tagline">Behaviour-Driven Development for people who hate ceremony.</p>
+    </section>
+
+    <section class="pitch" aria-label="What bididi gives you">
+      <article>
+        <h2>discover misunderstandings</h2>
+        <p>
+          Pin down what “done” means before anyone writes code. Bididi turns plain-English
+          examples into runnable specs — the conversation becomes the test.
+        </p>
+      </article>
+      <article>
+        <h2>clear your head</h2>
+        <p>
+          Stop juggling intent in your head. Write the example, run it, and let the tests hold
+          the shape of the feature for you.
+        </p>
+      </article>
+    </section>
+
+    <section class="install" aria-label="Install">
+      <pre><code>pnpm add -D @oselvar/bididi</code></pre>
+    </section>
+
+    <section class="quotes" aria-label="Quotes">
+      <h2>word on the street</h2>
+      <ul>
+        {quotes.map((q) => <li>{q}</li>)}
+      </ul>
+    </section>
+
+    <footer>
+      <a href="https://github.com/oselvar/bdd">github.com/oselvar/bdd</a>
+      <span> · © 2026 Oselvar</span>
+    </footer>
+  </main>
+</Base>
