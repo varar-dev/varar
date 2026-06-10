@@ -1,0 +1,7 @@
+{
+  "vitest.workspaceConfig": "./vitest.workspace.ts",
+  "vitest.maximumConfigs": 10,
+  "vitest.nodeEnv": {
+    "NODE_OPTIONS": "--import tsx"
+  }
+}
