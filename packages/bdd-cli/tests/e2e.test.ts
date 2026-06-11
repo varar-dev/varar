@@ -45,14 +45,16 @@ describe('bdd CLI (source via tsx)', () => {
     }
   })
 
-  test('lint --json exits 1 when a missing-step diagnostic is present', () => {
+  test('lint --json exits 0 when a .bdd.md has only prose / unmatched keyword-led lines', () => {
+    // No Given/When/Then heuristic: keyword-led but unmatched sentences are
+    // not diagnostics, so lint must exit 0.
     const dir = mkdtempSync(join(tmpdir(), 'bdd-e2e-lint-'))
     try {
       writeFileSync(join(dir, 'a.bdd.md'), '# A\n\nGiven I have 5 cukes')
       const r = run(['lint', '--json'], dir)
-      expect(r.status).toBe(1)
+      expect(r.status).toBe(0)
       const parsed = JSON.parse(r.stdout)
-      expect(parsed.diagnostics[0].code).toBe('missing-step')
+      expect(parsed.diagnostics).toEqual([])
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }

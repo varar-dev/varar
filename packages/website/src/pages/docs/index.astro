@@ -1,0 +1,76 @@
+---
+import Base from '../../layouts/Base.astro'
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '')
+---
+
+<Base
+  title="bididi docs"
+  description="bididi documentation organised by Diátaxis: tutorials, how-to guides, reference, and explanation."
+>
+  <main class="doc docs-index">
+    <nav class="doc-nav" aria-label="Breadcrumb">
+      <a href={`${base}/`}>bididi</a>
+      <span aria-hidden="true">›</span>
+      <span>docs</span>
+    </nav>
+
+    <h1>docs</h1>
+    <p class="lede">Organised by <a href="https://diataxis.fr/">Diátaxis</a>.</p>
+
+    <div class="docs-quadrants">
+      <section class="docs-quadrant">
+        <p class="kind">Learning</p>
+        <h2>tutorials</h2>
+        <ul>
+          <li>
+            <a href="https://github.com/oselvar/bdd/tree/main/docs/tutorial">
+              hello-bdd — your first spec
+            </a>
+          </li>
+        </ul>
+      </section>
+
+      <section class="docs-quadrant">
+        <p class="kind">Tasks</p>
+        <h2>how-to guides</h2>
+        <ul>
+          <li>
+            <a href={`${base}/docs/how-to/wire-bididi-into-agent-instructions`}>
+              Wire bididi into your AI agent's instructions
+            </a>
+          </li>
+          <li>
+            <a href={`${base}/docs/how-to/drive-features-with-bididi-and-an-agent`}>
+              Drive a feature with bididi and an AI agent
+            </a>
+          </li>
+        </ul>
+      </section>
+
+      <section class="docs-quadrant">
+        <p class="kind">Information</p>
+        <h2>reference</h2>
+        <p class="empty">Coming soon — spec syntax, step matching, CLI flags.</p>
+      </section>
+
+      <section class="docs-quadrant">
+        <p class="kind">Understanding</p>
+        <h2>explanation</h2>
+        <ul>
+          <li>
+            <a href={`${base}/docs/explanation/why-bididi-with-ai-agents`}>
+              Why bididi pairs well with AI coding agents
+            </a>
+          </li>
+        </ul>
+      </section>
+    </div>
+
+    <footer class="doc-footer">
+      <a href={`${base}/`}>← back to home</a>
+      <span> · </span>
+      <a href="https://github.com/oselvar/bdd">github.com/oselvar/bdd</a>
+    </footer>
+  </main>
+</Base>

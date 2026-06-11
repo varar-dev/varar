@@ -1,4 +1,5 @@
 import { fileURLToPath } from 'node:url'
+import { createRegistry, generateSnippet } from '@oselvar/bdd'
 import type { MatchRef } from '@oselvar/bdd-language'
 import type { Store } from './store.js'
 
@@ -26,11 +27,15 @@ type Diagnostic = {
 
 type MatchRangeEntry = { readonly range: Range; readonly params: ReadonlyArray<Range> }
 
+type SnippetResult = { readonly fullCode: string; readonly expression: string }
+
 type Handlers = {
   hover(params: HoverParams): HoverResult
   definition(params: DefinitionParams): DefinitionResult
   diagnosticsFor(uri: string): ReadonlyArray<Diagnostic>
   matchRanges(uri: string): ReadonlyArray<MatchRangeEntry>
+  generateSnippet(text: string): SnippetResult
+  stepGlobs(): ReadonlyArray<string>
 }
 
 export function buildHandlers(store: Store): Handlers {
@@ -77,6 +82,15 @@ export function buildHandlers(store: Store): Handlers {
           range: toLspRange(m.range),
           params: m.paramRanges.map(toLspRange),
         }))
+    },
+    generateSnippet(text) {
+      const snippet = generateSnippet(text, createRegistry(), {
+        template: store.snippetTemplate(),
+      })
+      return { fullCode: snippet.fullCode, expression: snippet.expression }
+    },
+    stepGlobs() {
+      return store.stepGlobs()
     },
   }
 }

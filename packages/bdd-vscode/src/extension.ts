@@ -2,12 +2,16 @@ import { realpathSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import {
+  commands,
   type ExtensionContext,
+  Position,
   Range,
   type TextEditor,
   type TextEditorDecorationType,
+  Uri,
   window,
   workspace,
+  WorkspaceEdit,
 } from 'vscode'
 import {
   type LanguageClientOptions,
@@ -43,6 +47,7 @@ export function activate(context: ExtensionContext): void {
   client = new LanguageClient('oselvar-bdd', 'oselvar BDD', serverOptions, clientOptions)
   const started = client.start()
   registerMatchDecorations(context, client, started)
+  registerGenerateStepDefinition(context, client, started)
 }
 
 type LspRange = {
@@ -119,6 +124,79 @@ function registerMatchDecorations(
     .catch(() => {
       // start failure is already surfaced by the language client itself.
     })
+}
+
+function registerGenerateStepDefinition(
+  context: ExtensionContext,
+  lspClient: LanguageClient,
+  started: Promise<void>,
+): void {
+  const cmd = commands.registerCommand('oselvar-bdd.generateStepDefinition', async () => {
+    const editor = window.activeTextEditor
+    if (!editor) {
+      void window.showInformationMessage('No active editor.')
+      return
+    }
+    const text = editor.document.getText(editor.selection).trim()
+    if (text.length === 0) {
+      void window.showInformationMessage('Select the text to generate a step definition from.')
+      return
+    }
+    await started
+    const [snippet, stepGlobs] = await Promise.all([
+      lspClient.sendRequest<{ readonly fullCode: string; readonly expression: string }>(
+        'bdd/generateSnippet',
+        { text },
+      ),
+      lspClient.sendRequest<ReadonlyArray<string>>('bdd/stepGlobs'),
+    ])
+    const stepFiles = await findStepFiles(stepGlobs)
+    if (stepFiles.length === 0) {
+      void window.showWarningMessage(
+        'No *.steps.ts files found in the workspace. Create one first, then re-run the command.',
+      )
+      return
+    }
+    const pick = await window.showQuickPick(
+      stepFiles.map((u) => ({ label: workspace.asRelativePath(u), uri: u })),
+      { placeHolder: `Append "${snippet.expression}" to which steps file?` },
+    )
+    if (!pick) return
+    await appendSnippet(pick.uri, snippet.fullCode)
+    const doc = await workspace.openTextDocument(pick.uri)
+    await window.showTextDocument(doc, { selection: new Range(doc.lineCount, 0, doc.lineCount, 0) })
+  })
+  context.subscriptions.push(cmd)
+}
+
+async function findStepFiles(stepGlobs: ReadonlyArray<string>): Promise<ReadonlyArray<Uri>> {
+  // Use the workspace globs reported by the server when present (config-driven);
+  // fall back to the convention if the config has no steps glob.
+  const patterns = stepGlobs.length > 0 ? stepGlobs : ['**/*.steps.ts']
+  const seen = new Set<string>()
+  const out: Uri[] = []
+  for (const pattern of patterns) {
+    const found = await workspace.findFiles(pattern, '**/node_modules/**')
+    for (const u of found) {
+      const key = u.toString()
+      if (!seen.has(key)) {
+        seen.add(key)
+        out.push(u)
+      }
+    }
+  }
+  return out
+}
+
+async function appendSnippet(uri: Uri, snippet: string): Promise<void> {
+  const doc = await workspace.openTextDocument(uri)
+  const edit = new WorkspaceEdit()
+  // Append at the very end of the file with a leading blank line separator.
+  const sep = doc.lineCount > 0 && doc.lineAt(doc.lineCount - 1).text.length > 0 ? '\n\n' : '\n'
+  const end = new Position(doc.lineCount, 0)
+  edit.insert(uri, end, `${sep}${snippet}`)
+  await workspace.applyEdit(edit)
+  await doc.save()
 }
 
 export async function deactivate(): Promise<void> {

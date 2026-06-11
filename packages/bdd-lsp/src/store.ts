@@ -1,22 +1,28 @@
 import { readFileSync } from 'node:fs'
 import { glob as nativeGlob } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { loadBddConfig } from '@oselvar/bdd'
+import { DEFAULT_SNIPPET_TEMPLATE, loadBddConfig } from '@oselvar/bdd'
 import { type WorkspaceIndex, buildWorkspaceIndex } from '@oselvar/bdd-language'
 
 export type Store = {
   reindex(workspaceRoot: string): Promise<void>
   index(): WorkspaceIndex
   workspaceRoot(): string
+  snippetTemplate(): string
+  stepGlobs(): ReadonlyArray<string>
 }
 
 export function createStore(): Store {
   let current: WorkspaceIndex = { stepDefs: [], matches: [], diagnostics: [] }
   let root = ''
+  let snippet = DEFAULT_SNIPPET_TEMPLATE
+  let steps: ReadonlyArray<string> = []
   return {
     async reindex(workspaceRoot: string) {
       root = workspaceRoot
       const cfg = await loadBddConfig(workspaceRoot)
+      snippet = cfg.snippet.template
+      steps = cfg.steps
       const stepPaths = await findFiles(workspaceRoot, cfg.steps)
       const bddPaths = await findFiles(workspaceRoot, cfg.bdds)
       const stepFiles = stepPaths.map((path) => ({
@@ -34,6 +40,12 @@ export function createStore(): Store {
     },
     workspaceRoot() {
       return root
+    },
+    snippetTemplate() {
+      return snippet
+    },
+    stepGlobs() {
+      return steps
     },
   }
 }

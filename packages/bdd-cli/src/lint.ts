@@ -61,7 +61,7 @@ function firstLine(s: string): string {
 }
 
 function isError(code: string): boolean {
-  return code === 'missing-step' || code === 'ambiguous-match'
+  return code === 'ambiguous-match'
 }
 
 async function findFiles(cwd: string, patterns: ReadonlyArray<string>): Promise<string[]> {

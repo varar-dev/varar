@@ -1,0 +1,33 @@
+---
+import Base from './Base.astro'
+
+interface Props {
+  title: string
+  description?: string
+}
+
+const { title, description } = Astro.props
+const fullTitle = `${title} — bididi docs`
+const desc =
+  description ??
+  'bididi — Behaviour-Driven Development specs that an AI agent can actually work against.'
+const base = import.meta.env.BASE_URL.replace(/\/$/, '')
+---
+
+<Base title={fullTitle} description={desc}>
+  <main class="doc">
+    <nav class="doc-nav" aria-label="Breadcrumb">
+      <a href={`${base}/`}>bididi</a>
+      <span aria-hidden="true">›</span>
+      <a href={`${base}/docs/`}>docs</a>
+    </nav>
+    <article class="doc-body">
+      <slot />
+    </article>
+    <footer class="doc-footer">
+      <a href={`${base}/docs/`}>← back to docs</a>
+      <span> · </span>
+      <a href="https://github.com/oselvar/bdd">github.com/oselvar/bdd</a>
+    </footer>
+  </main>
+</Base>

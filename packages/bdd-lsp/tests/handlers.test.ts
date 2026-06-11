@@ -139,7 +139,24 @@ step('the greeting is {string}', () => {})
   }
 })
 
-test('diagnosticsFor returns missing-step diagnostics for unmatched keyword-led sentences', async () => {
+test('generateSnippet turns selected text into a step-definition stub', async () => {
+  const { dir, cleanup } = tempWorkspace((dir) => {
+    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
+  })
+  try {
+    const store = createStore()
+    await store.reindex(dir)
+    const h = buildHandlers(store)
+    const snippet = h.generateSnippet('Given I greet "world"')
+    expect(snippet.expression).toBe('I greet {string}')
+    expect(snippet.fullCode).toContain("step('I greet {string}'")
+  } finally {
+    cleanup()
+  }
+})
+
+test('diagnosticsFor does NOT emit anything for a keyword-led but unmatched sentence', async () => {
+  // No Given/When/Then heuristic — step-def generation is selection-driven.
   const { dir, cleanup } = tempWorkspace((dir) => {
     writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
     writeFileSync(join(dir, 'b.bdd.md'), '# B\n\nGiven I have 5 cukes')
@@ -149,8 +166,7 @@ test('diagnosticsFor returns missing-step diagnostics for unmatched keyword-led 
     await store.reindex(dir)
     const h = buildHandlers(store)
     const diags = h.diagnosticsFor(`file://${join(dir, 'b.bdd.md')}`)
-    expect(diags).toHaveLength(1)
-    expect(diags[0]?.code).toBe('missing-step')
+    expect(diags).toEqual([])
   } finally {
     cleanup()
   }

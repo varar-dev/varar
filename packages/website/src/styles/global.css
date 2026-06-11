@@ -233,3 +233,233 @@ footer a {
 footer a:hover {
   color: var(--accent);
 }
+
+/* Doc pages */
+
+main.doc {
+  max-width: 720px;
+  padding-top: calc(var(--inset-5) + 24px);
+  padding-bottom: calc(var(--inset-5) + 24px);
+}
+
+.doc-nav {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  margin-bottom: 32px;
+  color: var(--ink);
+  text-transform: uppercase;
+}
+
+.doc-nav a {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+.doc-nav a:hover {
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+}
+
+.doc-nav span {
+  margin: 0 8px;
+  color: var(--orange);
+}
+
+.doc-body h1 {
+  font-family: "Monoton", cursive;
+  font-weight: 400;
+  font-size: clamp(36px, 6vw, 64px);
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+  margin: 0 0 32px;
+}
+
+.doc-body h2 {
+  font-family: "Monoton", cursive;
+  font-weight: 400;
+  font-size: clamp(24px, 3.2vw, 32px);
+  letter-spacing: 0.02em;
+  margin: 48px 0 12px;
+}
+
+.doc-body h3 {
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-weight: 700;
+  font-size: 20px;
+  margin: 32px 0 8px;
+}
+
+.doc-body p {
+  margin: 0 0 16px;
+}
+
+.doc-body ul,
+.doc-body ol {
+  padding-left: 24px;
+  margin: 0 0 16px;
+}
+
+.doc-body li {
+  margin: 6px 0;
+}
+
+.doc-body blockquote {
+  margin: 24px 0;
+  padding: 16px 24px;
+  border-left: 4px solid var(--orange);
+  background: var(--yellow);
+  font-style: italic;
+}
+
+.doc-body blockquote p {
+  margin: 0 0 8px;
+}
+
+.doc-body blockquote p:last-child {
+  margin: 0;
+  font-style: normal;
+  font-size: 14px;
+}
+
+.doc-body a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--orange);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
+
+.doc-body a:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+.doc-body code {
+  background: var(--yellow);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.92em;
+}
+
+.doc-body pre {
+  background: var(--ink);
+  color: var(--cream);
+  padding: 16px 20px;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.doc-body pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  color: inherit;
+  font-size: inherit;
+}
+
+.doc-body strong {
+  font-weight: 700;
+}
+
+.doc-body em {
+  font-style: italic;
+}
+
+.doc-footer {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--ink);
+  font-size: 14px;
+  text-align: left;
+}
+
+/* Docs landing */
+
+.docs-index {
+  padding-top: 32px;
+}
+
+.docs-index h1 {
+  font-family: "Monoton", cursive;
+  font-weight: 400;
+  font-size: clamp(48px, 8vw, 96px);
+  letter-spacing: 0.02em;
+  margin: 0 0 8px;
+  text-align: center;
+}
+
+.docs-index > p.lede {
+  font-size: 18px;
+  text-align: center;
+  margin: 0 0 48px;
+  font-style: italic;
+}
+
+.docs-quadrants {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 720px) {
+  .docs-quadrants {
+    grid-template-columns: 1fr;
+  }
+}
+
+.docs-quadrant {
+  border: 2px solid var(--ink);
+  padding: 24px;
+  background: var(--cream);
+}
+
+.docs-quadrant h2 {
+  font-family: "Monoton", cursive;
+  font-weight: 400;
+  font-size: clamp(24px, 3.5vw, 32px);
+  margin: 0 0 4px;
+  letter-spacing: 0.02em;
+}
+
+.docs-quadrant .kind {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--orange);
+  margin: 0 0 12px;
+}
+
+.docs-quadrant ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.docs-quadrant li {
+  margin: 8px 0;
+}
+
+.docs-quadrant a {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--orange);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
+
+.docs-quadrant a:hover {
+  color: var(--accent);
+  text-decoration-color: var(--accent);
+}
+
+.docs-quadrant .empty {
+  font-style: italic;
+  font-size: 14px;
+  opacity: 0.6;
+}

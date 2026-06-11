@@ -183,16 +183,16 @@ test('a step with NO following fence has no docString', () => {
   expect(result.examples[0]?.steps[0]?.docString).toBeUndefined()
 })
 
-test('a keyword-led sentence with no match produces a missing-step diagnostic', () => {
-  const r = createRegistry() // empty
+test('a keyword-led sentence with no match does NOT produce a diagnostic (no Given/When/Then heuristic)', () => {
+  // Step-def generation is selection-driven only; we never infer that a
+  // keyword-led sentence "should" have matched a step definition.
+  const r = createRegistry()
   const bdd = parse('m.bdd.md', '# Empty\n\nGiven I have 5 cukes in my belly.')
   const result = plan(bdd, r)
-  expect(result.diagnostics).toHaveLength(1)
-  expect(result.diagnostics[0]?.code).toBe('missing-step')
-  expect(result.diagnostics[0]?.message).toContain('I have {int} cukes in my belly')
+  expect(result.diagnostics).toHaveLength(0)
 })
 
-test('a sentence WITHOUT a keyword that has no match is silently treated as prose', () => {
+test('an unmatched sentence without a keyword is also silently treated as prose', () => {
   const r = createRegistry()
   const bdd = parse('p.bdd.md', '# Prose\n\nI have 5 cukes in my belly.')
   const result = plan(bdd, r)

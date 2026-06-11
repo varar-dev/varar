@@ -22,7 +22,21 @@ test('executePlan calls sink.example for each PlannedExample', () => {
 })
 
 test('executePlan reports all diagnostics through reporter.diagnostic', () => {
-  const r = createRegistry()
+  // Two step definitions that match the same sentence → ambiguous-match.
+  // Avoids the keyword heuristic but still produces a diagnostic.
+  let r = createRegistry()
+  r = addStep(r, {
+    expression: 'I have {int} cukes',
+    expressionSourceFile: 's.ts',
+    expressionSourceLine: 1,
+    handler: () => {},
+  })
+  r = addStep(r, {
+    expression: 'I have 5 cukes',
+    expressionSourceFile: 's.ts',
+    expressionSourceLine: 2,
+    handler: () => {},
+  })
   const p = plan(parse('m.bdd.md', '# A\n\nGiven I have 5 cukes'), r)
   const got: Diagnostic[] = []
   executePlan(p, {
@@ -30,7 +44,7 @@ test('executePlan reports all diagnostics through reporter.diagnostic', () => {
     reporter: { diagnostic: (d) => got.push(d) },
   })
   expect(got).toHaveLength(1)
-  expect(got[0]?.code).toBe('missing-step')
+  expect(got[0]?.code).toBe('ambiguous-match')
 })
 
 test('the sink.example run callback executes the step handlers in order', async () => {

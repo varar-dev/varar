@@ -9,6 +9,8 @@ const quotes = [
   'Plain English in, working tests out',
   'Your team’s shared brain, in markdown',
 ]
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '')
 ---
 
 <Base
@@ -50,6 +52,8 @@ const quotes = [
     </section>
 
     <footer>
+      <a href={`${base}/docs/`}>docs</a>
+      <span> · </span>
       <a href="https://github.com/oselvar/bdd">github.com/oselvar/bdd</a>
       <span> · © 2026 Oselvar</span>
     </footer>

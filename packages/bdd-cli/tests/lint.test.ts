@@ -4,27 +4,6 @@ import { join } from 'node:path'
 import { expect, test } from 'vitest'
 import { runLint } from '../src/lint.js'
 
-test('reports missing-step diagnostic for a keyword-led unmatched sentence', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'bdd-lint-'))
-  try {
-    writeFileSync(join(dir, 'a.bdd.md'), '# A\n\nGiven I have 5 cukes')
-    const captured: string[] = []
-    const result = await runLint({
-      cwd: dir,
-      json: true,
-      globs: undefined,
-      writeStdout: (s) => captured.push(s),
-      writeStderr: () => {},
-    })
-    expect(result.exitCode).toBe(1)
-    const parsed = JSON.parse(captured.join(''))
-    expect(Array.isArray(parsed.diagnostics)).toBe(true)
-    expect(parsed.diagnostics[0].code).toBe('missing-step')
-  } finally {
-    rmSync(dir, { recursive: true, force: true })
-  }
-})
-
 test('exit code 0 when no diagnostics found', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'bdd-lint-clean-'))
   try {
@@ -45,10 +24,10 @@ test('exit code 0 when no diagnostics found', async () => {
   }
 })
 
-test('human-readable output (no --json) lists path:line', async () => {
+test('human-readable output (no --json) lists path:line for an orphan-attachment', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'bdd-lint-text-'))
   try {
-    writeFileSync(join(dir, 'a.bdd.md'), '# A\n\nGiven I have 5 cukes')
+    writeFileSync(join(dir, 'a.bdd.md'), '# A\n\n```js\nx=1\n```\n')
     const captured: string[] = []
     await runLint({
       cwd: dir,
@@ -59,7 +38,7 @@ test('human-readable output (no --json) lists path:line', async () => {
     })
     const out = captured.join('')
     expect(out).toContain('a.bdd.md')
-    expect(out).toContain('missing-step')
+    expect(out).toContain('orphan-attachment')
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }

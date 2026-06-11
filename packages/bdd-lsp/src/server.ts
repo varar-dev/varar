@@ -58,6 +58,16 @@ export function registerHandlers(connection: Connection): void {
   connection.onRequest('bdd/matchRanges', (params: { uri: string }) =>
     handlers.matchRanges(params.uri),
   )
+
+  // Custom request for selection-driven step-definition generation. The
+  // client is responsible for source (the user's selection) and target
+  // (the steps file to append to); the server only knows how to translate
+  // text → snippet.
+  connection.onRequest('bdd/generateSnippet', (params: { text: string }) =>
+    handlers.generateSnippet(params.text),
+  )
+
+  connection.onRequest('bdd/stepGlobs', () => handlers.stepGlobs())
 }
 
 function pushDiagnostics(

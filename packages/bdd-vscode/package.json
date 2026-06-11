@@ -21,6 +21,38 @@
         "aliases": ["BDD Markdown", "bdd-md"],
         "extensions": [".bdd.md"]
       }
+    ],
+    "commands": [
+      {
+        "command": "oselvar-bdd.generateStepDefinition",
+        "title": "BDD: Generate Step Definition from Selection",
+        "category": "BDD"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "oselvar-bdd.generateStepDefinition",
+          "when": "editorHasSelection && resourceExtname == .md",
+          "group": "bdd@1"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "oselvar-bdd.generateStepDefinition",
+          "when": "editorHasSelection"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "oselvar-bdd.generateStepDefinition",
+        "key": "cmd+alt+g",
+        "mac": "cmd+alt+g",
+        "win": "ctrl+alt+g",
+        "linux": "ctrl+alt+g",
+        "when": "editorHasSelection"
+      }
     ]
   },
   "scripts": {

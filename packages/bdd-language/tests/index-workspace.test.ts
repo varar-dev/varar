@@ -26,14 +26,12 @@ test('cross-references matched substrings in .bdd.md to their step defs', () => 
   expect(m?.range.start.line).toBe(3)
 })
 
-test('an unmatched keyword-led sentence becomes a missing-step diagnostic', () => {
+test('an unmatched keyword-led sentence produces NO diagnostic (no Given/When/Then heuristic)', () => {
   const idx = buildWorkspaceIndex({
     stepFiles: [],
     bddFiles: [{ path: '/m.bdd.md', source: '# M\n\nGiven I have 5 cukes' }],
   })
-  expect(idx.diagnostics).toHaveLength(1)
-  expect(idx.diagnostics[0]?.code).toBe('missing-step')
-  expect(idx.diagnostics[0]?.bddPath).toBe('/m.bdd.md')
+  expect(idx.diagnostics).toEqual([])
 })
 
 test('ambiguous matches surface as ambiguous-match diagnostics', () => {
