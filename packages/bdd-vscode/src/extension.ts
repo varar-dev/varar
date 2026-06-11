@@ -2,10 +2,17 @@ import { realpathSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import {
+  CodeAction,
+  type CodeActionContext,
+  CodeActionKind,
+  type CodeActionProvider,
   commands,
   type ExtensionContext,
+  languages,
   Position,
   Range,
+  type Selection,
+  type TextDocument,
   type TextEditor,
   type TextEditorDecorationType,
   Uri,
@@ -48,6 +55,7 @@ export function activate(context: ExtensionContext): void {
   const started = client.start()
   registerMatchDecorations(context, client, started)
   registerGenerateStepDefinition(context, client, started)
+  registerGenerateCodeAction(context)
 }
 
 type LspRange = {
@@ -124,6 +132,36 @@ function registerMatchDecorations(
     .catch(() => {
       // start failure is already surfaced by the language client itself.
     })
+}
+
+function registerGenerateCodeAction(context: ExtensionContext): void {
+  const provider: CodeActionProvider = {
+    provideCodeActions(
+      _document: TextDocument,
+      range: Range | Selection,
+      _context: CodeActionContext,
+    ) {
+      // Only offer the action when the user has actually selected text — no
+      // keyword sniffing, no cursor-only triggering.
+      if (range.isEmpty) return undefined
+      const action = new CodeAction(
+        'Generate Step Definition from Selection',
+        CodeActionKind.RefactorExtract,
+      )
+      action.command = {
+        command: 'oselvar-bdd.generateStepDefinition',
+        title: 'Generate Step Definition',
+      }
+      return [action]
+    },
+  }
+  context.subscriptions.push(
+    languages.registerCodeActionsProvider(
+      { scheme: 'file', pattern: '**/*.bdd.md' },
+      provider,
+      { providedCodeActionKinds: [CodeActionKind.RefactorExtract] },
+    ),
+  )
 }
 
 function registerGenerateStepDefinition(

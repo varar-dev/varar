@@ -55,3 +55,13 @@ test('default template renders the "Write code here" comment and an Error throw'
   expect(s.fullCode).toContain('Write code here that turns the phrase above into concrete actions')
   expect(s.fullCode).toContain("throw new Error('not implemented')")
 })
+
+test('a custom {airport} parameter type drives both the expression and the arg name', () => {
+  const r = createRegistry()
+  r.parameterTypes.defineParameterType(
+    new ParameterType('airport', /[A-Z]{3}/, String, (s: string) => s, true, false),
+  )
+  const s = generateSnippet('I fly to LHR', r)
+  expect(s.expression).toBe('I fly to {airport}')
+  expect(s.handlerSignature).toBe('(ctx, airport: string) => {')
+})

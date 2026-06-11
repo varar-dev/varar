@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { glob as nativeGlob } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { DEFAULT_SNIPPET_TEMPLATE, loadBddConfig } from '@oselvar/bdd'
+import { DEFAULT_SNIPPET_TEMPLATE, createRegistry, loadBddConfig } from '@oselvar/bdd'
 import { type WorkspaceIndex, buildWorkspaceIndex } from '@oselvar/bdd-language'
 
 export type Store = {
@@ -13,7 +13,12 @@ export type Store = {
 }
 
 export function createStore(): Store {
-  let current: WorkspaceIndex = { stepDefs: [], matches: [], diagnostics: [] }
+  let current: WorkspaceIndex = {
+    stepDefs: [],
+    matches: [],
+    diagnostics: [],
+    registry: createRegistry(),
+  }
   let root = ''
   let snippet = DEFAULT_SNIPPET_TEMPLATE
   let steps: ReadonlyArray<string> = []

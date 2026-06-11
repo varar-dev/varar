@@ -1,5 +1,12 @@
-import { addStep, createRegistry, parse, plan } from '@oselvar/bdd'
-import { type Range, type StepDef, discoverStepDefs } from './step-defs.js'
+import {
+  addStep,
+  createRegistry,
+  defineParameterType,
+  parse,
+  plan,
+  type Registry,
+} from '@oselvar/bdd'
+import { type Range, type StepDef, discoverParameterTypes, discoverStepDefs } from './step-defs.js'
 
 export type WorkspaceInput = {
   readonly stepFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>
@@ -25,6 +32,10 @@ export type WorkspaceIndex = {
   readonly stepDefs: ReadonlyArray<StepDef>
   readonly matches: ReadonlyArray<MatchRef>
   readonly diagnostics: ReadonlyArray<DiagnosticRef>
+  // The fully-populated registry (step defs + custom parameter types) so
+  // downstream tools — snippet generation, completion, etc. — can use the
+  // same view the matcher used.
+  readonly registry: Registry
 }
 
 const EMPTY_HANDLER = (): void => {}
@@ -32,6 +43,23 @@ const EMPTY_HANDLER = (): void => {}
 export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
   const stepDefs: StepDef[] = []
   let registry = createRegistry()
+
+  // First pass: register every custom parameter type. We need them in place
+  // before compiling any step expressions, otherwise a `step('I fly to {airport}')`
+  // discovered in the same file would fail with UndefinedParameterTypeError.
+  for (const file of input.stepFiles) {
+    for (const pt of discoverParameterTypes(file.path, file.source)) {
+      try {
+        registry = defineParameterType(registry, {
+          name: pt.name,
+          regexp: pt.regexp,
+        })
+      } catch {
+        // Duplicate parameter type or invalid regex; ignore at index time.
+      }
+    }
+  }
+
   for (const file of input.stepFiles) {
     const defs = discoverStepDefs(file.path, file.source)
     for (const def of defs) {
@@ -44,7 +72,8 @@ export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
           handler: EMPTY_HANDLER,
         })
       } catch {
-        // duplicate step definition — surface as a diagnostic in a future iteration.
+        // duplicate step definition or unknown parameter type — surface as a
+        // diagnostic in a future iteration.
       }
     }
   }
@@ -82,7 +111,7 @@ export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
     }
   }
 
-  return { stepDefs, matches, diagnostics }
+  return { stepDefs, matches, diagnostics, registry }
 }
 
 type SpanLike = {

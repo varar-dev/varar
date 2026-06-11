@@ -1,5 +1,10 @@
-import { ParameterType } from '@cucumber/cucumber-expressions'
-import { type Registry, type StepHandler, addStep, createRegistry } from '@oselvar/bdd'
+import {
+  addStep,
+  createRegistry,
+  defineParameterType as defineParameterTypeCore,
+  type Registry,
+  type StepHandler,
+} from '@oselvar/bdd'
 
 type Entry = {
   readonly expression: string
@@ -64,10 +69,11 @@ export function contextFactory(): () => unknown {
 export function buildRegistry(): Registry {
   let r = createRegistry()
   for (const t of customTypes) {
-    const regexps = Array.isArray(t.regexp) ? (t.regexp as RegExp[]) : [t.regexp as RegExp]
-    r.parameterTypes.defineParameterType(
-      new ParameterType(t.name, regexps, String, t.transformer, true, true),
-    )
+    r = defineParameterTypeCore(r, {
+      name: t.name,
+      regexp: t.regexp as RegExp | ReadonlyArray<RegExp>,
+      transformer: t.transformer,
+    })
   }
   for (const e of steps) {
     r = addStep(r, {

@@ -1,5 +1,5 @@
-export { discoverStepDefs } from './step-defs.js'
-export type { StepDef, Range, Position } from './step-defs.js'
+export { discoverStepDefs, discoverParameterTypes } from './step-defs.js'
+export type { StepDef, Range, Position, ParameterTypeDef } from './step-defs.js'
 export { buildWorkspaceIndex } from './index-workspace.js'
 export type { WorkspaceIndex, WorkspaceInput, MatchRef, DiagnosticRef } from './index-workspace.js'
 export const VERSION = '0.0.0'

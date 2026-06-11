@@ -1,5 +1,5 @@
 import { fileURLToPath } from 'node:url'
-import { createRegistry, generateSnippet } from '@oselvar/bdd'
+import { generateSnippet } from '@oselvar/bdd'
 import type { MatchRef } from '@oselvar/bdd-language'
 import type { Store } from './store.js'
 
@@ -84,7 +84,9 @@ export function buildHandlers(store: Store): Handlers {
         }))
     },
     generateSnippet(text) {
-      const snippet = generateSnippet(text, createRegistry(), {
+      // Use the live index registry so custom parameter types declared in
+      // *.steps.ts surface in the generated expression.
+      const snippet = generateSnippet(text, store.index().registry, {
         template: store.snippetTemplate(),
       })
       return { fullCode: snippet.fullCode, expression: snippet.expression }

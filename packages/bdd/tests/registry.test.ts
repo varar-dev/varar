@@ -1,6 +1,6 @@
 import { ParameterTypeRegistry } from '@cucumber/cucumber-expressions'
 import { expect, test } from 'vitest'
-import { addStep, createRegistry } from '../src/registry.js'
+import { addStep, createRegistry, defineParameterType } from '../src/registry.js'
 
 test('createRegistry returns an empty registry with default parameter types', () => {
   const r = createRegistry()
@@ -20,6 +20,39 @@ test('addStep returns a new registry; original is unchanged', () => {
   expect(r0.steps).toHaveLength(0)
   expect(r1.steps).toHaveLength(1)
   expect(r1.steps[0]?.expression).toBe('I have {int} cukes')
+})
+
+test('defineParameterType makes a custom type available to subsequent step compilations', () => {
+  let r = createRegistry()
+  r = defineParameterType(r, { name: 'airport', regexp: /[A-Z]{3}/ })
+  // Compiling an expression that uses {airport} should now succeed without
+  // an UndefinedParameterTypeError.
+  expect(() =>
+    addStep(r, {
+      expression: 'I fly to {airport}',
+      expressionSourceFile: 'steps.ts',
+      expressionSourceLine: 1,
+      handler: () => {},
+    }),
+  ).not.toThrow()
+})
+
+test('defineParameterType returned step actually matches the regex at runtime', () => {
+  let r = createRegistry()
+  r = defineParameterType(r, {
+    name: 'airport',
+    regexp: /[A-Z]{3}/,
+    transformer: (raw) => raw.toLowerCase(),
+  })
+  r = addStep(r, {
+    expression: 'I fly to {airport}',
+    expressionSourceFile: 'steps.ts',
+    expressionSourceLine: 1,
+    handler: () => {},
+  })
+  const match = r.steps[0]?.compiled.match('I fly to LHR')
+  expect(match).not.toBeNull()
+  expect(match?.[0]?.getValue(undefined)).toBe('lhr')
 })
 
 test('addStep throws on duplicate expressions, listing both source positions', () => {

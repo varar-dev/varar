@@ -56,3 +56,25 @@ test('the index is empty for an empty workspace', () => {
   expect(idx.matches).toEqual([])
   expect(idx.diagnostics).toEqual([])
 })
+
+test('a custom parameter type defined in *.steps.ts is registered before step compilation', () => {
+  const idx = buildWorkspaceIndex({
+    stepFiles: [
+      {
+        path: '/airports.steps.ts',
+        source: `defineParameterType({ name: 'airport', regexp: /[A-Z]{3}/ })
+step('I fly to {airport}', (ctx, code) => {})
+`,
+      },
+    ],
+    bddFiles: [{ path: '/t.bdd.md', source: '# T\n\nGiven I fly to LHR\n' }],
+  })
+  expect(idx.matches).toHaveLength(1)
+  expect(idx.matches[0]?.stepDef.expression).toBe('I fly to {airport}')
+  // The matched substring covers "I fly to LHR", not just one word.
+  const m = idx.matches[0]!
+  expect(m.range.end.character - m.range.start.character).toBeGreaterThan(5)
+  // Custom parameter type is in the returned registry.
+  const names = [...idx.registry.parameterTypes.parameterTypes].map((p) => p.name)
+  expect(names).toContain('airport')
+})

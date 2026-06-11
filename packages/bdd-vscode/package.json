@@ -43,17 +43,7 @@
           "when": "editorHasSelection"
         }
       ]
-    },
-    "keybindings": [
-      {
-        "command": "oselvar-bdd.generateStepDefinition",
-        "key": "cmd+alt+g",
-        "mac": "cmd+alt+g",
-        "win": "ctrl+alt+g",
-        "linux": "ctrl+alt+g",
-        "when": "editorHasSelection"
-      }
-    ]
+    }
   },
   "scripts": {
     "build": "tsc -p tsconfig.json"

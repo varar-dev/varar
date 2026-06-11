@@ -27,8 +27,14 @@ export { parse } from './parse.js'
 export { splitSentences } from './sentences.js'
 export type { Sentence } from './sentences.js'
 
-export { createRegistry, addStep } from './registry.js'
-export type { Registry, StepRegistration, StepInput, StepHandler } from './registry.js'
+export { createRegistry, addStep, defineParameterType } from './registry.js'
+export type {
+  Registry,
+  StepRegistration,
+  StepInput,
+  StepHandler,
+  ParameterTypeInput,
+} from './registry.js'
 
 export { ambiguousMatch, missingStep, orphanAttachment } from './diagnostics.js'
 export type {

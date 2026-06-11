@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { discoverStepDefs } from '../src/step-defs.js'
+import { discoverParameterTypes, discoverStepDefs } from '../src/step-defs.js'
 
 test('discovers a single step call with its source range', () => {
   const source = `import { step } from '@oselvar/bdd-vitest'
@@ -45,4 +45,30 @@ const obj = { step: 1 }
 test('returns empty array for a file with no step calls', () => {
   expect(discoverStepDefs('empty.ts', '')).toEqual([])
   expect(discoverStepDefs('empty.ts', 'const x = 1\n')).toEqual([])
+})
+
+test('discovers defineParameterType with a regexp literal', () => {
+  const source = `import { defineParameterType } from '@oselvar/bdd-vitest'
+defineParameterType({ name: 'airport', regexp: /[A-Z]{3}/, transformer: (r) => r })
+`
+  const defs = discoverParameterTypes('p.ts', source)
+  expect(defs).toHaveLength(1)
+  expect(defs[0]?.name).toBe('airport')
+  expect(defs[0]?.regexp).toBe('[A-Z]{3}')
+})
+
+test('discovers defineParameterType with a string literal regexp', () => {
+  const source = `defineParameterType({ name: 'airport', regexp: '[A-Z]{3}' })
+`
+  const defs = discoverParameterTypes('p.ts', source)
+  expect(defs).toHaveLength(1)
+  expect(defs[0]?.regexp).toBe('[A-Z]{3}')
+})
+
+test('skips defineParameterType calls with non-literal name or regexp', () => {
+  const source = `const n = 'airport'
+defineParameterType({ name: n, regexp: /[A-Z]{3}/ })
+defineParameterType({ name: 'x', regexp: someRe })
+`
+  expect(discoverParameterTypes('p.ts', source)).toHaveLength(0)
 })
