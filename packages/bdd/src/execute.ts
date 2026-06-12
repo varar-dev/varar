@@ -4,9 +4,11 @@ import type { Reporter, TestSink } from './ports.js'
 export type ExecutePorts = {
   readonly sink: TestSink
   readonly reporter: Reporter
-  // Per-example context factory. Called once per example before any step runs.
-  // Defaults to `() => ({})` when omitted.
-  readonly createContext?: () => unknown | Promise<unknown>
+  // Per-stepfile context factory. The runtime calls this once per
+  // (example, stepfile) pair on demand — successive steps from the same
+  // stepfile share the same context object, steps in different stepfiles
+  // each get their own. Defaults to `() => ({})` when omitted.
+  readonly createContext?: (stepFile: string) => unknown | Promise<unknown>
 }
 
 export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
@@ -15,8 +17,16 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
   const path = plan.bdd.path
   for (const ex of plan.examples) {
     ports.sink.example(ex.name, async () => {
-      const ctx = await createContext()
+      // Cache one context per stepfile within this example. Lazy creation
+      // keeps the cost zero for stepfiles whose steps don't run.
+      const ctxByFile = new Map<string, unknown>()
       for (const step of ex.steps) {
+        const file = step.stepDef.expressionSourceFile
+        let ctx = ctxByFile.get(file)
+        if (!ctxByFile.has(file)) {
+          ctx = await createContext(file)
+          ctxByFile.set(file, ctx)
+        }
         try {
           await step.stepDef.handler(ctx, ...step.args)
         } catch (err) {

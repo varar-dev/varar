@@ -20,7 +20,10 @@ type CustomTypeDef = {
 }
 
 let steps: Entry[] = []
-let context: (() => unknown) | undefined
+// One context factory per stepfile. Each .steps.ts that calls
+// defineContext() owns its own slice of state; steps from different
+// stepfiles never see each other's context.
+const contextFactoriesByFile = new Map<string, () => unknown | Promise<unknown>>()
 let customTypes: CustomTypeDef[] = []
 
 // A `step` function bound to a context type `C`. Typed step instances flow `C`
@@ -40,14 +43,16 @@ export const step: Step<unknown> = (expression, handler) => {
   registerStep(expression, handler as StepHandler)
 }
 
-// Register the per-example context factory AND return a `step` typed against `C`
-// so handler bodies can use `ctx.foo` without casts. The factory itself is wired
-// into the runtime by runBddSource — every example gets its own fresh context.
+// Register the per-stepfile context factory AND return a `step` typed against
+// `C` so handler bodies can use `ctx.foo` without casts. The factory itself
+// is wired into the runtime by runBddSource — every example gets one fresh
+// context per stepfile that contributes a step to it.
 export function defineContext<C>(factory: () => C | Promise<C>): { readonly step: Step<C> } {
-  if (context) {
-    throw new Error('defineContext() called more than once')
+  const { sourceFile } = callerLocation()
+  if (contextFactoriesByFile.has(sourceFile)) {
+    throw new Error(`defineContext() called more than once in ${sourceFile}`)
   }
-  context = factory as () => unknown
+  contextFactoriesByFile.set(sourceFile, factory as () => unknown)
   const typedStep: Step<C> = (expression, handler) => {
     registerStep(expression, handler as StepHandler)
   }
@@ -62,8 +67,11 @@ export function defineParameterType<T>(opts: {
   customTypes.push(opts as CustomTypeDef)
 }
 
-export function contextFactory(): () => unknown {
-  return context ?? (() => ({}))
+export function contextFactory(): (stepFile: string) => unknown | Promise<unknown> {
+  return (stepFile: string) => {
+    const f = contextFactoriesByFile.get(stepFile)
+    return f ? f() : {}
+  }
 }
 
 export function buildRegistry(): Registry {
@@ -88,7 +96,7 @@ export function buildRegistry(): Registry {
 
 export function _resetBuilder(): void {
   steps = []
-  context = undefined
+  contextFactoriesByFile.clear()
   customTypes = []
 }
 
