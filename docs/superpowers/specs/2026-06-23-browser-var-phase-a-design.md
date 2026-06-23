@@ -115,6 +115,32 @@ definitions, editing `hello.var.md` so a sentence no longer matches a step
 surfaces the corresponding Vár diagnostic in the editor, and fixing it clears
 the diagnostic. This proves the in-browser LSP roundtrip end to end.
 
+## Build order (outside-in, small steps)
+
+Phase A is built outside-in — the visible shell first, the deepest dependency
+(the real filesystem) last — so each step is small and independently verifiable,
+and the outer layers are validated against stubs before the inner ones exist:
+
+1. **CodeMirror `<Editor>` island, no LSP.** Markdown mode + basic editing on a
+   demo page. Verify: it renders and is editable in the browser.
+2. **Worker + transport handshake, minimal server.** Stand up the Web Worker and
+   the CodeMirror-LSP-client ↔ `vscode-languageserver/browser` transport bridge
+   with a *minimal* server (only `onInitialize` returning capabilities). Verify:
+   the client initializes over the worker with no errors. (Pins the transport
+   spike before any real server logic.)
+3. **`FileSystem` port + store refactor (no browser).** Drill into the server
+   core: introduce the port, refactor `createStore` to inject `fs` + `config`,
+   move the existing `node:fs` logic into a Node adapter. Verify: unit tests
+   against a fake in-memory `FileSystem`; the existing Node/CLI LSP behaviour is
+   unchanged.
+4. **Wire real handlers in the worker over an in-memory `FileSystem`.** Replace
+   the minimal server with `registerHandlers` using a `Map`-backed FS seeded
+   with the demo files. Verify: live diagnostics appear in the Editor (the
+   Phase A proof), no IndexedDB yet.
+5. **IndexedDB `FileSystem` adapter + write-through persistence.** Swap the
+   `Map` FS for IndexedDB; `didChange` writes through; seed on first run. Verify:
+   content persists across reload and diagnostics still update.
+
 ## Testing
 
 - Unit-test the refactored `createStore` against a fake in-memory `FileSystem`
