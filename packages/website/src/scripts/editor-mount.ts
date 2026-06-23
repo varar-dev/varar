@@ -1,6 +1,8 @@
 import { markdown } from '@codemirror/lang-markdown'
 import { LSPClient, languageServerExtensions } from '@codemirror/lsp-client'
 import { EditorView, basicSetup } from 'codemirror'
+import { semanticTokens } from '../lib/cm-semantic-tokens.ts'
+import { varTokenTheme } from '../lib/var-token-theme.ts'
 import { workerTransport } from '../lib/worker-transport.ts'
 
 // One shared LSP client (one worker) for the page. Phase C generalises this to
@@ -10,7 +12,12 @@ let sharedClient: LSPClient | null = null
 function lspClient(): LSPClient {
   if (sharedClient) return sharedClient
   const worker = new Worker(new URL('../lib/var-worker.ts', import.meta.url), { type: 'module' })
-  sharedClient = new LSPClient({ extensions: languageServerExtensions() }).connect(workerTransport(worker))
+  sharedClient = new LSPClient({
+    extensions: [
+      ...languageServerExtensions(),
+      semanticTokens({ legend: { tokenTypes: ['function', 'parameter'] } }),
+    ],
+  }).connect(workerTransport(worker))
   return sharedClient
 }
 
@@ -20,7 +27,7 @@ export function mountEditor(el: HTMLElement): EditorView {
   const client = lspClient()
   return new EditorView({
     doc,
-    extensions: [basicSetup, markdown(), client.plugin(uri)],
+    extensions: [basicSetup, markdown(), varTokenTheme, client.plugin(uri)],
     parent: el,
   })
 }

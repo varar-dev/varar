@@ -39,6 +39,10 @@ export function registerHandlers(
         // No triggerCharacters — we want the suggestions to appear via the
         // user's invocation (Ctrl+Space) and as they type letters.
         completionProvider: { resolveProvider: false },
+        semanticTokensProvider: {
+          legend: { tokenTypes: ['function', 'parameter'], tokenModifiers: [] },
+          full: true,
+        },
       },
     }
   })
@@ -148,6 +152,10 @@ export function registerHandlers(
       return handlers.renderExpressionText(params)
     },
   )
+
+  // STUB (Task 2 replaces this with the real encoder): one function token over
+  // the first 5 chars of the first line, just to prove the client renders.
+  connection.onRequest('textDocument/semanticTokens/full', () => ({ data: [0, 0, 5, 0, 0] }))
 
   connection.onCompletion((params) => {
     if (!handlers) return []
