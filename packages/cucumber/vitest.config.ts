@@ -6,7 +6,7 @@ export default defineConfig({
   // which is scoped to the tutorial).
   plugins: [varPlugin({ cwd: new URL('.', import.meta.url).pathname })],
   // Vite follows symlinks by default. Setting preserveSymlinks keeps the
-  // resolved path as `library.feature.var.md` so the varDoc plugin sees the
+  // resolved path as `library.feature.var.md` so the var plugin sees the
   // intended extension instead of vite trying to parse `library.feature`
   // as JavaScript.
   resolve: { preserveSymlinks: true },

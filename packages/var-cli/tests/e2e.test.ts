@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, test } from 'vitest'
 
 // Drive the source bin.ts through tsx — no `pnpm build` required. The published
-// package resolves the `varDoc` binary to `./dist/bin.js`; locally we exercise the
+// package resolves the `var` binary to `./dist/bin.js`; locally we exercise the
 // same source via tsx so the dev loop stays fast.
 const HERE = dirname(fileURLToPath(import.meta.url))
 const BIN_TS = resolve(HERE, '..', 'src', 'bin.ts')

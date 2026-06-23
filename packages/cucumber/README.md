@@ -13,10 +13,10 @@ cucumber-js to oselvar/var by porting only the step definitions?*
 ```
 features/
   library.feature              real Gherkin, owned by cucumber-js
-  library.feature.var.md  ->   symlink to library.feature, parsed by varDoc
+  library.feature.var.md  ->   symlink to library.feature, parsed by var
 
 cucumber/steps/library.steps.ts   cucumber-js handlers (Given/When/Then + hooks)
-steps/library.steps.ts            varDoc handlers (step + defineContext)
+steps/library.steps.ts            var handlers (step + defineContext)
 
 src/library.ts                    the shared domain (a tiny library catalogue)
 ```
@@ -31,10 +31,10 @@ The `.feature` file is real Gherkin (`Feature:`, `Scenario:`, indented
 `Given/When/Then`, `| ... |` table rows without a `|---|` separator, `"""`
 doc strings). vitest's file matcher looks for `*.var.md`, so we symlink the
 file under both names. Vite's `preserveSymlinks: true` keeps the extension
-intact through the loader, so varDoc sees a `.var.md` file whose contents are
+intact through the loader, so var sees a `.var.md` file whose contents are
 Gherkin.
 
-To make the varDoc scanner understand Gherkin tables and doc strings the package
+To make the var scanner understand Gherkin tables and doc strings the package
 opts into two scanner plugins in `var.config.ts`:
 
 ```ts
@@ -55,8 +55,8 @@ Plugins are off by default in `@oselvar/var`; ordinary Markdown-native
 | Script | Runner | What it does |
 |---|---|---|
 | `pnpm test:cucumber` | cucumber-js | Loads `cucumber/steps/library.steps.ts`, runs `library.feature` |
-| `pnpm test:varDoc` | `@oselvar/var-cli` (`var run`) | Loads `steps/library.steps.ts`, runs `library.feature.var.md` |
-| `pnpm test:varDoc-vitest` | vitest + `@oselvar/var-vitest` plugin | Same .var.md, executed through vitest's runner |
+| `pnpm test:var` | `@oselvar/var-cli` (`var run`) | Loads `steps/library.steps.ts`, runs `library.feature.var.md` |
+| `pnpm test:var-vitest` | vitest + `@oselvar/var-vitest` plugin | Same .var.md, executed through vitest's runner |
 | `pnpm test` | all three in sequence | full sweep |
 
 All three run the same scenario green.
@@ -69,7 +69,7 @@ Locally, one scenario / three steps, Node 22:
 |---|---|
 | cucumber-js | ~0.85 s |
 | `var run` (CLI) | ~0.74 s |
-| `varDoc` via vitest | ~1.5 s |
+| `var` via vitest | ~1.5 s |
 
 The vitest path pays the cost of spinning up vite's transform + worker
 plumbing. The standalone CLI parses, plans, and executes the same .var.md
