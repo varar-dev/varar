@@ -1,9 +1,12 @@
 ---
+import { decodeEntities, highlightSteps } from '../lib/step-highlight.js'
+
 interface Props {
   filename: string
+  steps?: ReadonlyArray<{ path: string; source: string }>
 }
 
-const { filename } = Astro.props
+const { filename, steps } = Astro.props
 
 // Split the name from its (possibly multi-dot) extension so ".var.md" reads
 // as a single highlighted unit, e.g. "hello" + ".var.md".
@@ -17,7 +20,12 @@ const ext = dot === -1 ? '' : filename.slice(dot)
 // rendered slot is already HTML-escaped, so we emit it with `set:html` and
 // derive the gutter from its line count.
 const body = (await Astro.slots.render('default')).replace(/^\n+/, '').replace(/\n+$/, '')
-const gutter = body.split('\n').map((_, i) => i + 1).join('\n')
+const highlighted =
+  steps && steps.length > 0
+    ? highlightSteps({ varPath: filename, source: decodeEntities(body), steps })
+    : null
+const lineCount = highlighted ? highlighted.length : body.split('\n').length
+const gutter = Array.from({ length: lineCount }, (_, i) => i + 1).join('\n')
 ---
 
 <figure class="file-editor">
@@ -27,7 +35,19 @@ const gutter = body.split('\n').map((_, i) => i + 1).join('\n')
   </figcaption>
   <div class="fe-body">
     <pre class="fe-gutter" aria-hidden="true">{gutter}</pre>
-    <pre class="fe-code"><code set:html={body}></code></pre>
+    <pre class="fe-code">{
+      highlighted ? (
+        <code>{highlighted.map((line, i) => (
+          <Fragment>{line.map((seg) =>
+            seg.kind === 'param' ? <span class="fe-param">{seg.text}</span>
+            : seg.kind === 'step' ? <span class="fe-step">{seg.text}</span>
+            : seg.text,
+          )}{i < highlighted.length - 1 ? '\n' : ''}</Fragment>
+        ))}</code>
+      ) : (
+        <code set:html={body} />
+      )
+    }</pre>
   </div>
 </figure>
 
@@ -137,6 +157,20 @@ const gutter = body.split('\n').map((_, i) => i + 1).join('\n')
     font-family: inherit;
     font-size: inherit;
     color: inherit;
+  }
+
+  .fe-step {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-decoration-thickness: 2px;
+    text-underline-offset: 3px;
+  }
+
+  .fe-param {
+    background: var(--accent);
+    color: var(--ink);
+    border-radius: 4px;
+    padding: 1px 5px;
   }
 
   @media (max-width: 520px) {
