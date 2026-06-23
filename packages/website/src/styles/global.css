@@ -109,6 +109,18 @@ main {
   padding: 48px 0 24px;
 }
 
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(12px, 3vw, 40px);
+}
+
+.logo {
+  height: clamp(72px, 16vw, 200px);
+  width: auto;
+}
+
 .wordmark {
   font-family: "Monoton", cursive;
   font-weight: 400;
