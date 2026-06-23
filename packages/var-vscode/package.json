@@ -11,15 +11,15 @@
   "activationEvents": [
     "onLanguage:markdown",
     "onLanguage:typescript",
-    "workspaceContains:**/bdd.config.ts",
-    "workspaceContains:**/*.bdd.md"
+    "workspaceContains:**/var.config.ts",
+    "workspaceContains:**/*.var.md"
   ],
   "contributes": {
     "languages": [
       {
-        "id": "bdd-markdown",
-        "aliases": ["BDD Markdown", "bdd-md"],
-        "extensions": [".bdd.md"]
+        "id": "var-markdown",
+        "aliases": ["Vár Markdown", "var-md"],
+        "extensions": [".var.md"]
       }
     ],
     "commands": [
@@ -34,7 +34,7 @@
         {
           "command": "oselvar-var.generateStepDefinition",
           "when": "editorHasSelection && resourceExtname == .md",
-          "group": "bdd@1"
+          "group": "var@1"
         }
       ],
       "commandPalette": [

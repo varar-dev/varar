@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "NODE_OPTIONS=\"--import tsx\" cucumber-js && pnpm test:bdd && pnpm test:bdd-vitest",
+    "test": "NODE_OPTIONS=\"--import tsx\" cucumber-js && pnpm test:var && pnpm test:var-vitest",
     "test:cucumber": "NODE_OPTIONS=\"--import tsx\" cucumber-js",
-    "test:bdd": "NODE_OPTIONS=\"--import tsx\" node ../bdd-cli/src/bin.ts run",
-    "test:bdd-vitest": "NODE_OPTIONS=\"--import tsx\" vitest run"
+    "test:var": "NODE_OPTIONS=\"--import tsx\" node ../var-cli/src/bin.ts run",
+    "test:var-vitest": "NODE_OPTIONS=\"--import tsx\" vitest run"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^13.0.0",

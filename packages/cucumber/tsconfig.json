@@ -1,4 +1,4 @@
 {
-  "extends": "../bdd/tsconfig.json",
+  "extends": "../var/tsconfig.json",
   "include": ["src/**/*", "steps/**/*", "cucumber/steps/**/*"]
 }

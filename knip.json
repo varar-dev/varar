@@ -27,9 +27,9 @@
       "ignoreDependencies": ["@oselvar/var-language", "@oselvar/var-lsp"]
     },
     "docs/tutorial": {
-      "entry": ["**/*.bdd.md", "**/*.steps.ts", "vitest.config.ts"],
-      "project": ["**/*.{ts,bdd.md}"]
+      "entry": ["**/*.var.md", "**/*.steps.ts", "vitest.config.ts"],
+      "project": ["**/*.{ts,var.md}"]
     }
   },
-  "ignore": ["bdd.config.ts"]
+  "ignore": ["var.config.ts"]
 }
