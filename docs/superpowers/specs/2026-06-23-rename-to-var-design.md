@@ -21,6 +21,15 @@ rune ᚢᛅᚱ are branding only and never appear in code, package names, or CLI
   (`varDocs`, `varPatterns`, `varPaths`).
 - **Runic / accent:** ᚢᛅᚱ and "Vár" appear in README/docs/website/announcement
   titles and logo only. All code, package names, and CLI output use ASCII `var`.
+- **Public brand "bididi":** the website/docs brand the library "bididi" (wordmark,
+  titles, `@oselvar/bididi` install snippet, `*-bididi-*` filenames). This is the same
+  library, so "bididi" → "Vár" / "var" as well, including renaming the affected doc
+  files. The bogus `@oselvar/bididi` install snippet becomes the real
+  `@oselvar/var-vitest`.
+- **Methodology "BDD" stays:** "BDD" / "Behaviour-Driven Development" as the *name of the
+  methodology* (e.g. "var — markdown-native BDD") is kept. Only the *product* names
+  (`bdd`, `bdds`, `bididi`) become Vár. Uppercase `BDD` is therefore handled manually and
+  contextually, never blanket-replaced.
 
 ## Naming map
 
@@ -52,10 +61,36 @@ rune ᚢᛅᚱ are branding only and never appear in code, package names, or CLI
 
 ### Code identifiers
 
-- Type `Bdd` → `VarDoc` (~29 sites).
+- Type `Bdd` → `VarDoc`; compound types swap the `Bdd` prefix for `Var`:
+  `BddSource` → `VarSource`, `BddConfig` → `VarConfig`,
+  `BddVitestPluginOptions` → `VarVitestPluginOptions`; function `loadBddConfig` →
+  `loadVarConfig`.
 - Locals/params/fields `bdd` / `bddPatterns` / `bddPaths` → `varDoc` / `varPatterns` /
-  `varPaths` (~176 sites).
-- CLI help text, error strings, and `describe()` labels: `bdd` → `var`.
+  `varPaths`.
+- Default plugin import currently named `bdd` (`import bdd from '@oselvar/bdd-vitest'`)
+  → `varPlugin`; namespace import `import * as bdd from '../src/index.js'` → `varApi`.
+- LSP custom method namespace `bdd/*` (e.g. `bdd/didIndex`, `bdd/matchRanges`,
+  `bdd/stepAt`, `bdd/planRename`, `bdd/renderExpressionText`) → `var/*`. Client
+  (`var-vscode`) and server (`var-lsp`) must stay in sync.
+- VS Code `new LanguageClient('oselvar-bdd', 'oselvar BDD', …)` → id `oselvar-var`,
+  display name `Vár`.
+- Scaffolded example dir `bdd-examples/` (CLI `init`) → `var-examples/`.
+- Test temp-dir prefixes `bdd-*` → `var-*` (cosmetic).
+- CLI help text, error strings, and `describe()` labels: product `bdd` → `var` (but
+  methodology "BDD" is left as-is per the decisions above).
+- `var-vscode/src/extension.ts` resolves the LSP binary via the literal path segment
+  `'bdd-lsp'` → must become `'var-lsp'` (runtime-critical).
+
+### Public "bididi" branding
+
+- Replace `bididi`/`Bididi` → `Vár`/`var` across `packages/website/**` and `docs/**`
+  (excluding historical `docs/superpowers/`).
+- `@oselvar/bididi` install snippet → `@oselvar/var-vitest`.
+- Rename doc files containing `bididi`: e.g.
+  `why-bididi-with-ai-agents.md` → `why-var-with-ai-agents.md`,
+  `wire-bididi-into-agent-instructions.md` → `wire-var-into-agent-instructions.md`,
+  `drive-features-with-bididi-and-an-agent.md` → `drive-features-with-var-and-an-agent.md`,
+  and update every internal link/route that references the old slugs.
 
 ### Out of scope
 
