@@ -36,6 +36,15 @@ throughout all phases.
   a `FileSystem` port + an injected `VarConfig`, so the same handlers run over
   Node (`node:fs`) or the browser (IndexedDB). This aligns with the repo's
   functional-core / ports rule and removes I/O from the store core.
+- **TypeScript parsing behind a port.** `@oselvar/var-language` currently hard-
+  imports `typescript` in `discoverStepDefs`. Introduce a `StepDefScanner` port
+  so the parser is injectable; `buildWorkspaceIndex` accepts an optional
+  `scanner` defaulting to a `typescript`-backed implementation. Phase A uses the
+  `typescript` scanner in **both** Node and the browser worker; a lighter
+  browser scanner (e.g. `tsgo-wasm` / `typescript-go`) can drop in later behind
+  the same port without any API change. The CodeMirror client library is the
+  official `@codemirror/lsp-client`
+  (https://code.haverbeke.berlin/codemirror/lsp-client).
 
 ## Architecture
 
@@ -81,6 +90,23 @@ export interface FileSystem {
   no longer needs a disk `workspaceFolders` path in the browser case.
 
 The store becomes unit-testable with a fake in-memory `FileSystem`.
+
+### `@oselvar/var-language` — `StepDefScanner` port
+
+```ts
+export interface StepDefScanner {
+  discoverStepDefs(path: string, source: string): StepDef[]
+  discoverParameterTypes(path: string, source: string): ParameterTypeDef[]
+}
+```
+
+- `createTypeScriptScanner(): StepDefScanner` wraps the existing `typescript`-
+  based `discoverStepDefs`/`discoverParameterTypes`.
+- `buildWorkspaceIndex({ ..., scanner? })` accepts an optional scanner,
+  defaulting to `createTypeScriptScanner()` — so existing callers (`var-lsp`
+  store, the website step-highlight helper) keep working unchanged.
+- The seam is verified by injecting a fake scanner in a unit test. A future
+  `tsgo-wasm` scanner implements the same interface for the browser worker.
 
 ### Website — the browser edge
 
@@ -133,11 +159,15 @@ and the outer layers are validated against stubs before the inner ones exist:
    move the existing `node:fs` logic into a Node adapter. Verify: unit tests
    against a fake in-memory `FileSystem`; the existing Node/CLI LSP behaviour is
    unchanged.
-4. **Wire real handlers in the worker over an in-memory `FileSystem`.** Replace
+4. **`StepDefScanner` port in `var-language`.** Extract the `typescript` parser
+   behind an injectable port; `buildWorkspaceIndex` defaults to it. Verify: unit
+   test with a fake scanner; existing callers unchanged.
+5. **Wire real handlers in the worker over an in-memory `FileSystem`.** Replace
    the minimal server with `registerHandlers` using a `Map`-backed FS seeded
-   with the demo files. Verify: live diagnostics appear in the Editor (the
-   Phase A proof), no IndexedDB yet.
-5. **IndexedDB `FileSystem` adapter + write-through persistence.** Swap the
+   with the demo files (the default `typescript` scanner runs in the worker).
+   Verify: live diagnostics appear in the Editor (the Phase A proof), no
+   IndexedDB yet.
+6. **IndexedDB `FileSystem` adapter + write-through persistence.** Swap the
    `Map` FS for IndexedDB; `didChange` writes through; seed on first run. Verify:
    content persists across reload and diagnostics still update.
 
