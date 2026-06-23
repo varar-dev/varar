@@ -1,0 +1,151 @@
+---
+interface Props {
+  filename: string
+}
+
+const { filename } = Astro.props
+
+// Split the name from its (possibly multi-dot) extension so ".var.md" reads
+// as a single highlighted unit, e.g. "hello" + ".var.md".
+const dot = filename.indexOf('.')
+const name = dot === -1 ? filename : filename.slice(0, dot)
+const ext = dot === -1 ? '' : filename.slice(dot)
+
+// The file's source is the default slot. Author it as a raw string child —
+// `<FileEditor filename="…">{`line one\nline two`}</FileEditor>` — so MDX
+// passes the text through verbatim instead of compiling it to HTML. The
+// rendered slot is already HTML-escaped, so we emit it with `set:html` and
+// derive the gutter from its line count.
+const body = (await Astro.slots.render('default')).replace(/^\n+/, '').replace(/\n+$/, '')
+const gutter = body.split('\n').map((_, i) => i + 1).join('\n')
+---
+
+<figure class="file-editor">
+  <figcaption class="fe-bar">
+    <span class="fe-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+    <span class="fe-name">{name}<span class="fe-ext">{ext}</span></span>
+  </figcaption>
+  <div class="fe-body">
+    <pre class="fe-gutter" aria-hidden="true">{gutter}</pre>
+    <pre class="fe-code"><code set:html={body}></code></pre>
+  </div>
+</figure>
+
+<style>
+  .file-editor {
+    margin: 28px 0;
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-5);
+    overflow: hidden;
+    background: var(--ink);
+    box-shadow: 6px 6px 0 0 var(--ink);
+    transition:
+      transform 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+
+  .file-editor:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 9px 9px 0 0 var(--ink);
+  }
+
+  .fe-bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 9px 16px;
+    background: var(--yellow);
+    border-bottom: 2px solid var(--ink);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+
+  .fe-dots {
+    display: inline-flex;
+    gap: 7px;
+  }
+
+  .fe-dots i {
+    display: block;
+    width: 12px;
+    height: 12px;
+    border: 1.5px solid var(--ink);
+    border-radius: 50%;
+  }
+
+  .fe-dots i:nth-child(1) {
+    background: var(--accent);
+  }
+  .fe-dots i:nth-child(2) {
+    background: var(--orange);
+  }
+  .fe-dots i:nth-child(3) {
+    background: var(--cream);
+  }
+
+  .fe-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: 0.01em;
+  }
+
+  .fe-ext {
+    color: var(--accent);
+  }
+
+  .fe-body {
+    display: flex;
+    align-items: stretch;
+    background: var(--ink);
+  }
+
+  .fe-gutter,
+  .fe-code {
+    margin: 0;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  .fe-gutter {
+    flex: none;
+    padding-left: 16px;
+    padding-right: 14px;
+    text-align: right;
+    color: rgba(250, 245, 233, 0.38);
+    border-right: 1px solid rgba(250, 245, 233, 0.15);
+    user-select: none;
+  }
+
+  .fe-code {
+    flex: 1;
+    min-width: 0;
+    padding-left: 18px;
+    padding-right: 24px;
+    color: var(--cream);
+    overflow-x: auto;
+  }
+
+  .fe-code code {
+    padding: 0;
+    background: none;
+    font-family: inherit;
+    font-size: inherit;
+    color: inherit;
+  }
+
+  @media (max-width: 520px) {
+    .file-editor {
+      box-shadow: 4px 4px 0 0 var(--ink);
+    }
+    .file-editor:hover {
+      transform: none;
+      box-shadow: 4px 4px 0 0 var(--ink);
+    }
+  }
+</style>

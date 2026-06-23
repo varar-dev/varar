@@ -6,7 +6,8 @@ interface Props {
   description?: string
 }
 
-const { title, description } = Astro.props
+// Pages pass props directly; Markdown/MDX pages pass them via `frontmatter`.
+const { title, description } = Astro.props.frontmatter ?? Astro.props
 const fullTitle = `${title} — Vár docs`
 const desc =
   description ??
