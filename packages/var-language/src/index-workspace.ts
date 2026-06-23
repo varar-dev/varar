@@ -7,7 +7,8 @@ import {
   type Registry,
   type ScannerPlugin,
 } from '@oselvar/var'
-import { type Range, type StepDef, discoverParameterTypes, discoverStepDefs } from './step-defs.js'
+import { type Range, type StepDef } from './step-defs.js'
+import { type StepDefScanner, createTypeScriptScanner } from './scanner.js'
 
 export type WorkspaceInput = {
   readonly stepFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>
@@ -15,6 +16,10 @@ export type WorkspaceInput = {
   // Optional: opt-in scanner extensions (e.g. Gherkin tables, Gherkin doc
   // strings) sourced from var.config.ts. Empty/omitted = pure markdown.
   readonly scannerPlugins?: ReadonlyArray<ScannerPlugin>
+  // Optional: inject a custom step-def scanner. Defaults to the TypeScript
+  // compiler-based parser. A lighter browser scanner (e.g. tsgo-wasm) can
+  // implement StepDefScanner and be passed here without any other API change.
+  readonly scanner?: StepDefScanner
 }
 
 export type MatchRef = {
@@ -50,6 +55,7 @@ export type WorkspaceIndex = {
 const EMPTY_HANDLER = (): void => {}
 
 export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
+  const scanner = input.scanner ?? createTypeScriptScanner()
   const stepDefs: StepDef[] = []
   let registry = createRegistry()
 
@@ -57,7 +63,7 @@ export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
   // before compiling any step expressions, otherwise a `step('I fly to {airport}')`
   // discovered in the same file would fail with UndefinedParameterTypeError.
   for (const file of input.stepFiles) {
-    for (const pt of discoverParameterTypes(file.path, file.source)) {
+    for (const pt of scanner.discoverParameterTypes(file.path, file.source)) {
       try {
         registry = defineParameterType(registry, {
           name: pt.name,
@@ -70,7 +76,7 @@ export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
   }
 
   for (const file of input.stepFiles) {
-    const defs = discoverStepDefs(file.path, file.source)
+    const defs = scanner.discoverStepDefs(file.path, file.source)
     for (const def of defs) {
       stepDefs.push(def)
       try {
