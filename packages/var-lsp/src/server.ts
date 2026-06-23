@@ -7,6 +7,7 @@ import {
 } from 'vscode-languageserver'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { buildHandlers } from './handlers.js'
+import { SEMANTIC_LEGEND, semanticTokenData } from './semantic-tokens.js'
 import { type Store, type StoreDeps, createStore } from './store.js'
 import { uriToPath } from './uri.js'
 
@@ -40,7 +41,7 @@ export function registerHandlers(
         // user's invocation (Ctrl+Space) and as they type letters.
         completionProvider: { resolveProvider: false },
         semanticTokensProvider: {
-          legend: { tokenTypes: ['function', 'parameter'], tokenModifiers: [] },
+          legend: { tokenTypes: [...SEMANTIC_LEGEND.tokenTypes], tokenModifiers: [...SEMANTIC_LEGEND.tokenModifiers] },
           full: true,
         },
       },
@@ -153,9 +154,15 @@ export function registerHandlers(
     },
   )
 
-  // STUB (Task 2 replaces this with the real encoder): one function token over
-  // the first 5 chars of the first line, just to prove the client renders.
-  connection.onRequest('textDocument/semanticTokens/full', () => ({ data: [0, 0, 5, 0, 0] }))
+  connection.onRequest(
+    'textDocument/semanticTokens/full',
+    (params: { textDocument: { uri: string } }) => {
+      if (!store) return { data: [] }
+      const uri = params.textDocument.uri
+      const source = documents.get(uri)?.getText() ?? ''
+      return { data: semanticTokenData(store.index().matches, uriToPath(uri), source) }
+    },
+  )
 
   connection.onCompletion((params) => {
     if (!handlers) return []
