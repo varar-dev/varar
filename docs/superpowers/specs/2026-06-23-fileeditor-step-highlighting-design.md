@@ -77,24 +77,41 @@ export function highlightSteps(input: {
 
 ### `packages/website/src/components/FileEditor.astro` (modified)
 
+The component already takes the file's source as its **default slot** (authored
+as a raw template-string child in MDX) and renders it via `set:html` after
+deriving the gutter from the line count. The matching feature adds:
+
 - New optional prop `steps?: ReadonlyArray<{ path: string; source: string }>`.
-- When `steps` is present, the component computes `highlightSteps(...)` and
-  renders the code body from segments: `param` → `<span class="fe-param">`,
-  `step` → `<span class="fe-step">`, `plain` → text. The gutter (line numbers)
-  is generated from the line array exactly as today.
-- When `steps` is absent, renders the plain `<code>` body it does today (other
-  code samples are unaffected).
+- **Raw source recovery.** `Astro.slots.render('default')` returns the body
+  HTML-escaped (`&amp; &lt; &gt; &quot; &#39;`/`&#34;`). The matcher needs the
+  raw `.var.md` text, so the highlight path first decodes those entities back to
+  the raw source. Astro escapes exactly this fixed set, so the decode is a
+  lossless inverse and preserves character offsets.
+- When `steps` is present: `rawSource = decode(body)`, then
+  `highlightSteps({ varPath: filename, source: rawSource, steps })`, then render
+  the code body from segments — `param` → `<span class="fe-param">`, `step` →
+  `<span class="fe-step">`, `plain` → bare text. Segments are emitted as Astro
+  expressions (`{seg.text}`), which auto-escape, so no `set:html` is needed on
+  this path. The gutter is derived from the same line array.
+- When `steps` is absent: unchanged — emits the escaped `body` via `set:html`
+  (other code samples are unaffected).
 - Styling (scoped, using existing CSS variables):
   - `.fe-step` — accent/orange underline (e.g. `text-decoration: underline`,
     `text-decoration-color: var(--accent)`, thick, offset) on matched step text.
   - `.fe-param` — filled chip: `background: var(--accent)`, `color: var(--ink)`,
     small radius, slight horizontal padding.
 
-### `packages/website/src/pages/docs/tutorials/hello-var-your-first-spec.astro` (modified)
+A small pure `decodeEntities(s: string): string` helper (in `step-highlight.ts`)
+reverses the five/six entities Astro emits. It is unit-tested.
+
+### `packages/website/src/pages/docs/tutorials/hello-var-your-first-spec.mdx` (modified)
+
+The page is already MDX and renders `<FileEditor filename="hello.var.md">{` … `}</FileEditor>`.
+This work:
 
 - Adds `import helloSteps from '<relative>/docs/tutorial/steps/01-hello.steps.ts?raw'`.
-- Passes `steps={[{ path: '01-hello.steps.ts', source: helloSteps }]}` to
-  `<FileEditor>` alongside the existing `filename` / `code`.
+- Passes `steps={[{ path: '01-hello.steps.ts', source: helloSteps }]}` to the
+  existing `<FileEditor>` (the body slot is unchanged).
 
 ## Error handling
 
@@ -109,9 +126,9 @@ export function highlightSteps(input: {
   `@oselvar/var-language` test suites; this work does not re-test the engine.
 - Add a focused unit test for the pure `highlightSteps` helper covering:
   single-line step with one param, multiple params on a line, a line with no
-  match (all `plain`), and segment coalescing/nesting (param inside step). This
-  requires a `vitest.config.ts` for the website package so the root workspace
-  picks it up.
+  match (all `plain`), and segment coalescing/nesting (param inside step). Also
+  test `decodeEntities` round-trips the entities Astro emits. This requires a
+  `vitest.config.ts` for the website package so the root workspace picks it up.
 - Build-output verification: after `pnpm --filter @oselvar/website build`, the
   tutorial's `index.html` contains `.fe-step` and `.fe-param` spans wrapping the
   expected substrings, and the page remains script-free (still prerendered).
