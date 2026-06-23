@@ -157,9 +157,15 @@ importers:
       '@codemirror/lsp-client':
         specifier: ^6.0.0
         version: 6.2.5
+      '@oselvar/var':
+        specifier: workspace:*
+        version: link:../var
       '@oselvar/var-language':
         specifier: workspace:*
         version: link:../var-language
+      '@oselvar/var-lsp':
+        specifier: workspace:*
+        version: link:../var-lsp
       codemirror:
         specifier: ^6.0.1
         version: 6.0.2

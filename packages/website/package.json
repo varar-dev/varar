@@ -16,7 +16,9 @@
     "@astrojs/mdx": "^4",
     "@codemirror/lang-markdown": "^6.3.0",
     "@codemirror/lsp-client": "^6.0.0",
+    "@oselvar/var": "workspace:*",
     "@oselvar/var-language": "workspace:*",
+    "@oselvar/var-lsp": "workspace:*",
     "codemirror": "^6.0.1",
     "vscode-languageserver": "^9.0.1"
   }
