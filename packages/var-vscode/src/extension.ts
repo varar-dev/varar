@@ -51,7 +51,7 @@ export function activate(context: ExtensionContext): void {
       { scheme: 'file', pattern: '**/*.steps.ts' },
     ],
   }
-  client = new LanguageClient('oselvar-var', 'oselvar BDD', serverOptions, clientOptions)
+  client = new LanguageClient('oselvar-var', 'Vár', serverOptions, clientOptions)
   const started = client.start()
   registerMatchDecorations(context, client, started)
   registerGenerateStepDefinition(context, client, started)

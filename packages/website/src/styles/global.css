@@ -126,6 +126,13 @@ main {
   color: var(--ink);
 }
 
+.rune {
+  font-size: 2rem;
+  letter-spacing: 0.3em;
+  opacity: 0.7;
+  margin: 8px 0 0;
+}
+
 .pitch {
   display: grid;
   grid-template-columns: 1fr 1fr;

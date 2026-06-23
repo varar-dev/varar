@@ -1,16 +1,16 @@
 ---
 layout: ../../../layouts/Doc.astro
-title: Drive a feature with bididi and an AI agent
+title: Drive a feature with Vár and an AI agent
 description: The per-feature loop once your agent is wired up — talk in customer language, let the agent specify, then iterate on the spec.
 ---
 
-# Drive a feature with bididi and an AI agent
+# Drive a feature with Vár and an AI agent
 
-This is the per-feature working loop once your agent is wired up to use bididi (see [Wire bididi into your AI agent's instructions](wire-bididi-into-agent-instructions)).
+This is the per-feature working loop once your agent is wired up to use Vár (see [Wire Vár into your AI agent's instructions](wire-var-into-agent-instructions)).
 
 ## Before you start
 
-- Bididi installed in the repo.
+- Vár installed in the repo.
 - Agent instructions in place — the agent must already know to write specs first.
 - A clear idea of *what* the feature is, even if the *how* is open.
 
@@ -30,9 +30,9 @@ A correctly instructed agent will create or extend a `*.var.md` file with a conc
 
 If the spec doesn't match what you meant, push back now, not later. "The spec doesn't say what happens when the name is whitespace-only" is a much cheaper conversation than "the code is wrong in production".
 
-### 3. Let the agent run bididi and read the failures
+### 3. Let the agent run Vár and read the failures
 
-The agent should run the bididi suite (via vitest), see the new example fail, and start implementing. You don't need to watch each step. What you do need to watch:
+The agent should run the Vár suite (via vitest), see the new example fail, and start implementing. You don't need to watch each step. What you do need to watch:
 
 - Is the agent editing the spec to make the failure go away? Stop it. That breaks the contract.
 - Is the agent silently changing other specs that previously passed? Stop it. Ask why.
