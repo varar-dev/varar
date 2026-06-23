@@ -7,26 +7,30 @@ import {
 } from 'vscode-languageserver'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { buildHandlers } from './handlers.js'
-import { type Store, createStore } from './store.js'
+import { type Store, type StoreDeps, createStore } from './store.js'
 
 // Keep these re-exports so knip continues to count the workspace deps as used
 // in the build. T6 onward uses them directly.
 export type { StepDef } from '@oselvar/var-language'
 export { loadVarConfig } from '@oselvar/var'
 
-export function registerHandlers(connection: Connection): void {
-  const store = createStore()
-  const handlers = buildHandlers(store)
+export function registerHandlers(
+  connection: Connection,
+  makeDeps: (rootUri?: string) => Promise<StoreDeps>,
+): void {
+  let store: Store | null = null
+  let handlers: ReturnType<typeof buildHandlers> | null = null
   // Track in-memory document content so completion + future cursor-aware
   // features can read the current line without going back to disk.
   const documents = new TextDocuments(TextDocument)
   documents.listen(connection)
 
-  connection.onInitialize((params) => {
+  connection.onInitialize(async (params) => {
     const root = params.workspaceFolders?.[0]?.uri
-    if (root) {
-      void store.reindex(root.replace(/^file:\/\//, '')).then(() => afterReindex())
-    }
+    store = createStore(await makeDeps(root))
+    handlers = buildHandlers(store)
+    await store.reindex()
+    afterReindex()
     return {
       capabilities: {
         textDocumentSync: TextDocumentSyncKind.Incremental,
@@ -39,12 +43,16 @@ export function registerHandlers(connection: Connection): void {
     }
   })
 
-  connection.onDidSaveTextDocument(async () => {
-    await store.reindex(store.workspaceRoot())
+  // Write-through: persist edited docs to the FileSystem, then reindex.
+  documents.onDidChangeContent(async (e) => {
+    if (!store) return
+    await store.fs().write(uriToPath(e.document.uri), e.document.getText())
+    await store.reindex()
     afterReindex()
   })
 
   function afterReindex(): void {
+    if (!store || !handlers) return
     pushDiagnostics(connection, store, handlers)
     // Wake the client so it can refresh editor decorations and any other
     // client-side projections of the workspace index.
@@ -52,6 +60,7 @@ export function registerHandlers(connection: Connection): void {
   }
 
   connection.onHover((params) => {
+    if (!handlers) return null
     const result = handlers.hover({
       uri: params.textDocument.uri,
       position: params.position,
@@ -60,6 +69,7 @@ export function registerHandlers(connection: Connection): void {
   })
 
   connection.onDefinition((params) => {
+    if (!handlers) return []
     const links = handlers.definition({
       uri: params.textDocument.uri,
       position: params.position,
@@ -69,27 +79,34 @@ export function registerHandlers(connection: Connection): void {
 
   // Custom request the client uses to drive editor decorations for matched
   // step ranges. Returns 0-based LSP ranges.
-  connection.onRequest('var/matchRanges', (params: { uri: string }) =>
-    handlers.matchRanges(params.uri),
-  )
+  connection.onRequest('var/matchRanges', (params: { uri: string }) => {
+    if (!handlers) return []
+    return handlers.matchRanges(params.uri)
+  })
 
   // Custom request for selection-driven step-definition generation. The
   // client is responsible for source (the user's selection) and target
   // (the steps file to append to); the server only knows how to translate
   // text → snippet.
-  connection.onRequest('var/generateSnippet', (params: { text: string }) =>
-    handlers.generateSnippet(params.text),
-  )
+  connection.onRequest('var/generateSnippet', (params: { text: string }) => {
+    if (!handlers) return null
+    return handlers.generateSnippet(params.text)
+  })
 
-  connection.onRequest('var/stepGlobs', () => handlers.stepGlobs())
+  connection.onRequest('var/stepGlobs', () => {
+    if (!handlers) return []
+    return handlers.stepGlobs()
+  })
 
   // Resolve everything the Rename refactor needs from a single position —
   // the step def's expression + every matched .var.md site with its current
   // captured values. Returns null when the position isn't on a step.
   connection.onRequest(
     'var/stepAt',
-    (params: { uri: string; position: { line: number; character: number } }) =>
-      handlers.stepAt(params),
+    (params: { uri: string; position: { line: number; character: number } }) => {
+      if (!handlers) return null
+      return handlers.stepAt(params)
+    },
   )
 
   // Drive the cross-file rename. The server resolves the step, derives the
@@ -101,7 +118,10 @@ export function registerHandlers(connection: Connection): void {
       uri: string
       position: { line: number; character: number }
       newName: string
-    }) => handlers.renameStep(params),
+    }) => {
+      if (!handlers) return null
+      return handlers.renameStep(params)
+    },
   )
 
   // Phase 4 path: returns the rename plan (param fates + matches) so the
@@ -113,18 +133,24 @@ export function registerHandlers(connection: Connection): void {
       uri: string
       position: { line: number; character: number }
       newName: string
-    }) => handlers.planRename(params),
+    }) => {
+      if (!handlers) return null
+      return handlers.planRename(params)
+    },
   )
 
   // Render a (new) expression with a list of values into a literal string
   // suitable for splicing into a .var.md document.
   connection.onRequest(
     'var/renderExpressionText',
-    (params: { expression: string; values: ReadonlyArray<string> }) =>
-      handlers.renderExpressionText(params),
+    (params: { expression: string; values: ReadonlyArray<string> }) => {
+      if (!handlers) return null
+      return handlers.renderExpressionText(params)
+    },
   )
 
   connection.onCompletion((params) => {
+    if (!handlers) return []
     const doc = documents.get(params.textDocument.uri)
     const line = doc
       ? doc.getText({
@@ -149,6 +175,10 @@ export function registerHandlers(connection: Connection): void {
       },
     }))
   })
+}
+
+function uriToPath(uri: string): string {
+  return uri.startsWith('file://') ? uri.slice('file://'.length) : uri
 }
 
 function pushDiagnostics(

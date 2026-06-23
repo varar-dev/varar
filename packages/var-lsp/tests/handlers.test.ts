@@ -2,14 +2,24 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { realpathSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { loadVarConfig } from '@oselvar/var'
 import { expect, test } from 'vitest'
 import { buildHandlers } from '../src/handlers.js'
+import { createNodeFileSystem } from '../src/node-file-system.js'
 import { createStore } from '../src/store.js'
 
 function tempWorkspace(setup: (dir: string) => void): { dir: string; cleanup: () => void } {
   const dir = realpathSync(mkdtempSync(join(tmpdir(), 'var-lsp-')))
   setup(dir)
   return { dir, cleanup: () => rmSync(dir, { recursive: true, force: true }) }
+}
+
+async function makeStore(dir: string) {
+  const config = await loadVarConfig(dir)
+  const fs = createNodeFileSystem(dir)
+  const store = createStore({ fs, config })
+  await store.reindex()
+  return store
 }
 
 test('hoverOnMd returns the matching step def expression and source location', async () => {
@@ -23,8 +33,7 @@ test('hoverOnMd returns the matching step def expression and source location', a
     writeFileSync(join(dir, 'b.var.md'), '# B\n\nGiven I have 5 cukes')
   })
   try {
-    const store = createStore()
-    await store.reindex(dir)
+    const store = await makeStore(dir)
     const h = buildHandlers(store)
     // Cursor on line 3, character 12 (somewhere inside "I have 5 cukes")
     const result = h.hover({
@@ -50,8 +59,7 @@ test('definitionFromMd returns the steps.ts location for a matched step', async 
     writeFileSync(join(dir, 'b.var.md'), '# B\n\nGiven I have 5 cukes')
   })
   try {
-    const store = createStore()
-    await store.reindex(dir)
+    const store = await makeStore(dir)
     const h = buildHandlers(store)
     const result = h.definition({
       uri: `file://${join(dir, 'b.var.md')}`,
@@ -87,8 +95,7 @@ step('the greeting is {string}', () => {})
     )
   })
   try {
-    const store = createStore()
-    await store.reindex(dir)
+    const store = await makeStore(dir)
     const h = buildHandlers(store)
     // 0-based: source line 4 is `Then the greeting is "Hello, world!"`, char 18 = "is"
     const result = h.hover({
@@ -117,8 +124,7 @@ step('the greeting is {string}', () => {})
     )
   })
   try {
-    const store = createStore()
-    await store.reindex(dir)
+    const store = await makeStore(dir)
     const h = buildHandlers(store)
     const entries = h.matchRanges(`file://${join(dir, 'b.var.md')}`)
     expect(entries).toHaveLength(2)
@@ -157,8 +163,7 @@ test('stepAt resolves the step from a .var.md match and returns every matched si
     )
   })
   try {
-    const store = createStore()
-    await store.reindex(dir)
+    const store = await makeStore(dir)
     const h = buildHandlers(store)
     // Cursor on line 3 (0-based 2), character 11 — inside the matched range
     // of the .var.md "Given I greet \"world\"" sentence.
@@ -188,8 +193,7 @@ test('stepAt resolves the step from a .ts cucumber-expression literal position',
     writeFileSync(join(dir, 'a.var.md'), '# A\n\nGiven I greet "world"\n')
   })
   try {
-    const store = createStore()
-    await store.reindex(dir)
+    const store = await makeStore(dir)
     const h = buildHandlers(store)
     // 0-based: line 0, character 8 — inside the 'I greet {string}' literal.
     const result = h.stepAt({
@@ -211,8 +215,7 @@ test('stepAt returns null when the cursor is on plain prose, outside any step', 
     writeFileSync(join(dir, 'a.var.md'), '# A\n\nThis is just prose, no step here.\n')
   })
   try {
-    const store = createStore()
-    await store.reindex(dir)
+    const store = await makeStore(dir)
     const h = buildHandlers(store)
     const result = h.stepAt({
       uri: `file://${join(dir, 'a.var.md')}`,
@@ -236,8 +239,7 @@ test('renameStep (literal-only) produces a cascade across the step def + every m
     writeFileSync(join(dir, 'b.var.md'), '# B\n\nWhen I greet "Aslak"\n')
   })
   try {
-    const store = createStore()
-    await store.reindex(dir)
+    const store = await makeStore(dir)
     const h = buildHandlers(store)
     // Cursor on line 0 character 8 of a.steps.ts → inside 'I greet {string}'.
     // The user types the new expression directly.
@@ -270,8 +272,7 @@ test('planRename returns added/removed fates so the client can prompt', async ()
     writeFileSync(join(dir, 'b.var.md'), '# B\n\nWhen I greet "Aslak"\n')
   })
   try {
-    const store = createStore()
-    await store.reindex(dir)
+    const store = await makeStore(dir)
     const h = buildHandlers(store)
     const plan = h.planRename({
       uri: `file://${join(dir, 'a.steps.ts')}`,
@@ -310,8 +311,7 @@ step('I fly to {string}', () => {})
     writeFileSync(join(dir, 'a.var.md'), '# A\n\nGiven I fly to "world"\n')
   })
   try {
-    const store = createStore()
-    await store.reindex(dir)
+    const store = await makeStore(dir)
     const h = buildHandlers(store)
     const plan = h.planRename({
       uri: `file://${join(dir, 'a.steps.ts')}`,
@@ -346,8 +346,7 @@ test('planRename emits a handlerSync that adds a new typed arg when a parameter 
     writeFileSync(join(dir, 'a.var.md'), '# A\n\nGiven I greet "world"\n')
   })
   try {
-    const store = createStore()
-    await store.reindex(dir)
+    const store = await makeStore(dir)
     const h = buildHandlers(store)
     const plan = h.planRename({
       uri: `file://${join(dir, 'a.steps.ts')}`,
@@ -375,8 +374,7 @@ test('planRename emits a handlerSync that drops a removed arg', async () => {
     writeFileSync(join(dir, 'a.var.md'), '# A\n\nGiven I greet "world" loudly\n')
   })
   try {
-    const store = createStore()
-    await store.reindex(dir)
+    const store = await makeStore(dir)
     const h = buildHandlers(store)
     const plan = h.planRename({
       uri: `file://${join(dir, 'a.steps.ts')}`,
@@ -403,8 +401,7 @@ step('I fly to {string}', (ctx, name: string) => {})
     writeFileSync(join(dir, 'a.var.md'), '# A\n\nGiven I fly to "world"\n')
   })
   try {
-    const store = createStore()
-    await store.reindex(dir)
+    const store = await makeStore(dir)
     const h = buildHandlers(store)
     const plan = h.planRename({
       uri: `file://${join(dir, 'a.steps.ts')}`,
@@ -431,8 +428,7 @@ test('renderExpressionText rebuilds a sentence from an expression + captured val
     )
   })
   try {
-    const store = createStore()
-    await store.reindex(dir)
+    const store = await makeStore(dir)
     const h = buildHandlers(store)
     const rendered = h.renderExpressionText({
       expression: 'I drive from {airport} to {airport}',
@@ -457,8 +453,7 @@ test('renameStep refuses when a parameter is added (Phase 4 territory)', async (
     writeFileSync(join(dir, 'a.var.md'), '# A\n\nGiven I greet "world"\n')
   })
   try {
-    const store = createStore()
-    await store.reindex(dir)
+    const store = await makeStore(dir)
     const h = buildHandlers(store)
     const result = h.renameStep({
       uri: `file://${join(dir, 'a.steps.ts')}`,
@@ -484,8 +479,7 @@ test('renameStep from a .var.md uses CucumberExpressionGenerator on the new sent
     writeFileSync(join(dir, 'a.var.md'), '# A\n\nGiven I greet "world"\n')
   })
   try {
-    const store = createStore()
-    await store.reindex(dir)
+    const store = await makeStore(dir)
     const h = buildHandlers(store)
     // The user F2'd in a.var.md and typed a new sentence.
     const result = h.renameStep({
@@ -513,8 +507,7 @@ step('I greet {string}', () => {})
     )
   })
   try {
-    const store = createStore()
-    await store.reindex(dir)
+    const store = await makeStore(dir)
     const h = buildHandlers(store)
     const items = h.completions({
       uri: `file://${join(dir, 'b.var.md')}`,
@@ -543,8 +536,7 @@ test('completions: replace range starts at the first non-whitespace of the line 
     )
   })
   try {
-    const store = createStore()
-    await store.reindex(dir)
+    const store = await makeStore(dir)
     const h = buildHandlers(store)
     // The line is indented by two spaces (e.g. inside a list item). The
     // replace range should start AT the first non-whitespace character; any
@@ -574,8 +566,7 @@ step('I fly to {airport}', () => {})
     )
   })
   try {
-    const store = createStore()
-    await store.reindex(dir)
+    const store = await makeStore(dir)
     const h = buildHandlers(store)
     const items = h.completions({
       uri: `file://${join(dir, 'b.var.md')}`,
@@ -598,8 +589,7 @@ test('completions: returns nothing for non-.var.md files', async () => {
     )
   })
   try {
-    const store = createStore()
-    await store.reindex(dir)
+    const store = await makeStore(dir)
     const h = buildHandlers(store)
     const items = h.completions({
       uri: `file://${join(dir, 'a.steps.ts')}`,
@@ -617,8 +607,7 @@ test('generateSnippet turns selected text into a step-definition stub (verbatim,
     writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
   })
   try {
-    const store = createStore()
-    await store.reindex(dir)
+    const store = await makeStore(dir)
     const h = buildHandlers(store)
     const snippet = h.generateSnippet('Given I greet "world"')
     // No Given/When/Then heuristics — the selection IS the expression.
@@ -636,8 +625,7 @@ test('diagnosticsFor does NOT emit anything for a keyword-led but unmatched sent
     writeFileSync(join(dir, 'b.var.md'), '# B\n\nGiven I have 5 cukes')
   })
   try {
-    const store = createStore()
-    await store.reindex(dir)
+    const store = await makeStore(dir)
     const h = buildHandlers(store)
     const diags = h.diagnosticsFor(`file://${join(dir, 'b.var.md')}`)
     expect(diags).toEqual([])

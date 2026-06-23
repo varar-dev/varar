@@ -147,7 +147,7 @@ export function buildHandlers(store: Store): Handlers {
     hover({ uri, position }) {
       const m = findMatchAt(store, uri, position)
       if (!m) return null
-      const contents = `Matched by \`step('${m.stepDef.expression}')\` at ${relative(m.stepDef.file, store.workspaceRoot())}:${m.stepDef.expressionRange.start.line}`
+      const contents = `Matched by \`step('${m.stepDef.expression}')\` at ${m.stepDef.file}:${m.stepDef.expressionRange.start.line}`
       return { contents }
     },
     definition({ uri, position }) {
@@ -604,9 +604,6 @@ function uriToPath(uri: string): string {
   return uri.startsWith('file://') ? fileURLToPath(uri) : uri
 }
 
-function relative(file: string, root: string): string {
-  return file.startsWith(root) ? file.slice(root.length).replace(/^\//, '') : file
-}
 
 function toLspRange(range: { start: Position; end: Position }): Range {
   return {
