@@ -13,7 +13,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const SRC = join(ROOT, 'packages', 'bdd-vscode')
+const SRC = join(ROOT, 'packages', 'var-vscode')
 const NAME = 'oselvar.oselvar-var-0.0.0'
 const TARGETS = [
   join(homedir(), '.vscode', 'extensions', NAME),
