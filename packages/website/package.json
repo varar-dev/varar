@@ -15,7 +15,9 @@
   "dependencies": {
     "@astrojs/mdx": "^4",
     "@codemirror/lang-markdown": "^6.3.0",
+    "@codemirror/lsp-client": "^6.0.0",
     "@oselvar/var-language": "workspace:*",
-    "codemirror": "^6.0.1"
+    "codemirror": "^6.0.1",
+    "vscode-languageserver": "^9.0.1"
   }
 }
