@@ -6,22 +6,22 @@ import {
   plan,
   type Registry,
   type ScannerPlugin,
-} from '@oselvar/bdd'
+} from '@oselvar/var'
 import { type Range, type StepDef, discoverParameterTypes, discoverStepDefs } from './step-defs.js'
 
 export type WorkspaceInput = {
   readonly stepFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>
-  readonly bddFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>
+  readonly varFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>
   // Optional: opt-in scanner extensions (e.g. Gherkin tables, Gherkin doc
-  // strings) sourced from bdd.config.ts. Empty/omitted = pure markdown.
+  // strings) sourced from var.config.ts. Empty/omitted = pure markdown.
   readonly scannerPlugins?: ReadonlyArray<ScannerPlugin>
 }
 
 export type MatchRef = {
-  readonly bddPath: string
+  readonly varPath: string
   readonly range: Range
   readonly paramRanges: ReadonlyArray<Range>
-  // The captured value for each parameter, sliced from the .bdd.md source at
+  // The captured value for each parameter, sliced from the .var.md source at
   // index time. Same order as `paramRanges` and the cucumber expression's
   // parameter list. Used by the rename refactor to preserve values across
   // expressions whose parameter list survives the edit.
@@ -30,7 +30,7 @@ export type MatchRef = {
 }
 
 export type DiagnosticRef = {
-  readonly bddPath: string
+  readonly varPath: string
   readonly code: string
   readonly severity: 'error' | 'warning'
   readonly message: string
@@ -90,9 +90,9 @@ export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
   const matches: MatchRef[] = []
   const diagnostics: DiagnosticRef[] = []
 
-  for (const file of input.bddFiles) {
-    const bdd = parse(file.path, file.source, input.scannerPlugins ?? [])
-    const result = plan(bdd, registry)
+  for (const file of input.varFiles) {
+    const varDoc = parse(file.path, file.source, input.scannerPlugins ?? [])
+    const result = plan(varDoc, registry)
     for (const ex of result.examples) {
       for (const step of ex.steps) {
         const def = stepDefs.find(
@@ -102,7 +102,7 @@ export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
         )
         if (!def) continue
         matches.push({
-          bddPath: file.path,
+          varPath: file.path,
           range: toRange(step.matchSpan),
           paramRanges: step.paramSpans.map(toRange),
           paramValues: step.paramSpans.map((s) => file.source.slice(s.startOffset, s.endOffset)),
@@ -112,7 +112,7 @@ export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
     }
     for (const d of result.diagnostics) {
       diagnostics.push({
-        bddPath: file.path,
+        varPath: file.path,
         code: d.code,
         severity: d.severity,
         message: d.message,

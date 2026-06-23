@@ -1,41 +1,41 @@
 import { describe, expect, test } from 'vitest'
-import { bddVitestPlugin, generateVirtualModule } from '../src/plugin.js'
+import { varVitestPlugin, generateVirtualModule } from '../src/plugin.js'
 
 describe('generateVirtualModule', () => {
-  test('produces TS that imports runtime, step files, and invokes runBddSource', () => {
+  test('produces TS that imports runtime, step files, and invokes runVarSource', () => {
     const out = generateVirtualModule({
-      bddPath: '/abs/foo.bdd.md',
+      varPath: '/abs/foo.var.md',
       stepImports: ['/abs/account.steps.ts'],
     })
     expect(out).toContain("import { test as vitestTest } from 'vitest'")
-    expect(out).toContain("import { runBddSource } from '@oselvar/bdd-vitest/runtime'")
+    expect(out).toContain("import { runVarSource } from '@oselvar/var-vitest/runtime'")
     expect(out).toContain('import "/abs/account.steps.ts"')
-    expect(out).toContain('runBddSource(SOURCE, "/abs/foo.bdd.md",')
-    expect(out).toContain('scannerPlugins: bddConfig?.scannerPlugins ?? []')
+    expect(out).toContain('runVarSource(SOURCE, "/abs/foo.var.md",')
+    expect(out).toContain('scannerPlugins: varConfig?.scannerPlugins ?? []')
   })
 
-  test('imports bdd.config.ts when configPath is provided so scannerPlugins reach the runtime', () => {
+  test('imports var.config.ts when configPath is provided so scannerPlugins reach the runtime', () => {
     const out = generateVirtualModule({
-      bddPath: '/abs/foo.bdd.md',
+      varPath: '/abs/foo.var.md',
       stepImports: [],
-      configPath: '/abs/bdd.config.ts',
+      configPath: '/abs/var.config.ts',
     })
-    expect(out).toContain('import bddConfig from "/abs/bdd.config.ts"')
+    expect(out).toContain('import varConfig from "/abs/var.config.ts"')
   })
 
-  test('falls back to an empty bddConfig when no bdd.config.ts is found', () => {
+  test('falls back to an empty varConfig when no var.config.ts is found', () => {
     const out = generateVirtualModule({
-      bddPath: '/abs/foo.bdd.md',
+      varPath: '/abs/foo.var.md',
       stepImports: [],
     })
-    expect(out).toContain('const bddConfig = {}')
+    expect(out).toContain('const varConfig = {}')
   })
 })
 
-describe('bddVitestPlugin', () => {
+describe('varVitestPlugin', () => {
   test('returns a vite plugin object with name and resolveId/load hooks', () => {
-    const plugin = bddVitestPlugin()
-    expect(plugin.name).toBe('@oselvar/bdd-vitest')
+    const plugin = varVitestPlugin()
+    expect(plugin.name).toBe('@oselvar/var-vitest')
     expect(typeof plugin.load).toBe('function')
   })
 })

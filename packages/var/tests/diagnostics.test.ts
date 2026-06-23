@@ -35,5 +35,5 @@ test('missingStep diagnostic includes a paste-ready snippet', () => {
   expect(diag.code).toBe('missing-step')
   expect(diag.message).toContain('Step missing')
   expect(diag.message).toContain("step('I have {int} cukes', ")
-  expect(diag.message).toContain('bdd stepdef "Given I have 5 cukes"')
+  expect(diag.message).toContain('var stepdef "Given I have 5 cukes"')
 })

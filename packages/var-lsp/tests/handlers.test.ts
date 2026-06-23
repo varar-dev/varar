@@ -7,20 +7,20 @@ import { buildHandlers } from '../src/handlers.js'
 import { createStore } from '../src/store.js'
 
 function tempWorkspace(setup: (dir: string) => void): { dir: string; cleanup: () => void } {
-  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'bdd-lsp-')))
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'var-lsp-')))
   setup(dir)
   return { dir, cleanup: () => rmSync(dir, { recursive: true, force: true }) }
 }
 
 test('hoverOnMd returns the matching step def expression and source location', async () => {
   const { dir, cleanup } = tempWorkspace((dir) => {
-    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
     writeFileSync(
       join(dir, 'a.steps.ts'),
       `step('I have {int} cukes', () => {})
 `,
     )
-    writeFileSync(join(dir, 'b.bdd.md'), '# B\n\nGiven I have 5 cukes')
+    writeFileSync(join(dir, 'b.var.md'), '# B\n\nGiven I have 5 cukes')
   })
   try {
     const store = createStore()
@@ -28,7 +28,7 @@ test('hoverOnMd returns the matching step def expression and source location', a
     const h = buildHandlers(store)
     // Cursor on line 3, character 12 (somewhere inside "I have 5 cukes")
     const result = h.hover({
-      uri: `file://${join(dir, 'b.bdd.md')}`,
+      uri: `file://${join(dir, 'b.var.md')}`,
       // 0-based: source line 3 (Given) → LSP line 2
       position: { line: 2, character: 11 },
     })
@@ -41,20 +41,20 @@ test('hoverOnMd returns the matching step def expression and source location', a
 
 test('definitionFromMd returns the steps.ts location for a matched step', async () => {
   const { dir, cleanup } = tempWorkspace((dir) => {
-    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
     writeFileSync(
       join(dir, 'a.steps.ts'),
       `step('I have {int} cukes', () => {})
 `,
     )
-    writeFileSync(join(dir, 'b.bdd.md'), '# B\n\nGiven I have 5 cukes')
+    writeFileSync(join(dir, 'b.var.md'), '# B\n\nGiven I have 5 cukes')
   })
   try {
     const store = createStore()
     await store.reindex(dir)
     const h = buildHandlers(store)
     const result = h.definition({
-      uri: `file://${join(dir, 'b.bdd.md')}`,
+      uri: `file://${join(dir, 'b.var.md')}`,
       // 0-based: source line 3 (Given) → LSP line 2
       position: { line: 2, character: 11 },
     })
@@ -74,7 +74,7 @@ test('definitionFromMd returns the steps.ts location for a matched step', async 
 
 test('hover on the second of two adjacent steps returns the second step (off-by-one regression)', async () => {
   const { dir, cleanup } = tempWorkspace((dir) => {
-    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
     writeFileSync(
       join(dir, 'a.steps.ts'),
       `step('I greet {string}', () => {})
@@ -82,7 +82,7 @@ step('the greeting is {string}', () => {})
 `,
     )
     writeFileSync(
-      join(dir, 'b.bdd.md'),
+      join(dir, 'b.var.md'),
       '# B\n\nGiven I greet "world"\nThen the greeting is "Hello, world!"\n',
     )
   })
@@ -92,7 +92,7 @@ step('the greeting is {string}', () => {})
     const h = buildHandlers(store)
     // 0-based: source line 4 is `Then the greeting is "Hello, world!"`, char 18 = "is"
     const result = h.hover({
-      uri: `file://${join(dir, 'b.bdd.md')}`,
+      uri: `file://${join(dir, 'b.var.md')}`,
       position: { line: 3, character: 18 },
     })
     expect(result?.contents).toMatch(/the greeting is \{string\}/)
@@ -102,9 +102,9 @@ step('the greeting is {string}', () => {})
   }
 })
 
-test('matchRanges returns 0-based ranges plus per-param ranges for a .bdd.md', async () => {
+test('matchRanges returns 0-based ranges plus per-param ranges for a .var.md', async () => {
   const { dir, cleanup } = tempWorkspace((dir) => {
-    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
     writeFileSync(
       join(dir, 'a.steps.ts'),
       `step('I greet {string}', () => {})
@@ -112,7 +112,7 @@ step('the greeting is {string}', () => {})
 `,
     )
     writeFileSync(
-      join(dir, 'b.bdd.md'),
+      join(dir, 'b.var.md'),
       '# B\n\nGiven I greet "world"\nThen the greeting is "Hello, world!"\n',
     )
   })
@@ -120,7 +120,7 @@ step('the greeting is {string}', () => {})
     const store = createStore()
     await store.reindex(dir)
     const h = buildHandlers(store)
-    const entries = h.matchRanges(`file://${join(dir, 'b.bdd.md')}`)
+    const entries = h.matchRanges(`file://${join(dir, 'b.var.md')}`)
     expect(entries).toHaveLength(2)
     expect(entries[0]!.range.start.line).toBe(2)
     expect(entries[1]!.range.start.line).toBe(3)
@@ -139,20 +139,20 @@ step('the greeting is {string}', () => {})
   }
 })
 
-test('stepAt resolves the step from a .bdd.md match and returns every matched site with values', async () => {
+test('stepAt resolves the step from a .var.md match and returns every matched site with values', async () => {
   const { dir, cleanup } = tempWorkspace((dir) => {
-    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
     writeFileSync(
       join(dir, 'a.steps.ts'),
       `step('I greet {string}', () => {})
 `,
     )
     writeFileSync(
-      join(dir, 'a.bdd.md'),
+      join(dir, 'a.var.md'),
       '# A\n\nGiven I greet "world"\n',
     )
     writeFileSync(
-      join(dir, 'b.bdd.md'),
+      join(dir, 'b.var.md'),
       '# B\n\nWhen I greet "Aslak"\n',
     )
   })
@@ -161,9 +161,9 @@ test('stepAt resolves the step from a .bdd.md match and returns every matched si
     await store.reindex(dir)
     const h = buildHandlers(store)
     // Cursor on line 3 (0-based 2), character 11 — inside the matched range
-    // of the .bdd.md "Given I greet \"world\"" sentence.
+    // of the .var.md "Given I greet \"world\"" sentence.
     const result = h.stepAt({
-      uri: `file://${join(dir, 'a.bdd.md')}`,
+      uri: `file://${join(dir, 'a.var.md')}`,
       position: { line: 2, character: 11 },
     })
     expect(result).not.toBeNull()
@@ -179,13 +179,13 @@ test('stepAt resolves the step from a .bdd.md match and returns every matched si
 
 test('stepAt resolves the step from a .ts cucumber-expression literal position', async () => {
   const { dir, cleanup } = tempWorkspace((dir) => {
-    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
     writeFileSync(
       join(dir, 'a.steps.ts'),
       `step('I greet {string}', () => {})
 `,
     )
-    writeFileSync(join(dir, 'a.bdd.md'), '# A\n\nGiven I greet "world"\n')
+    writeFileSync(join(dir, 'a.var.md'), '# A\n\nGiven I greet "world"\n')
   })
   try {
     const store = createStore()
@@ -207,15 +207,15 @@ test('stepAt resolves the step from a .ts cucumber-expression literal position',
 
 test('stepAt returns null when the cursor is on plain prose, outside any step', async () => {
   const { dir, cleanup } = tempWorkspace((dir) => {
-    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
-    writeFileSync(join(dir, 'a.bdd.md'), '# A\n\nThis is just prose, no step here.\n')
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'a.var.md'), '# A\n\nThis is just prose, no step here.\n')
   })
   try {
     const store = createStore()
     await store.reindex(dir)
     const h = buildHandlers(store)
     const result = h.stepAt({
-      uri: `file://${join(dir, 'a.bdd.md')}`,
+      uri: `file://${join(dir, 'a.var.md')}`,
       position: { line: 2, character: 5 },
     })
     expect(result).toBeNull()
@@ -226,14 +226,14 @@ test('stepAt returns null when the cursor is on plain prose, outside any step', 
 
 test('renameStep (literal-only) produces a cascade across the step def + every match site', async () => {
   const { dir, cleanup } = tempWorkspace((dir) => {
-    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
     writeFileSync(
       join(dir, 'a.steps.ts'),
       `step('I greet {string}', () => {})
 `,
     )
-    writeFileSync(join(dir, 'a.bdd.md'), '# A\n\nGiven I greet "world"\n')
-    writeFileSync(join(dir, 'b.bdd.md'), '# B\n\nWhen I greet "Aslak"\n')
+    writeFileSync(join(dir, 'a.var.md'), '# A\n\nGiven I greet "world"\n')
+    writeFileSync(join(dir, 'b.var.md'), '# B\n\nWhen I greet "Aslak"\n')
   })
   try {
     const store = createStore()
@@ -260,14 +260,14 @@ test('renameStep (literal-only) produces a cascade across the step def + every m
 
 test('planRename returns added/removed fates so the client can prompt', async () => {
   const { dir, cleanup } = tempWorkspace((dir) => {
-    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
     writeFileSync(
       join(dir, 'a.steps.ts'),
       `step('I greet {string}', () => {})
 `,
     )
-    writeFileSync(join(dir, 'a.bdd.md'), '# A\n\nGiven I greet "world"\n')
-    writeFileSync(join(dir, 'b.bdd.md'), '# B\n\nWhen I greet "Aslak"\n')
+    writeFileSync(join(dir, 'a.var.md'), '# A\n\nGiven I greet "world"\n')
+    writeFileSync(join(dir, 'b.var.md'), '# B\n\nWhen I greet "Aslak"\n')
   })
   try {
     const store = createStore()
@@ -300,14 +300,14 @@ test('planRename returns added/removed fates so the client can prompt', async ()
 
 test('planRename surfaces a type change as kept + nameUnchanged:false (the client prompts for the new value)', async () => {
   const { dir, cleanup } = tempWorkspace((dir) => {
-    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
     writeFileSync(
       join(dir, 'a.steps.ts'),
       `defineParameterType({ name: 'airport', regexp: /[A-Z]{3}/ })
 step('I fly to {string}', () => {})
 `,
     )
-    writeFileSync(join(dir, 'a.bdd.md'), '# A\n\nGiven I fly to "world"\n')
+    writeFileSync(join(dir, 'a.var.md'), '# A\n\nGiven I fly to "world"\n')
   })
   try {
     const store = createStore()
@@ -337,13 +337,13 @@ step('I fly to {string}', () => {})
 
 test('planRename emits a handlerSync that adds a new typed arg when a parameter is added', async () => {
   const { dir, cleanup } = tempWorkspace((dir) => {
-    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
     writeFileSync(
       join(dir, 'a.steps.ts'),
       `step('I greet {string}', (ctx, name: string) => {})
 `,
     )
-    writeFileSync(join(dir, 'a.bdd.md'), '# A\n\nGiven I greet "world"\n')
+    writeFileSync(join(dir, 'a.var.md'), '# A\n\nGiven I greet "world"\n')
   })
   try {
     const store = createStore()
@@ -366,13 +366,13 @@ test('planRename emits a handlerSync that adds a new typed arg when a parameter 
 
 test('planRename emits a handlerSync that drops a removed arg', async () => {
   const { dir, cleanup } = tempWorkspace((dir) => {
-    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
     writeFileSync(
       join(dir, 'a.steps.ts'),
       `step('I greet {string} loudly', (ctx, name: string) => {})
 `,
     )
-    writeFileSync(join(dir, 'a.bdd.md'), '# A\n\nGiven I greet "world" loudly\n')
+    writeFileSync(join(dir, 'a.var.md'), '# A\n\nGiven I greet "world" loudly\n')
   })
   try {
     const store = createStore()
@@ -393,14 +393,14 @@ test('planRename emits a handlerSync that drops a removed arg', async () => {
 
 test('planRename emits a handlerSync that swaps the TS type when a param type changes', async () => {
   const { dir, cleanup } = tempWorkspace((dir) => {
-    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
     writeFileSync(
       join(dir, 'a.steps.ts'),
       `defineParameterType({ name: 'airport', regexp: /[A-Z]{3}/ })
 step('I fly to {string}', (ctx, name: string) => {})
 `,
     )
-    writeFileSync(join(dir, 'a.bdd.md'), '# A\n\nGiven I fly to "world"\n')
+    writeFileSync(join(dir, 'a.var.md'), '# A\n\nGiven I fly to "world"\n')
   })
   try {
     const store = createStore()
@@ -423,7 +423,7 @@ step('I fly to {string}', (ctx, name: string) => {})
 
 test('renderExpressionText rebuilds a sentence from an expression + captured values', async () => {
   const { dir, cleanup } = tempWorkspace((dir) => {
-    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
     writeFileSync(
       join(dir, 'a.steps.ts'),
       `defineParameterType({ name: 'airport', regexp: /[A-Z]{3}/ })
@@ -448,13 +448,13 @@ test('renderExpressionText rebuilds a sentence from an expression + captured val
 
 test('renameStep refuses when a parameter is added (Phase 4 territory)', async () => {
   const { dir, cleanup } = tempWorkspace((dir) => {
-    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
     writeFileSync(
       join(dir, 'a.steps.ts'),
       `step('I greet {string}', () => {})
 `,
     )
-    writeFileSync(join(dir, 'a.bdd.md'), '# A\n\nGiven I greet "world"\n')
+    writeFileSync(join(dir, 'a.var.md'), '# A\n\nGiven I greet "world"\n')
   })
   try {
     const store = createStore()
@@ -473,23 +473,23 @@ test('renameStep refuses when a parameter is added (Phase 4 territory)', async (
   }
 })
 
-test('renameStep from a .bdd.md uses CucumberExpressionGenerator on the new sentence', async () => {
+test('renameStep from a .var.md uses CucumberExpressionGenerator on the new sentence', async () => {
   const { dir, cleanup } = tempWorkspace((dir) => {
-    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
     writeFileSync(
       join(dir, 'a.steps.ts'),
       `step('I greet {string}', () => {})
 `,
     )
-    writeFileSync(join(dir, 'a.bdd.md'), '# A\n\nGiven I greet "world"\n')
+    writeFileSync(join(dir, 'a.var.md'), '# A\n\nGiven I greet "world"\n')
   })
   try {
     const store = createStore()
     await store.reindex(dir)
     const h = buildHandlers(store)
-    // The user F2'd in a.bdd.md and typed a new sentence.
+    // The user F2'd in a.var.md and typed a new sentence.
     const result = h.renameStep({
-      uri: `file://${join(dir, 'a.bdd.md')}`,
+      uri: `file://${join(dir, 'a.var.md')}`,
       position: { line: 2, character: 11 },
       newName: 'I welcome "world"',
     })
@@ -504,7 +504,7 @@ test('renameStep from a .bdd.md uses CucumberExpressionGenerator on the new sent
 
 test('completions: returns a snippet item per registered step, replacing from line start when no keyword is present', async () => {
   const { dir, cleanup } = tempWorkspace((dir) => {
-    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
     writeFileSync(
       join(dir, 'a.steps.ts'),
       `step('I have {int} cukes', () => {})
@@ -517,7 +517,7 @@ step('I greet {string}', () => {})
     await store.reindex(dir)
     const h = buildHandlers(store)
     const items = h.completions({
-      uri: `file://${join(dir, 'b.bdd.md')}`,
+      uri: `file://${join(dir, 'b.var.md')}`,
       position: { line: 2, character: 5 },
       linePrefix: 'I gr',
     })
@@ -535,7 +535,7 @@ step('I greet {string}', () => {})
 
 test('completions: replace range starts at the first non-whitespace of the line (no keyword sniffing)', async () => {
   const { dir, cleanup } = tempWorkspace((dir) => {
-    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
     writeFileSync(
       join(dir, 'a.steps.ts'),
       `step('I greet {string}', () => {})
@@ -551,7 +551,7 @@ test('completions: replace range starts at the first non-whitespace of the line 
     // leading "Given" / "When" etc. gets replaced too — the user owns the
     // narration around the snippet.
     const items = h.completions({
-      uri: `file://${join(dir, 'b.bdd.md')}`,
+      uri: `file://${join(dir, 'b.var.md')}`,
       position: { line: 2, character: 12 },
       linePrefix: '  Given I gr',
     })
@@ -565,7 +565,7 @@ test('completions: replace range starts at the first non-whitespace of the line 
 
 test('completions: a custom {airport} type uses its name as the placeholder', async () => {
   const { dir, cleanup } = tempWorkspace((dir) => {
-    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
     writeFileSync(
       join(dir, 'a.steps.ts'),
       `defineParameterType({ name: 'airport', regexp: /[A-Z]{3}/ })
@@ -578,7 +578,7 @@ step('I fly to {airport}', () => {})
     await store.reindex(dir)
     const h = buildHandlers(store)
     const items = h.completions({
-      uri: `file://${join(dir, 'b.bdd.md')}`,
+      uri: `file://${join(dir, 'b.var.md')}`,
       position: { line: 0, character: 0 },
       linePrefix: '',
     })
@@ -588,9 +588,9 @@ step('I fly to {airport}', () => {})
   }
 })
 
-test('completions: returns nothing for non-.bdd.md files', async () => {
+test('completions: returns nothing for non-.var.md files', async () => {
   const { dir, cleanup } = tempWorkspace((dir) => {
-    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
     writeFileSync(
       join(dir, 'a.steps.ts'),
       `step('I greet {string}', () => {})
@@ -614,7 +614,7 @@ test('completions: returns nothing for non-.bdd.md files', async () => {
 
 test('generateSnippet turns selected text into a step-definition stub (verbatim, no keyword strip)', async () => {
   const { dir, cleanup } = tempWorkspace((dir) => {
-    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
   })
   try {
     const store = createStore()
@@ -632,14 +632,14 @@ test('generateSnippet turns selected text into a step-definition stub (verbatim,
 test('diagnosticsFor does NOT emit anything for a keyword-led but unmatched sentence', async () => {
   // No Given/When/Then heuristic — step-def generation is selection-driven.
   const { dir, cleanup } = tempWorkspace((dir) => {
-    writeFileSync(join(dir, 'bdd.config.ts'), 'export default {}\n')
-    writeFileSync(join(dir, 'b.bdd.md'), '# B\n\nGiven I have 5 cukes')
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'b.var.md'), '# B\n\nGiven I have 5 cukes')
   })
   try {
     const store = createStore()
     await store.reindex(dir)
     const h = buildHandlers(store)
-    const diags = h.diagnosticsFor(`file://${join(dir, 'b.bdd.md')}`)
+    const diags = h.diagnosticsFor(`file://${join(dir, 'b.var.md')}`)
     expect(diags).toEqual([])
   } finally {
     cleanup()

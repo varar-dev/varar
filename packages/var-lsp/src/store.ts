@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { glob as nativeGlob } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { DEFAULT_SNIPPET_TEMPLATE, createRegistry, loadBddConfig } from '@oselvar/bdd'
-import { type WorkspaceIndex, buildWorkspaceIndex } from '@oselvar/bdd-language'
+import { DEFAULT_SNIPPET_TEMPLATE, createRegistry, loadVarConfig } from '@oselvar/var'
+import { type WorkspaceIndex, buildWorkspaceIndex } from '@oselvar/var-language'
 
 export type Store = {
   reindex(workspaceRoot: string): Promise<void>
@@ -25,22 +25,22 @@ export function createStore(): Store {
   return {
     async reindex(workspaceRoot: string) {
       root = workspaceRoot
-      const cfg = await loadBddConfig(workspaceRoot)
+      const cfg = await loadVarConfig(workspaceRoot)
       snippet = cfg.snippet.template
       steps = cfg.steps
       const stepPaths = await findFiles(workspaceRoot, cfg.steps)
-      const bddPaths = await findFiles(workspaceRoot, cfg.bdds)
+      const varPaths = await findFiles(workspaceRoot, cfg.vars)
       const stepFiles = stepPaths.map((path) => ({
         path,
         source: readFileSync(path, 'utf8'),
       }))
-      const bddFiles = bddPaths.map((path) => ({
+      const varFiles = varPaths.map((path) => ({
         path,
         source: readFileSync(path, 'utf8'),
       }))
       current = buildWorkspaceIndex({
         stepFiles,
-        bddFiles,
+        varFiles,
         scannerPlugins: cfg.scannerPlugins,
       })
     },

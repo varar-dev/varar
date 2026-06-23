@@ -2,8 +2,8 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
 const CONFIG = `export default {
-  bdds: ['bdd-examples/**/*.bdd.md'],
-  steps: ['bdd-examples/**/*.steps.ts'],
+  vars: ['var-examples/**/*.var.md'],
+  steps: ['var-examples/**/*.steps.ts'],
 }
 `
 
@@ -13,7 +13,7 @@ Given I greet "world"
 Then the greeting is "Hello, world!"
 `
 
-const EXAMPLE_STEPS = `import { defineContext } from '@oselvar/bdd-vitest'
+const EXAMPLE_STEPS = `import { defineContext } from '@oselvar/var-vitest'
 
 const { step } = defineContext(() => ({ greeting: '' }))
 
@@ -37,9 +37,9 @@ export type InitResult = { readonly exitCode: number }
 
 export async function runInit(opts: InitOptions): Promise<InitResult> {
   const files: Array<{ readonly relPath: string; readonly content: string }> = [
-    { relPath: 'bdd.config.ts', content: CONFIG },
-    { relPath: 'bdd-examples/01-hello.bdd.md', content: EXAMPLE_MD },
-    { relPath: 'bdd-examples/steps/01-hello.steps.ts', content: EXAMPLE_STEPS },
+    { relPath: 'var.config.ts', content: CONFIG },
+    { relPath: 'var-examples/01-hello.var.md', content: EXAMPLE_MD },
+    { relPath: 'var-examples/steps/01-hello.steps.ts', content: EXAMPLE_STEPS },
   ]
   for (const f of files) {
     const target = join(opts.cwd, f.relPath)

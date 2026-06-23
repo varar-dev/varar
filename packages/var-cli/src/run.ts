@@ -1,8 +1,8 @@
 import { globSync, readFileSync } from 'node:fs'
 import { relative, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { executePlan, loadBddConfig, parse, plan } from '@oselvar/bdd'
-import { buildRegistry, contextFactory } from '@oselvar/bdd-runtime'
+import { executePlan, loadVarConfig, parse, plan } from '@oselvar/var'
+import { buildRegistry, contextFactory } from '@oselvar/var-runtime'
 
 export type RunOptions = {
   readonly cwd: string
@@ -14,13 +14,13 @@ export type RunOptions = {
 export type RunResult = { readonly exitCode: number }
 
 export async function runRun(opts: RunOptions): Promise<RunResult> {
-  const cfg = await loadBddConfig(opts.cwd)
+  const cfg = await loadVarConfig(opts.cwd)
   const stepFiles = findFiles(opts.cwd, cfg.steps)
-  const bddPatterns = opts.globs && opts.globs.length > 0 ? opts.globs : cfg.bdds
-  const bddFiles = findFiles(opts.cwd, bddPatterns)
+  const varPatterns = opts.globs && opts.globs.length > 0 ? opts.globs : cfg.vars
+  const varFiles = findFiles(opts.cwd, varPatterns)
 
   // Importing each stepfile runs its `step()` / `defineContext()` /
-  // `defineParameterType()` calls, populating the @oselvar/bdd-runtime
+  // `defineParameterType()` calls, populating the @oselvar/var-runtime
   // module-scope registry. Order does not matter.
   for (const path of stepFiles) {
     await import(pathToFileURL(path).href)
@@ -33,10 +33,10 @@ export async function runRun(opts: RunOptions): Promise<RunResult> {
   let failed = 0
   let errorDiagnostics = 0
 
-  for (const path of bddFiles) {
+  for (const path of varFiles) {
     const source = readFileSync(path, 'utf8')
-    const bdd = parse(path, source, cfg.scannerPlugins)
-    const execution = plan(bdd, registry)
+    const varDoc = parse(path, source, cfg.scannerPlugins)
+    const execution = plan(varDoc, registry)
 
     const queue: { name: string; run: () => void | Promise<void> }[] = []
     executePlan(execution, {

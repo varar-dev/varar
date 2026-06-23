@@ -1,4 +1,4 @@
-import { defineContext } from '@oselvar/bdd-vitest'
+import { defineContext } from '@oselvar/var-vitest'
 import { expect } from 'vitest'
 
 const { step } = defineContext(() => ({ greeting: '', result: 0 }))

@@ -46,7 +46,7 @@ export function missingStep(input: MissingStepInput): Diagnostic {
   const message =
     `Step missing: "${input.text}"\n` +
     `Suggested step definition:\n  ${input.snippet.fullCode.replace(/\n/g, '\n  ')}\n` +
-    `Generate it with: bdd stepdef "${input.text}"`
+    `Generate it with: var stepdef "${input.text}"`
   return {
     severity: 'error',
     code: 'missing-step',

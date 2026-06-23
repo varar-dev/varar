@@ -72,7 +72,7 @@ export type Example = {
   readonly body: ReadonlyArray<Block>
 }
 
-export type Bdd = {
+export type VarDoc = {
   readonly path: string
   readonly source: string
   readonly examples: ReadonlyArray<Example>

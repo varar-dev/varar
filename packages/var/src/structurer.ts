@@ -1,4 +1,4 @@
-import type { Bdd, Block, Example, Fence, Table } from './ast.js'
+import type { VarDoc, Block, Example, Fence, Table } from './ast.js'
 import { spanFromOffsets } from './span.js'
 
 // Every paragraph / list item / blockquote becomes a candidate example. The
@@ -9,7 +9,7 @@ import { spanFromOffsets } from './span.js'
 // Tables and fences immediately following a candidate (with no intervening
 // heading or thematic break) attach to that candidate's body so the planner
 // can hand them to the last matched step. Otherwise they're orphans.
-export function structure(path: string, source: string, blocks: ReadonlyArray<Block>): Bdd {
+export function structure(path: string, source: string, blocks: ReadonlyArray<Block>): VarDoc {
   const examples: Example[] = []
   const orphanAttachments: (Table | Fence)[] = []
   const scopeStack: { level: number; text: string }[] = []

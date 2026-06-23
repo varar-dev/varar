@@ -14,7 +14,7 @@ export type ExecutePorts = {
 export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
   for (const d of plan.diagnostics) ports.reporter.diagnostic(d)
   const createContext = ports.createContext ?? (() => ({}))
-  const path = plan.bdd.path
+  const path = plan.varDoc.path
   for (const ex of plan.examples) {
     ports.sink.example(ex.name, async () => {
       // Cache one context per stepfile within this example. Lazy creation
@@ -52,17 +52,17 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
 }
 
 // Inject a synthetic V8 stack frame pointing at the matched step text's
-// location in the source .bdd.md. Terminals (vitest, iTerm, VSCode) recognize
+// location in the source .var.md. Terminals (vitest, iTerm, VSCode) recognize
 // the `file:line:col` pattern and make it cmd-clickable. The frame sits
 // directly BELOW the handler's `.ts` frame — conceptually the markdown calls
 // into the handler, so the handler is the callee (top) and the markdown is
 // the caller (one level out). Vitest's reporter auto-renders the code snippet
 // for the topmost frame, so the `.ts` source stays as the main error location
-// and the .bdd.md becomes a clickable link directly under it.
-function augmentStack(err: unknown, step: PlannedStep, bddPath: string): unknown {
+// and the .var.md becomes a clickable link directly under it.
+function augmentStack(err: unknown, step: PlannedStep, varPath: string): unknown {
   if (!(err instanceof Error) || typeof err.stack !== 'string') return err
   const label = step.text.length > 60 ? `${step.text.slice(0, 60)}…` : step.text
-  const frame = `    at ${label} (${bddPath}:${step.matchSpan.startLine}:${step.matchSpan.startCol})`
+  const frame = `    at ${label} (${varPath}:${step.matchSpan.startLine}:${step.matchSpan.startCol})`
   const lines = err.stack.split('\n')
   // Find the first existing stack frame (the handler's `.ts` line) and insert
   // immediately after it. If the error has no frames, fall back to position 1.

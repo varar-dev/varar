@@ -4,8 +4,8 @@ import {
   expressionSegments,
   generateSnippet,
   renderExpression,
-} from '@oselvar/bdd'
-import type { MatchRef } from '@oselvar/bdd-language'
+} from '@oselvar/var'
+import type { MatchRef } from '@oselvar/var-language'
 import type { Store } from './store.js'
 
 type Position = { readonly line: number; readonly character: number }
@@ -34,7 +34,7 @@ type MatchRangeEntry = { readonly range: Range; readonly params: ReadonlyArray<R
 
 type SnippetResult = { readonly fullCode: string; readonly expression: string }
 
-// Output of `bdd/stepAt`: everything the Rename refactor needs to compute a
+// Output of `var/stepAt`: everything the Rename refactor needs to compute a
 // cross-file WorkspaceEdit from a single F2 position. Ranges are 0-based LSP.
 type StepAtMatch = {
   readonly uri: string
@@ -169,7 +169,7 @@ export function buildHandlers(store: Store): Handlers {
       const path = uriToPath(uri)
       return store
         .index()
-        .diagnostics.filter((d) => d.bddPath === path)
+        .diagnostics.filter((d) => d.varPath === path)
         .map((d) => ({
           code: d.code,
           severity: d.severity,
@@ -181,7 +181,7 @@ export function buildHandlers(store: Store): Handlers {
       const path = uriToPath(uri)
       return store
         .index()
-        .matches.filter((m) => m.bddPath === path)
+        .matches.filter((m) => m.varPath === path)
         .map((m) => ({
           range: toLspRange(m.range),
           params: m.paramRanges.map(toLspRange),
@@ -202,11 +202,11 @@ export function buildHandlers(store: Store): Handlers {
       const stepAt = resolveStepAt(store, uri, position)
       if (!stepAt) return { ok: false, error: 'No step under cursor.' }
 
-      // In a .bdd.md, `newName` is the user's edited sentence; we derive the
+      // In a .var.md, `newName` is the user's edited sentence; we derive the
       // new cucumber expression via the live workspace registry (so custom
       // param types like {airport} apply). In a .steps.ts, `newName` is the
       // expression text directly.
-      const isBdd = uriToPath(uri).endsWith('.bdd.md')
+      const isBdd = uriToPath(uri).endsWith('.var.md')
       let newExpression: string
       if (isBdd) {
         try {
@@ -290,7 +290,7 @@ export function buildHandlers(store: Store): Handlers {
       const stepAt = resolveStepAt(store, uri, position)
       if (!stepAt) return { ok: false, error: 'No step under cursor.' }
 
-      const isBdd = uriToPath(uri).endsWith('.bdd.md')
+      const isBdd = uriToPath(uri).endsWith('.var.md')
       let newExpression: string
       if (isBdd) {
         try {
@@ -389,9 +389,9 @@ export function buildHandlers(store: Store): Handlers {
       }
     },
     completions({ uri, position, linePrefix }) {
-      // Only offer completions in .bdd.md docs. .steps.ts gets its own TS
+      // Only offer completions in .var.md docs. .steps.ts gets its own TS
       // completions from VSCode's TypeScript service.
-      if (!uriToPath(uri).endsWith('.bdd.md')) return []
+      if (!uriToPath(uri).endsWith('.var.md')) return []
 
       // Compute the replace range: from the first non-whitespace character of
       // the current line to the cursor. No Given/When/Then heuristics — if
@@ -427,7 +427,7 @@ function findMatchAt(store: Store, uri: string, position: Position): MatchRef | 
   // LSP positions are 0-based; the workspace index stores 1-based line/col.
   const pos: Position = { line: position.line + 1, character: position.character + 1 }
   return store.index().matches.find((m) => {
-    if (m.bddPath !== path) return false
+    if (m.varPath !== path) return false
     return contains(m.range, pos)
   })
 }
@@ -447,7 +447,7 @@ function resolveStepAt(store: Store, uri: string, position: Position): StepAtRes
     (d) => d.file === path && contains(d.expressionRange, pos),
   )
   if (!stepDef) {
-    const m = index.matches.find((m) => m.bddPath === path && contains(m.range, pos))
+    const m = index.matches.find((m) => m.varPath === path && contains(m.range, pos))
     if (m) stepDef = m.stepDef
   }
   if (!stepDef) return null
@@ -458,7 +458,7 @@ function resolveStepAt(store: Store, uri: string, position: Position): StepAtRes
         m.stepDef.expression === stepDef.expression && m.stepDef.file === stepDef.file,
     )
     .map((m) => ({
-      uri: `file://${m.bddPath}`,
+      uri: `file://${m.varPath}`,
       range: toLspRange(m.range),
       paramRanges: m.paramRanges.map(toLspRange),
       paramValues: m.paramValues,

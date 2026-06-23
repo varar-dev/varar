@@ -6,7 +6,7 @@ export type { Span } from './span.js'
 export { scan } from './scanner.js'
 
 export type {
-  Bdd,
+  VarDoc,
   Block,
   Heading,
   Paragraph,
@@ -73,5 +73,5 @@ export type { ExecutePorts } from './execute.js'
 
 export { renderTemplate } from './template.js'
 
-export { loadBddConfig } from './config.js'
-export type { BddConfig } from './config.js'
+export { loadVarConfig } from './config.js'
+export type { VarConfig } from './config.js'

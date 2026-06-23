@@ -1,8 +1,8 @@
-import { defineContext } from '@oselvar/bdd-vitest'
+import { defineContext } from '@oselvar/var-vitest'
 import { expect } from 'vitest'
 import { type Book, Library, type BorrowError, type Receipt } from '../src/library.js'
 
-// Cucumber's Before/After hooks → bdd-vitest's defineContext factory. The
+// Cucumber's Before/After hooks → varDoc-vitest's defineContext factory. The
 // factory runs once per example (vitest runs each example as its own test),
 // so it's the natural place to reset state. There's no After equivalent
 // because the per-example context goes out of scope when the test ends.

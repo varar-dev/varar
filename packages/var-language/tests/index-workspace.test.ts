@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { buildWorkspaceIndex } from '../src/index-workspace.js'
 
-test('cross-references matched substrings in .bdd.md to their step defs', () => {
+test('cross-references matched substrings in .var.md to their step defs', () => {
   const idx = buildWorkspaceIndex({
     stepFiles: [
       {
@@ -10,9 +10,9 @@ test('cross-references matched substrings in .bdd.md to their step defs', () => 
 `,
       },
     ],
-    bddFiles: [
+    varFiles: [
       {
-        path: '/abs/belly.bdd.md',
+        path: '/abs/belly.var.md',
         source: '# Belly\n\nGiven I have 5 cukes',
       },
     ],
@@ -20,7 +20,7 @@ test('cross-references matched substrings in .bdd.md to their step defs', () => 
   expect(idx.stepDefs).toHaveLength(1)
   expect(idx.matches).toHaveLength(1)
   const m = idx.matches[0]
-  expect(m?.bddPath).toBe('/abs/belly.bdd.md')
+  expect(m?.varPath).toBe('/abs/belly.var.md')
   expect(m?.stepDef.expression).toBe('I have {int} cukes')
   // Match starts somewhere inside line 3 (the body).
   expect(m?.range.start.line).toBe(3)
@@ -29,7 +29,7 @@ test('cross-references matched substrings in .bdd.md to their step defs', () => 
 test('an unmatched keyword-led sentence produces NO diagnostic (no Given/When/Then heuristic)', () => {
   const idx = buildWorkspaceIndex({
     stepFiles: [],
-    bddFiles: [{ path: '/m.bdd.md', source: '# M\n\nGiven I have 5 cukes' }],
+    varFiles: [{ path: '/m.var.md', source: '# M\n\nGiven I have 5 cukes' }],
   })
   expect(idx.diagnostics).toEqual([])
 })
@@ -44,14 +44,14 @@ step('I have {int} {word}', () => {})
 `,
       },
     ],
-    bddFiles: [{ path: '/a.bdd.md', source: '# Ambig\n\nGiven I have 5 cukes' }],
+    varFiles: [{ path: '/a.var.md', source: '# Ambig\n\nGiven I have 5 cukes' }],
   })
   const codes = idx.diagnostics.map((d) => d.code)
   expect(codes).toContain('ambiguous-match')
 })
 
 test('the index is empty for an empty workspace', () => {
-  const idx = buildWorkspaceIndex({ stepFiles: [], bddFiles: [] })
+  const idx = buildWorkspaceIndex({ stepFiles: [], varFiles: [] })
   expect(idx.stepDefs).toEqual([])
   expect(idx.matches).toEqual([])
   expect(idx.diagnostics).toEqual([])
@@ -67,7 +67,7 @@ step('I fly to {airport}', (ctx, code) => {})
 `,
       },
     ],
-    bddFiles: [{ path: '/t.bdd.md', source: '# T\n\nGiven I fly to LHR\n' }],
+    varFiles: [{ path: '/t.var.md', source: '# T\n\nGiven I fly to LHR\n' }],
   })
   expect(idx.matches).toHaveLength(1)
   expect(idx.matches[0]?.stepDef.expression).toBe('I fly to {airport}')

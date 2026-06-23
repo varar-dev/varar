@@ -15,13 +15,13 @@ async function main(): Promise<void> {
     case '-h':
       process.stdout.write(
         [
-          'bdd — markdown-native BDD',
+          'var — markdown-native BDD',
           '',
           'Usage:',
-          '  bdd run [globs]        run .bdd.md examples (no test runner)',
-          '  bdd stepdef "<text>"   generate a step definition',
-          '  bdd lint [globs]       check for missing/ambiguous/orphan steps',
-          '  bdd init               scaffold a new project',
+          '  var run [globs]        run .var.md examples (no test runner)',
+          '  var stepdef "<text>"   generate a step definition',
+          '  var lint [globs]       check for missing/ambiguous/orphan steps',
+          '  var init               scaffold a new project',
           '',
         ].join('\n'),
       )
@@ -29,7 +29,7 @@ async function main(): Promise<void> {
     case 'stepdef': {
       const text = parsed.positionals[0]
       if (!text) {
-        process.stderr.write('bdd stepdef: missing text argument\n')
+        process.stderr.write('var stepdef: missing text argument\n')
         process.exitCode = 1
         break
       }
@@ -75,12 +75,12 @@ async function main(): Promise<void> {
       break
     }
     default:
-      process.stderr.write(`bdd: unknown command "${parsed.command}". Try \`bdd help\`.\n`)
+      process.stderr.write(`var: unknown command "${parsed.command}". Try \`var help\`.\n`)
       process.exitCode = 1
   }
 }
 
 main().catch((err: unknown) => {
-  process.stderr.write(`bdd: ${err instanceof Error ? err.message : String(err)}\n`)
+  process.stderr.write(`var: ${err instanceof Error ? err.message : String(err)}\n`)
   process.exitCode = 1
 })

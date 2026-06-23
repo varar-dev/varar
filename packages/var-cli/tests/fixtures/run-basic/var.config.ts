@@ -1,4 +1,4 @@
 export default {
-  bdds: ['*.bdd.md'],
+  vars: ['*.var.md'],
   steps: ['*.steps.ts'],
 }

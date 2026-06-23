@@ -1,5 +1,5 @@
 import { expectTypeOf, test } from 'vitest'
-import type { Bdd, Block, Example, Heading, Paragraph } from '../src/ast.js'
+import type { VarDoc, Block, Example, Heading, Paragraph } from '../src/ast.js'
 
 test('Block is a discriminated union of Heading and Paragraph (Task 3 scope)', () => {
   expectTypeOf<Block>().toEqualTypeOf<Heading | Paragraph>()
@@ -13,6 +13,6 @@ test('Heading carries level and text', () => {
   }>()
 })
 
-test('Bdd has readonly examples array', () => {
-  expectTypeOf<Bdd['examples']>().toEqualTypeOf<ReadonlyArray<Example>>()
+test('VarDoc has readonly examples array', () => {
+  expectTypeOf<VarDoc['examples']>().toEqualTypeOf<ReadonlyArray<Example>>()
 })

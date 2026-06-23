@@ -1,4 +1,4 @@
-import type { Bdd, Block, Fence, InlineOffset, Table } from './ast.js'
+import type { VarDoc, Block, Fence, InlineOffset, Table } from './ast.js'
 import { type Diagnostic, ambiguousMatch, orphanAttachment } from './diagnostics.js'
 import { type Hit, findHits, resolveHits } from './matcher.js'
 import type { Registry, StepRegistration } from './registry.js'
@@ -6,7 +6,7 @@ import { splitSentences } from './sentences.js'
 import { type Span, spanFromOffsets } from './span.js'
 
 export type ExecutionPlan = {
-  readonly bdd: Bdd
+  readonly varDoc: VarDoc
   readonly examples: ReadonlyArray<PlannedExample>
   readonly diagnostics: ReadonlyArray<Diagnostic>
 }
@@ -30,10 +30,10 @@ export type PlannedStep = {
   readonly docString?: { content: string; contentType: string }
 }
 
-export function plan(bdd: Bdd, registry: Registry): ExecutionPlan {
+export function plan(varDoc: VarDoc, registry: Registry): ExecutionPlan {
   const examples: PlannedExample[] = []
   const diagnostics: Diagnostic[] = []
-  for (const ex of bdd.examples) {
+  for (const ex of varDoc.examples) {
     let hadAmbiguous = false
 
     // Pass 1: plan each text-bearing block and collect steps per body index.
@@ -43,7 +43,7 @@ export function plan(bdd: Bdd, registry: Registry): ExecutionPlan {
         return
       const result = planBlock(block.text, registry)
       for (const collision of result.ambiguities) {
-        const span = liftSpan(bdd.source, block, collision.matchStart, collision.matchEnd)
+        const span = liftSpan(varDoc.source, block, collision.matchStart, collision.matchEnd)
         diagnostics.push(
           ambiguousMatch({
             text: block.text.slice(collision.matchStart, collision.matchEnd),
@@ -60,8 +60,8 @@ export function plan(bdd: Bdd, registry: Registry): ExecutionPlan {
       if (!hadAmbiguous && result.steps.length > 0) {
         const blockSteps: PlannedStep[] = result.steps.map((hit) => ({
           text: block.text.slice(hit.matchStart, hit.matchEnd),
-          matchSpan: liftSpan(bdd.source, block, hit.matchStart, hit.matchEnd),
-          paramSpans: hit.paramSpans.map((p) => liftSpan(bdd.source, block, p.start, p.end)),
+          matchSpan: liftSpan(varDoc.source, block, hit.matchStart, hit.matchEnd),
+          paramSpans: hit.paramSpans.map((p) => liftSpan(varDoc.source, block, p.start, p.end)),
           stepDef: hit.stepDef,
           args: hit.args,
         }))
@@ -131,7 +131,7 @@ export function plan(bdd: Bdd, registry: Registry): ExecutionPlan {
   }
 
   // Top-level orphans (tables/fences not inside any example).
-  for (const orphan of bdd.orphanAttachments) {
+  for (const orphan of varDoc.orphanAttachments) {
     diagnostics.push(
       orphanAttachment({
         text: '',
@@ -141,7 +141,7 @@ export function plan(bdd: Bdd, registry: Registry): ExecutionPlan {
     )
   }
 
-  return { bdd, examples, diagnostics }
+  return { varDoc, examples, diagnostics }
 }
 
 type BlockPlan = {

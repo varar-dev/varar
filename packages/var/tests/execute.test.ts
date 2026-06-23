@@ -15,7 +15,7 @@ test('executePlan calls sink.example for each PlannedExample', () => {
   // With the paragraph-as-test model, each paragraph is its own example and
   // its name comes from the first sentence (with the trailing terminator
   // stripped). Two paragraphs → two named tests.
-  const p = plan(parse('e.bdd.md', '# A\n\nGiven I have 5 cukes\n\n# B\n\nGiven I have 9 cukes'), r)
+  const p = plan(parse('e.var.md', '# A\n\nGiven I have 5 cukes\n\n# B\n\nGiven I have 9 cukes'), r)
   const names: string[] = []
   executePlan(p, {
     sink: { example: (name) => names.push(name) },
@@ -40,7 +40,7 @@ test('executePlan reports all diagnostics through reporter.diagnostic', () => {
     expressionSourceLine: 2,
     handler: () => {},
   })
-  const p = plan(parse('m.bdd.md', '# A\n\nGiven I have 5 cukes'), r)
+  const p = plan(parse('m.var.md', '# A\n\nGiven I have 5 cukes'), r)
   const got: Diagnostic[] = []
   executePlan(p, {
     sink: { example: (_n, _r) => {} },
@@ -70,7 +70,7 @@ test('the sink.example run callback executes the step handlers in order', async 
       },
     },
   )
-  const p = plan(parse('e.bdd.md', '# Adding\n\nI add 5. I should have 5.'), r)
+  const p = plan(parse('e.var.md', '# Adding\n\nI add 5. I should have 5.'), r)
   let run: (() => void | Promise<void>) | undefined
   executePlan(p, {
     sink: {
@@ -84,7 +84,7 @@ test('the sink.example run callback executes the step handlers in order', async 
   expect(calls).toEqual(['add:5', 'check:5'])
 })
 
-test('executePlan augments a thrown error with a .bdd.md frame for the failing step', async () => {
+test('executePlan augments a thrown error with a .var.md frame for the failing step', async () => {
   const r = addStep(createRegistry(), {
     expression: 'I throw',
     expressionSourceFile: 's.ts',
@@ -93,7 +93,7 @@ test('executePlan augments a thrown error with a .bdd.md frame for the failing s
       throw new Error('boom')
     },
   })
-  const p = plan(parse('e.bdd.md', '# A\n\nI throw'), r)
+  const p = plan(parse('e.var.md', '# A\n\nI throw'), r)
   let captured: Error | undefined
   let run: (() => void | Promise<void>) | undefined
   executePlan(p, {
@@ -112,17 +112,17 @@ test('executePlan augments a thrown error with a .bdd.md frame for the failing s
   expect(captured).toBeInstanceOf(Error)
   // Original error message is left alone — augmentation only touches the stack.
   expect(captured?.message).toBe('boom')
-  // The synthetic stack frame points at the .bdd.md line where the step
+  // The synthetic stack frame points at the .var.md line where the step
   // text lives, directly BELOW the handler's `.ts` frame so vitest still
   // auto-renders the .ts snippet at the top.
   const stack = captured?.stack ?? ''
-  expect(stack).toContain('e.bdd.md:3:1')
+  expect(stack).toContain('e.var.md:3:1')
   expect(stack).toContain('at I throw')
   const frameLines = stack.split('\n').filter((l) => /^\s+at\s/.test(l))
-  const handlerIdx = frameLines.findIndex((l) => !l.includes('e.bdd.md'))
-  const bddIdx = frameLines.findIndex((l) => l.includes('e.bdd.md'))
+  const handlerIdx = frameLines.findIndex((l) => !l.includes('e.var.md'))
+  const varIdx = frameLines.findIndex((l) => l.includes('e.var.md'))
   expect(handlerIdx).toBeGreaterThanOrEqual(0)
-  expect(bddIdx).toBeGreaterThan(handlerIdx)
+  expect(varIdx).toBeGreaterThan(handlerIdx)
 })
 
 test('executePlan invokes createContext once per example and passes the result to handlers', async () => {
@@ -135,7 +135,7 @@ test('executePlan invokes createContext once per example and passes the result t
       ctxSeen.push(ctx)
     },
   })
-  const p = plan(parse('e.bdd.md', '# A\n\nI record ctx\n\n# B\n\nI record ctx'), r)
+  const p = plan(parse('e.var.md', '# A\n\nI record ctx\n\n# B\n\nI record ctx'), r)
   let calls = 0
   const runs: Array<() => void | Promise<void>> = []
   executePlan(p, {
@@ -172,7 +172,7 @@ these books exist:
 | Lolita | Nabokov |
 | Anna   | Tolstoy |
 `
-  const p = plan(parse('l.bdd.md', source), r)
+  const p = plan(parse('l.var.md', source), r)
   const runs: Array<() => unknown | Promise<unknown>> = []
   executePlan(p, {
     sink: { example: (_n, run) => runs.push(run) },
@@ -206,7 +206,7 @@ the receipt is:
 {"ok": true}
 \`\`\`
 `
-  const p = plan(parse('l.bdd.md', source), r)
+  const p = plan(parse('l.var.md', source), r)
   const runs: Array<() => unknown | Promise<unknown>> = []
   executePlan(p, {
     sink: { example: (_n, run) => runs.push(run) },

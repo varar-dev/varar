@@ -1,4 +1,4 @@
-import { defineContext } from '@oselvar/bdd-runtime'
+import { defineContext } from '@oselvar/var-runtime'
 
 const { step } = defineContext(() => ({ greeting: '' }))
 

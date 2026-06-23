@@ -1,4 +1,4 @@
-// Tiny domain shared between the Cucumber and the bdd stepdef sets. Both
+// Tiny domain shared between the Cucumber and the var stepdef sets. Both
 // runners exercise the exact same Library instance behaviour; only the
 // glue layer differs.
 

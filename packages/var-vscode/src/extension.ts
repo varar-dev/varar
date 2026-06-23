@@ -30,13 +30,13 @@ import { LanguageClient } from 'vscode-languageclient/node.js'
 let client: LanguageClient | undefined
 
 export function activate(context: ExtensionContext): void {
-  // The symlink installer (T8) mirrors `packages/bdd-vscode/` into
+  // The symlink installer (T8) mirrors `packages/var-vscode/` into
   // ~/.vscode/extensions/. Resolve the symlink before walking `..` so we land
   // at the real `packages/` directory; otherwise we'd point at
-  // `~/.vscode/extensions/bdd-lsp/dist/bin.js`, which doesn't exist.
+  // `~/.vscode/extensions/var-lsp/dist/bin.js`, which doesn't exist.
   const extReal = realpathSync(context.extensionPath)
-  const serverModule = resolve(extReal, '..', 'bdd-lsp', 'dist', 'bin.js')
-  // `@oselvar/bdd`'s `exports.import` points at `src/index.ts` so we can run
+  const serverModule = resolve(extReal, '..', 'var-lsp', 'dist', 'bin.js')
+  // `@oselvar/var`'s `exports.import` points at `src/index.ts` so we can run
   // tests without a build step. The LSP server reaches the core through that
   // same entry, so we need tsx to load `.ts` files at runtime.
   const tsxLoader = resolve(extReal, '..', '..', 'node_modules', 'tsx', 'dist', 'loader.mjs')
@@ -47,11 +47,11 @@ export function activate(context: ExtensionContext): void {
   }
   const clientOptions: LanguageClientOptions = {
     documentSelector: [
-      { scheme: 'file', pattern: '**/*.bdd.md' },
+      { scheme: 'file', pattern: '**/*.var.md' },
       { scheme: 'file', pattern: '**/*.steps.ts' },
     ],
   }
-  client = new LanguageClient('oselvar-bdd', 'oselvar BDD', serverOptions, clientOptions)
+  client = new LanguageClient('oselvar-var', 'oselvar BDD', serverOptions, clientOptions)
   const started = client.start()
   registerMatchDecorations(context, client, started)
   registerGenerateStepDefinition(context, client, started)
@@ -90,10 +90,10 @@ function registerMatchDecorations(
 
   const refresh = async (editor: TextEditor | undefined): Promise<void> => {
     if (!editor) return
-    if (!editor.document.fileName.endsWith('.bdd.md')) return
+    if (!editor.document.fileName.endsWith('.var.md')) return
     try {
       const entries = await lspClient.sendRequest<ReadonlyArray<MatchRangeEntry>>(
-        'bdd/matchRanges',
+        'var/matchRanges',
         { uri: editor.document.uri.toString() },
       )
       editor.setDecorations(
@@ -105,7 +105,7 @@ function registerMatchDecorations(
         entries.flatMap((e) => e.params.map(toVscodeRange)),
       )
     } catch {
-      // Server may be initializing; the next 'bdd/didIndex' will retry.
+      // Server may be initializing; the next 'var/didIndex' will retry.
     }
   }
 
@@ -127,7 +127,7 @@ function registerMatchDecorations(
   // the handler and do an initial paint.
   started
     .then(() => {
-      lspClient.onNotification('bdd/didIndex', refreshAll)
+      lspClient.onNotification('var/didIndex', refreshAll)
       refreshAll()
     })
     .catch(() => {
@@ -150,7 +150,7 @@ function registerGenerateCodeAction(context: ExtensionContext): void {
         CodeActionKind.RefactorExtract,
       )
       action.command = {
-        command: 'oselvar-bdd.generateStepDefinition',
+        command: 'oselvar-var.generateStepDefinition',
         title: 'Generate Step Definition',
       }
       return [action]
@@ -158,7 +158,7 @@ function registerGenerateCodeAction(context: ExtensionContext): void {
   }
   context.subscriptions.push(
     languages.registerCodeActionsProvider(
-      { scheme: 'file', pattern: '**/*.bdd.md' },
+      { scheme: 'file', pattern: '**/*.var.md' },
       provider,
       { providedCodeActionKinds: [CodeActionKind.RefactorExtract] },
     ),
@@ -170,7 +170,7 @@ function registerGenerateStepDefinition(
   lspClient: LanguageClient,
   started: Promise<void>,
 ): void {
-  const cmd = commands.registerCommand('oselvar-bdd.generateStepDefinition', async () => {
+  const cmd = commands.registerCommand('oselvar-var.generateStepDefinition', async () => {
     const editor = window.activeTextEditor
     if (!editor) {
       void window.showInformationMessage('No active editor.')
@@ -184,10 +184,10 @@ function registerGenerateStepDefinition(
     await started
     const [snippet, stepGlobs] = await Promise.all([
       lspClient.sendRequest<{ readonly fullCode: string; readonly expression: string }>(
-        'bdd/generateSnippet',
+        'var/generateSnippet',
         { text },
       ),
-      lspClient.sendRequest<ReadonlyArray<string>>('bdd/stepGlobs'),
+      lspClient.sendRequest<ReadonlyArray<string>>('var/stepGlobs'),
     ])
     const stepFiles = await findStepFiles(stepGlobs)
     if (stepFiles.length === 0) {
@@ -239,7 +239,7 @@ async function appendSnippet(uri: Uri, snippet: string): Promise<void> {
 }
 
 // -----------------------------------------------------------------------------
-// Rename: F2 on a matched step in .bdd.md OR on a step('...') expression
+// Rename: F2 on a matched step in .var.md OR on a step('...') expression
 // literal in .steps.ts triggers a cross-file refactor. v1 handles the
 // "literals only changed" case — same parameter count/order. Param add/remove
 // is rejected with a friendly message in this phase; phase 4 will prompt
@@ -305,7 +305,7 @@ function registerStepRename(
   const provider: import('vscode').RenameProvider = {
     async prepareRename(document, position) {
       await started
-      const at = await lspClient.sendRequest<StepAtResult>('bdd/stepAt', {
+      const at = await lspClient.sendRequest<StepAtResult>('var/stepAt', {
         uri: document.uri.toString(),
         position: { line: position.line, character: position.character },
       })
@@ -313,9 +313,9 @@ function registerStepRename(
         throw new Error('Place the cursor on a matched step or a step() expression first.')
       }
       // What VSCode pre-fills the inline editor with:
-      //   - in .bdd.md: the matched substring (a sentence)
+      //   - in .var.md: the matched substring (a sentence)
       //   - in .steps.ts: the cucumber expression literal WITHOUT its quotes
-      if (document.fileName.endsWith('.bdd.md')) {
+      if (document.fileName.endsWith('.var.md')) {
         const m = at.matches.find((m) => m.uri === document.uri.toString())
         if (!m) throw new Error('Internal: no match for the active document.')
         return {
@@ -328,7 +328,7 @@ function registerStepRename(
     },
     async provideRenameEdits(document, position, newName) {
       await started
-      const plan = await lspClient.sendRequest<PlanRenameResult>('bdd/planRename', {
+      const plan = await lspClient.sendRequest<PlanRenameResult>('var/planRename', {
         uri: document.uri.toString(),
         position: { line: position.line, character: position.character },
         newName,
@@ -387,7 +387,7 @@ function registerStepRename(
           values.push(answer)
         }
         const rendered = await lspClient.sendRequest<RenderTextResult>(
-          'bdd/renderExpressionText',
+          'var/renderExpressionText',
           { expression: plan.newExpression, values },
         )
         if (!rendered.ok) throw new Error(rendered.error)
@@ -398,7 +398,7 @@ function registerStepRename(
   }
 
   context.subscriptions.push(
-    languages.registerRenameProvider({ scheme: 'file', pattern: '**/*.bdd.md' }, provider),
+    languages.registerRenameProvider({ scheme: 'file', pattern: '**/*.var.md' }, provider),
     languages.registerRenameProvider({ scheme: 'file', pattern: '**/*.steps.ts' }, provider),
   )
 }

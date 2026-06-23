@@ -1,13 +1,13 @@
-export type { Bdd } from '@oselvar/bdd'
+export type { VarDoc } from '@oselvar/var'
 export { step, defineContext, defineParameterType } from './api.js'
 export type { Step } from './api.js'
-export { loadBddConfig } from '@oselvar/bdd'
-export type { BddConfig } from '@oselvar/bdd'
-export { runBddSource } from './runtime.js'
+export { loadVarConfig } from '@oselvar/var'
+export type { VarConfig } from '@oselvar/var'
+export { runVarSource } from './runtime.js'
 export type { RunPorts } from './runtime.js'
-export { bddVitestPlugin, generateVirtualModule } from './plugin.js'
-export type { BddVitestPluginOptions, GenerateInput } from './plugin.js'
+export { varVitestPlugin, generateVirtualModule } from './plugin.js'
+export type { VarVitestPluginOptions, GenerateInput } from './plugin.js'
 export const VERSION = '0.0.0'
 
-import { bddVitestPlugin } from './plugin.js'
-export default bddVitestPlugin
+import { varVitestPlugin } from './plugin.js'
+export default varVitestPlugin

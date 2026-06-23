@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { glob as nativeGlob } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { createRegistry, loadBddConfig, parse, plan } from '@oselvar/bdd'
+import { createRegistry, loadVarConfig, parse, plan } from '@oselvar/var'
 
 export type LintOptions = {
   readonly cwd: string
@@ -27,8 +27,8 @@ const glob = nativeGlob as unknown as (
 ) => AsyncIterable<string>
 
 export async function runLint(opts: LintOptions): Promise<LintResult> {
-  const cfg = await loadBddConfig(opts.cwd)
-  const patterns = opts.globs && opts.globs.length > 0 ? opts.globs : cfg.bdds
+  const cfg = await loadVarConfig(opts.cwd)
+  const patterns = opts.globs && opts.globs.length > 0 ? opts.globs : cfg.vars
   const files = await findFiles(opts.cwd, patterns)
   const registry = createRegistry()
   const items: Item[] = []

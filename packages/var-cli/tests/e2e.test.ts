@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, test } from 'vitest'
 
 // Drive the source bin.ts through tsx — no `pnpm build` required. The published
-// package resolves the `bdd` binary to `./dist/bin.js`; locally we exercise the
+// package resolves the `varDoc` binary to `./dist/bin.js`; locally we exercise the
 // same source via tsx so the dev loop stays fast.
 const HERE = dirname(fileURLToPath(import.meta.url))
 const BIN_TS = resolve(HERE, '..', 'src', 'bin.ts')
@@ -21,9 +21,9 @@ function run(args: ReadonlyArray<string>, cwd: string) {
   return spawnSync(TSX, [BIN_TS, ...args], { cwd, encoding: 'utf8', env })
 }
 
-describe('bdd CLI (source via tsx)', () => {
+describe('var CLI (source via tsx)', () => {
   test('stepdef --print emits the templated snippet to stdout', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'bdd-e2e-'))
+    const dir = mkdtempSync(join(tmpdir(), 'var-e2e-'))
     try {
       const r = run(['stepdef', 'I have 5 cukes', '--print'], dir)
       expect(r.status).toBe(0)
@@ -35,22 +35,22 @@ describe('bdd CLI (source via tsx)', () => {
   })
 
   test('init scaffolds three files and exits 0', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'bdd-e2e-init-'))
+    const dir = mkdtempSync(join(tmpdir(), 'var-e2e-init-'))
     try {
       const r = run(['init'], dir)
       expect(r.status).toBe(0)
-      expect(readFileSync(join(dir, 'bdd.config.ts'), 'utf8')).toContain('bdds:')
+      expect(readFileSync(join(dir, 'var.config.ts'), 'utf8')).toContain('vars:')
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }
   })
 
-  test('lint --json exits 0 when a .bdd.md has only prose / unmatched keyword-led lines', () => {
+  test('lint --json exits 0 when a .var.md has only prose / unmatched keyword-led lines', () => {
     // No Given/When/Then heuristic: keyword-led but unmatched sentences are
     // not diagnostics, so lint must exit 0.
-    const dir = mkdtempSync(join(tmpdir(), 'bdd-e2e-lint-'))
+    const dir = mkdtempSync(join(tmpdir(), 'var-e2e-lint-'))
     try {
-      writeFileSync(join(dir, 'a.bdd.md'), '# A\n\nGiven I have 5 cukes')
+      writeFileSync(join(dir, 'a.var.md'), '# A\n\nGiven I have 5 cukes')
       const r = run(['lint', '--json'], dir)
       expect(r.status).toBe(0)
       const parsed = JSON.parse(r.stdout)

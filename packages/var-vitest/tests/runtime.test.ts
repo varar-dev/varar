@@ -1,11 +1,11 @@
 import { afterEach, beforeEach, expect, test } from 'vitest'
 import { _resetBuilder, step } from '../src/api.js'
-import { runBddSource } from '../src/runtime.js'
+import { runVarSource } from '../src/runtime.js'
 
 beforeEach(() => _resetBuilder())
 afterEach(() => _resetBuilder())
 
-test('runBddSource emits one sink.example call per BDD example, executes its handlers', async () => {
+test('runVarSource emits one sink.example call per BDD example, executes its handlers', async () => {
   const calls: string[] = []
   step('I have {int} cukes', (_ctx, n) => {
     calls.push(`have:${n as number}`)
@@ -16,7 +16,7 @@ test('runBddSource emits one sink.example call per BDD example, executes its han
 
   const seen: string[] = []
   const runs: Array<() => void | Promise<void>> = []
-  runBddSource('# Eating\n\nI have 5 cukes. I eat 2.', 'belly.bdd.md', {
+  runVarSource('# Eating\n\nI have 5 cukes. I eat 2.', 'belly.var.md', {
     sink: {
       example: (name, run) => {
         seen.push(name)

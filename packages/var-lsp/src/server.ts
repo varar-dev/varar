@@ -11,8 +11,8 @@ import { type Store, createStore } from './store.js'
 
 // Keep these re-exports so knip continues to count the workspace deps as used
 // in the build. T6 onward uses them directly.
-export type { StepDef } from '@oselvar/bdd-language'
-export { loadBddConfig } from '@oselvar/bdd'
+export type { StepDef } from '@oselvar/var-language'
+export { loadVarConfig } from '@oselvar/var'
 
 export function registerHandlers(connection: Connection): void {
   const store = createStore()
@@ -48,7 +48,7 @@ export function registerHandlers(connection: Connection): void {
     pushDiagnostics(connection, store, handlers)
     // Wake the client so it can refresh editor decorations and any other
     // client-side projections of the workspace index.
-    void connection.sendNotification('bdd/didIndex')
+    void connection.sendNotification('var/didIndex')
   }
 
   connection.onHover((params) => {
@@ -69,7 +69,7 @@ export function registerHandlers(connection: Connection): void {
 
   // Custom request the client uses to drive editor decorations for matched
   // step ranges. Returns 0-based LSP ranges.
-  connection.onRequest('bdd/matchRanges', (params: { uri: string }) =>
+  connection.onRequest('var/matchRanges', (params: { uri: string }) =>
     handlers.matchRanges(params.uri),
   )
 
@@ -77,17 +77,17 @@ export function registerHandlers(connection: Connection): void {
   // client is responsible for source (the user's selection) and target
   // (the steps file to append to); the server only knows how to translate
   // text → snippet.
-  connection.onRequest('bdd/generateSnippet', (params: { text: string }) =>
+  connection.onRequest('var/generateSnippet', (params: { text: string }) =>
     handlers.generateSnippet(params.text),
   )
 
-  connection.onRequest('bdd/stepGlobs', () => handlers.stepGlobs())
+  connection.onRequest('var/stepGlobs', () => handlers.stepGlobs())
 
   // Resolve everything the Rename refactor needs from a single position —
-  // the step def's expression + every matched .bdd.md site with its current
+  // the step def's expression + every matched .var.md site with its current
   // captured values. Returns null when the position isn't on a step.
   connection.onRequest(
-    'bdd/stepAt',
+    'var/stepAt',
     (params: { uri: string; position: { line: number; character: number } }) =>
       handlers.stepAt(params),
   )
@@ -96,7 +96,7 @@ export function registerHandlers(connection: Connection): void {
   // new expression, diffs, and returns ready-to-apply edits — or an error.
   // Phase 3 path: refuses when any parameter is added/removed/type-changed.
   connection.onRequest(
-    'bdd/renameStep',
+    'var/renameStep',
     (params: {
       uri: string
       position: { line: number; character: number }
@@ -108,7 +108,7 @@ export function registerHandlers(connection: Connection): void {
   // client can drive per-occurrence prompts for added / type-changed
   // parameters before applying anything.
   connection.onRequest(
-    'bdd/planRename',
+    'var/planRename',
     (params: {
       uri: string
       position: { line: number; character: number }
@@ -117,9 +117,9 @@ export function registerHandlers(connection: Connection): void {
   )
 
   // Render a (new) expression with a list of values into a literal string
-  // suitable for splicing into a .bdd.md document.
+  // suitable for splicing into a .var.md document.
   connection.onRequest(
-    'bdd/renderExpressionText',
+    'var/renderExpressionText',
     (params: { expression: string; values: ReadonlyArray<string> }) =>
       handlers.renderExpressionText(params),
   )
@@ -157,7 +157,7 @@ function pushDiagnostics(
   handlers: ReturnType<typeof buildHandlers>,
 ): void {
   const seen = new Set<string>()
-  for (const d of store.index().diagnostics) seen.add(`file://${d.bddPath}`)
+  for (const d of store.index().diagnostics) seen.add(`file://${d.varPath}`)
   for (const uri of seen) {
     const diags = handlers.diagnosticsFor(uri)
     void connection.sendDiagnostics({

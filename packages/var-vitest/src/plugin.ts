@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { glob as nativeGlob } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { loadBddConfig } from '@oselvar/bdd'
+import { loadVarConfig } from '@oselvar/var'
 import type { Plugin } from 'vite'
 
 const glob = nativeGlob as unknown as (
@@ -9,22 +9,22 @@ const glob = nativeGlob as unknown as (
   opts: { cwd: string },
 ) => AsyncIterable<string>
 
-export type BddVitestPluginOptions = {
+export type VarVitestPluginOptions = {
   readonly cwd?: string
 }
 
-export function bddVitestPlugin(options: BddVitestPluginOptions = {}): Plugin {
+export function varVitestPlugin(options: VarVitestPluginOptions = {}): Plugin {
   const cwd = options.cwd ?? process.cwd()
   let stepFiles: ReadonlyArray<string> = []
-  // Absolute path to bdd.config.ts when one exists; the generated virtual
+  // Absolute path to var.config.ts when one exists; the generated virtual
   // module imports it directly so its scannerPlugins reach the runtime.
   let configPath: string | undefined
   return {
-    name: '@oselvar/bdd-vitest',
+    name: '@oselvar/var-vitest',
     async configResolved() {
-      const cfg = await loadBddConfig(cwd)
+      const cfg = await loadVarConfig(cwd)
       stepFiles = await findFiles(cwd, cfg.steps)
-      for (const name of ['bdd.config.ts', 'bdd.config.js', 'bdd.config.mjs']) {
+      for (const name of ['var.config.ts', 'var.config.js', 'var.config.mjs']) {
         const abs = resolve(cwd, name)
         if (existsSync(abs)) {
           configPath = abs
@@ -33,10 +33,10 @@ export function bddVitestPlugin(options: BddVitestPluginOptions = {}): Plugin {
       }
     },
     async load(id) {
-      if (!id.endsWith('.bdd.md')) return null
+      if (!id.endsWith('.var.md')) return null
       const source = readFileSync(id, 'utf8')
       return generateVirtualModule({
-        bddPath: id,
+        varPath: id,
         stepImports: stepFiles,
         source,
         configPath,
@@ -46,11 +46,11 @@ export function bddVitestPlugin(options: BddVitestPluginOptions = {}): Plugin {
 }
 
 export type GenerateInput = {
-  readonly bddPath: string
+  readonly varPath: string
   readonly stepImports: ReadonlyArray<string>
   readonly source?: string
-  // Absolute path to a bdd.config.ts file. When present, the generated
-  // virtual module imports it as `bddConfig` and forwards its
+  // Absolute path to a var.config.ts file. When present, the generated
+  // virtual module imports it as `varConfig` and forwards its
   // `scannerPlugins` to the runtime.
   readonly configPath?: string | undefined
 }
@@ -58,21 +58,21 @@ export type GenerateInput = {
 export function generateVirtualModule(input: GenerateInput): string {
   const sourceJson = JSON.stringify(input.source ?? '')
   const stepImports = input.stepImports.map((p) => `import ${JSON.stringify(p)}`).join('\n')
-  const pathJson = JSON.stringify(input.bddPath)
+  const pathJson = JSON.stringify(input.varPath)
   const configImport = input.configPath
-    ? `import bddConfig from ${JSON.stringify(input.configPath)}`
-    : 'const bddConfig = {}'
+    ? `import varConfig from ${JSON.stringify(input.configPath)}`
+    : 'const varConfig = {}'
   return `import { test as vitestTest } from 'vitest'
-import { runBddSource } from '@oselvar/bdd-vitest/runtime'
+import { runVarSource } from '@oselvar/var-vitest/runtime'
 ${configImport}
 ${stepImports}
 
 const SOURCE = ${sourceJson}
 
-runBddSource(SOURCE, ${pathJson}, {
+runVarSource(SOURCE, ${pathJson}, {
   sink: { example: (name, run) => vitestTest(name, run) },
-  reporter: { diagnostic: (d) => vitestTest(\`bdd:diagnostic:\${d.code}\`, () => { throw new Error(d.message) }) },
-  scannerPlugins: bddConfig?.scannerPlugins ?? [],
+  reporter: { diagnostic: (d) => vitestTest(\`var:diagnostic:\${d.code}\`, () => { throw new Error(d.message) }) },
+  scannerPlugins: varConfig?.scannerPlugins ?? [],
 })
 `
 }

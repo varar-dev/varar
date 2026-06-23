@@ -1,4 +1,4 @@
-import { defineContext, defineParameterType } from '@oselvar/bdd-vitest'
+import { defineContext, defineParameterType } from '@oselvar/var-vitest'
 import { expect } from 'vitest'
 // import { Library } from '../src/library'
 

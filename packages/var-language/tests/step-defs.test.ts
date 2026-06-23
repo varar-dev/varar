@@ -2,7 +2,7 @@ import { expect, test } from 'vitest'
 import { discoverParameterTypes, discoverStepDefs } from '../src/step-defs.js'
 
 test('discovers a single step call with its source range', () => {
-  const source = `import { step } from '@oselvar/bdd-vitest'
+  const source = `import { step } from '@oselvar/var-vitest'
 step('I have {int} cukes', (ctx, n) => {})
 `
   const defs = discoverStepDefs('steps.ts', source)
@@ -14,7 +14,7 @@ step('I have {int} cukes', (ctx, n) => {})
 })
 
 test('discovers multiple step calls across the file', () => {
-  const source = `import { step } from '@oselvar/bdd-vitest'
+  const source = `import { step } from '@oselvar/var-vitest'
 step('first', () => {})
 step('second', () => {})
 step('third', () => {})
@@ -24,7 +24,7 @@ step('third', () => {})
 })
 
 test('handles the destructured-step pattern: const { step } = defineContext(...)', () => {
-  const source = `import { defineContext } from '@oselvar/bdd-vitest'
+  const source = `import { defineContext } from '@oselvar/var-vitest'
 const { step } = defineContext(() => ({}))
 step('I greet {string}', (ctx, name: string) => {})
 `
@@ -48,7 +48,7 @@ test('returns empty array for a file with no step calls', () => {
 })
 
 test('discovers defineParameterType with a regexp literal', () => {
-  const source = `import { defineParameterType } from '@oselvar/bdd-vitest'
+  const source = `import { defineParameterType } from '@oselvar/var-vitest'
 defineParameterType({ name: 'airport', regexp: /[A-Z]{3}/, transformer: (r) => r })
 `
   const defs = discoverParameterTypes('p.ts', source)

@@ -5,7 +5,7 @@ import { expect, test } from 'vitest'
 import { runStepdef } from '../src/stepdef.js'
 
 test('writes the snippet to the file specified by --file', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'bdd-stepdef-'))
+  const dir = mkdtempSync(join(tmpdir(), 'var-stepdef-'))
   try {
     const target = join(dir, 'steps.ts')
     writeFileSync(target, '')
@@ -26,7 +26,7 @@ test('writes the snippet to the file specified by --file', async () => {
 })
 
 test('--print writes to stdout, not the file', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'bdd-stepdef-print-'))
+  const dir = mkdtempSync(join(tmpdir(), 'var-stepdef-print-'))
   try {
     const captured: string[] = []
     const result = await runStepdef({
@@ -44,10 +44,10 @@ test('--print writes to stdout, not the file', async () => {
 })
 
 test('appends to an existing step file (does not overwrite)', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'bdd-stepdef-append-'))
+  const dir = mkdtempSync(join(tmpdir(), 'var-stepdef-append-'))
   try {
     const target = join(dir, 'steps.ts')
-    writeFileSync(target, "import { step } from '@oselvar/bdd-vitest'\n\n")
+    writeFileSync(target, "import { step } from '@oselvar/var-vitest'\n\n")
     await runStepdef({
       text: 'I have 5 cukes',
       file: target,
@@ -56,18 +56,18 @@ test('appends to an existing step file (does not overwrite)', async () => {
       writeStdout: () => {},
     })
     const written = readFileSync(target, 'utf8')
-    expect(written).toContain("import { step } from '@oselvar/bdd-vitest'")
+    expect(written).toContain("import { step } from '@oselvar/var-vitest'")
     expect(written).toContain("step('I have {int} cukes',")
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
 })
 
-test('honors snippet.template from bdd.config.ts', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'bdd-stepdef-custom-'))
+test('honors snippet.template from var.config.ts', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'var-stepdef-custom-'))
   try {
     writeFileSync(
-      join(dir, 'bdd.config.ts'),
+      join(dir, 'var.config.ts'),
       `export default { snippet: { template: 'CUSTOM:{{expression}}' } }\n`,
     )
     const target = join(dir, 'steps.ts')

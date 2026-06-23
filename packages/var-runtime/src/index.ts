@@ -4,7 +4,7 @@ import {
   defineParameterType as defineParameterTypeCore,
   type Registry,
   type StepHandler,
-} from '@oselvar/bdd'
+} from '@oselvar/var'
 
 type Entry = {
   readonly expression: string
@@ -108,8 +108,8 @@ function callerLocation(): { sourceFile: string; sourceLine: number } {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i] ?? ''
     if (
-      line.includes('/bdd-runtime/src/index') ||
-      line.includes('/bdd-runtime/dist/index') ||
+      line.includes('/var-runtime/src/index') ||
+      line.includes('/var-runtime/dist/index') ||
       line.includes('/api.ts') ||
       line.includes('/api.js')
     ) {
