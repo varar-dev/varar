@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state'
-import { appendStepDef, flashRange, runGenerateStepDef } from './cm-generate-step.js'
+import { appendStepDef, flashField, flashRange, runGenerateStepDef } from './cm-generate-step.js'
 
 // Apply the returned change to the original string the way CodeMirror would,
 // so we can assert on the resulting document and the [from, to) slice.
@@ -82,5 +82,15 @@ describe('runGenerateStepDef', () => {
     const sel = steps.state.selection.main
     expect([sel.from, sel.to]).toEqual([result!.from, result!.to])
     expect(result!.expression).toBe('greet')
+  })
+})
+
+describe('flashField', () => {
+  it('adds one decoration on flashRange set and clears it on null', () => {
+    let state = EditorState.create({ doc: 'abcdef', extensions: [flashField] })
+    state = state.update({ effects: flashRange.of({ from: 1, to: 4 }) }).state
+    expect(state.field(flashField).size).toBe(1)
+    state = state.update({ effects: flashRange.of(null) }).state
+    expect(state.field(flashField).size).toBe(0)
   })
 })
