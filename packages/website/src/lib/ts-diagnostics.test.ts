@@ -1,0 +1,29 @@
+import { describe, expect, it } from 'vitest'
+import { createTsDiagnostics } from './ts-diagnostics.js'
+
+describe('ts-diagnostics', () => {
+  it('reports a type mismatch', () => {
+    const ts = createTsDiagnostics()
+    ts.updateDoc('a.steps.ts', 'const n: number = "x"\n')
+    const d = ts.diagnostics('a.steps.ts')
+    expect(d.length).toBeGreaterThan(0)
+    expect(d.some((x) => /not assignable/.test(x.message))).toBe(true)
+  })
+
+  it('resolves @oselvar/var-runtime via the ambient decl (no cannot-find-module)', () => {
+    const ts = createTsDiagnostics()
+    ts.updateDoc(
+      'b.steps.ts',
+      `import { defineContext } from '@oselvar/var-runtime'\nconst { step } = defineContext(() => ({ greeting: '' }))\nstep('I greet {string}', (ctx, name) => { ctx.greeting = name })\n`,
+    )
+    const d = ts.diagnostics('b.steps.ts')
+    expect(d.find((x) => /Cannot find module/.test(x.message))).toBeUndefined()
+  })
+
+  it('has the standard lib bundled (Error resolves)', () => {
+    const ts = createTsDiagnostics()
+    ts.updateDoc('c.steps.ts', 'throw new Error("boom")\n')
+    const d = ts.diagnostics('c.steps.ts')
+    expect(d.find((x) => /Cannot find name 'Error'/.test(x.message))).toBeUndefined()
+  })
+})
