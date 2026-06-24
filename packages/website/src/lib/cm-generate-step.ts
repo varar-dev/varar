@@ -212,5 +212,5 @@ export function stepGenAffordance(deps: {
     ]),
   )
 
-  return [affordanceField, tooltipFromField, debouncePlugin, confirmKeymap, affordanceTheme, flashExtension()]
+  return [affordanceField, tooltipFromField, debouncePlugin, confirmKeymap, affordanceTheme]
 }

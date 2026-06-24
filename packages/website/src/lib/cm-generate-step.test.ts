@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state'
+import { EditorState, type TransactionSpec } from '@codemirror/state'
 import { affordanceField, appendStepDef, flashField, flashRange, runGenerateStepDef, setAffordance } from './cm-generate-step.js'
 
 // Apply the returned change to the original string the way CodeMirror would,
