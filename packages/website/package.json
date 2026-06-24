@@ -20,6 +20,7 @@
     "@codemirror/state": "^6.7.0",
     "@codemirror/view": "^6.43.2",
     "@oselvar/var": "workspace:*",
+    "@oselvar/var-runtime": "workspace:*",
     "@oselvar/var-language": "workspace:*",
     "@oselvar/var-lsp": "workspace:*",
     "codemirror": "^6.0.1",

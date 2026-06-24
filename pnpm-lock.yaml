@@ -175,6 +175,9 @@ importers:
       '@oselvar/var-lsp':
         specifier: workspace:*
         version: link:../var-lsp
+      '@oselvar/var-runtime':
+        specifier: workspace:*
+        version: link:../var-runtime
       codemirror:
         specifier: ^6.0.1
         version: 6.0.2
