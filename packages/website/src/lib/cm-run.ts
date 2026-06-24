@@ -84,6 +84,10 @@ const errorGutter = gutter({
     }
     return null
   },
+  // Recompute markers when run results change (they arrive via a StateEffect,
+  // not a doc change, so the gutter wouldn't otherwise refresh).
+  lineMarkerChange: (update) =>
+    update.transactions.some((tr) => tr.effects.some((e) => e.is(setRunResults))),
 })
 
 function runPanel(view: EditorView, onRunAll: (view: EditorView) => void): Panel {
