@@ -1,11 +1,20 @@
 ---
-import Base from '../layouts/Base.astro'
 import Editor from '../components/Editor.astro'
-const hello = `# Hello, Vár\n\nFirst I greet "world" okay? I think the greeting should be "Hello, world!"\n`
+import Base from '../layouts/Base.astro'
+import { SEED_FILES } from '../lib/seed-files.ts'
 ---
 <Base title="Vár playground" description="Run Vár in the browser.">
   <main class="doc">
     <h1>playground</h1>
-    <Editor uri="file:///hello.var.md" lang="markdown" doc={hello} />
+    <p>
+      Edit the spec or the step definitions — both share one in-browser Vár language
+      server, so the highlighting in the spec updates live as you change either file.
+    </p>
+
+    <h2>the spec</h2>
+    <Editor uri="file:///hello.var.md" lang="markdown" doc={SEED_FILES['/hello.var.md']} />
+
+    <h2>the step definitions</h2>
+    <Editor uri="file:///01-hello.steps.ts" lang="typescript" doc={SEED_FILES['/01-hello.steps.ts']} />
   </main>
 </Base>

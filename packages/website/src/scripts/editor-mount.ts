@@ -1,3 +1,4 @@
+import { javascript } from '@codemirror/lang-javascript'
 import { markdown } from '@codemirror/lang-markdown'
 import { LSPClient, languageServerExtensions } from '@codemirror/lsp-client'
 import { EditorView, basicSetup } from 'codemirror'
@@ -24,10 +25,12 @@ function lspClient(): LSPClient {
 export function mountEditor(el: HTMLElement): EditorView {
   const doc = el.dataset.doc ?? ''
   const uri = el.dataset.uri ?? 'file:///untitled.var.md'
+  const lang = el.dataset.lang ?? 'markdown'
+  const language = lang === 'typescript' ? javascript({ typescript: true }) : markdown()
   const client = lspClient()
   return new EditorView({
     doc,
-    extensions: [basicSetup, markdown(), varTokenTheme, client.plugin(uri)],
+    extensions: [basicSetup, language, varTokenTheme, client.plugin(uri)],
     parent: el,
   })
 }
