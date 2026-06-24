@@ -1,14 +1,13 @@
 import { DEFAULT_SNIPPET_TEMPLATE } from '@oselvar/var'
 import { registerHandlers } from '@oselvar/var-lsp'
 import { BrowserMessageReader, BrowserMessageWriter, createConnection } from 'vscode-languageserver/browser.js'
-import { createMapFileSystem } from './map-file-system.ts'
+import { createIdbFileSystem } from './idb-file-system.ts'
 import { SEED_FILES } from './seed-files.ts'
 
 const reader = new BrowserMessageReader(self as DedicatedWorkerGlobalScope)
 const writer = new BrowserMessageWriter(self as DedicatedWorkerGlobalScope)
 const connection = createConnection(reader, writer)
 
-const fs = createMapFileSystem(SEED_FILES)
 const config = {
   vars: ['**/*.var.md'],
   steps: ['**/*.steps.ts'],
@@ -16,5 +15,8 @@ const config = {
   scannerPlugins: [],
 }
 
-registerHandlers(connection, async () => ({ fs, config }))
+registerHandlers(connection, async () => ({
+  fs: await createIdbFileSystem(SEED_FILES),
+  config,
+}))
 connection.listen()
