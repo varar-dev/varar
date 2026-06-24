@@ -58,16 +58,25 @@ class ErrorMarker extends GutterMarker {
     el.className = 'cm-run-errmark'
     el.title = 'Click to show the stack trace'
     el.onclick = () => {
-      // Simple popover: a <pre> appended near the editor. (A CM tooltip is an
-      // alternative — see note below.)
-      const editor = el.closest('.cm-editor')
-      // Remove any existing popover in this editor to prevent stacking on repeated clicks.
-      editor?.querySelectorAll('.cm-run-stack').forEach((existing) => existing.remove())
-      const pop = document.createElement('pre')
-      pop.className = 'cm-run-stack'
-      pop.textContent = this.stack
-      pop.onclick = () => pop.remove()
-      editor?.appendChild(pop)
+      // Native <dialog>: showModal() promotes it to the top layer (so it's
+      // viewport-fixed and never clipped/scrolled by the editor), Esc dismisses
+      // it for free, and click-outside is one line. Appending it inside the
+      // editor keeps the baseTheme styling.
+      const host = el.closest('.cm-editor') ?? document.body
+      host.querySelectorAll('dialog.cm-run-dialog').forEach((d) => d.remove())
+      const dialog = document.createElement('dialog')
+      dialog.className = 'cm-run-dialog'
+      const pre = document.createElement('pre')
+      pre.className = 'cm-run-stack'
+      pre.textContent = this.stack
+      dialog.appendChild(pre)
+      // A click on the dialog element itself (not its <pre> content) is the backdrop.
+      dialog.addEventListener('click', (e) => {
+        if (e.target === dialog) dialog.close()
+      })
+      dialog.addEventListener('close', () => dialog.remove())
+      host.appendChild(dialog)
+      dialog.showModal()
     }
     return el
   }
@@ -106,10 +115,15 @@ const runTheme = EditorView.baseTheme({
   '.cm-run-pass': { background: 'rgba(40, 167, 69, 0.18)' },
   '.cm-run-fail': { background: 'rgba(255, 46, 136, 0.18)' },
   '.cm-run-errmark': { color: 'var(--accent)', cursor: 'pointer', fontWeight: '700' },
+  '.cm-run-dialog': {
+    padding: '0', border: '2px solid var(--ink)', borderRadius: '8px',
+    maxWidth: 'min(90vw, 800px)', background: 'var(--ink)',
+  },
+  '.cm-run-dialog::backdrop': { background: 'rgba(26, 26, 26, 0.5)' },
   '.cm-run-stack': {
-    position: 'absolute', right: '8px', bottom: '8px', maxWidth: '90%', maxHeight: '40%',
-    overflow: 'auto', background: 'var(--ink)', color: 'var(--cream)', padding: '8px',
-    borderRadius: '6px', fontSize: '12px', zIndex: '5', whiteSpace: 'pre-wrap',
+    margin: '0', padding: '16px', maxHeight: '70vh', overflow: 'auto',
+    background: 'var(--ink)', color: 'var(--cream)', borderRadius: '6px',
+    fontSize: '13px', whiteSpace: 'pre-wrap',
   },
 })
 
