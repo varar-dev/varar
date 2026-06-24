@@ -12,9 +12,9 @@ import { SEED_FILES } from '../lib/seed-files.ts'
     </p>
 
     <h2>the spec</h2>
-    <Editor uri="file:///hello.var.md" lang="markdown" doc={SEED_FILES['/hello.var.md']} />
+    <Editor uri="file:///hello.var.md" lang="markdown">{SEED_FILES['/hello.var.md']}</Editor>
 
     <h2>the step definitions</h2>
-    <Editor uri="file:///01-hello.steps.ts" lang="typescript" doc={SEED_FILES['/01-hello.steps.ts']} />
+    <Editor uri="file:///01-hello.steps.ts" lang="typescript">{SEED_FILES['/01-hello.steps.ts']}</Editor>
   </main>
 </Base>

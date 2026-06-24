@@ -1,10 +1,19 @@
 ---
+import { decodeEntities } from '../lib/step-highlight.js'
+
 interface Props {
   uri: string
   lang?: 'markdown' | 'typescript'
-  doc?: string
 }
-const { uri, lang = 'markdown', doc = '' } = Astro.props
+const { uri, lang = 'markdown' } = Astro.props
+
+// The document is the default slot. Author it as a raw string child —
+// `<Editor uri="…">{`line one\nline two`}</Editor>` — so MDX/Astro passes the
+// text through verbatim. The rendered slot is HTML-escaped, so decode it back
+// to the raw source before handing it to CodeMirror via `data-doc`.
+const doc = decodeEntities(
+  (await Astro.slots.render('default')).replace(/^\n+/, '').replace(/\n+$/, ''),
+)
 ---
 <div class="cm-mount" data-uri={uri} data-lang={lang} data-doc={doc}></div>
 <style>
