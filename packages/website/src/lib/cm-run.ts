@@ -94,6 +94,9 @@ const errorGutter = gutter({
 const runTheme = EditorView.baseTheme({
   '.cm-run-pass': { background: 'rgba(40, 167, 69, 0.18)' },
   '.cm-run-fail': { background: 'rgba(255, 46, 136, 0.18)' },
+  // Reserve a fixed width so the gutter doesn't jitter as ✗ markers come and go.
+  '.cm-run-gutter': { width: '1.4em', minWidth: '1.4em' },
+  '.cm-run-gutter .cm-gutterElement': { textAlign: 'center' },
   '.cm-run-errmark': { color: 'var(--accent)', cursor: 'pointer', fontWeight: '700' },
   '.cm-run-dialog': {
     padding: '0', border: '2px solid var(--ink)', borderRadius: '8px',
