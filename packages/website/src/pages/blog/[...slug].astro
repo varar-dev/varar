@@ -1,0 +1,40 @@
+---
+import { getCollection, render } from 'astro:content'
+import Base from '../../layouts/Base.astro'
+
+export async function getStaticPaths() {
+  const posts = await getCollection('blog', ({ data }) => !data.draft)
+  return posts.map((post) => ({ params: { slug: post.id }, props: { post } }))
+}
+
+const { post } = Astro.props
+const { Content } = await render(post)
+const base = import.meta.env.BASE_URL.replace(/\/$/, '')
+const fmt = (d: Date) => d.toISOString().slice(0, 10)
+---
+
+<Base title={`${post.data.title} — Vár blog`} description={post.data.description}>
+  <main class="doc">
+    <nav class="doc-nav" aria-label="Breadcrumb">
+      <a href={`${base}/`}>Vár</a>
+      <span aria-hidden="true">›</span>
+      <a href={`${base}/blog/`}>blog</a>
+    </nav>
+
+    <article class="doc-body">
+      <h1>{post.data.title}</h1>
+      <p class="post-meta"><time datetime={fmt(post.data.pubDate)}>{fmt(post.data.pubDate)}</time></p>
+      <Content />
+    </article>
+
+    <footer class="doc-footer">
+      <a href={`${base}/blog/`}>← all posts</a>
+      <span> · </span>
+      <a href={`${base}/rss.xml`}>rss</a>
+    </footer>
+  </main>
+</Base>
+
+<style>
+  .post-meta { font-size: 13px; opacity: 0.7; margin: 0 0 24px; }
+</style>

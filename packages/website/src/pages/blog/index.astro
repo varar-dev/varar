@@ -1,0 +1,56 @@
+---
+import { getCollection } from 'astro:content'
+import Base from '../../layouts/Base.astro'
+
+const base = import.meta.env.BASE_URL.replace(/\/$/, '')
+const posts = (await getCollection('blog', ({ data }) => !data.draft)).sort(
+  (a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf(),
+)
+const fmt = (d: Date) => d.toISOString().slice(0, 10)
+---
+
+<Base title="Vár blog" description="Notes on Behaviour-Driven Development, executable specs, and Vár.">
+  <main class="doc">
+    <nav class="doc-nav" aria-label="Breadcrumb">
+      <a href={`${base}/`}>Vár</a>
+      <span aria-hidden="true">›</span>
+      <span>blog</span>
+    </nav>
+
+    <h1>blog</h1>
+    <p class="lede">
+      Notes on specs, examples, and not making people cry.
+      <a href={`${base}/rss.xml`}>RSS</a>.
+    </p>
+
+    <ul class="post-list">
+      {posts.map((p) => (
+        <li>
+          <a class="post-title" href={`${base}/blog/${p.id}/`}>{p.data.title}</a>
+          <time datetime={fmt(p.data.pubDate)}>{fmt(p.data.pubDate)}</time>
+          <p>{p.data.description}</p>
+        </li>
+      ))}
+    </ul>
+
+    <footer class="doc-footer">
+      <a href={`${base}/`}>← home</a>
+      <span> · </span>
+      <a href={`${base}/rss.xml`}>rss</a>
+    </footer>
+  </main>
+</Base>
+
+<style>
+  .post-list { list-style: none; padding: 0; margin: 32px 0; }
+  .post-list li { padding: 16px 0; border-bottom: 1px solid var(--ink); }
+  .post-title {
+    font-family: "Monoton", cursive;
+    font-size: clamp(22px, 3vw, 32px);
+    color: var(--ink);
+    text-decoration: none;
+  }
+  .post-title:hover { color: var(--accent); }
+  .post-list time { display: block; font-size: 13px; opacity: 0.7; margin: 4px 0; }
+  .post-list p { margin: 6px 0 0; }
+</style>

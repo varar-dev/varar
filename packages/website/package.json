@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@astrojs/mdx": "^4",
+    "@astrojs/rss": "^4",
     "@codemirror/lang-javascript": "^6.2.0",
     "@codemirror/lang-markdown": "^6.3.0",
     "@codemirror/lsp-client": "^6.0.0",
