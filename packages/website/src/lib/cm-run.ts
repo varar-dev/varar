@@ -74,6 +74,20 @@ class ErrorMarker extends GutterMarker {
   }
 }
 
+class PassMarker extends GutterMarker {
+  eq(other: GutterMarker): boolean {
+    return other instanceof PassMarker
+  }
+  toDOM(_view: EditorView): Node {
+    const el = document.createElement('span')
+    el.textContent = '✅'
+    el.className = 'cm-run-passmark'
+    el.title = 'This example passes'
+    return el
+  }
+}
+const PASS_MARKER = new PassMarker()
+
 const errorGutter = gutter({
   class: 'cm-run-gutter',
   lineMarker(view, line) {
@@ -81,7 +95,12 @@ const errorGutter = gutter({
     if (!results) return null
     const lineNo = view.state.doc.lineAt(line.from).number
     for (const ex of results.examples) {
-      if (ex.failure && ex.failure.line === lineNo) return new ErrorMarker(ex.failure.stack)
+      if (ex.status === 'failed' && ex.failure?.line === lineNo) {
+        return new ErrorMarker(ex.failure.stack)
+      }
+      if (ex.status === 'passed' && ex.lines.length > 0 && Math.min(...ex.lines) === lineNo) {
+        return PASS_MARKER
+      }
     }
     return null
   },
@@ -98,6 +117,7 @@ const runTheme = EditorView.baseTheme({
   '.cm-run-gutter': { width: '1.4em', minWidth: '1.4em' },
   '.cm-run-gutter .cm-gutterElement': { textAlign: 'center' },
   '.cm-run-errmark': { color: 'var(--accent)', cursor: 'pointer', fontWeight: '700' },
+  '.cm-run-passmark': { fontSize: '0.8em' },
   '.cm-run-dialog': {
     padding: '0', border: '2px solid var(--ink)', borderRadius: '8px',
     maxWidth: 'min(90vw, 800px)', background: 'var(--ink)',
