@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { appendStepDef } from './cm-generate-step.js'
+import { EditorSelection, EditorState, type TransactionSpec } from '@codemirror/state'
+import { appendStepDef, flashRange, runGenerateStepDef } from './cm-generate-step.js'
 
 // Apply the returned change to the original string the way CodeMirror would,
 // so we can assert on the resulting document and the [from, to) slice.
@@ -40,5 +41,46 @@ describe('appendStepDef', () => {
     const doc2 = apply(doc1, second.changes as { from: number; to: number; insert: string })
     expect(doc2).toBe(BLOCK.trim() + '\n\n' + BLOCK.trim() + '\n')
     expect(doc2.slice(second.from, second.to)).toBe(BLOCK.trim())
+  })
+})
+
+// Minimal headless EditorLike backed by an EditorState (no DOM).
+function editor(doc: string, selection?: { anchor: number; head: number }) {
+  let state = EditorState.create({ doc, selection })
+  return {
+    get state() {
+      return state
+    },
+    dispatch(tr: TransactionSpec) {
+      state = state.update(tr).state
+    },
+    focus() {},
+  }
+}
+
+describe('runGenerateStepDef', () => {
+  const generate = (text: string) =>
+    Promise.resolve({ fullCode: `step('${text}', (ctx) => {\n})\n`, expression: text })
+
+  it('returns null and does not touch the steps view when the selection is empty', async () => {
+    const spec = editor('I greet world', { anchor: 3, head: 3 })
+    const steps = editor("step('a', (ctx) => {\n})\n")
+    const before = steps.state.doc.toString()
+    const result = await runGenerateStepDef({ specView: spec, stepsView: steps, generate })
+    expect(result).toBeNull()
+    expect(steps.state.doc.toString()).toBe(before)
+  })
+
+  it('appends the generated snippet and selects the inserted block', async () => {
+    const spec = editor('I greet world', { anchor: 2, head: 7 }) // selects "greet"
+    const steps = editor("step('a', (ctx) => {\n})\n")
+    const result = await runGenerateStepDef({ specView: spec, stepsView: steps, generate })
+    expect(result).not.toBeNull()
+    const doc = steps.state.doc.toString()
+    expect(doc).toContain("step('greet', (ctx) => {")
+    expect(doc.slice(result!.from, result!.to)).toBe("step('greet', (ctx) => {\n})")
+    const sel = steps.state.selection.main
+    expect([sel.from, sel.to]).toEqual([result!.from, result!.to])
+    expect(result!.expression).toBe('greet')
   })
 })
