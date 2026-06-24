@@ -4,6 +4,15 @@ description: A rule you can't trace back to an example is just a vibe with a cli
 pubDate: 2026-06-24
 ---
 
+Rules without a cause.
+
+Rules without a cause are arbitrary. They invite rebellion or confusion.
+
+This manifests in software. When the domain is new and requirements are vague or ambiguous,
+you will always get useless software. Useless in the sense that it doesn't solve the users' problems.
+
+
+
 We love rules. *Always write the test first. Never push to main. Every step must
 start with Given, When, or Then.* Rules are comforting — cheap to state, easy to
 enforce, and they make us feel like grown-ups who have it together.
