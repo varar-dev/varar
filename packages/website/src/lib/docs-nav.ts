@@ -37,7 +37,6 @@ function sortedAreaEntries(
 ): ReadonlyArray<DocEntry> {
   return entries
     .filter((e) => e.area === area)
-    .slice()
     .sort((a, b) => a.order - b.order)
 }
 

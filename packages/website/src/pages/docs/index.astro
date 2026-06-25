@@ -1,7 +1,6 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro'
 import Search from '../../components/Search.astro'
-import { AREAS } from '../../lib/docs-areas'
 import { buildNav } from '../../lib/docs-nav'
 import { loadDocEntries } from '../../lib/docs-collection'
 
@@ -26,24 +25,21 @@ const groups = buildNav(entries, base, null)
   </p>
 
   <div class="docs-cards">
-    {AREAS.map((area) => {
-      const group = groups.find((g) => g.area.id === area.id)!
-      return (
-        <section class="docs-card">
-          <p class="docs-card__kind">{area.diataxis}</p>
-          <h2>{area.label}</h2>
-          {group.links.length > 0 ? (
-            <ul>
-              {group.links.map((link) => (
-                <li><a href={link.href}>{link.title}</a></li>
-              ))}
-            </ul>
-          ) : (
-            <p class="docs-card__empty">Coming soon — spec syntax, step matching, CLI flags.</p>
-          )}
-        </section>
-      )
-    })}
+    {groups.map((group) => (
+      <section class="docs-card">
+        <p class="docs-card__kind">{group.area.diataxis}</p>
+        <h2>{group.area.label}</h2>
+        {group.links.length > 0 ? (
+          <ul>
+            {group.links.map((link) => (
+              <li><a href={link.href}>{link.title}</a></li>
+            ))}
+          </ul>
+        ) : (
+          <p class="docs-card__empty">Coming soon — spec syntax, step matching, CLI flags.</p>
+        )}
+      </section>
+    ))}
   </div>
 </DocsLayout>
 

@@ -83,7 +83,7 @@ const desc = description ?? 'Vár — Behaviour-Driven Development specs an AI a
       }
       .docs-shell.is-open .docs-shell__sidebar { transform: translateX(0); }
       .docs-shell.is-open .docs-shell__backdrop {
-        display: block; position: fixed; inset: 0; z-index: 55; background: rgba(26,26,26,0.4);
+        display: block; position: fixed; inset: 0; z-index: 55; background: color-mix(in srgb, var(--ink) 40%, transparent);
       }
     }
   </style>
@@ -91,29 +91,81 @@ const desc = description ?? 'Vár — Behaviour-Driven Development specs an AI a
   <script>
     function initDocsDrawer() {
       const shell = document.querySelector('[data-docs-shell]')
-      const menu = document.querySelector('[data-docs-menu]')
+      const menuEl = document.querySelector<HTMLElement>('[data-docs-menu]')
       const backdrop = document.querySelector('[data-docs-backdrop]')
-      const sidebar = document.querySelector('[data-docs-sidebar]')
-      if (!shell || !menu || !sidebar) return
+      const sidebarEl = document.querySelector<HTMLElement>('[data-docs-sidebar]')
+      const mainContent = document.querySelector<HTMLElement>('.docs-shell__main')
+      const topbar = document.querySelector<HTMLElement>('.docs-topbar')
+      if (!shell || !menuEl || !sidebarEl) return
+      // After the guard above, these are guaranteed non-null. We reassign to
+      // non-nullable locals so closures below can use them without TS complaining.
+      const menu: HTMLElement = menuEl
+      const sidebar: HTMLElement = sidebarEl
+
+      const mobileQuery = window.matchMedia('(max-width: 820px)')
+
+      // Returns the first focusable element inside the sidebar, or the sidebar itself.
+      function firstFocusable(): HTMLElement {
+        return (
+          sidebar.querySelector<HTMLElement>(
+            'a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])',
+          ) ?? sidebar
+        )
+      }
+
+      function applyInertForMobileClosed() {
+        if (mobileQuery.matches) {
+          sidebar.setAttribute('inert', '')
+        } else {
+          sidebar.removeAttribute('inert')
+        }
+        // Always clear main/topbar inert when drawer is not open.
+        mainContent?.removeAttribute('inert')
+        topbar?.removeAttribute('inert')
+      }
 
       const open = () => {
         shell.classList.add('is-open')
         menu.setAttribute('aria-expanded', 'true')
+        if (mobileQuery.matches) {
+          sidebar.removeAttribute('inert')
+          mainContent?.setAttribute('inert', '')
+          topbar?.setAttribute('inert', '')
+          firstFocusable().focus()
+        }
       }
-      const close = () => {
+
+      const close = (restoreFocus = true) => {
         shell.classList.remove('is-open')
         menu.setAttribute('aria-expanded', 'false')
+        if (mobileQuery.matches) {
+          sidebar.setAttribute('inert', '')
+          mainContent?.removeAttribute('inert')
+          topbar?.removeAttribute('inert')
+          if (restoreFocus) menu.focus()
+        }
       }
+
+      // Sync inert state when the viewport crosses the 820px breakpoint.
+      mobileQuery.addEventListener('change', () => {
+        if (shell.classList.contains('is-open')) {
+          close(false)
+        }
+        applyInertForMobileClosed()
+      })
+
+      // Set initial inert state for the sidebar when at mobile widths and closed.
+      applyInertForMobileClosed()
 
       menu.addEventListener('click', () =>
         shell.classList.contains('is-open') ? close() : open(),
       )
-      backdrop?.addEventListener('click', close)
+      backdrop?.addEventListener('click', () => close())
       sidebar.addEventListener('click', (e) => {
         if ((e.target as HTMLElement).closest('a')) close()
       })
       document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') close()
+        if (e.key === 'Escape' && shell.classList.contains('is-open')) close()
       })
     }
 
