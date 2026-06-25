@@ -68,7 +68,7 @@ const autoRun = EditorView.updateListener.of((u) => {
   if (u.docChanged) scheduleRun()
 })
 
-export function mountEditor(el: HTMLElement): EditorView {
+function mountEditor(el: HTMLElement): EditorView {
   const doc = el.dataset.doc ?? ''
   const uri = el.dataset.uri ?? 'file:///untitled.var.md'
   const lang = el.dataset.lang ?? 'markdown'

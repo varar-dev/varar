@@ -1,35 +1,31 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
+  "ignoreExportsUsedInFile": true,
+  "ignoreWorkspaces": ["packages/cucumber"],
   "workspaces": {
     "packages/var": {
-      "entry": ["src/index.ts"],
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
     "packages/var-cli": {
-      "entry": ["src/index.ts", "src/bin.ts"],
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
     "packages/var-vitest": {
-      "entry": ["src/index.ts", "src/runtime.ts"],
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
     "packages/var-language": {
-      "entry": ["src/index.ts"],
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
     "packages/var-lsp": {
-      "entry": ["src/server.ts", "src/bin.ts"],
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
     "packages/var-vscode": {
-      "entry": ["src/extension.ts"],
       "project": ["src/**/*.ts"],
       "ignoreDependencies": ["@oselvar/var-language", "@oselvar/var-lsp"]
     },
     "docs/tutorial": {
-      "entry": ["**/*.var.md", "**/*.steps.ts", "vitest.config.ts"],
+      "entry": ["**/*.var.md", "**/*.steps.ts"],
       "project": ["**/*.{ts,var.md}"]
     }
   },
-  "ignore": ["var.config.ts"]
+  "ignore": ["var.config.ts", "**/tests/fixtures/**", "packages/website/src/layouts/Doc.astro"]
 }

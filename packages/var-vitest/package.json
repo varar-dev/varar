@@ -23,7 +23,6 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@cucumber/cucumber-expressions": "^17.1.0",
     "@oselvar/var": "workspace:*",
     "@oselvar/var-runtime": "workspace:*"
   },
