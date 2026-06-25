@@ -28,6 +28,11 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '')
       <p class="tagline">The ninth is Vár: she harkens to the oaths and compacts made between men and women; wherefore such covenants are called 'vows.' She also takes vengeance on those who perjure themselves.</p>
     </section>
 
+    <section class="cta" aria-label="Get started">
+      <a class="cta__primary" href={`${base}/docs/start-here/hello-var-your-first-spec`}>Get started →</a>
+      <a class="cta__secondary" href={`${base}/docs/`}>Browse docs</a>
+    </section>
+
     <section class="pitch" aria-label="What Vár gives you">
       <article>
         <h2>discover misunderstandings</h2>
@@ -66,3 +71,18 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '')
     </footer>
   </main>
 </Base>
+
+<style>
+  .cta {
+    display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: center;
+    margin: 8px 0 24px;
+  }
+  .cta__primary {
+    padding: 12px 24px;
+    background: var(--ink); color: var(--cream);
+    border-radius: var(--radius-5); text-decoration: none; font-weight: 600;
+  }
+  .cta__primary:hover { background: var(--accent); }
+  .cta__secondary { color: var(--ink); text-decoration: underline; text-decoration-color: var(--orange); }
+  .cta__secondary:hover { color: var(--accent); }
+</style>
