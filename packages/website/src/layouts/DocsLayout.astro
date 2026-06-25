@@ -87,4 +87,37 @@ const desc = description ?? 'Vár — Behaviour-Driven Development specs an AI a
       }
     }
   </style>
+
+  <script>
+    function initDocsDrawer() {
+      const shell = document.querySelector('[data-docs-shell]')
+      const menu = document.querySelector('[data-docs-menu]')
+      const backdrop = document.querySelector('[data-docs-backdrop]')
+      const sidebar = document.querySelector('[data-docs-sidebar]')
+      if (!shell || !menu || !sidebar) return
+
+      const open = () => {
+        shell.classList.add('is-open')
+        menu.setAttribute('aria-expanded', 'true')
+      }
+      const close = () => {
+        shell.classList.remove('is-open')
+        menu.setAttribute('aria-expanded', 'false')
+      }
+
+      menu.addEventListener('click', () =>
+        shell.classList.contains('is-open') ? close() : open(),
+      )
+      backdrop?.addEventListener('click', close)
+      sidebar.addEventListener('click', (e) => {
+        if ((e.target as HTMLElement).closest('a')) close()
+      })
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') close()
+      })
+    }
+
+    initDocsDrawer()
+    document.addEventListener('astro:after-swap', initDocsDrawer)
+  </script>
 </Base>
