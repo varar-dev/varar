@@ -1,7 +1,8 @@
 ---
-layout: ../../../layouts/Doc.astro
 title: Wire Vár into your AI agent's instructions
 description: One-time setup so your coding agent defaults to writing a Vár spec before any production code.
+area: guides
+order: 1
 ---
 
 # Wire Vár into your AI agent's instructions

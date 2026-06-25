@@ -1,7 +1,8 @@
 ---
-layout: ../../../layouts/Doc.astro
 title: Why Vár pairs well with AI coding agents
 description: ATDD is the deterministic counterweight to non-deterministic AI. The spec is the contract; the code is regeneratable.
+area: concepts
+order: 1
 ---
 
 # Why Vár pairs well with AI coding agents

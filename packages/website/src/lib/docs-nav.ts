@@ -1,4 +1,5 @@
 import { AREAS, type Area, type AreaId } from './docs-areas'
+export type { AreaId } from './docs-areas'
 
 // Minimal shape needed from a docs collection entry. Kept independent of
 // astro:content types so these functions stay pure and unit-testable.

@@ -1,7 +1,8 @@
 ---
-layout: ../../../layouts/Doc.astro
 title: Drive a feature with Vár and an AI agent
 description: The per-feature loop once your agent is wired up — talk in customer language, let the agent specify, then iterate on the spec.
+area: guides
+order: 2
 ---
 
 # Drive a feature with Vár and an AI agent
