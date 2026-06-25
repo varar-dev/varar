@@ -25,8 +25,6 @@ function evalStepFile(path: string, source: string): void {
   }
   const mod = { exports: {} as Record<string, unknown> }
   // `//# sourceURL` makes var-runtime's stack-based callerLocation see the real path.
-  // biome-ignore lint/security/noGlobalEval: intentional sandboxed eval for step file transpilation
-  // eslint-disable-next-line no-new-func
   new Function('require', 'exports', 'module', `${js}\n//# sourceURL=${path}`)(
     require,
     mod.exports,

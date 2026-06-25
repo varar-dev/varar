@@ -33,6 +33,10 @@
     {
       "includes": ["**/*.astro"],
       "linter": { "enabled": false }
+    },
+    {
+      "includes": ["**/*.test.ts", "**/tests/**"],
+      "linter": { "rules": { "style": { "noNonNullAssertion": "off" } } }
     }
   ]
 }

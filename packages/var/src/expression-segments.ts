@@ -186,6 +186,7 @@ export function diffExpressions(
         kind: 'kept',
         oldIndex: i,
         newIndex: i,
+        // biome-ignore lint/style/noNonNullAssertion: i is within oldParams bounds (loop index)
         nameUnchanged: oldParams[i]!.name === nextNew.name,
       })
     } else {
@@ -194,6 +195,7 @@ export function diffExpressions(
   }
   for (let j = 0; j < newParams.length; j++) {
     if (newConsumed.has(j)) continue
+    // biome-ignore lint/style/noNonNullAssertion: j is within newParams bounds (loop index)
     paramFates.push({ kind: 'added', newIndex: j, name: newParams[j]!.name })
   }
 

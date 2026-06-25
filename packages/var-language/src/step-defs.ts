@@ -138,7 +138,9 @@ function extractHandlerParams(
 ): HandlerParams | undefined {
   const params = handler.parameters
   if (params.length === 0) return undefined
+  // biome-ignore lint/style/noNonNullAssertion: length checked non-zero above
   const first = params[0]!
+  // biome-ignore lint/style/noNonNullAssertion: length checked non-zero above
   const last = params[params.length - 1]!
   const start = sf.getLineAndCharacterOfPosition(first.getStart(sf))
   const end = sf.getLineAndCharacterOfPosition(last.getEnd())

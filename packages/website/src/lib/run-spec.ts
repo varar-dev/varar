@@ -28,6 +28,7 @@ export async function runRegisteredSpec(
   const sink: TestSink = {
     example(name, run) {
       const idx = i++
+      // biome-ignore lint/style/noNonNullAssertion: example() is invoked once per examples entry, so idx is in range
       const ex = examples[idx]!
       const lines = [...new Set(ex.steps.map((s) => s.matchSpan.startLine))]
       pending.push(

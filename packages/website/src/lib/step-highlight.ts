@@ -65,6 +65,7 @@ export function highlightSteps(input: {
   for (const m of matches) {
     paint(m.range, 'step')
     for (let i = 0; i < m.paramRanges.length; i++) {
+      // biome-ignore lint/style/noNonNullAssertion: i is within paramRanges bounds (loop condition)
       const p = m.paramRanges[i]!
       const val = m.paramValues[i] ?? ''
       // {string} Cucumber parameters capture the surrounding quotes in their
