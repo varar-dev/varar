@@ -1,4 +1,5 @@
 import mdx from '@astrojs/mdx'
+import pagefind from 'astro-pagefind'
 import { defineConfig } from 'astro/config'
 
 export default defineConfig({
@@ -6,5 +7,5 @@ export default defineConfig({
   base: '/var',
   output: 'static',
   trailingSlash: 'ignore',
-  integrations: [mdx()],
+  integrations: [mdx(), pagefind()],
 })
