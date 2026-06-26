@@ -166,6 +166,12 @@ importers:
       '@codemirror/view':
         specifier: ^6.43.2
         version: 6.43.2
+      '@navikt/aksel-icons':
+        specifier: ^8.13.1
+        version: 8.13.1
+      '@navikt/ds-css':
+        specifier: ^8.13.1
+        version: 8.13.1
       '@oselvar/var':
         specifier: workspace:*
         version: link:../var
@@ -1239,6 +1245,12 @@ packages:
     peerDependencies:
       '@emnapi/core': ^1.7.1
       '@emnapi/runtime': ^1.7.1
+
+  '@navikt/aksel-icons@8.13.1':
+    resolution: {integrity: sha512-gZSFF0r97WK46yMidgS5jkl+l+S4nBcsspFZexIhZnyXAx0wOIs2Ahgt0kPGDb6pY/3GpfxTiKj178wI3UzBfg==}
+
+  '@navikt/ds-css@8.13.1':
+    resolution: {integrity: sha512-S8y5i6ic962L9m4CWBP688EUNYr1DH4vOcOr1irh6jZavsPp1LLUS3wXhC2OpreaNsxBO/8ZVxgA/XR03d3unA==}
 
   '@nodable/entities@2.2.0':
     resolution: {integrity: sha512-9uGyhaQavEUMC8AIddIjau4NsnsXhou+j5sBAGojCM1oxmQpVKTWR/9JxABD6UAv12vpIms55fPZKFQEhG6uBg==}
@@ -4799,6 +4811,10 @@ snapshots:
       '@emnapi/runtime': 1.10.0
       '@tybys/wasm-util': 0.10.2
     optional: true
+
+  '@navikt/aksel-icons@8.13.1': {}
+
+  '@navikt/ds-css@8.13.1': {}
 
   '@nodable/entities@2.2.0': {}
 
