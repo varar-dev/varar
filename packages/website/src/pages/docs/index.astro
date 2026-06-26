@@ -48,15 +48,14 @@ const groups = buildNav(entries, base, null)
     margin: 40px 0;
   }
   .docs-card {
-    border: 2px solid var(--ink);
-    border-radius: var(--radius-5);
-    padding: 20px;
+    border: 1px solid var(--ax-border-subtle);
+    border-radius: var(--ax-radius-12);
+    padding: var(--ax-space-24);
   }
   .docs-card__kind {
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    text-transform: uppercase; font-size: 11px; letter-spacing: 0.06em; opacity: 0.6; margin: 0;
+    text-transform: uppercase; font-size: var(--ax-font-size-small); letter-spacing: 0.04em; color: var(--ax-text-subtle); margin: 0;
   }
-  .docs-card h2 { font-family: var(--ax-font-family); font-weight: var(--ax-font-weight-bold); font-size: 24px; margin: 4px 0 12px; }
+  .docs-card h2 { font-family: var(--ax-font-family); font-weight: var(--ax-font-weight-bold); font-size: var(--ax-font-size-heading-small); margin: 4px 0 12px; }
   .docs-card ul { list-style: none; padding: 0; margin: 0; }
   .docs-card li { margin: 6px 0; }
   .docs-card__empty { font-size: 14px; opacity: 0.6; margin: 0; }

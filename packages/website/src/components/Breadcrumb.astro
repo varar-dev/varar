@@ -24,3 +24,14 @@ const { base, area, title } = Astro.props
     </>
   )}
 </nav>
+
+<style>
+  .doc-nav {
+    font-size: var(--ax-font-size-small);
+    color: var(--ax-text-subtle);
+    margin-bottom: var(--ax-space-24);
+  }
+  .doc-nav a { color: var(--ax-text-default); text-decoration: none; }
+  .doc-nav a:hover { text-decoration: underline; }
+  .doc-nav span[aria-hidden="true"] { color: var(--ax-text-subtle); margin: 0 var(--ax-space-4); }
+</style>
