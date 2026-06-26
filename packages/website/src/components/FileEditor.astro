@@ -160,17 +160,18 @@ const gutter = Array.from({ length: lineCount }, (_, i) => i + 1).join('\n')
   }
 
   .fe-step {
-    text-decoration: underline;
-    text-decoration-color: var(--accent);
-    text-decoration-thickness: 2px;
-    text-underline-offset: 3px;
+    background: #5e9488;
+    color: #fbf8f0;
+    border-radius: 4px;
+    padding: 1px 5px;
   }
 
   .fe-param {
-    background: var(--accent);
-    color: var(--ink);
+    background: #c8924a;
+    color: #1a130d;
     border-radius: 4px;
     padding: 1px 5px;
+    font-weight: 600;
   }
 
   @media (max-width: 520px) {
