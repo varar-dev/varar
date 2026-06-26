@@ -51,10 +51,14 @@ const refreshers = new Set<() => void>()
 
 // Generic, server-agnostic semantic-tokens extension for @codemirror/lsp-client.
 // Renders `cm-token-<type>` mark decorations; theme the classes separately.
-export function semanticTokens(options: { legend: { tokenTypes: string[] } }): LSPClientExtension {
+export function semanticTokens(options: {
+  legend: { tokenTypes: string[] }
+  transform?: (tokens: DecodedToken[]) => DecodedToken[]
+}): LSPClientExtension {
   // The passed-in legend is the advertised capability list and also the fallback
   // when the server has not yet reported its own capabilities.
   const fallbackTokenTypes = options.legend.tokenTypes
+  const transform = options.transform ?? ((tokens: DecodedToken[]) => tokens)
 
   const resolveTokenTypes = (view: EditorView): ReadonlyArray<string> => {
     // Fix 1: prefer the token-type list from the server's advertised capabilities
@@ -73,7 +77,7 @@ export function semanticTokens(options: { legend: { tokenTypes: string[] } }): L
     const doc = view.state.doc
     const builder = new RangeSetBuilder<Decoration>()
     const tokenTypes = resolveTokenTypes(view)
-    for (const t of decodeSemanticTokens(data, tokenTypes)) {
+    for (const t of transform(decodeSemanticTokens(data, tokenTypes))) {
       if (t.line + 1 > doc.lines) continue
       // Fix 3: clamp token position to line bounds so a mismatched token
       // never bleeds into the next line.

@@ -5,6 +5,7 @@ import { basicSetup, EditorView } from 'codemirror'
 import { flashExtension, type GenerateSnippet, stepGenAffordance } from '../lib/cm-generate-step.ts'
 import { setRunResults, varRunExtension } from '../lib/cm-run.ts'
 import { semanticTokens } from '../lib/cm-semantic-tokens.ts'
+import { joinStepParamTokens } from '../lib/var-capsule-tokens.ts'
 import { varEditorThemeExt } from '../lib/cm-var-theme.ts'
 import { runSpec } from '../lib/run-client.ts'
 import { varTokenTheme } from '../lib/var-token-theme.ts'
@@ -23,7 +24,10 @@ function lspClient(): LSPClient {
   sharedClient = new LSPClient({
     extensions: [
       ...languageServerExtensions(),
-      semanticTokens({ legend: { tokenTypes: ['function', 'parameter'] } }),
+      semanticTokens({
+        legend: { tokenTypes: ['function', 'parameter'] },
+        transform: joinStepParamTokens,
+      }),
     ],
   }).connect(workerTransport(worker))
   return sharedClient
