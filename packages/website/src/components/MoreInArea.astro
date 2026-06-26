@@ -14,9 +14,6 @@ const { next, areaLabel } = Astro.props
       <span class="more-in-area__title">{next.title} →</span>
     </a>
   )}
-  <p class="more-in-area__github">
-    <a href="https://github.com/oselvar/var">github.com/oselvar/var</a>
-  </p>
 </footer>
 
 <style>
@@ -32,5 +29,4 @@ const { next, areaLabel } = Astro.props
   .more-in-area__next:hover { background: var(--yellow); }
   .more-in-area__kicker { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.6; }
   .more-in-area__title { font-weight: 600; }
-  .more-in-area__github { margin: 16px 0 0; font-size: 14px; }
 </style>

@@ -1,4 +1,5 @@
 ---
+import SiteFooter from '../components/SiteFooter.astro'
 import '@navikt/ds-css/dist/global/tokens.css'
 import '@navikt/ds-css/dist/global/fonts.css'
 import '@navikt/ds-css/dist/global/reset.css'
@@ -51,5 +52,6 @@ const { title, description } = Astro.props
   </head>
   <body>
     <slot />
+    <SiteFooter />
   </body>
 </html>

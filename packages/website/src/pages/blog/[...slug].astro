@@ -26,12 +26,6 @@ const fmt = (d: Date) => d.toISOString().slice(0, 10)
       <p class="post-meta"><time datetime={fmt(post.data.pubDate)}>{fmt(post.data.pubDate)}</time></p>
       <Content />
     </article>
-
-    <footer class="doc-footer">
-      <a href={`${base}/blog/`}>← all posts</a>
-      <span> · </span>
-      <a href={`${base}/rss.xml`}>rss</a>
-    </footer>
   </main>
 </Base>
 

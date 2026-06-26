@@ -1,0 +1,29 @@
+---
+const base = import.meta.env.BASE_URL.replace(/\/$/, '')
+---
+
+<footer class="site-footer">
+  <nav aria-label="Footer">
+    <a href={`${base}/docs/`}>Docs</a>
+    <a href={`${base}/blog/`}>Blog</a>
+    <a href={`${base}/playground`}>Playground</a>
+    <a href="https://github.com/oselvar/var">GitHub</a>
+  </nav>
+  <p class="site-footer__legal">© 2026 Oselvar</p>
+</footer>
+
+<style>
+  .site-footer {
+    border-top: 1px solid var(--ax-border-subtle);
+    padding: var(--ax-space-32) var(--ax-space-24);
+    margin-top: var(--ax-space-64);
+    display: flex; flex-wrap: wrap; gap: var(--ax-space-16);
+    align-items: center; justify-content: space-between;
+    font-size: var(--ax-font-size-small);
+    color: var(--ax-text-subtle);
+  }
+  .site-footer nav { display: flex; gap: var(--ax-space-20, 1.25rem); flex-wrap: wrap; }
+  .site-footer a { color: var(--ax-text-default); text-decoration: none; }
+  .site-footer a:hover { text-decoration: underline; }
+  .site-footer__legal { margin: 0; }
+</style>
