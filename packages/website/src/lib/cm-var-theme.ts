@@ -27,13 +27,17 @@ const varEditorTheme = EditorView.theme({
 // --ed-step-text on the teal step band, --ed-chip-text on the brown param chip
 // (each resolves to that token's own text colour in both light and dark).
 // Prec.highest + !important is needed to beat drawSelection's own hiding rule.
+// The doubled class selectors (`.cm-line.cm-line`) out-specify drawSelection's
+// own `.cm-line { caret-color: transparent !important }` — a tie on !important
+// and precedence is broken by specificity, so the native caret reappears on
+// normal text instead of only inside the token spans.
 const varCaretTheme = Prec.highest(
   EditorView.theme({
     '.cm-cursorLayer': { display: 'none' },
-    '.cm-line': { caretColor: 'var(--ed-text) !important' },
-    '.cm-content': { caretColor: 'var(--ed-text) !important' },
-    '.cm-token-function': { caretColor: 'var(--ed-step-text) !important' },
-    '.cm-token-parameter': { caretColor: 'var(--ed-chip-text) !important' },
+    '.cm-line.cm-line': { caretColor: 'var(--ed-text) !important' },
+    '.cm-content.cm-content': { caretColor: 'var(--ed-text) !important' },
+    '.cm-token-function.cm-token-function': { caretColor: 'var(--ed-step-text) !important' },
+    '.cm-token-parameter.cm-token-parameter': { caretColor: 'var(--ed-chip-text) !important' },
   }),
 )
 
