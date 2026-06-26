@@ -1,7 +1,6 @@
 ---
 import { getCollection, render } from 'astro:content'
 import DocsLayout from '../../layouts/DocsLayout.astro'
-import Search from '../../components/Search.astro'
 import { breadcrumbFor, buildNav, nextInArea } from '../../lib/docs-nav'
 import { loadDocEntries } from '../../lib/docs-collection'
 
@@ -30,6 +29,5 @@ const next = nextInArea(entries, base, doc.id)
   breadcrumb={breadcrumb}
   next={next}
 >
-  <Search slot="search" />
   <Content />
 </DocsLayout>

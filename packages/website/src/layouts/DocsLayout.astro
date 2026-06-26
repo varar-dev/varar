@@ -19,14 +19,7 @@ const fullTitle = `${title} — Vár docs`
 const desc = description ?? 'Vár — Behaviour-Driven Development specs an AI agent can work against.'
 ---
 
-<Base title={fullTitle} description={desc}>
-  <div class="docs-topbar">
-    <a class="docs-topbar__brand" href={`${base}/docs/`}>Vár · Docs</a>
-    <div class="docs-topbar__search"><slot name="search" /></div>
-    <a class="docs-topbar__gh" href="https://github.com/oselvar/var" aria-label="GitHub">GitHub</a>
-    <button class="docs-topbar__menu" type="button" aria-label="Open navigation" aria-expanded="false" data-docs-menu>☰</button>
-  </div>
-
+<Base title={fullTitle} description={desc} hasSidebar={true}>
   <div class="docs-shell" data-docs-shell>
     <div class="docs-shell__backdrop" data-docs-backdrop aria-hidden="true"></div>
     <aside class="docs-shell__sidebar" data-docs-sidebar>
@@ -42,24 +35,6 @@ const desc = description ?? 'Vár — Behaviour-Driven Development specs an AI a
   </div>
 
   <style>
-    .docs-topbar {
-      position: sticky; top: 0; z-index: 50;
-      display: flex; align-items: center; gap: 16px;
-      padding: 12px var(--page-gutter);
-      background: var(--cream);
-      border-bottom: 2px solid var(--ink);
-    }
-    .docs-topbar__brand {
-      font-family: var(--ax-font-family); font-weight: var(--ax-font-weight-bold); font-size: 20px;
-      color: var(--ink); text-decoration: none; white-space: nowrap;
-    }
-    .docs-topbar__search { flex: 1; max-width: 420px; }
-    .docs-topbar__gh { color: var(--ink); text-decoration: none; font-size: 14px; }
-    .docs-topbar__gh:hover { color: var(--accent); }
-    .docs-topbar__menu {
-      display: none; background: none; border: none; font-size: 22px; cursor: pointer; color: var(--ink);
-    }
-
     .docs-shell {
       display: grid;
       grid-template-columns: 240px minmax(0, 1fr);
@@ -73,7 +48,6 @@ const desc = description ?? 'Vár — Behaviour-Driven Development specs an AI a
     .docs-shell__main { min-width: 0; }
 
     @media (max-width: 820px) {
-      .docs-topbar__menu { display: block; order: -1; }
       .docs-shell { grid-template-columns: minmax(0, 1fr); }
       .docs-shell__sidebar {
         position: fixed; top: 0; left: 0; bottom: 0; z-index: 60;

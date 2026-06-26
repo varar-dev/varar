@@ -1,5 +1,6 @@
 ---
 import SiteFooter from '../components/SiteFooter.astro'
+import TopNav from '../components/TopNav.astro'
 import '@navikt/ds-css/dist/global/tokens.css'
 import '@navikt/ds-css/dist/global/fonts.css'
 import '@navikt/ds-css/dist/global/reset.css'
@@ -10,9 +11,10 @@ import '../styles/global.css'
 interface Props {
   title: string
   description: string
+  hasSidebar?: boolean
 }
 
-const { title, description } = Astro.props
+const { title, description, hasSidebar = false } = Astro.props
 ---
 
 <!doctype html>
@@ -51,6 +53,7 @@ const { title, description } = Astro.props
     <title>{title}</title>
   </head>
   <body>
+    <TopNav hasSidebar={hasSidebar} />
     <slot />
     <SiteFooter />
   </body>

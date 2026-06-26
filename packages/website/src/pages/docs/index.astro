@@ -1,6 +1,5 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro'
-import Search from '../../components/Search.astro'
 import { buildNav } from '../../lib/docs-nav'
 import { loadDocEntries } from '../../lib/docs-collection'
 
@@ -16,8 +15,6 @@ const groups = buildNav(entries, base, null)
   groups={groups}
   breadcrumb={null}
 >
-  <Search slot="search" />
-
   <h1>Docs</h1>
   <p class="lede">
     Vár is executable documentation. Run the docs against your system; if behaviour drifts,
