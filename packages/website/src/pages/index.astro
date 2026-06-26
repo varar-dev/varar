@@ -63,17 +63,108 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '')
   </main>
 </Base>
 
-<style>
+<style is:global>
+  /*
+   * Front-page overrides — these are <style is:global> in index.astro.
+   * Astro inlines page global styles BEFORE the linked stylesheet (<link rel="stylesheet">),
+   * so we use `main` as a prefix (element specificity bump) to win the cascade over
+   * the same-named rules in global.css that load via the linked stylesheet.
+   */
+
+  /* ── Hero ── */
+  /* Note: keeping responsive clamp for font-size; --ax-font-size-heading-2xlarge (2.5rem/40px)
+     would be too small for the hero identity mark next to the logo image */
+  main .wordmark {
+    font-weight: var(--ax-font-weight-bold);
+    color: var(--ax-text-default);
+  }
+
+  main .rune {
+    color: var(--var-accent);
+    opacity: 1;
+  }
+
+  main .tagline {
+    color: var(--ax-text-subtle);
+    max-width: 46rem;
+    margin: 16px auto 0;
+  }
+
+  /* ── CTA buttons — no global.css competition, no `main` prefix needed ── */
   .cta {
-    display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: center;
-    margin: 8px 0 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--ax-space-16, 16px);
+    align-items: center;
+    justify-content: center;
+    margin: var(--ax-space-8, 8px) 0 var(--ax-space-24, 24px);
   }
+
   .cta__primary {
-    padding: 12px 24px;
-    background: var(--ink); color: var(--cream);
-    border-radius: var(--radius-5); text-decoration: none; font-weight: 600;
+    background: var(--ax-bg-accent-strong, var(--var-accent));
+    color: var(--ax-text-accent-contrast, #fff);
+    border-radius: var(--ax-radius-8);
+    padding: var(--ax-space-12) var(--ax-space-24);
+    font-weight: var(--ax-font-weight-bold);
+    text-decoration: none;
   }
-  .cta__primary:hover { background: var(--accent); }
-  .cta__secondary { color: var(--ink); text-decoration: underline; text-decoration-color: var(--orange); }
-  .cta__secondary:hover { color: var(--accent); }
+
+  .cta__primary:hover {
+    background: var(--ax-bg-accent-strong-hover, var(--var-accent));
+  }
+
+  .cta__secondary {
+    color: var(--ax-text-default);
+    text-decoration: underline;
+    text-decoration-color: var(--var-accent);
+  }
+
+  .cta__secondary:hover {
+    color: var(--ax-text-default);
+  }
+
+  /* ── Pitch ── */
+  main .pitch article {
+    background: var(--ax-bg-raised);
+    border: 1px solid var(--ax-border-subtle);
+    border-radius: var(--ax-radius-12);
+    padding: var(--ax-space-24);
+    color: var(--ax-text-default);
+  }
+
+  main .pitch h2 {
+    font-size: var(--ax-font-size-heading-medium);
+    font-weight: var(--ax-font-weight-bold);
+  }
+
+  /* ── Install ── */
+  main .install pre {
+    background: var(--ax-bg-raised);
+    border: 1px solid var(--ax-border-subtle);
+    border-radius: var(--ax-radius-12);
+    color: var(--ax-text-default);
+    padding: var(--ax-space-16) var(--ax-space-24);
+  }
+
+  main .install pre::before {
+    color: var(--var-accent);
+  }
+
+  /* ── Quotes ── */
+  main .quotes h2 {
+    font-size: var(--ax-font-size-heading-medium);
+    font-weight: var(--ax-font-weight-bold);
+  }
+
+  main .quotes li {
+    background: var(--ax-bg-raised);
+    border: 1px solid var(--ax-border-subtle);
+    border-radius: var(--ax-radius-12);
+    padding: var(--ax-space-20);
+    color: var(--ax-text-default);
+  }
+
+  main .quotes li::before {
+    color: var(--var-accent);
+  }
 </style>
