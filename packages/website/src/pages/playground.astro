@@ -4,7 +4,7 @@ import Base from '../layouts/Base.astro'
 import { SEED_FILES } from '../lib/seed-files.ts'
 ---
 <Base title="Vár playground" description="Run Vár in the browser.">
-  <main class="doc">
+  <main class="doc playground">
     <h1>playground</h1>
     <p>
       Edit the spec or the step definitions — both share one in-browser Vár language
@@ -33,3 +33,14 @@ import { SEED_FILES } from '../lib/seed-files.ts'
     </p>
   </main>
 </Base>
+
+<style>
+  /* The playground needs a wider column than the prose measure: code editors
+     are cramped at 46rem and overflow horizontally. Widen the container and
+     trim the side padding so the editors get room. */
+  main.playground {
+    max-width: 62rem;
+    padding-left: var(--ax-space-16);
+    padding-right: var(--ax-space-16);
+  }
+</style>

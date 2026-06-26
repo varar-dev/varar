@@ -10,9 +10,17 @@
   --orange: var(--var-accent);
   --yellow: var(--var-accent-strong);
   --accent: var(--ax-text-accent, var(--var-accent));
-  --radius-5: var(--ax-radius-12);
   --page-gutter: var(--ax-space-16);
   --content-max: 760px;
+
+  /* Vár theme: square corners. Foundation-only means our CSS is the sole
+     consumer of these Aksel radius tokens, so zeroing them here flips every
+     box and editor at once. Round affordances use --ax-radius-full / 50%
+     directly and are unaffected. */
+  --ax-radius-4: 0;
+  --ax-radius-8: 0;
+  --ax-radius-12: 0;
+  --radius-5: 0;
 }
 
 *,
