@@ -1,6 +1,7 @@
 ---
 import Base from './Base.astro'
 import Breadcrumb from '../components/Breadcrumb.astro'
+import CopyButton from '../components/CopyButton.astro'
 import DocsSidebar from '../components/DocsSidebar.astro'
 import MoreInArea from '../components/MoreInArea.astro'
 import type { Breadcrumb as Crumb, NavGroup, NavLink } from '../lib/docs-nav'
@@ -33,6 +34,7 @@ const desc = description ?? 'Vár — Behaviour-Driven Development specs an AI a
       <MoreInArea next={next} areaLabel={breadcrumb?.area.label} />
     </main>
   </div>
+  <CopyButton />
 
   <style>
     .docs-shell {
