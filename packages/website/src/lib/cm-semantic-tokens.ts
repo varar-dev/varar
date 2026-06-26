@@ -53,12 +53,13 @@ const refreshers = new Set<() => void>()
 // Renders `cm-token-<type>` mark decorations; theme the classes separately.
 export function semanticTokens(options: {
   legend: { tokenTypes: string[] }
-  transform?: (tokens: DecodedToken[]) => DecodedToken[]
+  transform?: (tokens: ReadonlyArray<DecodedToken>) => ReadonlyArray<DecodedToken>
 }): LSPClientExtension {
   // The passed-in legend is the advertised capability list and also the fallback
   // when the server has not yet reported its own capabilities.
   const fallbackTokenTypes = options.legend.tokenTypes
-  const transform = options.transform ?? ((tokens: DecodedToken[]) => tokens)
+  const transform =
+    options.transform ?? ((tokens: ReadonlyArray<DecodedToken>) => tokens)
 
   const resolveTokenTypes = (view: EditorView): ReadonlyArray<string> => {
     // Fix 1: prefer the token-type list from the server's advertised capabilities

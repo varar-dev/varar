@@ -11,6 +11,9 @@ export const varTokenTheme = EditorView.baseTheme({
     color: 'var(--ed-step-text)',
     borderRadius: '4px',
     padding: '1px 5px',
+    // Bold lifts the light-on-teal text to the AA large/bold contrast bar and
+    // matches the param chip.
+    fontWeight: '600',
   },
   '.cm-token-parameter': {
     background: 'var(--ed-chip-bg)',

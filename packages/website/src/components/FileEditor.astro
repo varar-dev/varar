@@ -137,8 +137,10 @@ const gutter = Array.from({ length: lineCount }, (_, i) => i + 1).join('\n')
     padding-left: 16px;
     padding-right: 14px;
     text-align: right;
-    color: rgba(250, 245, 233, 0.38);
-    border-right: 1px solid rgba(250, 245, 233, 0.15);
+    /* Derive from the code text colour (--cream) so the gutter stays legible
+       in both themes — the window inverts (bg --ink / text --cream) by mode. */
+    color: color-mix(in srgb, var(--cream) 42%, transparent);
+    border-right: 1px solid color-mix(in srgb, var(--cream) 18%, transparent);
     user-select: none;
   }
 
@@ -164,6 +166,7 @@ const gutter = Array.from({ length: lineCount }, (_, i) => i + 1).join('\n')
     color: #fbf8f0;
     border-radius: 4px;
     padding: 1px 5px;
+    font-weight: 600;
   }
 
   .fe-param {
