@@ -1,21 +1,18 @@
 :root {
-  --cream: #faf5e9;
-  --ink: #1a1a1a;
-  --yellow: #ffd60a;
-  --orange: #e67d00;
-  --accent: #ff2e88;
+  /* Vár identity accent (the only bespoke colors that survive) */
+  --var-accent: #e67d00;        /* orange */
+  --var-accent-strong: #ffd60a; /* yellow */
 
-  --page-gutter: 16px;
-  --radius-5: 14px;
-
-  --content-max: 960px;
-}
-
-@media (max-width: 720px) {
-  :root {
-    --page-gutter: 8px;
-    --radius-5: 7px;
-  }
+  /* Bridge: legacy brand vars now resolve to Aksel semantic tokens.
+     This re-themes every existing component and enables light/dark at once. */
+  --cream: var(--ax-bg-default);
+  --ink: var(--ax-text-default);
+  --orange: var(--var-accent);
+  --yellow: var(--var-accent-strong);
+  --accent: var(--ax-text-accent, var(--var-accent));
+  --radius-5: var(--ax-radius-12);
+  --page-gutter: var(--ax-space-16);
+  --content-max: 760px;
 }
 
 *,
@@ -31,11 +28,11 @@ body {
 }
 
 body {
-  background: var(--cream);
-  color: var(--ink);
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  font-size: 18px;
-  line-height: 1.5;
+  background: var(--ax-bg-default);
+  color: var(--ax-text-default);
+  font-family: var(--ax-font-family);
+  font-size: var(--ax-font-size-large, 1.125rem);
+  line-height: 1.6;
   min-height: 100vh;
 }
 
