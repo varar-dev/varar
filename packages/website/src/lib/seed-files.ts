@@ -1,5 +1,5 @@
 export const SEED_FILES: Record<string, string> = {
-  '/hello.var.md': `# Hello, Vár\n\nFirst I greet "world" okay? I think the greeting should be "Hello, world!"\n`,
+  '/hello.var.md': `# Hello, Vár\n\nFirst I greet "world" okay? I think the greeting should be "Hello, world!"\n\nOk.\n`,
   '/01-hello.steps.ts': `import { defineContext } from '@oselvar/var-runtime'
 
 const { step } = defineContext(() => ({ greeting: '' }))
