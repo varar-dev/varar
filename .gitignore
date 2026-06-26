@@ -4,3 +4,4 @@ dist
 *.tsbuildinfo
 coverage
 *.timestamp-*
+.superpowers
