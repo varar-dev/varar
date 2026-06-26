@@ -69,7 +69,7 @@ const desc = description ?? 'Vár — Behaviour-Driven Development specs an AI a
       const backdrop = document.querySelector('[data-docs-backdrop]')
       const sidebarEl = document.querySelector<HTMLElement>('[data-docs-sidebar]')
       const mainContent = document.querySelector<HTMLElement>('.docs-shell__main')
-      const topbar = document.querySelector<HTMLElement>('.docs-topbar')
+      const topbar = document.querySelector<HTMLElement>('.topnav')
       if (!shell || !menuEl || !sidebarEl) return
       // After the guard above, these are guaranteed non-null. We reassign to
       // non-nullable locals so closures below can use them without TS complaining.
