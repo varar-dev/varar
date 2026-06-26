@@ -119,7 +119,7 @@ const flashClearPlugin = ViewPlugin.fromClass(
 
 const flashTheme = EditorView.baseTheme({
   '.cm-stepgen-flash': {
-    backgroundColor: 'rgba(255, 46, 136, 0.28)',
+    backgroundColor: 'var(--ed-flash)',
     transition: 'background-color 0.4s ease',
   },
 })

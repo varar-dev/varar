@@ -117,13 +117,13 @@ const errorGutter = gutter({
 })
 
 const runTheme = EditorView.baseTheme({
-  '.cm-run-pass': { background: 'rgba(40, 167, 69, 0.18)' },
-  '.cm-run-fail': { background: 'rgba(255, 46, 136, 0.18)' },
+  '.cm-run-pass': { background: 'var(--ed-pass-bg)' },
+  '.cm-run-fail': { background: 'var(--ed-fail-bg)' },
   // Reserve a fixed width so the gutter doesn't jitter as ✗ markers come and go.
   '.cm-run-gutter': { width: '1.4em', minWidth: '1.4em' },
   '.cm-run-gutter .cm-gutterElement': { textAlign: 'center' },
-  '.cm-run-errmark': { color: 'var(--accent)', cursor: 'pointer', fontWeight: '700' },
-  '.cm-run-passmark': { color: '#28a745', fontWeight: '700' },
+  '.cm-run-errmark': { color: 'var(--ed-fail-mark)', cursor: 'pointer', fontWeight: '700' },
+  '.cm-run-passmark': { color: 'var(--ed-pass-mark)', fontWeight: '700' },
   '.cm-run-dialog': {
     padding: '0',
     border: '2px solid var(--ink)',
@@ -131,7 +131,7 @@ const runTheme = EditorView.baseTheme({
     maxWidth: 'min(90vw, 800px)',
     background: 'var(--ink)',
   },
-  '.cm-run-dialog::backdrop': { background: 'rgba(26, 26, 26, 0.5)' },
+  '.cm-run-dialog::backdrop': { background: 'rgba(23, 18, 13, 0.55)' },
   '.cm-run-stack': {
     margin: '0',
     padding: '16px',
