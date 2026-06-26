@@ -1,5 +1,5 @@
 import { HighlightStyle, syntaxHighlighting } from '@codemirror/language'
-import type { Extension } from '@codemirror/state'
+import { type Extension, Prec } from '@codemirror/state'
 import { EditorView } from '@codemirror/view'
 import { tags as t } from '@lezer/highlight'
 
@@ -7,7 +7,6 @@ import { tags as t } from '@lezer/highlight'
 // site's light/dark theme automatically.
 const varEditorTheme = EditorView.theme({
   '&': { background: 'var(--ed-bg)', color: 'var(--ed-text)' },
-  '.cm-content': { caretColor: 'var(--ed-text)' },
   '.cm-gutters': {
     background: 'var(--ed-bg)',
     color: 'var(--ed-gutter)',
@@ -15,14 +14,28 @@ const varEditorTheme = EditorView.theme({
   },
   '.cm-activeLine': { background: 'transparent' },
   '.cm-activeLineGutter': { background: 'transparent' },
-  // Caret matches the editor text colour, a touch wider for visibility.
-  '.cm-cursor, .cm-dropCursor': {
-    borderLeftColor: 'var(--ed-text)',
-    borderLeftWidth: '2px',
-  },
+  '.cm-dropCursor': { borderLeftColor: 'var(--ed-text)' },
   '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection':
     { background: 'var(--ed-selection)' },
 })
+
+// Per-token caret. basicSetup's drawSelection draws a single-colour caret and
+// hides the native one (Prec.highest + caret-color: transparent !important).
+// We hide that drawn caret and re-enable the native caret, whose `caret-color`
+// is naturally inherited from the token span it sits in — so the caret matches
+// the text colour of whatever it's over: --ed-text on normal text,
+// --ed-step-text on the teal step band, --ed-chip-text on the brown param chip
+// (each resolves to that token's own text colour in both light and dark).
+// Prec.highest + !important is needed to beat drawSelection's own hiding rule.
+const varCaretTheme = Prec.highest(
+  EditorView.theme({
+    '.cm-cursorLayer': { display: 'none' },
+    '.cm-line': { caretColor: 'var(--ed-text) !important' },
+    '.cm-content': { caretColor: 'var(--ed-text) !important' },
+    '.cm-token-function': { caretColor: 'var(--ed-step-text) !important' },
+    '.cm-token-parameter': { caretColor: 'var(--ed-chip-text) !important' },
+  }),
+)
 
 // Earthy syntax colors via --syn-* tokens. Registered WITHOUT fallback, so it
 // overrides basicSetup's defaultHighlightStyle (which is fallback:true).
@@ -44,5 +57,5 @@ const varHighlightStyle = HighlightStyle.define([
 ])
 
 export function varEditorThemeExt(): Extension {
-  return [varEditorTheme, syntaxHighlighting(varHighlightStyle)]
+  return [varEditorTheme, varCaretTheme, syntaxHighlighting(varHighlightStyle)]
 }
