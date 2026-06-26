@@ -36,16 +36,16 @@ const fmt = (d: Date) => d.toISOString().slice(0, 10)
 </Base>
 
 <style>
-  .post-list { list-style: none; padding: 0; margin: 32px 0; }
-  .post-list li { padding: 16px 0; border-bottom: 1px solid var(--ink); }
+  .post-list { list-style: none; padding: 0; margin: var(--ax-space-32) 0; }
+  .post-list li { padding: var(--ax-space-16) 0; border-bottom: 1px solid var(--ax-border-neutral-subtle); }
   .post-title {
     font-family: var(--ax-font-family);
     font-weight: var(--ax-font-weight-bold);
-    font-size: clamp(22px, 3vw, 32px);
-    color: var(--ink);
+    font-size: var(--ax-font-size-heading-medium);
+    color: var(--ax-text-default);
     text-decoration: none;
   }
-  .post-title:hover { color: var(--accent); }
-  .post-list time { display: block; font-size: 13px; opacity: 0.7; margin: 4px 0; }
+  .post-title:hover { color: var(--ax-text-accent, var(--var-accent)); }
+  .post-list time { display: block; font-size: 13px; color: var(--ax-text-neutral-subtle); margin: 4px 0; }
   .post-list p { margin: 6px 0 0; }
 </style>

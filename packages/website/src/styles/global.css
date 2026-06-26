@@ -196,9 +196,8 @@ footer a:hover {
 /* Doc pages */
 
 main.doc {
-  max-width: 900px;
-  padding-top: calc(var(--page-gutter) + 24px);
-  padding-bottom: calc(var(--page-gutter) + 24px);
+  max-width: 46rem;
+  padding: var(--ax-space-32) var(--ax-space-24) var(--ax-space-64);
 }
 
 .doc-nav {
@@ -206,52 +205,51 @@ main.doc {
   font-size: 14px;
   letter-spacing: 0.04em;
   margin-bottom: 32px;
-  color: var(--ink);
+  color: var(--ax-text-neutral-subtle);
   text-transform: uppercase;
 }
 
 .doc-nav a {
-  color: var(--ink);
+  color: var(--ax-text-default);
   text-decoration: none;
   border-bottom: 1px solid transparent;
 }
 
 .doc-nav a:hover {
-  border-bottom-color: var(--accent);
-  color: var(--accent);
+  border-bottom-color: var(--var-accent);
+  color: var(--ax-text-accent, var(--var-accent));
 }
 
 .doc-nav span {
   margin: 0 8px;
-  color: var(--orange);
+  color: var(--var-accent);
 }
 
 .doc-body h1 {
   font-family: var(--ax-font-family);
   font-weight: var(--ax-font-weight-bold);
-  font-size: clamp(36px, 6vw, 64px);
+  font-size: var(--ax-font-size-heading-large);
   line-height: 1.05;
-  letter-spacing: 0.02em;
   margin: 0 0 32px;
 }
 
 .doc-body h2 {
   font-family: var(--ax-font-family);
   font-weight: var(--ax-font-weight-bold);
-  font-size: clamp(24px, 3.2vw, 32px);
-  letter-spacing: 0.02em;
+  font-size: var(--ax-font-size-heading-medium);
   margin: 48px 0 12px;
 }
 
 .doc-body h3 {
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
-  font-weight: 700;
-  font-size: 20px;
+  font-family: var(--ax-font-family);
+  font-weight: var(--ax-font-weight-bold);
+  font-size: var(--ax-font-size-heading-small);
   margin: 32px 0 8px;
 }
 
 .doc-body p {
   margin: 0 0 16px;
+  color: var(--ax-text-default);
 }
 
 .doc-body ul,
@@ -267,8 +265,8 @@ main.doc {
 .doc-body blockquote {
   margin: 24px 0;
   padding: 16px 24px;
-  border-left: 4px solid var(--orange);
-  background: var(--yellow);
+  border-left: 4px solid var(--var-accent);
+  background: var(--ax-bg-raised);
   font-style: italic;
 }
 
@@ -283,31 +281,32 @@ main.doc {
 }
 
 .doc-body a {
-  color: var(--ink);
+  color: var(--ax-text-accent, var(--var-accent));
   text-decoration: underline;
-  text-decoration-color: var(--orange);
+  text-decoration-color: var(--var-accent);
   text-decoration-thickness: 2px;
   text-underline-offset: 2px;
 }
 
 .doc-body a:hover {
-  color: var(--accent);
-  text-decoration-color: var(--accent);
+  color: var(--ax-text-accent, var(--var-accent));
+  text-decoration-color: var(--ax-text-accent, var(--var-accent));
 }
 
 .doc-body code {
-  background: var(--yellow);
+  background: var(--ax-bg-raised);
   padding: 2px 6px;
-  border-radius: 3px;
+  border-radius: var(--ax-radius-4);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.92em;
+  color: var(--ax-text-default);
 }
 
 .doc-body pre {
-  background: var(--ink);
-  color: var(--cream);
+  background: var(--ax-bg-sunken, var(--ax-bg-raised));
+  color: var(--ax-text-default);
   padding: 16px 20px;
-  border-radius: 6px;
+  border-radius: var(--ax-radius-8);
   overflow-x: auto;
   font-size: 14px;
   line-height: 1.5;
@@ -332,8 +331,9 @@ main.doc {
 .doc-footer {
   margin-top: 48px;
   padding-top: 24px;
-  border-top: 1px solid var(--ink);
+  border-top: 1px solid var(--ax-border-neutral-subtle);
   font-size: 14px;
   text-align: left;
+  color: var(--ax-text-neutral-subtle);
 }
 
