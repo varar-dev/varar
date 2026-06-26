@@ -117,8 +117,12 @@ const errorGutter = gutter({
 })
 
 const runTheme = EditorView.baseTheme({
-  '.cm-run-pass': { background: 'var(--ed-pass-bg)' },
-  '.cm-run-fail': { background: 'var(--ed-fail-bg)' },
+  // `.cm-line` prefix raises specificity above `.cm-activeLine` so the run
+  // wash always wins on the cursor's active line (both are line decorations on
+  // the same element). The active-line highlight itself is neutralised in
+  // cm-var-theme (background: transparent).
+  '.cm-line.cm-run-pass': { background: 'var(--ed-pass-bg)' },
+  '.cm-line.cm-run-fail': { background: 'var(--ed-fail-bg)' },
   // Reserve a fixed width so the gutter doesn't jitter as ✗ markers come and go.
   '.cm-run-gutter': { width: '1.4em', minWidth: '1.4em' },
   '.cm-run-gutter .cm-gutterElement': { textAlign: 'center' },
