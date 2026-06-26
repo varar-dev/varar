@@ -15,14 +15,10 @@ const varEditorTheme = EditorView.theme({
   },
   '.cm-activeLine': { background: 'transparent' },
   '.cm-activeLineGutter': { background: 'transparent' },
-  '.cm-dropCursor': { borderLeftColor: 'var(--ed-text)' },
-  // Auto-contrasting caret: a thin white bar blended with `difference` inverts
-  // against whatever is behind it (linen, dark editor, teal step band, brown
-  // param chip), so it stays visible everywhere without per-context colour logic.
-  '.cm-cursor': {
-    borderLeftColor: '#fff',
+  // Caret matches the editor text colour, a touch wider for visibility.
+  '.cm-cursor, .cm-dropCursor': {
+    borderLeftColor: 'var(--ed-text)',
     borderLeftWidth: '2px',
-    mixBlendMode: 'difference',
   },
   '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection':
     { background: 'var(--ed-selection)' },
