@@ -17,6 +17,26 @@ const { title, description } = Astro.props
 <!doctype html>
 <html lang="en">
   <head>
+    <script is:inline>
+      ;(() => {
+        try {
+          const saved = localStorage.getItem('theme')
+          const sysDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+          const theme = saved === 'light' || saved === 'dark' ? saved : sysDark ? 'dark' : 'light'
+          document.documentElement.classList.remove('light', 'dark')
+          document.documentElement.classList.add(theme)
+        } catch {
+          document.documentElement.classList.add('light')
+        }
+        // Global helper the TopNav toggle calls.
+        window.__setTheme = (next) => {
+          document.documentElement.classList.remove('light', 'dark')
+          document.documentElement.classList.add(next)
+          try { localStorage.setItem('theme', next) } catch {}
+          window.dispatchEvent(new CustomEvent('theme:change', { detail: next }))
+        }
+      })()
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="description" content={description} />
