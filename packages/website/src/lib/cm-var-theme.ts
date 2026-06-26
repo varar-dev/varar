@@ -16,13 +16,13 @@ const varEditorTheme = EditorView.theme({
   '.cm-activeLine': { background: 'transparent' },
   '.cm-activeLineGutter': { background: 'transparent' },
   '.cm-dropCursor': { borderLeftColor: 'var(--ed-text)' },
-  // Block cursor — a thin caret is hard to see on the dark editor / param-chip
-  // backgrounds. A wide, semi-transparent border-left reads as a block while
-  // still letting the character underneath show through.
+  // Auto-contrasting caret: a thin white bar blended with `difference` inverts
+  // against whatever is behind it (linen, dark editor, teal step band, brown
+  // param chip), so it stays visible everywhere without per-context colour logic.
   '.cm-cursor': {
-    borderLeftColor: 'var(--ed-text)',
-    borderLeftWidth: '0.55em',
-    opacity: '0.5',
+    borderLeftColor: '#fff',
+    borderLeftWidth: '2px',
+    mixBlendMode: 'difference',
   },
   '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection':
     { background: 'var(--ed-selection)' },
