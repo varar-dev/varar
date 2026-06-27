@@ -25,9 +25,38 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '')
         <img class="logo" src={`${base}/logo2-transparent.png`} alt="Vár logo" />
         <h1 class="wordmark">Vár</h1>
       </div>
-      <p class="rune" aria-hidden="true">ᚢᛅᚱ</p>
-      <p class="tagline">Níunda Vár, hon hlýðir á eiða manna ok einkamál, er veita sín á milli konur ok karlar. Því heita þau mál várar. Hon hefnir ok þeim, er brigða.</p>
-      <p class="tagline">The ninth is Vár: she harkens to the oaths and compacts made between men and women; wherefore such covenants are called 'vows.' She also takes vengeance on those who perjure themselves.</p>
+
+      <p class="pitch-line">Executable documentation for people and agents</p>
+
+      <p class="hero__lead">
+        Vár hard-wires your documentation to your software. 
+        When they go out of sync, you'll know.
+      </p>
+
+      <p class="hero__lead">
+        The documentation is both <a href="#">signal</a> and <a href="#">sensor</a> for programmers and coding agents.
+      </p>
+
+      <p class="hero__lead">
+        <pre>
+      ----signal---&gt;
+[documentation]      [software]
+      &lt;---sensor---
+        </pre>
+      </p>
+
+      <p class="hero__lead">
+        This is different from how it's usually done.
+      </p>
+
+      <p class="hero__lead">
+        <pre>DRIFT
+        [specifications] ----signal---&gt;      
+        [documentation] --describes--&gt; [software]
+        [tests]     &lt;-------sensor-----
+        </pre>
+      </p>
+
     </section>
 
     <section class="cta" aria-label="Get started">
@@ -112,19 +141,64 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '')
     color: var(--ax-text-default);
   }
 
-  .tagline {
-    font-size: clamp(18px, 2.4vw, 24px);
-    font-style: italic;
-    margin: var(--ax-space-16) auto 0;
-    max-width: 46rem;
+  /* ── Pitch line ── */
+  .pitch-line {
+    margin: var(--ax-space-16) 0 0;
+    font-size: clamp(20px, 3.2vw, 34px);
+    font-weight: var(--ax-font-weight-bold);
     color: var(--ax-text-subtle);
   }
 
-  .rune {
-    font-size: 2rem;
-    letter-spacing: 0.3em;
-    margin: var(--ax-space-8) 0 0;
-    color: var(--var-accent);
+  /* Centered intro paragraphs (hero + demo). */
+  .hero__lead,
+  .demo__lead {
+    max-width: 42rem;
+    margin: var(--ax-space-16) auto 0;
+    text-align: center;
+    font-size: 17px;
+    color: var(--ax-text-subtle);
+  }
+
+  .demo__lead {
+    margin: 0 auto var(--ax-space-24);
+  }
+
+  /* Section headings (demo, pitch, quotes). */
+  .demo h2,
+  .pitch h2,
+  .quotes h2 {
+    font-family: var(--ax-font-family);
+    font-weight: var(--ax-font-weight-bold);
+    font-size: var(--ax-font-size-heading-medium);
+    letter-spacing: 0.02em;
+    margin: 0 0 var(--ax-space-12);
+  }
+
+  .demo h2,
+  .quotes h2 {
+    text-align: center;
+  }
+
+  .quotes h2 {
+    margin-bottom: var(--ax-space-32);
+  }
+
+  /* Raised, bordered surfaces (pitch cards, quote cards, install box). */
+  .pitch article,
+  .quotes li,
+  .install pre {
+    background: var(--ax-bg-raised);
+    border: 1px solid var(--ax-border-subtle);
+    border-radius: var(--ax-radius-12);
+    color: var(--ax-text-default);
+  }
+
+  /* Underlined links with an accent-coloured underline. */
+  .cta__secondary,
+  .demo__more a {
+    color: var(--ax-text-default);
+    text-decoration: underline;
+    text-decoration-color: var(--var-accent);
   }
 
   /* ── CTA ── */
@@ -150,12 +224,6 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '')
     background: var(--ax-bg-accent-strong-hover, var(--var-accent));
   }
 
-  .cta__secondary {
-    color: var(--ax-text-default);
-    text-decoration: underline;
-    text-decoration-color: var(--var-accent);
-  }
-
   .cta__secondary:hover {
     color: var(--ax-text-default);
   }
@@ -165,32 +233,9 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '')
     padding: var(--ax-space-24) 0 var(--ax-space-48);
   }
 
-  .demo h2 {
-    font-family: var(--ax-font-family);
-    font-weight: var(--ax-font-weight-bold);
-    font-size: var(--ax-font-size-heading-medium);
-    text-align: center;
-    margin: 0 0 var(--ax-space-12);
-    letter-spacing: 0.02em;
-  }
-
-  .demo__lead {
-    margin: 0 auto var(--ax-space-24);
-    max-width: 42rem;
-    text-align: center;
-    font-size: 17px;
-    color: var(--ax-text-subtle);
-  }
-
   .demo__more {
     text-align: center;
     margin: var(--ax-space-16) 0 0;
-  }
-
-  .demo__more a {
-    color: var(--ax-text-default);
-    text-decoration: underline;
-    text-decoration-color: var(--var-accent);
   }
 
   /* The step definitions still drive the run + highlighting, but the front page
@@ -218,19 +263,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '')
   }
 
   .pitch article {
-    background: var(--ax-bg-raised);
-    border: 1px solid var(--ax-border-subtle);
-    border-radius: var(--ax-radius-12);
     padding: var(--ax-space-24);
-    color: var(--ax-text-default);
-  }
-
-  .pitch h2 {
-    font-family: var(--ax-font-family);
-    font-weight: var(--ax-font-weight-bold);
-    font-size: var(--ax-font-size-heading-medium);
-    margin: 0 0 var(--ax-space-12);
-    letter-spacing: 0.02em;
   }
 
   .pitch p {
@@ -248,10 +281,6 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '')
     display: inline-block;
     margin: 0;
     padding: var(--ax-space-16) var(--ax-space-24);
-    background: var(--ax-bg-raised);
-    border: 1px solid var(--ax-border-subtle);
-    border-radius: var(--ax-radius-12);
-    color: var(--ax-text-default);
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     font-size: 17px;
   }
@@ -266,15 +295,6 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '')
     padding: var(--ax-space-48) 0;
   }
 
-  .quotes h2 {
-    font-family: var(--ax-font-family);
-    font-weight: var(--ax-font-weight-bold);
-    font-size: var(--ax-font-size-heading-medium);
-    text-align: center;
-    margin: 0 0 var(--ax-space-32);
-    letter-spacing: 0.02em;
-  }
-
   .quotes ul {
     list-style: none;
     padding: 0;
@@ -285,11 +305,7 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '')
   }
 
   .quotes li {
-    background: var(--ax-bg-raised);
-    border: 1px solid var(--ax-border-subtle);
-    border-radius: var(--ax-radius-12);
     padding: var(--ax-space-20);
-    color: var(--ax-text-default);
     font-style: italic;
     font-size: 18px;
   }
