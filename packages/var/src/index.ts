@@ -1,6 +1,8 @@
 export const VERSION = '0.0.0'
 
 export { hashSource } from './hash.js'
+export type { CellFailure, ExampleResult, SpecResults } from './result.js'
+export { toFailure } from './failure.js'
 
 export type {
   Block,
