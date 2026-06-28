@@ -3,6 +3,7 @@ import { hashSource } from '@oselvar/var'
 import { describe, expect, test } from 'vitest'
 import {
   buildSpecResults,
+  collectFromModules,
   collectFromTasks,
   resultFilePath,
   toSpecPath,
@@ -25,6 +26,30 @@ describe('buildSpecResults', () => {
       sourceHash: hashSource('src'),
       examples: [passed, failed],
     })
+  })
+})
+
+describe('collectFromModules', () => {
+  test('groups examples by moduleId via meta(), skips meta-less tests and empty modules', () => {
+    const modules = [
+      {
+        moduleId: '/cwd/docs/a.var.md',
+        children: {
+          allTests: () => [
+            { meta: () => ({ varResult: passed }) },
+            { meta: () => ({ varResult: failed }) },
+            { meta: () => ({}) }, // var:diagnostic-style test, no varResult
+          ],
+        },
+      },
+      {
+        moduleId: '/cwd/docs/empty.var.md',
+        children: { allTests: () => [{ meta: () => ({}) }] },
+      },
+    ]
+    const byFile = collectFromModules(modules)
+    expect([...byFile.keys()]).toEqual(['/cwd/docs/a.var.md'])
+    expect(byFile.get('/cwd/docs/a.var.md')).toEqual([passed, failed])
   })
 })
 

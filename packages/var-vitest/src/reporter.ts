@@ -33,7 +33,6 @@ export function collectFromTasks(files: ReadonlyArray<FileNode>): Map<string, Ex
 
 // ─── Vitest 4 structural types (TestModule / TestCase API) ──────────────────
 type TestCaseNode = {
-  readonly type?: string
   meta(): { readonly varResult?: ExampleResult }
 }
 type TestCollectionNode = {

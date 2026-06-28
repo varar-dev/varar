@@ -7,9 +7,9 @@ import {
   type TestSink,
   toFailure,
 } from '@oselvar/var'
+import { buildRegistry, contextFactory } from '@oselvar/var-runtime'
 
 export { toFailure }
-import { buildRegistry, contextFactory } from '@oselvar/var-runtime'
 
 export type RunPorts = {
   readonly sink: TestSink
