@@ -61,6 +61,8 @@ export type {
 } from './registry.js'
 export { addStep, createRegistry, defineParameterType } from './registry.js'
 export type { CellFailure, ExampleResult, SpecResults } from './result.js'
+export type { RunDiagnostic } from './run-diagnostics.js'
+export { runResultDiagnostics } from './run-diagnostics.js'
 export type { RawLine, ScannerPlugin } from './scanner.js'
 export { scan } from './scanner.js'
 export type { Sentence } from './sentences.js'
