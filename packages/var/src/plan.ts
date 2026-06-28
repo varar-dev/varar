@@ -1,4 +1,5 @@
 import type { Block, Fence, InlineOffset, Table, VarDoc } from './ast.js'
+import type { RowCheck } from './cell-diff.js'
 import { ambiguousMatch, type Diagnostic } from './diagnostics.js'
 import { findHits, type Hit, resolveHits } from './matcher.js'
 import type { Registry, StepRegistration } from './registry.js'
@@ -23,6 +24,9 @@ export type PlannedExample = {
   // so editor tooling can highlight the paragraph and its header-cell words
   // instead of the per-row table lines the executor runs against.
   readonly headerBinding?: HeaderBinding
+  // Present on each row of a header-bound table: one check per column, used by
+  // the executor to compare the step's returned columns against the cells.
+  readonly rowChecks?: ReadonlyArray<RowCheck>
 }
 
 export type HeaderBinding = {
@@ -103,6 +107,11 @@ export function plan(varDoc: VarDoc, registry: Registry): ExecutionPlan {
           matchSpan: row.span,
           args: [...bound.step.args, rowObject],
         }
+        const rowChecks: RowCheck[] = bound.table.header.cells.map((column, i) => ({
+          column,
+          value: row.cells[i] ?? '',
+          span: row.cellSpans[i] ?? row.span,
+        }))
         examples.push({
           name: row.cells.join(' / '),
           // Nest the rows under the binding paragraph as an extra describe scope.
@@ -110,6 +119,7 @@ export function plan(varDoc: VarDoc, registry: Registry): ExecutionPlan {
           span: row.span,
           steps: [rowStep],
           headerBinding,
+          rowChecks,
         })
       }
       continue

@@ -336,3 +336,28 @@ Some interrupting prose paragraph.
   const result = plan(parse('o.var.md', source), r)
   expect(result.diagnostics).toHaveLength(0)
 })
+
+test('a header-bound row example carries rowChecks (column, value, cell span)', () => {
+  let r = createRegistry()
+  r = addStep(r, {
+    expression: 'each row lists the dice, the category and the score',
+    expressionSourceFile: 's.ts',
+    expressionSourceLine: 1,
+    handler: () => {},
+  })
+  const source = `# Yahtzee
+
+each row lists the dice, the category and the score:
+
+| dice          | category   | score |
+| ------------- | ---------- | ----- |
+| 3, 3, 3, 4, 4 | full house | 17    |`
+  const result = plan(parse('y.var.md', source), r)
+  const checks = result.examples[0]?.rowChecks
+  if (!checks) throw new Error('no rowChecks')
+  expect(checks.map((c) => c.column)).toEqual(['dice', 'category', 'score'])
+  expect(checks.map((c) => c.value)).toEqual(['3, 3, 3, 4, 4', 'full house', '17'])
+  // The score cell span slices back to "17" in the source.
+  const scoreCheck = checks[2]!
+  expect(source.slice(scoreCheck.span.startOffset, scoreCheck.span.endOffset)).toBe('17')
+})
