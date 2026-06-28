@@ -166,3 +166,22 @@ these rows:
     source.slice(table.header.cellSpans[1]!.startOffset, table.header.cellSpans[1]!.endOffset),
   ).toBe('bb')
 })
+
+test('a single-column GFM table parses as a table (not paragraphs)', () => {
+  const source = `# T
+
+these:
+
+| n |
+| - |
+| 7 |
+| 8 |`
+  const doc = parse('t.var.md', source)
+  const table = doc.examples[0]?.body.find((b) => b.kind === 'table') as Table | undefined
+  if (!table) throw new Error('single-column table did not parse as a table')
+  expect(table.header.cells).toEqual(['n'])
+  expect(table.rows.map((r) => r.cells)).toEqual([['7'], ['8']])
+  // cellSpans still round-trip for the single column.
+  const c = table.rows[0]!.cellSpans[0]!
+  expect(source.slice(c.startOffset, c.endOffset)).toBe('7')
+})
