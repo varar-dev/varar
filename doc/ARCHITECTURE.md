@@ -1,470 +1,222 @@
-# Vár architecture (and a map for the Python port)
+# Vár architecture (target state)
 
-This document explains how the pieces of Vár fit together, and doubles as a
-porting guide. The goal is to make the **seams** explicit — the small set of
-pure data types and ports that everything else hangs off — so a Python port can
-reproduce the same shape without re-deriving it from the TypeScript source.
+This describes how Vár **should** be structured to support many languages — not
+how it is laid out today. It is the destination for the prefactoring work that
+precedes the first non-TypeScript language (Python).
 
-> TL;DR. There are **two sides** to Vár, and they share one pure core.
+> **One thesis:** maximise the shared surface, minimise the per-language surface.
 >
-> - **Side A — Authoring / static analysis.** Parse `.var.md` files *and* step
->   definition files, match them against each other, and produce an index.
->   Read-only, no execution. Powers the LSP, the VSCode extension, and `lint`.
-> - **Side B — Running.** Import the step files (so handlers are real callables),
->   build an `ExecutionPlan`, and hand it to a **pluggable test runner** through
->   one tiny port. Powers the vitest adapter and the standalone `var run` CLI.
->
-> The core (`@oselvar/var`) is pure functions over immutable data. All I/O —
-> file reading, module loading, test-runner integration, editor glue — lives in
-> the adapter packages and is wired in at the edges (hexagonal architecture).
+> There is **one** pure core — markdown parsing, matching, planning,
+> diagnostics, LSP — written once and reused by every language. A new language
+> contributes only three small things: a **tree-sitter query set** (to find step
+> definitions in its source), a **code emitter** (to generate step snippets),
+> and a **runtime adapter** (to actually execute its step functions). Everything
+> else is shared.
+
+The earlier version of this doc proposed *re-implementing* the core in each
+language (port the markdown parser, the matcher, the planner; parse step files
+with each language's native AST). We reject that: it multiplies the code that
+must be kept consistent, and it forks the LSP. The whole point of the design
+below is that those stay singular.
 
 ---
 
-## 1. Package map
+## 1. Two sides, one core
 
-```mermaid
-graph TD
-  subgraph core["Functional core — pure, no I/O"]
-    VAR["@oselvar/var<br/><i>scanner · structurer · matcher<br/>registry · planner · executor<br/>diagnostics · snippet</i>"]
-  end
+Both sides feed the **same matcher and planner**. They differ only in how they
+obtain the step-definition registry, and what they do with the result.
 
-  subgraph shared["Shared runtime glue"]
-    RT["@oselvar/var-runtime<br/><i>module-scope step registry<br/>step() · defineContext()<br/>buildRegistry() · contextFactory()</i>"]
-    LANG["@oselvar/var-language<br/><i>static step-def discovery<br/>buildWorkspaceIndex()</i>"]
-  end
-
-  subgraph runners["Side B — runner adapters"]
-    VITEST["@oselvar/var-vitest<br/><i>vite plugin + runVarSource</i>"]
-    CLI["@oselvar/var-cli<br/><i>var run / lint / stepdef / init</i>"]
-  end
-
-  subgraph authoring["Side A — authoring adapters"]
-    LSP["@oselvar/var-lsp<br/><i>LSP server (pygls-shaped)</i>"]
-    VSCODE["@oselvar/var-vscode<br/><i>editor extension / LSP client</i>"]
-  end
-
-  subgraph sample["Dogfood"]
-    CUKE["@oselvar/cucumber<br/><i>Library sample + benchmark</i>"]
-  end
-
-  RT --> VAR
-  LANG --> VAR
-  VITEST --> VAR
-  VITEST --> RT
-  CLI --> VAR
-  CLI --> RT
-  LSP --> VAR
-  LANG --> RT
-  LSP --> LANG
-  VSCODE -. "LSP/stdio" .-> LSP
-  CUKE -. "benchmark vs" .-> CLI
-
-  EXPR["@cucumber/cucumber-expressions<br/>(external)"]
-  VAR --> EXPR
-```
-
-The only external domain dependency of the core is
-`@cucumber/cucumber-expressions` (cucumber expression compilation + parameter
-types + snippet generation). Everything else in the core is hand-rolled and
-pure.
-
----
-
-## 2. The two sides
-
-This is the mental model to hold onto. Both sides feed the **same matcher and
-planner** in the core; they differ only in **how they obtain the registry of
-step definitions** and **what they do with the result**.
+| | **Side A — Authoring (static)** | **Side B — Running** |
+|---|---|---|
+| Step files are | **parsed** (tree-sitter), never executed | **executed** in their native runtime |
+| Handlers are | absent (matching only) | real callables |
+| Produces | a workspace index → matches + diagnostics | an `ExecutionPlan` → test-runner items |
+| Powers | LSP, VSCode, `lint` | the vitest/pytest adapters, `var run` |
+| Side effects | none | importing user modules |
 
 ```mermaid
 graph LR
-  subgraph inputs["Inputs on disk"]
-    MD[".var.md<br/>markdown examples"]
-    STEPS[".steps.ts<br/>step definitions"]
-  end
+  MD[".var.md<br/>examples"] --> PARSE["parse → VarDoc<br/><i>(shared core)</i>"]
+  STEPS["step source<br/>(.ts / .py / …)"] --> EXTRACT["tree-sitter extract<br/>→ StepDef[]<br/><i>(per-language query)</i>"]
 
-  subgraph sideA["SIDE A — Authoring / static analysis"]
-    direction TB
-    A_DISC["discoverStepDefs()<br/><i>parse step source, no execution</i>"]
-    A_REG["Registry<br/><i>handlerless — matching only</i>"]
-    A_INDEX["buildWorkspaceIndex()<br/>→ matches · diagnostics"]
-    A_DISC --> A_REG --> A_INDEX
-  end
+  PARSE --> MATCH["match + plan<br/><i>(shared core)</i>"]
+  EXTRACT --> MATCH
 
-  subgraph sideB["SIDE B — Running"]
-    direction TB
-    B_IMPORT["import step modules<br/><i>step() calls register at load</i>"]
-    B_REG["Registry<br/><i>real callable handlers</i>"]
-    B_PLAN["plan() → ExecutionPlan"]
-    B_EXEC["executePlan(plan, ports)"]
-    B_IMPORT --> B_REG --> B_PLAN --> B_EXEC
-  end
-
-  subgraph shared["Shared pure core"]
-    PARSE["parse(): markdown → VarDoc AST"]
-    MATCH["matcher: cucumber-expression hits"]
-  end
-
-  MD --> PARSE
-  STEPS --> A_DISC
-  STEPS --> B_IMPORT
-  PARSE --> A_INDEX
-  PARSE --> B_PLAN
-  MATCH --> A_INDEX
-  MATCH --> B_PLAN
-
-  A_INDEX --> LSPOUT["LSP · VSCode · lint<br/>hover · go-to-def · completion · rename · diagnostics"]
-  B_EXEC --> RUNOUT["pluggable test runner<br/>vitest · var run · (pytest · unittest)"]
+  MATCH --> A["Side A: WorkspaceIndex<br/>→ LSP · lint"]
+  MATCH --> B["Side B: ExecutionPlan<br/>→ runtime adapter"]
 ```
 
-**Why two registries?** The difference is the heart of the design:
+The markdown parser, the cucumber-expression matcher, and the planner are
+**language-agnostic and shared**. The only thing that knows about a host
+language is step-definition *extraction* (Side A) and step-definition
+*execution* (Side B).
 
-| | Side A (static) | Side B (runtime) |
+---
+
+## 2. The extraction seam (tree-sitter)
+
+The single most important seam. Today `discoverStepDefs(path, source)` is a pure
+function behind the `StepDefScanner` port (`var-language/scanner.ts`) — the
+shape is already right; only the implementation is TypeScript-specific
+(`ts.createSourceFile`).
+
+**Target:** one extractor mechanism for *all* languages — **tree-sitter** — with
+a small per-language query set replacing per-language parser code.
+
+```ts
+interface StepDefScanner {
+  discoverStepDefs(path: string, source: string): ReadonlyArray<StepDef>
+  discoverParameterTypes(path: string, source: string): ReadonlyArray<ParameterTypeDef>
+}
+```
+
+A language is added by supplying:
+
+- a **tree-sitter grammar** (`.wasm`), and
+- a **query set** that locates `step("…")` / `defineParameterType(…)` call sites
+  and their handler signatures,
+
+and registering the scanner against that language's file globs. No new parser,
+no new AST walker per language.
+
+### Why wasm (`web-tree-sitter`), not native bindings
+
+We run in the browser already (playground, VSCode-web, `run-worker`), and native
+`node-tree-sitter` cannot. `web-tree-sitter` runs in **browser, Node, and Bun**
+from one build, so we maintain **one** extractor everywhere. It is slower than
+native, which is irrelevant at LSP scale (we parse step files, not whole
+codebases). Two consequences leak through the port and are designed for, not
+papered over:
+
+1. **Async init.** `Parser.init()` and `Language.load(grammar.wasm)` are async,
+   while the core is sync. So extraction happens at the **shell edge** (async:
+   init → load → parse → immutable `StepDef[]`), and the sync core consumes the
+   result. A `GrammarLoader` port supplies grammar bytes per environment (disk
+   on Node/Bun, fetch in the browser).
+2. **`StepDef` stays language-neutral.** The one host-specific field today is the
+   handler param's `typeText` (a TS type as a string). Keep it an **opaque
+   string** the per-language emitter owns; the core never interprets it.
+
+---
+
+## 3. The execution seam — and the one open decision
+
+Static analysis needs no execution, so Side A is unambiguously shared. **Running**
+a language's steps is the one thing that genuinely requires that language's
+runtime — you cannot call a Python function from the JS process.
+
+The core already expresses the boundary cleanly: `plan()` produces an
+**`ExecutionPlan`** (pure data), and `TestSink.example(name, run)` is the only
+port a runner implements. The open question is *where the plan is produced* for a
+non-JS language:
+
+- **Model A — shared core, thin native runner (recommended).** The JS/wasm core
+  parses `.var.md`, matches, and emits a **serializable `ExecutionPlan`**
+  (steps → `stepDefId` + args + locations). A thin Python runner maps
+  `stepDefId → function` and executes. One parser, one matcher, one source of
+  truth; the per-language code is tiny. Cost: a JS process in the loop at test
+  time, and marshalling cucumber-expression arg values across the boundary.
+- **Model B — native re-implementation.** Python re-parses `.var.md` and
+  re-matches in-process (zero Node dependency, idiomatic `pytest`). Cost: a
+  second markdown parser, matcher, and planner to keep byte-for-byte consistent,
+  and the conformance suite (§5) becomes load-bearing rather than a safety net.
+
+We lean **Model A**: it is the only option consistent with "one shared core, thin
+adapters," and it keeps the markdown parser and matcher singular. Model B buys a
+zero-Node developer experience at the price of duplicated cores. **This decision
+should be locked before the refactoring begins** — it determines whether
+`ExecutionPlan` must become a serialization contract, and whether a markdown
+parser is ever written twice.
+
+---
+
+## 4. Ports a language must implement
+
+Under the target model, adding a language is "implement these ports," and most
+are already trivial or shared.
+
+| Port | Role | Per-language? |
 |---|---|---|
-| Step files are | **parsed** as source text | **imported / executed** |
-| Handlers are | absent (`EMPTY_HANDLER`) | real callables |
-| Registry built by | `buildWorkspaceIndex` (`var-language`) | `buildRegistry` (`var-runtime`) |
-| Used for | matching, completion, diagnostics, refactors | actually running examples |
-| Side effects | none | importing user modules |
-
-Both produce the *same* `Registry` type (compiled cucumber expressions +
-parameter types), so the matcher and planner don't know or care which side
-called them.
+| `StepDefScanner` (tree-sitter query set) | find step defs in source | **yes** — a query set + grammar |
+| `SnippetEmitter` | render a step snippet as host source | **yes** — selection-only, no keyword heuristics |
+| `TestSink` | turn an `ExecutionPlan` example into a runner item | **yes** — the runtime adapter |
+| `GrammarLoader` | supply grammar `.wasm` bytes | per-environment, not per-language |
+| `Reporter` | surface diagnostics | shared/edge |
+| `FileSystem` | list/read/write source | shared/edge |
+| markdown scanner · matcher · planner · LSP | everything else | **shared core** |
 
 ---
 
-## 3. Side A in detail — parsing & indexing
+## 5. Proving consistency: the conformance suite
 
-This is the side the user described as *"the passing [parsing] of the source
-files and the step definitions."* There are **two parsers** here, and they are
-independent:
+Because the static layers are shared, most "consistency" is free — there is only
+one matcher. What must be proven per language is the **extraction seam** (and,
+under Model B, the duplicated core).
 
-1. A **markdown parser** for `.var.md` (find examples, steps, tables, doc
-   strings). Hand-rolled line scanner today; this is the natural home for a
-   **PEG / Treetop-style grammar** in the port.
-2. A **step-definition parser** for `.steps.ts` (find `step("…")` and
-   `defineParameterType({…})` call sites and their handler signatures). Uses the
-   **TypeScript compiler API** today; in Python this becomes the stdlib `ast`
-   module.
+A **language-agnostic conformance suite** parametrised over every supported
+language:
 
-```mermaid
-graph TD
-  subgraph mdpipe["Markdown pipeline (pure, @oselvar/var)"]
-    SRC[".var.md source string"]
-    SCAN["scan()<br/><i>line scanner + ScannerPlugin hooks</i>"]
-    BLOCKS["Block[]<br/>heading · paragraph · list_item<br/>blockquote · table · fence · thematic_break"]
-    STRUCT["structure()<br/><i>group blocks into Examples under heading scopes;<br/>attach trailing tables/fences</i>"]
-    VARDOC["VarDoc<br/><i>examples + orphanAttachments</i>"]
-    SRC --> SCAN --> BLOCKS --> STRUCT --> VARDOC
-  end
+- **Per-language fixtures, shared expectations.** Each case has one
+  language-neutral expectation (e.g. "this source defines `a {int} cukes` at
+  range R; completion at P offers X"). Each language provides the equivalent
+  step-definition source; the harness asserts the **same** expectation against
+  every language.
+- **Golden snapshots.** Extraction output and LSP responses are serialised. A
+  shared-layer change that alters behaviour must update every language's goldens
+  in one commit, so accidental divergence is visible in review.
+- **Coverage matrix.** A language is "supported" only when green across
+  extraction, matching, ambiguity diagnostics, completion, go-to-definition,
+  document symbols, semantic tokens, and snippet round-trips. Gaps are logged,
+  not silently skipped.
 
-  subgraph plugins["Opt-in ScannerPlugins"]
-    GT["gherkinTables()"]
-    GD["gherkinDocStrings()"]
-  end
-  plugins -.->|"injected before built-ins"| SCAN
-
-  subgraph stepdisc["Step-def discovery (@oselvar/var-language)"]
-    STEPSRC[".steps.ts source string"]
-    SCANNER["StepDefScanner port<br/><i>createTypeScriptScanner()</i>"]
-    DEFS["StepDef[] · ParameterTypeDef[]<br/><i>expression + ranges + handler params</i>"]
-    STEPSRC --> SCANNER --> DEFS
-  end
-
-  subgraph index["buildWorkspaceIndex()"]
-    REG["Registry<br/><i>params first, then steps (handlerless)</i>"]
-    PLAN1["plan(VarDoc, Registry) per file"]
-    WIDX["WorkspaceIndex<br/>stepDefs · matches · diagnostics · registry"]
-  end
-
-  DEFS --> REG
-  VARDOC --> PLAN1
-  REG --> PLAN1
-  PLAN1 --> WIDX
-
-  WIDX --> CONSUMERS["LSP handlers:<br/>hover · definition · completion<br/>semantic tokens · rename · diagnostics"]
-```
-
-Key types along this path (all `readonly`/immutable):
-
-- `Block` → `Example` → `VarDoc` (`ast.ts`). Spans carry source offsets +
-  line/col so editors can map matches back to exact ranges. `inlineMap` records
-  how stripped inline markdown (backticks, emphasis) maps back to raw source
-  offsets — essential for accurate highlight/rename ranges.
-- `StepDef` / `ParameterTypeDef` (`var-language/step-defs.ts`) — the static view
-  of a step file, including the handler's parameter list (for signature sync on
-  rename).
-- `WorkspaceIndex` (`var-language/index-workspace.ts`) — the single artifact the
-  whole authoring side reads from.
-
-The LSP wraps this in a `Store` (re-indexes on change) behind a `FileSystem`
-port; the VSCode extension is a thin LSP client plus a couple of commands.
+Stand this harness up with TypeScript as the only column *before* Python, so
+Python slots in as column two rather than a new test framework.
 
 ---
 
-## 4. Side B in detail — running
+## 6. Data model (the shared contracts)
 
-This is *"the runner, which needs to be pluggable into any test runner."* The
-crucial design point the user raised — *"a generic instruction API to run the
-files, consistent across platforms but pluggable into whatever test runners are
-available"* — is satisfied by **one immutable data structure plus one port**:
-
-- The **instruction API** is the `ExecutionPlan` (pure data: examples → steps →
-  resolved handler + args + attachments).
-- The **plug point** is `TestSink.example(name, run)` — the *only* thing a
-  runner adapter must implement. `executePlan` walks the plan and calls
-  `sink.example(...)` once per example; the adapter decides what that means
-  (a vitest `test()`, a pytest item, a queued closure, …).
-
-```mermaid
-graph TD
-  subgraph load["Load step files (adapter shell — side effects OK)"]
-    IMP["import each *.steps.ts<br/><i>runs step()/defineContext()/defineParameterType()</i>"]
-    MODREG["@oselvar/var-runtime module-scope state<br/><i>steps[] · contextFactories · customTypes</i>"]
-    IMP --> MODREG
-  end
-
-  subgraph buildrun["runVarSource() — the generic run entry"]
-    PARSE2["parse(source) → VarDoc"]
-    BREG["buildRegistry() → Registry<br/><i>real handlers</i>"]
-    PLAN2["plan(VarDoc, Registry) → ExecutionPlan"]
-    EXEC["executePlan(plan, ports)"]
-    PARSE2 --> EXEC
-    BREG --> PLAN2 --> EXEC
-  end
-
-  MODREG --> BREG
-
-  subgraph ports["Ports — implemented by the adapter"]
-    SINK["TestSink.example(name, run)"]
-    REP["Reporter.diagnostic(d)"]
-    CTX["createContext(stepFile)"]
-  end
-  EXEC --> SINK
-  EXEC --> REP
-  EXEC --> CTX
-
-  subgraph adapters["Concrete runner adapters"]
-    V["vitest: example → vitestTest(name, run)"]
-    C["var run: example → queue.push; run sequentially"]
-    P["pytest (port): example → collected test item"]
-  end
-  SINK --> V
-  SINK --> C
-  SINK --> P
-```
-
-Inside `executePlan` (see `execute.ts`):
-
-- Each example becomes one `sink.example(name, asyncRun)`. The `asyncRun`
-  closure runs the example's steps **in order**, awaiting each handler.
-- **Context lifetime:** one context object **per stepfile per example**, created
-  lazily via `createContext(stepFile)` on first use and shared by subsequent
-  steps from that same stepfile. Different stepfiles get different contexts;
-  different examples never share. This is how state is isolated without
-  lifecycle hooks.
-- **Attachments:** a trailing data table arrives as the last handler arg as
-  `string[][]` (header row first); a doc string arrives as a plain string.
-- **Diagnostics** (ambiguous match, orphan attachment) are pushed to
-  `reporter.diagnostic` before any example runs.
-- **Clickable failures:** on a thrown error, a synthetic stack frame pointing at
-  the matched step's `file:line:col` in the `.var.md` is spliced in, so
-  terminals render a cmd-clickable link.
-
-The vitest adapter adds one more layer: a **vite plugin** turns every `.var.md`
-into a virtual module that imports the step files and calls `runVarSource`. In
-the port this is exactly the role a **pytest collection hook** plays — see §7.
-
----
-
-## 5. Hexagonal view — ports & adapters
-
-Everything that touches the outside world is a port implemented at the edge. A
-porter's checklist is "implement these six ports for the target platform."
-
-```mermaid
-graph TB
-  subgraph hex["Core domain (@oselvar/var) — pure"]
-    DOM["scan · structure · match · plan · executePlan<br/>diagnostics · snippet generation"]
-  end
-
-  subgraph portsdef["Ports (interfaces the core/edges depend on)"]
-    P1["TestSink<br/><i>example(name, run)</i>"]
-    P2["Reporter<br/><i>diagnostic(d)</i>"]
-    P3["createContext<br/><i>(stepFile) → ctx</i>"]
-    P4["ScannerPlugin<br/><i>tryScan(...) → Block</i>"]
-    P5["StepDefScanner<br/><i>discoverStepDefs / ParameterTypes</i>"]
-    P6["FileSystem<br/><i>list / read / write</i>"]
-  end
-
-  DOM --- P1 & P2 & P3 & P4 & P5 & P6
-
-  subgraph adps["Adapters (implement ports)"]
-    AD1["vitest test() / var-run queue / pytest item"]
-    AD2["vitest failing test / stderr writer / LSP push"]
-    AD3["per-stepfile defineContext() factory"]
-    AD4["gherkinTables() · gherkinDocStrings()"]
-    AD5["TypeScript compiler API → Python ast"]
-    AD6["node:fs (CLI/LSP) · in-memory (tests)"]
-  end
-
-  P1 --> AD1
-  P2 --> AD2
-  P3 --> AD3
-  P4 --> AD4
-  P5 --> AD5
-  P6 --> AD6
-```
-
-| Port | Defined in | Implemented by | Port-side responsibility |
-|---|---|---|---|
-| `TestSink` | `var/ports.ts` | vitest, `var run`, (pytest) | turn an example into a runner test |
-| `Reporter` | `var/ports.ts` | vitest, CLI stderr, LSP | surface diagnostics |
-| `createContext` | `var/execute.ts` (`ExecutePorts`) | `var-runtime` contextFactory | per-stepfile state factory |
-| `ScannerPlugin` | `var/scanner.ts` | gherkin plugins (core, opt-in) | recognise extra block shapes |
-| `StepDefScanner` | `var-language/scanner.ts` | TS compiler scanner | parse step source → `StepDef[]` |
-| `FileSystem` | `var-lsp/file-system.ts` | node-fs, in-memory test fs | list/read/write source files |
-
----
-
-## 6. Data model (the immutable contracts to reproduce)
-
-These are the types a port must reproduce faithfully — they are the wire format
-between stages. All fields are `readonly`; updates produce new values.
+These immutable types are the wire format between stages and are reproduced
+**once**, in the shared core.
 
 ```mermaid
 classDiagram
-  class VarDoc {
-    path: string
-    source: string
-    examples: Example[]
-    orphanAttachments: (Table|Fence)[]
-  }
-  class Example {
-    scopeStack: string[]
-    span: Span
-    body: Block[]
-  }
-  class Registry {
-    steps: StepRegistration[]
-    parameterTypes: ParameterTypeRegistry
-  }
-  class StepRegistration {
-    expression: string
-    expressionSourceFile: string
-    expressionSourceLine: number
-    handler: StepHandler
-    compiled: CucumberExpression
-  }
-  class ExecutionPlan {
-    varDoc: VarDoc
-    examples: PlannedExample[]
-    diagnostics: Diagnostic[]
-  }
-  class PlannedExample {
-    name: string
-    scopeStack: string[]
-    span: Span
-    steps: PlannedStep[]
-  }
-  class PlannedStep {
-    text: string
-    matchSpan: Span
-    paramSpans: Span[]
-    stepDef: StepRegistration
-    args: unknown[]
-    dataTable?: Table
-    docString?: DocString
-  }
+  class VarDoc { path; source; examples: Example[]; orphanAttachments }
+  class Registry { steps: StepRegistration[]; parameterTypes }
+  class StepRegistration { expression; sourceFile; sourceLine; handler; compiled }
+  class ExecutionPlan { varDoc; examples: PlannedExample[]; diagnostics }
+  class PlannedExample { name; scopeStack; span; steps: PlannedStep[] }
+  class PlannedStep { text; matchSpan; paramSpans; stepDef; args; dataTable?; docString? }
 
   VarDoc "1" --> "*" Example
-  ExecutionPlan "1" --> "*" PlannedExample
+  Registry "1" --> "*" StepRegistration
   ExecutionPlan --> VarDoc
+  ExecutionPlan "1" --> "*" PlannedExample
   PlannedExample "1" --> "*" PlannedStep
   PlannedStep --> StepRegistration
-  Registry "1" --> "*" StepRegistration
 ```
 
-`plan(VarDoc, Registry) → ExecutionPlan` is the join: it runs the matcher per
-text block, resolves overlaps/ambiguities, attaches trailing tables/fences to
-the last matched step, derives each example's name from its first sentence, and
-collects diagnostics. It is pure — same inputs, same plan.
+`plan(VarDoc, Registry) → ExecutionPlan` is the join: it matches each text block,
+resolves ambiguities, attaches trailing tables/fences to the last matched step,
+derives example names, and collects diagnostics. It is pure. Under Model A,
+`ExecutionPlan` additionally becomes the **serializable contract** shipped to a
+native runner (handlers replaced by `stepDefId`s).
 
 ---
 
-## 7. Porting to Python
+## 7. What this means for the refactoring (preview)
 
-The architecture is deliberately language-agnostic: pure core + ports. The port
-keeps the **same stages, the same immutable types, and the same two-sided
-split**; only the adapters change.
+The prefactoring that makes the first language drop in — each step improves trunk
+on TypeScript alone, before any Python exists:
 
-```mermaid
-graph TD
-  subgraph pycore["var (pure) — port of @oselvar/var"]
-    PS["scanner / structurer (markdown → VarDoc)"]
-    PM["matcher (cucumber-expressions for Python)"]
-    PP["planner / executor / diagnostics / snippet"]
-  end
-  subgraph pyglue["runtime glue"]
-    PRT["var.runtime<br/>@step / define_context / define_parameter_type<br/>build_registry()"]
-    PLANG["var.language<br/>discover_step_defs via stdlib ast<br/>build_workspace_index()"]
-  end
-  subgraph pyrun["runner adapters"]
-    PPLUG["pytest plugin<br/>pytest_collect_file: *.var.md → items"]
-    PCLI["var run CLI<br/>own TestSink"]
-  end
-  subgraph pyauth["authoring adapters"]
-    PLSP["LSP server via pygls"]
-    PEXT["VSCode extension (stays TS) → talks to Python LSP"]
-  end
-  PRT --> pycore
-  PLANG --> pycore
-  PPLUG --> pycore
-  PPLUG --> PRT
-  PCLI --> pycore
-  PCLI --> PRT
-  PLSP --> PLANG
-  PEXT -. stdio .-> PLSP
-```
+1. **Reimplement the TS `StepDefScanner` on tree-sitter** (web-tree-sitter + TS
+   grammar), keeping the port signature and making existing tests pass unchanged.
+   Dogfood the seam on the language we already have.
+2. **Move extraction to the async shell edge**; add the `GrammarLoader` port.
+3. **Make `StepDef` neutral** — `typeText` becomes opaque.
+4. **Extract a `SnippetEmitter` port** from the TS-emitting snippet code.
+5. **De-hardcode file patterns** into per-language config (`.var.md` stays neutral).
+6. **Lock Model A vs B** (§3); if A, make `ExecutionPlan` serializable.
+7. **Stand up the conformance harness** with TS as the only column.
 
-### Tooling translation
-
-| Concern | TypeScript today | Python port |
-|---|---|---|
-| Cucumber expressions | `@cucumber/cucumber-expressions` | `cucumber-expressions` (official PyPI package) |
-| **Markdown parse** (`.var.md`) | hand-rolled line scanner in `scanner.ts` | PEG grammar — **Treetop-style** via `parsimonious`/`lark`, or port the line scanner verbatim. `ScannerPlugin` → grammar extension / pre-rule hook |
-| **Step-def parse** (`.steps.py`) | TypeScript compiler API (`StepDefScanner`) | stdlib **`ast`** module: walk for `step("…")` / `define_parameter_type(...)` calls and decorator/handler signatures. Same `StepDefScanner` port shape |
-| Module-scope registration | `var-runtime` mutable module state | a registry module; `@step("…")` **decorator** registers at import — a natural fit for Python |
-| Per-stepfile context | `defineContext()` factory map | `define_context()` returning a typed `step`, keyed by module |
-| Runner plug point | `TestSink.example` → `vitestTest` | `TestSink.example` → **pytest** collected item (`pytest_collect_file` / `pytest_pycollect_makeitem`) or `unittest` test |
-| Per-`.var.md` wiring | vite virtual module | **pytest collection hook** turns each `.var.md` into a test file/module |
-| File access | `node:fs` / in-memory | `pathlib` / in-memory `FileSystem` port |
-| LSP server | `vscode-languageserver` | **`pygls`** |
-| Editor extension | `@oselvar/var-vscode` | keep the TS extension; point its `serverModule` at the Python LSP |
-
-### A note on "Treetop" / the two parsers
-
-The user's instruction — *use Treetop for the parsing* — applies to the
-**markdown side** (recognising examples, steps, tables, doc strings as a
-grammar). Treetop itself is a Ruby PEG library; the Python equivalents are
-`parsimonious`, `lark`, or `pyparsing`. The **step-definition side is a separate
-parser** and should **not** use a text grammar — it parses real Python source,
-so use the stdlib `ast` module (the analogue of today's TypeScript compiler
-API). Keeping these two parsers behind their existing seams (`ScannerPlugin`
-for markdown, `StepDefScanner` for step source) means each can evolve
-independently.
-
-### Suggested port order
-
-1. **Core types + markdown parser** (`scan`/`structure` → `VarDoc`). Pure;
-   easiest to test in isolation against the existing `.var.md` fixtures.
-2. **Registry + matcher + planner** on top of `cucumber-expressions`. This
-   unlocks both sides.
-3. **Side B runtime**: `@step` decorator registry + `build_registry` +
-   `execute_plan` with an in-memory `TestSink`; then the `var run` CLI.
-4. **pytest adapter**: `TestSink` → collected items via a collection hook.
-5. **Side A**: `discover_step_defs` (stdlib `ast`) + `build_workspace_index`.
-6. **LSP** via `pygls`, reusing the existing VSCode extension.
-
-Stages 1–3 give a runnable tool; 4 makes it idiomatic on the platform; 5–6 add
-the authoring experience.
+A detailed, sequenced refactoring plan follows separately.
