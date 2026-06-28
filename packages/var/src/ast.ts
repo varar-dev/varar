@@ -35,7 +35,11 @@ export type Blockquote = {
   readonly inlineMap: ReadonlyArray<InlineOffset>
 }
 
-export type Row = { readonly cells: ReadonlyArray<string>; readonly span: Span }
+export type Row = {
+  readonly cells: ReadonlyArray<string>
+  readonly cellSpans: ReadonlyArray<Span>
+  readonly span: Span
+}
 
 export type Table = {
   readonly kind: 'table'

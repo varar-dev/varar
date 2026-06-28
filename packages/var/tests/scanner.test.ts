@@ -1,4 +1,6 @@
 import { expect, test } from 'vitest'
+import type { Table } from '../src/ast.js'
+import { parse } from '../src/parse.js'
 import { scan } from '../src/scanner.js'
 
 test('scan finds a single h1 heading', () => {
@@ -139,4 +141,28 @@ test('scan recognizes blockquotes', () => {
   const bq = blocks[0]
   if (bq?.kind !== 'blockquote') throw new Error('expected blockquote')
   expect(bq.text).toBe('Given I have 100\nWhen I withdraw 40')
+})
+
+test('table rows expose a source span per cell that slices back to the trimmed cell text', () => {
+  const source = `# T
+
+these rows:
+
+| a | bb  |
+| - | --- |
+| 1 | 222 |`
+  const doc = parse('t.var.md', source)
+  const table = doc.examples[0]?.body.find((b) => b.kind === 'table') as Table | undefined
+  if (!table) throw new Error('no table parsed')
+  const row = table.rows[0]
+  if (!row) throw new Error('no row')
+  expect(row.cellSpans).toHaveLength(2)
+  const slice = (i: number) =>
+    source.slice(row.cellSpans[i]!.startOffset, row.cellSpans[i]!.endOffset)
+  expect(slice(0)).toBe('1')
+  expect(slice(1)).toBe('222')
+  // The header row carries cell spans too.
+  expect(
+    source.slice(table.header.cellSpans[1]!.startOffset, table.header.cellSpans[1]!.endOffset),
+  ).toBe('bb')
 })

@@ -332,18 +332,26 @@ function tryTable(
   if (!headerLine || !delimLine) return undefined
   if (!ROW_RE.test(headerLine.text)) return undefined
   if (!DELIM_RE.test(delimLine.text)) return undefined
+  const headerParsed = parseCellsWithSpans(headerLine.text, headerLine.startOffset, source)
   const header = {
-    cells: parseCells(headerLine.text),
+    cells: headerParsed.cells,
+    cellSpans: headerParsed.cellSpans,
     span: spanFromOffsets(source, headerLine.startOffset, headerLine.endOffset),
   }
-  const rows: { cells: ReadonlyArray<string>; span: ReturnType<typeof spanFromOffsets> }[] = []
+  const rows: {
+    cells: ReadonlyArray<string>
+    cellSpans: ReadonlyArray<ReturnType<typeof spanFromOffsets>>
+    span: ReturnType<typeof spanFromOffsets>
+  }[] = []
   let i = startIdx + 2
   while (i < lines.length) {
     const ln = lines[i]
     if (!ln) break
     if (!ROW_RE.test(ln.text)) break
+    const parsed = parseCellsWithSpans(ln.text, ln.startOffset, source)
     rows.push({
-      cells: parseCells(ln.text),
+      cells: parsed.cells,
+      cellSpans: parsed.cellSpans,
       span: spanFromOffsets(source, ln.startOffset, ln.endOffset),
     })
     i++
@@ -361,8 +369,27 @@ function tryTable(
   }
 }
 
-function parseCells(line: string): ReadonlyArray<string> {
+// Split a `| a | b |` row into trimmed cells AND the source span of each
+// cell's trimmed text. `lineStart` is the row's start offset in `source`.
+function parseCellsWithSpans(
+  line: string,
+  lineStart: number,
+  source: string,
+): { cells: ReadonlyArray<string>; cellSpans: ReadonlyArray<ReturnType<typeof spanFromOffsets>> } {
   const m = ROW_RE.exec(line)
-  if (!m) return []
-  return (m[1] ?? '').split('|').map((c) => c.trim())
+  if (!m) return { cells: [], cellSpans: [] }
+  const inner = m[1] ?? ''
+  const innerStart = 1 // ROW_RE anchors `^\|`, so inner text begins at column 1
+  const cells: string[] = []
+  const cellSpans: ReturnType<typeof spanFromOffsets>[] = []
+  let cursor = 0
+  for (const seg of inner.split('|')) {
+    const trimmed = seg.trim()
+    const leading = seg.length - seg.trimStart().length
+    const absStart = lineStart + innerStart + cursor + leading
+    cells.push(trimmed)
+    cellSpans.push(spanFromOffsets(source, absStart, absStart + trimmed.length))
+    cursor += seg.length + 1 // +1 for the `|` delimiter
+  }
+  return { cells, cellSpans }
 }
