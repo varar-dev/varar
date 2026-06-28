@@ -44,7 +44,7 @@ export type PlannedStep = {
   readonly stepDef: StepRegistration
   readonly args: ReadonlyArray<unknown>
   readonly dataTable?: Table
-  readonly docString?: { content: string; contentType: string }
+  readonly docString?: { content: string; contentType: string; span: Span }
 }
 
 export function plan(varDoc: VarDoc, registry: Registry): ExecutionPlan {
@@ -128,7 +128,7 @@ export function plan(varDoc: VarDoc, registry: Registry): ExecutionPlan {
     // Pass 2: look for table/fence immediately after a step-bearing block.
     const attachments = new Map<
       number,
-      { dataTable?: Table; docString?: { content: string; contentType: string } }
+      { dataTable?: Table; docString?: { content: string; contentType: string; span: Span } }
     >()
     for (let idx = 1; idx < ex.body.length; idx++) {
       const here = ex.body[idx]
@@ -139,7 +139,7 @@ export function plan(varDoc: VarDoc, registry: Registry): ExecutionPlan {
         const fence = here as Fence
         attachments.set(idx - 1, {
           ...(attachments.get(idx - 1) ?? {}),
-          docString: { content: fence.body, contentType: fence.info },
+          docString: { content: fence.body, contentType: fence.info, span: fence.bodySpan },
         })
       }
     }

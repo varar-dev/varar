@@ -361,3 +361,25 @@ each row lists the dice, the category and the score:
   const scoreCheck = checks[2]!
   expect(source.slice(scoreCheck.span.startOffset, scoreCheck.span.endOffset)).toBe('17')
 })
+
+test('a doc-string step carries the fence body span on its plan', () => {
+  const r = addStep(createRegistry(), {
+    expression: 'the payload is',
+    expressionSourceFile: 's.ts',
+    expressionSourceLine: 1,
+    handler: () => {},
+  })
+  const source = `# T
+
+the payload is:
+
+\`\`\`json
+{ "ok": true }
+\`\`\``
+  const result = plan(parse('d.var.md', source), r)
+  const ds = result.examples[0]?.steps[0]?.docString
+  if (!ds) throw new Error('no docString')
+  expect(ds.content).toBe('{ "ok": true }\n')
+  // The span slices back to the exact body content (trailing newline included).
+  expect(source.slice(ds.span.startOffset, ds.span.endOffset)).toBe('{ "ok": true }\n')
+})
