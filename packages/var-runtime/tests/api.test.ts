@@ -1,10 +1,14 @@
 import { beforeEach, expect, test } from 'vitest'
 import {
   _resetBuilder,
+  action,
   buildRegistry,
+  context,
   contextFactory,
   defineContext,
   defineParameterType,
+  defineState,
+  sensor,
   step,
 } from '../src/index.js'
 
@@ -84,4 +88,27 @@ test('defineContext() returns a `step` typed against the context factory output'
   })
   const r = buildRegistry()
   expect(r.steps).toHaveLength(2)
+})
+
+test('context/action/sensor register with their kind', () => {
+  context('a logged-in user', () => {})
+  action('I click submit', () => {})
+  sensor('the total is {int}', (_ctx, total: number) => [total])
+  const r = buildRegistry()
+  expect(r.steps.map((s) => s.kind)).toEqual(['context', 'action', 'sensor'])
+})
+
+test('defineState returns role functions typed against the state', () => {
+  const { context: ctxStep, sensor: sense } = defineState(() => ({ greeting: '' }))
+  ctxStep('I greet {string}', (ctx, name: string) => {
+    ctx.greeting = `Hello, ${name}!`
+  })
+  sense('the greeting should be {string}', (ctx) => [ctx.greeting])
+  const r = buildRegistry()
+  expect(r.steps).toHaveLength(2)
+})
+
+test('a second defineState in the SAME file throws', () => {
+  defineState(() => ({ balance: 0 }))
+  expect(() => defineState(() => ({ other: 1 }))).toThrow(/called more than once/)
 })

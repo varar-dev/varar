@@ -4,6 +4,7 @@ import {
   defineParameterType as defineParameterTypeCore,
   type Registry,
   type StepHandler,
+  type StepKind,
 } from '@oselvar/var'
 
 type Entry = {
@@ -11,6 +12,7 @@ type Entry = {
   readonly sourceFile: string
   readonly sourceLine: number
   readonly handler: StepHandler
+  readonly kind?: StepKind
 }
 
 type CustomTypeDef = {
@@ -33,15 +35,35 @@ export type Step<C = unknown> = <Args extends ReadonlyArray<unknown>>(
   handler: (ctx: C, ...args: Args) => void | Promise<void>,
 ) => void
 
-function registerStep(expression: string, handler: StepHandler): void {
+function registerStep(expression: string, handler: StepHandler, kind?: StepKind): void {
   const { sourceFile, sourceLine } = callerLocation()
-  steps.push({ expression, sourceFile, sourceLine, handler })
+  steps.push({ expression, sourceFile, sourceLine, handler, ...(kind !== undefined && { kind }) })
 }
 
 // Generic `step` import: ctx is unknown. Use `defineContext(...).step` for typed ctx.
 export const step: Step<unknown> = (expression, handler) => {
   registerStep(expression, handler as StepHandler)
 }
+
+export type RoleFn<C = unknown> = (
+  expression: string,
+  handler: (ctx: C, ...args: readonly unknown[]) => void | Promise<void>,
+) => void
+
+export type SensorFn<C = unknown> = <Args extends readonly unknown[]>(
+  expression: string,
+  handler: (
+    ctx: C,
+    ...args: Args
+  ) => NoInfer<Args> | Promise<NoInfer<Args>> | void | Promise<void>,
+) => void
+
+export const context: RoleFn = (expression, handler) =>
+  registerStep(expression, handler as StepHandler, 'context')
+export const action: RoleFn = (expression, handler) =>
+  registerStep(expression, handler as StepHandler, 'action')
+export const sensor: SensorFn = (expression, handler) =>
+  registerStep(expression, handler as StepHandler, 'sensor')
 
 // Register the per-stepfile context factory AND return a `step` typed against
 // `C` so handler bodies can use `ctx.foo` without casts. The factory itself
@@ -57,6 +79,26 @@ export function defineContext<C>(factory: () => C | Promise<C>): { readonly step
     registerStep(expression, handler as StepHandler)
   }
   return { step: typedStep }
+}
+
+export function defineState<C>(factory: () => C | Promise<C>): {
+  readonly context: RoleFn<C>
+  readonly action: RoleFn<C>
+  readonly sensor: SensorFn<C>
+} {
+  const { sourceFile } = callerLocation()
+  if (contextFactoriesByFile.has(sourceFile)) {
+    throw new Error(`defineState() called more than once in ${sourceFile}`)
+  }
+  contextFactoriesByFile.set(sourceFile, factory as () => unknown)
+  return {
+    context: (expression, handler) =>
+      registerStep(expression, handler as StepHandler, 'context'),
+    action: (expression, handler) =>
+      registerStep(expression, handler as StepHandler, 'action'),
+    sensor: (expression, handler) =>
+      registerStep(expression, handler as StepHandler, 'sensor'),
+  }
 }
 
 export function defineParameterType<T>(opts: {
@@ -89,6 +131,7 @@ export function buildRegistry(): Registry {
       expressionSourceFile: e.sourceFile,
       expressionSourceLine: e.sourceLine,
       handler: e.handler,
+      ...(e.kind !== undefined && { kind: e.kind }),
     })
   }
   return r
