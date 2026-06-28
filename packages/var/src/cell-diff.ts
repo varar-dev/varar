@@ -93,17 +93,19 @@ export function compareTable(returned: unknown, input: Table): ReadonlyArray<Cel
   for (let i = 0; i < dataRows.length; i++) {
     const row = dataRows[i] as Row
     const ret = returned[i]
+    if (allArrays) {
+      const cells = ret as ReadonlyArray<unknown>
+      if (cells.length !== columns.length) {
+        throw new ReturnShapeError(
+          `row ${i}: expected ${columns.length} column(s), got ${cells.length}`,
+        )
+      }
+    }
     for (let j = 0; j < columns.length; j++) {
       const column = columns[j] as string
       let actualValue: unknown
       if (allArrays) {
-        const cells = ret as ReadonlyArray<unknown>
-        if (cells.length !== columns.length) {
-          throw new ReturnShapeError(
-            `row ${i}: expected ${columns.length} column(s), got ${cells.length}`,
-          )
-        }
-        actualValue = cells[j]
+        actualValue = (ret as ReadonlyArray<unknown>)[j]
       } else {
         const rec = ret as Record<string, unknown>
         if (!(column in rec)) {

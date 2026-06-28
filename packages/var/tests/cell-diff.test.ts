@@ -126,6 +126,19 @@ test('compareTable: undefined return checks nothing', () => {
   expect(compareTable(undefined, table)).toEqual([])
 })
 
+test('compareTable: extra keys on a returned record are ignored', () => {
+  const { table } = tableOf(TABLE_SRC)
+  const diffs = compareTable(
+    [
+      { before: 'var', after: 'VAR', extra: 'ignored' },
+      { before: 'bdd', after: 'BDD', note: 123 },
+    ],
+    table,
+  )
+  expect(diffs.every((d) => d.ok)).toBe(true)
+  expect(diffs.map((d) => d.column)).toEqual(['before', 'after', 'before', 'after'])
+})
+
 test('compareTable: shape/type errors throw ReturnShapeError', () => {
   const { table } = tableOf(TABLE_SRC)
   expect(() => compareTable('nope', table)).toThrow(ReturnShapeError) // not an array

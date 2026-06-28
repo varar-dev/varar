@@ -450,6 +450,26 @@ test('a doc-string step returning a different string throws DocStringMismatchErr
   expect(source.slice(diff.span.startOffset, diff.span.endOffset)).toBe('Hello, world!\n')
 })
 
+test('a whole-table step returning undefined passes (asserted nothing)', async () => {
+  const r = addStep(createRegistry(), {
+    expression: 'uppercase each one',
+    expressionSourceFile: 's.ts',
+    expressionSourceLine: 1,
+    handler: () => undefined,
+  })
+  await expect(runsFor(TABLE_DOC, r)[0]?.()).resolves.toBeUndefined()
+})
+
+test('a doc-string step returning undefined passes (asserted nothing)', async () => {
+  const r = addStep(createRegistry(), {
+    expression: 'the greeting is',
+    expressionSourceFile: 's.ts',
+    expressionSourceLine: 1,
+    handler: () => undefined,
+  })
+  await expect(runsFor(DOCSTRING_DOC, r)[0]?.()).resolves.toBeUndefined()
+})
+
 test('a doc-string step returning the exact body passes', async () => {
   const r = addStep(createRegistry(), {
     expression: 'the greeting is',
