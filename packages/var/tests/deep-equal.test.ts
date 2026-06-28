@@ -28,3 +28,8 @@ test('Maps compare by entries', () => {
   expect(deepEqual(new Map([['a', 1]]), new Map([['a', 1]]))).toBe(true)
   expect(deepEqual(new Map([['a', 1]]), new Map([['a', 2]]))).toBe(false)
 })
+
+test('Sets compare by membership', () => {
+  expect(deepEqual(new Set([1, 2]), new Set([1, 2]))).toBe(true)
+  expect(deepEqual(new Set([1, 2]), new Set([1, 3]))).toBe(false)
+})
