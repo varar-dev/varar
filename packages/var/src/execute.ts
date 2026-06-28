@@ -3,6 +3,27 @@ import { compareDocString, DocStringMismatchError } from './doc-string-diff.js'
 import type { ExecutionPlan, PlannedStep } from './plan.js'
 import type { Reporter, TestSink } from './ports.js'
 
+export class UnexpectedPassError extends Error {
+  constructor(message = 'expected the example to fail, but it passed') {
+    super(message)
+    this.name = 'UnexpectedPassError'
+  }
+}
+export function isUnexpectedPassError(e: unknown): e is UnexpectedPassError {
+  return e instanceof UnexpectedPassError
+}
+
+export type StepObservation = {
+  readonly exampleName: string
+  readonly ordinal: number // 1-based index within the example
+  readonly stepFile: string // step.stepDef.expressionSourceFile (raw)
+  readonly outcome: 'pass' | 'fail'
+  readonly error?: unknown // the augmented error on failure
+}
+export interface ExecutionObserver {
+  step(o: StepObservation): void
+}
+
 export type ExecutePorts = {
   readonly sink: TestSink
   readonly reporter: Reporter
@@ -11,6 +32,9 @@ export type ExecutePorts = {
   // stepfile share the same context object, steps in different stepfiles
   // each get their own. Defaults to `() => ({})` when omitted.
   readonly createContext?: (stepFile: string) => unknown | Promise<unknown>
+  // Optional per-step observer for instrumentation (conformance trace mode).
+  // Called once per executed step; steps after a failure are not observed.
+  readonly observer?: ExecutionObserver
 }
 
 export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
@@ -21,22 +45,17 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
     ports.sink.example(
       ex.name,
       async () => {
-        // Cache one context per stepfile within this example. Lazy creation
-        // keeps the cost zero for stepfiles whose steps don't run.
         const ctxByFile = new Map<string, unknown>()
         let lastReturn: unknown
-        for (const step of ex.steps) {
+        let thrown: unknown
+        for (let i = 0; i < ex.steps.length; i++) {
+          const step = ex.steps[i] as PlannedStep
           const file = step.stepDef.expressionSourceFile
           let ctx = ctxByFile.get(file)
           if (!ctxByFile.has(file)) {
             ctx = await createContext(file)
             ctxByFile.set(file, ctx)
           }
-          // A trailing data table or doc string is passed as the LAST handler
-          // argument, after whatever the cucumber expression captured. Tables
-          // arrive as a plain `string[][]` (header row first); doc strings as
-          // a plain string. Either form is small enough that callers can
-          // shape it however they like.
           const extra: unknown[] = []
           if (step.dataTable) {
             extra.push([
@@ -46,14 +65,9 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
           } else if (step.docString) {
             extra.push(step.docString.content)
           }
-          let returned: unknown
           try {
-            returned = await step.stepDef.handler(ctx, ...step.args, ...extra)
-          } catch (err) {
-            throw augmentStack(err, step, path)
-          }
-          lastReturn = returned
-          try {
+            const returned = await step.stepDef.handler(ctx, ...step.args, ...extra)
+            lastReturn = returned
             if (step.dataTable) {
               const bad = compareTable(returned, step.dataTable).filter((d) => !d.ok)
               if (bad.length > 0) throw new CellMismatchError(bad)
@@ -61,18 +75,48 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
               const diff = compareDocString(returned, step.docString.content, step.docString.span)
               if (diff) throw new DocStringMismatchError(diff)
             }
+            ports.observer?.step({ exampleName: ex.name, ordinal: i + 1, stepFile: file, outcome: 'pass' })
           } catch (err) {
-            throw augmentStack(err, step, path)
+            const augmented = augmentStack(err, step, path)
+            ports.observer?.step({
+              exampleName: ex.name,
+              ordinal: i + 1,
+              stepFile: file,
+              outcome: 'fail',
+              error: augmented,
+            })
+            thrown = augmented
+            break
           }
         }
-        if (ex.rowChecks && ex.rowChecks.length > 0) {
+        if (thrown === undefined && ex.rowChecks && ex.rowChecks.length > 0) {
           const bad = compareRow(lastReturn, ex.rowChecks).filter((d) => !d.ok)
           if (bad.length > 0) {
-            const lastStep = ex.steps[ex.steps.length - 1]
-            // biome-ignore lint/style/noNonNullAssertion: a header-bound row example always has its row step
-            throw augmentStack(new CellMismatchError(bad), lastStep!, path)
+            const lastStep = ex.steps[ex.steps.length - 1] as PlannedStep
+            const augmented = augmentStack(new CellMismatchError(bad), lastStep, path)
+            ports.observer?.step({
+              exampleName: ex.name,
+              ordinal: ex.steps.length,
+              stepFile: lastStep.stepDef.expressionSourceFile,
+              outcome: 'fail',
+              error: augmented,
+            })
+            thrown = augmented
           }
         }
+        if (ex.expectedOutcome === 'fail') {
+          if (thrown === undefined) {
+            const lastStep = ex.steps[ex.steps.length - 1]
+            const e = new UnexpectedPassError()
+            throw lastStep ? augmentStack(e, lastStep, path) : e
+          }
+          if (ex.expectedErrorMessage) {
+            const msg = thrown instanceof Error ? thrown.message : String(thrown)
+            if (!msg.includes(ex.expectedErrorMessage)) throw thrown
+          }
+          return
+        }
+        if (thrown !== undefined) throw thrown
       },
       { lines: [...new Set(ex.steps.map((s) => s.matchSpan.startLine))] },
     )

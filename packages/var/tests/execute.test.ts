@@ -2,10 +2,20 @@ import { expect, test } from 'vitest'
 import { type CellMismatchError, isCellMismatchError, ReturnShapeError } from '../src/cell-diff.js'
 import type { Diagnostic } from '../src/diagnostics.js'
 import { type DocStringMismatchError, isDocStringMismatchError } from '../src/doc-string-diff.js'
-import { executePlan } from '../src/execute.js'
+import { executePlan, isUnexpectedPassError, type StepObservation } from '../src/execute.js'
 import { parse } from '../src/parse.js'
 import { plan } from '../src/plan.js'
 import { addStep, createRegistry } from '../src/registry.js'
+
+async function runOnly(p: ReturnType<typeof plan>, observer?: { step(o: StepObservation): void }) {
+  let run: (() => void | Promise<void>) | undefined
+  executePlan(p, {
+    sink: { example: (_n, r) => { run = r } },
+    reporter: { diagnostic: () => {} },
+    ...(observer ? { observer } : {}),
+  })
+  return run
+}
 
 test('executePlan calls sink.example for each PlannedExample', () => {
   const r = addStep(createRegistry(), {
@@ -495,4 +505,57 @@ test('executePlan passes each example its deduped 1-based step lines via info', 
 
   expect(seen).toHaveLength(1)
   expect(seen[0]?.lines).toEqual([3, 4])
+})
+
+test('expected-failure example: a thrown step makes the run resolve (pass)', async () => {
+  const r = addStep(createRegistry(), {
+    expression: 'I divide {int} by {int}',
+    expressionSourceFile: 's.ts',
+    expressionSourceLine: 1,
+    handler: (_c, _a, b) => { if (b === 0) throw new Error('division by zero') },
+  })
+  const src = '# D\n\nI divide 1 by 0.\n\n```error\ndivision by zero\n```\n'
+  const run = await runOnly(plan(parse('e.var.md', src), r))
+  await expect(run?.()).resolves.toBeUndefined()
+})
+
+test('expected-failure example: no throw makes the run reject with UnexpectedPassError', async () => {
+  const r = addStep(createRegistry(), {
+    expression: 'I divide {int} by {int}',
+    expressionSourceFile: 's.ts',
+    expressionSourceLine: 1,
+    handler: () => {},
+  })
+  const src = '# D\n\nI divide 1 by 1.\n\n```error\n```\n'
+  const run = await runOnly(plan(parse('e.var.md', src), r))
+  await expect(run?.()).rejects.toSatisfy(isUnexpectedPassError)
+})
+
+test('expected-failure with message substring: mismatch rejects with the real error', async () => {
+  const r = addStep(createRegistry(), {
+    expression: 'I divide {int} by {int}',
+    expressionSourceFile: 's.ts',
+    expressionSourceLine: 1,
+    handler: () => { throw new Error('boom') },
+  })
+  const src = '# D\n\nI divide 1 by 0.\n\n```error\ndivision by zero\n```\n'
+  const run = await runOnly(plan(parse('e.var.md', src), r))
+  await expect(run?.()).rejects.toThrow('boom')
+})
+
+test('observer receives a pass observation per executed step', async () => {
+  const r = addStep(createRegistry(), {
+    expression: 'I add {int}',
+    expressionSourceFile: 's.ts',
+    expressionSourceLine: 1,
+    handler: () => {},
+  })
+  const obs: StepObservation[] = []
+  const run = await runOnly(plan(parse('e.var.md', '# A\n\nI add 5.'), r), {
+    step: (o) => obs.push(o),
+  })
+  await run?.()
+  expect(obs).toEqual([
+    { exampleName: 'I add 5', ordinal: 1, stepFile: 's.ts', outcome: 'pass' },
+  ])
 })
