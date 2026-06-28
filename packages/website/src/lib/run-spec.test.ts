@@ -9,14 +9,11 @@ const SPEC = `# Greeting\n\nFirst I greet "world" okay? I think the greeting sho
 describe('runRegisteredSpec', () => {
   it('passes when the handler does not throw', async () => {
     _resetBuilder()
-    const { action } = defineState(() => ({ greeting: '' }))
+    const { action, sensor } = defineState(() => ({ greeting: '' }))
     action('I greet {string}', (ctx, name: string) => {
       ctx.greeting = `Hello, ${name}!`
     })
-    action('the greeting should be {string}', (ctx, expected: string) => {
-      if (ctx.greeting !== expected)
-        throw new Error(`expected "${expected}" but was "${ctx.greeting}"`)
-    })
+    sensor('the greeting should be {string}', (ctx, _expected: string) => [ctx.greeting] as [string])
     const results = await runRegisteredSpec('/spec.var.md', SPEC)
     expect(results.examples).toHaveLength(1)
     expect(results.examples[0]?.status).toBe('passed')

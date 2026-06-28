@@ -75,13 +75,11 @@ test('defineState() returns typed role functions with ctx typed against the fact
   // The typed action lets handler bodies read/write `ctx.foo` without casts. If
   // this regresses, the property accesses below fail with TS2339 ("Property
   // does not exist on type 'unknown'").
-  const { action: typedAction } = defineState(() => ({ greeting: '' }))
+  const { action: typedAction, sensor: typedSensor } = defineState(() => ({ greeting: '' }))
   typedAction('I greet {string}', (ctx, name: string) => {
     ctx.greeting = `Hello, ${name}!`
   })
-  typedAction('the greeting is {string}', (ctx, expected: string) => {
-    if (ctx.greeting !== expected) throw new Error('mismatch')
-  })
+  typedSensor('the greeting is {string}', (ctx, _expected: string) => [ctx.greeting] as [string])
   const r = buildRegistry()
   expect(r.steps).toHaveLength(2)
 })
