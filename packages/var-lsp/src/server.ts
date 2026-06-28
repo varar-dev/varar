@@ -1,5 +1,6 @@
 import {
   type Connection,
+  type Diagnostic,
   InsertTextFormat,
   type LocationLink,
   TextDocumentSyncKind,
@@ -7,6 +8,7 @@ import {
 } from 'vscode-languageserver'
 import { TextDocument } from 'vscode-languageserver-textdocument'
 import { buildHandlers } from './handlers.js'
+import { createRunResultsStore, type LspDiagnostic, runLspDiagnostics } from './run-results.js'
 import { SEMANTIC_LEGEND, semanticTokenData } from './semantic-tokens.js'
 import { createStore, type Store, type StoreDeps } from './store.js'
 import { uriToPath } from './uri.js'
@@ -22,6 +24,7 @@ export function registerHandlers(
 ): void {
   let store: Store | null = null
   let handlers: ReturnType<typeof buildHandlers> | null = null
+  let runResults: ReturnType<typeof createRunResultsStore> | null = null
   // Track in-memory document content so completion + future cursor-aware
   // features can read the current line without going back to disk.
   const documents = new TextDocuments(TextDocument)
@@ -32,6 +35,15 @@ export function registerHandlers(
     store = createStore(await makeDeps(root))
     handlers = buildHandlers(store)
     await store.reindex()
+    runResults = createRunResultsStore(root ?? '')
+    const varJsonPaths = await store.fs().list(['**/.var/**/*.json'])
+    for (const p of varJsonPaths) {
+      try {
+        runResults.ingest(p, await store.fs().read(p))
+      } catch {
+        // a .var file that vanished between list and read — ignore
+      }
+    }
     afterReindex()
     return {
       capabilities: {
@@ -61,9 +73,71 @@ export function registerHandlers(
     afterReindex()
   })
 
+  connection.onDidChangeWatchedFiles(async (params) => {
+    if (!runResults) return
+    for (const change of params.changes) {
+      const path = uriToPath(change.uri)
+      if (!path.includes('/.var/') || !path.endsWith('.json')) continue
+      // FileChangeType: 1 Created, 2 Changed, 3 Deleted
+      const specUri =
+        change.type === 3 ? runResults.remove(path) : await ingestWatched(path)
+      if (specUri) await publishFor(specUri)
+    }
+  })
+
+  async function ingestWatched(path: string): Promise<string | null> {
+    if (!store || !runResults) return null
+    try {
+      return runResults.ingest(path, await store.fs().read(path))
+    } catch {
+      return null
+    }
+  }
+
+  function toParseDiagnostics(uri: string): LspDiagnostic[] {
+    if (!handlers) return []
+    return handlers.diagnosticsFor(uri).map((d) => ({
+      severity: d.severity === 'error' ? 1 : 2,
+      source: 'var',
+      message: d.message,
+      range: {
+        start: { line: d.range.start.line - 1, character: d.range.start.character - 1 },
+        end: { line: d.range.end.line - 1, character: d.range.end.character - 1 },
+      },
+      code: d.code,
+    }))
+  }
+
+  async function publishFor(uri: string): Promise<void> {
+    if (!store) return
+    const parse = toParseDiagnostics(uri)
+    let run: LspDiagnostic[] = []
+    const results = runResults?.get(uri)
+    if (results) {
+      let source = documents.get(uri)?.getText()
+      if (source === undefined) {
+        try {
+          source = await store.fs().read(uriToPath(uri))
+        } catch {
+          source = undefined
+        }
+      }
+      if (source !== undefined) run = runLspDiagnostics(results, source)
+    }
+    void connection.sendDiagnostics({ uri, diagnostics: [...parse, ...run] as Diagnostic[] })
+  }
+
+  function publishAll(): void {
+    if (!store) return
+    const uris = new Set<string>()
+    for (const d of store.index().diagnostics) uris.add(`file://${d.varPath}`)
+    if (runResults) for (const u of runResults.specUris()) uris.add(u)
+    for (const u of uris) void publishFor(u)
+  }
+
   function afterReindex(): void {
     if (!store || !handlers) return
-    pushDiagnostics(connection, store, handlers)
+    publishAll()
     // Wake the client so it can refresh editor decorations and any other
     // client-side projections of the workspace index.
     void connection.sendNotification('var/didIndex')
@@ -180,34 +254,4 @@ export function registerHandlers(
       },
     }))
   })
-}
-
-function pushDiagnostics(
-  connection: Connection,
-  store: Store,
-  handlers: ReturnType<typeof buildHandlers>,
-): void {
-  const seen = new Set<string>()
-  for (const d of store.index().diagnostics) seen.add(`file://${d.varPath}`)
-  for (const uri of seen) {
-    const diags = handlers.diagnosticsFor(uri)
-    void connection.sendDiagnostics({
-      uri,
-      diagnostics: diags.map((d) => ({
-        severity: d.severity === 'error' ? 1 : 2,
-        message: d.message,
-        range: {
-          start: {
-            line: d.range.start.line - 1,
-            character: d.range.start.character - 1,
-          },
-          end: {
-            line: d.range.end.line - 1,
-            character: d.range.end.character - 1,
-          },
-        },
-        code: d.code,
-      })),
-    })
-  }
 }
