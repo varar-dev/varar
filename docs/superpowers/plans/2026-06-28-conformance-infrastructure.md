@@ -423,11 +423,14 @@ Expected: FAIL — cannot find module `../src/conformance.js`.
 Create `packages/var/src/conformance.ts`:
 
 ```ts
-import type { Block, Fence, Table, VarDoc } from './ast.js'
+import type { Fence, Table, VarDoc } from './ast.js'
 import type { Diagnostic } from './diagnostics.js'
-import type { ExecutionPlan } from './plan.js'
-import type { Registry } from './registry.js'
 import type { Span } from './span.js'
+
+// NOTE: only import what THIS task uses — biome `noUnusedImports` is a hard
+// lint gate (recommended preset), so every commit must be import-clean.
+// Later tasks add their own imports: Task 5 adds `ExecutionPlan` (./plan.js)
+// and `Registry` (./registry.js); Task 6 adds `plan` + `StepObservation`.
 
 // ---- Artifact types (the serialized contract) -----------------------------
 
@@ -751,7 +754,14 @@ Expected: FAIL — functions not exported.
 
 - [ ] **Step 3: Implement the three projections**
 
-Add to `packages/var/src/conformance.ts`:
+First add the two imports these functions need (Task 3 deliberately did not import them, to stay lint-clean) at the top of `packages/var/src/conformance.ts`, beside the existing type imports:
+
+```ts
+import type { ExecutionPlan } from './plan.js'
+import type { Registry } from './registry.js'
+```
+
+Then add the functions to `packages/var/src/conformance.ts`:
 
 ```ts
 export function toVarDocArtifact(doc: VarDoc): VarDocArtifact {
@@ -875,10 +885,10 @@ Expected: FAIL — `runConformance` not exported.
 
 - [ ] **Step 3: Implement `runConformance`**
 
-Add to `packages/var/src/conformance.ts` (extend the plan import; add executePlan + StepObservation):
+Add to `packages/var/src/conformance.ts`. Task 5 already added `import type { ExecutionPlan } from './plan.js'` — **replace that line** with a combined import so there is a single `./plan.js` import, and add the execute import:
 
 ```ts
-import { plan as buildPlan } from './plan.js'
+import { plan as buildPlan, type ExecutionPlan } from './plan.js'
 import { executePlan, type StepObservation } from './execute.js'
 ```
 

@@ -1,7 +1,5 @@
-import type { Block, Fence, Table, VarDoc } from './ast.js'
+import type { Fence, Table, VarDoc } from './ast.js'
 import type { Diagnostic } from './diagnostics.js'
-import type { ExecutionPlan } from './plan.js'
-import type { Registry } from './registry.js'
 import type { Span } from './span.js'
 
 // ---- Artifact types (the serialized contract) -----------------------------
