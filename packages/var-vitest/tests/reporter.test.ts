@@ -1,0 +1,58 @@
+import { join } from 'node:path'
+import { hashSource } from '@oselvar/var'
+import { describe, expect, test } from 'vitest'
+import {
+  buildSpecResults,
+  collectFromTasks,
+  resultFilePath,
+  toSpecPath,
+} from '../src/reporter.js'
+
+const passed = { name: 'A', status: 'passed' as const, lines: [3] }
+const failed = {
+  name: 'B',
+  status: 'failed' as const,
+  lines: [5],
+  failure: { line: 5, message: 'm', stack: 's', cells: [{ from: 1, to: 2, actual: '4' }] },
+}
+
+describe('buildSpecResults', () => {
+  test('wraps examples with version, path, and source hash', () => {
+    const r = buildSpecResults('docs/a.var.md', 'src', [passed, failed])
+    expect(r).toEqual({
+      version: 1,
+      specPath: 'docs/a.var.md',
+      sourceHash: hashSource('src'),
+      examples: [passed, failed],
+    })
+  })
+})
+
+describe('collectFromTasks', () => {
+  test('groups examples by spec file, walks nested suites, skips meta-less tasks', () => {
+    const files = [
+      {
+        filepath: '/cwd/docs/a.var.md',
+        tasks: [
+          { type: 'test', name: 'A', meta: { varResult: passed } },
+          { type: 'suite', name: 'g', tasks: [{ type: 'test', name: 'B', meta: { varResult: failed } }] },
+          { type: 'test', name: 'var:diagnostic:x', meta: {} },
+        ],
+      },
+      { filepath: '/cwd/docs/empty.var.md', tasks: [{ type: 'test', name: 'n', meta: {} }] },
+    ]
+    const byFile = collectFromTasks(files)
+    expect([...byFile.keys()]).toEqual(['/cwd/docs/a.var.md'])
+    expect(byFile.get('/cwd/docs/a.var.md')).toEqual([passed, failed])
+  })
+})
+
+describe('path helpers', () => {
+  test('toSpecPath returns a POSIX path relative to cwd', () => {
+    const abs = join('/cwd', 'docs', 'a.var.md')
+    expect(toSpecPath(abs, '/cwd')).toBe('docs/a.var.md')
+  })
+  test('resultFilePath mirrors the spec path under .var/', () => {
+    expect(resultFilePath('docs/a.var.md', '/cwd')).toBe(join('/cwd', '.var', 'docs/a.var.md.json'))
+  })
+})

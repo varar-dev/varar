@@ -10,6 +10,10 @@
     "./runtime": {
       "types": "./src/runtime.ts",
       "import": "./src/runtime.ts"
+    },
+    "./reporter": {
+      "types": "./src/reporter.ts",
+      "import": "./src/reporter.ts"
     }
   },
   "main": "./src/index.ts",
@@ -39,6 +43,10 @@
       "./runtime": {
         "types": "./dist/runtime.d.ts",
         "import": "./dist/runtime.js"
+      },
+      "./reporter": {
+        "types": "./dist/reporter.d.ts",
+        "import": "./dist/reporter.js"
       }
     },
     "main": "./dist/index.js",
