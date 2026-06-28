@@ -64,13 +64,32 @@ export function generateVirtualModule(input: GenerateInput): string {
     : 'const varConfig = {}'
   return `import { test as vitestTest } from 'vitest'
 import { runVarSource } from '@oselvar/var-vitest/runtime'
+import { toFailure } from '@oselvar/var'
 ${configImport}
 ${stepImports}
 
 const SOURCE = ${sourceJson}
+const PATH = ${pathJson}
 
-runVarSource(SOURCE, ${pathJson}, {
-  sink: { example: (name, run) => vitestTest(name, run) },
+runVarSource(SOURCE, PATH, {
+  sink: {
+    example: (name, run, info) =>
+      vitestTest(name, async (ctx) => {
+        const lines = info?.lines ?? []
+        try {
+          await run()
+          ctx.task.meta.varResult = { name, status: 'passed', lines }
+        } catch (error) {
+          ctx.task.meta.varResult = {
+            name,
+            status: 'failed',
+            lines,
+            failure: toFailure(error, PATH, lines[0] ?? 0),
+          }
+          throw error
+        }
+      }),
+  },
   reporter: { diagnostic: (d) => vitestTest(\`var:diagnostic:\${d.code}\`, () => { throw new Error(d.message) }) },
   scannerPlugins: varConfig?.scannerPlugins ?? [],
 })
