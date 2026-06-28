@@ -2,7 +2,6 @@
   "diagnostics": [
     {
       "code": "ambiguous-match",
-      "message": "Ambiguous step: \"I have 5 cukes\"\nMatched by:\n  step('I have {int} cukes', ...)    at /Users/aslakhellesoy/git/oselvar/bdd/packages/var-runtime/bundles/05-ambiguous-match/cukes.steps.ts:4\n  step('I have 5 cukes', ...)    at /Users/aslakhellesoy/git/oselvar/bdd/packages/var-runtime/bundles/05-ambiguous-match/cukes.steps.ts:5",
       "severity": "error",
       "span": {
         "endCol": 15,

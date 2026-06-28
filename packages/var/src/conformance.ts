@@ -1,6 +1,6 @@
 import type { Fence, Table, VarDoc } from './ast.js'
 import { isCellMismatchError, ReturnShapeError } from './cell-diff.js'
-import type { Diagnostic } from './diagnostics.js'
+import type { DiagnosticCode, Severity } from './diagnostics.js'
 import { isDocStringMismatchError } from './doc-string-diff.js'
 import { executePlan, isUnexpectedPassError, type StepObservation } from './execute.js'
 import { plan as buildPlan, type ExecutionPlan } from './plan.js'
@@ -48,7 +48,11 @@ export type PlanArtifact = {
       }
     }>
   }>
-  readonly diagnostics: ReadonlyArray<Diagnostic>
+  readonly diagnostics: ReadonlyArray<{
+    readonly code: DiagnosticCode
+    readonly severity: Severity
+    readonly span: Span
+  }>
 }
 
 export type FailureArtifact =
@@ -178,7 +182,11 @@ export function toPlanArtifact(plan: ExecutionPlan): PlanArtifact {
         }
       }),
     })),
-    diagnostics: plan.diagnostics,
+    diagnostics: plan.diagnostics.map((d) => ({
+      code: d.code,
+      severity: d.severity,
+      span: d.span,
+    })),
   }
 }
 

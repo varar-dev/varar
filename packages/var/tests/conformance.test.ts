@@ -90,6 +90,27 @@ test('toVarDocArtifact keeps path, examples and orphanAttachments', () => {
   expect(Array.isArray(art.examples)).toBe(true)
 })
 
+test('toPlanArtifact projects diagnostics to portable fields (no message/path)', () => {
+  let r = createRegistry()
+  r = addStep(r, {
+    expression: 'I have {int} cukes',
+    expressionSourceFile: '/abs/s.ts',
+    expressionSourceLine: 1,
+    handler: () => {},
+  })
+  r = addStep(r, {
+    expression: 'I have 5 cukes',
+    expressionSourceFile: '/abs/s.ts',
+    expressionSourceLine: 2,
+    handler: () => {},
+  })
+  const art = toPlanArtifact(plan(parse('e.var.md', '# A\n\nI have 5 cukes.'), r))
+  expect(art.diagnostics).toHaveLength(1)
+  expect(art.diagnostics[0]).not.toHaveProperty('message')
+  expect(art.diagnostics[0]?.code).toBe('ambiguous-match')
+  expect(JSON.stringify(art.diagnostics[0])).not.toContain('/abs/')
+})
+
 test('runConformance: passing example yields pass steps with structural contextKey', async () => {
   const r = addStep(createRegistry(), {
     expression: 'I have {int} cukes',
