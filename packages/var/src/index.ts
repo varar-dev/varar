@@ -1,9 +1,5 @@
 export const VERSION = '0.0.0'
 
-export { hashSource } from './hash.js'
-export type { CellFailure, ExampleResult, SpecResults } from './result.js'
-export { toFailure } from './failure.js'
-
 export type {
   Block,
   Blockquote,
@@ -45,6 +41,8 @@ export type { ExecutePorts } from './execute.js'
 export { executePlan } from './execute.js'
 export type { ExpressionDiff, ExpressionSegment, ParamFate } from './expression-segments.js'
 export { diffExpressions, expressionSegments, renderExpression } from './expression-segments.js'
+export { toFailure } from './failure.js'
+export { hashSource } from './hash.js'
 export type { StrippedInline } from './inline.js'
 export { stripInline } from './inline.js'
 export type { AmbiguityCollision, Hit, ResolvedSteps } from './matcher.js'
@@ -62,6 +60,7 @@ export type {
   StepRegistration,
 } from './registry.js'
 export { addStep, createRegistry, defineParameterType } from './registry.js'
+export type { CellFailure, ExampleResult, SpecResults } from './result.js'
 export type { RawLine, ScannerPlugin } from './scanner.js'
 export { scan } from './scanner.js'
 export type { Sentence } from './sentences.js'

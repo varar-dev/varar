@@ -31,7 +31,11 @@ export function toFailure(
     : undefined
 
   const doc: CellFailure | undefined = isDocStringMismatchError(error)
-    ? { from: error.diff.span.startOffset, to: error.diff.span.endOffset, actual: error.diff.actual }
+    ? {
+        from: error.diff.span.startOffset,
+        to: error.diff.span.endOffset,
+        actual: error.diff.actual,
+      }
     : undefined
 
   return {

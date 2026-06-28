@@ -21,59 +21,59 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
     ports.sink.example(
       ex.name,
       async () => {
-      // Cache one context per stepfile within this example. Lazy creation
-      // keeps the cost zero for stepfiles whose steps don't run.
-      const ctxByFile = new Map<string, unknown>()
-      let lastReturn: unknown
-      for (const step of ex.steps) {
-        const file = step.stepDef.expressionSourceFile
-        let ctx = ctxByFile.get(file)
-        if (!ctxByFile.has(file)) {
-          ctx = await createContext(file)
-          ctxByFile.set(file, ctx)
-        }
-        // A trailing data table or doc string is passed as the LAST handler
-        // argument, after whatever the cucumber expression captured. Tables
-        // arrive as a plain `string[][]` (header row first); doc strings as
-        // a plain string. Either form is small enough that callers can
-        // shape it however they like.
-        const extra: unknown[] = []
-        if (step.dataTable) {
-          extra.push([
-            step.dataTable.header.cells,
-            ...step.dataTable.rows.map((r) => r.cells),
-          ] as ReadonlyArray<ReadonlyArray<string>>)
-        } else if (step.docString) {
-          extra.push(step.docString.content)
-        }
-        let returned: unknown
-        try {
-          returned = await step.stepDef.handler(ctx, ...step.args, ...extra)
-        } catch (err) {
-          throw augmentStack(err, step, path)
-        }
-        lastReturn = returned
-        try {
-          if (step.dataTable) {
-            const bad = compareTable(returned, step.dataTable).filter((d) => !d.ok)
-            if (bad.length > 0) throw new CellMismatchError(bad)
-          } else if (step.docString) {
-            const diff = compareDocString(returned, step.docString.content, step.docString.span)
-            if (diff) throw new DocStringMismatchError(diff)
+        // Cache one context per stepfile within this example. Lazy creation
+        // keeps the cost zero for stepfiles whose steps don't run.
+        const ctxByFile = new Map<string, unknown>()
+        let lastReturn: unknown
+        for (const step of ex.steps) {
+          const file = step.stepDef.expressionSourceFile
+          let ctx = ctxByFile.get(file)
+          if (!ctxByFile.has(file)) {
+            ctx = await createContext(file)
+            ctxByFile.set(file, ctx)
           }
-        } catch (err) {
-          throw augmentStack(err, step, path)
+          // A trailing data table or doc string is passed as the LAST handler
+          // argument, after whatever the cucumber expression captured. Tables
+          // arrive as a plain `string[][]` (header row first); doc strings as
+          // a plain string. Either form is small enough that callers can
+          // shape it however they like.
+          const extra: unknown[] = []
+          if (step.dataTable) {
+            extra.push([
+              step.dataTable.header.cells,
+              ...step.dataTable.rows.map((r) => r.cells),
+            ] as ReadonlyArray<ReadonlyArray<string>>)
+          } else if (step.docString) {
+            extra.push(step.docString.content)
+          }
+          let returned: unknown
+          try {
+            returned = await step.stepDef.handler(ctx, ...step.args, ...extra)
+          } catch (err) {
+            throw augmentStack(err, step, path)
+          }
+          lastReturn = returned
+          try {
+            if (step.dataTable) {
+              const bad = compareTable(returned, step.dataTable).filter((d) => !d.ok)
+              if (bad.length > 0) throw new CellMismatchError(bad)
+            } else if (step.docString) {
+              const diff = compareDocString(returned, step.docString.content, step.docString.span)
+              if (diff) throw new DocStringMismatchError(diff)
+            }
+          } catch (err) {
+            throw augmentStack(err, step, path)
+          }
         }
-      }
-      if (ex.rowChecks && ex.rowChecks.length > 0) {
-        const bad = compareRow(lastReturn, ex.rowChecks).filter((d) => !d.ok)
-        if (bad.length > 0) {
-          const lastStep = ex.steps[ex.steps.length - 1]
-          // biome-ignore lint/style/noNonNullAssertion: a header-bound row example always has its row step
-          throw augmentStack(new CellMismatchError(bad), lastStep!, path)
+        if (ex.rowChecks && ex.rowChecks.length > 0) {
+          const bad = compareRow(lastReturn, ex.rowChecks).filter((d) => !d.ok)
+          if (bad.length > 0) {
+            const lastStep = ex.steps[ex.steps.length - 1]
+            // biome-ignore lint/style/noNonNullAssertion: a header-bound row example always has its row step
+            throw augmentStack(new CellMismatchError(bad), lastStep!, path)
+          }
         }
-      }
-    },
+      },
       { lines: [...new Set(ex.steps.map((s) => s.matchSpan.startLine))] },
     )
   }

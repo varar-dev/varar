@@ -22,7 +22,7 @@ function collectExamples(tasks: ReadonlyArray<TaskNode> | undefined): ExampleRes
 // Group every test's meta.varResult by its owning spec file, in declaration
 // order. Files that produced no var results (e.g. only var:diagnostic tasks)
 // are skipped.
-export function collectFromTasks(files: ReadonlyArray<FileNode>): Map<string, ExampleResult[]> {
+export function collectFromTasks(files: ReadonlyArray<FileNode>): ReadonlyMap<string, ReadonlyArray<ExampleResult>> {
   const byFile = new Map<string, ExampleResult[]>()
   for (const f of files) {
     const examples = collectExamples(f.tasks)
@@ -45,7 +45,7 @@ type TestModuleNode = {
 
 export function collectFromModules(
   testModules: ReadonlyArray<TestModuleNode>,
-): Map<string, ExampleResult[]> {
+): ReadonlyMap<string, ReadonlyArray<ExampleResult>> {
   const byFile = new Map<string, ExampleResult[]>()
   for (const m of testModules) {
     const examples: ExampleResult[] = []
@@ -88,7 +88,7 @@ export class VarResultsReporter {
     this.cwd = options.cwd ?? process.cwd()
   }
 
-  private writeResults(byFile: Map<string, ExampleResult[]>): void {
+  private writeResults(byFile: ReadonlyMap<string, ReadonlyArray<ExampleResult>>): void {
     for (const [filepath, examples] of byFile) {
       const specPath = toSpecPath(filepath, this.cwd)
       const source = readFileSync(filepath, 'utf8')

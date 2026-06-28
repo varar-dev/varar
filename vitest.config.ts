@@ -1,5 +1,5 @@
-import { VarResultsReporter } from './packages/var-vitest/src/reporter.js'
 import { defineConfig } from 'vitest/config'
+import { VarResultsReporter } from './packages/var-vitest/src/reporter.js'
 
 const root = new URL('.', import.meta.url).pathname
 

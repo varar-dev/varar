@@ -6,6 +6,7 @@
       "!**/dist",
       "!**/node_modules",
       "!**/.astro",
+      "!**/.var",
       "!**/public",
       "!**/*.timestamp*"
     ]

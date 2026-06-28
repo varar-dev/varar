@@ -38,7 +38,12 @@ export async function runRegisteredSpec(
             await run()
             out[idx] = { name, status: 'passed', lines }
           } catch (err) {
-            out[idx] = { name, status: 'failed', lines, failure: toFailure(err, varPath, lines[0] ?? 0) }
+            out[idx] = {
+              name,
+              status: 'failed',
+              lines,
+              failure: toFailure(err, varPath, lines[0] ?? 0),
+            }
           }
         })(),
       )
