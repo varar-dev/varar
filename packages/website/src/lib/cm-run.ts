@@ -1,5 +1,12 @@
 import { type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state'
-import { Decoration, type DecorationSet, EditorView, GutterMarker, gutter } from '@codemirror/view'
+import {
+  Decoration,
+  type DecorationSet,
+  EditorView,
+  GutterMarker,
+  gutter,
+  hoverTooltip,
+} from '@codemirror/view'
 import type { RunResults } from './run-types.ts'
 
 // Effect carrying the latest run results (null clears them).
@@ -13,6 +20,30 @@ const resultsField = StateField.define<RunResults | null>({
     return value
   },
 })
+
+// Every failing-cell range plus the doc-string range across the results, sorted
+// by start offset (offsets are source positions == CodeMirror positions).
+export function cellFailRanges(results: RunResults): ReadonlyArray<{ from: number; to: number }> {
+  const out: { from: number; to: number }[] = []
+  for (const ex of results.examples) {
+    const f = ex.failure
+    if (!f) continue
+    if (f.cells) for (const c of f.cells) out.push({ from: c.from, to: c.to })
+    if (f.doc) out.push({ from: f.doc.from, to: f.doc.to })
+  }
+  return out.sort((a, b) => a.from - b.from)
+}
+
+// The actual runtime value of the failing cell/doc covering `pos`, or null.
+export function actualAt(results: RunResults, pos: number): string | null {
+  for (const ex of results.examples) {
+    const f = ex.failure
+    if (!f) continue
+    const spans = [...(f.cells ?? []), ...(f.doc ? [f.doc] : [])]
+    for (const s of spans) if (pos >= s.from && pos <= s.to) return s.actual
+  }
+  return null
+}
 
 // Line-background decorations derived from the results.
 const decoField = StateField.define<DecorationSet>({
@@ -116,6 +147,43 @@ const errorGutter = gutter({
     update.transactions.some((tr) => tr.effects.some((e) => e.is(setRunResults))),
 })
 
+// Mark decorations that redden each failing cell's source text. Separate from
+// the line-wash field so we don't mix line + range decorations in one set.
+const cellMarkField = StateField.define<DecorationSet>({
+  create: () => Decoration.none,
+  update(deco, tr) {
+    const results = tr.state.field(resultsField)
+    if (!tr.docChanged && !tr.effects.some((e) => e.is(setRunResults))) return deco.map(tr.changes)
+    if (!results) return Decoration.none
+    const builder = new RangeSetBuilder<Decoration>()
+    const docLen = tr.state.doc.length
+    for (const r of cellFailRanges(results)) {
+      const from = Math.max(0, Math.min(r.from, docLen))
+      const to = Math.max(from, Math.min(r.to, docLen))
+      if (to > from) builder.add(from, to, Decoration.mark({ class: 'cm-run-cell-fail' }))
+    }
+    return builder.finish()
+  },
+  provide: (f) => EditorView.decorations.from(f),
+})
+
+// Hovering a failing cell shows the actual runtime value (`actual: 9`).
+const cellHover = hoverTooltip((view, pos) => {
+  const results = view.state.field(resultsField)
+  if (!results) return null
+  const actual = actualAt(results, pos)
+  if (actual == null) return null
+  return {
+    pos,
+    create: () => {
+      const dom = document.createElement('div')
+      dom.className = 'cm-run-cell-tip'
+      dom.textContent = `actual: ${actual}`
+      return { dom }
+    },
+  }
+})
+
 const runTheme = EditorView.baseTheme({
   // `.cm-line` prefix raises specificity above `.cm-activeLine` so the run
   // wash always wins on the cursor's active line (both are line decorations on
@@ -136,6 +204,16 @@ const runTheme = EditorView.baseTheme({
     background: 'var(--ink)',
   },
   '.cm-run-dialog::backdrop': { background: 'rgba(23, 18, 13, 0.55)' },
+  // Red failing-cell text. Bold so it stays legible on the fail wash.
+  '.cm-run-cell-fail': { color: 'var(--ed-fail-mark)', fontWeight: '700' },
+  '.cm-run-cell-tip': {
+    padding: '2px 6px',
+    background: 'var(--ink)',
+    color: 'var(--cream)',
+    borderRadius: '4px',
+    fontFamily: 'monospace',
+    fontSize: '13px',
+  },
   '.cm-run-stack': {
     margin: '0',
     padding: '16px',
@@ -152,5 +230,5 @@ const runTheme = EditorView.baseTheme({
 // Renders run results (line backgrounds + error gutter). Runs are triggered by
 // the host (debounced on every edit) — no buttons.
 export function varRunExtension(): Extension {
-  return [resultsField, decoField, errorGutter, runTheme]
+  return [resultsField, decoField, cellMarkField, errorGutter, cellHover, runTheme]
 }
