@@ -1,0 +1,32 @@
+{
+  "examples": [
+    {
+      "name": "I convert 1 to roman numerals",
+      "outcome": "pass",
+      "steps": [
+        {
+          "contextKey": {
+            "exampleName": "I convert 1 to roman numerals",
+            "stepFile": "numerals.steps"
+          },
+          "exampleName": "I convert 1 to roman numerals",
+          "matchedExpression": "I convert {int} to roman numerals",
+          "ordinal": 1,
+          "outcome": "pass",
+          "stepText": "I convert 1 to roman numerals"
+        },
+        {
+          "contextKey": {
+            "exampleName": "I convert 1 to roman numerals",
+            "stepFile": "numerals.steps"
+          },
+          "exampleName": "I convert 1 to roman numerals",
+          "matchedExpression": "The result is {word}",
+          "ordinal": 2,
+          "outcome": "pass",
+          "stepText": "The result is I."
+        }
+      ]
+    }
+  ]
+}

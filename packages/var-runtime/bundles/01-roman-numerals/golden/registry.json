@@ -1,0 +1,17 @@
+{
+  "parameterTypes": [],
+  "steps": [
+    {
+      "expression": "I convert {int} to roman numerals",
+      "parameterTypeNames": [
+        "int"
+      ]
+    },
+    {
+      "expression": "The result is {word}",
+      "parameterTypeNames": [
+        "word"
+      ]
+    }
+  ]
+}
