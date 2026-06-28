@@ -24,6 +24,16 @@ export {
 } from './cell-diff.js'
 export type { VarConfig } from './config-types.js'
 export type {
+  BundleArtifacts,
+  FailureArtifact,
+  PlanArtifact,
+  RegistryArtifact,
+  StepTrace,
+  TraceArtifact,
+  VarDocArtifact,
+} from './conformance.js'
+export { canonicalStringify } from './conformance.js'
+export type {
   AmbiguousInput,
   Candidate,
   Diagnostic,
