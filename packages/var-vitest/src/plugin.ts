@@ -63,8 +63,7 @@ export function generateVirtualModule(input: GenerateInput): string {
     ? `import varConfig from ${JSON.stringify(input.configPath)}`
     : 'const varConfig = {}'
   return `import { test as vitestTest } from 'vitest'
-import { runVarSource } from '@oselvar/var-vitest/runtime'
-import { toFailure } from '@oselvar/var'
+import { runVarSource, toFailure } from '@oselvar/var-vitest/runtime'
 ${configImport}
 ${stepImports}
 

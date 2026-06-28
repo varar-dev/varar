@@ -2,7 +2,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, join, relative, sep } from 'node:path'
 import { type ExampleResult, hashSource, type SpecResults } from '@oselvar/var'
 
-// Minimal structural view of the vitest task tree we walk (File/Suite/Test).
+// ─── Vitest 2 structural types (File/Suite/Test, task-tree API) ─────────────
 type TaskNode = {
   readonly name?: string
   readonly meta?: { readonly varResult?: ExampleResult }
@@ -27,6 +27,34 @@ export function collectFromTasks(files: ReadonlyArray<FileNode>): Map<string, Ex
   for (const f of files) {
     const examples = collectExamples(f.tasks)
     if (examples.length > 0) byFile.set(f.filepath, examples)
+  }
+  return byFile
+}
+
+// ─── Vitest 4 structural types (TestModule / TestCase API) ──────────────────
+type TestCaseNode = {
+  readonly type?: string
+  meta(): { readonly varResult?: ExampleResult }
+}
+type TestCollectionNode = {
+  allTests(): Iterable<TestCaseNode>
+}
+type TestModuleNode = {
+  readonly moduleId: string
+  readonly children: TestCollectionNode
+}
+
+export function collectFromModules(
+  testModules: ReadonlyArray<TestModuleNode>,
+): Map<string, ExampleResult[]> {
+  const byFile = new Map<string, ExampleResult[]>()
+  for (const m of testModules) {
+    const examples: ExampleResult[] = []
+    for (const tc of m.children.allTests()) {
+      const varResult = tc.meta()?.varResult
+      if (varResult) examples.push(varResult)
+    }
+    if (examples.length > 0) byFile.set(m.moduleId, examples)
   }
   return byFile
 }
@@ -61,10 +89,8 @@ export class VarResultsReporter {
     this.cwd = options.cwd ?? process.cwd()
   }
 
-  // Legacy task-tree hook, still supported in vitest 4. `files` carries each
-  // spec's filepath + task tree with the serialized meta.
-  onFinished(files: ReadonlyArray<FileNode> = []): void {
-    for (const [filepath, examples] of collectFromTasks(files)) {
+  private writeResults(byFile: Map<string, ExampleResult[]>): void {
+    for (const [filepath, examples] of byFile) {
       const specPath = toSpecPath(filepath, this.cwd)
       const source = readFileSync(filepath, 'utf8')
       const results = buildSpecResults(specPath, source, examples)
@@ -72,5 +98,16 @@ export class VarResultsReporter {
       mkdirSync(dirname(out), { recursive: true })
       writeFileSync(out, `${JSON.stringify(results, null, 2)}\n`)
     }
+  }
+
+  // Vitest 4+ reporter hook (TestModule API). Called after all tests finish.
+  onTestRunEnd(testModules: ReadonlyArray<TestModuleNode> = []): void {
+    this.writeResults(collectFromModules(testModules))
+  }
+
+  // Vitest 2 / legacy task-tree hook. `files` carries each spec's filepath +
+  // task tree with the serialized meta. Kept for consumers still on vitest 2.
+  onFinished(files: ReadonlyArray<FileNode> = []): void {
+    this.writeResults(collectFromTasks(files))
   }
 }

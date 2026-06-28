@@ -8,8 +8,7 @@ describe('generateVirtualModule', () => {
       stepImports: ['/abs/account.steps.ts'],
     })
     expect(out).toContain("import { test as vitestTest } from 'vitest'")
-    expect(out).toContain("import { runVarSource } from '@oselvar/var-vitest/runtime'")
-    expect(out).toContain("import { toFailure } from '@oselvar/var'")
+    expect(out).toContain("import { runVarSource, toFailure } from '@oselvar/var-vitest/runtime'")
     expect(out).toContain('import "/abs/account.steps.ts"')
     expect(out).toContain('const PATH = "/abs/foo.var.md"')
     expect(out).toContain('runVarSource(SOURCE, PATH,')

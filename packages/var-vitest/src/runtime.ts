@@ -5,7 +5,10 @@ import {
   type Reporter,
   type ScannerPlugin,
   type TestSink,
+  toFailure,
 } from '@oselvar/var'
+
+export { toFailure }
 import { buildRegistry, contextFactory } from '@oselvar/var-runtime'
 
 export type RunPorts = {
