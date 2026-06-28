@@ -18,7 +18,9 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
   const createContext = ports.createContext ?? (() => ({}))
   const path = plan.varDoc.path
   for (const ex of plan.examples) {
-    ports.sink.example(ex.name, async () => {
+    ports.sink.example(
+      ex.name,
+      async () => {
       // Cache one context per stepfile within this example. Lazy creation
       // keeps the cost zero for stepfiles whose steps don't run.
       const ctxByFile = new Map<string, unknown>()
@@ -71,7 +73,9 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
           throw augmentStack(new CellMismatchError(bad), lastStep!, path)
         }
       }
-    })
+    },
+      { lines: [...new Set(ex.steps.map((s) => s.matchSpan.startLine))] },
+    )
   }
 }
 

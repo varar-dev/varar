@@ -479,3 +479,20 @@ test('a doc-string step returning the exact body passes', async () => {
   })
   await expect(runsFor(DOCSTRING_DOC, r)[0]?.()).resolves.toBeUndefined()
 })
+
+test('executePlan passes each example its deduped 1-based step lines via info', async () => {
+  let r = createRegistry()
+  r = addStep(r, { expression: 'I have {int} cukes', expressionSourceFile: 'inline', expressionSourceLine: 1, handler: () => {} })
+  r = addStep(r, { expression: 'I eat {int} cukes', expressionSourceFile: 'inline', expressionSourceLine: 2, handler: () => {} })
+  // Both steps are in one paragraph (no blank line between them) so the planner
+  // creates a single example. "I have 5 cukes" is on line 3, "I eat 2 cukes" on line 4.
+  const source = '# T\n\nI have 5 cukes.\nI eat 2 cukes.\n'
+  const p = plan(parse('t.var.md', source), r)
+
+  const seen: Array<{ name: string; lines: ReadonlyArray<number> | undefined }> = []
+  const sink = { example: (name: string, _run: () => void | Promise<void>, info?: { readonly lines: ReadonlyArray<number> }) => { seen.push({ name, lines: info?.lines }) } }
+  executePlan(p, { sink, reporter: { diagnostic() {} } })
+
+  expect(seen).toHaveLength(1)
+  expect(seen[0]?.lines).toEqual([3, 4])
+})
