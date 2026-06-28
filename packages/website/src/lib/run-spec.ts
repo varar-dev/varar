@@ -1,26 +1,20 @@
 import {
+  type ExampleResult,
   executePlan,
-  isCellMismatchError,
-  isDocStringMismatchError,
+  hashSource,
   parse,
   plan,
+  type SpecResults,
   type TestSink,
+  toFailure,
 } from '@oselvar/var'
 import { buildRegistry, contextFactory } from '@oselvar/var-runtime'
-import type { ExampleResult, RunResults } from './run-types.ts'
-
-// Parse the `<varPath>:line:col` frame `executePlan` injects to find the failing line.
-function failingLine(stack: string, varPath: string): number | undefined {
-  const re = new RegExp(`${varPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}:(\\d+):\\d+`)
-  const m = re.exec(stack)
-  return m ? Number(m[1]) : undefined
-}
 
 export async function runRegisteredSpec(
   varPath: string,
   varSource: string,
   exampleIndex?: number,
-): Promise<RunResults> {
+): Promise<SpecResults> {
   const registry = buildRegistry()
   const varDoc = parse(varPath, varSource, [])
   const full = plan(varDoc, registry)
@@ -44,36 +38,7 @@ export async function runRegisteredSpec(
             await run()
             out[idx] = { name, status: 'passed', lines }
           } catch (err) {
-            const e = err as Error
-            const stack = e?.stack ?? String(err)
-            const cells = isCellMismatchError(err)
-              ? err.cells
-                  .filter((c) => !c.ok)
-                  .map((c) => ({
-                    from: c.span.startOffset,
-                    to: c.span.endOffset,
-                    actual: c.actual,
-                  }))
-              : undefined
-            const doc = isDocStringMismatchError(err)
-              ? {
-                  from: err.diff.span.startOffset,
-                  to: err.diff.span.endOffset,
-                  actual: err.diff.actual,
-                }
-              : undefined
-            out[idx] = {
-              name,
-              status: 'failed',
-              lines,
-              failure: {
-                line: failingLine(stack, varPath) ?? lines[0] ?? 0,
-                message: e?.message ?? String(err),
-                stack,
-                ...(cells?.length && { cells }),
-                ...(doc && { doc }),
-              },
-            }
+            out[idx] = { name, status: 'failed', lines, failure: toFailure(err, varPath, lines[0] ?? 0) }
           }
         })(),
       )
@@ -82,5 +47,5 @@ export async function runRegisteredSpec(
 
   executePlan(toRun, { sink, reporter: { diagnostic() {} }, createContext })
   await Promise.all(pending)
-  return { examples: out }
+  return { version: 1, specPath: varPath, sourceHash: hashSource(varSource), examples: out }
 }

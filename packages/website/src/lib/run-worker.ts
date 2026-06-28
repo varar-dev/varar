@@ -1,8 +1,8 @@
 import * as varCore from '@oselvar/var'
+import { hashSource, type SpecResults } from '@oselvar/var'
 import * as varRuntime from '@oselvar/var-runtime'
 import * as ts from 'typescript'
 import { runRegisteredSpec } from './run-spec.ts'
-import type { RunResults } from './run-types.ts'
 
 type RunInput = {
   varPath: string
@@ -34,7 +34,7 @@ function evalStepFile(path: string, source: string): void {
 
 self.onmessage = async (e: MessageEvent<RunInput>) => {
   const input = e.data
-  let results: RunResults
+  let results: SpecResults
   try {
     varRuntime._resetBuilder()
     for (const f of input.stepFiles) evalStepFile(f.path, f.source)
@@ -42,6 +42,9 @@ self.onmessage = async (e: MessageEvent<RunInput>) => {
   } catch (err) {
     const e2 = err as Error
     results = {
+      version: 1,
+      specPath: input.varPath,
+      sourceHash: hashSource(input.varSource),
       examples: [
         {
           name: 'run error',

@@ -1,4 +1,4 @@
-import type { RunResults } from './run-types.ts'
+import type { SpecResults } from '@oselvar/var'
 
 export type RunInput = {
   varPath: string
@@ -14,15 +14,15 @@ function spawn(): Worker {
   return worker
 }
 
-export function runSpec(input: RunInput, timeoutMs = 5000): Promise<RunResults> {
+export function runSpec(input: RunInput, timeoutMs = 5000): Promise<SpecResults> {
   const w = worker ?? spawn()
-  return new Promise<RunResults>((resolve, reject) => {
+  return new Promise<SpecResults>((resolve, reject) => {
     const timer = setTimeout(() => {
       w.terminate()
       worker = null
       reject(new Error(`run timed out after ${timeoutMs}ms`))
     }, timeoutMs)
-    w.onmessage = (e: MessageEvent<RunResults>) => {
+    w.onmessage = (e: MessageEvent<SpecResults>) => {
       clearTimeout(timer)
       resolve(e.data)
     }

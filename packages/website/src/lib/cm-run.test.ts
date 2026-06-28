@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { actualAt, cellFailRanges } from './cm-run.js'
-import type { RunResults } from './run-types.js'
+import type { SpecResults } from '@oselvar/var'
 
-const results: RunResults = {
+const results: SpecResults = {
+  version: 1,
+  specPath: 'spec.var.md',
+  sourceHash: 'fnv1a:00000000',
   examples: [
     {
       name: 'row',
@@ -43,7 +46,7 @@ describe('cellFailRanges', () => {
   })
 
   it('is empty when nothing failed with cell info', () => {
-    expect(cellFailRanges({ examples: [{ name: 'ok', status: 'passed', lines: [1] }] })).toEqual([])
+    expect(cellFailRanges({ version: 1, specPath: 'spec.var.md', sourceHash: 'fnv1a:00000000', examples: [{ name: 'ok', status: 'passed', lines: [1] }] })).toEqual([])
   })
 })
 

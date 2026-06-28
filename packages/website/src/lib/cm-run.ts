@@ -7,12 +7,12 @@ import {
   gutter,
   hoverTooltip,
 } from '@codemirror/view'
-import type { RunResults } from './run-types.ts'
+import type { SpecResults } from '@oselvar/var'
 
 // Effect carrying the latest run results (null clears them).
-export const setRunResults = StateEffect.define<RunResults | null>()
+export const setRunResults = StateEffect.define<SpecResults | null>()
 
-const resultsField = StateField.define<RunResults | null>({
+const resultsField = StateField.define<SpecResults | null>({
   create: () => null,
   update(value, tr) {
     if (tr.docChanged) return null // results go stale on edit
@@ -23,7 +23,7 @@ const resultsField = StateField.define<RunResults | null>({
 
 // Every failing-cell range plus the doc-string range across the results, sorted
 // by start offset (offsets are source positions == CodeMirror positions).
-export function cellFailRanges(results: RunResults): ReadonlyArray<{ from: number; to: number }> {
+export function cellFailRanges(results: SpecResults): ReadonlyArray<{ from: number; to: number }> {
   const out: { from: number; to: number }[] = []
   for (const ex of results.examples) {
     const f = ex.failure
@@ -35,7 +35,7 @@ export function cellFailRanges(results: RunResults): ReadonlyArray<{ from: numbe
 }
 
 // The actual runtime value of the failing cell/doc covering `pos`, or null.
-export function actualAt(results: RunResults, pos: number): string | null {
+export function actualAt(results: SpecResults, pos: number): string | null {
   for (const ex of results.examples) {
     const f = ex.failure
     if (!f) continue

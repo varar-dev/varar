@@ -4,6 +4,7 @@ import { foldGutter } from '@codemirror/language'
 import { LSPClient, languageServerExtensions } from '@codemirror/lsp-client'
 import type { Extension } from '@codemirror/state'
 import { lineNumbers } from '@codemirror/view'
+import { hashSource } from '@oselvar/var'
 import { basicSetup, EditorView, minimalSetup } from 'codemirror'
 import { flashExtension, type GenerateSnippet, stepGenAffordance } from '../lib/cm-generate-step.ts'
 import { setRunResults, varRunExtension } from '../lib/cm-run.ts'
@@ -53,6 +54,9 @@ async function runSpecNow(): Promise<void> {
   } catch (err) {
     mdView.dispatch({
       effects: setRunResults.of({
+        version: 1,
+        specPath: varPath,
+        sourceHash: hashSource(varSource),
         examples: [
           {
             name: 'error',
