@@ -27,6 +27,22 @@ test('gherkinTables handles indented rows (typical Gherkin layout)', () => {
   expect(table.header.cells).toEqual(['title', 'author'])
 })
 
+test('an indented gherkin table row exposes cell spans that slice back to the trimmed cell text', () => {
+  const source = '   | a | bb  |\n   | 1 | 222 |\n'
+  const blocks = scan(source, [gherkinTables()])
+  const table = blocks[0]!
+  if (table.kind !== 'table') throw new Error('expected table')
+  const slice = (s: { startOffset: number; endOffset: number }) =>
+    source.slice(s.startOffset, s.endOffset)
+  // Header carries cell spans despite the leading indentation.
+  expect(slice(table.header.cellSpans[1]!)).toBe('bb')
+  // Data row spans slice back to the trimmed cell text.
+  const row = table.rows[0]!
+  expect(row.cellSpans).toHaveLength(2)
+  expect(slice(row.cellSpans[0]!)).toBe('1')
+  expect(slice(row.cellSpans[1]!)).toBe('222')
+})
+
 test('gherkinTables defers to the built-in scanner when a |---| separator is present', () => {
   const source = '| a | b |\n|---|---|\n| 1 | 2 |\n'
   // With the gherkin plugin enabled but a separator present, the built-in

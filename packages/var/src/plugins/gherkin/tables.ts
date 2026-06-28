@@ -1,6 +1,7 @@
 import type { Row, Table } from '../../ast.js'
 import type { RawLine, ScannerPlugin } from '../../scanner.js'
 import { spanFromOffsets } from '../../span.js'
+import { parseRowCells } from '../../table-cells.js'
 
 // Gherkin tables are a contiguous run of `| ... |` rows, with no separator
 // row between the header and the body (Markdown requires `|---|`; Gherkin
@@ -45,14 +46,10 @@ export function gherkinTables(): ScannerPlugin {
 }
 
 function makeRow(source: string, line: RawLine): Row {
+  const parsed = parseRowCells(line.text, line.startOffset, source)
   return {
-    cells: parseCells(line.text),
+    cells: parsed.cells,
+    cellSpans: parsed.cellSpans,
     span: spanFromOffsets(source, line.startOffset, line.endOffset),
   }
-}
-
-function parseCells(text: string): ReadonlyArray<string> {
-  const m = ROW_RE.exec(text)
-  if (!m) return []
-  return (m[1] ?? '').split('|').map((c) => c.trim())
 }

@@ -1,6 +1,7 @@
 import type { Block, InlineOffset } from './ast.js'
 import { stripInline } from './inline.js'
-import { spanFromOffsets } from './span.js'
+import { type Span, spanFromOffsets } from './span.js'
+import { parseRowCells } from './table-cells.js'
 
 // A scanner-line representation that plugins receive verbatim. Plugins use
 // the offsets to materialize span info on the blocks they produce.
@@ -332,7 +333,7 @@ function tryTable(
   if (!headerLine || !delimLine) return undefined
   if (!ROW_RE.test(headerLine.text)) return undefined
   if (!DELIM_RE.test(delimLine.text)) return undefined
-  const headerParsed = parseCellsWithSpans(headerLine.text, headerLine.startOffset, source)
+  const headerParsed = parseRowCells(headerLine.text, headerLine.startOffset, source)
   const header = {
     cells: headerParsed.cells,
     cellSpans: headerParsed.cellSpans,
@@ -340,15 +341,15 @@ function tryTable(
   }
   const rows: {
     cells: ReadonlyArray<string>
-    cellSpans: ReadonlyArray<ReturnType<typeof spanFromOffsets>>
-    span: ReturnType<typeof spanFromOffsets>
+    cellSpans: ReadonlyArray<Span>
+    span: Span
   }[] = []
   let i = startIdx + 2
   while (i < lines.length) {
     const ln = lines[i]
     if (!ln) break
     if (!ROW_RE.test(ln.text)) break
-    const parsed = parseCellsWithSpans(ln.text, ln.startOffset, source)
+    const parsed = parseRowCells(ln.text, ln.startOffset, source)
     rows.push({
       cells: parsed.cells,
       cellSpans: parsed.cellSpans,
@@ -367,29 +368,4 @@ function tryTable(
     },
     next: i,
   }
-}
-
-// Split a `| a | b |` row into trimmed cells AND the source span of each
-// cell's trimmed text. `lineStart` is the row's start offset in `source`.
-function parseCellsWithSpans(
-  line: string,
-  lineStart: number,
-  source: string,
-): { cells: ReadonlyArray<string>; cellSpans: ReadonlyArray<ReturnType<typeof spanFromOffsets>> } {
-  const m = ROW_RE.exec(line)
-  if (!m) return { cells: [], cellSpans: [] }
-  const inner = m[1] ?? ''
-  const innerStart = 1 // ROW_RE anchors `^\|`, so inner text begins at column 1
-  const cells: string[] = []
-  const cellSpans: ReturnType<typeof spanFromOffsets>[] = []
-  let cursor = 0
-  for (const seg of inner.split('|')) {
-    const trimmed = seg.trim()
-    const leading = seg.length - seg.trimStart().length
-    const absStart = lineStart + innerStart + cursor + leading
-    cells.push(trimmed)
-    cellSpans.push(spanFromOffsets(source, absStart, absStart + trimmed.length))
-    cursor += seg.length + 1 // +1 for the `|` delimiter
-  }
-  return { cells, cellSpans }
 }
