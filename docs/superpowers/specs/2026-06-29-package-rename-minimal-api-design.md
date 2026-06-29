@@ -85,12 +85,22 @@ Because authors can no longer write a bare `defineParameterType({...})` call, le
 tooling that detects that pattern would be incoherent. Full removal therefore touches:
 
 - the standalone `defineParameterType` function in the registration shell;
-- `var-language`'s scanner detection of bare `defineParameterType(...)` calls
-  (`step-defs.ts`) and the corresponding tests;
-- `var-lsp` tests that exercise the pattern;
 - the website's `ts-diagnostics.ts` ambient declaration of `defineParameterType`;
 - the tutorial comment in `02-airport.steps.ts` referencing a "separate
   `defineParameterType` call".
+
+**`var-language` is a re-target, not a deletion.** `buildWorkspaceIndex`
+(`index-workspace.ts`) depends on `scanner.discoverParameterTypes()` to register
+custom parameter types *before* compiling step expressions — without them, a spec
+using `{airport}` fails to compile with `UndefinedParameterTypeError`, regressing LSP
+highlighting and diagnostics. So `discoverParameterTypes` must be re-pointed: instead
+of detecting bare `defineParameterType({ name, regexp })` calls, it discovers the
+`paramTypes` argument of `defineState(factory, { airport: { regexp, transformer } })`
+— each property key is the type name and its `regexp` sub-property is the pattern. The
+`ParameterTypeDef` return shape (`{ file, name, regexp, callRange }`) is unchanged, so
+`buildWorkspaceIndex` needs no change. `var-language`'s scanner tests and the
+`var-lsp` test fixtures that used the bare form are rewritten to the `defineState`
+form.
 
 The pure-core `defineParameterType` `Registry` transform (`var-core/src/registry.ts`)
 **stays** — `buildRegistry` still calls it to register the types collected from
