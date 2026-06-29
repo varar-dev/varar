@@ -7,9 +7,11 @@ order: 4
 
 Every stepfile that calls `defineState` owns a slice of **state** — a value
 created fresh for each example and threaded through its steps. State is
-**immutable**: handlers receive it deeply `readonly` (it is also deep-frozen at
-runtime, so a stray assignment throws), and steps evolve it by **returning a new
-(partial) value**, never by mutating.
+**immutable**: handlers receive it deeply `readonly`, and steps evolve it by
+**returning a new (partial) value**, never by mutating. At runtime, plain-data
+fields (objects and arrays) are also deep-frozen, so a stray assignment throws
+immediately — see [Stateful collaborators](#stateful-collaborators) for how
+class instances held in state are handled.
 
 ## The factory
 

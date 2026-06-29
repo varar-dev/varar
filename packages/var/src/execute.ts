@@ -77,8 +77,9 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
           try {
             const returned = await step.stepDef.handler(ctx, ...step.args, ...extra)
             lastReturn = returned
-            // Dispatch on the step's role. Only `sensor` compares a return
-            // value; `context`/`action` must not return; an unknown kind is a
+            // Dispatch on the step's role. `context`/`action` merge a returned
+            // partial state (or no-op when they return nothing); `sensor`
+            // compares its return against the Markdown; an unknown kind is a
             // wiring bug.
             const kind = step.stepDef.kind
             if (kind === 'context' || kind === 'action') {
@@ -101,7 +102,7 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
               if (!ex.rowChecks && returned !== undefined) {
                 if (!Array.isArray(returned)) {
                   throw new ReturnShapeError(
-                    `a sensor must return a tuple of its arguments after ctx, got ${typeof returned}`,
+                    `a sensor must return a tuple of its arguments after state, got ${typeof returned}`,
                   )
                 }
                 const expectedLen = step.args.length + extra.length

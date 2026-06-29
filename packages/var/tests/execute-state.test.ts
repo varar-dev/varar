@@ -144,3 +144,32 @@ test('mutating the frozen state throws at runtime', async () => {
   await new Promise((res) => setTimeout(res, 0))
   expect(getErr()).toBeInstanceOf(TypeError)
 })
+
+test('mutating the post-merge (re-frozen) state throws at runtime', async () => {
+  // After a first action merges and re-freezes state, a second action that
+  // attempts to mutate the frozen merged state must still throw.
+  const getErr = run(
+    '# X\n\nstep one\nmutate merged\n',
+    (r) => {
+      r = addStep(r, {
+        expression: 'step one',
+        expressionSourceFile: FILE,
+        expressionSourceLine: 1,
+        kind: 'action',
+        handler: () => ({ a: 1 }),
+      })
+      return addStep(r, {
+        expression: 'mutate merged',
+        expressionSourceFile: FILE,
+        expressionSourceLine: 2,
+        kind: 'action',
+        handler: (state) => {
+          ;(state as { a: number }).a = 99
+        },
+      })
+    },
+    () => ({}),
+  )
+  await new Promise((res) => setTimeout(res, 0))
+  expect(getErr()).toBeInstanceOf(TypeError)
+})

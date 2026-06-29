@@ -75,7 +75,10 @@ test('defineState() returns typed role functions with ctx typed against the fact
   // below fails with TS2339 ("Property does not exist on type 'unknown'").
   const { action: typedAction, sensor: typedSensor } = defineState(() => ({ greeting: '' }))
   typedAction('I greet {string}', (_ctx, name: string) => ({ greeting: `Hello, ${name}!` }))
-  typedSensor('the greeting is {string}', (ctx, _expected: string) => [ctx.greeting] as [string])
+  typedSensor(
+    'the greeting is {string}',
+    (state, _expected: string) => [state.greeting] as [string],
+  )
   const r = buildRegistry()
   expect(r.steps).toHaveLength(2)
 })

@@ -48,8 +48,8 @@ export function generateSnippet(
     return `${argName}: ${tsType}`
   })
 
-  const handlerSignature = `(ctx, ${handlerArgs.join(', ')}) => {`
-  const args = ['ctx', ...handlerArgs].join(', ')
+  const handlerSignature = `(state, ${handlerArgs.join(', ')}) => {`
+  const args = ['state', ...handlerArgs].join(', ')
   const role: StepKind = options.role ?? 'action'
   const others = (['context', 'action', 'sensor'] as const).filter((k) => k !== role)
   const fullCode = renderTemplate(options.template ?? DEFAULT_SNIPPET_TEMPLATE, {

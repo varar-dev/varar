@@ -17,11 +17,9 @@ const EXAMPLE_STEPS = `import { defineState } from '@oselvar/var-vitest'
 
 const { action, sensor } = defineState(() => ({ greeting: '' }))
 
-action('I greet {string}', (ctx, name: string) => {
-  ctx.greeting = \`Hello, \${name}!\`
-})
+action('I greet {string}', (_state, name: string) => ({ greeting: \`Hello, \${name}!\` }))
 
-sensor('the greeting is {string}', (ctx, _expected: string) => [ctx.greeting] as [string])
+sensor('the greeting is {string}', (state, _expected: string) => [state.greeting] as [string])
 `
 
 export type InitOptions = {

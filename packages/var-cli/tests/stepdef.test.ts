@@ -18,7 +18,7 @@ test('writes the snippet to the file specified by --file', async () => {
     })
     expect(result.exitCode).toBe(0)
     const written = readFileSync(target, 'utf8')
-    expect(written).toContain("action('I have {int} cukes', (ctx, count: number) => {")
+    expect(written).toContain("action('I have {int} cukes', (state, count: number) => {")
     expect(written).toContain("throw new Error('not implemented')")
   } finally {
     rmSync(dir, { recursive: true, force: true })
