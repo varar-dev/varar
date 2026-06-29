@@ -1,5 +1,8 @@
 # TODO
 
+> Repo is now multi-language: `packages/...` paths below are relative to the
+> `typescript/` workspace (see CLAUDE.md → Repository layout).
+
 ## Website
 
 - [ ] Simpler frontpage
