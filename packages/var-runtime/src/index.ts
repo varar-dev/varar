@@ -185,14 +185,6 @@ export function defineState<
   }
 }
 
-export function defineParameterType<T>(opts: {
-  name: string
-  regexp: RegExp | ReadonlyArray<RegExp>
-  transformer: (...captures: string[]) => T
-}): void {
-  customTypes.push(opts as CustomTypeDef)
-}
-
 export function contextFactory(): (stepFile: string) => unknown | Promise<unknown> {
   return (stepFile: string) => {
     const f = contextFactoriesByFile.get(stepFile)

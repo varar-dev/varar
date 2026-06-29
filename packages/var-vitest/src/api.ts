@@ -11,7 +11,6 @@ export {
   buildRegistry,
   context,
   contextFactory,
-  defineParameterType,
   defineState,
   sensor,
 } from '@oselvar/var-runtime'

@@ -4,7 +4,6 @@ import {
   action,
   buildRegistry,
   contextFactory,
-  defineParameterType,
   defineState,
 } from '../src/api.js'
 
@@ -32,17 +31,6 @@ test('contextFactory() returns a default `{}` for a stepfile that did not call d
   const here = new URL(import.meta.url).pathname
   expect(contextFactory()(here)).toEqual({})
   expect(contextFactory()('/some/other/file.steps.ts')).toEqual({})
-})
-
-test('defineParameterType() registers a custom type for snippet inference', () => {
-  defineParameterType({
-    name: 'color',
-    regexp: /red|green|blue/,
-    transformer: (s) => s,
-  })
-  const r = buildRegistry()
-  const has = [...r.parameterTypes.parameterTypes].some((p) => p.name === 'color')
-  expect(has).toBe(true)
 })
 
 test('duplicate action() calls throw at buildRegistry()', () => {

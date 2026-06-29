@@ -60,11 +60,6 @@ const AMBIENT = `declare module '@oselvar/var-runtime' {
   ): {
     readonly context: RoleFn<C, CustomRegistry<P>>; readonly action: RoleFn<C, CustomRegistry<P>>; readonly sensor: SensorFn<C, CustomRegistry<P>>
   }
-  export function defineParameterType<T>(opts: {
-    name: string
-    regexp: RegExp | readonly RegExp[]
-    transformer: (...captures: string[]) => T
-  }): void
 }`
 
 const OPTIONS: ts.CompilerOptions = {
