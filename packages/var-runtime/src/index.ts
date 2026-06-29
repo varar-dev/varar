@@ -102,22 +102,41 @@ type MapArgs<Names extends readonly string[], Custom> = {
 // describe it.
 type HandlerArgs<E extends string, Custom> = [...MapArgs<ParameterNames<E>, Custom>, ...AnyArg[]]
 
-// A context/action handler runs for its side effects only; its args are inferred
-// from the expression `E` (built-in parameter types, plus any `Custom` types
-// declared via `defineState`), so `(ctx, name) => …` types `name` without an
-// annotation and without TS2345.
+// Deeply-readonly view of the state handed to every step: each nested property
+// is `readonly`, so a handler can read state but never mutate it (mutation is a
+// type error and — because the runtime deep-freezes — a runtime throw too).
+// Functions pass through; arrays and objects recurse.
+type DeepReadonly<T> = T extends (...args: never[]) => unknown
+  ? T
+  : T extends ReadonlyArray<infer U>
+    ? ReadonlyArray<DeepReadonly<U>>
+    : T extends object
+      ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
+      : T
+
+// A context/action handler receives the immutable `state` (deeply readonly) plus
+// the args inferred from the expression `E` (built-in parameter types, plus any
+// `Custom` types declared via `defineState`), so `(state, name) => …` types
+// `name` without an annotation and without TS2345. It EVOLVES state by RETURNING
+// a partial state object (shallow-merged by the runtime) — or nothing, for no
+// change. It never mutates `state`.
 export type RoleFn<C = unknown, Custom = Record<never, never>> = <E extends string>(
   expression: E,
-  handler: (ctx: C, ...args: HandlerArgs<E, Custom>) => void | Promise<void>,
+  handler: (
+    state: DeepReadonly<C>,
+    ...args: HandlerArgs<E, Custom>
+    // biome-ignore lint/suspicious/noConfusingVoidType: mirrors the outer void; async handlers that return nothing satisfy Promise<void>, which is assignable here
+  ) => Partial<C> | void | Promise<Partial<C> | void>,
 ) => void
 
-// A sensor may RETURN a value for the pure core to compare against the Markdown.
-// That return shape is independent of the captured args — it can be a by-index
-// column tuple, a header-bound row object, a whole reproduced table, or a
-// doc-string tuple — so `R` is inferred freely from the handler body.
+// A sensor is a pure OBSERVER: it reads the immutable `state` (deeply readonly)
+// and may RETURN a value for the pure core to compare against the Markdown. That
+// return shape is independent of the captured args — a by-index column tuple, a
+// header-bound row object, a whole reproduced table, or a doc-string tuple — so
+// `R` is inferred freely from the handler body. A sensor never changes state.
 export type SensorFn<C = unknown, Custom = Record<never, never>> = <E extends string, R>(
   expression: E,
-  handler: (ctx: C, ...args: HandlerArgs<E, Custom>) => R | Promise<R>,
+  handler: (state: DeepReadonly<C>, ...args: HandlerArgs<E, Custom>) => R | Promise<R>,
 ) => void
 
 export const context: RoleFn = (expression, handler) =>

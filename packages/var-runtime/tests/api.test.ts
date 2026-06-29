@@ -148,13 +148,34 @@ test('context/action/sensor register with their kind', () => {
 
 test('defineState returns role functions typed against the state', () => {
   const { context: ctxStep, sensor: sense } = defineState(() => ({ greeting: '' }))
-  ctxStep('I greet {string}', (ctx, name: string) => {
-    ctx.greeting = `Hello, ${name}!`
-  })
-  sense('the greeting should be {string}', (ctx) => [ctx.greeting])
+  // context/action EVOLVE state by RETURNING a partial — never by mutating.
+  ctxStep('I greet {string}', (_state, name: string) => ({ greeting: `Hello, ${name}!` }))
+  sense('the greeting should be {string}', (state) => [state.greeting])
   const r = buildRegistry()
   expect(r.steps).toHaveLength(2)
   expect(r.steps.map((s) => s.kind)).toEqual(['context', 'sensor'])
+})
+
+test('state is deeply readonly and context/action returns are partial-state (type-level)', () => {
+  // TYPE-LEVEL assertions (fire via tsconfig.tests.json under `pnpm typecheck`).
+  type S = { greeting: string; nested: { n: number } }
+  const { action: act } = defineState((): S => ({ greeting: '', nested: { n: 0 } }))
+  // returning a partial is fine
+  act('a', () => ({ greeting: 'hi' }))
+  // returning nothing is fine
+  act('b', () => {})
+  act('c', (state) => {
+    // @ts-expect-error - state is deeply readonly; top-level mutation is forbidden
+    state.greeting = 'x'
+  })
+  act('d', (state) => {
+    // @ts-expect-error - nested mutation is forbidden too
+    state.nested.n = 1
+  })
+  // @ts-expect-error - an unknown/excess key is rejected
+  act('e', () => ({ nope: 1 }))
+  const r = buildRegistry()
+  expect(r.steps).toHaveLength(5)
 })
 
 test('a second defineState in the SAME file throws', () => {
