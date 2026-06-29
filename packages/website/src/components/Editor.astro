@@ -11,8 +11,8 @@ interface Props {
   // Offer the "Define step definition" affordance on a settled selection
   // (default true). Markdown editors only.
   define?: boolean
-  // When set, wrap the editor in a window chrome whose titlebar shows this
-  // filename (the extension is coloured). Omit for the bare bordered look.
+  // When set, render a borderless filename header bar directly above the
+  // editor. The editor itself looks identical to the bare variant.
   filename?: string
   // Editors sharing a group run together; their specs run against the step
   // files in the same group. Omit to use the page-wide default group.
@@ -40,12 +40,6 @@ const doc = decodeEntities(
   (await Astro.slots.render('default')).replace(/^\n+/, '').replace(/\n+$/, ''),
 )
 
-// Split the name from its (possibly multi-dot) extension so ".var.md" reads as
-// a single highlighted unit, e.g. "hello" + ".var.md".
-const dot = filename ? filename.indexOf('.') : -1
-const name = filename ? (dot === -1 ? filename : filename.slice(0, dot)) : ''
-const ext = filename && dot !== -1 ? filename.slice(dot) : ''
-
 const mountAttrs = {
   class: 'cm-mount',
   'data-uri': uri,
@@ -60,10 +54,7 @@ const mountAttrs = {
 ---
 {filename ? (
   <figure class="file-editor">
-    <figcaption class="fe-bar">
-      <span class="fe-dots" aria-hidden="true"><i></i><i></i><i></i></span>
-      <span class="fe-name">{name}<span class="fe-ext">{ext}</span></span>
-    </figcaption>
+    <figcaption class="fe-bar">{filename}</figcaption>
     <div {...mountAttrs}></div>
   </figure>
 ) : (
@@ -74,75 +65,24 @@ const mountAttrs = {
   .cm-mount :global(.cm-editor) { font-size: 14px; }
   .cm-mount :global(.cm-editor.cm-focused) { outline: none; }
 
-  /* Window chrome — shown only when `filename` is set. The editor body is
-     CodeMirror (themed by varEditorThemeExt), so the chrome is just the
-     titlebar; the nested mount drops its own border/margin to nest cleanly. */
+  /* Filename variant — shown only when `filename` is set. A borderless header
+     bar (background = the editor's border colour, text = the heading ink) sits
+     directly above the otherwise-unchanged bare editor. No window chrome,
+     shadow, or hover; the nested mount only drops its own vertical margin. */
   .file-editor {
-    margin: 28px 0;
-    border: 2px solid var(--ink);
-    border-radius: var(--radius-5);
-    overflow: hidden;
-    background: var(--ink);
-    box-shadow: 6px 6px 0 0 var(--ink);
-    transition:
-      transform 0.15s ease,
-      box-shadow 0.15s ease;
-  }
-  .file-editor:hover {
-    transform: translate(-2px, -2px);
-    box-shadow: 9px 9px 0 0 var(--ink);
+    margin: 24px 0;
   }
   .file-editor .cm-mount {
     margin: 0;
-    border: 0;
-    border-radius: 0;
   }
   .fe-bar {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-    padding: 9px 16px;
-    background: var(--yellow);
-    border-bottom: 2px solid var(--ink);
+    padding: 8px 14px;
+    background: var(--ax-border-subtle);
+    color: var(--ink);
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  }
-  .fe-dots {
-    display: inline-flex;
-    gap: 7px;
-  }
-  .fe-dots i {
-    display: block;
-    width: 12px;
-    height: 12px;
-    border: 1.5px solid var(--ink);
-    border-radius: 50%;
-  }
-  .fe-dots i:nth-child(1) {
-    background: var(--accent);
-  }
-  .fe-dots i:nth-child(2) {
-    background: var(--orange);
-  }
-  .fe-dots i:nth-child(3) {
-    background: var(--cream);
-  }
-  .fe-name {
     font-size: 14px;
     font-weight: 600;
-    color: var(--ink);
     letter-spacing: 0.01em;
-  }
-  .fe-ext {
-    color: var(--accent);
-  }
-  @media (max-width: 520px) {
-    .file-editor {
-      box-shadow: 4px 4px 0 0 var(--ink);
-    }
-    .file-editor:hover {
-      transform: none;
-      box-shadow: 4px 4px 0 0 var(--ink);
-    }
   }
 </style>
 <script>
