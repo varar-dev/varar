@@ -150,6 +150,9 @@ function refreshActiveState(view: EditorView): void {
 // are respected.
 function replayTo(view: EditorView, target: string, delayMs: number = REPLAY_MS): void {
   cancelReplay(view)
+  // Clicking the chrome button moved focus off the editor, which hides the
+  // caret. Return focus so the moving cursor stays visible during replay.
+  view.focus()
   const r = replays.get(view) ?? { token: 0 }
   replays.set(view, r)
   const token = r.token
