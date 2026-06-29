@@ -1,4 +1,4 @@
-import { type Diagnostic, linter, lintGutter } from '@codemirror/lint'
+import { type Diagnostic, linter } from '@codemirror/lint'
 import { type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state'
 import { Decoration, type DecorationSet, EditorView } from '@codemirror/view'
 import { runResultDiagnostics, type SpecResults } from '@oselvar/var'
@@ -67,8 +67,10 @@ const runTheme = EditorView.baseTheme({
   '.cm-line.cm-run-fail': { background: 'var(--ed-fail-bg)' },
 })
 
-// Renders run results (line backgrounds + lint diagnostics). Runs are triggered by
-// the host (debounced on every edit) — no buttons.
+// Renders run results (line backgrounds + inline lint diagnostics). Runs are
+// triggered by the host (debounced on every edit) — no buttons. No lint gutter:
+// failures show as the line-background wash plus the inline diagnostic on hover,
+// so the gutter column (and its marker) is unnecessary.
 export function varRunExtension(): Extension {
-  return [resultsField, decoField, runLinter, lintGutter(), runTheme]
+  return [resultsField, decoField, runLinter, runTheme]
 }
