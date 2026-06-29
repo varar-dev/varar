@@ -9,22 +9,22 @@ const { hasSidebar = false } = Astro.props
 const base = import.meta.env.BASE_URL.replace(/\/$/, '')
 ---
 
-<header class="topnav">
+<header class="sticky top-0 z-50 flex items-center gap-4 px-6 py-3 bg-surface border-b border-line-subtle">
   {hasSidebar && (
-    <button class="topnav__menu" type="button" aria-label="Open navigation" aria-expanded="false" data-docs-menu>☰</button>
+    <button class="hidden max-[820px]:block max-[820px]:order-first bg-none border-0 text-[1.4rem] cursor-pointer text-ink" type="button" aria-label="Open navigation" aria-expanded="false" data-docs-menu>☰</button>
   )}
-  <a class="topnav__brand" href={`${base}/`}>
-    <img class="topnav__logo" src={`${base}/logo2-transparent.png`} alt="" width="28" height="28" />
+  <a class="flex items-center gap-2 font-semibold text-lg text-ink no-underline whitespace-nowrap" href={`${base}/`}>
+    <img src={`${base}/logo2-transparent.png`} alt="" width="28" height="28" />
     <span>Vár</span>
   </a>
-  <nav class="topnav__links" aria-label="Primary">
-    <a href={`${base}/docs/`}>Docs</a>
-    <a href={`${base}/blog/`}>Blog</a>
+  <nav class="flex gap-4 max-[820px]:hidden" aria-label="Primary">
+    <a class="text-ink no-underline hover:text-accent" href={`${base}/docs/`}>Docs</a>
+    <a class="text-ink no-underline hover:text-accent" href={`${base}/blog/`}>Blog</a>
   </nav>
-  <div class="topnav__search"><Search /></div>
+  <div class="ml-auto w-[clamp(10rem,22vw,18rem)]"><Search /></div>
   <ThemeToggle />
   <a
-    class="topnav__icon"
+    class="inline-flex items-center justify-center w-9 h-9 text-ink no-underline hover:text-accent"
     href="https://github.com/oselvar/var"
     aria-label="Vár on GitHub"
     target="_blank"
@@ -37,36 +37,3 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '')
     </svg>
   </a>
 </header>
-
-<style>
-  .topnav {
-    position: sticky; top: 0; z-index: 50;
-    display: flex; align-items: center; gap: var(--ax-space-16);
-    padding: var(--ax-space-12, 0.75rem) var(--ax-space-24);
-    background: var(--ax-bg-default);
-    border-bottom: 1px solid var(--ax-border-subtle);
-  }
-  .topnav__icon {
-    display: inline-flex; align-items: center; justify-content: center;
-    width: 2.25rem; height: 2.25rem;
-    color: var(--ax-text-default); text-decoration: none;
-  }
-  .topnav__icon:hover { color: var(--ax-text-accent, var(--var-accent)); }
-  .topnav__brand {
-    display: flex; align-items: center; gap: var(--ax-space-8);
-    font-weight: var(--ax-font-weight-bold); font-size: 1.125rem;
-    color: var(--ax-text-default); text-decoration: none; white-space: nowrap;
-  }
-  .topnav__links { display: flex; gap: var(--ax-space-16); }
-  .topnav__links a { color: var(--ax-text-default); text-decoration: none; }
-  .topnav__links a:hover { color: var(--ax-text-accent, var(--var-accent)); }
-  /* margin-left:auto pushes the search and everything after it (theme toggle,
-     GitHub icon) to the right; brand + links stay on the left. */
-  .topnav__search { margin-left: auto; width: clamp(10rem, 22vw, 18rem); }
-  .topnav__menu { display: none; background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--ax-text-default); }
-
-  @media (max-width: 820px) {
-    .topnav__menu { display: block; order: -1; }
-    .topnav__links { display: none; }
-  }
-</style>

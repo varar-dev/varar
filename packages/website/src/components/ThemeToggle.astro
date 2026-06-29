@@ -1,4 +1,4 @@
-<button class="theme-toggle" type="button" aria-label="Toggle dark mode" data-theme-toggle>
+<button class="bg-none border border-line-subtle cursor-pointer rounded-full w-9 h-9 text-ink text-base leading-none hover:bg-raised" type="button" aria-label="Toggle dark mode" data-theme-toggle>
   <span class="theme-toggle__sun" aria-hidden="true">☀</span>
   <span class="theme-toggle__moon" aria-hidden="true">☾</span>
 </button>
@@ -23,13 +23,6 @@
 </script>
 
 <style>
-  .theme-toggle {
-    background: none; border: 1px solid var(--ax-border-subtle); cursor: pointer;
-    border-radius: var(--ax-radius-full); width: 2.25rem; height: 2.25rem;
-    color: var(--ax-text-default); font-size: 1rem; line-height: 1;
-  }
-  .theme-toggle:hover { background: var(--ax-bg-raised); }
-  /* Show the icon for the theme you'll switch TO. */
   :global(html.light) .theme-toggle__sun { display: none; }
   :global(html.dark) .theme-toggle__moon { display: none; }
 </style>
