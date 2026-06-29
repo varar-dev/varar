@@ -1,0 +1,15 @@
+[tool.uv.workspace]
+members = ["packages/*"]
+
+[tool.uv.sources]
+oselvar-var = { workspace = true }
+
+[dependency-groups]
+dev = ["pytest>=8", "ruff>=0.6"]
+
+[tool.pytest.ini_options]
+testpaths = ["packages"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

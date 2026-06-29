@@ -7,3 +7,10 @@ coverage
 .superpowers
 .var/
 .claude/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
