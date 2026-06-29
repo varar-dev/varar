@@ -6,15 +6,24 @@ import {
   createConnection,
 } from 'vscode-languageserver/browser'
 import yahtzeeSpec from '../../../../docs/tutorial/04-yahtzee.var.md?raw'
+import helloSteps from '../../../../docs/tutorial/steps/01-hello.steps.ts?raw'
 import yahtzeeSteps from '../../../../docs/tutorial/steps/04-yahtzee.steps.ts?raw'
 import { createIdbFileSystem } from './idb-file-system.ts'
 import { createTsDiagnostics } from './ts-diagnostics.ts'
 
 // Seed the in-browser filesystem from the canonical dogfood files so the
-// language server can cross-reference the spec against its step definitions.
+// language server can cross-reference each spec against its step definitions.
+//
+// NOTE — two separate workers: this LSP worker produces the semantic-token
+// highlighting (green step / orange param chips) from THIS index, while the
+// run-worker (run-client.ts -> run-worker.ts) executes specs from stepFiles
+// passed directly to it. A doc's hidden `steps` prop (Editor's data-steps)
+// reaches only the run-worker, so any step file a doc spec must HIGHLIGHT
+// against has to be seeded here too. The docs use hello + yahtzee steps.
 const SEED_FILES: Record<string, string> = {
   '/yahtzee.var.md': yahtzeeSpec,
   '/yahtzee.steps.ts': yahtzeeSteps,
+  '/01-hello.steps.ts': helloSteps,
 }
 
 const reader = new BrowserMessageReader(self as DedicatedWorkerGlobalScope)
