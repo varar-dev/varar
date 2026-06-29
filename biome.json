@@ -9,7 +9,7 @@
       "!**/.var",
       "!**/public",
       "!**/*.timestamp*",
-      "!**/bundles/**/golden/**"
+      "!**/bundles/**/golden"
     ]
   },
   "assist": { "actions": { "source": { "organizeImports": "on" } } },

@@ -93,7 +93,12 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
             thrown = augmented
             break
           }
-          ports.observer?.step({ exampleName: ex.name, ordinal: i + 1, stepFile: file, outcome: 'pass' })
+          ports.observer?.step({
+            exampleName: ex.name,
+            ordinal: i + 1,
+            stepFile: file,
+            outcome: 'pass',
+          })
         }
         if (thrown === undefined && ex.rowChecks && ex.rowChecks.length > 0) {
           const bad = compareRow(lastReturn, ex.rowChecks).filter((d) => !d.ok)

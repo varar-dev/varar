@@ -10,7 +10,11 @@ import { addStep, createRegistry } from '../src/registry.js'
 async function runOnly(p: ReturnType<typeof plan>, observer?: { step(o: StepObservation): void }) {
   let run: (() => void | Promise<void>) | undefined
   executePlan(p, {
-    sink: { example: (_n, r) => { run = r } },
+    sink: {
+      example: (_n, r) => {
+        run = r
+      },
+    },
     reporter: { diagnostic: () => {} },
     ...(observer ? { observer } : {}),
   })
@@ -492,15 +496,33 @@ test('a doc-string step returning the exact body passes', async () => {
 
 test('executePlan passes each example its deduped 1-based step lines via info', async () => {
   let r = createRegistry()
-  r = addStep(r, { expression: 'I have {int} cukes', expressionSourceFile: 'inline', expressionSourceLine: 1, handler: () => {} })
-  r = addStep(r, { expression: 'I eat {int} cukes', expressionSourceFile: 'inline', expressionSourceLine: 2, handler: () => {} })
+  r = addStep(r, {
+    expression: 'I have {int} cukes',
+    expressionSourceFile: 'inline',
+    expressionSourceLine: 1,
+    handler: () => {},
+  })
+  r = addStep(r, {
+    expression: 'I eat {int} cukes',
+    expressionSourceFile: 'inline',
+    expressionSourceLine: 2,
+    handler: () => {},
+  })
   // Both steps are in one paragraph (no blank line between them) so the planner
   // creates a single example. "I have 5 cukes" is on line 3, "I eat 2 cukes" on line 4.
   const source = '# T\n\nI have 5 cukes.\nI eat 2 cukes.\n'
   const p = plan(parse('t.var.md', source), r)
 
   const seen: Array<{ name: string; lines: ReadonlyArray<number> | undefined }> = []
-  const sink = { example: (name: string, _run: () => void | Promise<void>, info?: { readonly lines: ReadonlyArray<number> }) => { seen.push({ name, lines: info?.lines }) } }
+  const sink = {
+    example: (
+      name: string,
+      _run: () => void | Promise<void>,
+      info?: { readonly lines: ReadonlyArray<number> },
+    ) => {
+      seen.push({ name, lines: info?.lines })
+    },
+  }
   executePlan(p, { sink, reporter: { diagnostic() {} } })
 
   expect(seen).toHaveLength(1)
@@ -512,7 +534,9 @@ test('expected-failure example: a thrown step makes the run resolve (pass)', asy
     expression: 'I divide {int} by {int}',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    handler: (_c, _a, b) => { if (b === 0) throw new Error('division by zero') },
+    handler: (_c, _a, b) => {
+      if (b === 0) throw new Error('division by zero')
+    },
   })
   const src = '# D\n\nI divide 1 by 0.\n\n```error\ndivision by zero\n```\n'
   const run = await runOnly(plan(parse('e.var.md', src), r))
@@ -536,7 +560,9 @@ test('expected-failure with message substring: mismatch rejects with the real er
     expression: 'I divide {int} by {int}',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    handler: () => { throw new Error('boom') },
+    handler: () => {
+      throw new Error('boom')
+    },
   })
   const src = '# D\n\nI divide 1 by 0.\n\n```error\ndivision by zero\n```\n'
   const run = await runOnly(plan(parse('e.var.md', src), r))
@@ -555,9 +581,7 @@ test('observer receives a pass observation per executed step', async () => {
     step: (o) => obs.push(o),
   })
   await run?.()
-  expect(obs).toEqual([
-    { exampleName: 'I add 5', ordinal: 1, stepFile: 's.ts', outcome: 'pass' },
-  ])
+  expect(obs).toEqual([{ exampleName: 'I add 5', ordinal: 1, stepFile: 's.ts', outcome: 'pass' }])
 })
 
 test('observer receives a fail observation when a step throws', async () => {
@@ -565,7 +589,9 @@ test('observer receives a fail observation when a step throws', async () => {
     expression: 'I blow up',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    handler: () => { throw new Error('kaboom') },
+    handler: () => {
+      throw new Error('kaboom')
+    },
   })
   const obs: StepObservation[] = []
   const run = await runOnly(plan(parse('e.var.md', '# A\n\nI blow up.'), r), {

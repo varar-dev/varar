@@ -137,9 +137,7 @@ export function plan(varDoc: VarDoc, registry: Registry): ExecutionPlan {
     // An ```error fence anywhere in this example marks it expected-to-fail and
     // is consumed here (never attached to a step as a doc string).
     // `Fence` is already imported at the top of plan.ts.
-    const errorFence = ex.body.find(
-      (b): b is Fence => b.kind === 'fence' && b.info === 'error',
-    )
+    const errorFence = ex.body.find((b): b is Fence => b.kind === 'fence' && b.info === 'error')
 
     // Pass 2: look for table/fence immediately after a step-bearing block.
     const attachments = new Map<
