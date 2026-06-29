@@ -13,6 +13,7 @@ export type RunInput = {
   readonly stepFiles: ReadonlyArray<StepFile>
 }
 
+// Strips the scheme from a standard file:/// URI to recover the bare path.
 const stripFileScheme = (uri: string): string => uri.replace(/^file:\/\/\//, '')
 
 // Group editor descriptors and pair each group's spec (.var.md) with the step

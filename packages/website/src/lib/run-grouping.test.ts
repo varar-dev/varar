@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
+import type { StepFile } from './run-grouping.js'
 import { groupRunInputs } from './run-grouping.js'
 
-const noHidden = new Map()
+const noHidden = new Map<string, ReadonlyArray<StepFile>>()
 
 describe('groupRunInputs', () => {
   it('pairs a spec with the visible step files in its group', () => {
