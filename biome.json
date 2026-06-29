@@ -33,6 +33,10 @@
   "javascript": {
     "formatter": { "quoteStyle": "single", "trailingCommas": "all", "semicolons": "asNeeded" }
   },
+  "css": {
+    "parser": { "tailwindDirectives": true },
+    "formatter": { "quoteStyle": "single" }
+  },
   "overrides": [
     {
       "includes": ["**/*.astro"],
