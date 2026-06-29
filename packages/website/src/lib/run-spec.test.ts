@@ -10,12 +10,10 @@ describe('runRegisteredSpec', () => {
   it('passes when the handler does not throw', async () => {
     _resetBuilder()
     const { action, sensor } = defineState(() => ({ greeting: '' }))
-    action('I greet {string}', (ctx, name: string) => {
-      ctx.greeting = `Hello, ${name}!`
-    })
+    action('I greet {string}', (_state, name: string) => ({ greeting: `Hello, ${name}!` }))
     sensor(
       'the greeting should be {string}',
-      (ctx, _expected: string) => [ctx.greeting] as [string],
+      (state, _expected: string) => [state.greeting] as [string],
     )
     const results = await runRegisteredSpec('/spec.var.md', SPEC)
     expect(results.examples).toHaveLength(1)
@@ -26,12 +24,10 @@ describe('runRegisteredSpec', () => {
   it('fails with the message and the failing .var.md line on a throw', async () => {
     _resetBuilder()
     const { action } = defineState(() => ({ greeting: '' }))
-    action('I greet {string}', (ctx, name: string) => {
-      ctx.greeting = `Hi ${name}`
-    })
-    action('the greeting should be {string}', (ctx, expected: string) => {
-      if (ctx.greeting !== expected)
-        throw new Error(`expected "${expected}" but was "${ctx.greeting}"`)
+    action('I greet {string}', (_state, name: string) => ({ greeting: `Hi ${name}` }))
+    action('the greeting should be {string}', (state, expected: string) => {
+      if (state.greeting !== expected)
+        throw new Error(`expected "${expected}" but was "${state.greeting}"`)
     })
     const results = await runRegisteredSpec('/spec.var.md', SPEC)
     expect(results.examples[0]?.status).toBe('failed')
@@ -42,7 +38,7 @@ describe('runRegisteredSpec', () => {
   it('attaches cells (source span + actual) for a header-bound row mismatch', async () => {
     _resetBuilder()
     const { sensor } = defineState(() => ({}))
-    sensor('Each row lists the n and the double', (_ctx, row: { n: string; double: string }) => ({
+    sensor('Each row lists the n and the double', (_state, row: { n: string; double: string }) => ({
       double: Number(row.n) * 2,
     }))
     const spec = `# Doubling
@@ -78,11 +74,9 @@ Each row lists the n and the double:
   it('leaves cells/doc undefined for a plain thrown error', async () => {
     _resetBuilder()
     const { action } = defineState(() => ({ greeting: '' }))
-    action('I greet {string}', (ctx, name: string) => {
-      ctx.greeting = `Hi ${name}`
-    })
-    action('the greeting should be {string}', (ctx, expected: string) => {
-      if (ctx.greeting !== expected) throw new Error('nope')
+    action('I greet {string}', (_state, name: string) => ({ greeting: `Hi ${name}` }))
+    action('the greeting should be {string}', (state, expected: string) => {
+      if (state.greeting !== expected) throw new Error('nope')
     })
     const results = await runRegisteredSpec('/spec.var.md', SPEC)
     expect(results.examples[0]?.failure?.cells).toBeUndefined()
