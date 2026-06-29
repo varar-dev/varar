@@ -1,0 +1,97 @@
+---
+title: Step argument types
+description: How a step's handler arguments are typed — parameter types inferred straight from the cucumber expression, with custom types and trailing table/doc-string args as the exceptions.
+area: reference
+order: 1
+---
+
+import FileEditor from '../../../components/FileEditor.astro'
+import helloSteps from '../../../../../../docs/tutorial/steps/01-hello.steps.ts?raw'
+
+# Step argument types
+
+A step handler is `(ctx, ...args) => …`. The first parameter, `ctx`, is your
+state — its type comes from `defineState`. Everything after it is captured from
+the `{…}` **parameters** in the cucumber expression, and Vár infers those types
+directly from the expression string. **You don't annotate them.**
+
+```ts
+const { action } = defineState(() => ({ greeting: '' }))
+
+// `name` is inferred as string — no annotation needed.
+action('I greet {string}', (ctx, name) => {
+  ctx.greeting = `Hello, ${name}!`
+})
+```
+
+## Built-in parameter types
+
+Each built-in cucumber parameter type maps to a TypeScript type:
+
+| Parameter type                                                          | Inferred type |
+| ----------------------------------------------------------------------- | ------------- |
+| `{int}` `{float}` `{double}` `{long}` `{short}` `{byte}` `{bigdecimal}` | `number`      |
+| `{biginteger}`                                                          | `bigint`      |
+| `{string}` `{word}` `{}` (anonymous)                                    | `string`      |
+
+Parameters are inferred in source order, so `'expression {int}+{int}'` gives a
+handler `(ctx, a, b)` where both `a` and `b` are `number`. Here is the whole
+`01-hello` step file — note that **no parameter is annotated** — running against
+its spec:
+
+<FileEditor filename="hello.var.md" steps={[{ path: '01-hello.steps.ts', source: helloSteps }]}>{`
+# Hello, Vár
+
+First I greet "world" okay? I think the greeting should be "Hello, world!"
+
+## Another example
+
+The expression \`1+1\` should evaluate to \`2\`.
+`}</FileEditor>
+
+A wrong annotation is still an error: `{int}` infers `number`, so writing
+`(ctx, count: string)` fails to type-check. Annotate only when you want to
+**narrow** a slot the inference can't reach (below) — never to restate what the
+expression already says.
+
+## Two cases inference can't reach
+
+These fall back to `any`, so you annotate them to recover a precise type.
+
+### Custom parameter types
+
+A type you register with `defineParameterType` is inferred as `any` today,
+because the expression string carries only its name, not its transformer's
+return type. Annotate the parameter to type it:
+
+```ts
+defineParameterType({ name: 'date', regexp: /…/, transformer: (m, d) => new Date(/* … */) })
+
+// {date} is custom → inferred as `any`; annotate `_due` to get Date.
+context('borrowed {string}, due back on {date}', (_ctx, title, _due: Date) => {
+  // `title` is inferred as string from {string}; `_due` is annotated Date.
+})
+```
+
+> Inferring custom types from the transformer's return type is planned — it
+> needs the parameter types declared where TypeScript can see their return
+> types, rather than via a side-effecting `defineParameterType` call. Until then,
+> annotate them.
+
+### The trailing table or doc-string argument
+
+A data table or doc string attached to a step arrives as the **last** argument,
+*after* the captured parameters. It has no `{…}` placeholder in the expression,
+so it is inferred as `any` — annotate it. See [Tables](/docs/reference/tables)
+and [Doc strings](/docs/reference/doc-strings) for the shapes.
+
+```ts
+// `name` inferred from {word}; `body` is the trailing doc string — annotate it.
+sensor('Greet {word}:', (_ctx, name, body: string) => [name, `Hello, ${name}!\n`])
+```
+
+## Escaped braces
+
+A brace escaped with a backslash is literal text, not a parameter, so it
+produces no argument. `'a literal \{brace\} and an {int}'` yields a single
+`number` argument.

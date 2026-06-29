@@ -43,7 +43,7 @@ const { context, action, sensor } = defineState(() => ({
   member: 'maya',
 }))
 
-context('Maya has borrowed {string}, due back on {date}', (_ctx, _title: string, _due: Date) => {
+context('Maya has borrowed {string}, due back on {date}', (_ctx, _title, _due: Date) => {
   // ctx.library.checkOut(ctx.member, title, due)
 })
 

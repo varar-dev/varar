@@ -12,6 +12,8 @@ sensor('Uppercase each one:', (_ctx, rows: ReadonlyArray<ReadonlyArray<string>>)
 })
 
 // Doc-string mode: the post-ctx args are (name, body); return [name, text].
-sensor('Greet {word}:', (_ctx, name: string, _body: string) => {
+// `name` is inferred from {word}; `_body` is the trailing doc-string arg (no
+// placeholder in the expression), so it keeps its annotation.
+sensor('Greet {word}:', (_ctx, name, _body: string) => {
   return [name, `Hello, ${name}!\n`]
 })
