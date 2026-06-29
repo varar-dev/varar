@@ -34,10 +34,12 @@ pnpm workspace · biome · vitest (for the core's own tests) · knip · jscpd ·
 
 - Test files in the project's own test suite: `*.test.ts` (vitest).
 - BDD example files (dogfood + docs): plain `*.md`. There is no special `.var.md`
-  extension — a file is a spec iff its path matches a `vars` glob in `var.config.ts`.
-  `vars` has no default (an empty list discovers nothing); `!`-prefixed globs exclude
-  (e.g. a not-implemented tutorial exercise). That config is the single source of truth
-  for "what is a spec", consulted by the runner, the vitest plugin, and the LSP alike.
+  extension — a file is a spec iff its path matches the `vars` globs in `var.config.ts`.
+  `vars` is `{ include, exclude }` (a plain array is shorthand for include-only); both
+  are plain globs, no `!` prefix. `include` has no default (empty discovers nothing);
+  `exclude` removes matches (e.g. a not-implemented tutorial exercise). That config is
+  the single source of truth for "what is a spec", consulted by the runner, the LSP, and
+  the vitest plugin alike — the plugin drives vitest's own `include`/`exclude` from it.
 - Step definition files: `*.steps.ts`.
 - Config: `var.config.ts` at repo root.
 

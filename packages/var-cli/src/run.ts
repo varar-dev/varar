@@ -2,7 +2,7 @@ import { globSync, readFileSync } from 'node:fs'
 import { relative, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { buildRegistry, contextFactory } from '@oselvar/var/registry'
-import { executePlan, parse, partitionGlobs, plan } from '@oselvar/var-core'
+import { executePlan, parse, plan } from '@oselvar/var-core'
 import { loadVarConfig } from '@oselvar/var-core/node'
 
 export type RunOptions = {
@@ -17,8 +17,10 @@ export type RunResult = { readonly exitCode: number }
 export async function runRun(opts: RunOptions): Promise<RunResult> {
   const cfg = await loadVarConfig(opts.cwd)
   const stepFiles = findFiles(opts.cwd, cfg.steps)
-  const varPatterns = opts.globs && opts.globs.length > 0 ? opts.globs : cfg.vars
-  const varFiles = findFiles(opts.cwd, varPatterns)
+  // A CLI `--globs` override is include-only; excludes live in var.config.ts.
+  const varGlobs =
+    opts.globs && opts.globs.length > 0 ? { include: opts.globs, exclude: [] } : cfg.vars
+  const varFiles = findFiles(opts.cwd, varGlobs.include, varGlobs.exclude)
 
   // Importing each stepfile runs its `defineState(...)` calls, populating the
   // @oselvar/var module-scope registry. Order does not matter.
@@ -106,12 +108,15 @@ function globAbs(cwd: string, patterns: ReadonlyArray<string>): string[] {
   return out
 }
 
-function findFiles(cwd: string, patterns: ReadonlyArray<string>): string[] {
-  const { includes, excludes } = partitionGlobs(patterns)
-  const excluded = new Set(globAbs(cwd, excludes))
+function findFiles(
+  cwd: string,
+  include: ReadonlyArray<string>,
+  exclude: ReadonlyArray<string> = [],
+): string[] {
+  const excluded = new Set(globAbs(cwd, exclude))
   const out: string[] = []
   const seen = new Set<string>()
-  for (const abs of globAbs(cwd, includes)) {
+  for (const abs of globAbs(cwd, include)) {
     if (excluded.has(abs) || seen.has(abs)) continue
     seen.add(abs)
     out.push(abs)

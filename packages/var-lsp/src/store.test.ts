@@ -7,7 +7,7 @@ function fakeFs(files: Record<string, string>): FileSystem {
   return {
     async list(globs) {
       // Minimal matcher: support '**/*.ext' by extension suffix.
-      const exts = globs.map((g) => g.slice(g.lastIndexOf('.')))
+      const exts = globs.include.map((g) => g.slice(g.lastIndexOf('.')))
       return [...map.keys()].filter((p) => exts.some((e) => p.endsWith(e)))
     },
     async read(path) {
@@ -19,14 +19,14 @@ function fakeFs(files: Record<string, string>): FileSystem {
       map.set(path, content)
     },
     matches(path, globs) {
-      const exts = globs.filter((g) => !g.startsWith('!')).map((g) => g.slice(g.lastIndexOf('.')))
+      const exts = globs.include.map((g) => g.slice(g.lastIndexOf('.')))
       return exts.some((e) => path.endsWith(e))
     },
   }
 }
 
 const config = {
-  vars: ['**/*.md'],
+  vars: { include: ['**/*.md'], exclude: [] },
   steps: ['**/*.steps.ts'],
   snippet: { template: DEFAULT_SNIPPET_TEMPLATE },
   scannerPlugins: [],

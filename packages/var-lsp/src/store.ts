@@ -28,7 +28,7 @@ export function createStore(deps: StoreDeps): Store {
   }
   return {
     async reindex() {
-      const stepPaths = await fs.list(config.steps)
+      const stepPaths = await fs.list({ include: config.steps, exclude: [] })
       const varPaths = await fs.list(config.vars)
       const stepFiles = await Promise.all(
         stepPaths.map(async (path) => ({ path, source: await fs.read(path) })),

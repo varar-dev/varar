@@ -4,7 +4,6 @@ import { describe, expect, test } from 'vitest'
 import {
   buildSpecResults,
   collectFromModules,
-  collectFromTasks,
   resultFilePath,
   toSpecPath,
 } from '../src/reporter.js'
@@ -48,29 +47,6 @@ describe('collectFromModules', () => {
       },
     ]
     const byFile = collectFromModules(modules)
-    expect([...byFile.keys()]).toEqual(['/cwd/docs/a.md'])
-    expect(byFile.get('/cwd/docs/a.md')).toEqual([passed, failed])
-  })
-})
-
-describe('collectFromTasks', () => {
-  test('groups examples by spec file, walks nested suites, skips meta-less tasks', () => {
-    const files = [
-      {
-        filepath: '/cwd/docs/a.md',
-        tasks: [
-          { type: 'test', name: 'A', meta: { varResult: passed } },
-          {
-            type: 'suite',
-            name: 'g',
-            tasks: [{ type: 'test', name: 'B', meta: { varResult: failed } }],
-          },
-          { type: 'test', name: 'var:diagnostic:x', meta: {} },
-        ],
-      },
-      { filepath: '/cwd/docs/empty.md', tasks: [{ type: 'test', name: 'n', meta: {} }] },
-    ]
-    const byFile = collectFromTasks(files)
     expect([...byFile.keys()]).toEqual(['/cwd/docs/a.md'])
     expect(byFile.get('/cwd/docs/a.md')).toEqual([passed, failed])
   })

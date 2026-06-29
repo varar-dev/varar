@@ -1,17 +1,18 @@
 import varPlugin from '@oselvar/var-vitest'
-import { VarResultsReporter } from '@oselvar/var-vitest/reporter'
-import { configDefaults, defineConfig } from 'vitest/config'
+import { defineConfig } from 'vitest/config'
 
 const root = new URL('../..', import.meta.url).pathname
 
+// The var plugin reads var.config.ts and drives vitest's include/exclude from
+// its `vars` globs, so there's nothing to list here — var.config.ts is the
+// single source of truth for which `.md` files are specs.
+//
+// No reporter here: in vitest 4 workspace mode reporters are root-level only
+// (project reporters are ignored), so VarResultsReporter lives in the root
+// vitest.config.ts and collects every project's results, this one included.
 export default defineConfig({
   plugins: [varPlugin({ cwd: root })],
   test: {
-    include: ['**/*.md'],
-    // 05-roman-numerals is a not-implemented exercise (see var.config.ts); the
-    // plugin won't transform it, so keep vitest from collecting it as a test.
-    exclude: [...configDefaults.exclude, '**/05-roman-numerals.md'],
-    reporters: ['default', new VarResultsReporter({ cwd: root })],
     // Inline workspace packages so the plugin and runtime are transformed by vite.
     server: { deps: { inline: [/^@oselvar\//] } },
   },

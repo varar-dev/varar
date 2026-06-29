@@ -42,7 +42,7 @@ export function registerHandlers(
     handlers = buildHandlers(store)
     await store.reindex()
     runResults = createRunResultsStore(root ?? '')
-    const varJsonPaths = await store.fs().list(['**/.var/**/*.json'])
+    const varJsonPaths = await store.fs().list({ include: ['**/.var/**/*.json'], exclude: [] })
     for (const p of varJsonPaths) {
       try {
         runResults.ingest(p, await store.fs().read(p))

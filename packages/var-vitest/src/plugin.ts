@@ -1,9 +1,9 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { glob as nativeGlob } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { partitionGlobs } from '@oselvar/var-core'
 import { loadVarConfig } from '@oselvar/var-core/node'
 import type { Plugin } from 'vite'
+import { configDefaults } from 'vitest/config'
 
 const glob = nativeGlob as unknown as (
   pattern: string,
@@ -34,19 +34,33 @@ export function varVitestPlugin(options: VarVitestPluginOptions = {}): Plugin {
   let configPath: string | undefined
   return {
     name: '@oselvar/var-vitest',
-    config() {
-      // Force a single @oselvar/var (and @oselvar/var-core) module instance.
-      // The authoring API (defineState) and the registry glue
-      // (@oselvar/var/registry, used by runtime.ts) MUST share one module so
-      // buildRegistry() sees the steps registered via defineState. Under
-      // resolve.preserveSymlinks these can split into two instances, leaving
-      // an empty registry and zero steps run with no error — so we dedupe.
-      return { resolve: { dedupe: ['@oselvar/var', '@oselvar/var-core'] } }
+    async config() {
+      // var.config.ts is the single source of truth for which files are specs.
+      // Drive vitest's collection from it so an excluded `.md` is never handed
+      // to vite as a raw-markdown "script" (which fails to parse). Globs are
+      // made absolute against `cwd`; setting `test.exclude` *replaces* vitest's
+      // defaults, so re-add `configDefaults.exclude` to keep `node_modules` &c.
+      // out.
+      const cfg = await loadVarConfig(cwd)
+      const abs = (g: string) => resolve(cwd, g)
+      return {
+        // Force a single @oselvar/var (and @oselvar/var-core) module instance.
+        // The authoring API (defineState) and the registry glue
+        // (@oselvar/var/registry, used by runtime.ts) MUST share one module so
+        // buildRegistry() sees the steps registered via defineState. Under
+        // resolve.preserveSymlinks these can split into two instances, leaving
+        // an empty registry and zero steps run with no error — so we dedupe.
+        resolve: { dedupe: ['@oselvar/var', '@oselvar/var-core'] },
+        test: {
+          include: cfg.vars.include.map(abs),
+          exclude: [...configDefaults.exclude, ...cfg.vars.exclude.map(abs)],
+        },
+      }
     },
     async configResolved() {
       const cfg = await loadVarConfig(cwd)
       stepFiles = await findFiles(cwd, cfg.steps)
-      specFiles = new Set(await findFiles(cwd, cfg.vars))
+      specFiles = new Set(await findFiles(cwd, cfg.vars.include, cfg.vars.exclude))
       for (const name of ['var.config.ts', 'var.config.js', 'var.config.mjs']) {
         const abs = resolve(cwd, name)
         if (existsSync(abs)) {
@@ -129,12 +143,15 @@ async function globAbs(cwd: string, patterns: ReadonlyArray<string>): Promise<st
   return out
 }
 
-async function findFiles(cwd: string, patterns: ReadonlyArray<string>): Promise<string[]> {
-  const { includes, excludes } = partitionGlobs(patterns)
-  const excluded = new Set(await globAbs(cwd, excludes))
+async function findFiles(
+  cwd: string,
+  include: ReadonlyArray<string>,
+  exclude: ReadonlyArray<string> = [],
+): Promise<string[]> {
+  const excluded = new Set(await globAbs(cwd, exclude))
   const out: string[] = []
   const seen = new Set<string>()
-  for (const abs of await globAbs(cwd, includes)) {
+  for (const abs of await globAbs(cwd, include)) {
     if (excluded.has(abs) || seen.has(abs)) continue
     seen.add(abs)
     out.push(abs)

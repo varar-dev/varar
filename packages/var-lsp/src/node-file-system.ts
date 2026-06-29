@@ -1,7 +1,6 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { glob as nativeGlob } from 'node:fs/promises'
 import { matchesGlob, relative, resolve } from 'node:path'
-import { partitionGlobs } from '@oselvar/var-core'
 import type { FileSystem } from './file-system.js'
 
 const glob = nativeGlob as unknown as (
@@ -20,12 +19,11 @@ export function createNodeFileSystem(root: string): FileSystem {
     return out
   }
   return {
-    async list(patterns) {
-      const { includes, excludes } = partitionGlobs(patterns)
-      const excluded = new Set(await globAbs(excludes))
+    async list(globs) {
+      const excluded = new Set(await globAbs(globs.exclude))
       const out: string[] = []
       const seen = new Set<string>()
-      for (const abs of await globAbs(includes)) {
+      for (const abs of await globAbs(globs.include)) {
         if (excluded.has(abs) || seen.has(abs)) continue
         seen.add(abs)
         out.push(abs)
@@ -38,12 +36,11 @@ export function createNodeFileSystem(root: string): FileSystem {
     async write(path, content) {
       writeFileSync(path, content, 'utf8')
     },
-    matches(path, patterns) {
+    matches(path, globs) {
       // Globs are cwd-relative; relativise the (absolute) path before matching.
       const rel = relative(root, path)
-      const { includes, excludes } = partitionGlobs(patterns)
-      if (excludes.some((g) => matchesGlob(rel, g))) return false
-      return includes.some((g) => matchesGlob(rel, g))
+      if (globs.exclude.some((g) => matchesGlob(rel, g))) return false
+      return globs.include.some((g) => matchesGlob(rel, g))
     },
   }
 }

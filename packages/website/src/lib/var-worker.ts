@@ -31,7 +31,7 @@ const writer = new BrowserMessageWriter(self as DedicatedWorkerGlobalScope)
 const connection = createConnection(reader, writer)
 
 const config = {
-  vars: ['**/*.md'],
+  vars: { include: ['**/*.md'], exclude: [] },
   steps: ['**/*.steps.ts'],
   snippet: { template: DEFAULT_SNIPPET_TEMPLATE },
   scannerPlugins: [],

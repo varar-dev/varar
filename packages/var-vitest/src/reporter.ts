@@ -1,50 +1,24 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, join, relative, sep } from 'node:path'
 import { type ExampleResult, hashSource, type SpecResults } from '@oselvar/var-core'
+import type { Reporter, TestModule } from 'vitest/node'
 
-// ─── Vitest 2 structural types (File/Suite/Test, task-tree API) ─────────────
-type TaskNode = {
-  readonly name?: string
-  readonly meta?: { readonly varResult?: ExampleResult }
-  readonly tasks?: ReadonlyArray<TaskNode>
-}
-type FileNode = { readonly filepath: string; readonly tasks?: ReadonlyArray<TaskNode> }
-
-function collectExamples(tasks: ReadonlyArray<TaskNode> | undefined): ExampleResult[] {
-  const out: ExampleResult[] = []
-  for (const t of tasks ?? []) {
-    if (t.meta?.varResult) out.push(t.meta.varResult)
-    if (t.tasks) out.push(...collectExamples(t.tasks))
-  }
-  return out
-}
-
-// Group every test's meta.varResult by its owning spec file, in declaration
-// order. Files that produced no var results (e.g. only var:diagnostic tasks)
-// are skipped.
-export function collectFromTasks(
-  files: ReadonlyArray<FileNode>,
-): ReadonlyMap<string, ReadonlyArray<ExampleResult>> {
-  const byFile = new Map<string, ExampleResult[]>()
-  for (const f of files) {
-    const examples = collectExamples(f.tasks)
-    if (examples.length > 0) byFile.set(f.filepath, examples)
-  }
-  return byFile
-}
-
-// ─── Vitest 4 structural types (TestModule / TestCase API) ──────────────────
+// Structural shape of the slice of vitest's TestModule API the collector reads.
+// `meta()` is typed `unknown` so both vitest's real `TestModule` (whose
+// `meta()` returns the augmentation-free `TaskMeta`) and the plain test fakes
+// satisfy it without a module augmentation — the plugin stashes each example's
+// result on `ctx.task.meta.varResult`, which we narrow when reading.
 type TestCaseNode = {
-  meta(): { readonly varResult?: ExampleResult }
-}
-type TestCollectionNode = {
-  allTests(): Iterable<TestCaseNode>
+  meta(): unknown
 }
 type TestModuleNode = {
   readonly moduleId: string
-  readonly children: TestCollectionNode
+  readonly children: { allTests(): Iterable<TestCaseNode> }
 }
 
+// Group every test's meta.varResult by its owning spec module, in declaration
+// order. Modules that produced no var results (e.g. only var:diagnostic tasks)
+// are skipped.
 export function collectFromModules(
   testModules: ReadonlyArray<TestModuleNode>,
 ): ReadonlyMap<string, ReadonlyArray<ExampleResult>> {
@@ -52,7 +26,7 @@ export function collectFromModules(
   for (const m of testModules) {
     const examples: ExampleResult[] = []
     for (const tc of m.children.allTests()) {
-      const varResult = tc.meta()?.varResult
+      const varResult = (tc.meta() as { varResult?: ExampleResult } | null | undefined)?.varResult
       if (varResult) examples.push(varResult)
     }
     if (examples.length > 0) byFile.set(m.moduleId, examples)
@@ -84,7 +58,7 @@ export type VarResultsReporterOptions = { readonly cwd?: string }
 // Vitest reporter (the only side-effecting piece). Reads each spec's source,
 // hashes it, and writes .var/<spec>.json. Registry-free: every ExampleResult
 // arrives prebuilt on task.meta from the worker.
-export class VarResultsReporter {
+export class VarResultsReporter implements Reporter {
   private readonly cwd: string
   constructor(options: VarResultsReporterOptions = {}) {
     this.cwd = options.cwd ?? process.cwd()
@@ -101,14 +75,10 @@ export class VarResultsReporter {
     }
   }
 
-  // Vitest 4+ reporter hook (TestModule API). Called after all tests finish.
-  onTestRunEnd(testModules: ReadonlyArray<TestModuleNode> = []): void {
+  // Reporter hook (TestModule API). Called after all tests finish. vitest's
+  // `TestModule` structurally satisfies the `TestModuleNode` the pure collector
+  // consumes.
+  onTestRunEnd(testModules: ReadonlyArray<TestModule> = []): void {
     this.writeResults(collectFromModules(testModules))
-  }
-
-  // Vitest 2 / legacy task-tree hook. `files` carries each spec's filepath +
-  // task tree with the serialized meta. Kept for consumers still on vitest 2.
-  onFinished(files: ReadonlyArray<FileNode> = []): void {
-    this.writeResults(collectFromTasks(files))
   }
 }

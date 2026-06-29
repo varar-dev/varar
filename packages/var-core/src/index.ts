@@ -22,7 +22,7 @@ export {
   isCellMismatchError,
   ReturnShapeError,
 } from './cell-diff.js'
-export type { VarConfig } from './config-types.js'
+export type { VarConfig, VarGlobs } from './config-types.js'
 export type {
   BundleArtifacts,
   FailureArtifact,
@@ -60,7 +60,6 @@ export { executePlan, isUnexpectedPassError, UnexpectedPassError } from './execu
 export type { ExpressionDiff, ExpressionSegment, ParamFate } from './expression-segments.js'
 export { diffExpressions, expressionSegments, renderExpression } from './expression-segments.js'
 export { toFailure } from './failure.js'
-export { type PartitionedGlobs, partitionGlobs } from './globs.js'
 export { hashSource } from './hash.js'
 export type { StrippedInline } from './inline.js'
 export { stripInline } from './inline.js'
