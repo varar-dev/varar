@@ -1,4 +1,5 @@
 import { CellMismatchError, compareRow, compareTable, ReturnShapeError } from './cell-diff.js'
+import { deepFreeze } from './deep-freeze.js'
 import { compareDocString, DocStringMismatchError } from './doc-string-diff.js'
 import { compareParams } from './param-diff.js'
 import type { ExecutionPlan, PlannedStep } from './plan.js'
@@ -57,7 +58,7 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
           const file = step.stepDef.expressionSourceFile
           let ctx = ctxByFile.get(file)
           if (!ctxByFile.has(file)) {
-            ctx = await createContext(file)
+            ctx = deepFreeze(await createContext(file))
             ctxByFile.set(file, ctx)
           }
           // A trailing data table or doc string is passed as the LAST handler
@@ -81,10 +82,18 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
             // wiring bug.
             const kind = step.stepDef.kind
             if (kind === 'context' || kind === 'action') {
+              // A context/action step EVOLVES state: returning a partial state
+              // object shallow-merges onto the current state (re-frozen, then
+              // threaded to later steps in this stepfile). Returning nothing is
+              // a no-op. Any non-object return is a contract violation.
               if (returned !== undefined) {
-                throw new ReturnShapeError(
-                  'a context/action step must not return a value; only sensor() returns for comparison',
-                )
+                if (typeof returned !== 'object' || returned === null) {
+                  throw new ReturnShapeError(
+                    'a context/action step must return a partial state object or nothing',
+                  )
+                }
+                ctx = deepFreeze({ ...(ctx as object), ...(returned as object) })
+                ctxByFile.set(file, ctx)
               }
             } else if (kind === 'sensor') {
               // Header-bound rows are compared after the loop via ex.rowChecks;
