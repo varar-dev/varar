@@ -13,8 +13,13 @@
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
     "packages/var": {
-      "entry": ["src/index.ts", "tests/**/*.test.ts"],
-      "project": ["src/**/*.ts", "tests/**/*.ts"]
+      "entry": [
+        "src/index.ts",
+        "tests/**/*.test.ts",
+        "../../conformance/bundles/**/*.steps.ts",
+        "../../conformance/bundles/**/*.md"
+      ],
+      "project": ["src/**/*.ts", "tests/**/*.ts", "../../conformance/bundles/**/*.{ts,md}"]
     },
     "packages/var-language": {
       "project": ["src/**/*.ts", "tests/**/*.ts"]
@@ -29,10 +34,6 @@
     "packages/var-examples": {
       "entry": ["**/*.md", "**/*.steps.ts"],
       "project": ["**/*.{ts,md}"]
-    },
-    "conformance": {
-      "entry": ["bundles/**/*.steps.ts", "bundles/**/*.md"],
-      "project": ["bundles/**/*.{ts,md}"]
     }
   },
   "ignore": [
