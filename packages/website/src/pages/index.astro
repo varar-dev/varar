@@ -20,41 +20,41 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '')
   title="Vár — Behaviour-Driven Development that doesn’t make you cry"
   description="Vár turns plain-English examples into runnable specs. Discover misunderstandings, clear your head."
 >
-  <main class="landing">
-    <section class="hero">
-      <div class="brand">
-        <img class="logo" src={`${base}/logo2-transparent.png`} alt="Vár logo" />
-        <h1 class="wordmark">Vár</h1>
+  <main class="landing max-w-[70rem] mx-auto px-12 pt-20 pb-20">
+    <section class="text-center pt-12 pb-6">
+      <div class="flex items-center justify-center gap-[clamp(12px,3vw,40px)]">
+        <img class="h-[clamp(72px,16vw,200px)] w-auto" src={`${base}/logo2-transparent.png`} alt="Vár logo" />
+        <h1 class="font-sans font-semibold text-[clamp(72px,18vw,220px)] leading-[0.95] tracking-[0.02em] m-0 text-ink">Vár</h1>
       </div>
 
-      <p class="pitch-line">Executable documentation for people and agents</p>
+      <p class="mt-4 mb-0 text-[clamp(20px,3.2vw,34px)] font-semibold text-subtle">Executable documentation for people and agents</p>
     </section>
 
-    <section class="split" aria-label="What Vár is, and a live example">
-      <div class="split__explain">
-        <p class="hero__lead">
+    <section class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)] gap-10 items-start pt-6 pb-12 max-[880px]:grid-cols-1 max-[880px]:gap-6" aria-label="What Vár is, and a live example">
+      <div class="text-center">
+        <p class="max-w-[42rem] mt-4 mx-auto text-center text-[17px] text-subtle">
           Vár hard-wires your documentation to your software.
           When they go out of sync, you'll know.
         </p>
 
-        <p class="hero__lead">
+        <p class="max-w-[42rem] mt-4 mx-auto text-center text-[17px] text-subtle">
           The documentation is both <a href="#">signal</a> and <a href="#">sensor</a> for programmers and coding agents.
         </p>
 
-        <p class="hero__lead">
-          <pre>
+        <p class="max-w-[42rem] mt-4 mx-auto text-center text-[17px] text-subtle">
+          <pre class="mt-4 text-[clamp(11px,1.6vw,14px)] overflow-x-auto">
       ----signal---&gt;
 [documentation]      [software]
       &lt;---sensor---
           </pre>
         </p>
 
-        <p class="hero__lead">
+        <p class="max-w-[42rem] mt-4 mx-auto text-center text-[17px] text-subtle">
           This is different from how it's usually done.
         </p>
 
-        <p class="hero__lead">
-          <pre>DRIFT
+        <p class="max-w-[42rem] mt-4 mx-auto text-center text-[17px] text-subtle">
+          <pre class="mt-4 text-[clamp(11px,1.6vw,14px)] overflow-x-auto">DRIFT
         [specifications] ----signal---&gt;
         [documentation] --describes--&gt; [software]
         [tests]     &lt;-------sensor-----
@@ -62,302 +62,52 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '')
         </p>
       </div>
 
-      <section class="demo" aria-label="See it live">
-        <h2>the same five dice, five different scores</h2>
-        <p class="demo__lead">
-          This isn’t a screenshot — it’s a runnable spec. The table reads like a
+      <section class="p-0" aria-label="See it live">
+        <h2 class="font-sans font-semibold text-2xl tracking-[0.02em] mb-3 text-center">the same five dice, five different scores</h2>
+        <p class="max-w-[42rem] mx-auto mb-6 text-center text-[17px] text-subtle">
+          This isn't a screenshot — it's a runnable spec. The table reads like a
           Yahtzee scoresheet, yet every row is a precise, independent test. Change a
           die and watch a single row turn red.
         </p>
         <Editor uri="file:///yahtzee.md">{yahtzeeSpec}</Editor>
-        <div class="demo__steps" aria-hidden="true">
+        <div class="absolute left-[-99999px] top-0 w-[700px]" aria-hidden="true">
           <Editor uri="file:///yahtzee.steps.ts" lineNumbers folding>{yahtzeeSteps}</Editor>
         </div>
-        <p class="demo__more"><a href={`${base}/playground`}>Open it in the playground →</a></p>
+        <p class="text-center mt-4"><a class="text-ink underline decoration-accent" href={`${base}/playground`}>Open it in the playground →</a></p>
       </section>
     </section>
 
-    <section class="cta" aria-label="Get started">
-      <a class="cta__primary" href={`${base}/docs/start-here/hello-var-your-first-spec`}>Get started →</a>
-      <a class="cta__secondary" href={`${base}/docs/`}>Browse docs</a>
+    <section class="flex flex-wrap gap-4 items-center justify-center mt-2 mb-6" aria-label="Get started">
+      <a class="bg-strong text-accent-contrast rounded-none px-6 py-3 font-semibold no-underline hover:bg-strong-hover" href={`${base}/docs/start-here/hello-var-your-first-spec`}>Get started →</a>
+      <a class="text-ink underline decoration-accent hover:text-ink" href={`${base}/docs/`}>Browse docs</a>
     </section>
 
-    <section class="pitch" aria-label="What Vár gives you">
-      <article>
-        <h2>discover misunderstandings</h2>
-        <p>
-          Pin down what “done” means before anyone writes code. Vár turns plain-English
+    <section class="grid grid-cols-2 gap-6 py-12 max-[720px]:grid-cols-1" aria-label="What Vár gives you">
+      <article class="bg-raised border border-line-subtle rounded-none text-ink p-6">
+        <h2 class="font-sans font-semibold text-2xl tracking-[0.02em] mb-3">discover misunderstandings</h2>
+        <p class="m-0 text-[17px]">
+          Pin down what "done" means before anyone writes code. Vár turns plain-English
           examples into runnable specs — the conversation becomes the test.
         </p>
       </article>
-      <article>
-        <h2>clear your head</h2>
-        <p>
+      <article class="bg-raised border border-line-subtle rounded-none text-ink p-6">
+        <h2 class="font-sans font-semibold text-2xl tracking-[0.02em] mb-3">clear your head</h2>
+        <p class="m-0 text-[17px]">
           Stop juggling intent in your head. Write the example, run it, and let the tests hold
           the shape of the feature for you.
         </p>
       </article>
     </section>
 
-    <section class="install" aria-label="Install">
-      <pre><code>pnpm add -D @oselvar/var-vitest</code></pre>
+    <section class="py-12 text-center" aria-label="Install">
+      <pre class="bg-raised border border-line-subtle rounded-none text-ink inline-block m-0 px-6 py-4 font-mono text-[17px] before:content-['$_'] before:text-accent"><code>pnpm add -D @oselvar/var-vitest</code></pre>
     </section>
 
-    <section class="quotes" aria-label="Quotes">
-      <h2>word on the street</h2>
-      <ul>
-        {quotes.map((q) => <li>{q}</li>)}
+    <section class="py-12" aria-label="Quotes">
+      <h2 class="font-sans font-semibold text-2xl tracking-[0.02em] text-center mb-8">word on the street</h2>
+      <ul class="list-none p-0 m-0 grid grid-cols-[repeat(auto-fit,minmax(260px,1fr))] gap-4">
+        {quotes.map((q) => <li class="bg-raised border border-line-subtle rounded-none text-ink p-5 italic text-[18px] before:content-['“'] before:text-[36px] before:leading-[0] before:align-[-10px] before:mr-1 before:text-accent">{q}</li>)}
       </ul>
     </section>
   </main>
 </Base>
-
-<style>
-  /* Front-page styles — single source of truth (scoped to this page). */
-
-  /* ── Hero ── */
-  .hero {
-    text-align: center;
-    padding: var(--ax-space-48) 0 var(--ax-space-24);
-  }
-
-  .brand {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: clamp(12px, 3vw, 40px);
-  }
-
-  .logo {
-    height: clamp(72px, 16vw, 200px);
-    width: auto;
-  }
-
-  /* Keep the responsive clamp: --ax-font-size-heading-2xlarge (40px) would be too
-     small for the hero identity mark next to the logo image. */
-  .wordmark {
-    font-family: var(--ax-font-family);
-    font-weight: var(--ax-font-weight-bold);
-    font-size: clamp(72px, 18vw, 220px);
-    line-height: 0.95;
-    letter-spacing: 0.02em;
-    margin: 0;
-    color: var(--ax-text-default);
-  }
-
-  /* ── Pitch line ── */
-  .pitch-line {
-    margin: var(--ax-space-16) 0 0;
-    font-size: clamp(20px, 3.2vw, 34px);
-    font-weight: var(--ax-font-weight-bold);
-    color: var(--ax-text-subtle);
-  }
-
-  /* Centered intro paragraphs (hero + demo). */
-  .hero__lead,
-  .demo__lead {
-    max-width: 42rem;
-    margin: var(--ax-space-16) auto 0;
-    text-align: center;
-    font-size: 17px;
-    color: var(--ax-text-subtle);
-  }
-
-  .demo__lead {
-    margin: 0 auto var(--ax-space-24);
-  }
-
-  /* Section headings (demo, pitch, quotes). */
-  .demo h2,
-  .pitch h2,
-  .quotes h2 {
-    font-family: var(--ax-font-family);
-    font-weight: var(--ax-font-weight-bold);
-    font-size: var(--ax-font-size-heading-medium);
-    letter-spacing: 0.02em;
-    margin: 0 0 var(--ax-space-12);
-  }
-
-  .demo h2,
-  .quotes h2 {
-    text-align: center;
-  }
-
-  .quotes h2 {
-    margin-bottom: var(--ax-space-32);
-  }
-
-  /* Raised, bordered surfaces (pitch cards, quote cards, install box). */
-  .pitch article,
-  .quotes li,
-  .install pre {
-    background: var(--ax-bg-raised);
-    border: 1px solid var(--ax-border-subtle);
-    border-radius: var(--ax-radius-12);
-    color: var(--ax-text-default);
-  }
-
-  /* Underlined links with an accent-coloured underline. */
-  .cta__secondary,
-  .demo__more a {
-    color: var(--ax-text-default);
-    text-decoration: underline;
-    text-decoration-color: var(--var-accent);
-  }
-
-  /* ── CTA ── */
-  .cta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--ax-space-16);
-    align-items: center;
-    justify-content: center;
-    margin: var(--ax-space-8) 0 var(--ax-space-24);
-  }
-
-  .cta__primary {
-    background: var(--ax-bg-accent-strong, var(--var-accent));
-    color: var(--ax-text-accent-contrast, #fff);
-    border-radius: var(--ax-radius-8);
-    padding: var(--ax-space-12) var(--ax-space-24);
-    font-weight: var(--ax-font-weight-bold);
-    text-decoration: none;
-  }
-
-  .cta__primary:hover {
-    background: var(--ax-bg-accent-strong-hover, var(--var-accent));
-  }
-
-  .cta__secondary:hover {
-    color: var(--ax-text-default);
-  }
-
-  /* The two-column split needs more horizontal room than the default prose
-     measure; widen just the landing page. */
-  .landing {
-    max-width: 70rem;
-  }
-
-  /* ── Two-column split: explanation | live demo ── */
-  .split {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    gap: var(--ax-space-40, 40px);
-    align-items: start;
-    padding: var(--ax-space-24) 0 var(--ax-space-48);
-  }
-
-  .split__explain {
-    text-align: center;
-  }
-
-  /* Shrink the ASCII diagrams so they fit a column without overflowing. */
-  .split__explain pre {
-    margin: var(--ax-space-16) 0 0;
-    font-size: clamp(11px, 1.6vw, 14px);
-    overflow-x: auto;
-  }
-
-  /* The demo sits inside the split now; the grid owns its spacing. */
-  .split .demo {
-    padding: 0;
-  }
-
-  @media (max-width: 880px) {
-    .split {
-      grid-template-columns: 1fr;
-      gap: var(--ax-space-24);
-    }
-  }
-
-  /* ── Live demo ── */
-  .demo {
-    padding: var(--ax-space-24) 0 var(--ax-space-48);
-  }
-
-  .demo__more {
-    text-align: center;
-    margin: var(--ax-space-16) 0 0;
-  }
-
-  /* The step definitions still drive the run + highlighting, but the front page
-     shows only the spec — render the steps editor off-screen (kept in the DOM
-     and measurable so CodeMirror and the language server work). */
-  .demo__steps {
-    position: absolute;
-    left: -99999px;
-    top: 0;
-    width: 700px;
-  }
-
-  /* ── Pitch ── */
-  .pitch {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--ax-space-24);
-    padding: var(--ax-space-48) 0;
-  }
-
-  @media (max-width: 720px) {
-    .pitch {
-      grid-template-columns: 1fr;
-    }
-  }
-
-  .pitch article {
-    padding: var(--ax-space-24);
-  }
-
-  .pitch p {
-    margin: 0;
-    font-size: 17px;
-  }
-
-  /* ── Install ── */
-  .install {
-    padding: var(--ax-space-24) 0 var(--ax-space-48);
-    text-align: center;
-  }
-
-  .install pre {
-    display: inline-block;
-    margin: 0;
-    padding: var(--ax-space-16) var(--ax-space-24);
-    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 17px;
-  }
-
-  .install pre::before {
-    content: "$ ";
-    color: var(--var-accent);
-  }
-
-  /* ── Quotes ── */
-  .quotes {
-    padding: var(--ax-space-48) 0;
-  }
-
-  .quotes ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: var(--ax-space-16);
-  }
-
-  .quotes li {
-    padding: var(--ax-space-20);
-    font-style: italic;
-    font-size: 18px;
-  }
-
-  .quotes li::before {
-    content: "“";
-    font-size: 36px;
-    line-height: 0;
-    vertical-align: -10px;
-    margin-right: 4px;
-    color: var(--var-accent);
-  }
-</style>
