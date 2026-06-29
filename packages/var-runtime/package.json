@@ -19,7 +19,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@oselvar/var": "workspace:*"
+    "@oselvar/var-core": "workspace:*"
   },
   "devDependencies": {
     "vitest": "^4.1.9"

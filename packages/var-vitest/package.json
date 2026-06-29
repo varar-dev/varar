@@ -27,7 +27,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@oselvar/var": "workspace:*",
+    "@oselvar/var-core": "workspace:*",
     "@oselvar/var-runtime": "workspace:*"
   },
   "peerDependencies": {

@@ -1,5 +1,5 @@
-export type { VarConfig, VarDoc } from '@oselvar/var'
-export { loadVarConfig } from '@oselvar/var/node'
+export type { VarConfig, VarDoc } from '@oselvar/var-core'
+export { loadVarConfig } from '@oselvar/var-core/node'
 export type { RoleFn, SensorFn } from './api.js'
 export { action, context, defineState, sensor } from './api.js'
 export type { GenerateInput, VarVitestPluginOptions } from './plugin.js'

@@ -1,4 +1,4 @@
-export type { VarDoc } from '@oselvar/var'
+export type { VarDoc } from '@oselvar/var-core'
 export type { ParsedArgv } from './argv.js'
 export type { InitOptions, InitResult } from './init.js'
 export type { LintOptions, LintResult } from './lint.js'

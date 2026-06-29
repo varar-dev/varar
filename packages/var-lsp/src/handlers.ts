@@ -5,7 +5,7 @@ import {
   inferStepRole,
   renderExpression,
   type StepKind,
-} from '@oselvar/var'
+} from '@oselvar/var-core'
 import type { MatchRef } from '@oselvar/var-language'
 import type { Store } from './store.js'
 import { uriToPath } from './uri.js'

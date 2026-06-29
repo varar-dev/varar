@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { glob as nativeGlob } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { createRegistry, parse, plan } from '@oselvar/var'
-import { loadVarConfig } from '@oselvar/var/node'
+import { createRegistry, parse, plan } from '@oselvar/var-core'
+import { loadVarConfig } from '@oselvar/var-core/node'
 
 export type LintOptions = {
   readonly cwd: string

@@ -1,5 +1,5 @@
-import type { VarConfig } from '@oselvar/var'
-import { createRegistry } from '@oselvar/var'
+import type { VarConfig } from '@oselvar/var-core'
+import { createRegistry } from '@oselvar/var-core'
 import { buildWorkspaceIndex, type WorkspaceIndex } from '@oselvar/var-language'
 import type { FileSystem } from './file-system.js'
 

@@ -1,4 +1,4 @@
-import type { SpecResults } from '@oselvar/var'
+import type { SpecResults } from '@oselvar/var-core'
 
 export type RunInput = {
   varPath: string

@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, join, relative, sep } from 'node:path'
-import { type ExampleResult, hashSource, type SpecResults } from '@oselvar/var'
+import { type ExampleResult, hashSource, type SpecResults } from '@oselvar/var-core'
 
 // ─── Vitest 2 structural types (File/Suite/Test, task-tree API) ─────────────
 type TaskNode = {

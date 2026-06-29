@@ -5,7 +5,7 @@ import {
   type Registry,
   type StepHandler,
   type StepKind,
-} from '@oselvar/var'
+} from '@oselvar/var-core'
 
 type Entry = {
   readonly expression: string

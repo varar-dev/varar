@@ -1,4 +1,4 @@
-import { gherkinDocStrings, gherkinTables } from '@oselvar/var'
+import { gherkinDocStrings, gherkinTables } from '@oselvar/var-core'
 
 export default {
   vars: ['features/**/*.var.md'],

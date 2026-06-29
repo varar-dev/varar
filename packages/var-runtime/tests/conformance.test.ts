@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { canonicalStringify, parse, runConformance } from '@oselvar/var'
+import { canonicalStringify, parse, runConformance } from '@oselvar/var-core'
 import { describe, expect, test } from 'vitest'
 import { _resetBuilder, buildRegistry, contextFactory } from '../src/index.js'
 

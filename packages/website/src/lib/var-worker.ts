@@ -1,4 +1,4 @@
-import { DEFAULT_SNIPPET_TEMPLATE } from '@oselvar/var'
+import { DEFAULT_SNIPPET_TEMPLATE } from '@oselvar/var-core'
 import { registerHandlers } from '@oselvar/var-lsp'
 import {
   BrowserMessageReader,

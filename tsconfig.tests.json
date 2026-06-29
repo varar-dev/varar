@@ -12,7 +12,7 @@
     "sourceMap": false
   },
   "include": [
-    "packages/var/tests",
+    "packages/var-core/tests",
     "packages/var-cli/tests",
     "packages/var-language/tests",
     "packages/var-lsp/tests",

@@ -1,8 +1,8 @@
 import { globSync, readFileSync } from 'node:fs'
 import { relative, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { executePlan, parse, plan } from '@oselvar/var'
-import { loadVarConfig } from '@oselvar/var/node'
+import { executePlan, parse, plan } from '@oselvar/var-core'
+import { loadVarConfig } from '@oselvar/var-core/node'
 import { buildRegistry, contextFactory } from '@oselvar/var-runtime'
 
 export type RunOptions = {

@@ -51,7 +51,7 @@ test('returns empty array for a file with no step calls', () => {
 })
 
 test('discovers a paramType from defineState with a regexp literal', () => {
-  const source = `import { defineState } from '@oselvar/var'
+  const source = `import { defineState } from '@oselvar/var-core'
 const { action } = defineState(() => ({}), {
   airport: { regexp: /[A-Z]{3}/, transformer: (r) => r },
 })

@@ -44,12 +44,12 @@ importers:
       '@cucumber/cucumber':
         specifier: ^13.0.0
         version: 13.0.0
-      '@oselvar/var':
-        specifier: workspace:*
-        version: link:../var
       '@oselvar/var-cli':
         specifier: workspace:*
         version: link:../var-cli
+      '@oselvar/var-core':
+        specifier: workspace:*
+        version: link:../var-core
       '@oselvar/var-vitest':
         specifier: workspace:*
         version: link:../var-vitest
@@ -63,35 +63,35 @@ importers:
         specifier: ^4.1.9
         version: 4.1.9(@types/node@26.0.1)(vite@8.1.0(@types/node@26.0.1)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
 
-  packages/var:
+  packages/var-cli:
+    dependencies:
+      '@oselvar/var-core':
+        specifier: workspace:*
+        version: link:../var-core
+      '@oselvar/var-runtime':
+        specifier: workspace:*
+        version: link:../var-runtime
+
+  packages/var-core:
     dependencies:
       '@cucumber/cucumber-expressions':
         specifier: ^20.0.0
         version: 20.0.0
 
-  packages/var-cli:
-    dependencies:
-      '@oselvar/var':
-        specifier: workspace:*
-        version: link:../var
-      '@oselvar/var-runtime':
-        specifier: workspace:*
-        version: link:../var-runtime
-
   packages/var-language:
     dependencies:
-      '@oselvar/var':
+      '@oselvar/var-core':
         specifier: workspace:*
-        version: link:../var
+        version: link:../var-core
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
 
   packages/var-lsp:
     dependencies:
-      '@oselvar/var':
+      '@oselvar/var-core':
         specifier: workspace:*
-        version: link:../var
+        version: link:../var-core
       '@oselvar/var-language':
         specifier: workspace:*
         version: link:../var-language
@@ -104,9 +104,9 @@ importers:
 
   packages/var-runtime:
     dependencies:
-      '@oselvar/var':
+      '@oselvar/var-core':
         specifier: workspace:*
-        version: link:../var
+        version: link:../var-core
     devDependencies:
       vitest:
         specifier: ^4.1.9
@@ -114,9 +114,9 @@ importers:
 
   packages/var-vitest:
     dependencies:
-      '@oselvar/var':
+      '@oselvar/var-core':
         specifier: workspace:*
-        version: link:../var
+        version: link:../var-core
       '@oselvar/var-runtime':
         specifier: workspace:*
         version: link:../var-runtime
@@ -178,9 +178,9 @@ importers:
       '@navikt/ds-css':
         specifier: ^8.14.0
         version: 8.14.0
-      '@oselvar/var':
+      '@oselvar/var-core':
         specifier: workspace:*
-        version: link:../var
+        version: link:../var-core
       '@oselvar/var-lsp':
         specifier: workspace:*
         version: link:../var-lsp

@@ -7,7 +7,7 @@ import {
   type SpecResults,
   type TestSink,
   toFailure,
-} from '@oselvar/var'
+} from '@oselvar/var-core'
 import { buildRegistry, contextFactory } from '@oselvar/var-runtime'
 
 export async function runRegisteredSpec(

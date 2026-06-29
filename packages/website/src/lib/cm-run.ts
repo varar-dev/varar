@@ -1,7 +1,7 @@
 import { type Diagnostic, linter } from '@codemirror/lint'
 import { type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state'
 import { Decoration, type DecorationSet, EditorView } from '@codemirror/view'
-import { runResultDiagnostics, type SpecResults } from '@oselvar/var'
+import { runResultDiagnostics, type SpecResults } from '@oselvar/var-core'
 
 // Effect carrying the latest run results (null clears them).
 export const setRunResults = StateEffect.define<SpecResults | null>()

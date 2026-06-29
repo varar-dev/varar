@@ -1,5 +1,5 @@
-import * as varCore from '@oselvar/var'
-import { hashSource, type SpecResults } from '@oselvar/var'
+import * as varCore from '@oselvar/var-core'
+import { hashSource, type SpecResults } from '@oselvar/var-core'
 import * as varRuntime from '@oselvar/var-runtime'
 import * as ts from 'typescript'
 import { runRegisteredSpec } from './run-spec.ts'
@@ -18,7 +18,7 @@ function evalStepFile(path: string, source: string): void {
   }).outputText
   const require = (spec: string): unknown => {
     if (spec === '@oselvar/var-runtime' || spec === '@oselvar/var-vitest') return varRuntime
-    if (spec === '@oselvar/var') return varCore
+    if (spec === '@oselvar/var-core') return varCore
     throw new Error(
       `Cannot import "${spec}" in the browser runner — import action()/context()/sensor()/defineState() from "@oselvar/var-runtime".`,
     )

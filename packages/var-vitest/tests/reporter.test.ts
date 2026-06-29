@@ -1,5 +1,5 @@
 import { join } from 'node:path'
-import { hashSource } from '@oselvar/var'
+import { hashSource } from '@oselvar/var-core'
 import { describe, expect, test } from 'vitest'
 import {
   buildSpecResults,

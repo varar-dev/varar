@@ -6,7 +6,7 @@ import {
   plan,
   type Registry,
   type ScannerPlugin,
-} from '@oselvar/var'
+} from '@oselvar/var-core'
 import { createTypeScriptScanner, type StepDefScanner } from './scanner.js'
 import type { Range, StepDef } from './step-defs.js'
 

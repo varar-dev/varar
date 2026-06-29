@@ -1,4 +1,4 @@
-import type { StepKind } from '@oselvar/var'
+import type { StepKind } from '@oselvar/var-core'
 import * as ts from 'typescript'
 
 export type Position = { readonly line: number; readonly character: number }

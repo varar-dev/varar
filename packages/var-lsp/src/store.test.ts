@@ -1,4 +1,4 @@
-import { DEFAULT_SNIPPET_TEMPLATE } from '@oselvar/var'
+import { DEFAULT_SNIPPET_TEMPLATE } from '@oselvar/var-core'
 import { describe, expect, it } from 'vitest'
 import { createStore, type FileSystem } from './store.js'
 
