@@ -29,7 +29,7 @@ These users exist:
 ```
 
 ```ts
-sensor('These users exist:', (ctx, rows) => {
+sensor('These users exist:', (state, rows) => {
   // rows === [['name', 'age'], ['Bob', '30'], ['Eve', '25']]
 })
 ```
@@ -41,7 +41,7 @@ Return the full table (every column of every row) — as an array of rows
 that returns nothing asserts nothing.
 
 ```ts
-sensor('These users exist:', (ctx, rows) => {
+sensor('These users exist:', (state, rows) => {
   // rows === [['name', 'age'], ['Bob', '30'], ['Eve', '25']]
   return rows.slice(1).map(([name, age]) => ({ name, age })) // checked against the table
 })
@@ -76,7 +76,7 @@ The step receives one row at a time, as raw strings — parse them however you
 like:
 
 ```ts
-sensor('Examples of dice, category and score', (ctx, row) => {
+sensor('Examples of dice, category and score', (state, row) => {
   // row === { dice: '3, 3, 3, 4, 4', category: 'full house', score: '17' }
   const dice = row.dice.split(',').map((d) => Number(d.trim()))
   return { score: score(dice, row.category) } // the framework checks it against the cell

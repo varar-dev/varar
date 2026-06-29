@@ -1,0 +1,74 @@
+---
+title: State
+description: How step definitions share and evolve immutable state.
+area: reference
+order: 4
+---
+
+Every stepfile that calls `defineState` owns a slice of **state** — a value
+created fresh for each example and threaded through its steps. State is
+**immutable**: handlers receive it deeply `readonly` (it is also deep-frozen at
+runtime, so a stray assignment throws), and steps evolve it by **returning a new
+(partial) value**, never by mutating.
+
+## The factory
+
+`defineState` takes a factory that produces the initial state for each example:
+
+```ts
+const { context, action, sensor } = defineState(() => ({ greeting: '', count: 0 }))
+```
+
+## context / action: return a partial to evolve state
+
+A `context` or `action` handler returns a partial state object. The runtime
+shallow-merges it onto the current state and threads the result to the next
+step. Returning nothing leaves state unchanged.
+
+```ts
+action('I greet {string}', (state, name) => ({ greeting: `Hello, ${name}!` }))
+action('I add {int}', (state, n) => ({ count: state.count + n }))
+```
+
+Handlers may still perform side effects (call the system under test); only the
+*state value* is immutable.
+
+## sensor: observe, never change
+
+A `sensor` reads state and returns values for Vár to compare against the
+Markdown. A sensor never changes state.
+
+```ts
+sensor('the greeting should be {string}', (state) => [state.greeting])
+```
+
+## Shallow merge
+
+The merge is a **shallow** spread (`{ ...prev, ...returned }`). A returned key
+*replaces* the previous top-level value wholesale — nested objects are not
+deep-merged:
+
+```ts
+// state: { user: { name: 'a', age: 30 } }
+action('rename', (state) => ({ user: { name: 'b' } }))
+// result: { user: { name: 'b' } } — `age` is gone.
+```
+
+Keep state shallow, or return the full nested object when you update part of it.
+
+## Stateful collaborators
+
+The runtime deep-freeze freezes **plain data only** (plain objects and arrays).
+It does **not** freeze class instances held in state — a `Library`, page object,
+database client, the system under test, a `Date`, or a `Map`. You can keep a
+stateful collaborator in state and call its mutating methods freely; only the
+surrounding plain-data fields are immutable, and the reference to the instance
+itself cannot be reassigned (return new state for that).
+
+```ts
+// `library` is a class instance — its methods can mutate internal state freely.
+action('I add books', (state) => {
+  const receipt = state.library.addBooks(['Dune', 'Foundation'])
+  return { lastReceipt: receipt } // plain-data field updated via return
+})
+```

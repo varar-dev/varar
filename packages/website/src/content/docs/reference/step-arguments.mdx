@@ -10,7 +10,7 @@ import helloSteps from '../../../../../../docs/tutorial/steps/01-hello.steps.ts?
 
 # Step argument types
 
-A step handler is `(ctx, ...args) => …`. The first parameter, `ctx`, is your
+A step handler is `(state, ...args) => …`. The first parameter, `state`, is your
 state — its type comes from `defineState`. Everything after it is captured from
 the `{…}` **parameters** in the cucumber expression, and Vár infers those types
 directly from the expression string. **You don't annotate them.**
@@ -19,8 +19,10 @@ directly from the expression string. **You don't annotate them.**
 const { action } = defineState(() => ({ greeting: '' }))
 
 // `name` is inferred as string — no annotation needed.
-action('I greet {string}', (ctx, name) => {
-  ctx.greeting = `Hello, ${name}!`
+action('I greet {string}', (state, name) => {
+  // context/action steps EVOLVE state by RETURNING a partial — never by
+  // mutating. The returned object is shallow-merged onto the current state.
+  return { greeting: `Hello, ${name}!` }
 })
 ```
 
@@ -35,7 +37,7 @@ Each built-in cucumber parameter type maps to a TypeScript type:
 | `{string}` `{word}` `{}` (anonymous)                                    | `string`      |
 
 Parameters are inferred in source order, so `'expression {int}+{int}'` gives a
-handler `(ctx, a, b)` where both `a` and `b` are `number`. Here is the whole
+handler `(state, a, b)` where both `a` and `b` are `number`. Here is the whole
 `01-hello` step file — note that **no parameter is annotated** — running against
 its spec:
 
@@ -50,7 +52,7 @@ The expression \`1+1\` should evaluate to \`2\`.
 `}</FileEditor>
 
 A wrong annotation is still an error: `{int}` infers `number`, so writing
-`(ctx, count: string)` fails to type-check. Annotate only when you want to
+`(state, count: string)` fails to type-check. Annotate only when you want to
 **narrow** a slot the inference can't reach (below) — never to restate what the
 expression already says.
 
@@ -66,7 +68,7 @@ const { context } = defineState(() => ({ member: 'maya' }), {
 })
 
 // {date} → Date, {string} → string, both inferred.
-context('borrowed {string}, due back on {date}', (_ctx, title, due) => {
+context('borrowed {string}, due back on {date}', (_state, title, due) => {
   // `title` is string, `due` is Date.
 })
 ```
@@ -90,7 +92,7 @@ it. See [Tables](/docs/reference/tables) and
 
 ```ts
 // `name` inferred from {word}; `body` is the trailing doc string — annotate it.
-sensor('Greet {word}:', (_ctx, name, body: string) => [name, `Hello, ${name}!\n`])
+sensor('Greet {word}:', (_state, name, body: string) => [name, `Hello, ${name}!\n`])
 ```
 
 ## Escaped braces

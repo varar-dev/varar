@@ -18,8 +18,10 @@ Hello, world!
 ````
 
 ```ts
-action('The rendered greeting is:', (ctx, body) => {
+action('The rendered greeting is:', (state, body) => {
   // body === 'Hello, world!\n'
+  // A context/action step can return a partial to record the result.
+  return { lastRendered: body }
 })
 ```
 
@@ -28,7 +30,7 @@ action('The rendered greeting is:', (ctx, body) => {
 If the step **returns a string**, Vár compares it against the doc-string content — **exactly**, byte for byte. This turns the fenced block into an assertion: the prose shows the expected output, and the step produces it.
 
 ```ts
-sensor('Greet {word}:', (ctx, name, body) => {
+sensor('Greet {word}:', (state, name, body) => {
   return `Hello, ${name}!\n` // checked against the fence content, exactly
 })
 ```
