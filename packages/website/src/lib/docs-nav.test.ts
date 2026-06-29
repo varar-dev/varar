@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildNav, breadcrumbFor, docHref, nextInArea, type DocEntry } from './docs-nav'
+import { breadcrumbFor, buildNav, type DocEntry, docHref, nextInArea } from './docs-nav'
 
 const base = '/var'
 

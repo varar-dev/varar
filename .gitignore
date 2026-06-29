@@ -6,3 +6,4 @@ coverage
 *.timestamp-*
 .superpowers
 .var/
+.claude/

@@ -40,10 +40,7 @@ export type RoleFn<C = unknown> = (
 
 export type SensorFn<C = unknown> = <Args extends readonly unknown[]>(
   expression: string,
-  handler: (
-    ctx: C,
-    ...args: Args
-  ) => NoInfer<Args> | Promise<NoInfer<Args>> | void | Promise<void>,
+  handler: (ctx: C, ...args: Args) => NoInfer<Args> | Promise<NoInfer<Args>> | void | Promise<void>,
 ) => void
 
 export const context: RoleFn = (expression, handler) =>
@@ -64,12 +61,9 @@ export function defineState<C>(factory: () => C | Promise<C>): {
   }
   contextFactoriesByFile.set(sourceFile, factory as () => unknown)
   return {
-    context: (expression, handler) =>
-      registerStep(expression, handler as StepHandler, 'context'),
-    action: (expression, handler) =>
-      registerStep(expression, handler as StepHandler, 'action'),
-    sensor: (expression, handler) =>
-      registerStep(expression, handler as StepHandler, 'sensor'),
+    context: (expression, handler) => registerStep(expression, handler as StepHandler, 'context'),
+    action: (expression, handler) => registerStep(expression, handler as StepHandler, 'action'),
+    sensor: (expression, handler) => registerStep(expression, handler as StepHandler, 'sensor'),
   }
 }
 

@@ -15,8 +15,9 @@ const varEditorTheme = EditorView.theme({
   '.cm-activeLine': { background: 'transparent' },
   '.cm-activeLineGutter': { background: 'transparent' },
   '.cm-dropCursor': { borderLeftColor: 'var(--ed-text)' },
-  '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection':
-    { background: 'var(--ed-selection)' },
+  '&.cm-focused .cm-selectionBackground, .cm-selectionBackground, .cm-content ::selection': {
+    background: 'var(--ed-selection)',
+  },
 })
 
 // Per-token caret. basicSetup's drawSelection draws a single-colour caret and

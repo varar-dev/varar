@@ -1,6 +1,6 @@
+import { type Diagnostic, linter, lintGutter } from '@codemirror/lint'
 import { type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state'
 import { Decoration, type DecorationSet, EditorView } from '@codemirror/view'
-import { type Diagnostic, linter, lintGutter } from '@codemirror/lint'
 import { runResultDiagnostics, type SpecResults } from '@oselvar/var'
 
 // Effect carrying the latest run results (null clears them).

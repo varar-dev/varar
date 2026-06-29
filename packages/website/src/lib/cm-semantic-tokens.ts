@@ -58,8 +58,7 @@ export function semanticTokens(options: {
   // The passed-in legend is the advertised capability list and also the fallback
   // when the server has not yet reported its own capabilities.
   const fallbackTokenTypes = options.legend.tokenTypes
-  const transform =
-    options.transform ?? ((tokens: ReadonlyArray<DecodedToken>) => tokens)
+  const transform = options.transform ?? ((tokens: ReadonlyArray<DecodedToken>) => tokens)
 
   const resolveTokenTypes = (view: EditorView): ReadonlyArray<string> => {
     // Fix 1: prefer the token-type list from the server's advertised capabilities

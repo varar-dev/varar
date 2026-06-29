@@ -30,7 +30,12 @@ export function runLspDiagnostics(results: SpecResults, source: string): LspDiag
 function isSpecResults(v: unknown): v is SpecResults {
   if (typeof v !== 'object' || v === null) return false
   const o = v as Record<string, unknown>
-  return o.version === 1 && typeof o.specPath === 'string' && typeof o.sourceHash === 'string' && Array.isArray(o.examples)
+  return (
+    o.version === 1 &&
+    typeof o.specPath === 'string' &&
+    typeof o.sourceHash === 'string' &&
+    Array.isArray(o.examples)
+  )
 }
 
 export type RunResultsStore = {

@@ -13,7 +13,10 @@ describe('runRegisteredSpec', () => {
     action('I greet {string}', (ctx, name: string) => {
       ctx.greeting = `Hello, ${name}!`
     })
-    sensor('the greeting should be {string}', (ctx, _expected: string) => [ctx.greeting] as [string])
+    sensor(
+      'the greeting should be {string}',
+      (ctx, _expected: string) => [ctx.greeting] as [string],
+    )
     const results = await runRegisteredSpec('/spec.var.md', SPEC)
     expect(results.examples).toHaveLength(1)
     expect(results.examples[0]?.status).toBe('passed')

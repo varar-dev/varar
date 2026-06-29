@@ -1,7 +1,7 @@
 ---
 import DocsLayout from '../../layouts/DocsLayout.astro'
-import { buildNav } from '../../lib/docs-nav'
 import { loadDocEntries } from '../../lib/docs-collection'
+import { buildNav } from '../../lib/docs-nav'
 
 const base = import.meta.env.BASE_URL.replace(/\/$/, '')
 const entries = await loadDocEntries()

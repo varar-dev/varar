@@ -408,8 +408,10 @@ test('a whole-table sensor returning a mismatched table throws CellMismatchError
     expressionSourceLine: 1,
     kind: 'sensor',
     handler: () => [
-      [['var', 'WRONG'],
-      ['bdd', 'BDD']],
+      [
+        ['var', 'WRONG'],
+        ['bdd', 'BDD'],
+      ],
     ],
   })
   const source = TABLE_DOC
@@ -436,8 +438,10 @@ test('a whole-table sensor returning a matching table passes', async () => {
     expressionSourceLine: 1,
     kind: 'sensor',
     handler: () => [
-      [{ before: 'var', after: 'VAR' },
-      { before: 'bdd', after: 'BDD' }],
+      [
+        { before: 'var', after: 'VAR' },
+        { before: 'bdd', after: 'BDD' },
+      ],
     ],
   })
   await expect(runsFor(TABLE_DOC, r)[0]?.()).resolves.toBeUndefined()

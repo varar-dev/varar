@@ -1,4 +1,5 @@
 import { AREAS, type Area, type AreaId } from './docs-areas'
+
 export type { AreaId } from './docs-areas'
 
 // Minimal shape needed from a docs collection entry. Kept independent of
@@ -35,9 +36,7 @@ function sortedAreaEntries(
   entries: ReadonlyArray<DocEntry>,
   area: AreaId,
 ): ReadonlyArray<DocEntry> {
-  return entries
-    .filter((e) => e.area === area)
-    .sort((a, b) => a.order - b.order)
+  return entries.filter((e) => e.area === area).sort((a, b) => a.order - b.order)
 }
 
 export function buildNav(

@@ -2,7 +2,8 @@ import { expect, test } from 'vitest'
 import { compareParams } from '../src/param-diff.js'
 import { spanFromOffsets } from '../src/span.js'
 
-const span = (s: number, e: number) => spanFromOffsets('I should have 3 cukes in my big belly', s, e)
+const span = (s: number, e: number) =>
+  spanFromOffsets('I should have 3 cukes in my big belly', s, e)
 
 test('all elements equal → every cell ok', () => {
   const diffs = compareParams([3, 'big'], [3, 'big'], [span(14, 15), span(31, 34)], ['3', 'big'])

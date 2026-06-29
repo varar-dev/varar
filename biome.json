@@ -9,7 +9,9 @@
       "!**/.var",
       "!**/public",
       "!**/*.timestamp*",
-      "!**/bundles/**/golden"
+      "!**/bundles/**/golden",
+      "!**/.claude",
+      "!**/.superpowers"
     ]
   },
   "assist": { "actions": { "source": { "organizeImports": "on" } } },

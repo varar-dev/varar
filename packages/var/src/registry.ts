@@ -5,7 +5,10 @@ import {
 } from '@cucumber/cucumber-expressions'
 import type { StepKind } from './step-role.js'
 
-export type StepHandler = (ctx: unknown, ...args: ReadonlyArray<unknown>) => unknown | Promise<unknown>
+export type StepHandler = (
+  ctx: unknown,
+  ...args: ReadonlyArray<unknown>
+) => unknown | Promise<unknown>
 
 export type StepRegistration = {
   readonly expression: string

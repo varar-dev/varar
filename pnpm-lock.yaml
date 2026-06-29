@@ -175,9 +175,6 @@ importers:
       '@lezer/highlight':
         specifier: ^1.2.3
         version: 1.2.3
-      '@navikt/aksel-icons':
-        specifier: ^8.13.1
-        version: 8.13.1
       '@navikt/ds-css':
         specifier: ^8.13.1
         version: 8.13.1
@@ -1254,9 +1251,6 @@ packages:
     peerDependencies:
       '@emnapi/core': ^1.7.1
       '@emnapi/runtime': ^1.7.1
-
-  '@navikt/aksel-icons@8.13.1':
-    resolution: {integrity: sha512-gZSFF0r97WK46yMidgS5jkl+l+S4nBcsspFZexIhZnyXAx0wOIs2Ahgt0kPGDb6pY/3GpfxTiKj178wI3UzBfg==}
 
   '@navikt/ds-css@8.13.1':
     resolution: {integrity: sha512-S8y5i6ic962L9m4CWBP688EUNYr1DH4vOcOr1irh6jZavsPp1LLUS3wXhC2OpreaNsxBO/8ZVxgA/XR03d3unA==}
@@ -4820,8 +4814,6 @@ snapshots:
       '@emnapi/runtime': 1.10.0
       '@tybys/wasm-util': 0.10.2
     optional: true
-
-  '@navikt/aksel-icons@8.13.1': {}
 
   '@navikt/ds-css@8.13.1': {}
 

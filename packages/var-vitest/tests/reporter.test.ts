@@ -60,7 +60,11 @@ describe('collectFromTasks', () => {
         filepath: '/cwd/docs/a.var.md',
         tasks: [
           { type: 'test', name: 'A', meta: { varResult: passed } },
-          { type: 'suite', name: 'g', tasks: [{ type: 'test', name: 'B', meta: { varResult: failed } }] },
+          {
+            type: 'suite',
+            name: 'g',
+            tasks: [{ type: 'test', name: 'B', meta: { varResult: failed } }],
+          },
           { type: 'test', name: 'var:diagnostic:x', meta: {} },
         ],
       },

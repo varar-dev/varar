@@ -10,15 +10,35 @@ function results(source: string, examples: SpecResults['examples']): SpecResults
 test('cell mismatch → one diagnostic per cell with expected/actual message', () => {
   const source = 'x 6 y'
   const r = results(source, [
-    { name: 'r', status: 'failed', lines: [1], failure: { line: 1, message: 'm', stack: 's', cells: [{ from: 2, to: 3, actual: '50' }] } },
+    {
+      name: 'r',
+      status: 'failed',
+      lines: [1],
+      failure: { line: 1, message: 'm', stack: 's', cells: [{ from: 2, to: 3, actual: '50' }] },
+    },
   ])
-  expect(runResultDiagnostics(r, source)).toEqual([{ from: 2, to: 3, message: 'expected 6 but was 50' }])
+  expect(runResultDiagnostics(r, source)).toEqual([
+    { from: 2, to: 3, message: 'expected 6 but was 50' },
+  ])
 })
 
 test('whole-table mismatch yields multiple cell diagnostics', () => {
   const source = 'a 1 b 2 c'
   const r = results(source, [
-    { name: 'r', status: 'failed', lines: [1], failure: { line: 1, message: 'm', stack: 's', cells: [{ from: 2, to: 3, actual: '9' }, { from: 6, to: 7, actual: '8' }] } },
+    {
+      name: 'r',
+      status: 'failed',
+      lines: [1],
+      failure: {
+        line: 1,
+        message: 'm',
+        stack: 's',
+        cells: [
+          { from: 2, to: 3, actual: '9' },
+          { from: 6, to: 7, actual: '8' },
+        ],
+      },
+    },
   ])
   expect(runResultDiagnostics(r, source)).toEqual([
     { from: 2, to: 3, message: 'expected 1 but was 9' },
@@ -29,9 +49,16 @@ test('whole-table mismatch yields multiple cell diagnostics', () => {
 test('doc mismatch → one diagnostic on the body span', () => {
   const source = 'say:\nHello!\n'
   const r = results(source, [
-    { name: 'd', status: 'failed', lines: [2], failure: { line: 2, message: 'm', stack: 's', doc: { from: 5, to: 11, actual: 'Bye' } } },
+    {
+      name: 'd',
+      status: 'failed',
+      lines: [2],
+      failure: { line: 2, message: 'm', stack: 's', doc: { from: 5, to: 11, actual: 'Bye' } },
+    },
   ])
-  expect(runResultDiagnostics(r, source)).toEqual([{ from: 5, to: 11, message: 'expected Hello! but was Bye' }])
+  expect(runResultDiagnostics(r, source)).toEqual([
+    { from: 5, to: 11, message: 'expected Hello! but was Bye' },
+  ])
 })
 
 test('plain throw (no cells/doc) → one diagnostic spanning the failing line, with the error message', () => {
@@ -44,9 +71,19 @@ test('plain throw (no cells/doc) → one diagnostic spanning the failing line, w
 
 test('stale sourceHash → no diagnostics', () => {
   const source = 'x 6 y'
-  const r: SpecResults = { version: 1, specPath: 's.var.md', sourceHash: 'fnv1a:00000000', examples: [
-    { name: 'r', status: 'failed', lines: [1], failure: { line: 1, message: 'm', stack: 's', cells: [{ from: 2, to: 3, actual: '50' }] } },
-  ] }
+  const r: SpecResults = {
+    version: 1,
+    specPath: 's.var.md',
+    sourceHash: 'fnv1a:00000000',
+    examples: [
+      {
+        name: 'r',
+        status: 'failed',
+        lines: [1],
+        failure: { line: 1, message: 'm', stack: 's', cells: [{ from: 2, to: 3, actual: '50' }] },
+      },
+    ],
+  }
   expect(runResultDiagnostics(r, source)).toEqual([])
 })
 

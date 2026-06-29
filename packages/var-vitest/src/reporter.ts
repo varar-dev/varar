@@ -22,7 +22,9 @@ function collectExamples(tasks: ReadonlyArray<TaskNode> | undefined): ExampleRes
 // Group every test's meta.varResult by its owning spec file, in declaration
 // order. Files that produced no var results (e.g. only var:diagnostic tasks)
 // are skipped.
-export function collectFromTasks(files: ReadonlyArray<FileNode>): ReadonlyMap<string, ReadonlyArray<ExampleResult>> {
+export function collectFromTasks(
+  files: ReadonlyArray<FileNode>,
+): ReadonlyMap<string, ReadonlyArray<ExampleResult>> {
   const byFile = new Map<string, ExampleResult[]>()
   for (const f of files) {
     const examples = collectExamples(f.tasks)

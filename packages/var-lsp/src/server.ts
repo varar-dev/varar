@@ -79,8 +79,7 @@ export function registerHandlers(
       const path = uriToPath(change.uri)
       if (!path.includes('/.var/') || !path.endsWith('.json')) continue
       // FileChangeType: 1 Created, 2 Changed, 3 Deleted
-      const specUri =
-        change.type === 3 ? runResults.remove(path) : await ingestWatched(path)
+      const specUri = change.type === 3 ? runResults.remove(path) : await ingestWatched(path)
       if (specUri) await publishFor(specUri)
     }
   })

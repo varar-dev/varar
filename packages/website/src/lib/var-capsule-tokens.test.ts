@@ -16,9 +16,7 @@ describe('joinStepParamTokens', () => {
 
   it('leaves a function with no following parameter unchanged', () => {
     const tokens = [{ line: 0, char: 0, length: 4, type: 'function' }]
-    expect(joinStepParamTokens(tokens)).toEqual([
-      { line: 0, char: 0, length: 4, type: 'function' },
-    ])
+    expect(joinStepParamTokens(tokens)).toEqual([{ line: 0, char: 0, length: 4, type: 'function' }])
   })
 
   it('does not join across lines', () => {

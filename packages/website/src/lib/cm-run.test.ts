@@ -8,7 +8,12 @@ const results: SpecResults = {
   specPath: 's.var.md',
   sourceHash: hashSource(SOURCE),
   examples: [
-    { name: 'r', status: 'failed', lines: [1], failure: { line: 1, message: 'm', stack: 's', cells: [{ from: 2, to: 3, actual: '50' }] } },
+    {
+      name: 'r',
+      status: 'failed',
+      lines: [1],
+      failure: { line: 1, message: 'm', stack: 's', cells: [{ from: 2, to: 3, actual: '50' }] },
+    },
   ],
 }
 

@@ -66,9 +66,7 @@ test('action() type-checks typed handler arguments matching the cucumber express
 
 test('a second defineState() in the SAME file throws', () => {
   defineState(() => ({ balance: 0 }))
-  expect(() => defineState(() => ({ other: 1 }))).toThrow(
-    /defineState\(\) called more than once/,
-  )
+  expect(() => defineState(() => ({ other: 1 }))).toThrow(/defineState\(\) called more than once/)
 })
 
 test('defineState() returns typed role functions with ctx typed against the factory output', () => {

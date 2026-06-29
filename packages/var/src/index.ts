@@ -22,8 +22,6 @@ export {
   isCellMismatchError,
   ReturnShapeError,
 } from './cell-diff.js'
-export { compareParams } from './param-diff.js'
-export { deepEqual } from './deep-equal.js'
 export type { VarConfig } from './config-types.js'
 export type {
   BundleArtifacts,
@@ -42,6 +40,7 @@ export {
   toRegistryArtifact,
   toVarDocArtifact,
 } from './conformance.js'
+export { deepEqual } from './deep-equal.js'
 export type {
   AmbiguousInput,
   Candidate,
@@ -66,13 +65,12 @@ export type { StrippedInline } from './inline.js'
 export { stripInline } from './inline.js'
 export type { AmbiguityCollision, Hit, ResolvedSteps } from './matcher.js'
 export { findHits, resolveHits } from './matcher.js'
+export { compareParams } from './param-diff.js'
 export { parse } from './parse.js'
 export type { ExecutionPlan, PlannedExample, PlannedStep } from './plan.js'
 export { plan } from './plan.js'
 export { gherkinDocStrings, gherkinTables } from './plugins/gherkin/index.js'
 export type { Reporter, TestSink } from './ports.js'
-export type { StepKind } from './step-role.js'
-export { inferStepRole } from './step-role.js'
 export type {
   ParameterTypeInput,
   Registry,
@@ -93,5 +91,7 @@ export { generateSnippet } from './snippet.js'
 export { DEFAULT_SNIPPET_TEMPLATE } from './snippet-template.js'
 export type { Span } from './span.js'
 export { spanFromOffsets } from './span.js'
+export type { StepKind } from './step-role.js'
+export { inferStepRole } from './step-role.js'
 export { structure } from './structurer.js'
 export { renderTemplate } from './template.js'

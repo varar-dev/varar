@@ -39,7 +39,11 @@ export function runResultDiagnostics(
     const f = ex.failure
     if (f.cells && f.cells.length > 0) {
       for (const c of f.cells) {
-        out.push({ from: c.from, to: c.to, message: `expected ${source.slice(c.from, c.to)} but was ${c.actual}` })
+        out.push({
+          from: c.from,
+          to: c.to,
+          message: `expected ${source.slice(c.from, c.to)} but was ${c.actual}`,
+        })
       }
     } else if (f.doc) {
       out.push({

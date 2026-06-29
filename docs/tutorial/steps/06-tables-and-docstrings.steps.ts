@@ -5,7 +5,9 @@ const { sensor } = defineState(() => ({}))
 // Whole-table mode: the table arrives as string[][] (header row first). Return
 // the tuple [reproducedTable] — Vár compares every cell against the spec.
 sensor('Uppercase each one:', (_ctx, rows: ReadonlyArray<ReadonlyArray<string>>) => {
-  const reproduced = rows.slice(1).map(([before]) => ({ before, after: (before ?? '').toUpperCase() }))
+  const reproduced = rows
+    .slice(1)
+    .map(([before]) => ({ before, after: (before ?? '').toUpperCase() }))
   return [reproduced] as const
 })
 

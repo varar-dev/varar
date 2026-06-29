@@ -8,7 +8,12 @@ const SPEC: SpecResults = {
   specPath: 'docs/a.var.md',
   sourceHash: hashSource(SOURCE),
   examples: [
-    { name: 'r', status: 'failed', lines: [1], failure: { line: 1, message: 'm', stack: 's', cells: [{ from: 2, to: 3, actual: '50' }] } },
+    {
+      name: 'r',
+      status: 'failed',
+      lines: [1],
+      failure: { line: 1, message: 'm', stack: 's', cells: [{ from: 2, to: 3, actual: '50' }] },
+    },
   ],
 }
 
@@ -41,7 +46,12 @@ describe('RunResultsStore', () => {
   it('rejects malformed JSON and a wrong version (stores nothing)', () => {
     const store = createRunResultsStore('file:///root')
     expect(store.ingest('/root/.var/x.json', 'not json')).toBeNull()
-    expect(store.ingest('/root/.var/x.json', JSON.stringify({ version: 2, specPath: 'x', sourceHash: 'h', examples: [] }))).toBeNull()
+    expect(
+      store.ingest(
+        '/root/.var/x.json',
+        JSON.stringify({ version: 2, specPath: 'x', sourceHash: 'h', examples: [] }),
+      ),
+    ).toBeNull()
     expect(store.specUris()).toEqual([])
   })
 
