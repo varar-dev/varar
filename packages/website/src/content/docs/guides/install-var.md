@@ -1,11 +1,14 @@
 ---
-title: Installing Vár
+title: Install Vár
 description: Install and configure Vár
 area: guides
 order: 1
 ---
 
-# Installing Vár
+# Install Vár
+
+The `@oselvar/var` npm package is all you need to get started. 
+It doesn't matter if you are installing it into an existing project or starting one from scratch.
 
 Open a terminal and install var:
 
