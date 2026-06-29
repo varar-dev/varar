@@ -2,6 +2,19 @@
 
 Guidance for AI assistants working in this repo.
 
+## Repository layout
+
+This is a multi-language monorepo (ADR 0001). Top level:
+
+- `typescript/` — the pnpm workspace (pure core `@oselvar/var`, runtime, vitest
+  adapter, **and** the shared authoring/LSP/VS Code/website platform). **Run all
+  pnpm / vitest / tsc commands from `typescript/`.** Package paths in this file
+  (e.g. `packages/var/src/...`) are relative to `typescript/`.
+- `python/` — the uv workspace for the Python port (skeleton today; see issue #2).
+- `conformance/` — language-neutral corpus (`bundles/<n>/{example.md, *.steps.ts,
+  golden/*.json}`) read by every language's conformance harness.
+- `docs/`, `doc/` — shared design docs (ADRs, specs, plans, ARCHITECTURE).
+
 ## Architectural principles (non-negotiable)
 
 - **Immutable types.** All data types are `readonly` — no mutable fields, no in-place mutation. Use `ReadonlyArray<T>` and `ReadonlyMap<K, V>`. Updates produce a new value.
@@ -41,7 +54,7 @@ pnpm workspace · biome · vitest (for the core's own tests) · knip · jscpd ·
   the single source of truth for "what is a spec", consulted by the runner, the LSP, and
   the vitest plugin alike — the plugin drives vitest's own `include`/`exclude` from it.
 - Step definition files: `*.steps.ts`.
-- Config: `var.config.ts` at repo root.
+- Config: `var.config.ts` at the `typescript/` workspace root.
 
 ## Return-based comparison
 
