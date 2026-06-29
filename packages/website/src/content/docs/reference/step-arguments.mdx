@@ -5,7 +5,7 @@ area: reference
 order: 1
 ---
 
-import FileEditor from '../../../components/FileEditor.astro'
+import Editor from '../../../components/Editor.astro'
 import helloSteps from '../../../../../../docs/tutorial/steps/01-hello.steps.ts?raw'
 
 # Step argument types
@@ -41,7 +41,7 @@ handler `(state, a, b)` where both `a` and `b` are `number`. Here is the whole
 `01-hello` step file — note that **no parameter is annotated** — running against
 its spec:
 
-<FileEditor filename="hello.var.md" steps={[{ path: '01-hello.steps.ts', source: helloSteps }]}>{`
+<Editor uri="file:///hello.var.md" lang="markdown" filename="hello.var.md" group="step-arguments" define={false} steps={[{ path: '01-hello.steps.ts', source: helloSteps }]}>{`
 # Hello, Vár
 
 First I greet "world" okay? I think the greeting should be "Hello, world!"
@@ -49,7 +49,7 @@ First I greet "world" okay? I think the greeting should be "Hello, world!"
 ## Another example
 
 The expression \`1+1\` should evaluate to \`2\`.
-`}</FileEditor>
+`}</Editor>
 
 A wrong annotation is still an error: `{int}` infers `number`, so writing
 `(state, count: string)` fails to type-check. Annotate only when you want to

@@ -5,7 +5,7 @@ area: reference
 order: 2
 ---
 
-import FileEditor from '../../../components/FileEditor.astro'
+import Editor from '../../../components/Editor.astro'
 import yahtzeeSteps from '../../../../../../docs/tutorial/steps/04-yahtzee.steps.ts?raw'
 
 # Tables
@@ -58,7 +58,7 @@ There is no new syntax — the opt-in *is* the prose naming its columns. Here th
 sentence mentions `dice`, `category`, and `score`, which are exactly the table's
 headers:
 
-<FileEditor filename="yahtzee.var.md" steps={[{ path: '04-yahtzee.steps.ts', source: yahtzeeSteps }]}>{`
+<Editor uri="file:///yahtzee.var.md" lang="markdown" filename="yahtzee.var.md" group="tables" define={false} steps={[{ path: '04-yahtzee.steps.ts', source: yahtzeeSteps }]}>{`
 # Yahtzee
 
 Examples of dice, category and score:
@@ -70,7 +70,7 @@ Examples of dice, category and score:
 | 3, 3, 3, 3, 3 | full house     | 0     |
 | 3, 3, 3, 3, 3 | Yahtzee        | 50    |
 | 1, 2, 3, 4, 5 | small straight | 15    |
-`}</FileEditor>
+`}</Editor>
 
 The step receives one row at a time, as raw strings — parse them however you
 like:

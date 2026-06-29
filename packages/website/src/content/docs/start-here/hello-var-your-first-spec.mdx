@@ -5,7 +5,7 @@ area: start-here
 order: 1
 ---
 
-import FileEditor from '../../../components/FileEditor.astro'
+import Editor from '../../../components/Editor.astro'
 import helloSteps from '../../../../../../docs/tutorial/steps/01-hello.steps.ts?raw'
 
 # Hello Vár: your first punishment
@@ -13,11 +13,11 @@ import helloSteps from '../../../../../../docs/tutorial/steps/01-hello.steps.ts?
 The best way to understand Vár is to see something *not* working as expected.
 Create a new Markdown file with the following text:
 
-<FileEditor filename="hello.md">{`
+<Editor uri="file:///hello.md" lang="markdown" filename="hello.md" define={false} folding={false}>{`
 # Hello, Vár
 
 I hope this works!
-`}</FileEditor>
+`}</Editor>
 
 Then run var:
 
@@ -37,7 +37,7 @@ content, and you have a spec.
 
 Add this to a new file:
 
-<FileEditor filename="hello.var.md" steps={[{ path: '01-hello.steps.ts', source: helloSteps }]}>{`
+<Editor uri="file:///hello.var.md" lang="markdown" filename="hello.var.md" group="hello-var-tutorial" define={false} steps={[{ path: '01-hello.steps.ts', source: helloSteps }]}>{`
 # Hello, Vár
 Run \`pnpm test\` and watch this file run as tests.
 
@@ -48,4 +48,4 @@ Try changing to "Hello, Vár!" and watch the test fail.
 ## Another example
 
 The expression \`1+1\` should evaluate to \`2\`.
-`}</FileEditor>
+`}</Editor>
