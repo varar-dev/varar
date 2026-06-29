@@ -1,3 +1,4 @@
+import { type CucumberExpression, type Node, NodeType } from '@cucumber/cucumber-expressions'
 import type { Fence, Table, VarDoc } from './ast.js'
 import { isCellMismatchError, ReturnShapeError } from './cell-diff.js'
 import type { DiagnosticCode, Severity } from './diagnostics.js'
@@ -129,9 +130,22 @@ function fileStem(path: string): string {
   return base.replace(/\.[^.]+$/, '')
 }
 
-// `I have {int} cukes` -> ['int']. Internal — used only within this module.
-function parameterTypeNames(expression: string): ReadonlyArray<string> {
-  return [...expression.matchAll(/\{([^}]*)\}/g)].map((m) => m[1] ?? '')
+// Parameter-type names in source order, read from the compiled expression's
+// AST (authoritative). A naive `{...}` regex miscounts on escaped braces
+// (`\{`/`\}`), which are literal text, not parameters. Cucumber rejects
+// parameters inside optionals/alternation, so they only appear at the top
+// level, but we recurse defensively. Internal — used only within this module.
+function parameterTypeNames(compiled: CucumberExpression): ReadonlyArray<string> {
+  const names: string[] = []
+  const visit = (node: Node): void => {
+    if (node.type === NodeType.parameter) {
+      names.push(node.text())
+      return
+    }
+    for (const child of node.nodes ?? []) visit(child)
+  }
+  visit(compiled.ast)
+  return names
 }
 
 // Recover the 1-based failing line from the `<specPath>:line:col` frame that
@@ -154,7 +168,7 @@ export function toRegistryArtifact(
   return {
     steps: registry.steps.map((s) => ({
       expression: s.expression,
-      parameterTypeNames: parameterTypeNames(s.expression),
+      parameterTypeNames: parameterTypeNames(s.compiled),
     })),
     parameterTypes: parameterTypes.map((p) => ({ name: p.name, regexp: p.regexp })),
   }
@@ -169,7 +183,7 @@ export function toPlanArtifact(plan: ExecutionPlan): PlanArtifact {
       expectedOutcome: ex.expectedOutcome ?? 'pass',
       ...(ex.expectedErrorMessage ? { expectedErrorMessage: ex.expectedErrorMessage } : {}),
       steps: ex.steps.map((step) => {
-        const stepNames = parameterTypeNames(step.stepDef.expression)
+        const stepNames = parameterTypeNames(step.stepDef.compiled)
         return {
           text: step.text,
           matchSpan: step.matchSpan,

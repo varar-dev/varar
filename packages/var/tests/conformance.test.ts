@@ -72,6 +72,19 @@ test('toRegistryArtifact lists expressions and parsed parameter-type names', () 
   })
 })
 
+test('toRegistryArtifact reads parameter names from the AST, ignoring escaped braces', () => {
+  // A naive `{...}` regex would wrongly count the escaped `\{a, b\}` as a
+  // parameter and yield ['a, b', 'int']; the AST sees only the real {int}.
+  const r = addStep(createRegistry(), {
+    expression: 'the set \\{a, b\\} has {int} elements',
+    expressionSourceFile: 's.ts',
+    expressionSourceLine: 1,
+    kind: 'action',
+    handler: () => {},
+  })
+  expect(toRegistryArtifact(r).steps[0]?.parameterTypeNames).toEqual(['int'])
+})
+
 test('toPlanArtifact projects examples, expectedOutcome and stringified args', () => {
   const r = addStep(createRegistry(), {
     expression: 'I have {int} cukes',
