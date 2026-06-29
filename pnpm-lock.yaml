@@ -33,6 +33,12 @@ importers:
         specifier: ^4.1.9
         version: 4.1.9(@types/node@26.0.1)(vite@8.1.0(@types/node@26.0.1)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
 
+  conformance:
+    dependencies:
+      '@oselvar/var':
+        specifier: workspace:*
+        version: link:../packages/var
+
   packages/cucumber:
     devDependencies:
       '@cucumber/cucumber':
