@@ -40,13 +40,24 @@ const lang = uri.endsWith('.ts') ? 'typescript' : 'markdown'
 // directory) — shown only when `chrome` is set.
 const filename = uri.replace(/^file:\/\//, '').replace(/^.*\//, '')
 
-// The document is the default slot. Author it as a raw string child —
-// `<Editor uri="…">{`line one\nline two`}</Editor>` — so MDX/Astro passes the
-// text through verbatim. The rendered slot is HTML-escaped, so decode it back
-// to the raw source before handing it to CodeMirror via `data-doc`.
-const doc = decodeEntities(
-  (await Astro.slots.render('default')).replace(/^\n+/, '').replace(/\n+$/, ''),
+// The document may be authored two ways:
+//  1. Default slot — a single document (backward-compatible original form).
+//  2. N named slots — each is a "state"; source order is authoritative and the
+//     first is shown initially. Slot name = button label. Astro's Slots class
+//     exposes one enumerable property per slot in markup order, so
+//     `Object.keys(Astro.slots)` preserves authoring order.
+// The rendered slot is HTML-escaped, so decode it back to raw source for
+// CodeMirror (via `data-doc`) and for the carried state list (via `data-states`).
+const renderState = async (name: string) =>
+  decodeEntities((await Astro.slots.render(name)).replace(/^\n+/, '').replace(/\n+$/, ''))
+
+const stateNames = Object.keys(Astro.slots).filter((name) => name !== 'default')
+const states = await Promise.all(
+  stateNames.map(async (name) => ({ name, text: await renderState(name) })),
 )
+
+const doc = states.length > 0 ? states[0].text : await renderState('default')
+const hasStates = states.length >= 2
 
 const mountAttrs = {
   class: 'cm-mount border border-line-subtle rounded-none overflow-hidden my-6',
@@ -58,11 +69,26 @@ const mountAttrs = {
   'data-define': String(define),
   'data-group': group,
   'data-steps': steps ? JSON.stringify(steps) : undefined,
+  'data-states': hasStates ? JSON.stringify(states) : undefined,
 }
 ---
 {chrome ? (
   <figure class="file-editor my-6">
-    <figcaption class="fe-bar px-[14px] py-2 bg-line-subtle text-ink font-mono text-[14px] font-semibold tracking-[0.01em]">{filename}</figcaption>
+    <figcaption class="fe-bar flex items-center gap-2 px-[14px] py-2 bg-line-subtle text-ink font-mono text-[14px] font-semibold tracking-[0.01em]">
+      <span>{filename}</span>
+      {hasStates && (
+        <span class="fe-states-btns ml-auto flex items-center gap-1">
+          {states.map((s, i) => (
+            <button
+              type="button"
+              class="fe-state-btn px-2 py-0.5 text-[12px] font-normal rounded-none border border-line bg-surface text-ink cursor-pointer hover:bg-raised aria-pressed:bg-accent aria-pressed:text-accent-contrast aria-pressed:border-accent"
+              data-state-index={i}
+              aria-pressed="false"
+            >{s.name}</button>
+          ))}
+        </span>
+      )}
+    </figcaption>
     <div {...mountAttrs}></div>
   </figure>
 ) : (
