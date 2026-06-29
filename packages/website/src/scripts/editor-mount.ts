@@ -11,6 +11,8 @@ import { setRunResults, varRunExtension } from '../lib/cm-run.ts'
 import { semanticTokens } from '../lib/cm-semantic-tokens.ts'
 import { varEditorThemeExt } from '../lib/cm-var-theme.ts'
 import { runSpec } from '../lib/run-client.ts'
+import type { StepFile } from '../lib/run-grouping.ts'
+import { groupRunInputs } from '../lib/run-grouping.ts'
 import { joinStepParamTokens } from '../lib/var-capsule-tokens.ts'
 import { varTokenTheme } from '../lib/var-token-theme.ts'
 import { workerTransport } from '../lib/worker-transport.ts'
@@ -19,8 +21,23 @@ import { workerTransport } from '../lib/worker-transport.ts'
 // a registry keyed by an `lsp=` attribute.
 let sharedClient: LSPClient | null = null
 
-// Module-level map of all mounted editors, keyed by uri.
-const views = new Map<string, EditorView>()
+const DEFAULT_GROUP = 'default'
+
+type Group = {
+  readonly views: Map<string, EditorView> // uri -> view (visible editors)
+  readonly hiddenSteps: StepFile[] // carried step sources, no visible editor
+}
+
+const groups = new Map<string, Group>()
+
+function getGroup(id: string): Group {
+  let g = groups.get(id)
+  if (!g) {
+    g = { views: new Map(), hiddenSteps: [] }
+    groups.set(id, g)
+  }
+  return g
+}
 
 function lspClient(): LSPClient {
   if (sharedClient) return sharedClient
@@ -37,26 +54,36 @@ function lspClient(): LSPClient {
   return sharedClient
 }
 
-// Run the spec (from the current contents of both editors) and paint the
-// results into the markdown editor.
-async function runSpecNow(): Promise<void> {
-  const md = [...views.entries()].find(([u]) => u.endsWith('.var.md'))
-  if (!md) return
-  const mdView = md[1]
-  const varPath = md[0].replace(/^file:\/\//, '')
-  const varSource = mdView.state.doc.toString()
-  const stepFiles = [...views.entries()]
-    .filter(([u]) => u.endsWith('.steps.ts'))
-    .map(([u, v]) => ({ path: u.replace(/^file:\/\//, ''), source: v.state.doc.toString() }))
+// Run one group's spec against its step files and paint the result into the
+// group's markdown view.
+async function runSpecNow(groupId: string): Promise<void> {
+  const group = groups.get(groupId)
+  if (!group) return
+  const mdEntry = [...group.views.entries()].find(([u]) => u.endsWith('.var.md'))
+  if (!mdEntry) return
+  const mdView = mdEntry[1]
+
+  const editors = [...group.views.entries()].map(([uri, v]) => ({
+    uri,
+    group: groupId,
+    source: v.state.doc.toString(),
+  }))
+  const [input] = groupRunInputs(editors, new Map([[groupId, group.hiddenSteps]]))
+  if (!input) return
+
   try {
-    const results = await runSpec({ varPath, varSource, stepFiles })
+    const results = await runSpec({
+      varPath: input.varPath,
+      varSource: input.varSource,
+      stepFiles: input.stepFiles,
+    })
     mdView.dispatch({ effects: setRunResults.of(results) })
   } catch (err) {
     mdView.dispatch({
       effects: setRunResults.of({
         version: 1,
-        specPath: varPath,
-        sourceHash: hashSource(varSource),
+        specPath: input.varPath,
+        sourceHash: hashSource(input.varSource),
         examples: [
           {
             name: 'error',
@@ -70,21 +97,42 @@ async function runSpecNow(): Promise<void> {
   }
 }
 
-let runTimer: ReturnType<typeof setTimeout> | undefined
-function scheduleRun(): void {
-  clearTimeout(runTimer)
-  runTimer = setTimeout(() => void runSpecNow(), 300)
+const runTimers = new Map<string, ReturnType<typeof setTimeout>>()
+function scheduleRun(groupId: string): void {
+  const existing = runTimers.get(groupId)
+  if (existing) clearTimeout(existing)
+  runTimers.set(
+    groupId,
+    setTimeout(() => void runSpecNow(groupId), 300),
+  )
 }
 
-// Re-run (debounced) whenever any editor's document changes — no run buttons.
-const autoRun = EditorView.updateListener.of((u) => {
-  if (u.docChanged) scheduleRun()
-})
+// Re-run (debounced) only the group whose editor changed — no run buttons.
+function autoRun(groupId: string) {
+  return EditorView.updateListener.of((u) => {
+    if (u.docChanged) scheduleRun(groupId)
+  })
+}
 
 function mountEditor(el: HTMLElement): EditorView {
   const doc = el.dataset.doc ?? ''
   const uri = el.dataset.uri ?? 'file:///untitled.var.md'
   const lang = el.dataset.lang ?? 'markdown'
+  const groupId = el.dataset.group ?? DEFAULT_GROUP
+  const group = getGroup(groupId)
+
+  // Hidden companion step sources carried by this mount (docs samples that show
+  // only the spec). The browser decodes the data attribute for us, so the JSON
+  // is ready to parse.
+  if (el.dataset.steps) {
+    try {
+      const parsed = JSON.parse(el.dataset.steps) as StepFile[]
+      group.hiddenSteps.push(...parsed)
+    } catch {
+      // Ignore malformed carried steps — the spec simply runs without them.
+    }
+  }
+
   const language = lang === 'typescript' ? javascript({ typescript: true }) : markdown()
   const client = lspClient()
   // basicSetup bundles the line-number and fold gutters. When either is turned
@@ -102,7 +150,7 @@ function mountEditor(el: HTMLElement): EditorView {
     varEditorThemeExt(),
     varTokenTheme,
     client.plugin(uri),
-    autoRun,
+    autoRun(groupId),
     flashExtension(),
   ]
   if (lang === 'markdown') {
@@ -114,12 +162,12 @@ function mountEditor(el: HTMLElement): EditorView {
           expression: string
         }>
       const stepsView = () =>
-        [...views.entries()].find(([u]) => u.endsWith('.steps.ts'))?.[1] ?? null
+        [...group.views.entries()].find(([u]) => u.endsWith('.steps.ts'))?.[1] ?? null
       ext.push(stepGenAffordance({ generate, stepsView }))
     }
   }
   const view = new EditorView({ doc, extensions: ext, parent: el })
-  views.set(uri, view)
+  group.views.set(uri, view)
   return view
 }
 
@@ -132,5 +180,5 @@ function mountAll(): void {
 }
 
 mountAll()
-// Initial run once both editors are mounted.
-scheduleRun()
+// Initial run once all editors in each group are mounted.
+for (const groupId of groups.keys()) scheduleRun(groupId)
