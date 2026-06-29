@@ -17,10 +17,10 @@ import Base from '../layouts/Base.astro'
     </p>
 
     <h2>the spec</h2>
-    <Editor uri="file:///yahtzee.var.md" lang="markdown">{yahtzeeSpec}</Editor>
+    <Editor uri="file:///yahtzee.var.md" lineNumbers folding define>{yahtzeeSpec}</Editor>
 
     <h2>the step definitions</h2>
-    <Editor uri="file:///yahtzee.steps.ts" lang="typescript">{yahtzeeSteps}</Editor>
+    <Editor uri="file:///yahtzee.steps.ts" lineNumbers folding>{yahtzeeSteps}</Editor>
 
     <p>
       If you have ever written a unit test, this will be familiar. The main difference between

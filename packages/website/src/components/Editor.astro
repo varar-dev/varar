@@ -2,18 +2,19 @@
 import { decodeEntities } from '../lib/step-highlight.js'
 
 interface Props {
+  // The document identity. Must be a `file:///…` URI. The language is inferred
+  // from its extension and the header filename (see `chrome`) from its basename.
   uri: string
-  lang?: 'markdown' | 'typescript'
-  // Show the line-number gutter (default true).
+  // Show the line-number gutter (default false).
   lineNumbers?: boolean
-  // Show the fold (collapse/expand) gutter (default true).
+  // Show the fold (collapse/expand) gutter (default false).
   folding?: boolean
   // Offer the "Define step definition" affordance on a settled selection
-  // (default true). Markdown editors only.
+  // (default false). Markdown editors only.
   define?: boolean
-  // When set, render a borderless filename header bar directly above the
-  // editor. The editor itself looks identical to the bare variant.
-  filename?: string
+  // Render a borderless header bar (filename derived from `uri`) directly above
+  // the editor (default false). The editor itself looks identical without it.
+  chrome?: boolean
   // Editors sharing a group run together; their specs run against the step
   // files in the same group. Omit to use the page-wide default group.
   group?: string
@@ -23,14 +24,21 @@ interface Props {
 }
 const {
   uri,
-  lang = 'markdown',
-  lineNumbers = true,
-  folding = true,
-  define = true,
-  filename,
+  lineNumbers = false,
+  folding = false,
+  define = false,
+  chrome = false,
   group,
   steps,
 } = Astro.props
+
+// Language is inferred from the uri extension: TypeScript for `.ts` (incl.
+// `.steps.ts`), Markdown otherwise (`.md`, `.var.md`).
+const lang = uri.endsWith('.ts') ? 'typescript' : 'markdown'
+
+// The header filename is the uri's basename (strip the file:// scheme and any
+// directory) — shown only when `chrome` is set.
+const filename = uri.replace(/^file:\/\//, '').replace(/^.*\//, '')
 
 // The document is the default slot. Author it as a raw string child —
 // `<Editor uri="…">{`line one\nline two`}</Editor>` — so MDX/Astro passes the
@@ -52,7 +60,7 @@ const mountAttrs = {
   'data-steps': steps ? JSON.stringify(steps) : undefined,
 }
 ---
-{filename ? (
+{chrome ? (
   <figure class="file-editor">
     <figcaption class="fe-bar">{filename}</figcaption>
     <div {...mountAttrs}></div>

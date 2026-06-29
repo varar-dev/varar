@@ -13,7 +13,7 @@ import helloSteps from '../../../../../../docs/tutorial/steps/01-hello.steps.ts?
 The best way to understand Vár is to see something *not* working as expected.
 Create a new Markdown file with the following text:
 
-<Editor uri="file:///hello.md" lang="markdown" filename="hello.md" define={false} folding={false}>{`
+<Editor uri="file:///hello.md" chrome lineNumbers>{`
 # Hello, Vár
 
 I hope this works!
@@ -37,7 +37,7 @@ content, and you have a spec.
 
 Add this to a new file:
 
-<Editor uri="file:///hello.var.md" lang="markdown" filename="hello.var.md" group="hello-var-tutorial" define={false} steps={[{ path: '01-hello.steps.ts', source: helloSteps }]}>{`
+<Editor uri="file:///hello.var.md" chrome lineNumbers folding group="hello-var-tutorial" steps={[{ path: '01-hello.steps.ts', source: helloSteps }]}>{`
 # Hello, Vár
 Run \`pnpm test\` and watch this file run as tests.
 

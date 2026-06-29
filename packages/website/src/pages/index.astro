@@ -69,15 +69,9 @@ const base = import.meta.env.BASE_URL.replace(/\/$/, '')
           Yahtzee scoresheet, yet every row is a precise, independent test. Change a
           die and watch a single row turn red.
         </p>
-        <Editor
-          uri="file:///yahtzee.var.md"
-          lang="markdown"
-          lineNumbers={false}
-          folding={false}
-          define={false}
-          >{yahtzeeSpec}</Editor>
+        <Editor uri="file:///yahtzee.var.md">{yahtzeeSpec}</Editor>
         <div class="demo__steps" aria-hidden="true">
-          <Editor uri="file:///yahtzee.steps.ts" lang="typescript">{yahtzeeSteps}</Editor>
+          <Editor uri="file:///yahtzee.steps.ts" lineNumbers folding>{yahtzeeSteps}</Editor>
         </div>
         <p class="demo__more"><a href={`${base}/playground`}>Open it in the playground →</a></p>
       </section>
