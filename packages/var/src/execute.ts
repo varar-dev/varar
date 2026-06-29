@@ -48,18 +48,18 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
     ports.sink.example(
       ex.name,
       async () => {
-        // Cache one context per stepfile within this example. Lazy creation
+        // Cache one state value per stepfile within this example. Lazy creation
         // keeps the cost zero for stepfiles whose steps don't run.
-        const ctxByFile = new Map<string, unknown>()
+        const stateByFile = new Map<string, unknown>()
         let lastReturn: unknown
         let thrown: unknown
         for (let i = 0; i < ex.steps.length; i++) {
           const step = ex.steps[i] as PlannedStep
           const file = step.stepDef.expressionSourceFile
-          let ctx = ctxByFile.get(file)
-          if (!ctxByFile.has(file)) {
-            ctx = deepFreeze(await createContext(file))
-            ctxByFile.set(file, ctx)
+          let state = stateByFile.get(file)
+          if (!stateByFile.has(file)) {
+            state = deepFreeze(await createContext(file))
+            stateByFile.set(file, state)
           }
           // A trailing data table or doc string is passed as the LAST handler
           // argument, after whatever the cucumber expression captured. Tables
@@ -75,7 +75,7 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
             extra.push(step.docString.content)
           }
           try {
-            const returned = await step.stepDef.handler(ctx, ...step.args, ...extra)
+            const returned = await step.stepDef.handler(state, ...step.args, ...extra)
             lastReturn = returned
             // Dispatch on the step's role. `context`/`action` merge a returned
             // partial state (or no-op when they return nothing); `sensor`
@@ -93,8 +93,8 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
                     'a context/action step must return a partial state object or nothing',
                   )
                 }
-                ctx = deepFreeze({ ...(ctx as object), ...(returned as object) })
-                ctxByFile.set(file, ctx)
+                state = deepFreeze({ ...(state as object), ...(returned as object) })
+                stateByFile.set(file, state)
               }
             } else if (kind === 'sensor') {
               // Header-bound rows are compared after the loop via ex.rowChecks;
