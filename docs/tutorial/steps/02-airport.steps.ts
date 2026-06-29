@@ -13,7 +13,7 @@ action('I fly from {airport} to {airport}', (ctx, from: string, to: string) => {
   ctx.to = to
 })
 
-sensor(
-  'the route should be from {airport} to {airport}',
-  (ctx, _from: string, _to: string) => [ctx.from, ctx.to] as [string, string],
-)
+sensor('the route should be from {airport} to {airport}', (ctx, _from: string, _to: string) => [
+  ctx.from,
+  ctx.to,
+])

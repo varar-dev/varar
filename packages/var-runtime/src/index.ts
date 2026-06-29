@@ -33,14 +33,22 @@ function registerStep(expression: string, handler: StepHandler, kind: StepKind):
   steps.push({ expression, sourceFile, sourceLine, handler, kind })
 }
 
-export type RoleFn<C = unknown> = (
+// A context/action handler runs for its side effects only. `Args` is inferred
+// from the handler's own parameter list, so authors annotate the captured
+// arguments (`(ctx, name: string) => …`) without a cast and without TS2345.
+export type RoleFn<C = unknown> = <Args extends readonly unknown[]>(
   expression: string,
-  handler: (ctx: C, ...args: readonly unknown[]) => void | Promise<void>,
+  handler: (ctx: C, ...args: Args) => void | Promise<void>,
 ) => void
 
-export type SensorFn<C = unknown> = <Args extends readonly unknown[]>(
+// A sensor may RETURN a value for the pure core to compare against the Markdown.
+// That return shape is independent of the captured args — it can be a by-index
+// column tuple, a header-bound row object, a whole reproduced table, or a
+// doc-string tuple — so `R` is inferred freely from the handler body and is
+// deliberately NOT constrained to `Args`.
+export type SensorFn<C = unknown> = <Args extends readonly unknown[], R>(
   expression: string,
-  handler: (ctx: C, ...args: Args) => NoInfer<Args> | Promise<NoInfer<Args>> | void | Promise<void>,
+  handler: (ctx: C, ...args: Args) => R | Promise<R>,
 ) => void
 
 export const context: RoleFn = (expression, handler) =>

@@ -1,8 +1,9 @@
 import { expectTypeOf, test } from 'vitest'
 import type { Block, Example, Heading, Paragraph, VarDoc } from '../src/ast.js'
 
-test('Block is a discriminated union of Heading and Paragraph (Task 3 scope)', () => {
-  expectTypeOf<Block>().toEqualTypeOf<Heading | Paragraph>()
+test('Heading and Paragraph are members of the Block union', () => {
+  expectTypeOf<Heading>().toMatchTypeOf<Block>()
+  expectTypeOf<Paragraph>().toMatchTypeOf<Block>()
 })
 
 test('Heading carries level and text', () => {

@@ -66,6 +66,29 @@ test('action() type-checks typed handler arguments matching the cucumber express
   expect(r.steps).toHaveLength(2)
 })
 
+test('sensor() accepts return shapes independent of its captured args', () => {
+  // TYPE-LEVEL assertion (fires via tsconfig.tests.json). A sensor's return is
+  // compared by the pure core against the Markdown; its shape is NOT tied to the
+  // captured args. All of these must type-check without a cast.
+  const { sensor: sense } = defineState(() => ({ greeting: '' }))
+  sense('by-index column tuple', (ctx) => [ctx.greeting])
+  sense('header-bound row object', (_ctx, _row: { score: string }) => ({ score: 42 }))
+  sense('whole reproduced table', (_ctx, rows: ReadonlyArray<ReadonlyArray<string>>) => [rows])
+  sense('doc string', (_ctx, name: string) => [name, `Hello, ${name}!\n`])
+  const r = buildRegistry()
+  expect(r.steps).toHaveLength(4)
+})
+
+test('typed handlers reject mismatched ctx and arg usage', () => {
+  const { action: act } = defineState(() => ({ greeting: '' }))
+  // @ts-expect-error - `name` is declared string; multiplying it is a type error
+  act('I greet {string}', (_ctx, name: string) => name * 2)
+  // @ts-expect-error - `count` is not a field on the state context
+  act('I have {int} cukes', (ctx) => ctx.count++)
+  const r = buildRegistry()
+  expect(r.steps).toHaveLength(2)
+})
+
 test('context/action/sensor register with their kind', () => {
   context('a logged-in user', () => {})
   action('I click submit', () => {})

@@ -5,7 +5,7 @@ import { type DocStringMismatchError, isDocStringMismatchError } from '../src/do
 import { executePlan, isUnexpectedPassError, type StepObservation } from '../src/execute.js'
 import { parse } from '../src/parse.js'
 import { plan } from '../src/plan.js'
-import { addStep, createRegistry } from '../src/registry.js'
+import { addStep, createRegistry, type StepHandler } from '../src/registry.js'
 
 async function runOnly(p: ReturnType<typeof plan>, observer?: { step(o: StepObservation): void }) {
   let run: (() => void | Promise<void>) | undefined
@@ -177,7 +177,7 @@ test('executePlan invokes createContext once per example and passes the result t
 
 test('executePlan appends a data table as the last handler arg (after cucumber args)', async () => {
   let r = createRegistry()
-  let captured: unknown[] = []
+  let captured: readonly unknown[] = []
   r = addStep(r, {
     expression: 'these books exist:',
     expressionSourceFile: 's.ts',
@@ -213,7 +213,7 @@ these books exist:
 
 test('executePlan appends a docstring as the last handler arg', async () => {
   let r = createRegistry()
-  let captured: unknown[] = []
+  let captured: readonly unknown[] = []
   r = addStep(r, {
     expression: 'the receipt is:',
     expressionSourceFile: 's.ts',
@@ -285,9 +285,11 @@ test('a failing header-bound row points the stack frame at that row line', async
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
     kind: 'sensor',
-    handler: (_ctx, row: { score: string }) => {
+    // Typed fixtures bridge to the type-erased StepHandler the same way the
+    // production runtime API does (`handler as StepHandler`).
+    handler: ((_ctx, row: { score: string }) => {
       if (row.score === '50') throw new Error('boom')
-    },
+    }) as StepHandler,
   })
   // Rows sit on source lines 7 and 8 (header=5, separator=6).
   const source = `# Yahtzee
@@ -321,9 +323,9 @@ test('a returning header-bound row that mismatches throws CellMismatchError with
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
     kind: 'sensor',
-    handler: (_ctx, row: { score: string }) => ({
+    handler: ((_ctx, row: { score: string }) => ({
       score: row.score === '50' ? 999 : Number(row.score),
-    }),
+    })) as StepHandler,
   })
   const source = `# Yahtzee
 
@@ -362,7 +364,7 @@ test('a returning header-bound row that matches passes', async () => {
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
     kind: 'sensor',
-    handler: (_ctx, row: { score: string }) => ({ score: Number(row.score) }),
+    handler: ((_ctx, row: { score: string }) => ({ score: Number(row.score) })) as StepHandler,
   })
   const source = `# Yahtzee
 
@@ -518,7 +520,7 @@ test('a doc-string sensor returning the exact body passes', async () => {
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
     kind: 'sensor',
-    handler: (_ctx, body: string) => [body], // echo the exact content as a tuple
+    handler: ((_ctx, body: string) => [body]) as StepHandler, // echo the exact content as a tuple
   })
   await expect(runsFor(DOCSTRING_DOC, r)[0]?.()).resolves.toBeUndefined()
 })
@@ -635,7 +637,7 @@ test('observer receives a fail observation when a step throws', async () => {
   const run = await runOnly(plan(parse('e.var.md', '# A\n\nI blow up.'), r), {
     step: (o) => obs.push(o),
   })
-  await run?.().catch(() => {})
+  await Promise.resolve(run?.()).catch(() => {})
   expect(obs).toHaveLength(1)
   expect(obs[0]?.outcome).toBe('fail')
   expect(obs[0]?.error).toBeDefined()

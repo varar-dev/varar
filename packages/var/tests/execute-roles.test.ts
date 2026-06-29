@@ -4,7 +4,7 @@ import { isDocStringMismatchError } from '../src/doc-string-diff.js'
 import { type ExecutePorts, executePlan } from '../src/execute.js'
 import { parse } from '../src/parse.js'
 import { plan } from '../src/plan.js'
-import { addStep, createRegistry } from '../src/registry.js'
+import { addStep, createRegistry, type StepHandler } from '../src/registry.js'
 
 // Minimal ports that run the example body and surface the thrown error.
 function runOne(
@@ -141,7 +141,7 @@ test('a sensor with a trailing doc string returning the exact content passes', a
       expressionSourceFile: 's.steps.ts',
       expressionSourceLine: 1,
       kind: 'sensor',
-      handler: (_ctx, _body: string) => ['Hello, world!\n'],
+      handler: ((_ctx, _body: string) => ['Hello, world!\n']) as StepHandler,
     }),
   )
   await new Promise((res) => setTimeout(res, 0))
@@ -156,7 +156,7 @@ test('a sensor with a trailing doc string returning the wrong text throws DocStr
       expressionSourceFile: 's.steps.ts',
       expressionSourceLine: 1,
       kind: 'sensor',
-      handler: (_ctx, _body: string) => ['Goodbye!\n'],
+      handler: ((_ctx, _body: string) => ['Goodbye!\n']) as StepHandler,
     }),
   )
   await new Promise((res) => setTimeout(res, 0))

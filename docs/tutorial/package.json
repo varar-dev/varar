@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json"
+  },
   "devDependencies": {
     "@oselvar/var-vitest": "workspace:*",
     "vitest": "^2.1.5"

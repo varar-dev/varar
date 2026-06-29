@@ -1,0 +1,22 @@
+{
+  // Type-checks every package's tests/ in a single pass. The per-package
+  // `tsc -p tsconfig.json` builds only emit their own src/, so without this the
+  // test files (and their type-level assertions) are never type-checked.
+  // noEmit: this is a check, not a build. The website is excluded — it has its
+  // own Astro/browser toolchain (astro/tsconfigs/strict, DOM libs).
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false
+  },
+  "include": [
+    "packages/var/tests",
+    "packages/var-cli/tests",
+    "packages/var-language/tests",
+    "packages/var-lsp/tests",
+    "packages/var-runtime/tests",
+    "packages/var-vitest/tests"
+  ]
+}
