@@ -7,31 +7,20 @@ interface Props {
 const { base, area, title } = Astro.props
 ---
 
-<nav class="doc-nav" aria-label="Breadcrumb">
-  <a href={`${base}/`}>Vár</a>
-  <span aria-hidden="true">›</span>
-  <a href={`${base}/docs/`}>docs</a>
+<nav class="text-sm text-subtle mb-6" aria-label="Breadcrumb">
+  <a class="text-ink no-underline hover:underline" href={`${base}/`}>Vár</a>
+  <span class="text-subtle mx-1" aria-hidden="true">›</span>
+  <a class="text-ink no-underline hover:underline" href={`${base}/docs/`}>docs</a>
   {area && (
     <>
-      <span aria-hidden="true">›</span>
+      <span class="text-subtle mx-1" aria-hidden="true">›</span>
       <span>{area}</span>
     </>
   )}
   {title && (
     <>
-      <span aria-hidden="true">›</span>
+      <span class="text-subtle mx-1" aria-hidden="true">›</span>
       <span aria-current="page">{title}</span>
     </>
   )}
 </nav>
-
-<style>
-  .doc-nav {
-    font-size: var(--ax-font-size-small);
-    color: var(--ax-text-subtle);
-    margin-bottom: var(--ax-space-24);
-  }
-  .doc-nav a { color: var(--ax-text-default); text-decoration: none; }
-  .doc-nav a:hover { text-decoration: underline; }
-  .doc-nav span[aria-hidden="true"] { color: var(--ax-text-subtle); margin: 0 var(--ax-space-4); }
-</style>
