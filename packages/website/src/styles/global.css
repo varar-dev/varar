@@ -59,24 +59,6 @@
   --yellow: var(--highlight);
   --radius-5: 0;
 
-  /* Bridge: keep the old Aksel color tokens resolving to the new ones so
-     not-yet-converted components stay identical. Removed in the final task. */
-  --ax-bg-default: var(--surface);
-  --ax-bg-raised: var(--raised);
-  --ax-bg-sunken: var(--sunken);
-  --ax-text-default: var(--ink);
-  --ax-text-subtle: var(--subtle);
-  --ax-text-neutral-subtle: var(--muted);
-  --ax-text-accent: var(--accent);
-  --ax-text-accent-contrast: var(--accent-contrast);
-  --ax-bg-accent-strong: var(--strong);
-  --ax-bg-accent-strong-hover: var(--strong-hover);
-  --ax-border-subtle: var(--line-subtle);
-  --ax-border-neutral-subtle: var(--line-subtle);
-  --ax-border-default: var(--line);
-  --var-accent: var(--accent);
-  --var-accent-strong: var(--highlight);
-
   /* Editor (CodeMirror — out of scope, unchanged) */
   --ed-bg: #fbf8f0;
   --ed-text: #2a2017;
@@ -120,23 +102,6 @@
 
   --yellow: var(--highlight);
 
-  /* Bridge (removed in final task) */
-  --ax-bg-default: var(--surface);
-  --ax-bg-raised: var(--raised);
-  --ax-bg-sunken: var(--sunken);
-  --ax-text-default: var(--ink);
-  --ax-text-subtle: var(--subtle);
-  --ax-text-neutral-subtle: var(--muted);
-  --ax-text-accent: var(--accent);
-  --ax-text-accent-contrast: var(--accent-contrast);
-  --ax-bg-accent-strong: var(--strong);
-  --ax-bg-accent-strong-hover: var(--strong-hover);
-  --ax-border-subtle: var(--line-subtle);
-  --ax-border-neutral-subtle: var(--line-subtle);
-  --ax-border-default: var(--line);
-  --var-accent: var(--accent);
-  --var-accent-strong: var(--highlight);
-
   /* Editor (CodeMirror — out of scope, unchanged) */
   --ed-bg: #221a12;
   --ed-text: #efe7d7;
@@ -164,17 +129,6 @@
 
 /* Default page container (was `main`). Applied via the .page class. */
 .page {
-  max-width: 760px;
-  margin-inline: auto;
-  padding: 48px;
-}
-
-/* Bridge: the original global `main` rule, kept until index.astro (.landing,
-   Task 10) and playground.astro (.playground, Task 9) get explicit utilities.
-   Those mains only override max-width and inherit centering + padding from
-   here. `.page` (a class) wins over this element rule on converted pages.
-   Removed in the final task. */
-main {
   max-width: 760px;
   margin-inline: auto;
   padding: 48px;
