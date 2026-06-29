@@ -36,5 +36,10 @@
       "project": ["**/*.{ts,var.md}"]
     }
   },
-  "ignore": ["var.config.ts", "**/tests/fixtures/**", "packages/website/src/layouts/Doc.astro"]
+  "ignore": [
+    "var.config.ts",
+    "**/tests/fixtures/**",
+    "packages/website/src/layouts/Doc.astro",
+    "**/!(package).json"
+  ]
 }
