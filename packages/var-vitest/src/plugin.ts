@@ -21,6 +21,15 @@ export function varVitestPlugin(options: VarVitestPluginOptions = {}): Plugin {
   let configPath: string | undefined
   return {
     name: '@oselvar/var-vitest',
+    config() {
+      // Force a single @oselvar/var (and @oselvar/var-core) module instance.
+      // The authoring API (defineState) and the registry glue
+      // (@oselvar/var/registry, used by runtime.ts) MUST share one module so
+      // buildRegistry() sees the steps registered via defineState. Under
+      // resolve.preserveSymlinks these can split into two instances, leaving
+      // an empty registry and zero steps run with no error — so we dedupe.
+      return { resolve: { dedupe: ['@oselvar/var', '@oselvar/var-core'] } }
+    },
     async configResolved() {
       const cfg = await loadVarConfig(cwd)
       stepFiles = await findFiles(cwd, cfg.steps)

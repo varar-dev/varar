@@ -25,7 +25,7 @@ function evalStepFile(path: string, source: string): void {
     )
   }
   const mod = { exports: {} as Record<string, unknown> }
-  // `//# sourceURL` makes var-runtime's stack-based callerLocation see the real path.
+  // `//# sourceURL` makes @oselvar/var's stack-based callerLocation see the real path.
   new Function('require', 'exports', 'module', `${js}\n//# sourceURL=${path}`)(
     require,
     mod.exports,
