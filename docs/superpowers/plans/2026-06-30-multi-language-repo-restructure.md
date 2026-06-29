@@ -121,9 +121,15 @@ The atomic "the move." Each step is small, but the deliverable is one relocated,
 **Files:**
 - Move (git mv): `packages/`, `scripts/`, `package.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml`, `.npmrc`, `biome.json`, `knip.json`, `.jscpd.json`, `tsconfig.base.json`, `tsconfig.tests.json`, `var.config.ts`, `vitest.config.ts`, `vitest.plugins.ts` → `typescript/`
 - Modify: `typescript/packages/var/tests/conformance.test.ts:8` (one level deeper now)
+- Modify: `typescript/knip.json` (the `packages/var` block's cross-boundary `conformance` globs gain one `../`)
 
 **Interfaces:**
-- Consumes: root-level `conformance/bundles/` from Task 1.
+- Consumes: root-level `conformance/bundles/` from Task 1. Note Task 1's resolution
+  decisions: (a) `packages/var/vitest.config.ts` has a `resolve.alias` mapping
+  `@oselvar/var` → `./src/index.ts` (config-relative, so it survives this move
+  untouched); (b) `knip.json`'s `packages/var` block reaches the corpus via
+  `../../conformance/bundles/**` globs (load-bearing — they keep `@oselvar/var`'s
+  `defineState` export, consumed only by the bundle fixtures, from reading as unused).
 - Produces: a self-contained pnpm workspace rooted at `typescript/`; all gates run from there.
 
 - [ ] **Step 1: Create the target dir and move every workspace file/dir**
@@ -151,6 +157,39 @@ to (tests → var → packages → typescript → repo root, then into `conforma
 
 ```ts
 const BUNDLES = resolve(import.meta.dirname, '../../../../conformance/bundles')
+```
+
+- [ ] **Step 2b: Deepen the knip cross-boundary globs by one level**
+
+In `typescript/knip.json`, the `packages/var` block reaches the root corpus with
+`../../conformance/...` globs that assumed the workspace was at the repo root. Now that
+`packages/var` lives at `typescript/packages/var`, the corpus is one level further up.
+Change the `packages/var` block from:
+
+```json
+    "packages/var": {
+      "entry": [
+        "src/index.ts",
+        "tests/**/*.test.ts",
+        "../../conformance/bundles/**/*.steps.ts",
+        "../../conformance/bundles/**/*.md"
+      ],
+      "project": ["src/**/*.ts", "tests/**/*.ts", "../../conformance/bundles/**/*.{ts,md}"]
+    },
+```
+
+to (one extra `../`):
+
+```json
+    "packages/var": {
+      "entry": [
+        "src/index.ts",
+        "tests/**/*.test.ts",
+        "../../../conformance/bundles/**/*.steps.ts",
+        "../../../conformance/bundles/**/*.md"
+      ],
+      "project": ["src/**/*.ts", "tests/**/*.ts", "../../../conformance/bundles/**/*.{ts,md}"]
+    },
 ```
 
 - [ ] **Step 3: Reinstall dependencies under `typescript/`**
