@@ -8,6 +8,12 @@
 - [ ] Tabs for examples on front page and tutorial
 - [ ] Prerender all editors
 
+## Terminiology
+- [ ] Oath: an .md doc with 1 or more examples
+- [ ] Example: A paragraph with a matching step definition
+- [ ] Sensor: A step definition that returns an actual value from the system
+- [ ] Action: A step definition that interacts with the system
+
 ## Refactoring (LSP)
 
 - [ ] Rename a parameter type (e.g. `{airport}` → `{iata}`): cascade to the
