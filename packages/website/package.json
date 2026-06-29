@@ -10,28 +10,28 @@
     "check": "astro check"
   },
   "devDependencies": {
-    "@astrojs/check": "^0.9.4",
-    "astro": "^5.0.0"
+    "@astrojs/check": "^0.9.9",
+    "astro": "^7.0.3"
   },
   "dependencies": {
-    "@astrojs/mdx": "^4",
-    "@astrojs/rss": "^4",
-    "@codemirror/lang-javascript": "^6.2.0",
-    "@codemirror/lang-markdown": "^6.3.0",
-    "@codemirror/language": "^6.12.3",
-    "@codemirror/lint": "^6.9.0",
-    "@codemirror/lsp-client": "^6.0.0",
+    "@astrojs/mdx": "^7.0.0",
+    "@astrojs/rss": "^4.0.18",
+    "@codemirror/lang-javascript": "^6.2.5",
+    "@codemirror/lang-markdown": "^6.5.0",
+    "@codemirror/language": "^6.12.4",
+    "@codemirror/lint": "^6.9.7",
+    "@codemirror/lsp-client": "^6.2.5",
     "@codemirror/state": "^6.7.0",
-    "@codemirror/view": "^6.43.2",
+    "@codemirror/view": "^6.43.4",
     "@lezer/highlight": "^1.2.3",
-    "@navikt/ds-css": "^8.13.1",
+    "@navikt/ds-css": "^8.14.0",
     "@oselvar/var": "workspace:*",
     "@oselvar/var-language": "workspace:*",
     "@oselvar/var-lsp": "workspace:*",
     "@oselvar/var-runtime": "workspace:*",
     "astro-pagefind": "^2.0.0",
-    "codemirror": "^6.0.1",
-    "typescript": "^5.6.3",
-    "vscode-languageserver": "^9.0.1"
+    "codemirror": "^6.0.2",
+    "typescript": "^6.0.3",
+    "vscode-languageserver": "^10.0.1"
   }
 }

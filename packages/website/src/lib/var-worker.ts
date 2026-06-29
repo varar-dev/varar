@@ -4,7 +4,7 @@ import {
   BrowserMessageReader,
   BrowserMessageWriter,
   createConnection,
-} from 'vscode-languageserver/browser.js'
+} from 'vscode-languageserver/browser'
 import yahtzeeSpec from '../../../../docs/tutorial/04-yahtzee.var.md?raw'
 import yahtzeeSteps from '../../../../docs/tutorial/steps/04-yahtzee.steps.ts?raw'
 import { createIdbFileSystem } from './idb-file-system.ts'

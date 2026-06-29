@@ -63,9 +63,9 @@
   "dependencies": {
     "@oselvar/var-language": "workspace:*",
     "@oselvar/var-lsp": "workspace:*",
-    "vscode-languageclient": "^9.0.1"
+    "vscode-languageclient": "^10.0.1"
   },
   "devDependencies": {
-    "@types/vscode": "^1.92.0"
+    "@types/vscode": "^1.125.0"
   }
 }

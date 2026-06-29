@@ -20,12 +20,12 @@
     "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm knip && pnpm jscpd"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.0",
-    "@types/node": "^25.9.3",
-    "jscpd": "^5.0.8",
-    "knip": "^6.16.1",
+    "@biomejs/biome": "^2.5.1",
+    "@types/node": "^26.0.1",
+    "jscpd": "^5.0.11",
+    "knip": "^6.23.0",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.8"
+    "vitest": "^4.1.9"
   }
 }

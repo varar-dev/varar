@@ -17,6 +17,12 @@ import { uriToPath } from './uri.js'
 // in the build. T6 onward uses them directly.
 export type { StepDef } from '@oselvar/var-language'
 
+// vscode-languageserver 10's `onRequest(method, handler)` overload mis-infers the
+// result generic from a discriminated `{ ok: true } | { ok: false }` union (it
+// drops the failure arm). Pin the generic explicitly from each handler's own
+// return type so the result type round-trips correctly.
+type LspHandlers = NonNullable<ReturnType<typeof buildHandlers>>
+
 export function registerHandlers(
   connection: Connection,
   makeDeps: (rootUri?: string) => Promise<StoreDeps>,
@@ -195,7 +201,7 @@ export function registerHandlers(
   // Drive the cross-file rename. The server resolves the step, derives the
   // new expression, diffs, and returns ready-to-apply edits — or an error.
   // Phase 3 path: refuses when any parameter is added/removed/type-changed.
-  connection.onRequest(
+  connection.onRequest<ReturnType<LspHandlers['renameStep']> | null, void>(
     'var/renameStep',
     (params: { uri: string; position: { line: number; character: number }; newName: string }) => {
       if (!handlers) return null
@@ -206,7 +212,7 @@ export function registerHandlers(
   // Phase 4 path: returns the rename plan (param fates + matches) so the
   // client can drive per-occurrence prompts for added / type-changed
   // parameters before applying anything.
-  connection.onRequest(
+  connection.onRequest<ReturnType<LspHandlers['planRename']> | null, void>(
     'var/planRename',
     (params: { uri: string; position: { line: number; character: number }; newName: string }) => {
       if (!handlers) return null
@@ -216,7 +222,7 @@ export function registerHandlers(
 
   // Render a (new) expression with a list of values into a literal string
   // suitable for splicing into a .var.md document.
-  connection.onRequest(
+  connection.onRequest<ReturnType<LspHandlers['renderExpressionText']> | null, void>(
     'var/renderExpressionText',
     (params: { expression: string; values: ReadonlyArray<string> }) => {
       if (!handlers) return null

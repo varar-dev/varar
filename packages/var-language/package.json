@@ -20,7 +20,7 @@
   },
   "dependencies": {
     "@oselvar/var": "workspace:*",
-    "typescript": "^5.6.3"
+    "typescript": "^6.0.3"
   },
   "publishConfig": {
     "exports": {
