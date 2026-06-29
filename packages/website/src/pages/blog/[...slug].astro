@@ -14,14 +14,14 @@ const fmt = (d: Date) => d.toISOString().slice(0, 10)
 ---
 
 <Base title={`${post.data.title} — Vár blog`} description={post.data.description}>
-  <main class="doc">
+  <main class="page">
     <nav class="doc-nav" aria-label="Breadcrumb">
       <a href={`${base}/`}>Vár</a>
       <span aria-hidden="true">›</span>
       <a href={`${base}/blog/`}>blog</a>
     </nav>
 
-    <article class="doc-body">
+    <article class="doc-body prose max-w-none prose-headings:font-semibold prose-h2:text-2xl prose-h3:text-xl prose-a:decoration-accent prose-a:decoration-2 prose-a:underline-offset-2">
       <h1>{post.data.title}</h1>
       <p class="post-meta"><time datetime={fmt(post.data.pubDate)}>{fmt(post.data.pubDate)}</time></p>
       <Content />
