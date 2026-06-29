@@ -73,8 +73,8 @@ interface StepDefScanner {
 A language is added by supplying:
 
 - a **tree-sitter grammar** (`.wasm`), and
-- a **query set** that locates `step("…")` / `defineParameterType(…)` call sites
-  and their handler signatures,
+- a **query set** that locates `context("…")` / `action("…")` / `sensor("…")` /
+  `defineParameterType(…)` call sites and their handler signatures,
 
 and registering the scanner against that language's file globs. No new parser,
 no new AST walker per language.

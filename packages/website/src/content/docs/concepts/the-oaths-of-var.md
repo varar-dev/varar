@@ -29,7 +29,7 @@ The point is that the document is *already* the document. It reads as reference 
 
 This is where Gherkin rotted fastest. `Given`/`When`/`Then` were structural keywords, so authors started writing *to* the structure — and the structure pulled them toward `Given I click… When I wait 3 seconds… Then the modal appears`. Test code in a prose costume.
 
-Vár has no `Given`, `When`, or `Then` exports. There is one function: `step()`. Keywords, if you use them at all, are narration for the human reader — they are never matched, never parsed, never load-bearing. A step binds to a *sentence*, a paragraph of ordinary prose, not to a clause that begins with a magic word.
+Vár has no `Given`, `When`, or `Then` exports. Step definitions are written with three role functions — `context`, `action`, and `sensor` — chosen by what a step *does* (set up state, perform an action, observe a result), never by a keyword in the prose. Keywords, if you use them at all, are narration for the human reader — they are never matched, never parsed, never load-bearing. A step binds to a *sentence*, a paragraph of ordinary prose, not to a clause that begins with a magic word.
 
 When the keyword carries no mechanical weight, the incentive to write robotic click-by-click scenarios disappears. You describe behaviour, because describing behaviour is the only thing the tool rewards.
 

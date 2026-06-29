@@ -16,7 +16,7 @@ features/
   library.feature.var.md  ->   symlink to library.feature, parsed by var
 
 cucumber/steps/library.steps.ts   cucumber-js handlers (Given/When/Then + hooks)
-steps/library.steps.ts            var handlers (step + defineContext)
+steps/library.steps.ts            var handlers (context/action/sensor + defineState)
 
 src/library.ts                    the shared domain (a tiny library catalogue)
 ```
@@ -80,11 +80,12 @@ directly, with no test runner in the way — which is most of the gap.
 1. Symlink (or rename) `.feature` to `.var.md`.
 2. Add `gherkinTables()` and `gherkinDocStrings()` to `scannerPlugins` in
    `var.config.ts` so the existing Gherkin syntax parses unchanged.
-3. Re-write the step file: replace
-   `Given('expr', fn)` / `When(...)` / `Then(...)` with one shared
-   `step('expr', fn)`, and replace `World` + `Before`/`After` with a
-   `defineContext(() => ({...}))` factory whose return value flows into
-   each handler as the first argument.
+3. Re-write the step file: replace `Given('expr', fn)` / `When(...)` /
+   `Then(...)` with the role function that matches what each step does —
+   `context('expr', fn)` to set up state, `action('expr', fn)` to perform an
+   action, `sensor('expr', fn)` to return a value Vár checks — and replace
+   `World` + `Before`/`After` with a `defineState(() => ({...}))` factory whose
+   return value flows into each handler as the first argument.
 4. Data tables arrive as `ReadonlyArray<ReadonlyArray<string>>` (header row
    first); doc strings as `string`. Both are the LAST handler argument,
    after whatever the cucumber expression captured.

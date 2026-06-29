@@ -2,7 +2,7 @@
 title: Doc strings
 description: How a fenced code block attaches to a step in a Vár spec — passed in as text, and checked against the step's returned string.
 area: reference
-order: 2
+order: 3
 ---
 
 # Doc strings
@@ -18,7 +18,7 @@ Hello, world!
 ````
 
 ```ts
-step('The rendered greeting is:', (ctx, body) => {
+action('The rendered greeting is:', (ctx, body) => {
   // body === 'Hello, world!\n'
 })
 ```
@@ -28,7 +28,7 @@ step('The rendered greeting is:', (ctx, body) => {
 If the step **returns a string**, Vár compares it against the doc-string content — **exactly**, byte for byte. This turns the fenced block into an assertion: the prose shows the expected output, and the step produces it.
 
 ```ts
-step('Greet {word}:', (ctx, name, body) => {
+sensor('Greet {word}:', (ctx, name, body) => {
   return `Hello, ${name}!\n` // checked against the fence content, exactly
 })
 ```
