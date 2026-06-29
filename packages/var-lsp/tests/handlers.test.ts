@@ -569,10 +569,55 @@ test('generateSnippet turns selected text into a step-definition stub (verbatim,
   try {
     const store = await makeStore(dir)
     const h = buildHandlers(store)
-    const snippet = h.generateSnippet('Given I greet "world"')
+    // No uri/position provided — defaults to 'action'.
+    const snippet = h.generateSnippet({ text: 'Given I greet "world"' })
     // No Given/When/Then heuristics — the selection IS the expression.
     expect(snippet.expression).toBe('Given I greet {string}')
-    expect(snippet.fullCode).toContain("action('Given I greet {string}'")
+    expect(snippet.fullCode).toMatch(/^action\(/m)
+  } finally {
+    cleanup()
+  }
+})
+
+test('generateSnippet infers action role when position is before a sensor and nothing else exists', async () => {
+  // before=[], after=['sensor'] → inferStepRole → 'action'
+  const { dir, cleanup } = tempWorkspace((dir) => {
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'a.steps.ts'), `sensor('the greeting is {string}', () => {})\n`)
+    writeFileSync(join(dir, 'b.var.md'), '# B\n\nThen the greeting is "Hello, world!"\n')
+  })
+  try {
+    const store = await makeStore(dir)
+    const h = buildHandlers(store)
+    // 0-based position on line 1 (empty line), before the sensor step on line 2.
+    const snippet = h.generateSnippet({
+      text: 'I greet "world"',
+      uri: `file://${join(dir, 'b.var.md')}`,
+      position: { line: 1, character: 0 },
+    })
+    expect(snippet.fullCode).toMatch(/^action\(/m)
+  } finally {
+    cleanup()
+  }
+})
+
+test('generateSnippet infers sensor role when position is after all matched steps', async () => {
+  // before=['action'], after=[] → inferStepRole → 'sensor'
+  const { dir, cleanup } = tempWorkspace((dir) => {
+    writeFileSync(join(dir, 'var.config.ts'), 'export default {}\n')
+    writeFileSync(join(dir, 'a.steps.ts'), `action('I greet {string}', () => {})\n`)
+    writeFileSync(join(dir, 'b.var.md'), '# B\n\nGiven I greet "world"\n')
+  })
+  try {
+    const store = await makeStore(dir)
+    const h = buildHandlers(store)
+    // 0-based position on line 3 (past the last matched step on line 2).
+    const snippet = h.generateSnippet({
+      text: 'the greeting is "Hello, world!"',
+      uri: `file://${join(dir, 'b.var.md')}`,
+      position: { line: 3, character: 0 },
+    })
+    expect(snippet.fullCode).toMatch(/^sensor\(/m)
   } finally {
     cleanup()
   }

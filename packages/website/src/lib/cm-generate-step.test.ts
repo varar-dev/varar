@@ -66,7 +66,7 @@ function editor(doc: string, selection?: { anchor: number; head: number }) {
 }
 
 describe('runGenerateStepDef', () => {
-  const generate = (text: string) =>
+  const generate = (text: string, _position?: { line: number; character: number }) =>
     Promise.resolve({ fullCode: `action('${text}', (ctx) => {\n})\n`, expression: text })
 
   it('returns null and does not touch the steps view when the selection is empty', async () => {

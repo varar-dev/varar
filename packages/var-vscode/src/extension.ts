@@ -113,7 +113,14 @@ function registerGenerateStepDefinition(
     const [snippet, stepGlobs] = await Promise.all([
       lspClient.sendRequest<{ readonly fullCode: string; readonly expression: string }>(
         'var/generateSnippet',
-        { text },
+        {
+          text,
+          uri: editor.document.uri.toString(),
+          position: {
+            line: editor.selection.start.line,
+            character: editor.selection.start.character,
+          },
+        },
       ),
       lspClient.sendRequest<ReadonlyArray<string>>('var/stepGlobs'),
     ])
