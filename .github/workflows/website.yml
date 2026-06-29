@@ -4,10 +4,10 @@ on:
   push:
     branches: [main]
     paths:
-      - 'packages/website/**'
+      - 'typescript/packages/website/**'
       - '.github/workflows/website.yml'
-      - 'pnpm-lock.yaml'
-      - 'pnpm-workspace.yaml'
+      - 'typescript/pnpm-lock.yaml'
+      - 'typescript/pnpm-workspace.yaml'
   workflow_dispatch:
 
 permissions:
@@ -33,16 +33,19 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+          cache-dependency-path: typescript/pnpm-lock.yaml
 
       - run: pnpm install --frozen-lockfile
+        working-directory: typescript
 
       - run: pnpm --filter @oselvar/website build
+        working-directory: typescript
 
       - uses: actions/configure-pages@v5
 
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: packages/website/dist
+          path: typescript/packages/website/dist
 
   deploy:
     needs: build
