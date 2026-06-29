@@ -198,3 +198,39 @@ main {
   --tw-prose-th-borders: var(--line);
   --tw-prose-td-borders: var(--line-subtle);
 }
+
+/* Bespoke Markdown elements prose doesn't express. Blockquote keeps its
+   raised-surface citation design; inline code keeps its subtle chip. Both
+   suppress prose's default quotation/backtick pseudo-content. */
+.doc-body blockquote {
+  margin: 24px 0;
+  padding: 16px 24px;
+  border-left: 4px solid var(--accent);
+  background: var(--raised);
+  font-style: italic;
+  font-weight: 400;
+}
+.doc-body blockquote p {
+  margin: 0 0 8px;
+}
+.doc-body blockquote p:last-child {
+  margin: 0;
+  font-style: normal;
+  font-size: 14px;
+}
+.doc-body blockquote p:first-of-type::before,
+.doc-body blockquote p:last-of-type::after {
+  content: none;
+}
+.doc-body :not(pre) > code {
+  background: var(--raised);
+  padding: 2px 6px;
+  border-radius: 0;
+  font-weight: 400;
+  font-size: 0.92em;
+  color: var(--ink);
+}
+.doc-body :not(pre) > code::before,
+.doc-body :not(pre) > code::after {
+  content: none;
+}
