@@ -111,6 +111,6 @@ def test_trace_matches_golden(bundle: Path) -> None:
     source = (bundle / "example.md").read_text(encoding="utf-8")
     doc = parse("example.md", source)
     artifacts = run_conformance(doc, registry, create_ctx)
-    actual = canonical_stringify(artifacts["trace"])
+    actual = canonical_stringify(artifacts.trace)
     expected = (bundle / "golden" / "trace.json").read_text(encoding="utf-8")
     assert actual == expected, f"trace.json mismatch for {bundle.name}"

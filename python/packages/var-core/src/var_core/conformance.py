@@ -9,6 +9,7 @@ dicts expected by the conformance golden files.
 from __future__ import annotations
 
 import os
+from dataclasses import dataclass
 from typing import Any, Callable
 
 from cucumber_expressions.expression import CucumberExpression
@@ -33,6 +34,16 @@ from var_core.plan import ExecutionPlan
 from var_core.plan import plan as build_plan
 from var_core.registry import Registry
 from var_core.span import Span, utf16_slice
+
+
+@dataclass(frozen=True, slots=True)
+class BundleArtifacts:
+    """Typed container for the four-artifact conformance bundle."""
+
+    var_doc: dict[str, Any]
+    registry: dict[str, Any]
+    plan: dict[str, Any]
+    trace: dict[str, Any]
 
 
 # ---------------------------------------------------------------------------
@@ -186,12 +197,12 @@ def _doc_string(ds: Any) -> dict[str, Any]:
     }
 
 
-def to_plan_artifact(execution_plan: ExecutionPlan) -> dict[str, Any]:
+def to_plan_artifact(plan: ExecutionPlan) -> dict[str, Any]:
     """Project an ExecutionPlan to the camelCase wire dict for the plan artifact.
 
     Port of ``toPlanArtifact`` from conformance.ts.
     """
-    source = execution_plan.var_doc.source
+    source = plan.var_doc.source
 
     def _step(step: Any) -> dict[str, Any]:
         step_names = parameter_type_names(step.step_def.compiled)
@@ -227,14 +238,14 @@ def to_plan_artifact(execution_plan: ExecutionPlan) -> dict[str, Any]:
         return result
 
     return {
-        "examples": [_planned_example(ex) for ex in execution_plan.examples],
+        "examples": [_planned_example(ex) for ex in plan.examples],
         "diagnostics": [
             {
                 "code": d.code,
                 "severity": d.severity,
                 "span": _span(d.span),
             }
-            for d in execution_plan.diagnostics
+            for d in plan.diagnostics
         ],
     }
 
@@ -299,11 +310,10 @@ def run_conformance(
     registry: Registry,
     create_context: Callable[[str], Any],
     parameter_types: tuple[dict[str, str], ...] = (),
-) -> dict[str, Any]:
-    """Run all examples and return the four-artifact bundle dict.
+) -> BundleArtifacts:
+    """Run all examples and return the four-artifact bundle as a typed BundleArtifacts.
 
     Port of ``runConformance`` from conformance.ts.
-    Returns ``{"varDoc", "registry", "plan", "trace"}``.
     """
     execution = build_plan(var_doc, registry)
 
@@ -369,9 +379,9 @@ def run_conformance(
 
         trace_examples.append({"name": queued.name, "outcome": outcome, "steps": steps})
 
-    return {
-        "varDoc": to_var_doc_artifact(var_doc),
-        "registry": to_registry_artifact(registry, list(parameter_types)),
-        "plan": to_plan_artifact(execution),
-        "trace": {"examples": trace_examples},
-    }
+    return BundleArtifacts(
+        var_doc=to_var_doc_artifact(var_doc),
+        registry=to_registry_artifact(registry, list(parameter_types)),
+        plan=to_plan_artifact(execution),
+        trace={"examples": trace_examples},
+    )

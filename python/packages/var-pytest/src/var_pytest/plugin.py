@@ -40,7 +40,7 @@ class VarFile(pytest.File):
     def collect(self):
         _cfg, loaded, _root = _STASH[id(self.config)]
         source = self.path.read_text(encoding="utf-8")
-        execution_plan = plan_spec(source, self.path.name, loaded.registry)
+        execution_plan = plan_spec(self.path.name, source, loaded.registry)
         pairs = examples_with_runs(execution_plan, loaded.create_context, RecordingReporter())
         seen: dict[str, int] = {}
         for example, run in pairs:

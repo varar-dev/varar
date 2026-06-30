@@ -12,7 +12,7 @@ class RecordingReporter:
     def diagnostic(self, d: Any) -> None:
         self.diagnostics.append(d)
 
-def plan_spec(source: str, path: str, registry: Registry) -> ExecutionPlan:
+def plan_spec(path: str, source: str, registry: Registry) -> ExecutionPlan:
     return plan(parse(path, source), registry)
 
 def examples_with_runs(

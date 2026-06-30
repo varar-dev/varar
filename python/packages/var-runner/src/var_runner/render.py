@@ -8,7 +8,7 @@ from var_core.cell_diff import ReturnShapeError, is_cell_mismatch_error
 from var_core.doc_string_diff import is_doc_string_mismatch_error
 
 
-def render_failure(error: BaseException, source: str, var_path: str) -> str:  # noqa: ARG001
+def render_failure(error: BaseException, source: str, path: str) -> str:  # noqa: ARG001
     """Render a step failure as a human-readable, markdown-anchored string.
 
     Dispatches on the concrete error type:
@@ -21,7 +21,7 @@ def render_failure(error: BaseException, source: str, var_path: str) -> str:  # 
     are the primary anchor.
     """
     if is_cell_mismatch_error(error):
-        lines: list[str] = [f"Cell mismatch in {var_path}:"]
+        lines: list[str] = [f"Cell mismatch in {path}:"]
         failing = [c for c in error.cells if not c.ok]  # type: ignore[union-attr]
         if not failing:
             lines.append("  (no failing cells)")
