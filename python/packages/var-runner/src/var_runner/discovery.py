@@ -16,7 +16,9 @@ def _glob_to_regex(pattern: str) -> re.Pattern[str]:
     - ``/**/`` (slash–doublestar–slash) → ``/(?:.+/)?``  zero or more intermediate
       directory segments (the surrounding slashes are absorbed into the token).
     - ``/**`` at end of pattern → ``(?:/.*)?``  optional trailing path.
-    - ``**/`` at start (no preceding ``/``) → ``.*`` (catches the leading slash too).
+    - ``**/`` not preceded by ``/`` (leading or after a literal) → ``(?:.*/)?``
+      zero or more path segments including the trailing slash, so a leading ``**/``
+      matches both root-level paths and nested ones.
     - bare ``**`` elsewhere → ``.*``.
     - ``*``  → ``[^/]*``  (any chars except ``/``).
     - ``?``  → ``[^/]``   (single char except ``/``).
@@ -37,8 +39,13 @@ def _glob_to_regex(pattern: str) -> re.Pattern[str]:
             # /** at end → optional trailing /anything
             result += "(?:/.*)?"
             i += 3
+        elif c == "*" and pattern[i : i + 3] == "**/":
+            # **/ not preceded by /  (leading **/ or after a literal char)
+            # → zero or more path segments with their trailing slash (optional)
+            result += "(?:.*/)?"
+            i += 3
         elif c == "*" and pattern[i : i + 2] == "**":
-            # ** without a preceding /  (e.g. the leading **/ case)
+            # bare ** (e.g. at end of pattern with no following /)
             result += ".*"
             i += 2
         elif c == "*":
