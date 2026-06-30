@@ -271,6 +271,37 @@ def test_error_fence_on_ambiguous_example_emits_both_diagnostics() -> None:
     assert codes == ["ambiguous-match", "error-fence-without-step"]
 
 
+def test_header_binding_param_spans_point_at_header_cells_in_paragraph() -> None:
+    """HeaderBinding.param_spans must be the header-cell word spans, not the step's regex captures."""
+    r = create_registry()
+    r = add_step(
+        r,
+        expression="each row lists the dice, the category and the score",
+        expression_source_file="s.ts",
+        expression_source_line=1,
+        handler=_noop,
+        kind="action",
+    )
+    source = (
+        "# Yahtzee\n\n"
+        "each row lists the dice, the category and the score:\n\n"
+        "| dice          | category   | score |\n"
+        "| ------------- | ---------- | ----- |\n"
+        "| 3, 3, 3, 4, 4 | full house | 17    |"
+    )
+    result = plan(parse("y.md", source), r)
+    assert len(result.examples) == 1
+    ex = result.examples[0]
+    assert ex.header_binding is not None
+    hb = ex.header_binding
+    # One span per header cell, not the step-expression regex captures (which are empty).
+    assert len(hb.param_spans) == 3
+    # Each span must slice back to the header-cell word in the source (ASCII so UTF-16 == CP).
+    assert source[hb.param_spans[0].start_offset : hb.param_spans[0].end_offset] == "dice"
+    assert source[hb.param_spans[1].start_offset : hb.param_spans[1].end_offset] == "category"
+    assert source[hb.param_spans[2].start_offset : hb.param_spans[2].end_offset] == "score"
+
+
 def test_doc_string_step_carries_fence_body_span() -> None:
     r = add_step(create_registry(), expression="the payload is", expression_source_file="s.ts", expression_source_line=1, handler=_noop, kind="action")
     source = "# T\n\nthe payload is:\n\n```json\n{ \"ok\": true }\n```"

@@ -22,7 +22,7 @@ from var.diagnostics import (
 from var.matcher import Hit, find_hits, resolve_hits
 from var.registry import Registry, StepRegistration
 from var.sentences import split_sentences
-from var.span import Span, span_from_offsets
+from var.span import Span, span_from_offsets, to_utf16_offset, utf16_len
 
 
 # ---------------------------------------------------------------------------
@@ -239,8 +239,11 @@ def _detect_header_bound(
         offsets = [_word_offset(above.text, cell) for cell in header_cells]  # type: ignore[union-attr]
         if any(o < 0 for o in offsets):
             continue
+        # Convert code-point offsets from _word_offset to UTF-16 offsets
+        # (m.start() is a code-point index; _lift_span expects UTF-16 code units).
+        utf16_offsets = [to_utf16_offset(above.text, o) for o in offsets]  # type: ignore[union-attr]
         header_spans = tuple(
-            _lift_span(source, above, offsets[i], offsets[i] + len(header_cells[i]))  # type: ignore[arg-type]
+            _lift_span(source, above, utf16_offsets[i], utf16_offsets[i] + utf16_len(header_cells[i]))  # type: ignore[arg-type]
             for i in range(len(header_cells))
         )
         return table, steps[-1], header_spans
@@ -352,7 +355,7 @@ def plan(var_doc: VarDoc, registry: Registry) -> ExecutionPlan:
             table, binding_step, header_spans = bound
             header_binding = HeaderBinding(
                 match_span=binding_step.match_span,
-                param_spans=binding_step.param_spans,
+                param_spans=header_spans,
                 step_def=binding_step.step_def,
             )
             assert table.header is not None
