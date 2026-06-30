@@ -1,0 +1,18 @@
+from var import define_state
+
+context, action, sensor = define_state(lambda: {})
+
+ROMAN = {1: "I", 4: "IV", 9: "IX", 40: "XL"}
+
+
+@action("I convert {int} to roman numerals")
+def _(state, n):
+    return {"result": ROMAN.get(n)}
+
+
+@sensor("The result is {word}")
+def _(state, expected):
+    # Strip sentence-ending punctuation captured by {word} when it appears last.
+    cleaned = expected.rstrip(".!?")
+    if state.get("result") != cleaned:
+        raise AssertionError(f"expected {cleaned} but got {state.get('result')}")

@@ -1,14 +1,15 @@
-"""conformance.py — var-doc and registry artifact projections.
+"""conformance.py — var-doc, registry, plan, and trace artifact projections.
 
-Port of toVarDocArtifact and toRegistryArtifact from
-typescript/packages/var-core/src/conformance.ts.
-Serializes a VarDoc AST / Registry to the camelCase wire dicts expected by the
-conformance golden files.
+Port of toVarDocArtifact, toRegistryArtifact, toPlanArtifact, toFailureArtifact,
+and runConformance from typescript/packages/var-core/src/conformance.ts.
+Serializes a VarDoc AST / Registry / ExecutionPlan / trace to the camelCase wire
+dicts expected by the conformance golden files.
 """
 
 from __future__ import annotations
 
-from typing import Any
+import os
+from typing import Any, Callable
 
 from cucumber_expressions.expression import CucumberExpression
 
@@ -25,7 +26,11 @@ from var.ast import (
     ThematicBreak,
     VarDoc,
 )
+from var.cell_diff import CellMismatchError, ReturnShapeError, is_cell_mismatch_error
+from var.doc_string_diff import is_doc_string_mismatch_error
+from var.execute import CollectPorts, StepObservation, collect_examples, is_unexpected_pass_error
 from var.plan import ExecutionPlan
+from var.plan import plan as build_plan
 from var.registry import Registry
 from var.span import Span, utf16_slice
 
@@ -231,4 +236,145 @@ def to_plan_artifact(execution_plan: ExecutionPlan) -> dict[str, Any]:
             }
             for d in execution_plan.diagnostics
         ],
+    }
+
+
+# ---------------------------------------------------------------------------
+# Trace artifact projection
+# ---------------------------------------------------------------------------
+
+
+def _file_stem(path: str) -> str:
+    """Return the file stem: ``path/to/foo.steps.py`` -> ``foo.steps``.
+
+    Port of ``fileStem`` from conformance.ts.  Strips the final extension so
+    that ``foo.steps.py`` becomes ``foo.steps`` and ``foo.py`` becomes ``foo``.
+    """
+    base = os.path.basename(path)
+    # Strip the last extension only (same as TS: base.replace(/\\.[^.]+$/, ''))
+    stem, _ext = os.path.splitext(base)
+    return stem
+
+
+def to_failure_artifact(error: object, line: int) -> dict[str, Any]:
+    """Project an execution error to a FailureArtifact dict.
+
+    Port of ``toFailureArtifact`` from conformance.ts.
+    ``line`` is the failing step's ``match_span.start_line`` (1-based).
+    """
+    if is_cell_mismatch_error(error):
+        assert isinstance(error, CellMismatchError)
+        return {
+            "kind": "cell-mismatch",
+            "line": line,
+            "cells": [
+                {
+                    "column": c.column,
+                    "expected": c.expected,
+                    "actual": c.actual,
+                    "span": _span(c.span),
+                }
+                for c in error.cells
+                if not c.ok
+            ],
+        }
+    if is_doc_string_mismatch_error(error):
+        from var.doc_string_diff import DocStringMismatchError
+        assert isinstance(error, DocStringMismatchError)
+        return {
+            "kind": "doc-string-mismatch",
+            "line": line,
+            "diff": {
+                "expected": error.diff.expected,
+                "actual": error.diff.actual,
+                "span": _span(error.diff.span),
+            },
+        }
+    if isinstance(error, ReturnShapeError):
+        return {"kind": "return-shape", "line": line}
+    if is_unexpected_pass_error(error):
+        return {"kind": "unexpected-pass", "line": line}
+    return {"kind": "thrown", "line": line}
+
+
+def run_conformance(
+    var_doc: VarDoc,
+    registry: Registry,
+    create_context: Callable[[str], Any],
+    parameter_types: tuple[dict[str, str], ...] = (),
+) -> dict[str, Any]:
+    """Run all examples and return the four-artifact bundle dict.
+
+    Port of ``runConformance`` from conformance.ts.
+    Returns ``{"varDoc", "registry", "plan", "trace"}``.
+    """
+    execution = build_plan(var_doc, registry)
+
+    # Accumulate step observations keyed by example index.
+    observed: dict[int, list[StepObservation]] = {}
+
+    class _RecordingObserver:
+        def step(self, o: StepObservation) -> None:
+            lst = observed.setdefault(o.example_index, [])
+            lst.append(o)
+
+    class _NullReporter:
+        def diagnostic(self, _d: Any) -> None:
+            pass
+
+    queue = collect_examples(
+        execution,
+        CollectPorts(
+            reporter=_NullReporter(),
+            create_context=create_context,
+            observer=_RecordingObserver(),
+        ),
+    )
+
+    trace_examples = []
+    for k, queued in enumerate(queue):
+        outcome: str = "pass"
+        try:
+            queued.run()
+        except Exception:
+            outcome = "fail"
+
+        planned = execution.examples[k]
+        obs_list = observed.get(k, [])
+
+        steps = []
+        for i, step in enumerate(planned.steps):
+            # Select the fail observation if any, else the last; skipped if none.
+            ordinal = i + 1
+            matches = [x for x in obs_list if x.ordinal == ordinal]
+            o = next((m for m in matches if m.outcome == "fail"), None)
+            if o is None and matches:
+                o = matches[-1]
+
+            step_outcome: str = o.outcome if o is not None else "skipped"
+            step_dict: dict[str, Any] = {
+                "exampleName": queued.name,
+                "ordinal": ordinal,
+                "stepText": step.text,
+                "matchedExpression": step.step_def.expression,
+                "contextKey": {
+                    "exampleName": queued.name,
+                    "stepFile": _file_stem(step.step_def.expression_source_file),
+                },
+                "outcome": step_outcome,
+            }
+            if step_outcome == "fail":
+                step_dict["failure"] = to_failure_artifact(
+                    o.error if o is not None else None,
+                    step.match_span.start_line,
+                )
+            steps.append(step_dict)
+
+        trace_examples.append({"name": queued.name, "outcome": outcome, "steps": steps})
+
+    return {
+        "varDoc": to_var_doc_artifact(var_doc),
+        "registry": to_registry_artifact(registry, list(parameter_types)),
+        "plan": to_plan_artifact(execution),
+        "trace": {"examples": trace_examples},
     }
