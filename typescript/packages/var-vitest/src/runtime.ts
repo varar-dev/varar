@@ -1,13 +1,12 @@
 import { buildRegistry, contextFactory } from '@oselvar/var/registry'
 import {
   executePlan,
-  parse,
-  plan,
   type Reporter,
   type ScannerPlugin,
   type TestSink,
   toFailure,
 } from '@oselvar/var-core'
+import { planSpec } from '@oselvar/var-runner'
 
 export { toFailure }
 
@@ -19,9 +18,8 @@ export type RunPorts = {
   readonly scannerPlugins?: ReadonlyArray<ScannerPlugin>
 }
 
-export function runVarSource(source: string, path: string, ports: RunPorts): void {
-  const varDoc = parse(path, source, ports.scannerPlugins ?? [])
+export function runVarSource(path: string, source: string, ports: RunPorts): void {
   const registry = buildRegistry()
-  const p = plan(varDoc, registry)
+  const p = planSpec(path, source, registry, ports.scannerPlugins)
   executePlan(p, { ...ports, createContext: contextFactory() })
 }

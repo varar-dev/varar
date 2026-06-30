@@ -27,7 +27,7 @@ describe('generateVirtualModule', () => {
     expect(out).toContain("import { runVarSource, toFailure } from '@oselvar/var-vitest/runtime'")
     expect(out).toContain('import "/abs/account.steps.ts"')
     expect(out).toContain('const PATH = "/abs/foo.md"')
-    expect(out).toContain('runVarSource(SOURCE, PATH,')
+    expect(out).toContain('runVarSource(PATH, SOURCE,')
     expect(out).toContain('ctx.task.meta.varResult')
     expect(out).toContain('toFailure(error, PATH, lines[0] ?? 0)')
     expect(out).toContain('scannerPlugins: varConfig?.scannerPlugins ?? []')

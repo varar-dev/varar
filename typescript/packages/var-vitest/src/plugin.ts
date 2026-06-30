@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { findFiles, loadVarConfig } from '@oselvar/var-core/node'
+import { findSpecs, readVarConfig } from '@oselvar/var-runner'
 import type { Plugin } from 'vite'
 import { configDefaults } from 'vitest/config'
 
@@ -35,7 +35,7 @@ export function varVitestPlugin(options: VarVitestPluginOptions = {}): Plugin {
       // made absolute against `cwd`; setting `test.exclude` *replaces* vitest's
       // defaults, so re-add `configDefaults.exclude` to keep `node_modules` &c.
       // out.
-      const cfg = await loadVarConfig(cwd)
+      const cfg = await readVarConfig(cwd)
       const abs = (g: string) => resolve(cwd, g)
       return {
         // Force a single @oselvar/var (and @oselvar/var-core) module instance.
@@ -52,9 +52,9 @@ export function varVitestPlugin(options: VarVitestPluginOptions = {}): Plugin {
       }
     },
     async configResolved() {
-      const cfg = await loadVarConfig(cwd)
-      stepFiles = findFiles(cwd, cfg.steps)
-      specFiles = new Set(findFiles(cwd, cfg.vars.include, cfg.vars.exclude))
+      const cfg = await readVarConfig(cwd)
+      stepFiles = findSpecs(cwd, cfg.steps)
+      specFiles = new Set(findSpecs(cwd, cfg.vars.include, cfg.vars.exclude))
       for (const name of ['var.config.ts', 'var.config.js', 'var.config.mjs']) {
         const abs = resolve(cwd, name)
         if (existsSync(abs)) {
@@ -101,7 +101,7 @@ ${stepImports}
 const SOURCE = ${sourceJson}
 const PATH = ${pathJson}
 
-runVarSource(SOURCE, PATH, {
+runVarSource(PATH, SOURCE, {
   sink: {
     example: (name, run, info) =>
       vitestTest(name, async (ctx) => {
