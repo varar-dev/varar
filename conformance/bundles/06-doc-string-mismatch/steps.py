@@ -1,8 +1,0 @@
-from var import define_state
-
-context, action, sensor = define_state(lambda: {})
-
-
-@sensor("I echo the following:")
-def _(state, doc):
-    return ["goodbye"]

@@ -26,7 +26,7 @@ from var.ast import (
     ThematicBreak,
     VarDoc,
 )
-from var.cell_diff import CellMismatchError, ReturnShapeError, is_cell_mismatch_error
+from var.cell_diff import ReturnShapeError, is_cell_mismatch_error
 from var.doc_string_diff import is_doc_string_mismatch_error
 from var.execute import CollectPorts, StepObservation, collect_examples, is_unexpected_pass_error
 from var.plan import ExecutionPlan
@@ -263,7 +263,6 @@ def to_failure_artifact(error: object, line: int) -> dict[str, Any]:
     ``line`` is the failing step's ``match_span.start_line`` (1-based).
     """
     if is_cell_mismatch_error(error):
-        assert isinstance(error, CellMismatchError)
         return {
             "kind": "cell-mismatch",
             "line": line,
@@ -279,8 +278,6 @@ def to_failure_artifact(error: object, line: int) -> dict[str, Any]:
             ],
         }
     if is_doc_string_mismatch_error(error):
-        from var.doc_string_diff import DocStringMismatchError
-        assert isinstance(error, DocStringMismatchError)
         return {
             "kind": "doc-string-mismatch",
             "line": line,
