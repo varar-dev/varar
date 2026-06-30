@@ -38,11 +38,15 @@ class VarFile(pytest.File):
         source = self.path.read_text(encoding="utf-8")
         execution_plan = plan_spec(source, self.path.name, loaded.registry)
         pairs = examples_with_runs(execution_plan, loaded.create_context, RecordingReporter())
+        seen: dict[str, int] = {}
         for example, run in pairs:
             # Use the innermost heading (scope_stack[-1]) as the item name so
             # pytest displays "## adds two" as "adds two"; fall back to the
             # body-derived name when there is no scope.
-            name = example.scope_stack[-1] if example.scope_stack else example.name
+            base = example.scope_stack[-1] if example.scope_stack else example.name
+            idx = seen.get(base, 0)
+            seen[base] = idx + 1
+            name = base if idx == 0 else f"{base}[{idx}]"
             yield VarItem.from_parent(self, name=name, example=example, run=run, source=source)
 
 
