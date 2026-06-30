@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
-from typing import Literal
+from typing import Any, Literal
 
 from var.ast import Block, Example, Fence, InlineOffset, Table, VarDoc
 from var.cell_diff import RowCheck
@@ -79,6 +79,10 @@ class ExecutionPlan:
     var_doc: VarDoc
     examples: tuple[PlannedExample, ...]
     diagnostics: tuple[Diagnostic, ...]
+    # Raw AST examples that had text-bearing blocks but no matching step defs
+    # (silently dropped as "plain docs" by the planner).  Adapters can inspect
+    # this to surface "undefined step" failures rather than silently passing.
+    dropped_examples: tuple[Any, ...] = ()  # tuple[Example, ...]
 
 
 # ---------------------------------------------------------------------------
@@ -279,6 +283,7 @@ def plan(var_doc: VarDoc, registry: Registry) -> ExecutionPlan:
     """
     examples: list[PlannedExample] = []
     diagnostics: list[Diagnostic] = []
+    dropped: list[Example] = []
 
     for ex in var_doc.examples:
         had_ambiguous = False
@@ -458,7 +463,10 @@ def plan(var_doc: VarDoc, registry: Registry) -> ExecutionPlan:
             diagnostics.append(error_fence_without_step(error_fence.span))  # type: ignore[arg-type]
 
         if not final_steps and not had_ambiguous:
-            # No matches — drop this example (plain docs).
+            # No matches — drop this example (plain docs).  Track it so
+            # adapters can surface "undefined step" failures for text-bearing
+            # examples that have sentences but no matching step defs.
+            dropped.append(ex)
             continue
 
         # Build expected-outcome fields.
@@ -485,6 +493,7 @@ def plan(var_doc: VarDoc, registry: Registry) -> ExecutionPlan:
         var_doc=var_doc,
         examples=tuple(examples),
         diagnostics=tuple(diagnostics),
+        dropped_examples=tuple(dropped),
     )
 
 

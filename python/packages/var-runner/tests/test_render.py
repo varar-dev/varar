@@ -3,7 +3,7 @@ from var.cell_diff import CellDiff, CellMismatchError, ReturnShapeError
 from var.doc_string_diff import DocStringDiff, DocStringMismatchError
 from var.span import Span
 
-from var_runner.render import render_failure
+from var_runner.render import UndefinedStepError, render_failure
 
 
 def _span(line: int) -> Span:
@@ -99,3 +99,24 @@ def test_generic_exception_renders_type_and_message():
     result = render_failure(error, "", "spec.md")
 
     assert result == "ValueError: boom"
+
+
+# ---------------------------------------------------------------------------
+# UndefinedStepError
+# ---------------------------------------------------------------------------
+
+
+def test_undefined_step_renders_step_text():
+    error = UndefinedStepError("I do something undefined")
+    result = render_failure(error, "", "spec.md")
+
+    assert "Undefined step" in result
+    assert "I do something undefined" in result
+
+
+def test_undefined_step_message_does_not_duplicate():
+    """render_failure should return 'Undefined step: <text>', not nest the prefix."""
+    error = UndefinedStepError("I open the app")
+    result = render_failure(error, "", "spec.md")
+
+    assert result == "Undefined step: I open the app"
