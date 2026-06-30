@@ -1041,3 +1041,45 @@ def test_sensor_with_trailing_doc_string_returning_wrong_text_raises_doc_string_
         ),
     )
     assert is_doc_string_mismatch_error(caught[0])
+
+
+# ---------------------------------------------------------------------------
+# Async handler tests
+# ---------------------------------------------------------------------------
+
+
+def test_async_def_handlers_are_driven_to_completion() -> None:
+    """async def context/action and sensor handlers are driven to completion via asyncio.run.
+
+    If the async path is broken (coroutine not awaited), the action's state
+    merge would never happen and the sensor would fail with ReturnShapeError
+    (a raw coroutine object is not a list/tuple) or see stale state.
+    """
+    seen: list[Any] = []
+
+    async def _async_action(state: Any, n: int) -> dict:
+        return {"count": n}
+
+    async def _async_sensor(state: Any, expected: int) -> list:
+        seen.append(state["count"])
+        return [state["count"]]
+
+    r = add_step(
+        add_step(
+            create_registry(),
+            expression="set count to {int}",
+            expression_source_file="async.ts",
+            expression_source_line=1,
+            kind="action",
+            handler=_async_action,
+        ),
+        expression="count is {int}",
+        expression_source_file="async.ts",
+        expression_source_line=2,
+        kind="sensor",
+        handler=_async_sensor,
+    )
+    p = plan(parse("a.md", "# Async\n\nset count to 5. count is 5.\n"), r)
+    run = _capture_run(p)
+    run()  # must not raise
+    assert seen == [5], "async sensor was not driven to completion or state was not merged"

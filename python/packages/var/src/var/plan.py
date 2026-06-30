@@ -12,6 +12,7 @@ from dataclasses import dataclass
 from typing import Literal
 
 from var.ast import Block, Example, Fence, InlineOffset, Table, VarDoc
+from var.cell_diff import RowCheck
 from var.diagnostics import (
     AmbiguousInput,
     Candidate,
@@ -57,13 +58,8 @@ class HeaderBinding:
     step_def: StepRegistration
 
 
-@dataclass(frozen=True, slots=True)
-class RowCheck:
-    """One expected column value for a header-bound table row."""
-
-    column: str
-    value: str
-    span: Span
+# RowCheck is imported from cell_diff (single canonical definition, mirroring
+# the TypeScript reference where RowCheck lives only in cell-diff.ts).
 
 
 @dataclass(frozen=True, slots=True)
