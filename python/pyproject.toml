@@ -3,6 +3,7 @@ members = ["packages/*"]
 
 [tool.uv.sources]
 oselvar-var = { workspace = true }
+oselvar-var-runner = { workspace = true }
 
 [dependency-groups]
 dev = ["pytest>=8", "ruff>=0.6"]

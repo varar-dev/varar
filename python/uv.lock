@@ -5,6 +5,7 @@ requires-python = ">=3.11"
 [manifest]
 members = [
     "oselvar-var",
+    "oselvar-var-runner",
     "oselvar-var-unittest",
     "pytest-var",
 ]
@@ -52,6 +53,17 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [{ name = "cucumber-expressions", specifier = "==20.0.0" }]
+
+[[package]]
+name = "oselvar-var-runner"
+version = "0.0.0"
+source = { editable = "packages/var-runner" }
+dependencies = [
+    { name = "oselvar-var" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "oselvar-var", editable = "packages/var" }]
 
 [[package]]
 name = "oselvar-var-unittest"
