@@ -1,0 +1,108 @@
+{
+  "examples": [
+    {
+      "body": [
+        {
+          "inlineMap": [
+            {
+              "sourceOffset": 54,
+              "textOffset": 0
+            },
+            {
+              "sourceOffset": 55,
+              "textOffset": 1
+            },
+            {
+              "sourceOffset": 56,
+              "textOffset": 2
+            },
+            {
+              "sourceOffset": 57,
+              "textOffset": 3
+            },
+            {
+              "sourceOffset": 58,
+              "textOffset": 4
+            },
+            {
+              "sourceOffset": 59,
+              "textOffset": 5
+            },
+            {
+              "sourceOffset": 60,
+              "textOffset": 6
+            },
+            {
+              "sourceOffset": 61,
+              "textOffset": 7
+            },
+            {
+              "sourceOffset": 62,
+              "textOffset": 8
+            },
+            {
+              "sourceOffset": 63,
+              "textOffset": 9
+            },
+            {
+              "sourceOffset": 64,
+              "textOffset": 10
+            },
+            {
+              "sourceOffset": 65,
+              "textOffset": 11
+            },
+            {
+              "sourceOffset": 66,
+              "textOffset": 12
+            },
+            {
+              "sourceOffset": 67,
+              "textOffset": 13
+            },
+            {
+              "sourceOffset": 68,
+              "textOffset": 14
+            },
+            {
+              "sourceOffset": 69,
+              "textOffset": 15
+            },
+            {
+              "sourceOffset": 70,
+              "textOffset": 16
+            },
+            {
+              "sourceOffset": 71,
+              "textOffset": 17
+            }
+          ],
+          "kind": "blockquote",
+          "span": {
+            "endCol": 21,
+            "endLine": 5,
+            "endOffset": 72,
+            "startCol": 1,
+            "startLine": 5,
+            "startOffset": 52
+          },
+          "text": "I greet \"éwörld\"."
+        }
+      ],
+      "scopeStack": [
+        "🎉 Café World",
+        "It greets with combining marks"
+      ],
+      "span": {
+        "endCol": 21,
+        "endLine": 5,
+        "endOffset": 72,
+        "startCol": 1,
+        "startLine": 5,
+        "startOffset": 52
+      }
+    }
+  ],
+  "orphanAttachments": [],
+  "path": "example.md"
+}

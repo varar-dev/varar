@@ -1,0 +1,128 @@
+{
+  "diagnostics": [],
+  "examples": [
+    {
+      "expectedOutcome": "pass",
+      "name": "I greet \"😀wörld\"",
+      "scopeStack": [
+        "😀 Emoji World",
+        "It greets after an emoji"
+      ],
+      "span": {
+        "endCol": 18,
+        "endLine": 9,
+        "endOffset": 119,
+        "startCol": 1,
+        "startLine": 5,
+        "startOffset": 47
+      },
+      "steps": [
+        {
+          "args": [
+            {
+              "parameterType": "string",
+              "value": "\"😀wörld\""
+            }
+          ],
+          "dataTable": {
+            "header": {
+              "cellSpans": [
+                {
+                  "endCol": 7,
+                  "endLine": 7,
+                  "endOffset": 75,
+                  "startCol": 3,
+                  "startLine": 7,
+                  "startOffset": 71
+                },
+                {
+                  "endCol": 13,
+                  "endLine": 7,
+                  "endOffset": 81,
+                  "startCol": 10,
+                  "startLine": 7,
+                  "startOffset": 78
+                }
+              ],
+              "cells": [
+                "Café",
+                "日本語"
+              ],
+              "span": {
+                "endCol": 15,
+                "endLine": 7,
+                "endOffset": 83,
+                "startCol": 1,
+                "startLine": 7,
+                "startOffset": 69
+              }
+            },
+            "kind": "table",
+            "rows": [
+              {
+                "cellSpans": [
+                  {
+                    "endCol": 4,
+                    "endLine": 9,
+                    "endOffset": 105,
+                    "startCol": 3,
+                    "startLine": 9,
+                    "startOffset": 104
+                  },
+                  {
+                    "endCol": 11,
+                    "endLine": 9,
+                    "endOffset": 112,
+                    "startCol": 10,
+                    "startLine": 9,
+                    "startOffset": 111
+                  }
+                ],
+                "cells": [
+                  "a",
+                  "b"
+                ],
+                "span": {
+                  "endCol": 18,
+                  "endLine": 9,
+                  "endOffset": 119,
+                  "startCol": 1,
+                  "startLine": 9,
+                  "startOffset": 102
+                }
+              }
+            ],
+            "span": {
+              "endCol": 18,
+              "endLine": 9,
+              "endOffset": 119,
+              "startCol": 1,
+              "startLine": 7,
+              "startOffset": 69
+            }
+          },
+          "matchSpan": {
+            "endCol": 20,
+            "endLine": 5,
+            "endOffset": 66,
+            "startCol": 3,
+            "startLine": 5,
+            "startOffset": 49
+          },
+          "matchedExpression": "I greet {string}",
+          "paramSpans": [
+            {
+              "endCol": 20,
+              "endLine": 5,
+              "endOffset": 66,
+              "startCol": 11,
+              "startLine": 5,
+              "startOffset": 57
+            }
+          ],
+          "text": "I greet \"😀wörld\""
+        }
+      ]
+    }
+  ]
+}

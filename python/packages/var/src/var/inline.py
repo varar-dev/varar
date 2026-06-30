@@ -131,8 +131,18 @@ def strip_inline(raw_text: str, source_base: int) -> tuple[str, tuple[InlineOffs
         push_offset(source_base + u16_i)
         out.append(ch)
         u16_cp_units = 2 if ord(ch) > 0xFFFF else 1
-        text_offset += u16_cp_units
-        u16_i += u16_cp_units
+        text_offset += 1
+        u16_i += 1
+        if u16_cp_units == 2:
+            # Astral-plane character: TypeScript's string indexer visits each
+            # UTF-16 code unit (high and low surrogate) separately and emits
+            # an inlineMap entry for both.  Mirror that here so the Python
+            # inline map matches the TS golden byte-for-byte.
+            map_list.append(
+                InlineOffset(text_offset=text_offset, source_offset=source_base + u16_i)
+            )
+            text_offset += 1
+            u16_i += 1
         cp_i += 1
 
     # Fallback for empty input (map must have at least one entry).

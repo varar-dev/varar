@@ -1,0 +1,21 @@
+{
+  "examples": [
+    {
+      "name": "I greet \"éwörld\"",
+      "outcome": "pass",
+      "steps": [
+        {
+          "contextKey": {
+            "exampleName": "I greet \"éwörld\"",
+            "stepFile": "greet.steps"
+          },
+          "exampleName": "I greet \"éwörld\"",
+          "matchedExpression": "I greet {string}",
+          "ordinal": 1,
+          "outcome": "pass",
+          "stepText": "I greet \"éwörld\""
+        }
+      ]
+    }
+  ]
+}

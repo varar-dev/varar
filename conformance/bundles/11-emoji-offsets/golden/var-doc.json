@@ -1,0 +1,194 @@
+{
+  "examples": [
+    {
+      "body": [
+        {
+          "inlineMap": [
+            {
+              "sourceOffset": 49,
+              "textOffset": 0
+            },
+            {
+              "sourceOffset": 50,
+              "textOffset": 1
+            },
+            {
+              "sourceOffset": 51,
+              "textOffset": 2
+            },
+            {
+              "sourceOffset": 52,
+              "textOffset": 3
+            },
+            {
+              "sourceOffset": 53,
+              "textOffset": 4
+            },
+            {
+              "sourceOffset": 54,
+              "textOffset": 5
+            },
+            {
+              "sourceOffset": 55,
+              "textOffset": 6
+            },
+            {
+              "sourceOffset": 56,
+              "textOffset": 7
+            },
+            {
+              "sourceOffset": 57,
+              "textOffset": 8
+            },
+            {
+              "sourceOffset": 58,
+              "textOffset": 9
+            },
+            {
+              "sourceOffset": 59,
+              "textOffset": 10
+            },
+            {
+              "sourceOffset": 60,
+              "textOffset": 11
+            },
+            {
+              "sourceOffset": 61,
+              "textOffset": 12
+            },
+            {
+              "sourceOffset": 62,
+              "textOffset": 13
+            },
+            {
+              "sourceOffset": 63,
+              "textOffset": 14
+            },
+            {
+              "sourceOffset": 64,
+              "textOffset": 15
+            },
+            {
+              "sourceOffset": 65,
+              "textOffset": 16
+            },
+            {
+              "sourceOffset": 66,
+              "textOffset": 17
+            }
+          ],
+          "kind": "list_item",
+          "markerSpan": {
+            "endCol": 2,
+            "endLine": 5,
+            "endOffset": 48,
+            "startCol": 1,
+            "startLine": 5,
+            "startOffset": 47
+          },
+          "ordered": false,
+          "span": {
+            "endCol": 21,
+            "endLine": 5,
+            "endOffset": 67,
+            "startCol": 1,
+            "startLine": 5,
+            "startOffset": 47
+          },
+          "text": "I greet \"😀wörld\"."
+        },
+        {
+          "header": {
+            "cellSpans": [
+              {
+                "endCol": 7,
+                "endLine": 7,
+                "endOffset": 75,
+                "startCol": 3,
+                "startLine": 7,
+                "startOffset": 71
+              },
+              {
+                "endCol": 13,
+                "endLine": 7,
+                "endOffset": 81,
+                "startCol": 10,
+                "startLine": 7,
+                "startOffset": 78
+              }
+            ],
+            "cells": [
+              "Café",
+              "日本語"
+            ],
+            "span": {
+              "endCol": 15,
+              "endLine": 7,
+              "endOffset": 83,
+              "startCol": 1,
+              "startLine": 7,
+              "startOffset": 69
+            }
+          },
+          "kind": "table",
+          "rows": [
+            {
+              "cellSpans": [
+                {
+                  "endCol": 4,
+                  "endLine": 9,
+                  "endOffset": 105,
+                  "startCol": 3,
+                  "startLine": 9,
+                  "startOffset": 104
+                },
+                {
+                  "endCol": 11,
+                  "endLine": 9,
+                  "endOffset": 112,
+                  "startCol": 10,
+                  "startLine": 9,
+                  "startOffset": 111
+                }
+              ],
+              "cells": [
+                "a",
+                "b"
+              ],
+              "span": {
+                "endCol": 18,
+                "endLine": 9,
+                "endOffset": 119,
+                "startCol": 1,
+                "startLine": 9,
+                "startOffset": 102
+              }
+            }
+          ],
+          "span": {
+            "endCol": 18,
+            "endLine": 9,
+            "endOffset": 119,
+            "startCol": 1,
+            "startLine": 7,
+            "startOffset": 69
+          }
+        }
+      ],
+      "scopeStack": [
+        "😀 Emoji World",
+        "It greets after an emoji"
+      ],
+      "span": {
+        "endCol": 18,
+        "endLine": 9,
+        "endOffset": 119,
+        "startCol": 1,
+        "startLine": 5,
+        "startOffset": 47
+      }
+    }
+  ],
+  "orphanAttachments": [],
+  "path": "example.md"
+}
