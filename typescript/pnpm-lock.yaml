@@ -121,6 +121,12 @@ importers:
         specifier: ^1.0.12
         version: 1.0.12
 
+  packages/var-runner:
+    dependencies:
+      '@oselvar/var-core':
+        specifier: workspace:*
+        version: link:../var-core
+
   packages/var-vitest:
     dependencies:
       '@oselvar/var':
