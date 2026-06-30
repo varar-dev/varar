@@ -125,10 +125,16 @@ version = "0.0.0"
 source = { editable = "packages/var-pytest" }
 dependencies = [
     { name = "oselvar-var" },
+    { name = "oselvar-var-runner" },
+    { name = "pytest" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "oselvar-var", editable = "packages/var" }]
+requires-dist = [
+    { name = "oselvar-var", editable = "packages/var" },
+    { name = "oselvar-var-runner", editable = "packages/var-runner" },
+    { name = "pytest", specifier = ">=8" },
+]
 
 [[package]]
 name = "ruff"

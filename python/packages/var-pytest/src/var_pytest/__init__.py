@@ -1,3 +1,3 @@
-"""pytest plugin for var (skeleton — see issue #2)."""
+"""pytest plugin for var."""
 
 __version__ = "0.0.0"

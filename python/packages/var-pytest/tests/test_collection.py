@@ -1,0 +1,51 @@
+STEPS = '''
+from var import define_state
+context, action, sensor = define_state(lambda: {"n": 0})
+@action("I add {int}")
+def _(state, n):
+    return {"n": state["n"] + n}
+@sensor("the total is {int}")
+def _(state, total):
+    assert state["n"] == total, f"expected {total} got {state['n']}"
+'''
+PYPROJECT = '''
+[tool.var]
+vars = ["features/**/*.md"]
+steps = ["steps/**/*.steps.py"]
+'''
+# Steps must be in the same paragraph (single newline, not blank line) so the
+# structurer groups them into one example per ## section.
+SPEC = "# Calc\n\n## adds two\n\nI add 2\nthe total is 2\n\n## adds wrong\n\nI add 2\nthe total is 9\n"
+
+
+def _write_steps(pytester):
+    (pytester.path / "steps").mkdir(exist_ok=True)
+    (pytester.path / "steps/calc.steps.py").write_text(STEPS.strip(), encoding="utf-8")
+
+
+def test_one_item_per_example_pass_and_fail(pytester):
+    pytester.makepyprojecttoml(PYPROJECT)
+    _write_steps(pytester)
+    (pytester.path / "features").mkdir()
+    (pytester.path / "features/calc.md").write_text(SPEC, encoding="utf-8")
+    result = pytester.runpytest("-v")
+    result.assert_outcomes(passed=1, failed=1)
+    result.stdout.fnmatch_lines(["*features/calc.md::adds two*PASSED*"])
+
+
+def test_k_selection(pytester):
+    pytester.makepyprojecttoml(PYPROJECT)
+    _write_steps(pytester)
+    (pytester.path / "features").mkdir()
+    (pytester.path / "features/calc.md").write_text(SPEC, encoding="utf-8")
+    # pytest 9 uses expression syntax; "adds and two" matches items whose
+    # keywords include both "adds" and "two" — uniquely identifies "adds two".
+    result = pytester.runpytest("-k", "adds and two")
+    result.assert_outcomes(passed=1)
+
+
+def test_non_matching_md_is_ignored(pytester):
+    pytester.makepyprojecttoml(PYPROJECT)
+    (pytester.path / "README.md").write_text("# not a spec\n", encoding="utf-8")
+    result = pytester.runpytest()
+    result.assert_outcomes()  # nothing collected, no error
