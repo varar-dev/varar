@@ -8,20 +8,6 @@ from var.cell_diff import ReturnShapeError, is_cell_mismatch_error
 from var.doc_string_diff import is_doc_string_mismatch_error
 
 
-class UndefinedStepError(Exception):
-    """Raised by adapters when a spec example has no matching step definition.
-
-    The core planner silently drops examples with no matching steps (treating
-    them as plain docs).  Adapters that want to surface the gap as a test
-    failure raise this error in the example's run closure so that
-    ``repr_failure`` can present an actionable message.
-    """
-
-    def __init__(self, step_text: str) -> None:
-        super().__init__(f"Undefined step: {step_text}")
-        self.step_text = step_text
-
-
 def render_failure(error: BaseException, source: str, var_path: str) -> str:  # noqa: ARG001
     """Render a step failure as a human-readable, markdown-anchored string.
 
@@ -56,8 +42,5 @@ def render_failure(error: BaseException, source: str, var_path: str) -> str:  # 
 
     if isinstance(error, ReturnShapeError):
         return str(error)
-
-    if isinstance(error, UndefinedStepError):
-        return f"Undefined step: {error.step_text}"
 
     return f"{type(error).__name__}: {error}"

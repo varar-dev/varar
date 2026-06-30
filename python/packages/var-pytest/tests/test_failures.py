@@ -2,7 +2,7 @@
 
 Tests:
 - Cell-mismatch failure renders line number + expected/actual diff.
-- Undefined-step failure names the unmatched step text.
+- A paragraph whose sentences match no step definition is silently ignored.
 """
 
 PYPROJECT = """
@@ -37,19 +37,46 @@ def _(state, row=None):
 """
 
 # ---------------------------------------------------------------------------
-# Undefined-step fixtures
+# Prose-paragraph fixtures (no matching step defs → silently ignored)
 # ---------------------------------------------------------------------------
 
-UNDEFINED_SPEC = """\
+# A spec with one real example AND one prose paragraph that matches no step def.
+PROSE_AND_REAL_SPEC = """\
 # My Feature
 
-## My Example
+## Prose paragraph
 
-I have a step with no matching def.
+This sentence matches no step definition at all.
+
+## A real example
+
+I report the score and grade.
+
+| score | grade |
+| ----- | ----- |
+| 99    | A     |
 """
 
-# A steps file that defines state but registers NO step defs.
-UNDEFINED_STEPS = """\
+# A spec with ONLY a prose paragraph — the whole file has no matched steps.
+PROSE_ONLY_SPEC = """\
+# My Feature
+
+## Prose paragraph
+
+This sentence matches no step definition at all.
+"""
+
+PROSE_STEPS = """\
+from var import define_state
+context, action, sensor = define_state(lambda: {})
+
+@sensor("I report the score and grade")
+def _(state, row=None):
+    return {"score": "99", "grade": "A"}
+"""
+
+# Steps that register NO defs at all.
+EMPTY_STEPS = """\
 from var import define_state
 context, action, sensor = define_state(lambda: {})
 """
@@ -89,13 +116,19 @@ def test_cell_mismatch_repr_failure_shows_line_and_diff(pytester):
     assert any("line" in line for line in result.stdout.lines)
 
 
-def test_undefined_step_failure_names_step_text(pytester):
-    """When a spec has a step text that matches no step definition, pytest must
-    collect the example as a failed test item whose failure message names the
-    unmatched step text."""
-    _write_fixture(pytester, UNDEFINED_SPEC, UNDEFINED_STEPS)
+def test_prose_paragraph_with_no_matching_steps_is_silently_ignored(pytester):
+    """A paragraph whose sentences match no step definition must NOT be collected
+    as a test item — it is plain prose and is silently dropped by the planner."""
+    _write_fixture(pytester, PROSE_ONLY_SPEC, EMPTY_STEPS)
     result = pytester.runpytest("-v")
-    result.assert_outcomes(failed=1)
-    # render_failure output: "Undefined step: I have a step with no matching def."
-    result.stdout.fnmatch_lines(["*Undefined step*"])
-    result.stdout.fnmatch_lines(["*no matching def*"])
+    # No items collected, no failures.
+    result.assert_outcomes(passed=0, failed=0)
+
+
+def test_prose_paragraph_does_not_pollute_real_examples(pytester):
+    """A spec that mixes a prose paragraph (no matches) with a real example must
+    collect only the real example — no extra failing item for the prose."""
+    _write_fixture(pytester, PROSE_AND_REAL_SPEC, PROSE_STEPS)
+    result = pytester.runpytest("-v")
+    # Only the one real example should be collected and should pass.
+    result.assert_outcomes(passed=1, failed=0)
