@@ -1,0 +1,81 @@
+from __future__ import annotations
+
+import re
+from collections.abc import Sequence
+from pathlib import Path
+
+
+def _rel_posix(path: Path, root: Path) -> str:
+    return path.resolve().relative_to(root.resolve()).as_posix()
+
+
+def _glob_to_regex(pattern: str) -> re.Pattern[str]:
+    """Translate a glob pattern with **, *, ? to a compiled regex.
+
+    Semantics (same as ``pathlib.Path.full_match`` / PEP 428):
+    - ``/**/`` (slash–doublestar–slash) → ``/(?:.+/)?``  zero or more intermediate
+      directory segments (the surrounding slashes are absorbed into the token).
+    - ``/**`` at end of pattern → ``(?:/.*)?``  optional trailing path.
+    - ``**/`` at start (no preceding ``/``) → ``.*`` (catches the leading slash too).
+    - bare ``**`` elsewhere → ``.*``.
+    - ``*``  → ``[^/]*``  (any chars except ``/``).
+    - ``?``  → ``[^/]``   (single char except ``/``).
+
+    ``pathlib.Path.full_match`` (Python 3.13+) would express this natively,
+    but Python 3.12 does not have it, so we compile a regex instead.
+    """
+    result = ""
+    i = 0
+    n = len(pattern)
+    while i < n:
+        c = pattern[i]
+        if c == "/" and pattern[i : i + 4] == "/**/":
+            # /**/ → /(?:.+/)?  — absorb both slashes; zero or more intermediate dirs
+            result += "/(?:.+/)?"
+            i += 4
+        elif c == "/" and pattern[i : i + 3] == "/**" and i + 3 == n:
+            # /** at end → optional trailing /anything
+            result += "(?:/.*)?"
+            i += 3
+        elif c == "*" and pattern[i : i + 2] == "**":
+            # ** without a preceding /  (e.g. the leading **/ case)
+            result += ".*"
+            i += 2
+        elif c == "*":
+            result += "[^/]*"
+            i += 1
+        elif c == "?":
+            result += "[^/]"
+            i += 1
+        else:
+            result += re.escape(c)
+            i += 1
+    return re.compile(result)
+
+
+def _matches_any(rel: str, globs: Sequence[str]) -> bool:
+    return any(_glob_to_regex(g).fullmatch(rel) is not None for g in globs)
+
+
+def match_spec(
+    path: Path,
+    include: Sequence[str],
+    exclude: Sequence[str],
+    root: Path,
+) -> bool:
+    """Return True iff *path* matches an include glob and no exclude glob."""
+    rel = _rel_posix(path, root)
+    return _matches_any(rel, include) and not _matches_any(rel, exclude)
+
+
+def find_specs(
+    include: Sequence[str],
+    exclude: Sequence[str],
+    root: Path,
+) -> tuple[Path, ...]:
+    """Return existing files under *root* matching any include glob, minus any exclude; sorted."""
+    out: set[Path] = set()
+    for g in include:
+        out.update(p for p in root.glob(g) if p.is_file())
+    keep = [p for p in out if not _matches_any(_rel_posix(p, root), exclude)]
+    return tuple(sorted(keep))
