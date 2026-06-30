@@ -1,6 +1,6 @@
 import { addStep, createRegistry, type Diagnostic } from '@oselvar/var-core'
 import { expect, test } from 'vitest'
-import { planSpec, RecordingReporter } from '../src/run.js'
+import { examplesWithRuns, planSpec, RecordingReporter } from '../src/run.js'
 
 function makeRegistry() {
   let r = createRegistry()
@@ -76,6 +76,46 @@ test('RecordingReporter records diagnostics', () => {
   reporter.diagnostic(d)
   expect(reporter.diagnostics).toHaveLength(1)
   expect(reporter.diagnostics[0]).toBe(d)
+})
+
+test('examplesWithRuns pairs examples with run functions', async () => {
+  const source = [
+    '# Calc',
+    '',
+    'I have 10 cucumbers. I eat 3 cucumbers. I should have 7 cucumbers left.',
+  ].join('\n')
+  const plan = planSpec('spec.md', source, makeRegistry())
+  const reporter = new RecordingReporter()
+  const pairs = examplesWithRuns(plan, () => ({}), reporter)
+
+  expect(pairs).toHaveLength(1)
+  const { example, run } = pairs[0]!
+  expect(example.name).toBe('I have 10 cucumbers')
+  // Passing run resolves without throwing
+  await expect(run()).resolves.toBeUndefined()
+})
+
+test('examplesWithRuns — failing run rejects', async () => {
+  // Build a registry whose sensor always throws
+  let r = createRegistry()
+  r = addStep(r, {
+    expression: 'the value is {int}',
+    expressionSourceFile: 'steps.ts',
+    expressionSourceLine: 1,
+    kind: 'sensor',
+    handler: (_state, _expected) => {
+      throw new Error('intentional failure')
+    },
+  })
+  const source = '# Test\n\nthe value is 42.\n'
+  const plan = planSpec('spec.md', source, r)
+  const reporter = new RecordingReporter()
+  const pairs = examplesWithRuns(plan, () => ({}), reporter)
+
+  expect(pairs).toHaveLength(1)
+  const { run } = pairs[0]!
+  // Failing run rejects
+  await expect(run()).rejects.toThrow('intentional failure')
 })
 
 test('RecordingReporter accumulates multiple diagnostics', () => {

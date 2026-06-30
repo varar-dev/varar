@@ -1,12 +1,27 @@
 import {
+  collectExamples,
   type Diagnostic,
   type ExecutionPlan,
+  type PlannedExample,
   parse,
   plan,
+  type QueuedExample,
   type Registry,
   type Reporter,
   type ScannerPlugin,
 } from '@oselvar/var-core'
+
+export function examplesWithRuns(
+  executionPlan: ExecutionPlan,
+  createContext: (stepFile: string) => unknown | Promise<unknown>,
+  reporter: Reporter,
+): ReadonlyArray<{ readonly example: PlannedExample; readonly run: () => void | Promise<void> }> {
+  const queued = collectExamples(executionPlan, { reporter, createContext })
+  return executionPlan.examples.map((example, i) => ({
+    example,
+    run: (queued[i] as QueuedExample).run,
+  }))
+}
 
 export function planSpec(
   path: string,
