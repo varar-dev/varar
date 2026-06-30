@@ -543,7 +543,7 @@ function buildHandlerSync(input: {
     newUserParams.push({ name: baseName, typeText })
   }
 
-  const ctxText = ctxParam ? renderHandlerParam(ctxParam) : 'ctx'
+  const ctxText = ctxParam ? renderHandlerParam(ctxParam) : 'state'
   const userText = newUserParams.map(renderHandlerParam).join(', ')
   const newText = userText.length > 0 ? `${ctxText}, ${userText}` : ctxText
 
