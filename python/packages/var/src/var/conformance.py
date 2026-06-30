@@ -1,13 +1,16 @@
-"""conformance.py — var-doc artifact projection.
+"""conformance.py — var-doc and registry artifact projections.
 
-Port of toVarDocArtifact from typescript/packages/var-core/src/conformance.ts.
-Serializes a VarDoc AST to the camelCase wire dict expected by the conformance
-golden files.
+Port of toVarDocArtifact and toRegistryArtifact from
+typescript/packages/var-core/src/conformance.ts.
+Serializes a VarDoc AST / Registry to the camelCase wire dicts expected by the
+conformance golden files.
 """
 
 from __future__ import annotations
 
 from typing import Any
+
+from cucumber_expressions.expression import CucumberExpression
 
 from var.ast import (
     Blockquote,
@@ -22,7 +25,49 @@ from var.ast import (
     ThematicBreak,
     VarDoc,
 )
+from var.registry import Registry
 from var.span import Span
+
+
+# ---------------------------------------------------------------------------
+# Registry artifact projection
+# ---------------------------------------------------------------------------
+
+
+def parameter_type_names(compiled: CucumberExpression) -> list[str]:
+    """Return parameter-type names in source order from a compiled expression.
+
+    Port of ``parameterTypeNames`` in conformance.ts.  The TS implementation
+    walks ``compiled.ast`` collecting ``NodeType.parameter`` nodes; in Python
+    ``CucumberExpression`` does not expose ``.ast``, but ``compiled.parameter_types``
+    is populated in source order by ``rewrite_parameter`` during ``__init__``,
+    giving identical results.
+    """
+    return [pt.name for pt in compiled.parameter_types]
+
+
+def to_registry_artifact(
+    registry: Registry,
+    parameter_types: list[dict[str, str]] | None = None,
+) -> dict[str, Any]:
+    """Project a Registry to the camelCase wire dict for the registry artifact.
+
+    Port of ``toRegistryArtifact`` from conformance.ts.
+    """
+    if parameter_types is None:
+        parameter_types = []
+    return {
+        "steps": [
+            {
+                "expression": s.expression,
+                "parameterTypeNames": parameter_type_names(s.compiled),
+            }
+            for s in registry.steps
+        ],
+        "parameterTypes": [
+            {"name": p["name"], "regexp": p["regexp"]} for p in parameter_types
+        ],
+    }
 
 
 def _span(s: Span) -> dict[str, Any]:
