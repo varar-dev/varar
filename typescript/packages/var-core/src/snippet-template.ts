@@ -2,7 +2,7 @@
 //   {{role}}         — the active role: context | action | sensor
 //   {{altA}},{{altB}}— the two non-active roles (for commented alternatives)
 //   {{expression}}   — the cucumber expression, e.g. `I have {int} cukes`
-//   {{args}}         — formatted handler args, e.g. `ctx, count: number`
+//   {{args}}         — formatted handler args, e.g. `state, count: number`
 //   {{originalText}} — the raw input the user typed
 export const DEFAULT_SNIPPET_TEMPLATE = `// {{altA}}('{{expression}}', ({{args}}) => {})
 // {{altB}}('{{expression}}', ({{args}}) => {})

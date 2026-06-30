@@ -6,7 +6,7 @@ import {
 import type { StepKind } from './step-role.js'
 
 export type StepHandler = (
-  ctx: unknown,
+  state: unknown,
   ...args: ReadonlyArray<unknown>
 ) => unknown | Promise<unknown>
 
