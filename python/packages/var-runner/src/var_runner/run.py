@@ -1,10 +1,10 @@
 from __future__ import annotations
 from collections.abc import Callable
 from typing import Any
-from var.execute import CollectPorts, collect_examples
-from var.parse import parse
-from var.plan import ExecutionPlan, PlannedExample, plan
-from var.registry import Registry
+from var_core.execute import CollectPorts, collect_examples
+from var_core.parse import parse
+from var_core.plan import ExecutionPlan, PlannedExample, plan
+from var_core.registry import Registry
 
 class RecordingReporter:
     def __init__(self) -> None:

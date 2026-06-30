@@ -3,8 +3,8 @@ from __future__ import annotations
 
 from typing import Any, Callable, Optional
 
-from var.registry import Registry, add_step, create_registry, define_parameter_type
-from var.step_role import StepKind
+from var_core.registry import Registry, add_step, create_registry, define_parameter_type
+from var_core.step_role import StepKind
 
 # ---------------------------------------------------------------------------
 # Module-level mutable builder state (mirrors the module-scope vars in internal.ts)

@@ -4,8 +4,8 @@ Pure function: no I/O, no side effects.
 """
 from __future__ import annotations
 
-from var.cell_diff import ReturnShapeError, is_cell_mismatch_error
-from var.doc_string_diff import is_doc_string_mismatch_error
+from var_core.cell_diff import ReturnShapeError, is_cell_mismatch_error
+from var_core.doc_string_diff import is_doc_string_mismatch_error
 
 
 def render_failure(error: BaseException, source: str, var_path: str) -> str:  # noqa: ARG001

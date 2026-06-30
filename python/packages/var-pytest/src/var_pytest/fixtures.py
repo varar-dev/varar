@@ -14,7 +14,7 @@ from contextvars import ContextVar
 from dataclasses import replace
 from typing import Any, Callable
 
-from var.registry import Registry
+from var_core.registry import Registry
 
 # ---------------------------------------------------------------------------
 # Per-item active request contextvar

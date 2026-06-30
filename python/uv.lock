@@ -5,6 +5,7 @@ requires-python = ">=3.11"
 [manifest]
 members = [
     "oselvar-var",
+    "oselvar-var-core",
     "oselvar-var-runner",
     "oselvar-var-unittest",
     "pytest-var",
@@ -47,6 +48,21 @@ wheels = [
 name = "oselvar-var"
 version = "0.0.0"
 source = { editable = "packages/var" }
+dependencies = [
+    { name = "cucumber-expressions" },
+    { name = "oselvar-var-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "cucumber-expressions", specifier = "==20.0.0" },
+    { name = "oselvar-var-core", editable = "packages/var-core" },
+]
+
+[[package]]
+name = "oselvar-var-core"
+version = "0.0.0"
+source = { editable = "packages/var-core" }
 dependencies = [
     { name = "cucumber-expressions" },
 ]

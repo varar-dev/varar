@@ -1,119 +1,59 @@
-# Task 1 Report: Promote conformance corpus to root `conformance/`
+# Task 1 Report: Extract var-core Engine Package (Python)
 
-## Status: DONE_WITH_CONCERNS
+## Status: DONE
 
-Commit: `0837b59`
-
----
-
-## What was changed
-
-### Files moved (history preserved via git rename detection)
-`packages/var/bundles/` → `conformance/bundles/` (10 bundle dirs, 60 files total, all detected as git renames)
-
-### Files modified per brief
-- `packages/var/tests/conformance.test.ts` line 8:
-  `resolve(import.meta.dirname, '../bundles')` → `resolve(import.meta.dirname, '../../../conformance/bundles')`
-- `knip.json`: removed `bundles/**` globs from `packages/var` block; added new `conformance` workspace block
-
-### Files modified beyond brief (required to fix module resolution — see concern)
-- `pnpm-workspace.yaml`: added `- conformance` to workspace packages list
-- `conformance/package.json`: created — minimal workspace package (`@oselvar/conformance`) declaring `@oselvar/var: workspace:*` as a dependency
+**Commit:** `441d015`
 
 ---
 
-## Deviation from brief + rationale
+## What was done
 
-The brief does not mention `conformance/package.json` or updating `pnpm-workspace.yaml`. However, these were required to fix a module resolution failure the brief could not anticipate.
+### Scaffold
+- Created `python/packages/var-core/pyproject.toml` and `src/var_core/__init__.py`
+- Added `oselvar-var-core = { workspace = true }` to `python/pyproject.toml` `[tool.uv.sources]`
+- Added `oselvar-var-core` to `python/packages/var/pyproject.toml` dependencies
 
-**Root cause**: The bundle step files (`*.steps.ts`) import from `@oselvar/var`. When they lived inside `packages/var/bundles/`, this worked via Node.js's **self-referencing** mechanism: Node.js walks up the directory tree looking for a `package.json`, found `packages/var/package.json` with `"name": "@oselvar/var"`, and resolved the bare specifier to the package's own exports. After moving to `conformance/bundles/`, the files are no longer inside any workspace package, so self-referencing no longer applies and Node.js reports `Cannot find package '@oselvar/var'`.
+### Module moves (git mv, history preserved)
+All 22 engine modules moved from `python/packages/var/src/var/<mod>.py` → `python/packages/var-core/src/var_core/<mod>.py` via `git mv`. All 17 engine unit tests (all `test_*.py` except `test_define_state.py`, `test_conformance.py`, `test_smoke.py`) moved to `python/packages/var-core/tests/`.
 
-**Fix**: Add `conformance/package.json` (declaring `@oselvar/var: workspace:*` as a dep) and register `conformance` in `pnpm-workspace.yaml`. After `pnpm install`, pnpm creates `conformance/node_modules/@oselvar/var → ../packages/var`. Node.js module resolution now walks up from `conformance/bundles/XX/` and finds it at `conformance/node_modules/@oselvar/var`.
+`test_smoke.py` was intentionally kept in `var/tests` — it tests `var.__version__` (the facade package), not any engine module, and would create a circular dependency if moved to var-core.
 
-This is the standard pnpm-workspace way to wire inter-package dependencies and is the minimal correct fix.
+### Import rewrite approach
+Used `perl -i -pe` with an alternation over the 22 engine module names to rewrite `from var.<enginemod>` → `from var_core.<enginemod>` in:
+- All moved engine modules in `var_core/`
+- All moved tests in `var-core/tests/`
+- `python/packages/var/src/var/define_state.py` (registry + step_role imports only)
+- `python/packages/var/tests/test_conformance.py` (canonical_json, conformance, parse, plan → var_core; define_state stays as `from var.define_state`)
+- `python/packages/var-runner/src/var_runner/render.py`, `run.py` (engine imports)
+- `python/packages/var-pytest/src/var_pytest/fixtures.py` (registry import)
+- `python/packages/var-runner/tests/test_render.py` (engine imports)
 
----
+One non-top-level import was missed by the `^`-anchored regex: an inline `from var.doc_string_diff import DocStringDiff` inside a test function in `test_doc_string_diff.py` — fixed with a targeted edit.
 
-## Commands run and output
+`grep -rn "from var\b\|import var\b" python/packages/var-core/src` returns nothing (clean).
 
-### `pnpm test`
+### Deviation from brief
+The brief's list of files to update did not include `var-runner` and `var-pytest` source and test files, but those packages also import engine modules directly. Updating them was required to make the test suite pass.
+
+## Verification output
+
 ```
-Test Files  73 passed (73)
-Tests  437 passed (437)
-Start at  00:11:19
-Duration  10.24s
-```
-All 10 conformance suites pass (01-roman-numerals through 10-error-fence-without-step).
+uv run pytest -q
+262 passed in 0.45s
 
-### `pnpm knip`
-Exit code: 0
+uv run pytest -k conformance -q
+48 passed, 214 deselected in 0.10s
 
-Output (informational hints only, no errors):
-```
-Configuration hints (6)
-packages/website/src/layouts/Doc.astro   knip.json  Remove from ignore
-**/!(package).json                       knip.json  Remove from ignore
-@oselvar/var-lsp  packages/var-vscode    knip.json  Remove from ignoreDependencies
-src/index.ts      packages/var           knip.json  Remove redundant entry pattern
-.md               packages/var-examples  knip.json  Extension in project not registered…
-.md               conformance            knip.json  Extension in project not registered…
-```
-The `.md` hint for `conformance` is equivalent to the pre-existing hint for `packages/var-examples` — both informational, not errors.
-
-### `pnpm -r build`
-All packages built successfully including website.
-
-### `pnpm typecheck`
-Exit 0, no errors.
-
----
-
-## Concerns
-
-1. **`conformance/package.json` adds TS-specific metadata to a "language-neutral" directory.** This is temporary while the TS workspace is still at repo root. The next task (moving TS workspace into `typescript/`) will need to reconsider this — the dependency path `@oselvar/var: workspace:*` will break when packages move, and `pnpm install` must be re-run.
-
-2. **`pnpm-workspace.yaml` now lists `conformance` as a workspace.** If a future language's conformance runner also needs package management (e.g., a Python `pyproject.toml`), the `conformance/` directory will have mixed tooling concerns.
-
-3. **Knip configuration hints** for `.md` extension in `conformance` workspace are informational — same as the pre-existing hint for `packages/var-examples`. Not errors, no action needed.
-
----
-
-## Follow-up fix (this session)
-
-**Problem:** The two concerns above were addressed. `conformance/package.json` and the `- conformance` entry in `pnpm-workspace.yaml` were removed. Instead, `@oselvar/var` is resolved via a Vitest `resolve.alias` in `packages/var/vitest.config.ts`, and the `knip.json` `packages/var` workspace now includes the conformance bundle globs via relative `../../conformance/bundles/...` patterns.
-
-### Files changed
-
-- **Deleted** `conformance/package.json`
-- **`pnpm-workspace.yaml`**: removed `- conformance` line
-- **`packages/var/vitest.config.ts`**: added `resolve.alias` mapping `/^@oselvar\/var$/` → `fileURLToPath(new URL('./src/index.ts', import.meta.url))`
-- **`knip.json`**: removed `conformance` workspace block; added `../../conformance/bundles/**` globs to `packages/var` workspace entry/project
-- Ran `pnpm install` to drop the conformance symlink
-
-### Commands run and output
-
-#### `pnpm test`
-```
-Test Files  73 passed (73)
-Tests  437 passed (437)
-Duration  9.87s
-```
-All 10 conformance suites pass (01-roman-numerals through 10-error-fence-without-step).
-
-#### `pnpm knip`
-Exit code: 0 (hints only, same as before)
-```
-Configuration hints (6)
-packages/website/src/layouts/Doc.astro   knip.json  Remove from ignore
-**/!(package).json                       knip.json  Remove from ignore
-@oselvar/var-lsp  packages/var-vscode    knip.json  Remove from ignoreDependencies
-src/index.ts      packages/var           knip.json  Remove redundant entry pattern
-.md               packages/var-examples  knip.json  Extension in project not registered…
-.md               packages/var           knip.json  Extension in project not registered…
+uv run ruff check
+All checks passed!
 ```
 
-#### `pnpm lint`
+## Git history check
+
 ```
-Checked 237 files in 49ms. No fixes applied.
+git log --follow --oneline -3 -- python/packages/var-core/src/var_core/parse.py
+441d015 refactor(py): extract var-core engine package from var
+ac08c71 feat(py): structurer + parse
 ```
-Exit code: 0
+
+History resolves through the rename.

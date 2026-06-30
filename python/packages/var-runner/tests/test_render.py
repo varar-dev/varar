@@ -1,7 +1,7 @@
 """Tests for render_failure — pure human-readable rendering of diff errors."""
-from var.cell_diff import CellDiff, CellMismatchError, ReturnShapeError
-from var.doc_string_diff import DocStringDiff, DocStringMismatchError
-from var.span import Span
+from var_core.cell_diff import CellDiff, CellMismatchError, ReturnShapeError
+from var_core.doc_string_diff import DocStringDiff, DocStringMismatchError
+from var_core.span import Span
 
 from var_runner.render import render_failure
 
