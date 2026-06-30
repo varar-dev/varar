@@ -25,6 +25,15 @@ wheels = [
 ]
 
 [[package]]
+name = "cucumber-expressions"
+version = "20.0.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/a2/a6/eaac4ff3afdc776a4d3e0ef29c79db1c9faf11c423175771e225bcef9c84/cucumber_expressions-20.0.0.tar.gz", hash = "sha256:5cbd4012c66584aa82ada990a6e7cb131274796e132e905d27d95ae9a2ca0f48", size = 13738, upload-time = "2026-06-11T07:13:43.691Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/75/24/e403585f201d30ab561d8a971a1adc4de28123fb9bf2f9813650fda8ddb0/cucumber_expressions-20.0.0-py3-none-any.whl", hash = "sha256:8a0434529efd7ca6e2052934ec8d677c7e24edc0fad3b1d1b1bc4bbca5e521f3", size = 20236, upload-time = "2026-06-11T07:13:42.667Z" },
+]
+
+[[package]]
 name = "iniconfig"
 version = "2.3.0"
 source = { registry = "https://pypi.org/simple" }
@@ -37,6 +46,12 @@ wheels = [
 name = "oselvar-var"
 version = "0.0.0"
 source = { editable = "packages/var" }
+dependencies = [
+    { name = "cucumber-expressions" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "cucumber-expressions", specifier = "==20.0.0" }]
 
 [[package]]
 name = "oselvar-var-unittest"

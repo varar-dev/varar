@@ -1,0 +1,118 @@
+"""Tests for define_state.py — translated from var/src/internal.ts tests."""
+from __future__ import annotations
+
+import pytest
+
+from var.define_state import _reset_builder, build_registry, context_factory, define_state
+
+
+def test_three_decorators_register_with_correct_kinds() -> None:
+    _reset_builder()
+
+    def factory():
+        return {}
+
+    context, action, sensor = define_state(factory)
+
+    @context("I have set up the world")
+    def setup(state):
+        pass
+
+    @action("I do something")
+    def do_something(state):
+        pass
+
+    @sensor("I check the result")
+    def check(state):
+        pass
+
+    r = build_registry()
+    assert len(r.steps) == 3
+    kinds = {s.expression: s.kind for s in r.steps}
+    assert kinds["I have set up the world"] == "context"
+    assert kinds["I do something"] == "action"
+    assert kinds["I check the result"] == "sensor"
+
+
+def test_decorators_capture_source_file_and_line() -> None:
+    _reset_builder()
+
+    def factory():
+        return {}
+
+    context, _action, _sensor = define_state(factory)
+
+    @context("a step")
+    def my_step(state):
+        pass
+
+    r = build_registry()
+    step = r.steps[0]
+    assert step.expression_source_line >= 1
+    assert "test_define_state" in step.expression_source_file
+
+
+def test_second_define_state_in_same_module_raises() -> None:
+    _reset_builder()
+
+    def factory1():
+        return {}
+
+    def factory2():
+        return {}
+
+    define_state(factory1)
+    with pytest.raises(Exception, match=r"defineState.*called more than once"):
+        define_state(factory2)
+
+
+def test_build_registry_returns_steps_in_registration_order() -> None:
+    _reset_builder()
+
+    def factory():
+        return {}
+
+    context, action, sensor = define_state(factory)
+
+    @context("step one")
+    def s1(state):
+        pass
+
+    @action("step two")
+    def s2(state):
+        pass
+
+    @sensor("step three")
+    def s3(state):
+        pass
+
+    r = build_registry()
+    assert [s.expression for s in r.steps] == ["step one", "step two", "step three"]
+
+
+def test_context_factory_returns_callable_that_invokes_registered_factory() -> None:
+    _reset_builder()
+
+    def factory():
+        return {"count": 42}
+
+    context, _action, _sensor = define_state(factory)
+
+    @context("some step")
+    def step(state):
+        pass
+
+    r = build_registry()
+    # context_factory() returns a callable(step_file) -> state
+    cf = context_factory()
+    step_file = r.steps[0].expression_source_file
+    state = cf(step_file)
+    assert state == {"count": 42}
+
+
+def test_context_factory_returns_empty_dict_for_unknown_file() -> None:
+    _reset_builder()
+
+    cf = context_factory()
+    result = cf("nonexistent_file.py")
+    assert result == {}
