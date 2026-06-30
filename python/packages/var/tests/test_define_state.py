@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import pytest
 
-from var.define_state import _reset_builder, build_registry, context_factory, define_state
+from var.registry import _reset_builder, build_registry, context_factory
+from var import define_state
 
 
 def test_three_decorators_register_with_correct_kinds() -> None:

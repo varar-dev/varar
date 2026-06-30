@@ -23,7 +23,7 @@ import pytest
 
 from var_core.canonical_json import canonical_stringify
 from var_core.conformance import run_conformance, to_plan_artifact, to_registry_artifact, to_var_doc_artifact
-from var.define_state import _reset_builder, build_registry, context_factory
+from var.registry import _reset_builder, build_registry, context_factory
 from var_core.parse import parse
 from var_core.plan import plan as build_plan
 

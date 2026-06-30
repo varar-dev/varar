@@ -1,7 +1,7 @@
-"""Pure Python core for var (skeleton — see issue #2)."""
+"""Author facade for var: defineState over the pure var-core engine."""
 
 __version__ = "0.0.0"
 
-from var.define_state import define_state
+from var.internal import define_state
 
 __all__ = ["define_state"]

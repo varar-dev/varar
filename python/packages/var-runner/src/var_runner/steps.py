@@ -4,7 +4,7 @@ from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from var.define_state import _reset_builder, build_registry, context_factory
+from var.registry import _reset_builder, build_registry, context_factory
 from var_core.registry import Registry
 
 
