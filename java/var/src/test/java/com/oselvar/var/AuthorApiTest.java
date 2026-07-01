@@ -3,6 +3,7 @@ package com.oselvar.var;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.oselvar.var.core.StepKind;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 

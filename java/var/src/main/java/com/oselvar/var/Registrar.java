@@ -1,6 +1,8 @@
 package com.oselvar.var;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
 /**
  * The sink a step-definition class registers into. Task 11 winning shape (Candidate B):
@@ -43,6 +45,16 @@ public interface Registrar {
      */
     <C extends State> StateBinder<C> defineState(Supplier<C> factory);
 
-    // Task 12: <T> void defineParameterType(String name, Pattern regexp,
-    //                                       Function<String[], T> transformer);
+    /**
+     * Registers a custom cucumber-expression parameter type, available to every step
+     * subsequently compiled through this registrar — the facade-level equivalent of
+     * {@code com.oselvar.var.core.Registry#defineParameterType}.
+     *
+     * @param name the {@code {name}} placeholder this type matches
+     * @param regexp the pattern a placeholder occurrence must match
+     * @param transformer maps the matched capture group(s) to the argument value a
+     *     handler receives for this placeholder
+     * @param <T> the type the transformer produces
+     */
+    <T> void defineParameterType(String name, Pattern regexp, Function<String[], T> transformer);
 }

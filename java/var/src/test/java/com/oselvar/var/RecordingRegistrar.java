@@ -1,8 +1,11 @@
 package com.oselvar.var;
 
+import com.oselvar.var.core.StepKind;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
 /**
  * A minimal in-memory {@link Registrar} used to prove the author API in tests. It records
@@ -15,8 +18,11 @@ final class RecordingRegistrar implements Registrar {
     record Registration(
             String expression, StepKind kind, Object handler, String sourceFile, int sourceLine) {}
 
+    record ParamTypeRegistration(String name, Pattern regexp, Function<String[], ?> transformer) {}
+
     private final List<Registration> steps = new ArrayList<>();
     private final List<Supplier<? extends State>> factories = new ArrayList<>();
+    private final List<ParamTypeRegistration> paramTypes = new ArrayList<>();
 
     List<Registration> steps() {
         return List.copyOf(steps);
@@ -26,23 +32,38 @@ final class RecordingRegistrar implements Registrar {
         return List.copyOf(factories);
     }
 
+    List<ParamTypeRegistration> paramTypes() {
+        return List.copyOf(paramTypes);
+    }
+
     @Override
     public <C extends State> StateBinder<C> defineState(Supplier<C> factory) {
         factories.add(factory);
         return new Binder<>();
     }
 
+    @Override
+    public <T> void defineParameterType(String name, Pattern regexp, Function<String[], T> transformer) {
+        paramTypes.add(new ParamTypeRegistration(name, regexp, transformer));
+    }
+
     private void record(String expression, StepKind kind, Object handler) {
+        String thisClass = RecordingRegistrar.class.getName();
+        String nestedPrefix = thisClass + "$";
         StackWalker.StackFrame caller =
                 StackWalker.getInstance()
                         .walk(
                                 frames ->
                                         frames.filter(
-                                                        f ->
-                                                                !f.getClassName()
-                                                                        .startsWith(
-                                                                                RecordingRegistrar.class
-                                                                                        .getName()))
+                                                        f -> {
+                                                            String cn = f.getClassName();
+                                                            // Exact match (this class) or a nested class of
+                                                            // it (e.g. Binder) — NOT mere string-prefix, which
+                                                            // would wrongly also skip an unrelated class whose
+                                                            // name happens to start with the same characters.
+                                                            return !cn.equals(thisClass)
+                                                                    && !cn.startsWith(nestedPrefix);
+                                                        })
                                                 .findFirst()
                                                 .orElseThrow());
         steps.add(
