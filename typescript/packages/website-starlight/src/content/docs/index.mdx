@@ -16,14 +16,16 @@ hero:
       variant: minimal
 ---
 
-import { Card, CardGrid, Code } from '@astrojs/starlight/components';
+import { Card, CardGrid } from '@astrojs/starlight/components';
+import Editor from '../../components/Editor.astro';
 import yahtzeeSource from '../../../../var-examples/yahtzee/yahtzee.md?raw';
+import yahtzeeSteps from '../../../../var-examples/yahtzee/yahtzee.steps.ts?raw';
 
 ## This is a real spec
 
-Not a snippet — the whole file, unmodified, running in this repo's own test suite:
+Not a snippet — the whole file, unmodified, running in this repo's own test suite. Edit it:
 
-<Code code={yahtzeeSource} lang="md" title="yahtzee.md" />
+<Editor uri="file:///yahtzee.md" chrome lineNumbers folding group="yahtzee" steps={[{ path: 'yahtzee.steps.ts', source: yahtzeeSteps }]}>{yahtzeeSource}</Editor>
 
 ## Next steps
 

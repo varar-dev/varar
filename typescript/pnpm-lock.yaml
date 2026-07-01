@@ -261,21 +261,70 @@ importers:
       '@astrojs/starlight-tailwind':
         specifier: ^5.0.0
         version: 5.0.0(@astrojs/starlight@0.41.1(@astrojs/markdown-remark@7.2.0)(astro@7.0.3(@astrojs/markdown-remark@7.2.0)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/node@26.0.1)(jiti@2.7.0)(rollup@4.62.2)(tsx@4.22.4)(yaml@2.9.0))(typescript@6.0.3))(tailwindcss@4.3.2)
+      '@codemirror/lang-javascript':
+        specifier: ^6.2.5
+        version: 6.2.5
+      '@codemirror/lang-markdown':
+        specifier: ^6.5.0
+        version: 6.5.0
+      '@codemirror/language':
+        specifier: ^6.12.4
+        version: 6.12.4
+      '@codemirror/lint':
+        specifier: ^6.9.7
+        version: 6.9.7
+      '@codemirror/lsp-client':
+        specifier: ^6.2.5
+        version: 6.2.5
+      '@codemirror/state':
+        specifier: ^6.7.0
+        version: 6.7.0
+      '@codemirror/view':
+        specifier: ^6.43.4
+        version: 6.43.4
       '@fontsource-variable/source-sans-3':
         specifier: ^5.2.9
         version: 5.2.9
+      '@lezer/highlight':
+        specifier: ^1.2.3
+        version: 1.2.3
+      '@oselvar/var':
+        specifier: workspace:^
+        version: link:../var
+      '@oselvar/var-core':
+        specifier: workspace:^
+        version: link:../var-core
+      '@oselvar/var-lsp':
+        specifier: workspace:^
+        version: link:../var-lsp
       '@tailwindcss/vite':
         specifier: ^4.3.2
         version: 4.3.2(vite@8.1.0(@types/node@26.0.1)(esbuild@0.28.1)(jiti@2.7.0)(tsx@4.22.4)(yaml@2.9.0))
       astro:
         specifier: ^7.0.2
         version: 7.0.3(@astrojs/markdown-remark@7.2.0)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/node@26.0.1)(jiti@2.7.0)(rollup@4.62.2)(tsx@4.22.4)(yaml@2.9.0)
+      codemirror:
+        specifier: ^6.0.2
+        version: 6.0.2
+      diff:
+        specifier: ^9.0.0
+        version: 9.0.0
       sharp:
         specifier: ^0.34.5
         version: 0.34.5
       tailwindcss:
         specifier: ^4.3.2
         version: 4.3.2
+      typescript:
+        specifier: ^6.0.3
+        version: 6.0.3
+      vscode-languageserver:
+        specifier: ^10.0.1
+        version: 10.0.1
+    devDependencies:
+      '@astrojs/check':
+        specifier: ^0.9.9
+        version: 0.9.9(prettier@3.9.3)(typescript@6.0.3)
 
 packages:
 
