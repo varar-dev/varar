@@ -1,11 +1,21 @@
 import type { VarConfig } from '@oselvar/var-core'
 import { createRegistry } from '@oselvar/var-core'
-import { buildWorkspaceIndex, type WorkspaceIndex } from '@oselvar/var-language'
+import {
+  buildWorkspaceIndex,
+  createTreeSitterScanner,
+  type GrammarLoader,
+  type StepDefScanner,
+  type WorkspaceIndex,
+} from '@oselvar/var-language'
 import type { FileSystem } from './file-system.js'
 
 export type { FileSystem } from './file-system.js'
 
-export type StoreDeps = { readonly fs: FileSystem; readonly config: VarConfig }
+export type StoreDeps = {
+  readonly fs: FileSystem
+  readonly config: VarConfig
+  readonly grammarLoader: GrammarLoader
+}
 
 export type Store = {
   reindex(): Promise<void>
@@ -19,15 +29,20 @@ export type Store = {
 }
 
 export function createStore(deps: StoreDeps): Store {
-  const { fs, config } = deps
+  const { fs, config, grammarLoader } = deps
   let current: WorkspaceIndex = {
     stepDefs: [],
     matches: [],
     diagnostics: [],
     registry: createRegistry(),
   }
+  // Created once, lazily, on the first reindex — not in createStore itself,
+  // which stays synchronous. Later reindexes reuse it.
+  let scannerPromise: Promise<StepDefScanner> | undefined
   return {
     async reindex() {
+      scannerPromise ??= createTreeSitterScanner(grammarLoader)
+      const scanner = await scannerPromise
       const stepPaths = await fs.list({ include: config.steps, exclude: [] })
       const varPaths = await fs.list(config.vars)
       const stepFiles = await Promise.all(
@@ -36,7 +51,12 @@ export function createStore(deps: StoreDeps): Store {
       const varFiles = await Promise.all(
         varPaths.map(async (path) => ({ path, source: await fs.read(path) })),
       )
-      current = buildWorkspaceIndex({ stepFiles, varFiles, scannerPlugins: config.scannerPlugins })
+      current = buildWorkspaceIndex({
+        stepFiles,
+        varFiles,
+        scannerPlugins: config.scannerPlugins,
+        scanner,
+      })
     },
     index: () => current,
     snippetTemplate: () => config.snippet.template,
