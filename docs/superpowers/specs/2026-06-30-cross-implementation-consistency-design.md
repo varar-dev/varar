@@ -210,5 +210,6 @@ next implementor (Java/C#) knows which side to follow:
 - [Python core port design](2026-06-30-python-core-port-design.md)
 - [var-pytest plugin design](2026-06-30-var-pytest-plugin-design.md)
 - [ADR 0001 — Python as the second language](../../adr/0001-second-language-python.md)
-  (this design is a candidate for a follow-up ADR 0002 — "canonical cross-implementation
-  structure").
+  (this design is a candidate for a follow-up ADR — "canonical cross-implementation
+  structure"; note ADR 0002 is now
+  [drift detection](../../adr/0002-drift-detection-and-acknowledgment.md)).
