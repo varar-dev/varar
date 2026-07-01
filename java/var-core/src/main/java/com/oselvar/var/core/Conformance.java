@@ -1,5 +1,8 @@
 package com.oselvar.var.core;
 
+import io.cucumber.cucumberexpressions.CucumberExpressionParser;
+import io.cucumber.cucumberexpressions.Node;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -9,15 +12,16 @@ import java.util.Map;
  * structures that {@link CanonicalJson#canonicalStringify(Object)} turns into the
  * conformance corpus's deterministic JSON artifacts.
  *
- * <p>Port of the var-doc portion of {@code var-core/src/conformance.ts}'s
- * {@code toVarDocArtifact} (and the equivalent {@code to_var_doc_artifact} in the
- * Python port). Field names are camelCase and must match
- * {@code conformance/bundles/*}/golden/var-doc.json} exactly; key ordering doesn't
- * matter here ({@link LinkedHashMap} is used purely for readability while
- * debugging) because {@link CanonicalJson} recursively sorts keys itself.
+ * <p>Port of the var-doc and registry portions of {@code var-core/src/conformance.ts}'s
+ * {@code toVarDocArtifact}/{@code toRegistryArtifact} (and the equivalent
+ * {@code to_var_doc_artifact}/{@code to_registry_artifact} in the Python port). Field
+ * names are camelCase and must match {@code conformance/bundles/*}/golden/*.json}
+ * exactly; key ordering doesn't matter here ({@link LinkedHashMap} is used purely for
+ * readability while debugging) because {@link CanonicalJson} recursively sorts keys
+ * itself.
  *
- * <p>Registry/plan/trace projections are later tasks (Milestones 2-4) — this class
- * currently covers only the var-doc projection.
+ * <p>Plan/trace projections are later tasks (Milestones 3-4) — this class currently
+ * covers the var-doc and registry projections.
  */
 public final class Conformance {
 
@@ -35,6 +39,84 @@ public final class Conformance {
                 "orphanAttachments",
                 doc.orphanAttachments().stream().map(Conformance::tableOrFence).toList());
         return out;
+    }
+
+    /**
+     * Projects a {@link Registry} to the registry wire artifact: {@code {steps:
+     * [{expression, parameterTypeNames}], parameterTypes: [{name, regexp}]}}.
+     *
+     * <p>Port of {@code toRegistryArtifact} in {@code conformance.ts} (and
+     * {@code to_registry_artifact} in the Python port). No conformance bundle
+     * currently exercises {@code defineParameterType} (every {@code golden/
+     * registry.json}'s {@code parameterTypes} is {@code []} — see the plan's
+     * deferred list), so unlike TS/Python this overload takes no explicit custom-
+     * parameter-types argument; add one if/when a bundle needs it.
+     */
+    public static Map<String, Object> toRegistryArtifact(Registry registry) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("steps", registry.steps().stream().map(Conformance::step).toList());
+        out.put("parameterTypes", List.of());
+        return out;
+    }
+
+    private static Map<String, Object> step(Registry.StepRegistration s) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("expression", s.expression());
+        out.put("parameterTypeNames", parameterTypeNames(s.expression()));
+        return out;
+    }
+
+    /**
+     * Parameter-type names in source order, read from the expression's parsed AST
+     * (authoritative). A naive {@code {...}} regex miscounts on escaped braces
+     * ({@code \{}/{@code \}}), which are literal text, not parameters. Cucumber
+     * rejects parameters inside optionals/alternation, so they only appear at the
+     * top level, but this recurses defensively, mirroring {@code conformance.ts}'s
+     * {@code parameterTypeNames}.
+     *
+     * <p>Java's {@code CucumberExpression} (unlike the TS/Python libraries) does not
+     * expose its parsed AST or parameter-type list publicly — confirmed via {@code
+     * javap -p}, no {@code getAst()}/{@code getParameterTypes()} escape the class.
+     * This re-parses {@code source} with the library's own public {@link
+     * CucumberExpressionParser#parse(String)}, which is exactly what {@code
+     * CucumberExpression}'s constructor does internally to build its regex —
+     * reproducing an identical {@link Node} tree, empirically confirmed by dumping
+     * it for an expression exercising nested parameters and an escaped brace (each
+     * {@code PARAMETER_NODE} has exactly one {@code TEXT_NODE} child holding the
+     * name, and {@code \{escaped\}} parses as a single literal {@code TEXT_NODE},
+     * never a parameter). {@link Node#text()} recurses the same way internally but
+     * is package-private; {@link #nodeText} reimplements it against the class's
+     * public surface ({@link Node#token()}/{@link Node#nodes()}) instead of
+     * reflecting into the library.
+     */
+    static List<String> parameterTypeNames(String source) {
+        Node ast = new CucumberExpressionParser().parse(source);
+        List<String> names = new ArrayList<>();
+        collectParameterNames(ast, names);
+        return names;
+    }
+
+    private static void collectParameterNames(Node node, List<String> names) {
+        if (node.type() == Node.Type.PARAMETER_NODE) {
+            names.add(nodeText(node));
+            return;
+        }
+        List<Node> children = node.nodes();
+        if (children != null) {
+            for (Node child : children) collectParameterNames(child, names);
+        }
+    }
+
+    /** Reimplements {@code Node#text()} (package-private in the library) publicly. */
+    private static String nodeText(Node node) {
+        String token = node.token();
+        if (token != null) return token;
+        StringBuilder sb = new StringBuilder();
+        List<Node> children = node.nodes();
+        if (children != null) {
+            for (Node child : children) sb.append(nodeText(child));
+        }
+        return sb.toString();
     }
 
     /** Dispatches on the sealed {@link Ast.TableOrFence} union (the orphan-attachment type). */

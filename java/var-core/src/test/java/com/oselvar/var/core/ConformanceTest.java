@@ -8,8 +8,11 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Named;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
@@ -22,8 +25,13 @@ import org.junit.jupiter.params.provider.MethodSource;
  *
  * <p>Port of the var-doc stage of {@code typescript/packages/var/tests/conformance.test.ts}
  * and {@code python/packages/var/tests/test_conformance.py::test_var_doc_matches_golden}.
- * Registry/plan/trace stages are later tasks (Milestones 2-4) — this harness only exercises
- * var-doc.
+ * Plan/trace stages are later tasks (Milestones 3-4) — this class's golden-driven harness
+ * only exercises var-doc; it also carries unit-level (non-golden) coverage of {@link
+ * Conformance#toRegistryArtifact}/{@link Conformance#parameterTypeNames}, ported from
+ * {@code conformance.test.ts}'s equivalent unit tests — the registry stage's own
+ * golden-driven gate lives in {@code com.oselvar.var.ConformanceTest} (the {@code var}
+ * module), since it needs a real Java step-definition fixture per bundle, authored against
+ * the {@code var} module's {@code Registrar}/{@code StepDefinitions} API.
  *
  * <p>Each bundle is a separately reported {@code @ParameterizedTest} case (not one loop
  * hiding failures behind the first mismatch), keyed by directory name.
@@ -65,5 +73,44 @@ class ConformanceTest {
         String expected =
                 Files.readString(bundle.resolve("golden").resolve("var-doc.json"), StandardCharsets.UTF_8);
         assertEquals(expected, actual, () -> bundle.getFileName() + "/var-doc.json mismatch");
+    }
+
+    private static final Object NOOP_HANDLER = (Runnable) () -> {};
+
+    // Unit-level (not golden-driven) coverage of the registry projection, ported from
+    // conformance.test.ts's "toRegistryArtifact lists expressions and parsed
+    // parameter-type names" / "... ignoring escaped braces".
+
+    @Test
+    void toRegistryArtifactListsExpressionsAndParsedParameterTypeNames() {
+        Registry r =
+                Registry.addStep(
+                        Registry.createRegistry(), "I have {int} cukes", "s.ts", 1, NOOP_HANDLER, null);
+
+        var artifact = Conformance.toRegistryArtifact(r);
+        assertEquals(List.of(), artifact.get("parameterTypes"));
+        @SuppressWarnings("unchecked")
+        var steps = (List<Object>) artifact.get("steps");
+        assertEquals(1, steps.size());
+        @SuppressWarnings("unchecked")
+        var step = (Map<String, Object>) steps.get(0);
+        assertEquals("I have {int} cukes", step.get("expression"));
+        assertEquals(List.of("int"), step.get("parameterTypeNames"));
+    }
+
+    @Test
+    void toRegistryArtifactReadsParameterNamesFromTheAstIgnoringEscapedBraces() {
+        // A naive `{...}` regex would wrongly count the escaped `\{a, b\}` as a
+        // parameter and yield ["a, b", "int"]; the AST sees only the real {int}.
+        Registry r =
+                Registry.addStep(
+                        Registry.createRegistry(),
+                        "the set \\{a, b\\} has {int} elements",
+                        "s.ts",
+                        1,
+                        NOOP_HANDLER,
+                        null);
+
+        assertEquals(List.of("int"), Conformance.parameterTypeNames(r.steps().get(0).expression()));
     }
 }
