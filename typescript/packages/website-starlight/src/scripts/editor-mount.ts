@@ -19,9 +19,36 @@ import { workerTransport } from '../lib/worker-transport.ts'
 
 // One shared LSP client (one worker) for the whole page.
 let sharedClient: LSPClient | null = null
+
+// Collects every mounted <Editor>'s <File> children across the WHOLE page —
+// not just the caller's own editor — so the LSP worker can cross-reference
+// specs against step definitions even if they live in a different <Editor>
+// instance. Called once, before the worker is created, so the full seed is
+// known upfront.
+function collectPageSeed(): Record<string, string> {
+  const seed: Record<string, string> = {}
+  for (const fileEl of document.querySelectorAll<HTMLElement>('[data-var-file]')) {
+    const uri = fileEl.dataset.uri
+    if (!uri) continue
+    const path = uri.replace(/^file:\/\/\//, '/')
+    seed[path] = fileEl.dataset.doc ?? ''
+  }
+  return seed
+}
+
 function lspClient(): LSPClient {
   if (sharedClient) return sharedClient
   const worker = new Worker(new URL('../lib/var-worker.ts', import.meta.url), { type: 'module' })
+  const channel = new MessageChannel()
+  worker.postMessage({ seed: collectPageSeed() }, [channel.port2])
+  // MessagePort queues are disabled until either the `onmessage` property is
+  // assigned or `.start()` is called explicitly — unlike a Worker's default
+  // channel, which is implicitly active. workerTransport() attaches via
+  // addEventListener (not `.onmessage=`) so it works unchanged for a Worker,
+  // but a raw MessagePort like channel.port1 needs this explicit kick or
+  // every message queued on it (i.e. every LSP response) is silently
+  // dropped and requests hang until they time out.
+  channel.port1.start()
   sharedClient = new LSPClient({
     extensions: [
       ...languageServerExtensions(),
@@ -30,7 +57,7 @@ function lspClient(): LSPClient {
         transform: joinStepParamTokens,
       }),
     ],
-  }).connect(workerTransport(worker))
+  }).connect(workerTransport(channel.port1))
   return sharedClient
 }
 
