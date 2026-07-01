@@ -592,8 +592,117 @@ handled the identical case.
   --stat 2a2bfad..HEAD -- java/var-core java/var` → empty — the only prior diff was
   the parent `pom.xml`'s `<modules>` addition in Task 1, which doesn't touch either
   module's own tree).
-- [ ] **Step 4: Commit** (if anything needed fixing) or note the plan is complete with
-  no further action.
+- [x] **Step 4: Commit** — no fixes needed; all checks passed clean.
+
+---
+
+## Task 16: Surface plan-stage diagnostics through JUnit reporting
+
+**Follow-up from the final sub-project review.** `VarFileDescriptor.before()`
+(Task 11) builds a `Run.RecordingReporter()` to satisfy `Execute.ExecutePorts`, then
+discards its `.diagnostics()` — so a plan-stage diagnostic (e.g. bundle 05's
+`ambiguous-match`, bundle 10's `error-fence-without-step`) is silently swallowed: the
+affected example either passes vacuously or produces zero examples, with no signal
+reaching JUnit reporting/IDEs. This is correct against the conformance contract (the
+`trace.json` outcome is what's gated), but it's a real author-facing UX gap other
+adapters (`var-vitest`/`var-pytest`) may already handle differently — worth checking.
+
+**The real mechanism (confirmed via `javap` against the real 6.1.1 jar, not
+assumed):** `org.junit.platform.engine.EngineExecutionListener` has
+`reportingEntryPublished(TestDescriptor, ReportEntry)` (a `default` method);
+`org.junit.platform.engine.reporting.ReportEntry` has static factories `from(String
+key, String value)` / `from(Map<String,String>)`. This is the platform's own,
+public, general-purpose mechanism for a `TestEngine` to attach arbitrary diagnostic
+data to a `TestDescriptor` (surfaced to IDEs/build-tool reports) — it is NOT specific
+to Jupiter.
+
+**The threading problem to solve:** `VarEngineExecutionContext` (Task 7) is currently
+empty, and `VarTestEngine.createExecutionContext(ExecutionRequest request)` discards
+`request` entirely. The `EngineExecutionListener` is only available via
+`ExecutionRequest.getEngineExecutionListener()` at that point — `Node.before(...)`
+never receives it directly. Grow `VarEngineExecutionContext` to carry the listener
+(set once in `createExecutionContext`), so `VarFileDescriptor.before(context)` can
+call `context.listener().reportingEntryPublished(this,
+ReportEntry.from("code", diagnostic.code().toString()))` (or however many key-value
+pairs make sense — read `Diagnostics.Diagnostic`'s actual fields) for each collected
+diagnostic, against the file container itself (or, if a diagnostic's `span` can be
+matched back to a specific example, consider reporting against that leaf instead —
+your call, but don't over-engineer this if file-level reporting is good enough for
+v1).
+
+- [ ] **Step 1:** Read `Diagnostics.Diagnostic`/`Diagnostics.DiagnosticCode` (in
+  `var-core`) for the exact fields available to report.
+- [ ] **Step 2:** Grow `VarEngineExecutionContext` with an `EngineExecutionListener`
+  field; wire `VarTestEngine.createExecutionContext` to populate it from the real
+  `request`.
+- [ ] **Step 3:** In `VarFileDescriptor.before(context)`, after collecting
+  diagnostics via the existing `Run.RecordingReporter`, publish one `ReportEntry` per
+  diagnostic via `context`'s listener.
+- [ ] **Step 4: Write a test** — via `EngineTestKit`, discover+execute a bundle/fixture
+  known to produce a plan diagnostic (e.g. an ambiguous-match spec) and assert a
+  `reportingEntryPublished` event actually fired with the expected content (check
+  `EngineTestKit`'s `Events`/`Event` API for how to assert on reporting entries
+  specifically, not just test outcomes).
+- [ ] **Step 5: Run → PASS.** `mvn -f pom.xml clean test` from `java/`.
+- [ ] **Step 6: Commit** — `feat(java): surface plan-stage diagnostics via JUnit ReportEntry`
+
+---
+
+## Task 17: Fix the multi-`UniqueIdSelector` same-file merge gap
+
+**Follow-up from the final sub-project review.** Selecting two DIFFERENT examples
+from the SAME file via two bare `UniqueIdSelector`s (no accompanying file/container
+selector) in one discovery request currently produces two separate single-child
+`VarFileDescriptor` containers (each independently built by
+`VarFileSelectorResolver.resolveOneExample`) instead of one container with two
+children — a real risk if an IDE's "run these N selected tests" ever emits exactly
+this shape (single-example-file selections are unaffected and already correctly
+tested).
+
+**Correction to a prior review's suggested fix — verify this yourself before
+proceeding:** an earlier review suggested this needs JUnit Jupiter's
+`Filterable`/`DynamicDescendantFilter` machinery. **That suggestion was checked and
+is wrong**: both classes live in `org.junit.jupiter.engine.descriptor` — confirmed via
+`unzip -l` against the real `junit-jupiter-engine-6.1.1.jar` — meaning they are
+package-private implementation details of the JUPITER engine module specifically, not
+part of the public `junit-platform-engine` API any custom `TestEngine` can depend on
+or reuse. Do not go down this path; verify it yourself (the classes genuinely aren't
+on `var-junit`'s classpath, and `var-junit` has no dependency on
+`junit-jupiter-engine`) and then look for the actual, accessible fix below.
+
+**The likely real fix:** `VarFileSelectorResolver` is instantiated once per discovery
+pass (confirm this by reading `DiscoverySelectorResolver.java`, where it's
+constructed) — so it can hold state across multiple `resolve(...)` calls within one
+request. Add a cache (e.g. `Map<String, VarFileDescriptor>` keyed by `specPath`) on
+the resolver instance; when `resolveOneExample` (or the file-container resolver path)
+would otherwise build a brand-new `VarFileDescriptor` for a spec path that's ALREADY
+been resolved earlier in this same discovery pass, reuse the EXISTING instance and add
+the new leaf to it instead of creating a sibling duplicate with a colliding
+`UniqueId`. Read `EngineDiscoveryRequestResolver`/`SelectorResolver`'s
+`Context.addToParent(...)` contract carefully first (Javadoc/decompile) — confirm
+whether the generic framework already does some deduplication-by-UniqueId that your
+fix needs to cooperate with rather than fight, and whether `addToParent` can be called
+more than once validly for the "add another child to an already-added parent"
+case, or whether you need a different call shape for that. **Investigate before
+implementing** — this is exactly the kind of task where the right JUnit Platform
+idiom matters and guessing produces a subtly-wrong fix.
+
+- [ ] **Step 1:** Read `DiscoverySelectorResolver.java`/`VarFileSelectorResolver.java`
+  in full; confirm the resolver's instantiation lifetime (once per discovery pass).
+- [ ] **Step 2:** Investigate `EngineDiscoveryRequestResolver`'s real
+  `Context.addToParent`/`SelectorResolver.Resolution` contract for how to correctly
+  add a second child to an already-resolved parent.
+- [ ] **Step 3:** Implement the cache-and-reuse fix (or whatever the real contract
+  turns out to require).
+- [ ] **Step 4: Write the failing-then-passing test** — via `EngineTestKit`, build a
+  discovery request with TWO bare `UniqueIdSelector`s for two different examples in
+  the SAME file (no file/container selector), and assert exactly ONE container with
+  TWO children is discovered (not two containers with one child each, and not a
+  duplicate-UniqueId error).
+- [ ] **Step 5:** Confirm the existing single-example-selection test (Task 10) still
+  passes unchanged — this fix must not regress the already-correct common case.
+- [ ] **Step 6: Run → PASS.** `mvn -f pom.xml clean test` from `java/`.
+- [ ] **Step 7: Commit** — `fix(java): merge multiple UniqueIdSelectors for the same file into one container`
 
 ---
 
