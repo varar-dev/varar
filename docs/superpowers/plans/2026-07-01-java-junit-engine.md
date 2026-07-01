@@ -433,6 +433,16 @@ method calls transfer unchanged.
 
 ## Task 10: `var-junit` — leaf descriptor tree (one per example)
 
+**Note carried forward from Task 9's review:** until this task adds at least one
+child per `VarFileDescriptor`, every discovered spec container is a childless,
+non-root `Type.CONTAINER` — and JUnit Platform's `EngineDiscoveryOrchestrator` calls
+`TestDescriptor.prune()` after discovery, which silently removes exactly that shape.
+This means a real Surefire/IDE run *today* (before this task lands) discovers nothing
+observable end-to-end, even though Task 9's resolver is correct — confirmed as an
+expected, temporary state, not a defect (verified against `TestDescriptor.prune()`
+and `EngineDiscoveryOrchestrator` in the real 6.1.1 sources during Task 9's review).
+It resolves automatically once this task gives each container ≥1 leaf.
+
 **Files:** Create `VarExampleDescriptor.java`; modify `VarFileDescriptor.java` (or
 wherever discovery builds children) to add the planning step.
 
