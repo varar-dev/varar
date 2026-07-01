@@ -56,3 +56,25 @@ def test_find_specs_dedup(tmp_path: Path) -> None:
 def test_single_star_does_not_cross_slash(tmp_path: Path) -> None:
     """* must not match a path separator."""
     assert match_spec(tmp_path / "dir/file.md", ["*.md"], [], tmp_path) is False
+
+
+def test_specs_outside_root_via_parent_glob(tmp_path: Path) -> None:
+    """A spec in a SIBLING of the config root is reachable via a ``../`` glob.
+
+    This backs pointing ``[tool.var]`` at a shared corpus that lives outside the
+    package (e.g. ``../conformance/bundles``): ``relative_to(..., walk_up=True)``
+    yields a ``../corpus/...`` path that matches a ``../corpus/**`` glob.
+    """
+    root = tmp_path / "proj"
+    root.mkdir()
+    spec = _touch(tmp_path, "corpus/features/a.md")
+    inc = ["../corpus/**/*.md"]
+    found = find_specs(inc, [], root)
+    # find_specs returns the glob path (which carries the ``..``); compare by
+    # resolved file identity, not exact Path form.
+    assert len(found) == 1
+    assert found[0].resolve() == spec.resolve()
+    assert match_spec(spec, inc, [], root) is True
+    # a sibling file NOT under the glob is not matched
+    other = _touch(tmp_path, "other/b.md")
+    assert match_spec(other, inc, [], root) is False

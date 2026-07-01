@@ -1,59 +1,29 @@
-# Task 1 Report: Extract var-core Engine Package (Python)
+# Task 1 Report: Scaffold @oselvar/var-runner (TS)
 
 ## Status: DONE
 
-**Commit:** `441d015`
+**Commit:** `be54b71`  
+**Gate:** `pnpm -r build` exit 0; `pnpm check` (lint + typecheck + 456 tests in 76 files + knip + jscpd) all green  
+**Tree clean:** confirmed (`git status --short` — empty)
 
 ---
 
-## What was done
+## Package wiring
 
-### Scaffold
-- Created `python/packages/var-core/pyproject.toml` and `src/var_core/__init__.py`
-- Added `oselvar-var-core = { workspace = true }` to `python/pyproject.toml` `[tool.uv.sources]`
-- Added `oselvar-var-core` to `python/packages/var/pyproject.toml` dependencies
+- `typescript/packages/var-runner/` with `package.json` (name `@oselvar/var-runner`, type module, single dep `@oselvar/var-core: workspace:*`), `tsconfig.json` extending `../../tsconfig.base.json`, `vitest.config.ts` identical to var-cli.
+- `@oselvar/var` omitted from deps: knip flagged it unused because none of the Task 1 source files import it. Task 2 (`loadSteps`/`examplesWithRuns`) will add it then.
+- `typescript/knip.json`: `packages/var-runner` block added (mirrors `packages/var-cli`).
 
-### Module moves (git mv, history preserved)
-All 22 engine modules moved from `python/packages/var/src/var/<mod>.py` → `python/packages/var-core/src/var_core/<mod>.py` via `git mv`. All 17 engine unit tests (all `test_*.py` except `test_define_state.py`, `test_conformance.py`, `test_smoke.py`) moved to `python/packages/var-core/tests/`.
+## renderFailure approach and error shapes
 
-`test_smoke.py` was intentionally kept in `var/tests` — it tests `var.__version__` (the facade package), not any engine module, and would create a circular dependency if moved to var-core.
+- `CellMismatchError` (from `cell-diff.ts`): carries `readonly cells: ReadonlyArray<CellDiff>`, each with `column`, `span.startLine`, `expected`, `actual`, `ok`. Only failing cells (`!ok`) are rendered: `CellMismatchError\n  path.md:LINE col "COL": expected "X" but was "Y"`.
+- `DocStringMismatchError` (from `doc-string-diff.ts`): carries `readonly diff: DocStringDiff` with `span.startLine`, `expected`, `actual`. Rendered as `DocStringMismatchError at path.md:LINE\n  expected: …\n  actual: …`.
+- `ReturnShapeError` (from `cell-diff.ts`): rendered as `ReturnShapeError: MESSAGE`.
+- Opaque throws: `error.stack` if present (covers Error + message), `error.message` fallback, then `String(error)` — matching `formatError` in var-cli.
+- `_source` parameter present in the signature per the brief (future line-context enrichment) but currently unused; prefixed `_` to satisfy `noUnusedParameters`.
 
-### Import rewrite approach
-Used `perl -i -pe` with an alternation over the 22 engine module names to rewrite `from var.<enginemod>` → `from var_core.<enginemod>` in:
-- All moved engine modules in `var_core/`
-- All moved tests in `var-core/tests/`
-- `python/packages/var/src/var/define_state.py` (registry + step_role imports only)
-- `python/packages/var/tests/test_conformance.py` (canonical_json, conformance, parse, plan → var_core; define_state stays as `from var.define_state`)
-- `python/packages/var-runner/src/var_runner/render.py`, `run.py` (engine imports)
-- `python/packages/var-pytest/src/var_pytest/fixtures.py` (registry import)
-- `python/packages/var-runner/tests/test_render.py` (engine imports)
+## Tests (17 passing)
 
-One non-top-level import was missed by the `^`-anchored regex: an inline `from var.doc_string_diff import DocStringDiff` inside a test function in `test_doc_string_diff.py` — fixed with a targeted edit.
-
-`grep -rn "from var\b\|import var\b" python/packages/var-core/src` returns nothing (clean).
-
-### Deviation from brief
-The brief's list of files to update did not include `var-runner` and `var-pytest` source and test files, but those packages also import engine modules directly. Updating them was required to make the test suite pass.
-
-## Verification output
-
-```
-uv run pytest -q
-262 passed in 0.45s
-
-uv run pytest -k conformance -q
-48 passed, 214 deselected in 0.10s
-
-uv run ruff check
-All checks passed!
-```
-
-## Git history check
-
-```
-git log --follow --oneline -3 -- python/packages/var-core/src/var_core/parse.py
-441d015 refactor(py): extract var-core engine package from var
-ac08c71 feat(py): structurer + parse
-```
-
-History resolves through the rename.
+- `tests/config.test.ts` (4): `readVarConfig` loads / returns defaults; `findSpecs` resolves include and respects exclude
+- `tests/run.test.ts` (5): `planSpec` returns `ExecutionPlan` with examples/steps/scopeStack; default and explicit scannerPlugins; `RecordingReporter` records and accumulates diagnostics
+- `tests/render.test.ts` (8): CellMismatchError (single, multi-cell, passing-cell filter), DocStringMismatchError, ReturnShapeError, arbitrary Error, non-Error throw, Error without stack

@@ -13,6 +13,32 @@ dev = ["pytest>=8", "ruff>=0.6"]
 testpaths = ["packages"]
 addopts = "--import-mode=importlib"
 
+# Dogfood: run the shared conformance bundles as LIVE var-pytest specs.
+#   cd python && uv run pytest --rootdir=. ../conformance/bundles
+# Edit any listed bundle's example.md or *.steps.py and re-run to see var
+# pass/fail change. NOTE: the plugin builds ONE global step registry, but the
+# conformance bundles intentionally reuse expressions across bundles
+# (`I echo…`, `I have {int} cukes`, `I greet {string}`). So this is a
+# COLLISION-FREE subset — a mix of passing bundles and two that fail by design
+# (07 row-check-mismatch, 09 expected-message-mismatch).
+[tool.var]
+vars = [
+  "../conformance/bundles/01-roman-numerals/*.md",
+  "../conformance/bundles/02-context-isolation/*.md",
+  "../conformance/bundles/04-tables-and-docstrings/*.md",
+  "../conformance/bundles/07-row-check-mismatch/*.md",
+  "../conformance/bundles/08-string-capture/*.md",
+  "../conformance/bundles/09-expected-message-mismatch/*.md",
+]
+steps = [
+  "../conformance/bundles/01-roman-numerals/*.steps.py",
+  "../conformance/bundles/02-context-isolation/*.steps.py",
+  "../conformance/bundles/04-tables-and-docstrings/*.steps.py",
+  "../conformance/bundles/07-row-check-mismatch/*.steps.py",
+  "../conformance/bundles/08-string-capture/*.steps.py",
+  "../conformance/bundles/09-expected-message-mismatch/*.steps.py",
+]
+
 [tool.ruff]
 line-length = 100
 target-version = "py311"

@@ -6,7 +6,10 @@ from pathlib import Path
 
 
 def _rel_posix(path: Path, root: Path) -> str:
-    return path.resolve().relative_to(root.resolve()).as_posix()
+    # walk_up=True (Python 3.12+) yields a ``../`` prefix when *path* is outside
+    # *root*, so specs can live outside the config root (e.g. a shared corpus in a
+    # sibling directory) and still match a ``../sibling/**`` glob.
+    return path.resolve().relative_to(root.resolve(), walk_up=True).as_posix()
 
 
 def _glob_to_regex(pattern: str) -> re.Pattern[str]:
