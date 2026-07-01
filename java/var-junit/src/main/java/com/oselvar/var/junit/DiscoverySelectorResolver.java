@@ -1,5 +1,6 @@
 package com.oselvar.var.junit;
 
+import com.oselvar.var.runner.StepLoader;
 import com.oselvar.var.runner.VarConfig;
 import org.junit.platform.commons.io.ResourceFilter;
 import org.junit.platform.engine.EngineDiscoveryRequest;
@@ -45,26 +46,23 @@ import org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolve
  * (one per selector-kind concern) — there is no equivalent of Cucumber's separate {@code
  * FeatureWithLinesFileResolver}/{@code FeatureFileResolver} split to preserve.
  *
- * <p><strong>Task 9/10 split:</strong> this resolver creates containers only (one {@link
- * VarFileDescriptor} per matching spec, no children) — it does not parse or plan a file's
- * content into example leaves. That remains a clean, separate next task: nothing about {@code
- * EngineDiscoveryRequestResolver}'s mechanics forces leaf creation into this same pass (unlike
- * Cucumber's {@code FeatureFileResolver}, which must parse eagerly because Gherkin's
- * scenario/rule/outline nesting is discovered structure, not a flat list — var's is a flat list
- * of examples per file, so there is no structural reason to fuse the two tasks).
+ * <p><strong>Task 9/10 split:</strong> {@link VarFileSelectorResolver} now also parses+plans each
+ * resolved file's content (against the {@link StepLoader.LoadedSteps} threaded through this
+ * class's constructor, loaded once per discovery pass by {@link VarTestEngine#discover}) and adds
+ * one {@link VarExampleDescriptor} leaf per {@code PlannedExample} — closing the Task 9 gap where
+ * a childless {@code VarFileDescriptor} container was silently pruned by the Launcher.
  *
- * <p>{@code UniqueIdSelector} (re-running a single container by id) is intentionally left
- * unresolved for now: with no children under a {@code VarFileDescriptor} until example leaves
- * exist, there is nothing more specific to round-trip to, and IDEs re-running "this file" already
- * pass a matching {@code ClasspathResourceSelector}/{@code FileSelector} alongside the {@code
- * UniqueIdSelector} in practice. Revisit once example leaves exist (next task).
+ * <p>{@code UniqueIdSelector} (re-running a single file or example by id, standalone — no
+ * accompanying file/classpath selector) is handled too, by {@code
+ * VarFileSelectorResolver.resolve(UniqueIdSelector, Context)} — see that method's javadoc for the
+ * file-vs-example distinction and its one documented, narrow multi-select limitation.
  */
 final class DiscoverySelectorResolver {
 
     private final EngineDiscoveryRequestResolver<VarEngineDescriptor> resolver;
 
-    DiscoverySelectorResolver(VarConfig config) {
-        VarFileSelectorResolver fileSelectorResolver = new VarFileSelectorResolver(config);
+    DiscoverySelectorResolver(VarConfig config, StepLoader.LoadedSteps loadedSteps) {
+        VarFileSelectorResolver fileSelectorResolver = new VarFileSelectorResolver(config, loadedSteps);
         this.resolver =
                 EngineDiscoveryRequestResolver.<VarEngineDescriptor>builder()
                         .addResourceContainerSelectorResolver(
