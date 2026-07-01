@@ -1,9 +1,11 @@
 package com.oselvar.var.junit;
 
+import com.oselvar.var.runner.VarConfig;
 import org.junit.platform.engine.EngineDiscoveryRequest;
 import org.junit.platform.engine.ExecutionRequest;
 import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.UniqueId;
+import org.junit.platform.engine.support.discovery.DiscoveryIssueReporter;
 import org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine;
 
 /**
@@ -14,10 +16,10 @@ import org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine;
  * wiring is required (mirrors {@code var-pytest}'s {@code pytest11} entry-point
  * ergonomics). See {@code docs/adr/0003-java-junit-integration.md}.
  *
- * <p>This is the discovery/execution SKELETON: {@link #discover} always returns an empty
- * {@link VarEngineDescriptor} (no children). Resolving discovery selectors into one
- * container per spec file and one leaf per example is Tasks 9-10; leaf execution against
- * var-runner is Task 11.
+ * <p>{@link #discover} resolves the request's selectors ({@link DiscoverySelectorResolver})
+ * into one {@link VarFileDescriptor} container per {@code .md} spec matching {@code
+ * var.vars.include}/{@code var.vars.exclude} ({@link ConfigBridge}). It does not yet create
+ * per-example leaves (next task) or execute anything (Task 11).
  */
 public final class VarTestEngine extends HierarchicalTestEngine<VarEngineExecutionContext> {
 
@@ -28,7 +30,12 @@ public final class VarTestEngine extends HierarchicalTestEngine<VarEngineExecuti
 
     @Override
     public TestDescriptor discover(EngineDiscoveryRequest discoveryRequest, UniqueId uniqueId) {
-        return new VarEngineDescriptor(uniqueId);
+        VarEngineDescriptor engineDescriptor = new VarEngineDescriptor(uniqueId);
+        VarConfig config = ConfigBridge.fromConfigurationParameters(discoveryRequest.getConfigurationParameters());
+        DiscoveryIssueReporter issueReporter =
+                DiscoveryIssueReporter.forwarding(discoveryRequest.getDiscoveryListener(), uniqueId);
+        new DiscoverySelectorResolver(config).resolveSelectors(discoveryRequest, engineDescriptor, issueReporter);
+        return engineDescriptor;
     }
 
     @Override
