@@ -12,6 +12,7 @@ import com.oselvar.`var`.RegistrarGlue
 import com.oselvar.`var`.State
 import com.oselvar.`var`.StateBinder
 import com.oselvar.`var`.StepDefinitions
+import java.util.function.Function
 import java.util.function.Supplier
 import kotlinx.coroutines.runBlocking
 
@@ -83,6 +84,20 @@ class StepsScope<C : Any> internal constructor(
 
     fun <R> sensor(expression: String, handler: suspend C.() -> R) {
         binder.sensor(expression, SensorAdapter<C>(0) { c, _ -> handler(c) })
+    }
+
+    /**
+     * Registers a custom cucumber-expression parameter type. Must appear BEFORE
+     * any step whose expression uses `{name}` — the underlying registrar
+     * compiles each expression eagerly against the types registered so far
+     * (same ordering rule as the Java author API).
+     */
+    fun parameterType(name: String, regexp: Regex, transformer: (Array<String>) -> Any?) {
+        registrar.defineParameterType(
+            name,
+            regexp.toPattern(),
+            Function<Array<String>, Any?> { captures -> transformer(captures) },
+        )
     }
 }
 
