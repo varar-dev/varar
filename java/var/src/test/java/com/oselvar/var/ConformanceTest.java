@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Named;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -153,5 +154,43 @@ class ConformanceTest {
         String expected =
                 Files.readString(bundle.resolve("golden").resolve("plan.json"), StandardCharsets.UTF_8);
         assertEquals(expected, actual, () -> bundle.getFileName() + "/plan.json mismatch");
+    }
+
+    /**
+     * The Milestone 4 conformance gate — the final one: parses each bundle's {@code
+     * example.md}, builds its {@link Registry} and initial-state {@link Supplier} from its Java
+     * step-definition fixture (as {@link #planMatchesGolden} does, plus {@link
+     * RegistryRegistrar#stateFactory()}), runs the whole plan via {@link
+     * Conformance#runConformance}, and asserts byte-for-byte equality of the {@code trace}
+     * artifact with the committed {@code golden/trace.json}. Port of the trace stage of {@code
+     * typescript/packages/var/tests/conformance.test.ts} and {@code python/packages/var/tests/
+     * test_conformance.py::test_trace_matches_golden}.
+     *
+     * <p>Kept as its own separately reported stage (mirroring the Python port and this class's
+     * own {@code registryMatchesGolden}/{@code planMatchesGolden} precedent) rather than folding
+     * all four artifacts into one combined assertion (TS's approach): a trace mismatch is then
+     * never masked by an earlier var-doc/registry/plan pass, and this task doesn't need to
+     * restructure two already-working, well-documented tests to land the final stage.
+     */
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("bundleDirs")
+    void traceMatchesGolden(Path bundle) throws IOException {
+        String bundleName = bundle.getFileName().toString();
+        StepDefinitions fixture = loadFixture(bundleName);
+
+        RegistryRegistrar registrar = new RegistryRegistrar();
+        fixture.defineSteps(registrar);
+        Registry registry = registrar.registry();
+        Supplier<? extends State> contextFactory = registrar.stateFactory();
+
+        String source = Files.readString(bundle.resolve("example.md"), StandardCharsets.UTF_8);
+        Ast.VarDoc doc = Parse.parse("example.md", source);
+
+        Conformance.BundleArtifacts artifacts = Conformance.runConformance(doc, registry, contextFactory);
+
+        String actual = CanonicalJson.canonicalStringify(artifacts.trace());
+        String expected =
+                Files.readString(bundle.resolve("golden").resolve("trace.json"), StandardCharsets.UTF_8);
+        assertEquals(expected, actual, () -> bundle.getFileName() + "/trace.json mismatch");
     }
 }

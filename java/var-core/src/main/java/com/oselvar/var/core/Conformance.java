@@ -3,9 +3,11 @@ package com.oselvar.var.core;
 import io.cucumber.cucumberexpressions.CucumberExpressionParser;
 import io.cucumber.cucumberexpressions.Node;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
  * Serializes {@link Ast} nodes into the plain {@code Map}/{@code List} wire-format
@@ -20,8 +22,11 @@ import java.util.Map;
  * readability while debugging) because {@link CanonicalJson} recursively sorts keys
  * itself.
  *
- * <p>Trace projection is a later task (Milestone 4) — this class currently covers the
- * var-doc, registry, and plan projections.
+ * <p>This class covers all four conformance projections: var-doc, registry, plan (Tasks
+ * 10/13/16), and — added here — the trace projection ({@link #toFailureArtifact}/{@link
+ * #runConformance}, Task 19), closing the loop so every bundle can be checked against
+ * all four goldens ({@code var-doc.json}, {@code registry.json}, {@code plan.json},
+ * {@code trace.json}) byte-for-byte.
  */
 public final class Conformance {
 
@@ -89,6 +94,221 @@ public final class Conformance {
                 plan.examples().stream().map(ex -> plannedExample(source, ex)).toList());
         out.put("diagnostics", plan.diagnostics().stream().map(Conformance::diagnostic).toList());
         return out;
+    }
+
+    /**
+     * The typed return of {@link #runConformance}: all four projected wire artifacts for one
+     * bundle. Java has no reason to repeat the untyped-{@code Map}-per-stage pattern the way
+     * Python's {@code run_conformance} initially did (and later had to retrofit a {@code
+     * BundleArtifacts} dataclass onto) — a typed record costs nothing extra here and is
+     * available from the start.
+     */
+    public record BundleArtifacts(
+            Map<String, Object> varDoc,
+            Map<String, Object> registry,
+            Map<String, Object> plan,
+            Map<String, Object> trace) {}
+
+    /**
+     * Projects a caught step exception to the {@code FailureArtifact} wire shape — port of
+     * {@code toFailureArtifact} in {@code conformance.ts}. {@code line} is the failing step's
+     * own 1-based {@code matchSpan.startLine} in the {@code .md} — a deterministic,
+     * language-agnostic source position (never scraped from a stack trace), so every port
+     * reproduces it identically.
+     *
+     * <p>Dispatch order mirrors {@code conformance.ts} exactly: {@link
+     * CellDiff.CellMismatchException} (filtered to only the failing cells) &rarr; {@link
+     * DocStringDiff.DocStringMismatchException} &rarr; {@link CellDiff.ReturnShapeException}
+     * &rarr; {@link Execute.UnexpectedPassException} &rarr; anything else falls through to
+     * {@code "thrown"}, which — confirmed against real goldens ({@code
+     * conformance/bundles/03-expected-failure/golden/trace.json} and {@code
+     * 09-expected-message-mismatch/golden/trace.json}) — carries no extra fields beyond
+     * {@code kind}/{@code line}; TS's own fallback ({@code return { kind: 'thrown', line }})
+     * likewise never adds the error's message/stack to the wire artifact.
+     */
+    public static Map<String, Object> toFailureArtifact(Throwable error, int line) {
+        if (CellDiff.isCellMismatchException(error)) {
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("kind", "cell-mismatch");
+            out.put("line", line);
+            List<Object> cells = new ArrayList<>();
+            for (CellDiff c : ((CellDiff.CellMismatchException) error).cells()) {
+                if (!c.ok()) cells.add(failureCell(c));
+            }
+            out.put("cells", cells);
+            return out;
+        }
+        if (DocStringDiff.isDocStringMismatchException(error)) {
+            DocStringDiff diff = ((DocStringDiff.DocStringMismatchException) error).diff();
+            Map<String, Object> out = new LinkedHashMap<>();
+            out.put("kind", "doc-string-mismatch");
+            out.put("line", line);
+            Map<String, Object> d = new LinkedHashMap<>();
+            d.put("expected", diff.expected());
+            d.put("actual", diff.actual());
+            d.put("span", span(diff.span()));
+            out.put("diff", d);
+            return out;
+        }
+        if (error instanceof CellDiff.ReturnShapeException) return kindLine("return-shape", line);
+        if (error instanceof Execute.UnexpectedPassException) return kindLine("unexpected-pass", line);
+        return kindLine("thrown", line);
+    }
+
+    private static Map<String, Object> failureCell(CellDiff c) {
+        Map<String, Object> cell = new LinkedHashMap<>();
+        cell.put("column", c.column());
+        cell.put("expected", c.expected());
+        cell.put("actual", c.actual());
+        cell.put("span", span(c.span()));
+        return cell;
+    }
+
+    private static Map<String, Object> kindLine(String kind, int line) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("kind", kind);
+        out.put("line", line);
+        return out;
+    }
+
+    /**
+     * The top-level conformance orchestration for one bundle — port of {@code runConformance}
+     * in {@code conformance.ts}. Builds the plan ({@link Plan#plan}), runs it ({@link
+     * Execute#collectExamples}) while recording every {@link Execute.StepObservation} via an
+     * {@link Execute.ExecutionObserver}, then projects all four wire artifacts into one {@link
+     * BundleArtifacts}.
+     *
+     * <p><b>{@code contextFactory} is a single {@link Supplier}</b>, not (as in TS/Python) a
+     * function keyed by step file: every Java conformance fixture registers exactly one state
+     * type via a single {@code defineState} call (see {@code RegistryRegistrar}), so there is
+     * never more than one context factory to dispatch to. {@link Execute.ExecutePorts} still
+     * declares {@code createContext} as a {@code Function<String, Object>} keyed by step file
+     * (that port is unaware of this simplification — it's shared with any future non-conformance
+     * caller that might need per-file contexts) — this method just wraps {@code contextFactory}
+     * in a function that ignores its argument.
+     *
+     * <p>{@code contextFactory} is typed {@code Supplier<?>}, not {@code
+     * Supplier<com.oselvar.var.State>}: this package ({@code var-core}) has zero compile-time
+     * dependency on the {@code var} facade's {@code State} marker interface — the same
+     * hexagonal boundary {@link Execute}'s own {@code createContext} port already respects by
+     * returning plain {@code Object}.
+     *
+     * <p>Per-step outcome selection mirrors {@code conformance.ts} exactly: among the
+     * observations recorded for a step's ordinal, prefer the first {@code "fail"}; otherwise
+     * fall back to the last observation; a step with no observation at all (never reached,
+     * because an earlier step in the same example already failed) is {@code "skipped"}. An
+     * example's own top-level {@code outcome} is {@code "fail"} iff running it threw (including
+     * the expected-failure inversion {@link Execute} already performs — a passing {@code error}-
+     * fenced example does NOT throw, so its top-level outcome is {@code "pass"} even though one
+     * of its steps is individually traced as {@code "fail"}; see {@code
+     * conformance/bundles/03-expected-failure/golden/trace.json}).
+     */
+    public static BundleArtifacts runConformance(Ast.VarDoc doc, Registry registry, Supplier<?> contextFactory) {
+        Plan.ExecutionPlan execution = Plan.plan(doc, registry);
+
+        Map<Integer, List<Execute.StepObservation>> observed = new HashMap<>();
+        Execute.ExecutePorts ports =
+                new Execute.ExecutePorts(
+                        diagnostic -> {}, // diagnostics are already captured in the plan artifact
+                        file -> contextFactory.get(),
+                        observation ->
+                                observed
+                                        .computeIfAbsent(observation.exampleIndex(), k -> new ArrayList<>())
+                                        .add(observation));
+
+        List<Execute.QueuedExample> queue = Execute.collectExamples(execution, ports);
+
+        List<Object> traceExamples = new ArrayList<>(queue.size());
+        for (int k = 0; k < queue.size(); k++) {
+            Execute.QueuedExample queued = queue.get(k);
+            String outcome = "pass";
+            try {
+                queued.run().run();
+            } catch (Throwable t) {
+                outcome = "fail";
+            }
+
+            Plan.PlannedExample planned = execution.examples().get(k);
+            List<Execute.StepObservation> obs = observed.getOrDefault(k, List.of());
+
+            List<Object> steps = new ArrayList<>(planned.steps().size());
+            for (int i = 0; i < planned.steps().size(); i++) {
+                Plan.PlannedStep step = planned.steps().get(i);
+                int ordinal = i + 1;
+
+                // Prefer the first "fail" observation for this ordinal; else the last
+                // observation seen; else null (never observed -> "skipped").
+                Execute.StepObservation chosen = null;
+                for (Execute.StepObservation o : obs) {
+                    if (o.ordinal() != ordinal) continue;
+                    chosen = o;
+                    if ("fail".equals(o.outcome())) break;
+                }
+                String stepOutcome = chosen != null ? chosen.outcome() : "skipped";
+
+                Map<String, Object> contextKey = new LinkedHashMap<>();
+                contextKey.put("exampleName", queued.name());
+                contextKey.put("stepFile", fileStem(step.stepDef().expressionSourceFile()));
+
+                Map<String, Object> stepTrace = new LinkedHashMap<>();
+                stepTrace.put("exampleName", queued.name());
+                stepTrace.put("ordinal", ordinal);
+                stepTrace.put("stepText", step.text());
+                stepTrace.put("matchedExpression", step.stepDef().expression());
+                stepTrace.put("contextKey", contextKey);
+                stepTrace.put("outcome", stepOutcome);
+                if ("fail".equals(stepOutcome)) {
+                    stepTrace.put(
+                            "failure",
+                            toFailureArtifact(
+                                    chosen != null ? chosen.error() : null, step.matchSpan().startLine()));
+                }
+                steps.add(stepTrace);
+            }
+
+            Map<String, Object> exampleTrace = new LinkedHashMap<>();
+            exampleTrace.put("name", queued.name());
+            exampleTrace.put("outcome", outcome);
+            exampleTrace.put("steps", steps);
+            traceExamples.add(exampleTrace);
+        }
+
+        Map<String, Object> trace = new LinkedHashMap<>();
+        trace.put("examples", traceExamples);
+
+        return new BundleArtifacts(
+                toVarDocArtifact(doc), toRegistryArtifact(registry), toPlanArtifact(execution), trace);
+    }
+
+    /**
+     * Recovers the cross-language-shared step-file "stem" (e.g. {@code "numerals.steps"}) used
+     * for {@code contextKey.stepFile} in the trace artifact. TS/Python's {@code fileStem} strips
+     * only the file's last extension — their step files are literally named {@code
+     * numerals.steps.ts}/{@code numerals.steps.py}, so stripping just {@code .ts}/{@code .py}
+     * already leaves the shared {@code numerals.steps} stem. Java's step-file naming convention
+     * (Task 13's report) is structurally different — {@code <Stem>Steps.java} (PascalCase, e.g.
+     * {@code NumeralsSteps.java}), not {@code numerals.steps.java} — so reproducing the exact same
+     * shared stem the golden files were generated from (the goldens are ONE corpus, shared across
+     * every language's fixture for a given bundle — see the {@code adding-a-language-port} skill's
+     * "Step-def files referenced by stem" rule) needs the inverse of the Java convention: strip
+     * the {@code .java} extension, strip a trailing {@code Steps} suffix if present, decapitalize
+     * the remaining leading letter, and re-append the shared {@code .steps} suffix. Confirmed
+     * against Task 13's own per-bundle stem table (e.g. {@code NumeralsSteps.java} &rarr; {@code
+     * numerals.steps}, {@code CounterSteps.java} &rarr; {@code counter.steps}, ...,{@code
+     * BoomSteps.java} &rarr; {@code boom.steps}). Falls back to plain extension-stripping
+     * (matching TS/Python's rule) for any file that doesn't follow the {@code <Stem>Steps.java}
+     * convention.
+     */
+    private static String fileStem(String path) {
+        int slash = Math.max(path.lastIndexOf('/'), path.lastIndexOf('\\'));
+        String base = slash >= 0 ? path.substring(slash + 1) : path;
+        int dot = base.lastIndexOf('.');
+        String noExt = dot > 0 ? base.substring(0, dot) : base;
+        if (noExt.length() > "Steps".length() && noExt.endsWith("Steps")) {
+            String stem = noExt.substring(0, noExt.length() - "Steps".length());
+            return Character.toLowerCase(stem.charAt(0)) + stem.substring(1) + ".steps";
+        }
+        return noExt;
     }
 
     private static Map<String, Object> plannedExample(String source, Plan.PlannedExample ex) {

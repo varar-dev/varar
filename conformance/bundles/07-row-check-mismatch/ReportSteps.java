@@ -11,7 +11,13 @@ import java.util.Map;
  * 07-row-check-mismatch}). Header-bound row step: returns its computed columns as a
  * {@code Map<String, String>} (column name -&gt; value) for the core to diff cell-by-
  * cell against the table row (the {@code rowChecks} path) — score 99 != 10 in the
- * example, producing a {@code CellMismatchError} at the trace stage.
+ * example, producing a {@code CellMismatchException} at the trace stage.
+ *
+ * <p>{@code Plan}'s header-bound expansion appends the current row (also a {@code
+ * Map<String, String>}, keyed by header cell) as a trailing positional argument after
+ * whatever the expression itself captured (here: nothing) — so the handler takes it,
+ * even though this fixture ignores its value and always returns the same hardcoded
+ * (wrong) columns.
  */
 public final class ReportSteps implements StepDefinitions {
 
@@ -23,6 +29,6 @@ public final class ReportSteps implements StepDefinitions {
 
         s.sensor(
                 "I report the score and grade",
-                (Ctx ctx) -> Map.of("score", "99", "grade", "A"));
+                (Ctx ctx, Map<String, String> row) -> Map.of("score", "99", "grade", "A"));
     }
 }
