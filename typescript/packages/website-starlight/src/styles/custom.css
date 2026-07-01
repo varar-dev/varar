@@ -1,6 +1,24 @@
 @import '@fontsource-variable/source-sans-3';
 
 /*
+ * "Norse" by Joël Carrouché (https://www.fontspace.com/norse-font-f21080),
+ * freeware, free for personal and commercial use, embedding in web pages
+ * permitted — self-hosted below. Splash-page hero heading only; the rest
+ * of the site stays on --sl-font.
+ */
+@font-face {
+  font-family: 'Norse';
+  src: url('/fonts/norse.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.hero h1 {
+  font-family: 'Norse', var(--sl-font);
+}
+
+/*
  * Vár earthy palette, ported from
  * docs/superpowers/specs/2026-06-26-earthy-color-scheme-design.md
  * onto Starlight's own theming variables. Dark is the default `:root`
