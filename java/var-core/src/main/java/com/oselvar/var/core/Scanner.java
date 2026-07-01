@@ -100,7 +100,7 @@ public final class Scanner {
             blocks.add(paragraphResult.paragraph());
             i = paragraphResult.next();
         }
-        return blocks;
+        return List.copyOf(blocks);
     }
 
     private static List<RawLine> splitLines(String source) {
@@ -263,9 +263,17 @@ public final class Scanner {
             i++;
         }
         // A trailing +1 on the last line's endOffset can overshoot source.length() when an
-        // unclosed fence runs to end-of-input with no final newline; JS's String.slice/charCodeAt
-        // clamp silently there, but Java's substring/charAt throw, so clamp explicitly to match
-        // the same (empty-tail) result without an IndexOutOfBoundsException.
+        // unclosed fence runs to end-of-input with no final newline. JS's String.slice clamps an
+        // out-of-range end argument internally, so clamping here reproduces the same body TEXT JS
+        // would produce (the full remaining tail, not an empty string). It does NOT reproduce JS's
+        // bodySpan.endOffset/endCol for this case: JS's spanFromOffsets does not clamp its
+        // endOffset argument, so JS's real (unclamped) span endpoint is an out-of-range value —
+        // itself just an artifact of charCodeAt returning NaN for out-of-range access (never
+        // equal to '\n', so the line/col loop increments once more), not a documented contract.
+        // We deliberately don't chase that OOB quirk here: no conformance bundle exercises an
+        // unclosed fence with no trailing newline, so this divergence has no observable effect
+        // today, and replicating it would mean engineering a fragile OOB-quirk mechanism for a
+        // bug nobody observes. Clamping avoids a StringIndexOutOfBoundsException; nothing more.
         int clampedBodyEnd = bodyEnd == null ? 0 : Math.min(bodyEnd, source.length());
         String body = (bodyStart != null && bodyEnd != null) ? source.substring(bodyStart, clampedBodyEnd) : "";
         int fallbackOffset = start.endOffset();
