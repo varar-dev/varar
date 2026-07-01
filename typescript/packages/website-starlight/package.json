@@ -25,6 +25,7 @@
     "@lezer/highlight": "^1.2.3",
     "@oselvar/var": "workspace:^",
     "@oselvar/var-core": "workspace:^",
+    "@oselvar/var-language": "workspace:^",
     "@oselvar/var-lsp": "workspace:^",
     "@tailwindcss/vite": "^4.3.2",
     "astro": "^7.0.2",

@@ -300,6 +300,9 @@ importers:
       '@oselvar/var-core':
         specifier: workspace:^
         version: link:../var-core
+      '@oselvar/var-language':
+        specifier: workspace:^
+        version: link:../var-language
       '@oselvar/var-lsp':
         specifier: workspace:^
         version: link:../var-lsp
