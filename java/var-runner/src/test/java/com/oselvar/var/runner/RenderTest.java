@@ -41,8 +41,9 @@ class RenderTest {
         // "4" is the narrative capture's source text (the expected value, sliced from
         // source — Result.CellFailure stores no separate `expected` field).
         assertTrue(rendered.contains("4"), "expected sliced value: " + rendered);
-        // "3" is the sensor's actual returned value.
-        assertTrue(rendered.contains("3"), "actual value: " + rendered);
+        // "3" is the sensor's actual returned value; assert the specific `got "3"`
+        // rendering (not a bare "3") so this can't pass via the unrelated "line 3".
+        assertTrue(rendered.contains("got \"3\""), "actual value: " + rendered);
         assertTrue(rendered.contains("line 3"), "failing line: " + rendered);
     }
 
