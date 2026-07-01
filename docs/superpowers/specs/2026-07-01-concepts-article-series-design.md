@@ -13,6 +13,43 @@ possible when decoupled), and lands on Vár's positioning: an **acceptance**-tes
 framework that validates **business rules, not the user interface**, pluggable at
 any level.
 
+## Start here (read this first if resuming cold)
+
+If you are picking this up in a fresh session with no prior context, read these
+before writing a word:
+
+1. **Voice & format** — read all of `typescript/packages/website/src/content/docs/concepts/*.md*`,
+   especially `the-decline-of-bdd-and-cucumber.md`, `your-docs-are-your-source.md`,
+   `the-oaths-of-var.md`. Match their register exactly: confident, opinionated,
+   historically/architecturally grounded, problem-first; `##` headers that are
+   themselves mini-arguments; short code blocks and the occasional 2-column
+   table; every piece ends in a forward link. No hedging, no marketing fluff.
+2. **The technical backing for article #4** — read the "Ports & injection" section
+   of `docs/superpowers/specs/2026-06-30-cross-implementation-consistency-design.md`.
+   That is the concrete truth behind #4's "test at any level" claim: Vár's pure
+   core receives only **injected data + port callbacks** (a `sink`, a `reporter`,
+   `createContext`); an "adapter" is *just* those port implementations, so a
+   caller can inject data and read results (the browser does this — no runner) or
+   wire a full-stack driver — same business rules, different adapter.
+3. **Existing reference page to link to** — `.../reference/examples-and-drift.mdx`.
+
+**The thesis, in three sentences.** Hexagonal architecture, dependency injection,
+functional core / imperative shell, pure functions, immutability, and value
+objects are not six separate best-practices — they are dialects of one sentence:
+*keep I/O at the edges and keep the core pure*, which buys testability,
+decoupling, and maintainability. That was optional "hygiene" for decades;
+agentic development makes it existential, because an agent's loop is only as fast
+as its feedback, and fast feedback is only possible when the business logic is
+decoupled from I/O. Vár is where that lands: an **acceptance**-testing framework
+that validates **business rules, not the user interface**, and — because the core
+is injected — plugs in at *any* level.
+
+**Author's stakes (write to this bar).** This series is a large part of the
+author's software philosophy; the author believes Vár could become as significant
+as Cucumber once was. Write it as the definitive, quotable statement of that
+philosophy — essays a senior engineer forwards to their team — not as product
+copy.
+
 ## Why (author's intent)
 
 This is a large part of the author's software philosophy, and the belief is that
