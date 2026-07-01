@@ -12,6 +12,10 @@ describe('createTreeSitterScanner', () => {
     expect(stepDefs).toHaveLength(1)
     expect(stepDefs[0]?.expression).toBe('I have {int} cukes')
     expect(stepDefs[0]?.kind).toBe('action')
+    expect(stepDefs[0]?.handlerParams?.params).toEqual([
+      { name: 'ctx', typeText: '' },
+      { name: 'n', typeText: '' },
+    ])
 
     const paramTypes = scanner.discoverParameterTypes(
       'p.ts',
@@ -44,5 +48,23 @@ describe('createTreeSitterScanner', () => {
     const stepDefs = scanner.discoverStepDefs('s.ts', source)
     expect(stepDefs).toHaveLength(1)
     expect(stepDefs[0]?.expression).toBe('a real step')
+  })
+
+  test('discovers a parameter type with a string-literal regexp', async () => {
+    const scanner = await createTreeSitterScanner(createTestGrammarLoader())
+    const paramTypes = scanner.discoverParameterTypes(
+      'p.ts',
+      `const x = defineState(() => ({}), {\n  digit: { regexp: '[0-9]' },\n})\n`,
+    )
+    expect(paramTypes).toHaveLength(1)
+    expect(paramTypes[0]?.name).toBe('digit')
+    expect(paramTypes[0]?.regexp).toBe('[0-9]')
+  })
+
+  test('decodes escape sequences beyond a simple quote', async () => {
+    const scanner = await createTreeSitterScanner(createTestGrammarLoader())
+    const source = "action('a\\tb\\u00e9c', () => {})\n"
+    const stepDefs = scanner.discoverStepDefs('s.ts', source)
+    expect(stepDefs[0]?.expression).toBe('a\tbéc')
   })
 })

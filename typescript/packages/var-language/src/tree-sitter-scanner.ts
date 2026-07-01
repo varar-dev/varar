@@ -62,12 +62,38 @@ function toRange(startNode: Node, endNode: Node = startNode): Range {
   return { start: toPosition(startNode.startPosition), end: toPosition(endNode.endPosition) }
 }
 
-const ESCAPE_SEQUENCES: Readonly<Record<string, string>> = {
-  "\\'": "'",
-  '\\"': '"',
-  '\\\\': '\\',
-  '\\n': '\n',
-  '\\t': '\t',
+const SIMPLE_ESCAPES: Readonly<Record<string, string>> = {
+  "'": "'",
+  '"': '"',
+  '`': '`',
+  '\\': '\\',
+  n: '\n',
+  t: '\t',
+  r: '\r',
+  b: '\b',
+  f: '\f',
+  v: '\v',
+  '0': '\0',
+}
+
+// `text` is the escape_sequence node's full text, including the leading
+// backslash (e.g. "\\n", "\\x41", "\\u00e9", "\\u{1F389}"). Verified against
+// JavaScript's own native escape decoding for every branch below.
+function decodeEscapeSequence(text: string): string {
+  const body = text.slice(1)
+  const simple = SIMPLE_ESCAPES[body]
+  if (simple !== undefined) return simple
+  if (body.startsWith('x') && body.length === 3) {
+    return String.fromCodePoint(Number.parseInt(body.slice(1), 16))
+  }
+  if (body.startsWith('u{')) {
+    return String.fromCodePoint(Number.parseInt(body.slice(2, -1), 16))
+  }
+  if (body.startsWith('u') && body.length === 5) {
+    return String.fromCodePoint(Number.parseInt(body.slice(1), 16))
+  }
+  // Redundant escape (e.g. `\z`) — ECMAScript yields the character itself.
+  return body
 }
 
 // Unlike `ts.StringLiteral.text` (already decoded), a tree-sitter `string`
@@ -80,7 +106,7 @@ function decodeString(node: Node): string {
   let out = ''
   for (const child of node.children) {
     if (child.type === 'string_fragment') out += child.text
-    else if (child.type === 'escape_sequence') out += ESCAPE_SEQUENCES[child.text] ?? child.text
+    else if (child.type === 'escape_sequence') out += decodeEscapeSequence(child.text)
   }
   return out
 }
