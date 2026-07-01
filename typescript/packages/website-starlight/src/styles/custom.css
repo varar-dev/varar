@@ -1,3 +1,5 @@
+@import '@fontsource-variable/source-sans-3';
+
 /*
  * Vár earthy palette, ported from
  * docs/superpowers/specs/2026-06-26-earthy-color-scheme-design.md
@@ -10,6 +12,8 @@
  */
 
 :root {
+  --sl-font: 'Source Sans 3 Variable', 'Source Sans 3', system-ui, sans-serif;
+
   --sl-color-black: #110d09;
   --sl-color-gray-1: #17120d;
   --sl-color-gray-2: #221a12;
@@ -26,6 +30,8 @@
 }
 
 :root[data-theme='light'] {
+  --sl-font: 'Source Sans 3 Variable', 'Source Sans 3', system-ui, sans-serif;
+
   --sl-color-black: #f4f0e6;
   --sl-color-gray-1: #fbf8f0;
   --sl-color-gray-2: #ece5d5;
