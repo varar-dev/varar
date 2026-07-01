@@ -14,7 +14,14 @@ class VarConfig:
 
 
 def read_var_config(pyproject_path: str | Path) -> VarConfig:
-    data = tomllib.loads(Path(pyproject_path).read_text(encoding="utf-8"))
+    # A missing pyproject.toml (or one without [tool.var]) means "no specs" — the
+    # plugin must no-op, never crash. var-pytest is auto-active in ANY pytest
+    # project via its pytest11 entry point, so it can be loaded where no config
+    # exists (e.g. rootdir resolved to a directory with no pyproject.toml).
+    path = Path(pyproject_path)
+    if not path.is_file():
+        return VarConfig()
+    data = tomllib.loads(path.read_text(encoding="utf-8"))
     tool_var = data.get("tool", {}).get("var", {})
     vars_field = tool_var.get("vars", {})
     if isinstance(vars_field, list):

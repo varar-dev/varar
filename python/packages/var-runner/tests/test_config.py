@@ -1,4 +1,4 @@
-from var_runner.config import read_var_config
+from var_runner.config import VarConfig, read_var_config
 
 
 def _write(tmp_path, body):
@@ -32,3 +32,10 @@ def test_missing_table_is_empty(tmp_path):
     p = _write(tmp_path, "[project]\nname='x'\nversion='0'\n")
     cfg = read_var_config(p)
     assert cfg.vars_include == () and cfg.steps == ()
+
+
+def test_missing_pyproject_is_empty_not_crash(tmp_path):
+    """A nonexistent pyproject.toml yields an empty config (plugin no-ops),
+    never a FileNotFoundError — var-pytest is auto-active in any pytest project."""
+    cfg = read_var_config(tmp_path / "does-not-exist" / "pyproject.toml")
+    assert cfg == VarConfig()
