@@ -1,6 +1,7 @@
 package com.oselvar.var.junit;
 
 import com.oselvar.var.core.Plan;
+import com.oselvar.var.runner.Render;
 import org.junit.platform.engine.TestSource;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor;
@@ -26,11 +27,22 @@ import org.junit.platform.engine.support.hierarchical.Node;
  * (see {@code Span}'s javadoc) and {@code FilePosition} requires line numbers greater than zero
  * (confirmed by reading {@code FilePosition}'s source), so no conversion is needed.
  *
- * <p>Retains the {@link Plan.PlannedExample} itself so a later task (execution — Task 11) can run
- * it; the registry/{@code createContext}/source text it was planned against are reachable via its
- * parent {@link VarFileDescriptor} rather than duplicated here. Does <strong>not</strong> implement
- * {@code execute(...)} yet — {@link Node}'s all-default (no-op) lifecycle makes this a pure
- * pass-through leaf for now, exactly like {@link VarFileDescriptor} before it.
+ * <p>Retains the {@link Plan.PlannedExample} itself so it can be run; the registry/{@code
+ * createContext}/source text it was planned against are reachable via its parent {@link
+ * VarFileDescriptor} rather than duplicated here.
+ *
+ * <h2>Execution (Task 11)</h2>
+ *
+ * <p>{@link #execute} looks up ITS OWN {@link com.oselvar.var.runner.Run.ExampleRun} from the
+ * parent {@link VarFileDescriptor}'s cache ({@link VarFileDescriptor#runFor}) rather than
+ * re-planning or re-collecting anything — planning already happened once, at discovery. On
+ * success it returns normally, so JUnit Platform reports {@code SUCCESSFUL} (its own default). On
+ * the underlying {@code Runnable} throwing, the caught {@code Throwable} — already carrying an
+ * injected {@link StackTraceElement} pointing at the failing step's {@code .md} location, per
+ * {@code Execute.runExample}'s {@code augmentStack} — is rendered via {@link Render#renderFailure}
+ * into markdown-anchored text, then wrapped in {@link RenderedFailure} (preserving the original as
+ * {@link Throwable#getCause()}) and thrown; JUnit Platform's {@code
+ * TestExecutionResult.failed(Throwable)} then reports {@code getMessage()} from THAT wrapper.
  */
 final class VarExampleDescriptor extends AbstractTestDescriptor implements Node<VarEngineExecutionContext> {
 
@@ -51,5 +63,41 @@ final class VarExampleDescriptor extends AbstractTestDescriptor implements Node<
     /** The example this leaf was planned from. */
     Plan.PlannedExample example() {
         return example;
+    }
+
+    @Override
+    public VarEngineExecutionContext execute(VarEngineExecutionContext context, DynamicTestExecutor dynamicTestExecutor)
+            throws Exception {
+        VarFileDescriptor fileDescriptor = fileDescriptor();
+        Runnable run = fileDescriptor.runFor(example);
+        try {
+            run.run();
+        } catch (Throwable error) {
+            String rendered = Render.renderFailure(error, fileDescriptor.content(), fileDescriptor.specPath());
+            throw new RenderedFailure(rendered, error);
+        }
+        return context;
+    }
+
+    /**
+     * This leaf's parent, always a {@link VarFileDescriptor} — every {@link
+     * VarExampleDescriptor} is created and immediately added as a child of exactly one, by {@link
+     * VarFileSelectorResolver#createDescriptor}, so by execution time (long after discovery)
+     * {@link #getParent()} is populated.
+     */
+    private VarFileDescriptor fileDescriptor() {
+        return (VarFileDescriptor)
+                getParent().orElseThrow(() -> new IllegalStateException("no parent for " + getUniqueId()));
+    }
+
+    /**
+     * Wraps a caught step failure so JUnit Platform's {@code TestExecutionResult.failed(...)}
+     * reports {@link Render}'s markdown-anchored text as {@link #getMessage()}, without losing
+     * the original exception's identity or stack trace — preserved whole as {@link #getCause()}.
+     */
+    static final class RenderedFailure extends RuntimeException {
+        RenderedFailure(String renderedMessage, Throwable cause) {
+            super(renderedMessage, cause);
+        }
     }
 }
