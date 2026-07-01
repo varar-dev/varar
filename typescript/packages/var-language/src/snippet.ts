@@ -1,7 +1,6 @@
 import { CucumberExpressionGenerator } from '@cucumber/cucumber-expressions'
-import type { Registry } from './registry.js'
+import type { Registry, StepKind } from '@oselvar/var-core'
 import { DEFAULT_SNIPPET_TEMPLATE } from './snippet-template.js'
-import type { StepKind } from './step-role.js'
 import { renderTemplate } from './template.js'
 
 export type Snippet = {

@@ -1,12 +1,11 @@
 import {
   diffExpressions,
   expressionSegments,
-  generateSnippet,
   inferStepRole,
   renderExpression,
   type StepKind,
 } from '@oselvar/var-core'
-import type { MatchRef } from '@oselvar/var-language'
+import { generateSnippet, type MatchRef } from '@oselvar/var-language'
 import type {
   HandlerSync,
   PlanParamFate,
@@ -140,8 +139,9 @@ export function buildHandlers(store: Store): Handlers {
         uri !== undefined && position !== undefined
           ? inferStepRole(neighbourRolesForSelection(store, uri, position))
           : undefined
+      const template = store.snippetTemplate()
       const snippet = generateSnippet(text, store.index().registry, {
-        template: store.snippetTemplate(),
+        ...(template !== undefined ? { template } : {}),
         ...(role !== undefined ? { role } : {}),
       })
       return { fullCode: snippet.fullCode, expression: snippet.expression }
@@ -410,8 +410,9 @@ function prepareRename(
   let newExpression: string
   if (isVarDoc) {
     try {
+      const template = store.snippetTemplate()
       newExpression = generateSnippet(newName, store.index().registry, {
-        template: store.snippetTemplate(),
+        ...(template !== undefined ? { template } : {}),
       }).expression
     } catch (e) {
       return {
