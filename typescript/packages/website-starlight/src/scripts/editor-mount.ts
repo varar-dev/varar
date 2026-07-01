@@ -293,17 +293,3 @@ function mountAll(): void {
 mountAll()
 // Initial run once all editors in each group are mounted.
 for (const groupId of groups.keys()) scheduleRun(groupId)
-
-// CodeMirror measures line height/char width from the DOM at mount time and
-// caches it for coordinate math (click-to-position, ArrowUp/Down). If a web
-// font (e.g. the page's variable body font, inherited via `font-family`)
-// hasn't finished loading yet, that first measurement is taken against a
-// fallback font's metrics and goes stale the moment the real font swaps in —
-// producing exactly the symptoms of a stale cache: clicks landing on the
-// wrong character, ArrowDown overshooting by more than one line. Force a
-// remeasure once every font the page requested has actually loaded.
-document.fonts.ready.then(() => {
-  for (const group of groups.values()) {
-    for (const view of group.views.values()) view.requestMeasure()
-  }
-})
