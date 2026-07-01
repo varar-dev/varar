@@ -170,6 +170,7 @@ function mountEditor(editorEl: HTMLElement): void {
 
   const client = lspClient()
   const views = new Map<string, EditorView>()
+  const panes = new Map<string, HTMLElement>() // uri -> wrapper div hosting that file's view
   const tabButtons = new Map<string, HTMLButtonElement>()
   let activeUri: string = files[0] ? files[0].uri : ''
 
@@ -243,7 +244,7 @@ function mountEditor(editorEl: HTMLElement): void {
 
   function showFile(uri: string): void {
     activeUri = uri
-    for (const [u, view] of views) view.dom.style.display = u === uri ? '' : 'none'
+    for (const [u, pane] of panes) pane.style.display = u === uri ? '' : 'none'
     for (const [u, btn] of tabButtons) btn.setAttribute('aria-selected', String(u === uri))
     renderFooter(uri)
     views.get(uri)?.focus()
@@ -293,9 +294,16 @@ function mountEditor(editorEl: HTMLElement): void {
         ext.push(stepGenAffordance({ generate, stepsView }))
       }
     }
-    const view = new EditorView({ doc: file.doc, extensions: ext, parent: mount })
-    view.dom.style.display = file.uri === activeUri ? '' : 'none'
+    // CodeMirror's own base theme sets `.cm-editor { display: flex !important }`
+    // (to protect its internal layout from outer CSS), which beats a plain
+    // (non-!important) inline `display: none` on view.dom directly — so hide a
+    // wrapper pane around the view instead of the view's own root element.
+    const pane = document.createElement('div')
+    pane.style.display = file.uri === activeUri ? '' : 'none'
+    mount.appendChild(pane)
+    const view = new EditorView({ doc: file.doc, extensions: ext, parent: pane })
     views.set(file.uri, view)
+    panes.set(file.uri, pane)
 
     const tabBtn = document.createElement('button')
     tabBtn.type = 'button'
