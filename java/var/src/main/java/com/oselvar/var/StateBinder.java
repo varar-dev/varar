@@ -35,6 +35,12 @@ public interface StateBinder<C extends State> {
         C apply(C state, A a);
     }
 
+    /** context/action handler with two captures {@code a}, {@code b}: return new state. */
+    @FunctionalInterface
+    interface Context2<C extends State, A, B> {
+        C apply(C state, A a, B b);
+    }
+
     /** sensor with no captures: observe {@code state}, return a value the core compares. */
     @FunctionalInterface
     interface Sensor0<C extends State, R> {
@@ -47,15 +53,27 @@ public interface StateBinder<C extends State> {
         R apply(C state, A a);
     }
 
+    /** sensor with two captures {@code a}, {@code b}: return a value the core compares. */
+    @FunctionalInterface
+    interface Sensor2<C extends State, A, B, R> {
+        R apply(C state, A a, B b);
+    }
+
     void context(String expression, Context0<C> handler);
 
     <A> void context(String expression, Context1<C, A> handler);
+
+    <A, B> void context(String expression, Context2<C, A, B> handler);
 
     void action(String expression, Context0<C> handler);
 
     <A> void action(String expression, Context1<C, A> handler);
 
+    <A, B> void action(String expression, Context2<C, A, B> handler);
+
     <R> void sensor(String expression, Sensor0<C, R> handler);
 
     <A, R> void sensor(String expression, Sensor1<C, A, R> handler);
+
+    <A, B, R> void sensor(String expression, Sensor2<C, A, B, R> handler);
 }

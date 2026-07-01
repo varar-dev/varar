@@ -83,6 +83,11 @@ final class RecordingRegistrar implements Registrar {
         }
 
         @Override
+        public <A, B> void context(String expression, Context2<C, A, B> handler) {
+            record(expression, StepKind.CONTEXT, handler);
+        }
+
+        @Override
         public void action(String expression, Context0<C> handler) {
             record(expression, StepKind.ACTION, handler);
         }
@@ -93,12 +98,22 @@ final class RecordingRegistrar implements Registrar {
         }
 
         @Override
+        public <A, B> void action(String expression, Context2<C, A, B> handler) {
+            record(expression, StepKind.ACTION, handler);
+        }
+
+        @Override
         public <R> void sensor(String expression, Sensor0<C, R> handler) {
             record(expression, StepKind.SENSOR, handler);
         }
 
         @Override
         public <A, R> void sensor(String expression, Sensor1<C, A, R> handler) {
+            record(expression, StepKind.SENSOR, handler);
+        }
+
+        @Override
+        public <A, B, R> void sensor(String expression, Sensor2<C, A, B, R> handler) {
             record(expression, StepKind.SENSOR, handler);
         }
     }
