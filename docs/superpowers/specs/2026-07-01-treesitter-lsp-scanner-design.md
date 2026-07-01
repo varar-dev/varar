@@ -43,14 +43,18 @@ bytes* is per-environment.
     load(languageId: string): Promise<Uint8Array>
   }
   ```
-- `src/byte-offset.ts` — pure utility. Tree-sitter reports node positions as
-  **UTF-8 byte offsets**; the existing `Range` contract (and the TS-compiler
-  scanner) uses **UTF-16 code-unit** `{line, character}` positions
-  (`ts.SourceFile.getLineAndCharacterOfPosition`). These silently disagree on
-  any non-ASCII source text. This module converts a tree-sitter byte offset to
-  the same `{line, character}` shape the TS-compiler scanner produces, given
-  the source string. Own unit tests with multi-byte fixtures (accented
-  characters, an emoji — a UTF-16 surrogate pair).
+- **No byte-offset conversion needed** (verified empirically, see "Lessons
+  from cucumber/language-service" below): despite `web-tree-sitter`'s `.d.ts`
+  describing node positions as byte offsets, `Parser.parse()` auto-selects
+  UTF-16 input mode when given a plain JS string — which is what
+  `discoverStepDefs(path, source: string)` always passes. Measured directly
+  against `action('café {int} 🎉', ...)`: `node.startIndex`/`.endIndex` and
+  `.startPosition.column`/`.endPosition.column` already land on UTF-16
+  code-unit boundaries (a `🎉` counts as 2 columns, matching its surrogate-pair
+  width in a JS string), identically to `ts.SourceFile.getLineAndCharacterOfPosition`.
+  So `Range` conversion is just `{line: node.startPosition.row + 1, character:
+  node.startPosition.column + 1}` — the same shape the current `rangeOf()`
+  helper already produces, no separate utility module needed.
 - `src/tree-sitter-queries.ts` — the per-language surface, as string constants
   (not `.scm` asset files — avoids a second asset-loading mechanism alongside
   `GrammarLoader` in the same sub-project). Capture names follow
@@ -71,18 +75,25 @@ bytes* is per-environment.
     this *is* a real regexp, since it defines a custom parameter type's
     matching pattern; unrelated to the "no regexp step defs" rule above).
 
-  The exact tree-sitter-typescript node shapes for these three source shapes
-  (string literals, regex literals, arrow functions, call expressions) must be
-  verified empirically against real parse trees during implementation — grammar
-  internals have shifted across versions before, so this is not assumed.
+  Node shapes verified empirically against `tree-sitter-typescript` 0.23.2 (see
+  "Lessons from cucumber/language-service" for how): `call_expression` has
+  `function`/`arguments` fields; a `required_parameter`'s `pattern` field is
+  the name, its optional `type` field is a `type_annotation` node whose `.text`
+  includes the leading colon (use `.namedChild(0).text` to get the bare type,
+  e.g. `"number"` not `": number"`); `regex` has `pattern`/`flags` fields
+  directly (no need to hand-parse trailing flags off `.text` like
+  cucumber/language-service does).
 
-  **String-literal decoding.** Unlike `ts.StringLiteral.text` (already decoded),
-  a tree-sitter `string` node's children include the quote-character tokens and
-  the content is *not* unescaped. Extracting the expression text needs the
-  same two steps cucumber/language-service's `helpers.ts` uses: filter out the
-  quote-token children (`childrenToString(node, NO_QUOTES)`), then unescape
-  `\'`/`\"`. Skipping this would make `action('I said \'hi\'', ...)` extract
-  wrong. Gets its own test fixture (see Testing strategy).
+  **String-literal decoding.** Unlike `ts.StringLiteral.text` (already
+  decoded), a `string` node's children are the two quote tokens plus
+  alternating `string_fragment` (verbatim text) and `escape_sequence` nodes —
+  *not* a single flat run. Reconstructing the decoded value means walking the
+  children: append `string_fragment` text verbatim, decode each
+  `escape_sequence` (`\'`→`'`, `\"`→`"`, `\\`→`\`, `\n`→newline, `\t`→tab).
+  Verified against `action('I said \'hi\'', ...)`, whose `string` node has
+  children `(string_fragment "I said ") (escape_sequence "\'")
+  (string_fragment "hi") (escape_sequence "\'")` — decoding to
+  `I said 'hi'`. Gets its own test fixture (see Testing strategy).
 - `src/tree-sitter-scanner.ts` — `createTreeSitterScanner(grammarLoader:
   GrammarLoader): Promise<StepDefScanner>`. Selects the `typescript` grammar
   for `.ts` files and `typescript-tsx` for `.tsx` files (see TSX below), memoizes
@@ -104,34 +115,32 @@ both and selecting by file extension — this also means `.tsx` step files (e.g.
 a downstream project with `steps: ['**/*.steps.tsx']` in its `var.config.ts`)
 work correctly from day one, not just `.ts`.
 
-### Grammar sourcing — build our own, don't depend on a prebuilt bundle
+### Grammar sourcing — depend on tree-sitter-typescript's own shipped wasm
 
-Considered depending on a prebuilt wasm-grammar bundle (`tree-sitter-wasms`).
-Rejected: the actively-published fork (`tree-sitter-wasms` on npm, maintained by
-a single individual) is a single-maintainer rebundle with no guarantee it
-tracks upstream grammar releases; the original (`sourcegraph/tree-sitter-wasms`)
-is two years stale. [cucumber/language-service](https://github.com/cucumber/language-service)
-— the project ADR 0001 already draws inspiration from — builds its own grammar
-wasm files via `scripts/build.js` rather than depending on a prebuilt bundle.
-As of `tree-sitter-cli` 0.26.1+ (current: 0.26.10), `tree-sitter build --wasm`
-auto-downloads its own toolchain (wasi-sdk) — Docker/emscripten are no longer
-required, so building our own is now cheap.
+Considered depending on a prebuilt wasm-grammar *bundle* (`tree-sitter-wasms`).
+Rejected: the actively-published fork on npm is a single-maintainer rebundle
+with no guarantee it tracks upstream grammar releases; the original
+(`sourcegraph/tree-sitter-wasms`) is two years stale. Also considered building
+our own via `tree-sitter-cli` (matching
+[cucumber/language-service](https://github.com/cucumber/language-service)'s
+`scripts/build.js`) — but checking the actual `tree-sitter-typescript` 0.23.2
+npm package directly shows it already ships `tree-sitter-typescript.wasm` and
+`tree-sitter-tsx.wasm` **in the package itself** (`"*.wasm"` is explicitly in
+its `package.json` `files` array — a genuinely published asset, not something
+a postinstall script generates). That makes building our own pointless
+duplication: this is the canonical upstream grammar package's own asset, not a
+third-party rebundle, so the staleness/bus-factor concern that ruled out
+`tree-sitter-wasms` doesn't apply — it's a regular npm dependency with normal
+version-pin semantics.
 
-- `var-lsp` gets two new **devDependencies**: `tree-sitter-cli` (0.26.10) and
-  `tree-sitter-typescript` (0.23.2, the official `tree-sitter`-org grammar
-  source package — not a prebuilt wasm bundle).
-- `packages/var-lsp/scripts/build-grammars.mjs` runs `tree-sitter build --wasm`
-  against the `typescript` and `tsx` subdirectories of
-  `node_modules/tree-sitter-typescript`, producing
-  `packages/var-lsp/grammars/typescript.wasm` and
-  `packages/var-lsp/grammars/typescript-tsx.wasm`.
-- Both `.wasm` files are **committed to git** (matches how prebuilt-bundle
-  packages ship — we're just doing it ourselves, pinned to a grammar version we
-  choose). A `build:grammars` package script regenerates them; this must be
-  re-run and the output re-committed whenever `tree-sitter-typescript` is
-  bumped — call this out in the package README so it isn't forgotten.
-- `createNodeGrammarLoader()` (in `var-lsp`) just reads the committed files from
-  disk by `languageId` — no runtime dependency on any third-party wasm bundle.
+- `var-lsp` gets one new **dependency** (runtime, not dev):
+  `tree-sitter-typescript` (0.23.2).
+- `createNodeGrammarLoader()` (in `var-lsp`) resolves each `.wasm` file's path
+  via `import.meta.resolve('tree-sitter-typescript/tree-sitter-typescript.wasm')`
+  (and the `tsx` counterpart) — verified this works with no `exports` field
+  restricting subpath access — then reads it with `node:fs/promises`. No build
+  step, no committed binaries in this repo; bumping the `tree-sitter-typescript`
+  dependency version is the only thing needed to pick up a grammar update.
 - `web-tree-sitter` (the parser *runtime*, unrelated to grammar sourcing) is a
   regular dependency of `var-language`, since extraction itself must stay
   environment-agnostic.
@@ -141,7 +150,8 @@ required, so building our own is now cheap.
 Mirrors the existing `FileSystem` port / `node-file-system.ts` pattern exactly:
 
 - `src/node-grammar-loader.ts` — `createNodeGrammarLoader(): GrammarLoader`,
-  reads the committed `.wasm` files via `node:fs/promises`.
+  resolves each grammar's `.wasm` path via `import.meta.resolve(...)` against
+  the `tree-sitter-typescript` package and reads it with `node:fs/promises`.
 - `store.ts` — add `grammarLoader: GrammarLoader` to `StoreDeps` (alongside
   `fs`). Memoize `createTreeSitterScanner(grammarLoader)` inside the
   already-async `reindex()` (first call pays the init cost; later calls reuse
@@ -151,7 +161,7 @@ Mirrors the existing `FileSystem` port / `node-file-system.ts` pattern exactly:
   `createNodeFileSystem(root)`.
 - `store.test.ts` (×3 call sites) and `handlers.test.ts` (×1) get the new
   `grammarLoader` field added to their deps (real loader — no fake needed,
-  since the `.wasm` files are real committed assets, not something a test
+  since the `.wasm` files are a real npm package asset, not something a test
   needs to vary).
 
 `buildWorkspaceIndex`'s own default stays `createTypeScriptScanner()` — only
@@ -161,20 +171,34 @@ Mirrors the existing `FileSystem` port / `node-file-system.ts` pattern exactly:
 ### Lessons from cucumber/language-service
 
 Read the actual source, not just `scripts/build.js`, before finalizing this
-design. Adopted:
+design. Also independently ran `web-tree-sitter` 0.26.10 +
+`tree-sitter-typescript` 0.23.2 directly (see scratch scripts referenced in
+the implementation plan) against every existing test fixture, to verify
+adopted patterns rather than take them on faith. Adopted:
 
 - The query-string-with-named-captures pattern and its capture-name vocabulary
   (`@root`/`@function-name`/`@expression`/`@name`), rather than manual
-  tree-walking.
+  tree-walking. Verified end-to-end: real queries built on this pattern,
+  run against all 12 existing fixtures plus 2 new ones, reproduce the
+  TS-compiler scanner's output exactly.
 - The quote-stripping + unescape steps needed to decode a `string` node's
   content (see above) — an easy-to-miss gap this design didn't originally
-  cover.
-- Confirmation that our `byte-offset.ts` conversion is a real, not
-  hypothetical, gap: `helpers.ts`'s `createLocationLink` passes tree-sitter's
-  raw `startPosition.column` (a UTF-8 byte offset) directly into an LSP
-  `Range`, with no UTF-16 conversion visible anywhere in the source. If that's
-  accurate, the reference implementation itself mishandles non-ASCII columns —
-  which is a reason to keep our conversion, not drop it as gold-plating.
+  cover, confirmed necessary and now verified against a real escaped-quote
+  parse tree.
+
+**Correction after empirical verification:** this design originally flagged
+`helpers.ts`'s `createLocationLink` — which passes tree-sitter's raw
+`startPosition.column` straight into an LSP `Range` — as evidence that
+cucumber/language-service mishandles non-ASCII columns, and planned a
+`byte-offset.ts` conversion utility to avoid the same bug. Measuring it
+directly shows this concern doesn't apply: `web-tree-sitter`'s `Parser.parse()`
+auto-selects UTF-16 input mode when given a plain JS string (which is what
+both projects always pass), so `startPosition.column` already lands on
+UTF-16 code-unit boundaries — the `.d.ts`'s "byte index" wording describes the
+native C API's terminology, not the actual behavior for string input. Their
+code is fine; so is skipping the conversion utility here. Retracting the
+original claim rather than leaving a wrong critique of a third-party project
+in a committed doc.
 
 Explicitly declined:
 
@@ -215,14 +239,16 @@ Explicitly declined:
   the same fixtures against both `createTypeScriptScanner()` and the new
   tree-sitter scanner (parity proof, avoids literal test duplication `jscpd`
   would flag).
-- Add 1–2 new fixtures with non-ASCII expression text (accented characters, an
-  emoji) to exercise the byte-offset→UTF-16 conversion.
+- Add a fixture with non-ASCII expression text (accented characters, an emoji)
+  asserting the reported `Range` matches the TS-compiler scanner's — locks in
+  that no byte-offset conversion is needed, verified empirically above.
 - One fixture per grammar exercising a plain angle-bracket type assertion in a
   `.ts` file, to lock in that the `typescript` grammar (not `tsx`) is selected
-  for `.ts` files.
+  for `.ts` files. Verified empirically that the `tsx` grammar produces a real
+  parse `ERROR` node for this input, while `typescript` parses it cleanly as
+  `type_assertion`.
 - One fixture with an escaped quote inside the expression string (e.g.
   `action('I said \'hi\'', ...)`) to lock in the quote-stripping/unescape step.
-- `byte-offset.ts` gets its own focused unit tests.
 - `var-lsp`'s existing `store.test.ts`/`handlers.test.ts` continue to pass
   unchanged (aside from the new `grammarLoader` field) — the integration-level
   parity proof.
@@ -244,12 +270,8 @@ Explicitly declined:
 
 ## Risks
 
-- Tree-sitter-typescript's exact node shapes for string/regex literals and
-  call expressions must be verified against real parse trees during
-  implementation, not assumed from memory of the grammar.
-- Byte-offset vs UTF-16 column mismatch is a real, if currently untested,
-  correctness gap for any non-ASCII step-definition source — addressed above,
-  not deferred.
-- Committed binary grammar artifacts need an explicit regeneration step on
-  `tree-sitter-typescript` version bumps, or they silently drift from the
-  npm-declared version.
+- Grammar node shapes were verified against `tree-sitter-typescript` 0.23.2
+  specifically; a future version bump could change them (tree-sitter grammars
+  have shifted node shapes across versions before). Re-verify against the 12+
+  fixtures when bumping the dependency — the shared-fixture test setup (see
+  Testing strategy) makes this a fast check, not a re-design.
