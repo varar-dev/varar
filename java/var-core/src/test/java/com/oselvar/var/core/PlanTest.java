@@ -333,16 +333,16 @@ class PlanTest {
                 | 3, 3, 3, 4, 4 | full house | 17    |""";
         Plan.ExecutionPlan result = Plan.plan(Parse.parse("y.md", source), r);
         @SuppressWarnings("unchecked")
-        List<Plan.RowCheck> checks = (List<Plan.RowCheck>) result.examples().get(0).rowChecks();
+        List<CellDiff.RowCheck> checks = (List<CellDiff.RowCheck>) result.examples().get(0).rowChecks();
         if (checks == null) fail("no rowChecks");
         assertEquals(
                 List.of("dice", "category", "score"),
-                checks.stream().map(Plan.RowCheck::column).toList());
+                checks.stream().map(CellDiff.RowCheck::column).toList());
         assertEquals(
                 List.of("3, 3, 3, 4, 4", "full house", "17"),
-                checks.stream().map(Plan.RowCheck::value).toList());
+                checks.stream().map(CellDiff.RowCheck::value).toList());
         // The score cell span slices back to "17" in the source.
-        Plan.RowCheck scoreCheck = checks.get(2);
+        CellDiff.RowCheck scoreCheck = checks.get(2);
         assertEquals(
                 "17", source.substring(scoreCheck.span().startOffset(), scoreCheck.span().endOffset()));
     }

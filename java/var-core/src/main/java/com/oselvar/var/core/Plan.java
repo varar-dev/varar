@@ -42,12 +42,11 @@ public final class Plan {
      * null} when not applicable (TS's optional fields). {@code rowChecks} is {@code null} except
      * on a header-bound table's row examples.
      *
-     * <p>{@code rowChecks} is typed {@code List<?>} rather than {@code List<RowCheck>} from {@code
-     * cell-diff.ts} on purpose: that module (and its canonical {@code RowCheck} type, to live in
-     * {@code CellDiff.java}) is a later task. Each element here is actually a {@link
-     * Plan.RowCheck} — a same-shaped ({@code column}/{@code value}/{@code span}) placeholder
-     * defined locally so this module's own tests can assert row-check contents without reaching
-     * ahead into an unported file.
+     * <p>{@code rowChecks} stays typed {@code List<?>} rather than {@code List<CellDiff.RowCheck>}
+     * — matching this record's original interface spec — even though each element is now the
+     * canonical {@link CellDiff.RowCheck} from {@code CellDiff.java} (this field predates that
+     * type; see {@code CellDiff.java}'s javadoc for the {@code column}/{@code value}/{@code span}
+     * shape).
      */
     public record PlannedExample(
             String name,
@@ -75,12 +74,6 @@ public final class Plan {
             paramSpans = List.copyOf(paramSpans);
         }
     }
-
-    /**
-     * One checked column of one header-bound row — see {@link PlannedExample#rowChecks}'s javadoc
-     * for why this isn't {@code cell-diff.ts}'s (not-yet-ported) canonical {@code RowCheck}.
-     */
-    public record RowCheck(String column, String value, Span span) {}
 
     /** One matched step: its text, source span, captured-parameter spans, args, and attachments. */
     public record PlannedStep(
@@ -170,9 +163,10 @@ public final class Plan {
                                     rowArgs,
                                     null,
                                     null);
-                    List<RowCheck> rowChecks = new ArrayList<>(headerCells.size());
+                    List<CellDiff.RowCheck> rowChecks = new ArrayList<>(headerCells.size());
                     for (int i = 0; i < headerCells.size(); i++) {
-                        rowChecks.add(new RowCheck(headerCells.get(i), cellAt(row, i), cellSpanAt(row, i)));
+                        rowChecks.add(
+                                new CellDiff.RowCheck(headerCells.get(i), cellAt(row, i), cellSpanAt(row, i)));
                     }
                     List<String> nestedScope = new ArrayList<>(ex.scopeStack());
                     nestedScope.add(bound.step().text());
