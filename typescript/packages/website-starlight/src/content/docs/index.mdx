@@ -16,7 +16,14 @@ hero:
       variant: minimal
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
+import { Card, CardGrid, Code } from '@astrojs/starlight/components';
+import yahtzeeSource from '../../../../var-examples/yahtzee/yahtzee.md?raw';
+
+## This is a real spec
+
+Not a snippet — the whole file, unmodified, running in this repo's own test suite:
+
+<Code code={yahtzeeSource} lang="md" title="yahtzee.md" />
 
 ## Next steps
 
