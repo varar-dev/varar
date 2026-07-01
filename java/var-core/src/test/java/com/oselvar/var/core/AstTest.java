@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 /** Port of typescript/packages/var-core/src/ast.ts (type definitions only, no logic there). */
@@ -137,7 +138,7 @@ class AstTest {
     void varDocExposesFieldsAndDefensivelyCopiesExamplesAndOrphanAttachments() {
         Ast.Example example = new Ast.Example(List.of(), SPAN, List.of(new Ast.ThematicBreak(SPAN)));
         List<Ast.Example> examples = new ArrayList<>(List.of(example));
-        List<Ast.Block> orphanAttachments = new ArrayList<>(List.of(new Ast.Fence(SPAN, "", "", SPAN)));
+        List<Ast.TableOrFence> orphanAttachments = new ArrayList<>(List.of(new Ast.Fence(SPAN, "", "", SPAN)));
         Ast.VarDoc doc = new Ast.VarDoc("spec.md", "# Title", examples, orphanAttachments);
 
         assertEquals("spec.md", doc.path());
@@ -147,11 +148,18 @@ class AstTest {
         assertThrows(UnsupportedOperationException.class, () -> doc.examples().add(example));
         assertThrows(
                 UnsupportedOperationException.class,
-                () -> doc.orphanAttachments().add(new Ast.ThematicBreak(SPAN)));
+                () -> doc.orphanAttachments().add(new Ast.Fence(SPAN, "", "", SPAN)));
     }
 
     @Test
     void blockPermitsExactlySevenVariants() {
         assertEquals(7, Ast.Block.class.getPermittedSubclasses().length);
+    }
+
+    @Test
+    void tableOrFencePermitsExactlyTableAndFence() {
+        Class<?>[] permitted = Ast.TableOrFence.class.getPermittedSubclasses();
+        assertEquals(2, permitted.length);
+        assertEquals(Set.of(Ast.Table.class, Ast.Fence.class), Set.of(permitted));
     }
 }

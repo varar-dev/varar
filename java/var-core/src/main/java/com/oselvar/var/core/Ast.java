@@ -75,15 +75,22 @@ public final class Ast {
         }
     }
 
+    /**
+     * Marker union of the block kinds that may appear as a {@link VarDoc}
+     * orphan attachment — mirrors the TS union type {@code Table | Fence}
+     * (ast.ts:79-84).
+     */
+    public sealed interface TableOrFence permits Table, Fence {}
+
     /** A markdown table: a header {@link Row} plus zero or more data rows. */
-    public record Table(Span span, Row header, List<Row> rows) implements Block {
+    public record Table(Span span, Row header, List<Row> rows) implements Block, TableOrFence {
         public Table {
             rows = List.copyOf(rows);
         }
     }
 
     /** A fenced code block; {@code info} is the text after the opening fence (e.g. a language tag). */
-    public record Fence(Span span, String info, String body, Span bodySpan) implements Block {}
+    public record Fence(Span span, String info, String body, Span bodySpan) implements Block, TableOrFence {}
 
     /** A thematic break ({@code ---}/{@code ***}/{@code ___}). */
     public record ThematicBreak(Span span) implements Block {}
@@ -107,7 +114,8 @@ public final class Ast {
     }
 
     /** A parsed source file: its matched examples plus any table/fence blocks not attached to one. */
-    public record VarDoc(String path, String source, List<Example> examples, List<Block> orphanAttachments) {
+    public record VarDoc(
+            String path, String source, List<Example> examples, List<TableOrFence> orphanAttachments) {
         public VarDoc {
             examples = List.copyOf(examples);
             orphanAttachments = List.copyOf(orphanAttachments);
