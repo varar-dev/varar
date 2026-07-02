@@ -48,3 +48,15 @@ def test_wrong_type_raises(tmp_path):
     root = _write(tmp_path, '{"steps": "x"}')
     with pytest.raises(ValueError, match="steps"):
         read_var_config(root)
+
+
+def test_falsy_wrong_type_docs_raises(tmp_path):
+    root = _write(tmp_path, '{"docs": false}')
+    with pytest.raises(ValueError, match="docs"):
+        read_var_config(root)
+
+
+def test_falsy_wrong_type_snippets_raises(tmp_path):
+    root = _write(tmp_path, '{"snippets": []}')
+    with pytest.raises(ValueError, match="snippets"):
+        read_var_config(root)

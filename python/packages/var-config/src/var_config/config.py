@@ -46,13 +46,17 @@ def read_var_config(root: str | Path) -> VarConfig:
     unknown = set(data) - _KNOWN_KEYS
     if unknown:
         raise ValueError(f"{path}: unknown key(s): {', '.join(sorted(unknown))}")
-    docs = data.get("docs") or {}
+    docs = data.get("docs")
+    if docs is None:
+        docs = {}
     if not isinstance(docs, dict):
         raise ValueError(f"{path}: 'docs' must be an object")
     unknown_docs = set(docs) - _KNOWN_DOCS_KEYS
     if unknown_docs:
         raise ValueError(f"{path}: unknown docs key(s): {', '.join(sorted(unknown_docs))}")
-    snippets = data.get("snippets") or {}
+    snippets = data.get("snippets")
+    if snippets is None:
+        snippets = {}
     if not isinstance(snippets, dict) or not all(
         isinstance(k, str) and isinstance(v, str) for k, v in snippets.items()
     ):
