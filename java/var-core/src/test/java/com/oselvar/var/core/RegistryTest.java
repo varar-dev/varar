@@ -94,4 +94,21 @@ class RegistryTest {
                         Registry.createRegistry(), "I greet {string}", "a.steps.ts", 1, NOOP_HANDLER, null);
         assertNull(r.steps().get(0).kind());
     }
+
+    @Test
+    void defineParameterTypeRecordsTheCustomTypeImmutably() {
+        Registry r0 = Registry.createRegistry();
+        assertEquals(List.of(), r0.customParameterTypes());
+        Registry r1 =
+                Registry.defineParameterType(
+                        r0, "airport", java.util.regex.Pattern.compile("[A-Z]{3}"), g -> g[0]);
+        assertEquals(
+                List.of(new Registry.CustomParameterType("airport", "[A-Z]{3}")),
+                r1.customParameterTypes());
+        // The original registry value is untouched (records are immutable views).
+        assertEquals(List.of(), r0.customParameterTypes());
+        assertThrows(
+                UnsupportedOperationException.class,
+                () -> r1.customParameterTypes().add(new Registry.CustomParameterType("x", "y")));
+    }
 }

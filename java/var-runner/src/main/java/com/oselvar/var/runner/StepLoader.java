@@ -76,7 +76,11 @@ import java.util.function.Supplier;
  * steps()} list into the accumulator's — reusing the already-compiled expressions as-is
  * — with the same duplicate-expression check {@code addStep} performs (and the same
  * error message shape), since two classes accidentally registering the identical
- * expression is a genuine authoring bug this merge should still catch.
+ * expression is a genuine authoring bug this merge should still catch. {@code
+ * customParameterTypes()} is merged the same way — plain concatenation, no
+ * recompilation — since it exists purely to be projected into the registry
+ * conformance artifact ({@link com.oselvar.var.core.Conformance#toRegistryArtifact}),
+ * never consulted to compile anything itself.
  */
 public final class StepLoader {
 
@@ -102,6 +106,7 @@ public final class StepLoader {
      */
     public static LoadedSteps loadSteps(List<String> stepClassNames, ClassLoader loader) {
         List<Registry.StepRegistration> mergedSteps = new ArrayList<>();
+        List<Registry.CustomParameterType> mergedCustomParameterTypes = new ArrayList<>();
         ParameterTypeRegistry parameterTypes = null;
         Map<String, Supplier<? extends State>> factoriesByFile = new HashMap<>();
 
@@ -122,6 +127,7 @@ public final class StepLoader {
                     requireNoDuplicate(mergedSteps, step);
                     mergedSteps.add(step);
                 }
+                mergedCustomParameterTypes.addAll(own.customParameterTypes());
 
                 if (!own.steps().isEmpty()) {
                     String file = own.steps().get(0).expressionSourceFile();
@@ -145,7 +151,8 @@ public final class StepLoader {
         Registry merged =
                 new Registry(
                         mergedSteps,
-                        parameterTypes != null ? parameterTypes : Registry.createRegistry().parameterTypes());
+                        parameterTypes != null ? parameterTypes : Registry.createRegistry().parameterTypes(),
+                        mergedCustomParameterTypes);
         Map<String, Supplier<? extends State>> resolvedFactories = Map.copyOf(factoriesByFile);
         Function<String, Object> createContext =
                 file -> {

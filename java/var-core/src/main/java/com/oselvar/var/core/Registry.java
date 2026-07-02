@@ -37,11 +37,22 @@ import java.util.regex.Pattern;
  * only affects locale-sensitive built-in types ({@code float}/{@code double} decimal
  * separators), not {@code int}/{@code word}/{@code string}.
  */
-public record Registry(List<StepRegistration> steps, ParameterTypeRegistry parameterTypes) {
+public record Registry(
+        List<StepRegistration> steps,
+        ParameterTypeRegistry parameterTypes,
+        List<CustomParameterType> customParameterTypes) {
 
     public Registry {
         steps = List.copyOf(steps);
+        customParameterTypes = List.copyOf(customParameterTypes);
     }
+
+    /**
+     * A custom parameter type as registered by an author — name plus the bare pattern
+     * source ({@link Pattern#pattern()}, no flags/delimiters), the exact string the
+     * conformance registry artifact serializes. Built-ins never appear here.
+     */
+    public record CustomParameterType(String name, String regexp) {}
 
     /**
      * One registered step: its source cucumber expression, source location, handler
@@ -59,7 +70,7 @@ public record Registry(List<StepRegistration> steps, ParameterTypeRegistry param
 
     /** An empty registry with a fresh default {@link ParameterTypeRegistry}. */
     public static Registry createRegistry() {
-        return new Registry(List.of(), new ParameterTypeRegistry(Locale.ENGLISH));
+        return new Registry(List.of(), new ParameterTypeRegistry(Locale.ENGLISH), List.of());
     }
 
     /**
@@ -98,15 +109,17 @@ public record Registry(List<StepRegistration> steps, ParameterTypeRegistry param
         next.add(
                 new StepRegistration(
                         expression, expressionSourceFile, expressionSourceLine, handler, compiled, kind));
-        return new Registry(next, registry.parameterTypes());
+        return new Registry(next, registry.parameterTypes(), registry.customParameterTypes());
     }
 
     /**
      * Registers a custom parameter type on {@code registry}'s shared {@link
-     * ParameterTypeRegistry}. The registry object returned is the same instance passed
-     * in — {@code ParameterTypeRegistry.defineParameterType} mutates in place, and (as in
-     * the TS/Python ports) that mutation is intentionally shared across every step
-     * subsequently compiled against this registry.
+     * ParameterTypeRegistry} and returns a NEW {@link Registry} recording it in {@link
+     * #customParameterTypes()}. The underlying {@link ParameterTypeRegistry} is still
+     * mutated in place — {@code ParameterTypeRegistry.defineParameterType} mutates in
+     * place, and (as in the TS/Python ports) that mutation is intentionally shared across
+     * every step subsequently compiled against this registry — but callers MUST use the
+     * returned {@link Registry} (not the argument) to observe the tracked custom type.
      *
      * @param transformer maps the matched capture group(s) to the argument value; unlike
      *     TS/Python there is no implicit identity default — callers pass one explicitly
@@ -128,6 +141,8 @@ public record Registry(List<StepRegistration> steps, ParameterTypeRegistry param
                         /* preferForRegexpMatch= */ false,
                         /* useRegexpMatchAsStrongTypeHint= */ false);
         registry.parameterTypes().defineParameterType(parameterType);
-        return registry;
+        List<CustomParameterType> recorded = new ArrayList<>(registry.customParameterTypes());
+        recorded.add(new CustomParameterType(name, regexp.pattern()));
+        return new Registry(registry.steps(), registry.parameterTypes(), recorded);
     }
 }

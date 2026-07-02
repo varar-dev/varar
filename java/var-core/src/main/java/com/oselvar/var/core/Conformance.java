@@ -51,16 +51,26 @@ public final class Conformance {
      * [{expression, parameterTypeNames}], parameterTypes: [{name, regexp}]}}.
      *
      * <p>Port of {@code toRegistryArtifact} in {@code conformance.ts} (and
-     * {@code to_registry_artifact} in the Python port). No conformance bundle
-     * currently exercises {@code defineParameterType} (every {@code golden/
-     * registry.json}'s {@code parameterTypes} is {@code []} — see the plan's
-     * deferred list), so unlike TS/Python this overload takes no explicit custom-
-     * parameter-types argument; add one if/when a bundle needs it.
+     * {@code to_registry_artifact} in the Python port). {@code parameterTypes} is
+     * projected straight from {@link Registry#customParameterTypes()} — bundle 13
+     * ({@code {airport}}) is the first to exercise {@code defineParameterType} (every
+     * other bundle's {@code golden/registry.json} still has {@code parameterTypes: []},
+     * since nothing registers a custom type there).
      */
     public static Map<String, Object> toRegistryArtifact(Registry registry) {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("steps", registry.steps().stream().map(Conformance::step).toList());
-        out.put("parameterTypes", List.of());
+        out.put(
+                "parameterTypes",
+                registry.customParameterTypes().stream()
+                        .map(
+                                p -> {
+                                    Map<String, Object> pt = new LinkedHashMap<String, Object>();
+                                    pt.put("name", p.name());
+                                    pt.put("regexp", p.regexp());
+                                    return (Object) pt;
+                                })
+                        .toList());
         return out;
     }
 
