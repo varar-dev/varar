@@ -2,7 +2,7 @@
 # One component per package in typescript/packages/*; every arrow is a real
 # `workspace:` dependency taken from that package's package.json.
 # Boundaries follow the hexagonal architecture: pure functional core,
-# imperative shell (adapters), editor tooling, docs & dogfood.
+# imperative shell (adapters), editor tooling.
 
 direction: down
 
@@ -40,15 +40,6 @@ classes: {
       border-radius: 4
     }
   }
-  legacy: {
-    style: {
-      fill: "#CCCCCC"
-      font-color: "#333333"
-      stroke: "#999999"
-      stroke-dash: 3
-      border-radius: 4
-    }
-  }
   boundary: {
     style: {
       fill: "transparent"
@@ -68,10 +59,6 @@ vitest: "Vitest\n[External system]\n\nTest runner" {
 }
 
 vscode: "VS Code\n[External system]\n\nEditor" {
-  class: external
-}
-
-cucumber-js: "cucumber-js\n[External system]\n\nLegacy BDD runner" {
   class: external
 }
 
@@ -123,35 +110,13 @@ tooling: "Editor tooling" {
   }
 }
 
-docs: "Docs & dogfood" {
-  class: boundary
-
-  website-starlight: "@oselvar/website-starlight\n[Component: Astro site]\n\nDocs at var.oselvar.com with\nin-browser CodeMirror editor + LSP" {
-    class: component
-  }
-
-  website: "@oselvar/website\n[Component: legacy site]\n\nRetired docs site\n(never built or deployed)" {
-    class: legacy
-  }
-
-  var-examples: "@oselvar/var-examples\n[Component: npm package]\n\nDogfood specs: one directory per\nexample, run via vitest" {
-    class: component
-  }
-
-  cucumber: "@oselvar/cucumber\n[Component: npm package]\n\nMigration-verification sandbox:\nsame feature under cucumber-js and Vár" {
-    class: component
-  }
-}
-
 # --- People and external systems ---
 
 developer -> core.var: authors specs and steps with
 developer -> tooling.var-vscode: edits specs in
-developer -> docs.website-starlight: learns Vár from
 
 shell.var-vitest -> vitest: plugs into
 tooling.var-vscode -> vscode: installs into
-docs.cucumber -> cucumber-js: also runs under
 
 # --- Functional core ---
 
@@ -182,23 +147,3 @@ tooling.var-lsp -> core.var-core
 
 tooling.var-vscode -> tooling.var-lsp
 tooling.var-vscode -> core.var-language
-
-# --- Docs & dogfood ---
-
-docs.website-starlight -> tooling.var-lsp
-docs.website-starlight -> core.var-language
-docs.website-starlight -> core.var
-docs.website-starlight -> core.var-core
-
-docs.website -> tooling.var-lsp: {style.stroke-dash: 3}
-docs.website -> core.var-language: {style.stroke-dash: 3}
-docs.website -> core.var: {style.stroke-dash: 3}
-docs.website -> core.var-core: {style.stroke-dash: 3}
-
-docs.var-examples -> core.var
-docs.var-examples -> shell.var-vitest
-
-docs.cucumber -> core.var
-docs.cucumber -> core.var-core
-docs.cucumber -> shell.var-cli
-docs.cucumber -> shell.var-vitest
