@@ -3,6 +3,7 @@ import { Language, type Node, Parser, Query, type QueryMatch } from 'web-tree-si
 import type { GrammarLoader } from './grammar-loader.js'
 import type { StepDefScanner } from './scanner.js'
 import type { ParameterTypeDef, StepDef } from './step-defs.js'
+import { pythonSpec } from './tree-sitter-dialects/python.js'
 import type { LanguageId, LanguageSpec } from './tree-sitter-dialects/types.js'
 import { toRange } from './tree-sitter-dialects/types.js'
 import { typescriptSpec } from './tree-sitter-dialects/typescript.js'
@@ -18,6 +19,7 @@ type Dialect = {
 // typescript spec: the queries and decoding are identical — only the grammar
 // (loaded per languageId) differs, which is why TSX is a separate LanguageId.
 const SPECS: Readonly<Partial<Record<LanguageId, LanguageSpec>>> = {
+  python: pythonSpec,
   typescript: typescriptSpec,
   'typescript-tsx': typescriptSpec,
 }
