@@ -1,0 +1,8 @@
+{
+  "$schema": "../conformance/config/var.config.schema.json",
+  "docs": {
+    "include": ["packages/var-examples/**/*.md"],
+    "exclude": ["packages/var-examples/yahtzee/yahtzee.broken.md"]
+  },
+  "steps": ["packages/var-examples/**/*.steps.ts"]
+}

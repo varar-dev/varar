@@ -3,8 +3,8 @@ import { defineConfig } from 'vitest/config'
 
 const root = new URL('../..', import.meta.url).pathname
 
-// The var plugin reads var.config.ts and drives vitest's include/exclude from
-// its `vars` globs, so there's nothing to list here — var.config.ts is the
+// The var plugin reads var.config.json and drives vitest's include/exclude from
+// its `vars` globs, so there's nothing to list here — var.config.json is the
 // single source of truth for which `.md` files are specs.
 //
 // No reporter here: in vitest 4 workspace mode reporters are root-level only

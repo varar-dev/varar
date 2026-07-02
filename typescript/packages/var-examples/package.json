@@ -8,6 +8,7 @@
   },
   "devDependencies": {
     "@oselvar/var": "workspace:*",
+    "@oselvar/var-core": "workspace:*",
     "@oselvar/var-vitest": "workspace:*",
     "vitest": "^4.1.9"
   }

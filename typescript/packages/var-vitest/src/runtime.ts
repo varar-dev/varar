@@ -14,7 +14,7 @@ export type RunPorts = {
   readonly sink: TestSink
   readonly reporter: Reporter
   // Opt-in scanner plugins (e.g. Gherkin tables, Gherkin doc strings) that
-  // the var-vitest plugin forwards from var.config.ts.
+  // the var-vitest plugin forwards from var.config.json.
   readonly scannerPlugins?: ReadonlyArray<ScannerPlugin>
 }
 

@@ -99,6 +99,9 @@ importers:
       '@oselvar/var':
         specifier: workspace:*
         version: link:../var
+      '@oselvar/var-core':
+        specifier: workspace:*
+        version: link:../var-core
       '@oselvar/var-vitest':
         specifier: workspace:*
         version: link:../var-vitest

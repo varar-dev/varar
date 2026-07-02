@@ -22,32 +22,28 @@ describe('generateVirtualModule', () => {
     const out = generateVirtualModule({
       varPath: '/abs/foo.md',
       stepImports: ['/abs/account.steps.ts'],
+      scannerPluginNames: [],
     })
     expect(out).toContain("import { test as vitestTest } from 'vitest'")
+    expect(out).toContain("import { resolveScannerPlugins } from '@oselvar/var-core'")
     expect(out).toContain("import { runVarSource, toFailure } from '@oselvar/var-vitest/runtime'")
     expect(out).toContain('import "/abs/account.steps.ts"')
     expect(out).toContain('const PATH = "/abs/foo.md"')
     expect(out).toContain('runVarSource(PATH, SOURCE,')
     expect(out).toContain('ctx.task.meta.varResult')
     expect(out).toContain('toFailure(error, PATH, lines[0] ?? 0)')
-    expect(out).toContain('scannerPlugins: varConfig?.scannerPlugins ?? []')
+    expect(out).toContain('scannerPlugins: resolveScannerPlugins([])')
   })
 
-  test('imports var.config.ts when configPath is provided so scannerPlugins reach the runtime', () => {
+  test('resolves configured scanner-plugin names via var-core so scannerPlugins reach the runtime', () => {
     const out = generateVirtualModule({
       varPath: '/abs/foo.md',
       stepImports: [],
-      configPath: '/abs/var.config.ts',
+      scannerPluginNames: ['gherkinTables', 'gherkinDocStrings'],
     })
-    expect(out).toContain('import varConfig from "/abs/var.config.ts"')
-  })
-
-  test('falls back to an empty varConfig when no var.config.ts is found', () => {
-    const out = generateVirtualModule({
-      varPath: '/abs/foo.md',
-      stepImports: [],
-    })
-    expect(out).toContain('const varConfig = {}')
+    expect(out).toContain(
+      'scannerPlugins: resolveScannerPlugins(["gherkinTables","gherkinDocStrings"])',
+    )
   })
 })
 

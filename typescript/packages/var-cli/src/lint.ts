@@ -22,9 +22,9 @@ type Item = {
 
 export async function runLint(opts: LintOptions): Promise<LintResult> {
   const cfg = await readVarConfig(opts.cwd)
-  // A CLI `--globs` override is include-only; excludes live in var.config.ts.
+  // A CLI `--globs` override is include-only; excludes live in var.config.json.
   const varGlobs =
-    opts.globs && opts.globs.length > 0 ? { include: opts.globs, exclude: [] } : cfg.vars
+    opts.globs && opts.globs.length > 0 ? { include: opts.globs, exclude: [] } : cfg.docs
   const files = findSpecs(opts.cwd, varGlobs.include, varGlobs.exclude)
   const registry = createRegistry()
   const items: Item[] = []

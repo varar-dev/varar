@@ -1,9 +1,9 @@
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
-const CONFIG = `export default {
-  vars: ['var-examples/**/*.md'],
-  steps: ['var-examples/**/*.steps.ts'],
+const CONFIG = `{
+  "docs": { "include": ["var-examples/**/*.md"], "exclude": [] },
+  "steps": ["var-examples/**/*.steps.ts"]
 }
 `
 
@@ -31,7 +31,7 @@ export type InitResult = { readonly exitCode: number }
 
 export async function runInit(opts: InitOptions): Promise<InitResult> {
   const files: Array<{ readonly relPath: string; readonly content: string }> = [
-    { relPath: 'var.config.ts', content: CONFIG },
+    { relPath: 'var.config.json', content: CONFIG },
     { relPath: 'var-examples/01-hello.md', content: EXAMPLE_MD },
     { relPath: 'var-examples/steps/01-hello.steps.ts', content: EXAMPLE_STEPS },
   ]

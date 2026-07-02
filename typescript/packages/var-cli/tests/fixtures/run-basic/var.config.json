@@ -1,0 +1,4 @@
+{
+  "docs": { "include": ["*.md"], "exclude": [] },
+  "steps": ["*.steps.ts"]
+}

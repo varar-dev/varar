@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { findSpecs, readVarConfig } from '@oselvar/var-runner'
 import type { Plugin } from 'vite'
@@ -19,17 +19,17 @@ export function isVarSpecId(id: string, specFiles: ReadonlySet<string>): boolean
 export function varVitestPlugin(options: VarVitestPluginOptions = {}): Plugin {
   const cwd = options.cwd ?? process.cwd()
   let stepFiles: ReadonlyArray<string> = []
-  // Absolute paths of the spec files discovered from `cfg.vars`. The `load`
+  // Absolute paths of the spec files discovered from `cfg.docs`. The `load`
   // hook transforms only these into virtual test modules — there is no longer
   // a `.md` extension to key off of.
   let specFiles: ReadonlySet<string> = new Set()
-  // Absolute path to var.config.ts when one exists; the generated virtual
-  // module imports it directly so its scannerPlugins reach the runtime.
-  let configPath: string | undefined
+  // Scanner-plugin names from var.config.json; forwarded into the generated
+  // virtual module so it can re-resolve them via var-core's registry.
+  let pluginNames: ReadonlyArray<string> = []
   return {
     name: '@oselvar/var-vitest',
     async config() {
-      // var.config.ts is the single source of truth for which files are specs.
+      // var.config.json is the single source of truth for which files are specs.
       // Drive vitest's collection from it so an excluded `.md` is never handed
       // to vite as a raw-markdown "script" (which fails to parse). Globs are
       // made absolute against `cwd`; setting `test.exclude` *replaces* vitest's
@@ -46,22 +46,16 @@ export function varVitestPlugin(options: VarVitestPluginOptions = {}): Plugin {
         // an empty registry and zero steps run with no error — so we dedupe.
         resolve: { dedupe: ['@oselvar/var', '@oselvar/var-core'] },
         test: {
-          include: cfg.vars.include.map(abs),
-          exclude: [...configDefaults.exclude, ...cfg.vars.exclude.map(abs)],
+          include: cfg.docs.include.map(abs),
+          exclude: [...configDefaults.exclude, ...cfg.docs.exclude.map(abs)],
         },
       }
     },
     async configResolved() {
       const cfg = await readVarConfig(cwd)
       stepFiles = findSpecs(cwd, cfg.steps)
-      specFiles = new Set(findSpecs(cwd, cfg.vars.include, cfg.vars.exclude))
-      for (const name of ['var.config.ts', 'var.config.js', 'var.config.mjs']) {
-        const abs = resolve(cwd, name)
-        if (existsSync(abs)) {
-          configPath = abs
-          break
-        }
-      }
+      specFiles = new Set(findSpecs(cwd, cfg.docs.include, cfg.docs.exclude))
+      pluginNames = cfg.scannerPluginNames
     },
     async load(id) {
       if (!isVarSpecId(id, specFiles)) return null
@@ -70,7 +64,7 @@ export function varVitestPlugin(options: VarVitestPluginOptions = {}): Plugin {
         varPath: id,
         stepImports: stepFiles,
         source,
-        configPath,
+        scannerPluginNames: pluginNames,
       })
     },
   }
@@ -80,22 +74,20 @@ export type GenerateInput = {
   readonly varPath: string
   readonly stepImports: ReadonlyArray<string>
   readonly source?: string
-  // Absolute path to a var.config.ts file. When present, the generated
-  // virtual module imports it as `varConfig` and forwards its
-  // `scannerPlugins` to the runtime.
-  readonly configPath?: string | undefined
+  // Scanner-plugin NAMES from var.config.json. The generated module
+  // re-resolves them via var-core's registry — functions can't be
+  // serialized into generated source, names can.
+  readonly scannerPluginNames: ReadonlyArray<string>
 }
 
 export function generateVirtualModule(input: GenerateInput): string {
   const sourceJson = JSON.stringify(input.source ?? '')
   const stepImports = input.stepImports.map((p) => `import ${JSON.stringify(p)}`).join('\n')
   const pathJson = JSON.stringify(input.varPath)
-  const configImport = input.configPath
-    ? `import varConfig from ${JSON.stringify(input.configPath)}`
-    : 'const varConfig = {}'
+  const pluginNamesJson = JSON.stringify(input.scannerPluginNames)
   return `import { test as vitestTest } from 'vitest'
+import { resolveScannerPlugins } from '@oselvar/var-core'
 import { runVarSource, toFailure } from '@oselvar/var-vitest/runtime'
-${configImport}
 ${stepImports}
 
 const SOURCE = ${sourceJson}
@@ -121,7 +113,7 @@ runVarSource(PATH, SOURCE, {
       }),
   },
   reporter: { diagnostic: (d) => vitestTest(\`var:diagnostic:\${d.code}\`, () => { throw new Error(d.message) }) },
-  scannerPlugins: varConfig?.scannerPlugins ?? [],
+  scannerPlugins: resolveScannerPlugins(${pluginNamesJson}),
 })
 `
 }

@@ -14,7 +14,7 @@ export type WorkspaceInput = {
   readonly stepFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>
   readonly varFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>
   // Optional: opt-in scanner extensions (e.g. Gherkin tables, Gherkin doc
-  // strings) sourced from var.config.ts. Empty/omitted = pure markdown.
+  // strings) sourced from var.config.json. Empty/omitted = pure markdown.
   readonly scannerPlugins?: ReadonlyArray<ScannerPlugin>
   // Optional: inject a custom step-def scanner. Defaults to the TypeScript
   // compiler-based parser. A lighter browser scanner (e.g. tsgo-wasm) can
