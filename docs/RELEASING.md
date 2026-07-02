@@ -20,9 +20,12 @@ GitHub release.
 
 ## One-time setup
 
-All secrets live in the 1Password vault **`Var`**, injected via `op run`
-with the references in `release/release.env`. Never put a real secret in
-the repo or your shell profile.
+All secrets live in the 1Password vault **`Vár`** (account `my.1password.com`),
+injected via `op run` with the references in `release/release.env`. The env file
+references the vault by ID because `op://` URIs reject non-ASCII vault names.
+The seven items already exist with `PLACEHOLDER-set-me` values — the setup steps
+below replace those values with real tokens. Never put a real secret in the
+repo or your shell profile.
 
 Local tools (macOS): `brew install pnpm uv maven gh gnupg 1password-cli jq`
 and `npm install -g @vscode/vsce ovsx`. Sign in: `op signin`, `gh auth login`.
@@ -70,5 +73,5 @@ generate an access token.
 2. Drop `release/targets/NN-<registry>.sh` following the existing contract:
    probe first (`is <name>@<version> already there?`), publish only what is
    missing, honor `DRY_RUN=1`, exit non-zero only on real failure.
-3. Add the registry credential to `release/release.env` (`op://Var/...`)
+3. Add the registry credential to `release/release.env` (`op://<vault-id>/...` (see `release/release.env`))
    and its setup here.

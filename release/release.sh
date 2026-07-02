@@ -14,6 +14,10 @@ DRY_RUN="${DRY_RUN:-0}"
 SKIP_GATE="${SKIP_GATE:-0}"
 TAG="v$VERSION"
 
+# The Vár vault lives in this account (several accounts are configured locally);
+# release.env references the vault by ID — see the comment there.
+export OP_ACCOUNT="${OP_ACCOUNT:-my.1password.com}"
+
 # ── 1. Preflight (fail fast, zero side effects) ─────────────────────────────
 [[ -n "$VERSION" ]] || die "usage: release/release.sh <version>"
 is_semver "$VERSION" || die "not a semver version: $VERSION"
