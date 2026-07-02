@@ -9,7 +9,7 @@ Maven Central, the VS Code Marketplace, and Open VSX together.
 section below. Before releasing, rename `## [Unreleased]` to `## [x.y.z]`
 (and start a fresh `## [Unreleased]` on top).
 
-## [Unreleased]
+## [0.1.0]
 
 ### Added
 
