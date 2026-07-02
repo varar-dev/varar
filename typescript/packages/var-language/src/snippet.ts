@@ -1,7 +1,6 @@
 import { CucumberExpressionGenerator } from '@cucumber/cucumber-expressions'
 import type { Registry, StepKind } from '@oselvar/var-core'
 import { createTypeScriptSnippetEmitter, type SnippetEmitter } from './snippet-emitter.js'
-import { DEFAULT_SNIPPET_TEMPLATE } from './snippet-template.js'
 import { renderTemplate } from './template.js'
 
 export type Snippet = {
@@ -46,19 +45,25 @@ export function generateSnippet(
     const count = (usedNames.get(baseName) ?? 0) + 1
     usedNames.set(baseName, count)
     const argName = count === 1 ? baseName : `${baseName}${count}`
-    return `${argName}: ${emitter.typeNameFor(pt)}`
+    return emitter.renderParam(argName, emitter.typeNameFor(pt))
   })
 
-  const handlerSignature = `(state, ${handlerArgs.join(', ')}) => {`
-  const args = ['state', ...handlerArgs].join(', ')
+  const stateParam = emitter.renderStateParam()
+  const argsList = stateParam ? [stateParam, ...handlerArgs] : handlerArgs
+  const args = argsList.join(', ')
+  // Kotlin-style trailing-lambda header: params + arrow, or empty when the
+  // step captures nothing (a bare '{' block). Other templates ignore it.
+  const lambdaParams = handlerArgs.length > 0 ? `${handlerArgs.join(', ')} ->` : ''
+  const handlerSignature = `(${args}) => {`
   const role: StepKind = options.role ?? 'action'
   const others = (['context', 'action', 'sensor'] as const).filter((k) => k !== role)
-  const fullCode = renderTemplate(options.template ?? DEFAULT_SNIPPET_TEMPLATE, {
+  const fullCode = renderTemplate(options.template ?? emitter.defaultTemplate, {
     role,
     altA: others[0] as string,
     altB: others[1] as string,
     expression,
     args,
+    lambdaParams,
     originalText,
   })
 

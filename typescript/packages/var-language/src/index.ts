@@ -6,8 +6,19 @@ export { createTypeScriptScanner } from './scanner.js'
 export type { Snippet } from './snippet.js'
 export { generateSnippet } from './snippet.js'
 export type { SnippetEmitter } from './snippet-emitter.js'
-export { createTypeScriptSnippetEmitter } from './snippet-emitter.js'
-export { DEFAULT_SNIPPET_TEMPLATE } from './snippet-template.js'
+export {
+  createJavaSnippetEmitter,
+  createKotlinSnippetEmitter,
+  createPythonSnippetEmitter,
+  createTypeScriptSnippetEmitter,
+  emitterForLanguage,
+} from './snippet-emitter.js'
+export {
+  DEFAULT_SNIPPET_TEMPLATE,
+  JAVA_SNIPPET_TEMPLATE,
+  KOTLIN_SNIPPET_TEMPLATE,
+  PYTHON_SNIPPET_TEMPLATE,
+} from './snippet-template.js'
 export type { ParameterTypeDef, Position, Range, StepDef } from './step-defs.js'
 export { discoverParameterTypes, discoverStepDefs } from './step-defs.js'
 export { renderTemplate } from './template.js'
