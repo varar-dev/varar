@@ -1,6 +1,7 @@
 """Author-facing API for declaring step state — port of var/src/internal.ts (defineState)."""
 from __future__ import annotations
 
+from re import Pattern
 from typing import Any, Callable, Optional
 
 from var_core.registry import Registry, add_step, create_registry, define_parameter_type
@@ -124,3 +125,27 @@ def _reset_builder() -> None:
     _steps = []
     _context_factories_by_file.clear()
     _custom_types = []
+
+
+def _custom_parameter_types() -> list[dict[str, str]]:
+    """Conformance-harness accessor: the custom parameter types accumulated by
+    ``define_state`` since the last ``_reset_builder``, projected to the
+    ``{"name", "regexp"}`` wire shape ``to_registry_artifact`` serializes.
+
+    ``regexp`` is the bare pattern source (``re.Pattern.pattern`` or the string
+    as authored — no flags/delimiters), the cross-port convention every
+    language's registry golden uses. Internal-only, mirrors the TS
+    ``_customParameterTypes``.
+    """
+    out: list[dict[str, str]] = []
+    for t in _custom_types:
+        rx = t["regexp"]
+        if isinstance(rx, Pattern):
+            rx = rx.pattern
+        elif not isinstance(rx, str):
+            raise TypeError(
+                f"parameter type {t['name']!r}: regexp lists are not supported by the "
+                "conformance projection yet"
+            )
+        out.append({"name": t["name"], "regexp": rx})
+    return out

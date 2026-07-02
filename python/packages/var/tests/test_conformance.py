@@ -23,7 +23,7 @@ import pytest
 
 from var_core.canonical_json import canonical_stringify
 from var_core.conformance import run_conformance, to_plan_artifact, to_registry_artifact, to_var_doc_artifact
-from var.registry import _reset_builder, build_registry, context_factory
+from var.registry import _custom_parameter_types, _reset_builder, build_registry, context_factory
 from var_core.parse import parse
 from var_core.plan import plan as build_plan
 
@@ -82,7 +82,7 @@ def test_registry_matches_golden(bundle: Path) -> None:
     _reset_builder()
     _import_steps(bundle)
     registry = build_registry()
-    artifact = to_registry_artifact(registry)
+    artifact = to_registry_artifact(registry, _custom_parameter_types())
     actual = canonical_stringify(artifact)
     expected = (bundle / "golden" / "registry.json").read_text(encoding="utf-8")
     assert actual == expected, f"registry.json mismatch for {bundle.name}"
@@ -110,7 +110,7 @@ def test_trace_matches_golden(bundle: Path) -> None:
     create_ctx = context_factory()
     source = (bundle / "example.md").read_text(encoding="utf-8")
     doc = parse("example.md", source)
-    artifacts = run_conformance(doc, registry, create_ctx)
+    artifacts = run_conformance(doc, registry, create_ctx, tuple(_custom_parameter_types()))
     actual = canonical_stringify(artifacts.trace)
     expected = (bundle / "golden" / "trace.json").read_text(encoding="utf-8")
     assert actual == expected, f"trace.json mismatch for {bundle.name}"

@@ -19,7 +19,7 @@ from var_core.doc_string_diff import DocStringDiff, DocStringMismatchError
 from var_core.execute import UnexpectedPassError
 from var_core.parse import parse
 from var_core.plan import plan
-from var_core.registry import add_step, create_registry
+from var_core.registry import add_step, create_registry, define_parameter_type
 from var_core.span import Span
 
 
@@ -121,6 +121,23 @@ def test_to_registry_artifact_reads_parameter_names_ignoring_escaped_braces():
         handler=lambda *_: None,
     )
     assert to_registry_artifact(r)["steps"][0]["parameterTypeNames"] == ["int"]
+
+
+def test_to_registry_artifact_projects_passed_custom_parameter_types() -> None:
+    r = create_registry()
+    r = define_parameter_type(r, name="airport", regexp="[A-Z]{3}")
+    r = add_step(
+        r,
+        expression="I fly to {airport}",
+        expression_source_file="airports.steps",
+        expression_source_line=1,
+        kind="action",
+        handler=lambda *_: None,
+    )
+    assert to_registry_artifact(r, [{"name": "airport", "regexp": "[A-Z]{3}"}]) == {
+        "steps": [{"expression": "I fly to {airport}", "parameterTypeNames": ["airport"]}],
+        "parameterTypes": [{"name": "airport", "regexp": "[A-Z]{3}"}],
+    }
 
 
 # ---------------------------------------------------------------------------
