@@ -9,7 +9,13 @@ private val SMOKE_CONFIG = mapOf(
     "var.steps" to "com.oselvar.varkt.kotest.fixtures.SmokeSteps",
 )
 
-/** Executed by the Kotest engine under Surefire: one container (the spec file), one passing example. */
+/**
+ * Executed by the Kotest engine under Surefire: one container (the spec file),
+ * one passing example. Note: Surefire's console summary shows "Tests run: 0"
+ * for Kotest specs (a nested-test counting quirk); the surefire-reports XML
+ * records the real per-example testcase, and a failing example still fails
+ * the build (proven by VarSpecFailureTest).
+ */
 class VarSpecSmokeTest : VarSpec(
     root = Path.of("src/test/resources/kotest-smoke"),
     lookup = SMOKE_CONFIG::get,

@@ -156,7 +156,7 @@ fun <C : Any, A, B, R> StepsScope<C>.sensor(expression: String, handler: suspend
  * authoring error surfaced with a step-authoring message rather than an
  * index-out-of-bounds.
  */
-internal abstract class HandlerAdapter<C : Any>(private val arity: Int) {
+internal abstract class HandlerAdapter(private val arity: Int) {
 
     protected fun arguments(supplied: List<Any?>): List<Any?> {
         require(supplied.size >= arity) {
@@ -170,7 +170,7 @@ internal abstract class HandlerAdapter<C : Any>(private val arity: Int) {
 internal class ContextAdapter<C : Any>(
     arity: Int,
     private val f: suspend (C, List<Any?>) -> C,
-) : HandlerAdapter<C>(arity), StateBinder.Context0<StateBox<C>> {
+) : HandlerAdapter(arity), StateBinder.Context0<StateBox<C>> {
 
     override fun apply(box: StateBox<C>): StateBox<C> = call(box, listOf())
 
@@ -189,7 +189,7 @@ internal class ContextAdapter<C : Any>(
 internal class SensorAdapter<C : Any>(
     arity: Int,
     private val f: suspend (C, List<Any?>) -> Any?,
-) : HandlerAdapter<C>(arity), StateBinder.Sensor0<StateBox<C>, Any?> {
+) : HandlerAdapter(arity), StateBinder.Sensor0<StateBox<C>, Any?> {
 
     override fun apply(box: StateBox<C>): Any? = call(box, listOf())
 

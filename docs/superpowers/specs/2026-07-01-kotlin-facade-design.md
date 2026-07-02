@@ -184,11 +184,13 @@ language):
 - If neither applies → the existing "does not implement StepDefinitions"
   error, extended to mention the static-factory alternative.
 
-Config surface is unchanged: `var.steps` still takes package names or FQCNs
-(`junit-platform.properties` / system property, per the Java engine design).
-The package-scan predicate in `var-junit` extends the same way. Kotlin authors
-can pin the facade class name with `@file:JvmName("CukeSteps")` if they care
-about the FQCN's spelling.
+Config surface is unchanged: `var.steps` entries are FQCNs, each resolved
+individually via `Class.forName` (`junit-platform.properties` / system
+property, per the Java engine design). No package scanning exists in any
+adapter today — if it is ever added, its inclusion predicate must accept the
+static-factory shape too, or Kotlin step files in a scanned package would be
+silently skipped. Kotlin authors can pin the facade class name with
+`@file:JvmName("CukeSteps")` if they care about the FQCN's spelling.
 
 Edge to enforce: two qualifying `val`s in one `.steps.kt` file share the same
 `expressionSourceFile`, which would silently collide in `StepLoader`'s
@@ -230,8 +232,9 @@ stable major):
   `Conformance.fileStem`'s existing fallback path handles `.kt` with **no
   changes** (and the `StackWalker` naturally captures `numerals.steps.kt` as
   the source file, since the author-visible frame lives in the fixture).
-  Each fixture declares `package com.oselvar.var.conformance.bundleNN` (Kotlin
-  doesn't require directory/package agreement) and holds the approved
+  Each fixture declares `package com.oselvar.varkt.conformance.bundleNN`
+  (Kotlin doesn't require directory/package agreement; the `varkt` root avoids
+  back-ticking the `var` keyword) and holds the approved
   top-level-`val` shape, registering the same expressions, parameter types,
   and deterministic handlers as its `.steps.ts`/`.steps.py`/`…Steps.java`
   siblings.
@@ -239,9 +242,11 @@ stable major):
   `java/var`'s — per-bundle parameterized test, replay the fixture's
   `StepDefinitions` against a fresh `RegistryRegistrar`, project with
   `Conformance.toRegistryArtifact`, `CanonicalJson.canonicalStringify`,
-  byte-for-byte against `golden/registry.json`. Bundles are wired via
-  `build-helper-maven-plugin`'s `add-test-source` on `conformance/bundles`
-  plus `kotlin-maven-plugin` test compilation, same mechanism as `java/var`.
+  byte-for-byte against `golden/registry.json`. Bundles are wired via the
+  `kotlin-maven-plugin` test-compile execution's explicit `<sourceDirs>`
+  (src/test/kotlin + `conformance/bundles`) — kotlinc-only, deliberately NOT
+  `build-helper-maven-plugin` as `java/var` uses, so javac never recompiles
+  the sibling `*Steps.java` fixtures into this module.
 - **Facade unit tests** (Kotlin, JUnit Jupiter — the rest of the reactor's
   convention) cover what the registry gate can't see: receiver binding
   (`copy(…)` gets the right `this`), capture-arity dispatch across the ladder,
@@ -256,10 +261,13 @@ stable major):
 
 ## Build
 
-- `java/pom.xml` gains two modules; Kotlin version and `kotlin-maven-plugin`
-  configured once in the parent, `jvmTarget` matching the reactor's Java
-  release. `var-kotlin` depends on `var` + `kotlinx-coroutines-core`;
-  `var-kotest` on `var-kotlin`, `var-runner`, Kotest.
+- `java/pom.xml` gains two modules and the version properties
+  (`kotlin.version`, `kotlinx-coroutines.version`, `kotest.version`); the
+  `kotlin-maven-plugin` block itself is configured per Kotlin module (a
+  candidate for parent `pluginManagement` in a later cleanup), `jvmTarget`
+  matching the reactor's Java release. `var-kotlin` depends on `var` +
+  `kotlinx-coroutines-core`; `var-kotest` on `var-kotlin`, `var-runner`,
+  Kotest.
 - Consumers of the pure-Java artifacts are unaffected — no Kotlin stdlib leaks
   into `var`/`var-core`/`var-runner`/`var-junit` (the `@RegistrarGlue`
   annotation is plain Java).

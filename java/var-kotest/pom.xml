@@ -42,6 +42,14 @@
       <artifactId>kotest-runner-junit5-jvm</artifactId>
       <version>${kotest.version}</version>
     </dependency>
+    <!-- Drives the Kotest engine programmatically in VarSpecFailureTest (the
+         failing-example path must be asserted, not just observed via a green
+         build). Version from the parent's junit-bom. -->
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-testkit</artifactId>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <build>

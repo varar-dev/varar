@@ -18,8 +18,9 @@ import java.util.Optional
  * container. All discovery/loading/planning/failure-rendering is delegated to
  * var-runner — this class contains zero pipeline logic.
  *
- * v1 defers (matching var-pytest/var-junit): no per-example fixture lifecycle,
- * no plan-diagnostic surfacing.
+ * v1 defers (matching var-pytest): no per-example fixture lifecycle, no
+ * plan-diagnostic surfacing (var-junit DOES surface diagnostics via
+ * ReportEntry — restoring that parity here is a known follow-up).
  *
  * @param root the directory the include/exclude globs resolve against
  *     (defaults to the module working directory).
