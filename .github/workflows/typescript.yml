@@ -66,8 +66,8 @@ jobs:
 
       - run: pnpm --filter @oselvar/website-starlight... build
 
-      - uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: typescript/packages/website-starlight
+      - run: pnpm dlx wrangler@4.106.0 deploy
+        working-directory: typescript/packages/website-starlight
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
