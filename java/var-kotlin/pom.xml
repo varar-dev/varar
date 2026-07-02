@@ -60,6 +60,19 @@
           <execution>
             <id>test-compile</id>
             <goals><goal>test-compile</goal></goals>
+            <configuration>
+              <sourceDirs>
+                <sourceDir>${project.basedir}/src/test/kotlin</sourceDir>
+                <!-- The shared, language-neutral conformance corpus (repo root).
+                     kotlinc compiles only the *.steps.kt fixtures it finds there;
+                     the sibling *.steps.ts/.py/.java and golden/*.json are ignored
+                     (kotlinc reads .java for resolution only, emits nothing for it).
+                     Same fixture-layout rationale as java/var/pom.xml's
+                     build-helper block — see that comment for why fixture files
+                     live in the corpus, not under src/. -->
+                <sourceDir>${project.basedir}/../../conformance/bundles</sourceDir>
+              </sourceDirs>
+            </configuration>
           </execution>
         </executions>
         <configuration>
