@@ -7,11 +7,14 @@ import {
 } from '@oselvar/var-core'
 import {
   createTypeScriptSnippetEmitter,
+  emitterForLanguage,
   generateSnippet,
+  languageIdForPath,
   type MatchRef,
   type SnippetEmitter,
 } from '@oselvar/var-language'
 import type {
+  GenerateSnippetResult,
   HandlerSync,
   PlanParamFate,
   PlanRenameResult,
@@ -42,8 +45,6 @@ type Diagnostic = {
   readonly message: string
   readonly range: { readonly start: Position; readonly end: Position }
 }
-
-type SnippetResult = { readonly fullCode: string; readonly expression: string }
 
 // Ready-to-apply edit for the Rename refactor. The client just turns these
 // into a WorkspaceEdit and calls applyEdit.
@@ -83,7 +84,7 @@ type Handlers = {
     readonly text: string
     readonly uri?: string
     readonly position?: Position
-  }): SnippetResult
+  }): GenerateSnippetResult
   stepGlobs(): ReadonlyArray<string>
   stepAt(params: HoverParams): StepAtResult
   renameStep(params: RenameStepParams): RenameStepResult
@@ -144,12 +145,15 @@ export function buildHandlers(store: Store): Handlers {
         uri !== undefined && position !== undefined
           ? inferStepRole(neighbourRolesForSelection(store, uri, position))
           : undefined
-      const template = store.snippetTemplate()
+      const language = snippetLanguageFor(store.stepGlobs(), store.stepPaths())
+      const emitter = emitterForLanguage(language)
+      const template = store.snippetTemplate(language)
       const snippet = generateSnippet(text, store.index().registry, {
+        snippetEmitter: emitter,
         ...(template !== undefined ? { template } : {}),
         ...(role !== undefined ? { role } : {}),
       })
-      return { fullCode: snippet.fullCode, expression: snippet.expression }
+      return { fullCode: snippet.fullCode, expression: snippet.expression, language }
     },
     stepGlobs() {
       return store.stepGlobs()
@@ -236,14 +240,11 @@ export function buildHandlers(store: Store): Handlers {
         .stepDefs.find(
           (d) => d.expression === stepAt.expression && `file://${d.file}` === stepAt.stepDefUri,
         )
-      // Handler-signature sync renders TypeScript source (the only
-      // SnippetEmitter today). Python/Java/Kotlin step defs now carry
-      // handlerParams too (tree-sitter dialects), but until sub-project D
-      // ships per-language emitters, syncing would write TS-shaped text into
-      // .py/.java/.kt files — so sync stays TS-only.
-      const syncable =
-        stepDefRecord?.handlerParams !== undefined &&
-        (stepDefRecord.file.endsWith('.ts') || stepDefRecord.file.endsWith('.tsx'))
+      // Handler-signature sync is now per-language: each dialect's
+      // SnippetEmitter (TypeScript/Python/Java/Kotlin) knows its own param
+      // shape, so sync fires for any step def whose handlerParams were
+      // extracted, not just TypeScript's.
+      const syncable = stepDefRecord?.handlerParams !== undefined
       const handlerSync = syncable
         ? buildHandlerSync({
             stepDefUri: stepAt.stepDefUri,
@@ -253,6 +254,7 @@ export function buildHandlers(store: Store): Handlers {
               .filter((s) => s.kind === 'param')
               .map((s) => (s as { name: string }).name),
             registry: store.index().registry,
+            snippetEmitter: emitterForLanguage(languageIdForPath(stepDefRecord.file)),
           })
         : undefined
 
@@ -312,6 +314,44 @@ export function buildHandlers(store: Store): Handlers {
       return items
     },
   }
+}
+
+// The user-approved snippet-language selection: languages configured in
+// config.steps (by glob extension, config order, tsx folded into
+// typescript); a single configured language wins outright; with several,
+// the language owning the most indexed step files wins; ties break to the
+// FIRST configured language. No recognizable language -> typescript.
+function snippetLanguageFor(
+  stepGlobs: ReadonlyArray<string>,
+  stepPaths: ReadonlyArray<string>,
+): string {
+  const normalize = (id: string): string => (id === 'typescript-tsx' ? 'typescript' : id)
+  const configured: string[] = []
+  for (const glob of stepGlobs) {
+    const id = languageIdForPath(glob)
+    if (id === undefined) continue
+    const language = normalize(id)
+    if (!configured.includes(language)) configured.push(language)
+  }
+  if (configured.length === 0) return 'typescript'
+  if (configured.length === 1) return configured[0] as string
+  const counts = new Map<string, number>()
+  for (const path of stepPaths) {
+    const id = languageIdForPath(path)
+    if (id === undefined) continue
+    const language = normalize(id)
+    counts.set(language, (counts.get(language) ?? 0) + 1)
+  }
+  let best = configured[0] as string
+  let bestCount = counts.get(best) ?? 0
+  for (const language of configured.slice(1)) {
+    const count = counts.get(language) ?? 0
+    if (count > bestCount) {
+      best = language
+      bestCount = count
+    }
+  }
+  return best
 }
 
 function findMatchAt(store: Store, uri: string, position: Position): MatchRef | undefined {
@@ -423,7 +463,10 @@ function prepareRename(
   let newExpression: string
   if (isVarDoc) {
     try {
-      const template = store.snippetTemplate()
+      // Only `.expression` is used here (the template shapes fullCode, which
+      // this call discards) — the language doesn't matter for deriving the
+      // cucumber expression from the edited sentence.
+      const template = store.snippetTemplate('typescript')
       newExpression = generateSnippet(newName, store.index().registry, {
         ...(template !== undefined ? { template } : {}),
       }).expression
@@ -522,7 +565,7 @@ function buildHandlerSync(input: {
     parameterTypes: { parameterTypes: Iterable<{ name?: string | undefined; type: unknown }> }
   }
   snippetEmitter?: SnippetEmitter
-}): HandlerSync {
+}): HandlerSync | undefined {
   const { old, paramFates, newExpressionParams, registry } = input
   const emitter = input.snippetEmitter ?? createTypeScriptSnippetEmitter()
   // Index parameter types by name once so per-fate lookup is O(1).
@@ -530,9 +573,10 @@ function buildHandlerSync(input: {
   for (const pt of registry.parameterTypes.parameterTypes) {
     if (pt.name) paramTypeByName.set(pt.name, pt)
   }
-  // Old user-supplied args (skip the first, conventionally `ctx`).
-  const ctxParam = old.params[0]
-  const oldUserParams = old.params.slice(1)
+  // Kotlin lambdas carry user params only (state is the receiver): the whole
+  // old params list is user params, and there is no ctx prefix to render.
+  const ctxParam = emitter.stateInParams ? old.params[0] : undefined
+  const oldUserParams = emitter.stateInParams ? old.params.slice(1) : [...old.params]
 
   // Walk fates in newIndex order so we emit args in the order the new
   // expression expects them.
@@ -556,13 +600,23 @@ function buildHandlerSync(input: {
     }
     const baseName = freshName(newPtName, usedNames)
     const paramType = paramTypeByName.get(newPtName)
-    const typeText = paramType ? emitter.typeNameFor(paramType) : 'string'
+    const typeText = emitter.typeNameFor(paramType ?? { type: String })
     newUserParams.push({ name: baseName, typeText })
   }
 
-  const ctxText = ctxParam ? renderHandlerParam(ctxParam) : 'state'
-  const userText = newUserParams.map(renderHandlerParam).join(', ')
-  const newText = userText.length > 0 ? `${ctxText}, ${userText}` : ctxText
+  if (!emitter.stateInParams && newUserParams.length === 0) {
+    // An empty Kotlin param list would strand the lambda's '->'; skip the
+    // sync rather than corrupt the file (the author removes the params).
+    return undefined
+  }
+
+  const userText = newUserParams.map((p) => emitter.renderParam(p.name, p.typeText)).join(', ')
+  const ctxText = ctxParam
+    ? emitter.renderParam(ctxParam.name, ctxParam.typeText)
+    : emitter.stateInParams
+      ? emitter.renderStateParam()
+      : ''
+  const newText = ctxText ? (userText ? `${ctxText}, ${userText}` : ctxText) : userText
 
   return {
     uri: input.stepDefUri,
@@ -573,10 +627,6 @@ function buildHandlerSync(input: {
     },
     newText,
   }
-}
-
-function renderHandlerParam(p: { name: string; typeText: string }): string {
-  return p.typeText ? `${p.name}: ${p.typeText}` : p.name
 }
 
 function freshName(ptName: string, used: Map<string, number>): string {

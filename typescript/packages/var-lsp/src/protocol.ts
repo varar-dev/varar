@@ -61,6 +61,16 @@ export type PlanRenameResult =
     }
   | { readonly ok: false; readonly error: string }
 
+// Output of `var/generateSnippet`.
+export type GenerateSnippetResult = {
+  readonly fullCode: string
+  readonly expression: string
+  // The language the server selected from config.steps (the user-approved
+  // algorithm: single configured language, else most step files, tie broken
+  // by config order). The client filters its steps-file quick-pick to this.
+  readonly language: string
+}
+
 export type RenderTextResult =
   | { readonly ok: true; readonly text: string }
   | { readonly ok: false; readonly error: string }

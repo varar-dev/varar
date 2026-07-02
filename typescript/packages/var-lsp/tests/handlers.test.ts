@@ -413,7 +413,11 @@ action('I fly to {string}', (ctx, name: string) => {})
   }
 })
 
-test('planRename on a .py step returns the expression edit but NO handlerSync (TS-only signature sync)', async () => {
+test('renaming a .py step syncs the def parameters in python shape', async () => {
+  // Same fixture shape as the .ts handlerSync test (param addition), but the
+  // step lives in a .py file: sync now fires and renders python source. The
+  // cursor is in the .steps.py file itself (not a .md sentence) so the new
+  // expression is used verbatim — mirrors the .ts sibling test's call shape.
   const { dir, cleanup } = tempWorkspace((dir) => {
     writeFileSync(
       join(dir, 'var.config.json'),
@@ -421,33 +425,25 @@ test('planRename on a .py step returns the expression edit but NO handlerSync (T
     )
     writeFileSync(
       join(dir, 'a.steps.py'),
-      `from var import define_state
-
-context, action, sensor = define_state(lambda: {})
-
-
-@action("I greet {string}")
-def _(state, name):
-    pass
-`,
+      '@action("I greet {string}")\ndef _(state, user):\n    pass\n',
     )
     writeFileSync(join(dir, 'a.md'), '# A\n\nGiven I greet "world"\n')
   })
   try {
     const store = await makeStore(dir)
     const h = buildHandlers(store)
+    // 0-based: character 9 lands inside the 'I greet {string}' literal
+    // (after the '@action("' prefix).
     const plan = h.planRename({
       uri: `file://${join(dir, 'a.steps.py')}`,
-      position: { line: 5, character: 8 },
+      position: { line: 0, character: 9 },
       newName: 'I greet {string} {int} times',
     })
     expect(plan.ok).toBe(true)
     if (!plan.ok) return
-    // The expression edit is still produced...
-    expect(plan.newExpression).toBe('I greet {string} {int} times')
-    // ...but handler-signature sync is TS-only: a .py handler must never be
-    // rewritten with TypeScript-shaped text.
-    expect(plan.handlerSync).toBeUndefined()
+    expect(plan.handlerSync).toBeDefined()
+    // Kept param reused verbatim; added {int} param rendered python-style.
+    expect(plan.handlerSync?.newText).toBe('state, user, count: int')
   } finally {
     cleanup()
   }
@@ -725,6 +721,85 @@ test('generateSnippet infers sensor role when position is after all matched step
       position: { line: 3, character: 0 },
     })
     expect(snippet.fullCode).toMatch(/^sensor\(/m)
+  } finally {
+    cleanup()
+  }
+})
+
+test('generateSnippet picks python when it is the only configured step language', async () => {
+  const { dir, cleanup } = tempWorkspace((dir) => {
+    writeFileSync(
+      join(dir, 'var.config.json'),
+      '{ "docs": { "include": ["**/*.md"], "exclude": [] }, "steps": ["**/*.steps.py"] }\n',
+    )
+    writeFileSync(join(dir, 'a.steps.py'), '@action("existing")\ndef _(state):\n    pass\n')
+    writeFileSync(join(dir, 'b.md'), '# B\n\nGiven I have 5 cukes')
+  })
+  try {
+    const store = await makeStore(dir)
+    const h = buildHandlers(store)
+    const result = h.generateSnippet({ text: 'I have 5 cukes' })
+    expect(result.language).toBe('python')
+    expect(result.fullCode).toContain('@action("I have {int} cukes")')
+    expect(result.fullCode).toContain('def _(state, count: int):')
+  } finally {
+    cleanup()
+  }
+})
+
+test('generateSnippet resolves multi-language by file count, ties by config order', async () => {
+  const { dir, cleanup } = tempWorkspace((dir) => {
+    writeFileSync(
+      join(dir, 'var.config.json'),
+      '{ "docs": { "include": ["**/*.md"], "exclude": [] }, "steps": ["**/*.steps.ts", "**/*.steps.py"] }\n',
+    )
+    // Two python files vs one typescript file: python wins on count.
+    writeFileSync(join(dir, 'a.steps.ts'), `action('x', () => {})\n`)
+    writeFileSync(join(dir, 'p1.steps.py'), '@action("p1")\ndef _(state):\n    pass\n')
+    writeFileSync(join(dir, 'p2.steps.py'), '@action("p2")\ndef _(state):\n    pass\n')
+    writeFileSync(join(dir, 'b.md'), '# B\n\nGiven x')
+  })
+  try {
+    const store = await makeStore(dir)
+    const h = buildHandlers(store)
+    expect(h.generateSnippet({ text: 'I greet "bob"' }).language).toBe('python')
+  } finally {
+    cleanup()
+  }
+})
+
+test('generateSnippet tie-breaks to the first language in config.steps order', async () => {
+  const { dir, cleanup } = tempWorkspace((dir) => {
+    writeFileSync(
+      join(dir, 'var.config.json'),
+      '{ "docs": { "include": ["**/*.md"], "exclude": [] }, "steps": ["**/*.steps.py", "**/*.steps.ts"] }\n',
+    )
+    writeFileSync(join(dir, 'a.steps.ts'), `action('x', () => {})\n`)
+    writeFileSync(join(dir, 'p1.steps.py'), '@action("p1")\ndef _(state):\n    pass\n')
+    writeFileSync(join(dir, 'b.md'), '# B\n\nGiven x')
+  })
+  try {
+    const store = await makeStore(dir)
+    const h = buildHandlers(store)
+    expect(h.generateSnippet({ text: 'hello' }).language).toBe('python')
+  } finally {
+    cleanup()
+  }
+})
+
+test('generateSnippet honors a config snippets template override for the picked language', async () => {
+  const { dir, cleanup } = tempWorkspace((dir) => {
+    writeFileSync(
+      join(dir, 'var.config.json'),
+      '{ "docs": { "include": ["**/*.md"], "exclude": [] }, "steps": ["**/*.steps.py"], "snippets": { "python": "PY:{{expression}}" } }\n',
+    )
+    writeFileSync(join(dir, 'a.steps.py'), '@action("existing")\ndef _(state):\n    pass\n')
+    writeFileSync(join(dir, 'b.md'), '# B\n\nGiven x')
+  })
+  try {
+    const store = await makeStore(dir)
+    const h = buildHandlers(store)
+    expect(h.generateSnippet({ text: 'I have 5 cukes' }).fullCode).toBe('PY:I have {int} cukes')
   } finally {
     cleanup()
   }

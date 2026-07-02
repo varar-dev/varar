@@ -27,8 +27,12 @@ export type StoreDeps = {
 export type Store = {
   reindex(): Promise<void>
   index(): WorkspaceIndex
-  snippetTemplate(): string | undefined
+  snippetTemplate(language: string): string | undefined
   stepGlobs(): ReadonlyArray<string>
+  // The step files found at the last reindex — used by the LSP's
+  // per-language snippet-selection algorithm to pick the language owning the
+  // most step files when several are configured.
+  stepPaths(): ReadonlyArray<string>
   // Whether a file is a var spec — i.e. it was discovered by the `docs` globs.
   // There is no `.md` extension to key off of; the config defines specs.
   isVarDoc(path: string): boolean
@@ -47,9 +51,11 @@ export function createStore(deps: StoreDeps): Store {
   // which stays synchronous. Later reindexes reuse it.
   let scannerPromise: Promise<StepDefScanner> | undefined
   let scannerKey: string | undefined
+  let currentStepPaths: ReadonlyArray<string> = []
   return {
     async reindex() {
       const stepPaths = await fs.list({ include: config.steps, exclude: [] })
+      currentStepPaths = stepPaths
       // Derive the scanner's language set from what's actually on disk, so a
       // TS-only workspace never pays to load python/java/kotlin grammars —
       // and rebuild the scanner only when that set changes (dialects are
@@ -82,8 +88,10 @@ export function createStore(deps: StoreDeps): Store {
       })
     },
     index: () => current,
-    snippetTemplate: () => config.snippets.typescript,
+    snippetTemplate: (language) =>
+      Object.hasOwn(config.snippets, language) ? config.snippets[language] : undefined,
     stepGlobs: () => config.steps,
+    stepPaths: () => currentStepPaths,
     // Delegates to the filesystem port so unsaved editor buffers (which the
     // disk-backed index can't see) are still recognised as spec docs.
     isVarDoc: (path) => fs.matches(path, config.docs),

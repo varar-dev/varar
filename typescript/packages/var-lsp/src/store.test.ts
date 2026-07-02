@@ -70,6 +70,14 @@ describe('createStore over a FileSystem', () => {
     expect(store.isVarDoc('/s.steps.ts')).toBe(false)
   })
 
+  it('snippetTemplate takes a language and returns undefined when it is not configured', async () => {
+    const fs = fakeFs({ '/s.steps.ts': '', '/a.md': '# none\n' })
+    const store = createStore({ fs, config, grammarLoader })
+    await store.reindex()
+    expect(store.snippetTemplate('typescript')).toBe(DEFAULT_SNIPPET_TEMPLATE)
+    expect(store.snippetTemplate('python')).toBeUndefined()
+  })
+
   it('falls back to the TypeScript-compiler scanner when no grammarLoader is supplied', async () => {
     const fs = fakeFs({
       '/s.steps.ts': `action('I greet {string}', (ctx, name: string) => {})\n`,
