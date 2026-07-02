@@ -69,7 +69,13 @@ function lspClient(): LSPClient {
 const replayTxn = Annotation.define<boolean>()
 const REPLAY_MS = 35 // default per-keystroke delay (overridable via <Editor replayMs>)
 
-type ReplayState = { token: number; timer?: ReturnType<typeof setTimeout> }
+type ReplayState = {
+  token: number
+  timer?: ReturnType<typeof setTimeout>
+  // Resolves the pending replayTo() promise. Called on completion AND on
+  // cancellation — callers only need to know the replay is over, not why.
+  settle?: () => void
+}
 const replays = new WeakMap<EditorView, ReplayState>()
 
 function cancelReplay(view: EditorView): void {
@@ -78,6 +84,8 @@ function cancelReplay(view: EditorView): void {
     r.token += 1
     if (r.timer) clearTimeout(r.timer)
     r.timer = undefined
+    r.settle?.()
+    r.settle = undefined
   }
 }
 
@@ -101,8 +109,9 @@ function nextCaretStep(view: EditorView, cur: number, target: number): number {
 
 // Animate the live document into `target`, one keystroke per `delayMs` tick.
 // Always diffs from the *current* doc, so manual edits (before or mid-replay)
-// are respected.
-function replayTo(view: EditorView, target: string, delayMs: number): void {
+// are respected. The returned promise settles when the replay reaches the
+// target OR is cancelled/superseded — it never rejects.
+function replayTo(view: EditorView, target: string, delayMs: number): Promise<void> {
   cancelReplay(view)
   // Clicking the version button moved focus off the editor, which hides the
   // caret. Return focus so the moving cursor stays visible during replay.
@@ -115,7 +124,11 @@ function replayTo(view: EditorView, target: string, delayMs: number): void {
   const step = (): void => {
     const cur = replays.get(view)
     if (!cur || cur.token !== token) return // superseded or cancelled
-    if (i >= ops.length) return
+    if (i >= ops.length) {
+      cur.settle?.()
+      cur.settle = undefined
+      return
+    }
     const op: ReplayOp = ops[i] as ReplayOp
     // Walk the caret to the edit location first — a visible arrow-key travel
     // instead of a teleport when the next edit is far from where it sits.
@@ -150,7 +163,10 @@ function replayTo(view: EditorView, target: string, delayMs: number): void {
     }
     cur.timer = setTimeout(step, delayMs)
   }
-  step()
+  return new Promise((resolve) => {
+    r.settle = resolve
+    step()
+  })
 }
 
 type VersionData = { readonly label: string; readonly doc: string }
@@ -249,11 +265,15 @@ function mountEditor(editorEl: HTMLElement): void {
   // Cycling version button — one per editor, floating in the mount's top-right
   // corner. It always advertises the *next* version of the active file
   // (wrapping), and clicking it types that version into the view via replay.
+  // While the replay runs the button is disabled and keeps the clicked label
+  // with a spinner to its left; it only advances to advertise the following
+  // version once the replay settles (finished or cancelled by a user edit).
   const versionIndex = new Map<string, number>() // uri -> last applied version
+  let busyUri: string | null = null // uri whose replay is in flight, if any
   const versionBtn = document.createElement('button')
   versionBtn.type = 'button'
   versionBtn.className =
-    'fe-version-btn absolute top-2 right-2 z-10 px-2 py-0.5 font-mono text-[12px] rounded-none border border-line bg-surface text-ink cursor-pointer hover:bg-raised'
+    'fe-version-btn absolute top-2 right-2 z-10 px-2 py-0.5 font-mono text-[12px] rounded-none border border-line bg-surface text-ink cursor-pointer hover:bg-raised disabled:opacity-60 disabled:cursor-default disabled:hover:bg-surface'
   const activeVersions = (): ReadonlyArray<VersionData> | undefined =>
     files.find((f) => f.uri === activeUri)?.versions
 
@@ -264,18 +284,38 @@ function mountEditor(editorEl: HTMLElement): void {
       return
     }
     versionBtn.style.display = ''
+    const busy = busyUri === activeUri
+    versionBtn.disabled = busy
     const cur = versionIndex.get(activeUri) ?? 0
-    versionBtn.textContent = versions[(cur + 1) % versions.length]?.label ?? ''
+    // Busy: the version being typed (already stored in versionIndex).
+    // Idle: the next one, wrapping.
+    const label = versions[busy ? cur : (cur + 1) % versions.length]?.label ?? ''
+    const children: Node[] = []
+    if (busy) {
+      const spinner = document.createElement('span')
+      spinner.className =
+        'inline-block w-3 h-3 mr-1.5 align-[-1px] rounded-full border-2 border-current border-t-transparent animate-spin'
+      spinner.setAttribute('aria-hidden', 'true')
+      children.push(spinner)
+    }
+    children.push(document.createTextNode(label))
+    versionBtn.replaceChildren(...children)
   }
 
   versionBtn.addEventListener('click', () => {
     const versions = activeVersions()
     const view = views.get(activeUri)
-    if (!versions || !view) return
-    const next = ((versionIndex.get(activeUri) ?? 0) + 1) % versions.length
-    versionIndex.set(activeUri, next)
-    replayTo(view, versions[next]?.doc ?? '', delayMs)
+    if (!versions || !view || busyUri === activeUri) return
+    const uri = activeUri
+    const next = ((versionIndex.get(uri) ?? 0) + 1) % versions.length
+    versionIndex.set(uri, next)
+    busyUri = uri
     renderVersionBtn()
+    void replayTo(view, versions[next]?.doc ?? '', delayMs).then(() => {
+      // Another file's replay may have taken over the flag in the meantime.
+      if (busyUri === uri) busyUri = null
+      renderVersionBtn()
+    })
   })
 
   function showFile(uri: string): void {
