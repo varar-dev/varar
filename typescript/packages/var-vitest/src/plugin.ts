@@ -8,7 +8,7 @@ export type VarVitestPluginOptions = {
   readonly cwd?: string
 }
 
-// A file is a var spec iff it was discovered by the configured `vars` globs.
+// A file is a var spec iff it was discovered by the configured `docs` globs.
 // Vite may append a query suffix (e.g. `?v=123`) to module ids, so strip it
 // before matching against the discovered absolute paths.
 export function isVarSpecId(id: string, specFiles: ReadonlySet<string>): boolean {

@@ -32,6 +32,19 @@ test('all keys are optional and default to empty; $schema is ignored', () => {
   })
 })
 
+test('null values are treated as absent, not errors', () => {
+  const parsed = parseVarConfig(
+    '{ "docs": { "include": null, "exclude": null }, "steps": null, "snippets": null, "scannerPlugins": null }',
+    'var.config.json',
+  )
+  expect(parsed).toEqual({
+    docs: { include: [], exclude: [] },
+    steps: [],
+    snippets: {},
+    scannerPlugins: [],
+  })
+})
+
 test('malformed JSON throws with the source path in the message', () => {
   expect(() => parseVarConfig('{ nope', '/w/var.config.json')).toThrowError(
     /^\/w\/var\.config\.json/,

@@ -23,7 +23,7 @@ function isRecord(v: unknown): v is Record<string, unknown> {
 }
 
 function stringArray(value: unknown, key: string, sourcePath: string): ReadonlyArray<string> {
-  if (value === undefined) return []
+  if (value === undefined || value === null) return []
   if (!Array.isArray(value) || !value.every((v) => typeof v === 'string')) {
     throw new Error(`${sourcePath}: "${key}" must be an array of strings`)
   }
@@ -50,7 +50,7 @@ export function parseVarConfig(jsonText: string, sourcePath: string): ParsedVarC
     }
   }
   let docs: VarGlobs = EMPTY_PARSED.docs
-  if (data.docs !== undefined) {
+  if (data.docs !== undefined && data.docs !== null) {
     if (!isRecord(data.docs)) throw new Error(`${sourcePath}: "docs" must be an object`)
     for (const key of Object.keys(data.docs)) {
       if (!KNOWN_DOCS_KEYS.has(key)) {
@@ -63,7 +63,7 @@ export function parseVarConfig(jsonText: string, sourcePath: string): ParsedVarC
     }
   }
   let snippets: Readonly<Record<string, string>> = {}
-  if (data.snippets !== undefined) {
+  if (data.snippets !== undefined && data.snippets !== null) {
     if (
       !isRecord(data.snippets) ||
       !Object.values(data.snippets).every((v) => typeof v === 'string')

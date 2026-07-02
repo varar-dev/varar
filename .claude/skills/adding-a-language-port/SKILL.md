@@ -163,12 +163,18 @@ Modeled on `var-vitest` (TS) and `var-pytest` (Python):
 - **Collection**: one test item per *example* (not per file), independently
   selectable/reportable, with the item's location pointing at the `.md`
   source line, not adapter internals.
-- **Discovery/config**: mirrors `var.config.ts` — `vars: {include, exclude}`
-  (bare array = include-only shorthand) plus a `steps` glob. No special file
-  extension; a file is a spec iff its path matches the `vars` globs. Give
-  this the idiomatic config surface for the ecosystem (Python used a
-  `[tool.var]` table in `pyproject.toml`) but keep the field names/semantics
-  identical.
+- **Discovery/config**: one `var.config.json` per workspace root, shared
+  verbatim across every port — canonical keys `docs: {include, exclude}`
+  (globs; no special file extension, a file is a spec iff its path matches
+  the `docs` globs), `steps` (a glob array), `snippets`, and `scannerPlugins`
+  (plugin name strings, resolved to functions per-language via a name
+  registry). The schema lives at `conformance/config/var.config.schema.json`.
+  Each port reads the same JSON with its own small config package
+  (`@oselvar/var-config` in TypeScript, `var_config` in Python, `var-config`
+  in Java) — do not invent an ecosystem-idiomatic surface (no `[tool.var]`
+  table, no per-language field names); a new port's reader must reproduce
+  the shared conformance corpus at `conformance/config/cases/*/golden.json`
+  byte-for-byte before it's considered done.
 - **Fixture/DI bridge** (if the framework has one): handlers keep the core
   signature `(state, *expression_captures) -> partial|None|value`. Classify
   trailing parameters as framework fixtures/injected values **by position**,
