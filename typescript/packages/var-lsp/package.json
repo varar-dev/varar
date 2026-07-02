@@ -29,6 +29,9 @@
     "@oselvar/var-config": "workspace:*",
     "@oselvar/var-core": "workspace:*",
     "@oselvar/var-language": "workspace:*",
+    "@tree-sitter-grammars/tree-sitter-kotlin": "^1.1.0",
+    "tree-sitter-java": "^0.23.5",
+    "tree-sitter-python": "^0.25.0",
     "tree-sitter-typescript": "^0.23.2",
     "vscode-languageserver": "^10.0.1",
     "vscode-languageserver-textdocument": "^1.0.12"

@@ -2,15 +2,23 @@ import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
 import type { GrammarLoader } from '@oselvar/var-language'
 
+const GRAMMAR_FILES: Readonly<Record<string, string>> = {
+  typescript: 'tree-sitter-typescript/tree-sitter-typescript.wasm',
+  'typescript-tsx': 'tree-sitter-typescript/tree-sitter-tsx.wasm',
+  python: 'tree-sitter-python/tree-sitter-python.wasm',
+  java: 'tree-sitter-java/tree-sitter-java.wasm',
+  kotlin: '@tree-sitter-grammars/tree-sitter-kotlin/tree-sitter-kotlin.wasm',
+}
+
 export function createNodeGrammarLoader(): GrammarLoader {
   return {
     async load(languageId) {
-      const filename =
-        languageId === 'typescript-tsx' ? 'tree-sitter-tsx.wasm' : 'tree-sitter-typescript.wasm'
+      const specifier = GRAMMAR_FILES[languageId]
+      if (!specifier) throw new Error(`No grammar wasm known for language "${languageId}"`)
       // Resolved dynamically at runtime, so knip can't trace this import —
-      // hence the `ignoreDependencies: ["tree-sitter-typescript"]` entry for
-      // this package in knip.json.
-      const url = import.meta.resolve(`tree-sitter-typescript/${filename}`)
+      // hence the `ignoreDependencies: [...]` entry for this package in
+      // knip.json.
+      const url = import.meta.resolve(specifier)
       return readFile(fileURLToPath(url))
     },
   }

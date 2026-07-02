@@ -124,6 +124,15 @@ importers:
         specifier: ^0.26.10
         version: 0.26.10
     devDependencies:
+      '@tree-sitter-grammars/tree-sitter-kotlin':
+        specifier: ^1.1.0
+        version: 1.1.0
+      tree-sitter-java:
+        specifier: ^0.23.5
+        version: 0.23.5
+      tree-sitter-python:
+        specifier: ^0.25.0
+        version: 0.25.0
       tree-sitter-typescript:
         specifier: ^0.23.2
         version: 0.23.2
@@ -139,6 +148,15 @@ importers:
       '@oselvar/var-language':
         specifier: workspace:*
         version: link:../var-language
+      '@tree-sitter-grammars/tree-sitter-kotlin':
+        specifier: ^1.1.0
+        version: 1.1.0
+      tree-sitter-java:
+        specifier: ^0.23.5
+        version: 0.23.5
+      tree-sitter-python:
+        specifier: ^0.25.0
+        version: 0.25.0
       tree-sitter-typescript:
         specifier: ^0.23.2
         version: 0.23.2
@@ -1744,6 +1762,14 @@ packages:
     resolution: {integrity: sha512-ID7fosbc50TbT0MK0EG12O+gAP3W3Aa/Pz4DaTtQtEvlc9Odaqi0de+xuZ7Li2GtK4HzEX7IuRWS/JmZLksR3Q==}
     engines: {node: '>=14'}
 
+  '@tree-sitter-grammars/tree-sitter-kotlin@1.1.0':
+    resolution: {integrity: sha512-vlVXaxEE8t2kpJgfZpa8XVvxcnKw9AYtRTgy7KWjsDmAsadk06RxAT80IXOgGQnmM9i/orQn1nD84gPNUHu6DQ==}
+    peerDependencies:
+      tree-sitter: ^0.22.4
+    peerDependenciesMeta:
+      tree-sitter:
+        optional: true
+
   '@tybys/wasm-util@0.10.3':
     resolution: {integrity: sha512-F3fo1MYrRJYL3zER0OUOmkutjr1Vp23m7OsSgp7nq4SP6OqX6C/56XFIPAl5bt3zaBRjmW7SGz3u/6LwFpYcOg==}
 
@@ -2904,6 +2930,11 @@ packages:
     resolution: {integrity: sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==}
     engines: {node: '>=0.10.0'}
 
+  npm-check-updates@17.1.18:
+    resolution: {integrity: sha512-bkUy2g4v1i+3FeUf5fXMLbxmV95eG4/sS7lYE32GrUeVgQRfQEk39gpskksFunyaxQgTIdrvYbnuNbO/pSUSqw==}
+    engines: {node: ^18.18.0 || >=20.0.0, npm: '>=8.12.1'}
+    hasBin: true
+
   nth-check@2.1.1:
     resolution: {integrity: sha512-lqjrjmaOoAnWfMmBPL+XNnynZh2+swxiX3WUE0s4yEHI6m+AwrK2UZOimIRl3X/4QctVqS8AiZjFqyOGrMXb/w==}
 
@@ -3337,10 +3368,26 @@ packages:
     resolution: {integrity: sha512-sf4i37nQ2LBx4m3wB74y+ubopq6W/dIzXg0FDGjsYnZHVa1Da8FH853wlL2gtUhg+xJXjfk3kUZS3BRoQeoQBQ==}
     engines: {node: '>=6'}
 
+  tree-sitter-java@0.23.5:
+    resolution: {integrity: sha512-Yju7oQ0Xx7GcUT01mUglPP+bYfvqjNCGdxqigTnew9nLGoII42PNVP3bHrYeMxswiCRM0yubWmN5qk+zsg0zMA==}
+    peerDependencies:
+      tree-sitter: ^0.21.1
+    peerDependenciesMeta:
+      tree-sitter:
+        optional: true
+
   tree-sitter-javascript@0.23.1:
     resolution: {integrity: sha512-/bnhbrTD9frUYHQTiYnPcxyHORIw157ERBa6dqzaKxvR/x3PC4Yzd+D1pZIMS6zNg2v3a8BZ0oK7jHqsQo9fWA==}
     peerDependencies:
       tree-sitter: ^0.21.1
+    peerDependenciesMeta:
+      tree-sitter:
+        optional: true
+
+  tree-sitter-python@0.25.0:
+    resolution: {integrity: sha512-eCmJx6zQa35GxaCtQD+wXHOhYqBxEL+bp71W/s3fcDMu06MrtzkVXR437dRrCrbrDbyLuUDJpAgycs7ncngLXw==}
+    peerDependencies:
+      tree-sitter: ^0.25.0
     peerDependenciesMeta:
       tree-sitter:
         optional: true
@@ -5116,6 +5163,12 @@ snapshots:
 
   '@teppeis/multimaps@3.0.0': {}
 
+  '@tree-sitter-grammars/tree-sitter-kotlin@1.1.0':
+    dependencies:
+      node-addon-api: 8.9.0
+      node-gyp-build: 4.8.4
+      npm-check-updates: 17.1.18
+
   '@tybys/wasm-util@0.10.3':
     dependencies:
       tslib: 2.8.1
@@ -6722,6 +6775,8 @@ snapshots:
 
   normalize-path@3.0.0: {}
 
+  npm-check-updates@17.1.18: {}
+
   nth-check@2.1.1:
     dependencies:
       boolbase: 1.0.0
@@ -7341,7 +7396,17 @@ snapshots:
 
   totalist@3.0.1: {}
 
+  tree-sitter-java@0.23.5:
+    dependencies:
+      node-addon-api: 8.9.0
+      node-gyp-build: 4.8.4
+
   tree-sitter-javascript@0.23.1:
+    dependencies:
+      node-addon-api: 8.9.0
+      node-gyp-build: 4.8.4
+
+  tree-sitter-python@0.25.0:
     dependencies:
       node-addon-api: 8.9.0
       node-gyp-build: 4.8.4

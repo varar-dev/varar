@@ -4,6 +4,7 @@ import {
   buildWorkspaceIndex,
   createTreeSitterScanner,
   type GrammarLoader,
+  languageIdForPath,
   type StepDefScanner,
   type WorkspaceIndex,
 } from '@oselvar/var-language'
@@ -45,11 +46,27 @@ export function createStore(deps: StoreDeps): Store {
   // Created once, lazily, on the first reindex — not in createStore itself,
   // which stays synchronous. Later reindexes reuse it.
   let scannerPromise: Promise<StepDefScanner> | undefined
+  let scannerKey: string | undefined
   return {
     async reindex() {
-      if (grammarLoader) scannerPromise ??= createTreeSitterScanner(grammarLoader)
-      const scanner = grammarLoader ? await scannerPromise : undefined
       const stepPaths = await fs.list({ include: config.steps, exclude: [] })
+      // Derive the scanner's language set from what's actually on disk, so a
+      // TS-only workspace never pays to load python/java/kotlin grammars —
+      // and rebuild the scanner only when that set changes (dialects are
+      // cached per loader inside the scanner module, so a wider rebuild
+      // reuses already-loaded grammars).
+      const languages = [...new Set(stepPaths.map(languageIdForPath))]
+        .filter((id): id is NonNullable<typeof id> => id !== undefined)
+        .sort()
+      const key = languages.join(',')
+      if (grammarLoader && key !== scannerKey) {
+        scannerKey = key
+        scannerPromise = createTreeSitterScanner(
+          grammarLoader,
+          languages.length > 0 ? languages : undefined,
+        )
+      }
+      const scanner = grammarLoader ? await scannerPromise : undefined
       const varPaths = await fs.list(config.docs)
       const stepFiles = await Promise.all(
         stepPaths.map(async (path) => ({ path, source: await fs.read(path) })),

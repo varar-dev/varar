@@ -80,4 +80,18 @@ describe('createStore over a FileSystem', () => {
     const matches = store.index().matches.filter((m) => m.varPath === '/hello.md')
     expect(matches.length).toBeGreaterThan(0)
   })
+
+  it('indexes a TS-only workspace after the language-set-derived scanner signature change', async () => {
+    // Proves the default path still works: `steps` matches only `.steps.ts`
+    // files, so the store derives a `['typescript']` language set from disk
+    // rather than falling back to the createTreeSitterScanner default.
+    const fs = fakeFs({
+      '/s.steps.ts': `action('I greet {string}', (ctx, name: string) => {})\n`,
+      '/hello.md': `# Hi\n\nFirst I greet "world" okay?\n`,
+    })
+    const store = createStore({ fs, config, grammarLoader })
+    await store.reindex()
+    const matches = store.index().matches.filter((m) => m.varPath === '/hello.md')
+    expect(matches.length).toBeGreaterThan(0)
+  })
 })
