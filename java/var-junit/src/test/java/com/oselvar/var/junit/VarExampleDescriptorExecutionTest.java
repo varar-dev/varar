@@ -13,8 +13,12 @@ import static org.junit.platform.testkit.engine.TestExecutionResultConditions.me
 
 import com.oselvar.var.junit.fixtures.CounterSteps;
 import com.oselvar.var.junit.fixtures.WidgetSteps;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.platform.engine.TestExecutionResult;
 import org.junit.platform.testkit.engine.EngineExecutionResults;
 import org.junit.platform.testkit.engine.EngineTestKit;
@@ -31,17 +35,27 @@ import org.junit.platform.testkit.engine.Event;
  */
 class VarExampleDescriptorExecutionTest {
 
-    private static EngineExecutionResults execute(String classpathResource, Class<?> stepsClass) {
+    private static EngineExecutionResults execute(Path workspace, String classpathResource, Class<?> stepsClass)
+            throws Exception {
+        Files.writeString(
+                workspace.resolve("var.config.json"),
+                """
+                {
+                  "docs": { "include": ["examplefixture/**/*.md"], "exclude": [] },
+                  "steps": ["%s"]
+                }
+                """
+                        .formatted(stepsClass.getName()),
+                StandardCharsets.UTF_8);
         return EngineTestKit.engine("var")
                 .selectors(selectClasspathResource(classpathResource))
-                .configurationParameter("var.vars.include", "examplefixture/**/*.md")
-                .configurationParameter("var.steps", stepsClass.getName())
+                .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                 .execute();
     }
 
     @Test
-    void aPassingExampleReportsSuccessful() {
-        EngineExecutionResults results = execute("examplefixture/widgets.md", WidgetSteps.class);
+    void aPassingExampleReportsSuccessful(@TempDir Path workspace) throws Exception {
+        EngineExecutionResults results = execute(workspace, "examplefixture/widgets.md", WidgetSteps.class);
 
         results.testEvents()
                 .assertThatEvents()
@@ -49,8 +63,9 @@ class VarExampleDescriptorExecutionTest {
     }
 
     @Test
-    void aFailingExampleReportsFailedWithTheRenderedMarkdownAnchoredMessage() {
-        EngineExecutionResults results = execute("examplefixture/failing.md", WidgetSteps.class);
+    void aFailingExampleReportsFailedWithTheRenderedMarkdownAnchoredMessage(@TempDir Path workspace)
+            throws Exception {
+        EngineExecutionResults results = execute(workspace, "examplefixture/failing.md", WidgetSteps.class);
 
         List<Event> failed = results.testEvents().failed().list();
         assertEquals(1, failed.size(), "failing.md's one example is a genuine cell mismatch");
@@ -80,13 +95,13 @@ class VarExampleDescriptorExecutionTest {
     }
 
     @Test
-    void stateDoesNotLeakBetweenTwoExamplesInTheSameFile() {
+    void stateDoesNotLeakBetweenTwoExamplesInTheSameFile(@TempDir Path workspace) throws Exception {
         // counter.md has two examples, each independently adding 5 to a freshly-initialized
         // (Ctx(0)) counter and asserting it's exactly 5. If the second example's state leaked
         // from the first (i.e. it did not start from a fresh Ctx(0)), its counter would come
         // out as 10, not 5, and the sensor step would fail -- so both examples reporting
         // SUCCESSFUL is a genuine proof of state isolation, not an assumption.
-        EngineExecutionResults results = execute("examplefixture/counter.md", CounterSteps.class);
+        EngineExecutionResults results = execute(workspace, "examplefixture/counter.md", CounterSteps.class);
 
         results.testEvents()
                 .assertThatEvents()

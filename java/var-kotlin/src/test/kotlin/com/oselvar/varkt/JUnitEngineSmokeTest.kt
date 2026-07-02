@@ -17,7 +17,7 @@ import org.junit.platform.testkit.engine.EngineTestKit
 class JUnitEngineSmokeTest {
 
     // VarFileSelectorResolver relativizes a FileSelector's path against the module's working
-    // directory (Maven/Surefire's basedir) before testing it against var.vars.include (see its
+    // directory (Maven/Surefire's basedir) before testing it against docsInclude (see its
     // javadoc + Discovery.matchSpec). @TempDir sits outside that basedir entirely, so the include
     // value must be the SAME relativized string the resolver itself computes -- and, on macOS,
     // DiscoverySelectors.selectFile canonicalizes the FileSelector's path (resolving the
@@ -29,10 +29,21 @@ class JUnitEngineSmokeTest {
     private fun runSpec(dir: Path, body: String) =
         Files.writeString(dir.resolve("cukes.md"), body).let { spec ->
             val relativeInclude = moduleRoot.relativize(spec.toRealPath()).toString().replace('\\', '/')
+            Files.writeString(
+                dir.resolve("var.config.json"),
+                """
+                {
+                  "docs": { "include": ["$relativeInclude"], "exclude": [] },
+                  "steps": ["com.oselvar.varkt.fixtures.CukeSteps"]
+                }
+                """.trimIndent(),
+            )
+            // "var.config.root" is var-junit's ConfigBridge.CONFIG_ROOT_KEY, package-private
+            // to com.oselvar.var.junit -- this module is a separate JAR, so the literal must be
+            // duplicated here rather than referenced.
             EngineTestKit.engine("var")
                 .selectors(selectFile(spec.toFile()))
-                .configurationParameter("var.vars.include", relativeInclude)
-                .configurationParameter("var.steps", "com.oselvar.varkt.fixtures.CukeSteps")
+                .configurationParameter("var.config.root", dir.toString())
                 .execute()
         }
 

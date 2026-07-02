@@ -1,10 +1,10 @@
 package com.oselvar.var.junit;
 
+import com.oselvar.var.config.VarConfig;
 import com.oselvar.var.core.Plan;
 import com.oselvar.var.runner.Discovery;
 import com.oselvar.var.runner.Run;
 import com.oselvar.var.runner.StepLoader;
-import com.oselvar.var.runner.VarConfig;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
@@ -36,7 +36,7 @@ import org.junit.platform.engine.support.discovery.SelectorResolver;
  * PackageSelector}/{@code ModuleSelector} are reduced to (see {@link
  * DiscoverySelectorResolver}), plus {@code FileSelector}/{@code DirectorySelector} given
  * directly, into one {@link VarFileDescriptor} per {@code .md} resource/file matching {@code
- * config.varsInclude()}/{@code varsExclude()} — ported from {@code
+ * config.docsInclude()}/{@code docsExclude()} — ported from {@code
  * cucumber-junit-platform-engine}'s {@code FeatureFileResolver} (classpath-resource case) and
  * {@code FileContainerSelectorResolver} (directory-expansion case), ONE {@code SelectorResolver}
  * covering both because var, unlike Cucumber, has no scenario-outline/rule nesting to warrant
@@ -83,7 +83,7 @@ final class VarFileSelectorResolver implements SelectorResolver {
     /** Whether a classpath resource name (already relative, POSIX-separated) is a spec. */
     boolean matchesSpec(String resourceName) {
         return Discovery.matchSpec(
-                Path.of(resourceName), config.varsInclude(), config.varsExclude(), Path.of(""));
+                Path.of(resourceName), config.docsInclude(), config.docsExclude(), Path.of(""));
     }
 
     @Override
@@ -118,7 +118,7 @@ final class VarFileSelectorResolver implements SelectorResolver {
     @Override
     public Resolution resolve(FileSelector selector, Context context) {
         Path path = selector.getPath();
-        if (!Discovery.matchSpec(path, config.varsInclude(), config.varsExclude(), root)) {
+        if (!Discovery.matchSpec(path, config.docsInclude(), config.docsExclude(), root)) {
             return Resolution.unresolved();
         }
         String relPath = root.relativize(path.toAbsolutePath().normalize()).toString().replace('\\', '/');
@@ -253,10 +253,10 @@ final class VarFileSelectorResolver implements SelectorResolver {
         return DiscoverySelectors.selectClasspathResource(specPath);
     }
 
-    /** The same {@code var.vars.include}/{@code varsExclude()} guard {@link #resolve} methods apply. */
+    /** The same {@code config.docsInclude()}/{@code docsExclude()} guard {@link #resolve} methods apply. */
     private boolean matchesFileSelector(DiscoverySelector selector) {
         if (selector instanceof FileSelector fileSelector) {
-            return Discovery.matchSpec(fileSelector.getPath(), config.varsInclude(), config.varsExclude(), root);
+            return Discovery.matchSpec(fileSelector.getPath(), config.docsInclude(), config.docsExclude(), root);
         }
         if (selector instanceof ClasspathResourceSelector classpathSelector) {
             return matchesSpec(classpathSelector.getClasspathResourceName());

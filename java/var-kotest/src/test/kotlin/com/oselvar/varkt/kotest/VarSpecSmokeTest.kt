@@ -4,21 +4,18 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import java.nio.file.Path
 
-private val SMOKE_CONFIG = mapOf(
-    "var.vars.include" to "specs/**/*.md",
-    "var.steps" to "com.oselvar.varkt.kotest.fixtures.SmokeSteps",
-)
-
 /**
  * Executed by the Kotest engine under Surefire: one container (the spec file),
  * one passing example. Note: Surefire's console summary shows "Tests run: 0"
  * for Kotest specs (a nested-test counting quirk); the surefire-reports XML
  * records the real per-example testcase, and a failing example still fails
  * the build (proven by VarSpecFailureTest).
+ *
+ * Config comes from `src/test/resources/kotest-smoke/var.config.json` (docs.include matches
+ * every .md file under specs, steps = SmokeSteps).
  */
 class VarSpecSmokeTest : VarSpec(
     root = Path.of("src/test/resources/kotest-smoke"),
-    lookup = SMOKE_CONFIG::get,
 )
 
 /**
@@ -40,7 +37,6 @@ class VarSpecRegistrationTest : FunSpec({
     test("VarSpec registered one container with one example") {
         val spec = object : VarSpec(
             root = Path.of("src/test/resources/kotest-smoke"),
-            lookup = SMOKE_CONFIG::get,
         ) {}
         // tests() is @KotestInternal (@RequiresOptIn, WARNING level) — accepted
         // knowingly: it is the only accessor for a spec's registered roots, and

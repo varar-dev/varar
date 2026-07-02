@@ -9,12 +9,14 @@ import static org.junit.platform.engine.discovery.DiscoverySelectors.selectFile;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectUniqueId;
 
 import com.oselvar.var.junit.fixtures.WidgetSteps;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.ClasspathResourceSource;
@@ -43,11 +45,24 @@ class VarExampleDescriptorTest {
 
     private static final String STEPS = WidgetSteps.class.getName();
 
-    private static EngineDiscoveryResults discoverWidgets() {
+    private static void writeConfig(Path workspace, String docsInclude) throws Exception {
+        Files.writeString(
+                workspace.resolve("var.config.json"),
+                """
+                {
+                  "docs": { "include": ["%s"], "exclude": [] },
+                  "steps": ["%s"]
+                }
+                """
+                        .formatted(docsInclude, STEPS),
+                StandardCharsets.UTF_8);
+    }
+
+    private static EngineDiscoveryResults discoverWidgets(Path workspace) throws Exception {
+        writeConfig(workspace, "examplefixture/**/*.md");
         return EngineTestKit.engine("var")
                 .selectors(selectClasspathResource("examplefixture/widgets.md"))
-                .configurationParameter("var.vars.include", "examplefixture/**/*.md")
-                .configurationParameter("var.steps", STEPS)
+                .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                 .discover();
     }
 
@@ -58,8 +73,9 @@ class VarExampleDescriptorTest {
     }
 
     @Test
-    void twoExampleFileDiscoversTwoLeavesWithLineBasedUniqueIdsAndSource() {
-        TestDescriptor engineDescriptor = discoverWidgets().getEngineDescriptor();
+    void twoExampleFileDiscoversTwoLeavesWithLineBasedUniqueIdsAndSource(@TempDir Path workspace)
+            throws Exception {
+        TestDescriptor engineDescriptor = discoverWidgets(workspace).getEngineDescriptor();
         TestDescriptor fileDescriptor = onlyFileDescriptor(engineDescriptor);
         assertEquals(TestDescriptor.Type.CONTAINER, fileDescriptor.getType());
 
@@ -96,8 +112,8 @@ class VarExampleDescriptorTest {
     }
 
     @Test
-    void selectingOneLeafByUniqueIdDiscoversOnlyThatOne() {
-        TestDescriptor wholeFileEngine = discoverWidgets().getEngineDescriptor();
+    void selectingOneLeafByUniqueIdDiscoversOnlyThatOne(@TempDir Path workspace) throws Exception {
+        TestDescriptor wholeFileEngine = discoverWidgets(workspace).getEngineDescriptor();
         TestDescriptor fileDescriptor = onlyFileDescriptor(wholeFileEngine);
         List<? extends TestDescriptor> examples = List.copyOf(fileDescriptor.getChildren());
         TestDescriptor targetLeaf = examples.get(0);
@@ -107,8 +123,7 @@ class VarExampleDescriptorTest {
         EngineDiscoveryResults singleSelection =
                 EngineTestKit.engine("var")
                         .selectors(selectUniqueId(targetLeaf.getUniqueId()))
-                        .configurationParameter("var.vars.include", "examplefixture/**/*.md")
-                        .configurationParameter("var.steps", STEPS)
+                        .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                         .discover();
 
         TestDescriptor engineDescriptor = singleSelection.getEngineDescriptor();
@@ -132,8 +147,9 @@ class VarExampleDescriptorTest {
      * javadoc for the full mechanism).
      */
     @Test
-    void selectingTwoDifferentExamplesByBareUniqueIdMergesIntoOneContainerWithBothChildren() {
-        TestDescriptor wholeFileEngine = discoverWidgets().getEngineDescriptor();
+    void selectingTwoDifferentExamplesByBareUniqueIdMergesIntoOneContainerWithBothChildren(
+            @TempDir Path workspace) throws Exception {
+        TestDescriptor wholeFileEngine = discoverWidgets(workspace).getEngineDescriptor();
         TestDescriptor fileDescriptor = onlyFileDescriptor(wholeFileEngine);
         List<? extends TestDescriptor> examples = List.copyOf(fileDescriptor.getChildren());
         UniqueId line3 = examples.get(0).getUniqueId();
@@ -143,8 +159,7 @@ class VarExampleDescriptorTest {
         EngineDiscoveryResults twoSelectors =
                 EngineTestKit.engine("var")
                         .selectors(selectUniqueId(line3), selectUniqueId(line7))
-                        .configurationParameter("var.vars.include", "examplefixture/**/*.md")
-                        .configurationParameter("var.steps", STEPS)
+                        .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                         .discover();
 
         List<? extends TestDescriptor> topLevel =
@@ -165,15 +180,15 @@ class VarExampleDescriptorTest {
     }
 
     @Test
-    void uniqueIdIsLineBasedNotNameBased() {
+    void uniqueIdIsLineBasedNotNameBased(@TempDir Path workspace) throws Exception {
         // Same step-bearing paragraph position (line 3 in both files), deliberately different
         // leading narration ("Setup complete. ") so Plan's deriveExampleName (first sentence of
         // the example's body) differs between the two files -- proving the UniqueId tracks the
         // example's *position*, not its Markdown-derived display text (the exact risk the design
         // doc flags: an author editing wording must not change a UniqueId, or UniqueIdSelector
         // re-run-single-test silently breaks).
-        TestDescriptor wordingA = discoverOneFile("examplefixture/wording-a.md");
-        TestDescriptor wordingB = discoverOneFile("examplefixture/wording-b.md");
+        TestDescriptor wordingA = discoverOneFile(workspace, "examplefixture/wording-a.md");
+        TestDescriptor wordingB = discoverOneFile(workspace, "examplefixture/wording-b.md");
 
         TestDescriptor exampleA = onlyExample(wordingA);
         TestDescriptor exampleB = onlyExample(wordingB);
@@ -189,12 +204,13 @@ class VarExampleDescriptorTest {
         assertEquals("3", exampleA.getUniqueId().getLastSegment().getValue());
     }
 
-    private static TestDescriptor discoverOneFile(String classpathResource) {
+    private static TestDescriptor discoverOneFile(Path workspace, String classpathResource)
+            throws Exception {
+        writeConfig(workspace, "examplefixture/**/*.md");
         EngineDiscoveryResults results =
                 EngineTestKit.engine("var")
                         .selectors(selectClasspathResource(classpathResource))
-                        .configurationParameter("var.vars.include", "examplefixture/**/*.md")
-                        .configurationParameter("var.steps", STEPS)
+                        .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                         .discover();
         return onlyFileDescriptor(results.getEngineDescriptor());
     }
@@ -208,19 +224,20 @@ class VarExampleDescriptorTest {
     @Test
     void noSelectorsMatchWhenIncludeIsEmpty() {
         // Same guarantee as Task 9's discovery-level test, still true now that files get real
-        // children: an empty var.vars.include must discover nothing at all, not merely "no
-        // examples inside an empty container".
+        // children: with no var.config.root parameter, ConfigBridge falls back to the JVM
+        // working directory (java/var-junit under this module's own `mvn test`), which has no
+        // var.config.json -- so docsInclude defaults to empty and nothing is discovered at all,
+        // not merely "no examples inside an empty container".
         EngineDiscoveryResults results =
                 EngineTestKit.engine("var")
                         .selectors(selectClasspathResource("examplefixture/widgets.md"))
-                        .configurationParameter("var.steps", STEPS)
                         .discover();
         assertTrue(results.getEngineDescriptor().getChildren().isEmpty());
     }
 
     @Test
-    void fileDescriptorTypeIsStillContainer() {
-        TestDescriptor fileDescriptor = discoverOneFile("examplefixture/widgets.md");
+    void fileDescriptorTypeIsStillContainer(@TempDir Path workspace) throws Exception {
+        TestDescriptor fileDescriptor = discoverOneFile(workspace, "examplefixture/widgets.md");
         assertInstanceOf(TestDescriptor.class, fileDescriptor);
         assertEquals(TestDescriptor.Type.CONTAINER, fileDescriptor.getType());
     }
@@ -236,15 +253,17 @@ class VarExampleDescriptorTest {
      * resources.
      */
     @Test
-    void realFileSelectorAlsoProducesLeavesWithFileSourcePositions() {
-        Path widgetsFile = Path.of("src/test/resources/examplefixture/widgets.md").toAbsolutePath();
+    void realFileSelectorAlsoProducesLeavesWithFileSourcePositions(@TempDir Path workspace)
+            throws Exception {
+        Path widgetsFile =
+                Path.of("src/test/resources/examplefixture/widgets.md").toAbsolutePath();
         assertTrue(Files.isRegularFile(widgetsFile), "fixture must exist on disk for this FileSelector-based test");
 
+        writeConfig(workspace, "src/test/resources/examplefixture/**/*.md");
         EngineDiscoveryResults results =
                 EngineTestKit.engine("var")
                         .selectors(selectFile(widgetsFile.toFile()))
-                        .configurationParameter("var.vars.include", "src/test/resources/examplefixture/**/*.md")
-                        .configurationParameter("var.steps", STEPS)
+                        .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                         .discover();
 
         TestDescriptor fileDescriptor = onlyFileDescriptor(results.getEngineDescriptor());
@@ -261,8 +280,7 @@ class VarExampleDescriptorTest {
         EngineDiscoveryResults singleSelection =
                 EngineTestKit.engine("var")
                         .selectors(selectUniqueId(targetId))
-                        .configurationParameter("var.vars.include", "src/test/resources/examplefixture/**/*.md")
-                        .configurationParameter("var.steps", STEPS)
+                        .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                         .discover();
         TestDescriptor selectedFile = onlyFileDescriptor(singleSelection.getEngineDescriptor());
         assertEquals(1, selectedFile.getChildren().size());

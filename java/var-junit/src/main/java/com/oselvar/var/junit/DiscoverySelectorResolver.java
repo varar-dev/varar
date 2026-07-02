@@ -1,7 +1,7 @@
 package com.oselvar.var.junit;
 
+import com.oselvar.var.config.VarConfig;
 import com.oselvar.var.runner.StepLoader;
-import com.oselvar.var.runner.VarConfig;
 import org.junit.platform.commons.io.ResourceFilter;
 import org.junit.platform.engine.EngineDiscoveryRequest;
 import org.junit.platform.engine.support.discovery.DiscoveryIssueReporter;
@@ -30,7 +30,7 @@ import org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolve
  * <ul>
  *   <li>{@code ClasspathRootSelector}/{@code ModuleSelector}/{@code PackageSelector} &rarr;
  *       {@code ClasspathResourceSelector} (candidate {@code .md} resources matching {@code
- *       var.vars.include}/{@code varsExclude()}) — the platform's own built-in {@code
+ *       config.docsInclude()}/{@code docsExclude()}) — the platform's own built-in {@code
  *       addResourceContainerSelectorResolver(ResourceFilter)}, which performs exactly this
  *       expansion generically (classpath/module/package scanning) for any engine; var supplies
  *       only the {@link ResourceFilter} predicate (delegating to {@code

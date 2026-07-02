@@ -11,8 +11,13 @@ import static org.junit.platform.testkit.engine.TestExecutionResultConditions.me
 
 import com.oselvar.var.junit.fixtures.CounterSteps;
 import com.oselvar.var.junit.fixtures.WidgetSteps;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.testkit.engine.EngineDiscoveryResults;
@@ -29,10 +34,9 @@ import org.junit.platform.testkit.engine.EngineTestKit;
  *       include/exclude filtering at the container level, via {@code VarTestEngine#discover}
  *       directly (Task 9, containers had no children yet).
  *   <li>{@code ConfigBridgeTest} — {@code ConfigurationParameters} &rarr; {@code VarConfig}
- *       adaptation, including {@code var.steps} parsing into a plain string list (unit-level, no
- *       engine involved).
+ *       adaptation via var.config.json (unit-level, no engine involved).
  *   <li>{@code VarTestEngineTest} — engine id, {@code ServiceLoader} registration, and the
- *       zero-matching-<em>files</em> case (no resource matches {@code var.vars.include} at all).
+ *       zero-matching-<em>files</em> case (no resource matches {@code docsInclude} at all).
  *   <li>{@code VarExampleDescriptorTest} — leaf shape, line-based {@code UniqueId}s (not
  *       wording-based), and single-leaf {@code UniqueId} selection <em>at discovery time</em> for
  *       a two-example file, for both classpath-resource and real-file selectors.
@@ -40,7 +44,7 @@ import org.junit.platform.testkit.engine.EngineTestKit;
  *       failure rendered with its markdown-anchored message (fixed at line 3), and no state
  *       leakage between two examples in the same file (two passes, not a mixed outcome).
  *   <li>{@code ConfigPrecedenceTest} — {@code ConfigurationParameters} provider-tier precedence,
- *       unrelated to {@code var.steps} semantics.
+ *       unrelated to {@code steps} semantics.
  * </ul>
  *
  * <p>None of the above exercises, in one file with a genuine MIXED outcome: (1) per-example
@@ -48,7 +52,7 @@ import org.junit.platform.testkit.engine.EngineTestKit;
  * {@code UniqueId} through actual EXECUTION (not just discovery) when its siblings include a
  * failure; (3) a failure line other than the one hardcoded fixture line (3) already proven
  * elsewhere, to rule out the line lookup being coincidentally right only for that line; or (4)
- * {@code var.steps} actually gating which step-definition classes get loaded, end to end through
+ * {@code steps} actually gating which step-definition classes get loaded, end to end through
  * the real engine, as opposed to {@code ConfigBridgeTest}'s isolated parsing check or Task 4's
  * {@code var-runner}-only {@code StepLoaderTest}. This class fills exactly those four.
  */
@@ -65,8 +69,9 @@ class VarEngineBehaviorTest {
      * line lookup driving the rendered message is proven for more than one coincidental value.
      */
     @Test
-    void mixedFileReportsExactPerExamplePassAndFailCountsWithLineAnchoredFailure() {
-        EngineExecutionResults results = executeMixed();
+    void mixedFileReportsExactPerExamplePassAndFailCountsWithLineAnchoredFailure(@TempDir Path workspace)
+            throws Exception {
+        EngineExecutionResults results = executeMixed(workspace);
 
         assertEquals(2, results.testEvents().succeeded().count(), "two of mixed.md's three examples pass");
         assertEquals(1, results.testEvents().failed().count(), "exactly one of mixed.md's three examples fails");
@@ -92,8 +97,9 @@ class VarEngineBehaviorTest {
      * test event runs, and it is the failing one, not a sibling.
      */
     @Test
-    void reRunningOneFailingExampleByUniqueIdAmongThreeExecutesOnlyThatOneExample() {
-        EngineDiscoveryResults discovery = discoverMixed();
+    void reRunningOneFailingExampleByUniqueIdAmongThreeExecutesOnlyThatOneExample(@TempDir Path workspace)
+            throws Exception {
+        EngineDiscoveryResults discovery = discoverMixed(workspace);
         TestDescriptor fileDescriptor = onlySpecDescriptor(discovery.getEngineDescriptor());
         List<? extends TestDescriptor> examples = List.copyOf(fileDescriptor.getChildren());
         assertEquals(3, examples.size(), "mixed.md has three examples");
@@ -103,8 +109,7 @@ class VarEngineBehaviorTest {
         EngineExecutionResults results =
                 EngineTestKit.engine("var")
                         .selectors(selectUniqueId(failingExampleId))
-                        .configurationParameter("var.vars.include", "examplefixture/**/*.md")
-                        .configurationParameter("var.steps", WIDGET_STEPS)
+                        .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                         .execute();
 
         results.testEvents().assertThatEvents().hasSize(2); // started + finished, for that one example only
@@ -115,10 +120,10 @@ class VarEngineBehaviorTest {
     }
 
     /**
-     * Same file, same {@code var.vars.include}, only {@code var.steps} changes — proving {@code
-     * var.steps} is genuinely load-bearing end to end through the real engine, not merely parsed
-     * (as {@code ConfigBridgeTest} already confirms in isolation) and then ignored in favor of some
-     * other source of steps (e.g. scanning every {@code StepDefinitions} on the classpath).
+     * Same file, same {@code docsInclude}, only {@code steps} changes — proving {@code steps} is
+     * genuinely load-bearing end to end through the real engine, not merely parsed (as {@code
+     * ConfigBridgeTest} already confirms in isolation) and then ignored in favor of some other
+     * source of steps (e.g. scanning every {@code StepDefinitions} on the classpath).
      * {@code widgets.md}'s sentences match only {@link WidgetSteps}' expressions; {@link
      * CounterSteps}' expressions ("I add {int} to the counter" / "the counter should be {int}")
      * match nothing in it. Per {@code Plan.plan}'s documented behavior (confirmed against {@code
@@ -129,48 +134,69 @@ class VarEngineBehaviorTest {
      * javadoc), leaving zero children at the engine root entirely.
      */
     @Test
-    void varStepsOnlyLoadsTheNamedClassesNotEveryStepDefinitionOnTheClasspath() {
+    void varStepsOnlyLoadsTheNamedClassesNotEveryStepDefinitionOnTheClasspath(
+            @TempDir Path onlyCounterStepsWorkspace, @TempDir Path bothStepsWorkspace) throws Exception {
+        writeConfig(onlyCounterStepsWorkspace, "examplefixture/**/*.md", COUNTER_STEPS);
         EngineDiscoveryResults onlyCounterSteps =
                 EngineTestKit.engine("var")
                         .selectors(selectClasspathResource("examplefixture/widgets.md"))
-                        .configurationParameter("var.vars.include", "examplefixture/**/*.md")
-                        .configurationParameter("var.steps", COUNTER_STEPS)
+                        .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, onlyCounterStepsWorkspace.toString())
                         .discover();
         assertTrue(
                 onlyCounterSteps.getEngineDescriptor().getChildren().isEmpty(),
-                "CounterSteps' expressions don't match widgets.md's sentences -- var.steps must be"
+                "CounterSteps' expressions don't match widgets.md's sentences -- steps must be"
                         + " the only source of loaded steps, so nothing survives discovery (and the"
                         + " resulting childless container is itself pruned)");
 
+        writeConfig(bothStepsWorkspace, "examplefixture/**/*.md", COUNTER_STEPS + "," + WIDGET_STEPS);
         EngineDiscoveryResults bothSteps =
                 EngineTestKit.engine("var")
                         .selectors(selectClasspathResource("examplefixture/widgets.md"))
-                        .configurationParameter("var.vars.include", "examplefixture/**/*.md")
-                        .configurationParameter("var.steps", COUNTER_STEPS + "," + WIDGET_STEPS)
+                        .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, bothStepsWorkspace.toString())
                         .discover();
         TestDescriptor fileDescriptor = onlySpecDescriptor(bothSteps.getEngineDescriptor());
         assertEquals(
                 2,
                 fileDescriptor.getChildren().size(),
-                "adding WidgetSteps back to var.steps (comma-separated) must recover both examples --"
-                        + " proving the zero-examples result above was really var.steps at work, not"
+                "adding WidgetSteps back to steps (comma-separated) must recover both examples --"
+                        + " proving the zero-examples result above was really steps at work, not"
                         + " e.g. widgets.md being unparsable for an unrelated reason");
     }
 
-    private static EngineDiscoveryResults discoverMixed() {
+    private static EngineDiscoveryResults discoverMixed(Path workspace) throws Exception {
+        writeConfig(workspace, "examplefixture/**/*.md", WIDGET_STEPS);
         return EngineTestKit.engine("var")
                 .selectors(selectClasspathResource("examplefixture/mixed.md"))
-                .configurationParameter("var.vars.include", "examplefixture/**/*.md")
-                .configurationParameter("var.steps", WIDGET_STEPS)
+                .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                 .discover();
     }
 
-    private static EngineExecutionResults executeMixed() {
+    private static EngineExecutionResults executeMixed(Path workspace) throws Exception {
+        writeConfig(workspace, "examplefixture/**/*.md", WIDGET_STEPS);
         return EngineTestKit.engine("var")
                 .selectors(selectClasspathResource("examplefixture/mixed.md"))
-                .configurationParameter("var.vars.include", "examplefixture/**/*.md")
-                .configurationParameter("var.steps", WIDGET_STEPS)
+                .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                 .execute();
+    }
+
+    /**
+     * Writes a var.config.json into {@code workspace} whose {@code docs.include} is the single
+     * glob {@code docsInclude} (no excludes) and whose {@code steps} is {@code stepClassNames}
+     * split on comma — the same comma-separated-classes shape {@code StepLoader} always accepted,
+     * ported into a JSON array here.
+     */
+    private static void writeConfig(Path workspace, String docsInclude, String stepClassNames) throws Exception {
+        String stepsJson =
+                Arrays.stream(stepClassNames.split(","))
+                        .map(name -> "\"" + name + "\"")
+                        .reduce((a, b) -> a + ", " + b)
+                        .orElse("");
+        Files.writeString(
+                workspace.resolve("var.config.json"),
+                "{ \"docs\": { \"include\": [\"" + docsInclude + "\"], \"exclude\": [] }, \"steps\": ["
+                        + stepsJson
+                        + "] }",
+                StandardCharsets.UTF_8);
     }
 
     private static TestDescriptor onlySpecDescriptor(TestDescriptor engineDescriptor) {

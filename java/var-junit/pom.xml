@@ -27,6 +27,11 @@
       <version>${project.version}</version>
     </dependency>
     <dependency>
+      <groupId>com.oselvar</groupId>
+      <artifactId>var-config</artifactId>
+      <version>${project.version}</version>
+    </dependency>
+    <dependency>
       <groupId>org.junit.platform</groupId>
       <artifactId>junit-platform-engine</artifactId>
     </dependency>

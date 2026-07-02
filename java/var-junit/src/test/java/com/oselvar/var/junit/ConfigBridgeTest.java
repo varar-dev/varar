@@ -2,29 +2,41 @@ package com.oselvar.var.junit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.oselvar.var.runner.VarConfig;
+import com.oselvar.var.config.VarConfig;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.platform.engine.ConfigurationParameters;
 
 /**
  * Verifies {@link ConfigBridge#fromConfigurationParameters} is a faithful adapter from a real
- * {@link ConfigurationParameters} instance to {@link VarConfig#fromLookup} — no parsing logic of
- * its own (that stays in {@code VarConfig}, tested independently in var-runner).
+ * {@link ConfigurationParameters} instance to {@link VarConfig#load} — no parsing logic of its
+ * own (that stays in {@code var-config}, tested independently there).
  */
 class ConfigBridgeTest {
 
     @Test
-    void knownKeysProduceTheExpectedVarConfig() {
+    void configRootKeyPointsAtTheWorkspaceHoldingVarConfigJson(@TempDir Path workspace) throws Exception {
+        Files.writeString(
+                workspace.resolve("var.config.json"),
+                """
+                {
+                  "docs": {
+                    "include": ["features/**/*.md", "more/**/*.md"],
+                    "exclude": ["features/wip/**/*.md"]
+                  },
+                  "steps": ["steps/**/*.steps.ts"]
+                }
+                """,
+                StandardCharsets.UTF_8);
         ConfigurationParameters params =
-                new FakeConfigurationParameters(
-                        Map.of(
-                                "var.vars.include", "features/**/*.md, more/**/*.md",
-                                "var.vars.exclude", "features/wip/**/*.md",
-                                "var.steps", "steps/**/*.steps.ts"));
+                new FakeConfigurationParameters(Map.of("var.config.root", workspace.toString()));
 
         VarConfig config = ConfigBridge.fromConfigurationParameters(params);
 
@@ -32,17 +44,22 @@ class ConfigBridgeTest {
                 new VarConfig(
                         List.of("features/**/*.md", "more/**/*.md"),
                         List.of("features/wip/**/*.md"),
-                        List.of("steps/**/*.steps.ts")),
+                        List.of("steps/**/*.steps.ts"),
+                        Map.of(),
+                        List.of()),
                 config);
     }
 
     @Test
-    void missingKeysProduceEmptyLists() {
+    void missingConfigRootKeyDefaultsToTheEmptyConfigWhenTheWorkingDirectoryHasNoVarConfigJson() {
+        // No var.config.root parameter is set, so ConfigBridge falls back to the JVM working
+        // directory (java/var-junit under this module's own `mvn test`) -- which has no
+        // var.config.json -- so VarConfig.load resolves to the empty config.
         ConfigurationParameters params = new FakeConfigurationParameters(Map.of());
 
         VarConfig config = ConfigBridge.fromConfigurationParameters(params);
 
-        assertEquals(new VarConfig(List.of(), List.of(), List.of()), config);
+        assertEquals(VarConfig.empty(), config);
     }
 
     /**

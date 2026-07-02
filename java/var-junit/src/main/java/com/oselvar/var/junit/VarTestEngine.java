@@ -1,7 +1,7 @@
 package com.oselvar.var.junit;
 
+import com.oselvar.var.config.VarConfig;
 import com.oselvar.var.runner.StepLoader;
-import com.oselvar.var.runner.VarConfig;
 import org.junit.platform.engine.EngineDiscoveryRequest;
 import org.junit.platform.engine.ExecutionRequest;
 import org.junit.platform.engine.TestDescriptor;
@@ -17,11 +17,11 @@ import org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine;
  * wiring is required (mirrors {@code var-pytest}'s {@code pytest11} entry-point
  * ergonomics). See {@code docs/adr/0003-java-junit-integration.md}.
  *
- * <p>{@link #discover} loads every {@code var.steps} class exactly once per discovery pass
- * ({@link StepLoader#loadSteps}, mirroring Python's {@code pytest_configure}) — cached on the
- * returned {@link VarEngineDescriptor} — then resolves the request's selectors ({@link
- * DiscoverySelectorResolver}) into one {@link VarFileDescriptor} container per {@code .md} spec
- * matching {@code var.vars.include}/{@code var.vars.exclude} ({@link ConfigBridge}), each with one
+ * <p>{@link #discover} loads every {@code steps} class named by var.config.json exactly once per
+ * discovery pass ({@link StepLoader#loadSteps}, mirroring Python's {@code pytest_configure}) —
+ * cached on the returned {@link VarEngineDescriptor} — then resolves the request's selectors
+ * ({@link DiscoverySelectorResolver}) into one {@link VarFileDescriptor} container per {@code .md}
+ * spec matching {@code docsInclude}/{@code docsExclude} ({@link ConfigBridge}), each with one
  * {@link VarExampleDescriptor} leaf per {@link com.oselvar.var.core.Plan.PlannedExample} planned
  * against that shared, merged registry. It does not yet execute anything (Task 11).
  */

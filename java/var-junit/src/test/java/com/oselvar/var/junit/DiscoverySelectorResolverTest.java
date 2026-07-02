@@ -4,8 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectPackage;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.platform.engine.TestDescriptor;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.launcher.LauncherDiscoveryRequest;
@@ -16,12 +20,12 @@ import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
  * {@code PackageSelector} — which expands to a {@code ClasspathResourceSelector} per resource,
  * via {@code junit-platform-engine}'s own {@code addResourceContainerSelectorResolver} — into
  * exactly one {@link VarFileDescriptor} container per {@code .md} resource matching {@code
- * var.vars.include} minus {@code var.vars.exclude}, not one for every {@code .md} resource on
+ * docsInclude} minus {@code docsExclude}, not one for every {@code .md} resource on
  * the classpath.
  *
  * <p>Fixture: {@code src/test/resources/discoveryfixture/included.md} and {@code
- * .../excluded.md} — both match {@code var.vars.include=discoveryfixture/**\/*.md}, but only
- * {@code included.md} survives {@code var.vars.exclude=**\/excluded.md}.
+ * .../excluded.md} — both match {@code docs.include=["discoveryfixture/**\/*.md"]}, but only
+ * {@code included.md} survives {@code docs.exclude=["**\/excluded.md"]}.
  *
  * <p><strong>Why this calls {@link VarTestEngine#discover} directly instead of going through
  * {@code EngineTestKit.engine("var")...discover()}/{@code .execute()}:</strong> both of those
@@ -44,12 +48,17 @@ import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
 class DiscoverySelectorResolverTest {
 
     @Test
-    void resolvesOneContainerPerMatchingSpecResource() {
+    void resolvesOneContainerPerMatchingSpecResource(@TempDir Path workspace) throws Exception {
+        Files.writeString(
+                workspace.resolve("var.config.json"),
+                """
+                { "docs": { "include": ["discoveryfixture/**/*.md"], "exclude": ["**/excluded.md"] } }
+                """,
+                StandardCharsets.UTF_8);
         LauncherDiscoveryRequest request =
                 LauncherDiscoveryRequestBuilder.request()
                         .selectors(selectPackage("discoveryfixture"))
-                        .configurationParameter("var.vars.include", "discoveryfixture/**/*.md")
-                        .configurationParameter("var.vars.exclude", "**/excluded.md")
+                        .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                         .build();
 
         TestDescriptor engineDescriptor = new VarTestEngine().discover(request, UniqueId.forEngine("var"));
@@ -77,6 +86,6 @@ class DiscoverySelectorResolverTest {
 
         assertTrue(
                 engineDescriptor.getChildren().isEmpty(),
-                "an empty var.vars.include must discover nothing, per CLAUDE.md's include-has-no-default rule");
+                "an empty docsInclude must discover nothing, per CLAUDE.md's include-has-no-default rule");
     }
 }

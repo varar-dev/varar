@@ -7,8 +7,13 @@ import static org.junit.platform.testkit.engine.EventConditions.event;
 import static org.junit.platform.testkit.engine.EventConditions.reportEntry;
 
 import com.oselvar.var.junit.fixtures.AmbiguousSteps;
+import com.oselvar.var.junit.fixtures.CounterSteps;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.platform.testkit.engine.EngineExecutionResults;
 import org.junit.platform.testkit.engine.EngineTestKit;
 
@@ -29,8 +34,9 @@ class VarDiagnosticsReportingTest {
     private static final String AMBIGUOUS_STEPS = AmbiguousSteps.class.getName();
 
     @Test
-    void ambiguousMatchDiagnosticIsPublishedAsAReportEntryOnTheFileContainer() {
-        EngineExecutionResults results = executeAmbiguous();
+    void ambiguousMatchDiagnosticIsPublishedAsAReportEntryOnTheFileContainer(@TempDir Path workspace)
+            throws Exception {
+        EngineExecutionResults results = executeAmbiguous(workspace);
 
         assertEquals(
                 1,
@@ -55,13 +61,21 @@ class VarDiagnosticsReportingTest {
     }
 
     @Test
-    void aFileWithNoDiagnosticsPublishesNoReportingEntries() {
+    void aFileWithNoDiagnosticsPublishesNoReportingEntries(@TempDir Path workspace) throws Exception {
+        Files.writeString(
+                workspace.resolve("var.config.json"),
+                """
+                {
+                  "docs": { "include": ["examplefixture/counter.md"], "exclude": [] },
+                  "steps": ["%s"]
+                }
+                """
+                        .formatted(CounterSteps.class.getName()),
+                StandardCharsets.UTF_8);
         EngineExecutionResults results =
                 EngineTestKit.engine("var")
                         .selectors(selectClasspathResource("examplefixture/counter.md"))
-                        .configurationParameter("var.vars.include", "examplefixture/counter.md")
-                        .configurationParameter(
-                                "var.steps", com.oselvar.var.junit.fixtures.CounterSteps.class.getName())
+                        .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                         .execute();
 
         assertEquals(
@@ -70,11 +84,20 @@ class VarDiagnosticsReportingTest {
                 "counter.md's sentences match unambiguously -- no plan diagnostics, so nothing to report");
     }
 
-    private static EngineExecutionResults executeAmbiguous() {
+    private static EngineExecutionResults executeAmbiguous(Path workspace) throws Exception {
+        Files.writeString(
+                workspace.resolve("var.config.json"),
+                """
+                {
+                  "docs": { "include": ["examplefixture/ambiguous.md"], "exclude": [] },
+                  "steps": ["%s"]
+                }
+                """
+                        .formatted(AMBIGUOUS_STEPS),
+                StandardCharsets.UTF_8);
         return EngineTestKit.engine("var")
                 .selectors(selectClasspathResource("examplefixture/ambiguous.md"))
-                .configurationParameter("var.vars.include", "examplefixture/ambiguous.md")
-                .configurationParameter("var.steps", AMBIGUOUS_STEPS)
+                .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                 .execute();
     }
 }

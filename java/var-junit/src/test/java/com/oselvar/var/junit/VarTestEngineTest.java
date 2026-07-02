@@ -6,7 +6,11 @@ import static org.junit.platform.testkit.engine.EventConditions.container;
 import static org.junit.platform.testkit.engine.EventConditions.event;
 import static org.junit.platform.testkit.engine.EventConditions.finishedSuccessfully;
 
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.platform.testkit.engine.EngineExecutionResults;
 import org.junit.platform.testkit.engine.EngineTestKit;
 
@@ -31,7 +35,7 @@ class VarTestEngineTest {
         // here, so this line alone proves the META-INF/services registration works.
         EngineExecutionResults results = EngineTestKit.engine("var").execute();
 
-        // No configuration parameters and no selectors are supplied, so var.vars.include
+        // No configuration parameters and no selectors are supplied, so docsInclude
         // defaults to empty (CLAUDE.md: no default include) and nothing is even attempted
         // to be resolved: there is exactly one container event (the "var" engine itself)
         // and no test events at all.
@@ -44,11 +48,11 @@ class VarTestEngineTest {
     }
 
     @Test
-    void zeroMatchingFilesRunsNoTestsAndReportsSuccess() {
+    void zeroMatchingFilesRunsNoTestsAndReportsSuccess(@TempDir Path workspace) throws Exception {
         // discoveryfixture/ has two real .md files on the classpath (included.md,
         // excluded.md, used by DiscoverySelectorResolverTest) -- unlike
         // isDiscoverableByEngineIdViaServiceLoader above, this test actively selects that
-        // package and gives the resolver a chance to match something, but var.vars.include
+        // package and gives the resolver a chance to match something, but docsInclude
         // is a glob that matches neither file. This is Task 12's "real zero-matching-files
         // scenario" (mirrors CucumberEngineDescriptor's rationale for VarEngineDescriptor's
         // ifChildren guard, ported in Task 7): confirms discovery correctly produces zero
@@ -58,10 +62,16 @@ class VarTestEngineTest {
         // action is currently a no-op (see VarEngineDescriptor's Javadoc: no lifecycle work
         // exists yet to skip), so there is nothing further to observe about the guard
         // itself beyond this outcome.
+        Files.writeString(
+                workspace.resolve("var.config.json"),
+                """
+                { "docs": { "include": ["nowhere/**/*.md"], "exclude": [] } }
+                """,
+                StandardCharsets.UTF_8);
         EngineExecutionResults results =
                 EngineTestKit.engine("var")
                         .selectors(selectPackage("discoveryfixture"))
-                        .configurationParameter("var.vars.include", "nowhere/**/*.md")
+                        .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                         .execute();
 
         results.containerEvents()

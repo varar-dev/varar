@@ -5,11 +5,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectFile;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Named;
+import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.platform.testkit.engine.EngineExecutionResults;
@@ -43,13 +45,15 @@ import org.junit.platform.testkit.engine.EngineTestKit;
  * org.junit.platform.engine.discovery.FileSelector, org.junit.platform.engine.support.discovery.
  * SelectorResolver.Context)}, which relativizes the selected file against the module's working
  * directory (Maven/Surefire's basedir for this module) to test it against {@code
- * var.vars.include}/{@code var.vars.exclude}. {@link #BUNDLES_DIR} mirrors {@code var}'s own
+ * docsInclude}/{@code docsExclude}. {@link #BUNDLES_DIR} mirrors {@code var}'s own
  * {@code ConformanceTest} — two levels up from the module directory to the repo root's {@code
  * conformance/} — and each bundle's exact relative path (no wildcards needed; only one file is
- * ever selected) becomes the {@code var.vars.include} value, so no OTHER bundle's {@code
- * example.md} can accidentally satisfy this request. {@code var.steps} names the one fixture
- * class {@link StepLoader} should load, exactly as {@link VarEngineBehaviorTest} already proves
- * end to end for classpath-resource specs — this task is the same mechanism for a real-file spec.
+ * ever selected) becomes the config's {@code docs.include} value, written into a per-case {@code
+ * @TempDir} var.config.json ({@link ConfigBridge#CONFIG_ROOT_KEY} points at it), so no OTHER
+ * bundle's {@code example.md} can accidentally satisfy this request. The config's {@code steps}
+ * names the one fixture class {@link StepLoader} should load, exactly as {@link
+ * VarEngineBehaviorTest} already proves end to end for classpath-resource specs — this task is
+ * the same mechanism for a real-file spec.
  *
  * <p><b>What's asserted:</b> not a JSON diff (that's {@code var}'s job) but the per-example
  * pass/fail OUTCOME the real engine reports, matching each bundle's committed {@code
@@ -187,18 +191,27 @@ class ConformanceDogfoodTest {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("bundleCases")
-    void bundleOutcomesMatchGoldenTrace(BundleCase bundleCase) throws IOException {
+    void bundleOutcomesMatchGoldenTrace(BundleCase bundleCase, @TempDir Path workspace) throws IOException {
         Path bundleDir = BUNDLES_DIR.resolve(bundleCase.bundleName());
         Path exampleMd = bundleDir.resolve("example.md");
         assertTrue(Files.isRegularFile(exampleMd), () -> "missing bundle spec: " + exampleMd.toAbsolutePath());
 
-        String varsInclude = exampleMd.toString().replace('\\', '/');
+        String docsInclude = exampleMd.toString().replace('\\', '/');
+        Files.writeString(
+                workspace.resolve("var.config.json"),
+                """
+                {
+                  "docs": { "include": ["%s"], "exclude": [] },
+                  "steps": ["%s"]
+                }
+                """
+                        .formatted(docsInclude, bundleCase.stepsClassName()),
+                StandardCharsets.UTF_8);
 
         EngineExecutionResults results =
                 EngineTestKit.engine("var")
                         .selectors(selectFile(exampleMd.toFile()))
-                        .configurationParameter("var.vars.include", varsInclude)
-                        .configurationParameter("var.steps", bundleCase.stepsClassName())
+                        .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                         .execute();
 
         assertEquals(
