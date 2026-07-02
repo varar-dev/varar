@@ -20,13 +20,8 @@
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
     "packages/var": {
-      "entry": [
-        "src/index.ts",
-        "tests/**/*.test.ts",
-        "../../../conformance/bundles/**/*.steps.ts",
-        "../../../conformance/bundles/**/*.md"
-      ],
-      "project": ["src/**/*.ts", "tests/**/*.ts", "../../../conformance/bundles/**/*.{ts,md}"]
+      "entry": ["tests/**/*.test.ts", "../../../conformance/bundles/**/*.steps.ts"],
+      "project": ["src/**/*.ts", "tests/**/*.ts", "../../../conformance/bundles/**/*.ts"]
     },
     "packages/var-language": {
       "project": ["src/**/*.ts", "tests/**/*.ts"],
@@ -47,14 +42,13 @@
       ]
     },
     "packages/var-vscode": {
-      "project": ["src/**/*.ts"],
-      "ignoreDependencies": ["@oselvar/var-language", "@oselvar/var-lsp"]
+      "project": ["src/**/*.ts"]
     },
     "packages/var-examples": {
-      "entry": ["**/*.md", "**/*.steps.ts"],
-      "project": ["**/*.{ts,md}"],
+      "entry": ["**/*.steps.ts"],
+      "project": ["**/*.ts"],
       "ignoreDependencies": ["@oselvar/var-core"]
     }
   },
-  "ignore": ["**/tests/fixtures/**", "packages/website/src/layouts/Doc.astro", "**/!(package).json"]
+  "ignore": ["**/tests/fixtures/**"]
 }

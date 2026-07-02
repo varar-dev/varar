@@ -13,12 +13,12 @@ const REGISTRY: Readonly<Record<string, () => ScannerPlugin>> = {
 
 export function resolveScannerPlugins(names: ReadonlyArray<string>): ReadonlyArray<ScannerPlugin> {
   return names.map((name) => {
-    if (!Object.hasOwn(REGISTRY, name)) {
+    const factory = Object.hasOwn(REGISTRY, name) ? REGISTRY[name] : undefined
+    if (!factory) {
       throw new Error(
         `Unknown scanner plugin "${name}" — known plugins: ${Object.keys(REGISTRY).join(', ')}`,
       )
     }
-    const factory = REGISTRY[name]!
     return factory()
   })
 }
