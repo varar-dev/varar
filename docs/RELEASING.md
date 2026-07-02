@@ -39,10 +39,10 @@ and `npm install -g @vscode/vsce ovsx`. Sign in: `op signin`, `gh auth login`.
 Create a granular automation token with publish rights for the `@oselvar`
 scope and the `oselvar-var`-adjacent public packages at
 https://www.npmjs.com/settings → Access Tokens. The account keeps 2FA on
-publishes (no bypass-2FA token, deliberately): the npm target prompts for a
-one-time password on the terminal right before the first publish and
-re-prompts if it expires mid-run — so run releases from an interactive
-shell, not CI.
+publishes (no bypass-2FA token, deliberately): each publish triggers npm's
+**browser-based 2FA** — a `npmjs.com/auth/cli/...` page opens and the
+challenge is answered with 1Password/passkey. One browser round-trip per
+package being published, so run releases from an interactive shell, not CI.
 → 1Password item `npm-oselvar`, field `token`.
 
 ### 2. PyPI

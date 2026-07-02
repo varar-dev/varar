@@ -16,17 +16,17 @@ cd "$REPO_ROOT/typescript"
 pnpm install --frozen-lockfile
 pnpm build
 
-# The npm account keeps 2FA on publishes (deliberately — no bypass-2FA token),
-# so every publish needs a one-time password. Prompt on the terminal directly
-# (`/dev/tty`, since op run owns stdin) right before the first publish, reuse
-# the code while it stays valid, and re-prompt once per package if it expires
-# mid-run.
-NPM_OTP=""
-prompt_otp() {
+# The npm account keeps 2FA on publishes (deliberately — no bypass-2FA token).
+# npm's own web flow handles it: on an interactive terminal, an EOTP-guarded
+# publish opens https://www.npmjs.com/auth/cli/... in the browser, where the
+# 2FA challenge is answered with 1Password/passkey — no typed OTP (this is
+# what release-it rides on too). npm only offers it when BOTH stdin and stdout
+# are TTYs (lib/utils/auth.js), and `op run` pipes our stdio to mask secrets,
+# so rebind the publish command to /dev/tty. Expect one browser round-trip per
+# package being published.
+require_tty() {
   { : </dev/tty; } 2>/dev/null ||
-    die "npm: publishing requires an interactive OTP prompt, but there is no terminal"
-  IFS= read -r -p "npm: one-time password (2FA): " NPM_OTP </dev/tty >/dev/tty
-  [[ -n "$NPM_OTP" ]] || die "npm: empty OTP"
+    die "npm: publishing needs a terminal for npm's browser-based 2FA — run the release interactively"
 }
 
 published=0 skipped=0
@@ -42,12 +42,9 @@ for pkgjson in packages/*/package.json; do
     log "npm: would publish $name@$VERSION"
     continue
   fi
-  [[ -n "$NPM_OTP" ]] || prompt_otp
-  if ! (cd "$(dirname "$pkgjson")" && pnpm publish --access public --no-git-checks --otp "$NPM_OTP"); then
-    warn "npm: publish of $name failed — if the OTP expired, enter a fresh one"
-    prompt_otp
-    (cd "$(dirname "$pkgjson")" && pnpm publish --access public --no-git-checks --otp "$NPM_OTP")
-  fi
+  require_tty
+  (cd "$(dirname "$pkgjson")" &&
+    pnpm publish --access public --no-git-checks </dev/tty >/dev/tty 2>/dev/tty)
   log "npm: published $name@$VERSION"
   published=$((published + 1))
 done
