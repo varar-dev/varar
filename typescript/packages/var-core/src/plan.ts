@@ -303,12 +303,16 @@ function deriveExampleName(body: ReadonlyArray<Block>): string {
   ) {
     return ''
   }
-  const sentences = splitSentences(primary.text)
-  const first = sentences[0]
-  if (!first) return ''
-  // Strip a single trailing . ! ? for the test name; embedded terminators
-  // (e.g. inside `i.e.` or a quoted string) are left alone.
-  return first.text.replace(/[.!?]$/, '')
+  // The entire paragraph is the test name — an example is often a paragraph
+  // where only some sentences match steps, and the narration around them is
+  // part of what the test asserts about. Hard line breaks inside the
+  // paragraph collapse to single spaces (test names must be one line), and a
+  // single trailing . ! ? is stripped; embedded terminators (e.g. inside
+  // `i.e.` or a quoted string) are left alone.
+  return primary.text
+    .replace(/\s+/g, ' ')
+    .trim()
+    .replace(/[.!?]$/, '')
 }
 
 function liftSpan(source: string, block: Block, blockStart: number, blockEnd: number): Span {

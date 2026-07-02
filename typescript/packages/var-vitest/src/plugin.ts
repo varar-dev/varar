@@ -1,8 +1,10 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import type { ScannerPlugin } from '@oselvar/var-core'
 import { findSpecs, readVarConfig } from '@oselvar/var-runner'
 import type { Plugin } from 'vite'
 import { configDefaults } from 'vitest/config'
+import { discoverStaticExamples, type StaticExample } from './static-examples.js'
 
 export type VarVitestPluginOptions = {
   readonly cwd?: string
@@ -24,8 +26,10 @@ export function varVitestPlugin(options: VarVitestPluginOptions = {}): Plugin {
   // a `.md` extension to key off of.
   let specFiles: ReadonlySet<string> = new Set()
   // Absolute path to var.config.ts when one exists; the generated virtual
-  // module imports it directly so its scannerPlugins reach the runtime.
+  // module imports it directly so its scannerPlugins reach the runtime, and
+  // the load hook forwards them to the static planner.
   let configPath: string | undefined
+  let scannerPlugins: ReadonlyArray<ScannerPlugin> = []
   return {
     name: '@oselvar/var-vitest',
     async config() {
@@ -55,6 +59,7 @@ export function varVitestPlugin(options: VarVitestPluginOptions = {}): Plugin {
       const cfg = await readVarConfig(cwd)
       stepFiles = findSpecs(cwd, cfg.steps)
       specFiles = new Set(findSpecs(cwd, cfg.vars.include, cfg.vars.exclude))
+      scannerPlugins = cfg.scannerPlugins
       for (const name of ['var.config.ts', 'var.config.js', 'var.config.mjs']) {
         const abs = resolve(cwd, name)
         if (existsSync(abs)) {
@@ -65,12 +70,25 @@ export function varVitestPlugin(options: VarVitestPluginOptions = {}): Plugin {
     },
     async load(id) {
       if (!isVarSpecId(id, specFiles)) return null
-      const source = readFileSync(id, 'utf8')
+      const varPath = id.split('?')[0] ?? id
+      const source = readFileSync(varPath, 'utf8')
+      // The transform result depends on the step definitions (they decide
+      // which paragraphs are examples), so a step-file edit must re-transform
+      // every spec in watch mode.
+      for (const f of stepFiles) this.addWatchFile(f)
+      if (configPath) this.addWatchFile(configPath)
+      const examples = discoverStaticExamples({
+        varPath,
+        source,
+        stepFiles: stepFiles.map((path) => ({ path, source: readFileSync(path, 'utf8') })),
+        scannerPlugins,
+      })
       return generateVirtualModule({
-        varPath: id,
+        varPath,
         stepImports: stepFiles,
         source,
         configPath,
+        examples,
       })
     },
   }
@@ -84,44 +102,51 @@ export type GenerateInput = {
   // virtual module imports it as `varConfig` and forwards its
   // `scannerPlugins` to the runtime.
   readonly configPath?: string | undefined
+  // Statically discovered examples (see discoverStaticExamples). Each one
+  // becomes a `test("literal name", ...)` call placed at its own markdown
+  // line/column.
+  readonly examples?: ReadonlyArray<StaticExample>
 }
 
+// The generated module preserves an IDENTITY LINE MAPPING to the markdown
+// source: all imports and setup are squeezed onto line 1, and each example's
+// `test(...)` call sits at the example's own line and column. Runtime stack
+// traces (vitest's includeTaskLocation) and editor AST discovery therefore
+// point at the right spec line — with a string-literal test name — without
+// any source map.
 export function generateVirtualModule(input: GenerateInput): string {
   const sourceJson = JSON.stringify(input.source ?? '')
-  const stepImports = input.stepImports.map((p) => `import ${JSON.stringify(p)}`).join('\n')
   const pathJson = JSON.stringify(input.varPath)
-  const configImport = input.configPath
-    ? `import varConfig from ${JSON.stringify(input.configPath)}`
-    : 'const varConfig = {}'
-  return `import { test as vitestTest } from 'vitest'
-import { runVarSource, toFailure } from '@oselvar/var-vitest/runtime'
-${configImport}
-${stepImports}
-
-const SOURCE = ${sourceJson}
-const PATH = ${pathJson}
-
-runVarSource(PATH, SOURCE, {
-  sink: {
-    example: (name, run, info) =>
-      vitestTest(name, async (ctx) => {
-        const lines = info?.lines ?? []
-        try {
-          await run()
-          ctx.task.meta.varResult = { name, status: 'passed', lines }
-        } catch (error) {
-          ctx.task.meta.varResult = {
-            name,
-            status: 'failed',
-            lines,
-            failure: toFailure(error, PATH, lines[0] ?? 0),
-          }
-          throw error
-        }
-      }),
-  },
-  reporter: { diagnostic: (d) => vitestTest(\`var:diagnostic:\${d.code}\`, () => { throw new Error(d.message) }) },
-  scannerPlugins: varConfig?.scannerPlugins ?? [],
-})
-`
+  const examples = input.examples ?? []
+  const header: string[] = [
+    "import { test } from 'vitest'",
+    "import { collectVarExamples, varTestBody } from '@oselvar/var-vitest/runtime'",
+    input.configPath
+      ? `import varConfig from ${JSON.stringify(input.configPath)}`
+      : 'const varConfig = {}',
+    ...input.stepImports.map((p) => `import ${JSON.stringify(p)}`),
+    `const PATH = ${pathJson}`,
+    // Diagnostics and the stale-transform guard register their tests inside
+    // collectVarExamples, so the only `test(...)` callsites in this module
+    // are the real per-example ones below — static AST discovery sees an
+    // exact test tree.
+    `const EXAMPLES = collectVarExamples(PATH, ${sourceJson}, { scannerPlugins: varConfig?.scannerPlugins ?? [], expectedCount: ${examples.length} })`,
+  ]
+  const testCall = (ex: StaticExample, i: number): string => {
+    const nameJson = JSON.stringify(ex.name)
+    return `test(${nameJson}, varTestBody(EXAMPLES, ${i}, ${nameJson}, PATH))`
+  }
+  const lastLine = Math.max(1, ...examples.map((e) => e.line))
+  const lines: string[] = new Array(lastLine).fill('')
+  lines[0] = header.join(';')
+  examples.forEach((ex, i) => {
+    if (ex.line <= 1) {
+      lines[0] += `;${testCall(ex, i)}`
+    } else {
+      const at = ex.line - 1
+      const indented = ' '.repeat(Math.max(0, ex.col - 1)) + testCall(ex, i)
+      lines[at] = lines[at] ? `${lines[at]};${testCall(ex, i)}` : indented
+    }
+  })
+  return `${lines.join('\n')}\n`
 }
