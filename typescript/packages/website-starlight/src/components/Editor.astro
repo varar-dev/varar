@@ -11,7 +11,7 @@ interface Props {
   // Lower is faster. Only relevant for a File with ≥2 <Version> children.
   replayMs?: number
 }
-const { lineNumbers = false, folding = false, define = true, replayMs = 200 } = Astro.props
+const { lineNumbers = false, folding = false, define = true, replayMs = 100 } = Astro.props
 ---
 <!--
   not-content opts the whole subtree out of Starlight's sibling-spacing rule
@@ -43,7 +43,7 @@ const { lineNumbers = false, folding = false, define = true, replayMs = 200 } = 
    * stale) the ArrowUp/ArrowDown skipping a line. Pin it explicitly so
    * the editor never depends on an ambient page-level value.
    */
-  .cm-mount :global(.cm-editor) { font-size: 14px; line-height: normal; }
+  .cm-mount :global(.cm-editor) { font-size: 15px; line-height: normal; }
   .cm-mount :global(.cm-editor.cm-focused) { outline: none; }
 </style>
 <script>

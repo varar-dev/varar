@@ -303,9 +303,9 @@ importers:
       '@codemirror/view':
         specifier: ^6.43.4
         version: 6.43.4
-      '@fontsource-variable/source-sans-3':
-        specifier: ^5.2.9
-        version: 5.2.9
+      '@fontsource/ibm-plex-serif':
+        specifier: ^5.2.7
+        version: 5.2.7
       '@lezer/highlight':
         specifier: ^1.2.3
         version: 1.2.3
@@ -928,6 +928,9 @@ packages:
 
   '@fontsource-variable/source-sans-3@5.2.9':
     resolution: {integrity: sha512-K9fkQbb0BNnRmmaU+Gpr6U4IaYKpNzA8t07J6aam2i+6v84RT72MVpar8OBr3yYAEznj4riKivPQ2nAF2fPKsw==}
+
+  '@fontsource/ibm-plex-serif@5.2.7':
+    resolution: {integrity: sha512-04owmc2OQQ/DAMjXjEMJc+7V4dBVmR01aIFOg4cuqS8pQ4HbvtlYs/u6+O0vCt21EMx5M/azIbgx43iKyisEOA==}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -4506,6 +4509,8 @@ snapshots:
       '@expressive-code/core': 0.44.0
 
   '@fontsource-variable/source-sans-3@5.2.9': {}
+
+  '@fontsource/ibm-plex-serif@5.2.7': {}
 
   '@img/colour@1.1.0': {}
 
