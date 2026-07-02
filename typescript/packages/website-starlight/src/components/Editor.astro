@@ -7,8 +7,8 @@ interface Props {
   // Offer the "Define step definition" affordance on a settled selection in
   // markdown File tabs (default true).
   define?: boolean
-  // Milliseconds between keystrokes when replaying between named states.
-  // Lower is faster. Only relevant for a File with ≥2 named-slot states.
+  // Milliseconds between keystrokes when a version button replays its edits.
+  // Lower is faster. Only relevant for a File with ≥2 <Version> children.
   replayMs?: number
 }
 const { lineNumbers = false, folding = false, define = true, replayMs = 100 } = Astro.props
@@ -24,13 +24,12 @@ const { lineNumbers = false, folding = false, define = true, replayMs = 100 } = 
     role="tablist"
   ></figcaption>
   <div
-    class="cm-mount m-0 border border-t-0 border-line-subtle rounded-none overflow-hidden"
+    class="cm-mount relative m-0 border border-t-0 border-line-subtle rounded-none overflow-hidden"
     data-line-numbers={String(lineNumbers)}
     data-folding={String(folding)}
     data-define={String(define)}
     data-replay-ms={String(replayMs)}
   ></div>
-  <div class="fe-footer flex items-center gap-1 px-[14px] py-2 bg-line-subtle" hidden></div>
   <div hidden><slot /></div>
 </figure>
 <style>
