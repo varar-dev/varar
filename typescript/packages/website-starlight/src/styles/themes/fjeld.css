@@ -1,0 +1,119 @@
+/*
+ * Fjeld — the mountain theme (white/black/green). Same mechanism as
+ * themes/fjord.css: selected via `data-palette='fjeld'` on <html>, mirrors
+ * custom.css variable for variable. Neutral near-black monochrome with a
+ * green accent in dark; white paper, black text, deep green accent in
+ * light. --ed-pass/--ed-fail stay Okabe-Ito.
+ */
+
+:root[data-palette='fjeld'] {
+  --sl-color-black: #0a0c0a;
+  --sl-color-gray-1: #f2f5f0;
+  --sl-color-gray-2: #adb5ad;
+  --sl-color-gray-3: #7f8a7f;
+  --sl-color-gray-4: #4c564c;
+  --sl-color-gray-5: #2c332c;
+  --sl-color-gray-6: #191d19;
+  --sl-color-gray-7: #101310;
+  --sl-color-white: #f2f5f0;
+
+  --sl-color-accent-low: #143318;
+  --sl-color-accent: #3aa655;
+  --sl-color-accent-high: #7fd48f;
+
+  /* Legacy names for the live Editor component — see custom.css. */
+  --surface: #101310;
+  --raised: #191d19;
+  --sunken: #0a0c0a;
+  --ink: #f2f5f0;
+  --subtle: #adb5ad;
+  --muted: #7f8a7f;
+  --accent: #3aa655;
+  --accent-contrast: #101310;
+  --strong: #3aa655;
+  --strong-hover: #46b862;
+  --highlight: #7fd48f;
+  --line: #4c564c;
+  --line-subtle: #2c332c;
+
+  /* Editor (CodeMirror) surface + run-result tokens. */
+  --ed-bg: #191d19;
+  --ed-text: #f2f5f0;
+  --ed-gutter: #6a746a;
+  --ed-selection: #2c332c;
+  --ed-pass-bg: rgba(0, 158, 115, 0.24);
+  --ed-fail-bg: rgba(213, 84, 0, 0.26);
+  --ed-pass-mark: #2fb88e;
+  --ed-fail-mark: #f2772b;
+  --ed-step-bg: #8fa3c9;
+  --ed-step-text: #101310;
+  --ed-chip-bg: #9aa39a;
+  --ed-chip-text: #101310;
+  --ed-flash: rgba(143, 163, 201, 0.45);
+
+  /* Editor syntax highlighting. */
+  --syn-keyword: #56c46a;
+  --syn-string: #d4cf9a;
+  --syn-comment: #6a746a;
+  --syn-function: #b8d48f;
+  --syn-number: #8fc9b8;
+  --syn-heading: #f2f5f0;
+  --syn-meta: #7f8a7f;
+}
+
+:root[data-palette='fjeld'][data-theme='light'] {
+  --sl-color-bg: #fcfdfc;
+
+  --sl-color-black: #f2f5f2;
+  --sl-color-gray-1: #131613;
+  --sl-color-gray-2: #3d443d;
+  --sl-color-gray-3: #677067;
+  --sl-color-gray-4: #b0b8b0;
+  --sl-color-gray-5: #d3d9d3;
+  --sl-color-gray-6: #e8ede8;
+  --sl-color-gray-7: #fcfdfc;
+  --sl-color-white: #131613;
+
+  --sl-color-accent-low: #d6ecd9;
+  --sl-color-accent: #1e7f34;
+  --sl-color-accent-high: #2f9c49;
+
+  /* Legacy names — see custom.css. */
+  --surface: #f2f5f2;
+  --raised: #fcfdfc;
+  --sunken: #e8ede8;
+  --ink: #131613;
+  --subtle: #3d443d;
+  --muted: #677067;
+  --accent: #1e7f34;
+  --accent-contrast: #fcfdfc;
+  --strong: #16321b;
+  --strong-hover: #131613;
+  --highlight: #2f9c49;
+  --line: #b0b8b0;
+  --line-subtle: #d3d9d3;
+
+  /* Editor (CodeMirror) surface + run-result tokens. */
+  --ed-bg: #fcfdfc;
+  --ed-text: #131613;
+  --ed-gutter: #677067;
+  --ed-selection: #dde5dd;
+  --ed-pass-bg: rgba(0, 158, 115, 0.15);
+  --ed-fail-bg: rgba(213, 84, 0, 0.15);
+  --ed-pass-mark: #009e73;
+  --ed-fail-mark: #d55e00;
+  --ed-step-bg: #4a6b9b;
+  --ed-step-text: #fcfdfc;
+  --ed-chip-bg: #16321b;
+  --ed-chip-text: #f2f5f2;
+  --ed-flash: rgba(74, 107, 155, 0.4);
+
+  /* Editor syntax highlighting. */
+  --syn-keyword: #1c7a32;
+  --syn-string: #6e7a2e;
+  --syn-comment: #9aa39a;
+  --syn-function: #2e6e5a;
+  --syn-number: #3d6b2a;
+  --syn-heading: #16321b;
+  --syn-meta: #677067;
+}

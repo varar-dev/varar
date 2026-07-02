@@ -14,6 +14,8 @@ export default defineConfig({
         './src/styles/tailwind.css',
         './src/styles/custom.css',
         './src/styles/themes/fjord.css',
+        './src/styles/themes/ild.css',
+        './src/styles/themes/fjeld.css',
       ],
       components: {
         ThemeSelect: './src/components/ThemeSelect.astro',
@@ -24,7 +26,7 @@ export default defineConfig({
           // attribute-less default; only Fjord needs marking).
           tag: 'script',
           content:
-            "try{if(localStorage.getItem('var-palette')==='fjord')document.documentElement.dataset.palette='fjord'}catch(e){}",
+            "try{var p=localStorage.getItem('var-palette');if(p==='fjord'||p==='ild'||p==='fjeld')document.documentElement.dataset.palette=p}catch(e){}",
         },
       ],
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/oselvar/var' }],

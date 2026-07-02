@@ -3,6 +3,11 @@
 Date: 2026-07-02
 Status: approved
 
+> Update (2026-07-02): two more palettes added via the same mechanism —
+> **Ild** (red/orange, `themes/ild.css`) and **Fjeld** (white/black/green,
+> `themes/fjeld.css`). Each is one CSS file plus one selector option, as
+> designed.
+
 ## Goal
 
 Add a second color theme to the Starlight website without changing the existing

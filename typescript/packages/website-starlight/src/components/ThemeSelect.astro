@@ -18,6 +18,8 @@ import Default from '@astrojs/starlight/components/ThemeSelect.astro'
     options={[
       { label: 'Jord', selected: true, value: 'jord' },
       { label: 'Fjord', selected: false, value: 'fjord' },
+      { label: 'Ild', selected: false, value: 'ild' },
+      { label: 'Fjeld', selected: false, value: 'fjeld' },
     ]}
     width="6.25em"
   />
@@ -25,11 +27,12 @@ import Default from '@astrojs/starlight/components/ThemeSelect.astro'
 <Default><slot /></Default>
 
 <script>
-  type Palette = 'jord' | 'fjord'
+  type Palette = 'jord' | 'fjord' | 'ild' | 'fjeld'
 
   const storageKey = 'var-palette'
 
-  const parsePalette = (value: unknown): Palette => (value === 'fjord' ? 'fjord' : 'jord')
+  const parsePalette = (value: unknown): Palette =>
+    value === 'fjord' || value === 'ild' || value === 'fjeld' ? value : 'jord'
 
   const loadPalette = (): Palette =>
     parsePalette(typeof localStorage !== 'undefined' && localStorage.getItem(storageKey))
