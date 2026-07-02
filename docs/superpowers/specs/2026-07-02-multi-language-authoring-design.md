@@ -224,14 +224,16 @@ language (same empirical care as the existing `decodeString` /
 
 `var-language`'s snippet emitter gains one default template per language
 (`typescript`, `python`, `java`, `kotlin`), overridable via A's `snippets`
-map. The VS Code extension picks the emit language from the config:
+map. The LSP server picks the emit language from the config and returns it
+in the `var/generateSnippet` response (`GenerateSnippetResult.language`):
 
 1. Derive the language of each glob in `config.steps` from its extension
    (`.ts`/`.tsx` → typescript, `.py` → python, `.java` → java, `.kt` →
    kotlin).
 2. If exactly one language is configured, use it.
-3. If more than one is configured, count the workspace files matching each
-   language's steps globs and pick the language with the most files.
+3. If more than one is configured, count the indexed step files per language
+   (the files discovered by `config.steps`) and pick the language with the
+   most files.
 4. On a tie, pick the language that appears **first in `config.steps`
    order**.
 
