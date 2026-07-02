@@ -1,7 +1,7 @@
 # Multi-language authoring support: unified config + tree-sitter scanners for Python, Java, Kotlin
 
 **Date:** 2026-07-02
-**Status:** Sub-projects A–C implemented; D unimplemented
+**Status:** Sub-projects A–D implemented
 **Realizes:** ADR 0001's "shared LSP with tree-sitter adapters" direction and its
 "per-language fixtures, shared expectations" conformance strategy for the
 step-definition extraction seam.
@@ -253,8 +253,10 @@ sync — works from the extracted `StepDef`s, including `handlerParams`.
   exists) instead of the hardcoded `**/*.steps.ts`.
 - `activationEvents` add `onLanguage:python`, `onLanguage:java`,
   `onLanguage:kotlin`.
-- The packaged extension bundles all grammar wasm files next to the LSP
-  server.
+- The dev install (typescript/scripts/install-vscode.mjs symlink) resolves
+  all five grammar wasm files through the workspace's node_modules; a real
+  packaging pipeline (vsce bundle incl. wasm + built LSP) does not exist yet
+  and is deferred to a future packaging project.
 - `innerStringRange` (quote stripping for rename) already handles `"`/`'`
   and needs no per-language change.
 

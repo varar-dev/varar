@@ -18,6 +18,9 @@
   "activationEvents": [
     "onLanguage:markdown",
     "onLanguage:typescript",
+    "onLanguage:python",
+    "onLanguage:java",
+    "onLanguage:kotlin",
     "workspaceContains:**/var.config.json"
   ],
   "contributes": {

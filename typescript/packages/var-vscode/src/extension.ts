@@ -1,7 +1,9 @@
 import { realpathSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
+import { languageIdForPath } from '@oselvar/var-language'
 import type {
+  GenerateSnippetResult,
   Range as LspRange,
   PlanParamFate,
   PlanRenameResult,
@@ -54,6 +56,9 @@ export function activate(context: ExtensionContext): void {
     documentSelector: [
       { scheme: 'file', pattern: '**/*.md' },
       { scheme: 'file', pattern: '**/*.steps.ts' },
+      { scheme: 'file', pattern: '**/*.steps.py' },
+      { scheme: 'file', pattern: '**/*.steps.kt' },
+      { scheme: 'file', pattern: '**/*Steps.java' },
     ],
     synchronize: {
       fileEvents: workspace.createFileSystemWatcher('**/.var/**/*.json'),
@@ -116,23 +121,24 @@ function registerGenerateStepDefinition(
     }
     await started
     const [snippet, stepGlobs] = await Promise.all([
-      lspClient.sendRequest<{ readonly fullCode: string; readonly expression: string }>(
-        'var/generateSnippet',
-        {
-          text,
-          uri: editor.document.uri.toString(),
-          position: {
-            line: editor.selection.start.line,
-            character: editor.selection.start.character,
-          },
+      lspClient.sendRequest<GenerateSnippetResult>('var/generateSnippet', {
+        text,
+        uri: editor.document.uri.toString(),
+        position: {
+          line: editor.selection.start.line,
+          character: editor.selection.start.character,
         },
-      ),
+      }),
       lspClient.sendRequest<ReadonlyArray<string>>('var/stepGlobs'),
     ])
-    const stepFiles = await findStepFiles(stepGlobs)
+    const normalize = (id: string | undefined): string | undefined =>
+      id === 'typescript-tsx' ? 'typescript' : id
+    const stepFiles = (await findStepFiles(stepGlobs)).filter(
+      (u) => normalize(languageIdForPath(u.fsPath)) === snippet.language,
+    )
     if (stepFiles.length === 0) {
       void window.showWarningMessage(
-        'No *.steps.ts files found in the workspace. Create one first, then re-run the command.',
+        `No ${snippet.language} steps files found in the workspace. Create one first, then re-run the command.`,
       )
       return
     }
@@ -151,7 +157,10 @@ function registerGenerateStepDefinition(
 async function findStepFiles(stepGlobs: ReadonlyArray<string>): Promise<ReadonlyArray<Uri>> {
   // Use the workspace globs reported by the server when present (config-driven);
   // fall back to the convention if the config has no steps glob.
-  const patterns = stepGlobs.length > 0 ? stepGlobs : ['**/*.steps.ts']
+  const patterns =
+    stepGlobs.length > 0
+      ? stepGlobs
+      : ['**/*.steps.ts', '**/*.steps.py', '**/*.steps.kt', '**/*Steps.java']
   const seen = new Set<string>()
   const out: Uri[] = []
   for (const pattern of patterns) {
@@ -291,6 +300,9 @@ function registerStepRename(
   context.subscriptions.push(
     languages.registerRenameProvider({ scheme: 'file', pattern: '**/*.md' }, provider),
     languages.registerRenameProvider({ scheme: 'file', pattern: '**/*.steps.ts' }, provider),
+    languages.registerRenameProvider({ scheme: 'file', pattern: '**/*.steps.py' }, provider),
+    languages.registerRenameProvider({ scheme: 'file', pattern: '**/*.steps.kt' }, provider),
+    languages.registerRenameProvider({ scheme: 'file', pattern: '**/*Steps.java' }, provider),
   )
 }
 
