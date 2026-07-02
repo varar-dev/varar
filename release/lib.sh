@@ -27,7 +27,7 @@ changelog_body() {
 # Prints the .vsix path on stdout (all build noise goes to stderr).
 build_vsix() {
   local version="$1"
-  local vsix="$REPO_ROOT/release/dist/oselvar-var-$version.vsix"
+  local vsix="$REPO_ROOT/release/dist/oselvar-var-$version-$(git -C "$REPO_ROOT" rev-parse --short HEAD).vsix"
   [[ -f "$vsix" ]] && { echo "$vsix"; return 0; }
   local manifest_version
   manifest_version="$(jq -r .version "$REPO_ROOT/typescript/packages/var-vscode/package.json")"

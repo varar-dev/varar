@@ -14,7 +14,7 @@ export NPM_CONFIG_USERCONFIG="$npmrc_tmp"
 cd "$REPO_ROOT/typescript"
 
 pnpm install --frozen-lockfile
-pnpm -r build
+pnpm build
 
 published=0 skipped=0
 for pkgjson in packages/*/package.json; do

@@ -5,6 +5,8 @@ source "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
 VERSION="$1"
 cd "$REPO_ROOT/python"
 
+trap 'rm -rf "$REPO_ROOT/python/dist-release"' EXIT
+
 rm -rf dist-release
 published=0 skipped=0
 for pyproject in packages/*/pyproject.toml; do

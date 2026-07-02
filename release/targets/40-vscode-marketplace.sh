@@ -4,8 +4,8 @@ set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
 VERSION="$1"
 
-if vsce show oselvar.oselvar-var --json 2>/dev/null \
-    | jq -e --arg v "$VERSION" '[.versions[]?.version] | index($v) != null' >/dev/null; then
+listing="$(vsce show oselvar.oselvar-var --json 2>/dev/null || true)"
+if [[ -n "$listing" ]] && jq -e --arg v "$VERSION" '[.versions[]?.version] | index($v) != null' >/dev/null 2>&1 <<<"$listing"; then
   log "marketplace: oselvar.oselvar-var $VERSION already published"
   exit 0
 fi
