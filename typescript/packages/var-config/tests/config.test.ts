@@ -2,83 +2,92 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, test } from 'vitest'
-import { loadVarConfig } from '../src/config.js'
+import { loadVarConfig, parseVarConfig } from '../src/config.js'
 
-test('loads var.config.ts when present', async () => {
+test('parseVarConfig reads all four keys', () => {
+  const parsed = parseVarConfig(
+    `{
+      "docs": { "include": ["specs/**/*.md"], "exclude": ["specs/wip/**"] },
+      "steps": ["**/*.steps.ts"],
+      "snippets": { "typescript": "T" },
+      "scannerPlugins": ["gherkinTables"]
+    }`,
+    'var.config.json',
+  )
+  expect(parsed).toEqual({
+    docs: { include: ['specs/**/*.md'], exclude: ['specs/wip/**'] },
+    steps: ['**/*.steps.ts'],
+    snippets: { typescript: 'T' },
+    scannerPlugins: ['gherkinTables'],
+  })
+})
+
+test('all keys are optional and default to empty; $schema is ignored', () => {
+  const parsed = parseVarConfig('{ "$schema": "https://x/y.json" }', 'var.config.json')
+  expect(parsed).toEqual({
+    docs: { include: [], exclude: [] },
+    steps: [],
+    snippets: {},
+    scannerPlugins: [],
+  })
+})
+
+test('malformed JSON throws with the source path in the message', () => {
+  expect(() => parseVarConfig('{ nope', '/w/var.config.json')).toThrowError(
+    /^\/w\/var\.config\.json/,
+  )
+})
+
+test('an unknown top-level key throws (migration tripwire for the old "vars" key)', () => {
+  expect(() => parseVarConfig('{ "vars": {} }', 'var.config.json')).toThrowError(
+    /unknown key.*"vars"/i,
+  )
+})
+
+test('a wrong-typed value throws naming the key', () => {
+  expect(() => parseVarConfig('{ "steps": "x" }', 'var.config.json')).toThrowError(/steps/)
+  expect(() => parseVarConfig('{ "docs": [] }', 'var.config.json')).toThrowError(/docs/)
+  expect(() =>
+    parseVarConfig('{ "snippets": { "typescript": 1 } }', 'var.config.json'),
+  ).toThrowError(/snippets/)
+})
+
+test('loadVarConfig resolves plugin names and keeps the names', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'var-cfg-'))
   try {
     writeFileSync(
-      join(dir, 'var.config.ts'),
-      `export default { vars: ['specs/**/*.md'], steps: ['**/*.steps.ts'] }\n`,
+      join(dir, 'var.config.json'),
+      '{ "docs": { "include": ["**/*.md"] }, "scannerPlugins": ["gherkinTables"] }\n',
     )
     const cfg = await loadVarConfig(dir)
-    // A plain array is shorthand for include-only.
-    expect(cfg.vars).toEqual({ include: ['specs/**/*.md'], exclude: [] })
-    expect(cfg.steps).toEqual(['**/*.steps.ts'])
+    expect(cfg.docs).toEqual({ include: ['**/*.md'], exclude: [] })
+    expect(cfg.steps).toEqual([])
+    expect(cfg.scannerPluginNames).toEqual(['gherkinTables'])
+    expect(cfg.scannerPlugins.map((p) => p.name)).toEqual(['gherkin/tables'])
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
 })
 
-test('loads explicit vars.include/vars.exclude from var.config.ts', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'var-cfg-explicit-'))
+test('missing var.config.json yields the empty config (no default steps glob)', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'var-cfg-none-'))
   try {
-    writeFileSync(
-      join(dir, 'var.config.ts'),
-      `export default { vars: { include: ['specs/**/*.md'], exclude: ['specs/wip.md'] } }\n`,
-    )
     const cfg = await loadVarConfig(dir)
-    expect(cfg.vars).toEqual({ include: ['specs/**/*.md'], exclude: ['specs/wip.md'] })
+    expect(cfg.docs).toEqual({ include: [], exclude: [] })
+    expect(cfg.steps).toEqual([])
+    expect(cfg.snippets).toEqual({})
+    expect(cfg.scannerPlugins).toEqual([])
+    expect(cfg.scannerPluginNames).toEqual([])
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }
 })
 
-test('defaults vars to empty include/exclude (explicit vars required) when var.config.ts is absent', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'var-cfg-empty-'))
+test('loadVarConfig rejects an unknown plugin name', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'var-cfg-badplugin-'))
   try {
-    const cfg = await loadVarConfig(dir)
-    expect(cfg.vars).toEqual({ include: [], exclude: [] })
-    expect(cfg.steps).toEqual(['**/*.steps.ts'])
-  } finally {
-    rmSync(dir, { recursive: true, force: true })
-  }
-})
-
-test('defaults vars to empty include/exclude when var.config.ts omits vars', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'var-cfg-novars-'))
-  try {
-    writeFileSync(join(dir, 'var.config.ts'), `export default { steps: ['**/*.steps.ts'] }\n`)
-    const cfg = await loadVarConfig(dir)
-    expect(cfg.vars).toEqual({ include: [], exclude: [] })
-  } finally {
-    rmSync(dir, { recursive: true, force: true })
-  }
-})
-
-test('loads snippet.template from var.config.ts when provided', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'var-cfg-snippet-'))
-  try {
-    writeFileSync(
-      join(dir, 'var.config.ts'),
-      `export default {
-        vars: ['specs/**/*.md'],
-        steps: ['**/*.steps.ts'],
-        snippet: { template: 'CUSTOM: {{expression}}' },
-      }\n`,
-    )
-    const cfg = await loadVarConfig(dir)
-    expect(cfg.snippet.template).toBe('CUSTOM: {{expression}}')
-  } finally {
-    rmSync(dir, { recursive: true, force: true })
-  }
-})
-
-test('omits snippet.template when absent (generateSnippet in @oselvar/var-language supplies its own default)', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'var-cfg-snippet-default-'))
-  try {
-    const cfg = await loadVarConfig(dir)
-    expect(cfg.snippet.template).toBeUndefined()
+    writeFileSync(join(dir, 'var.config.json'), '{ "scannerPlugins": ["nope"] }\n')
+    await expect(loadVarConfig(dir)).rejects.toThrowError(/unknown scanner plugin "nope"/i)
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }

@@ -1,60 +1,95 @@
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { pathToFileURL } from 'node:url'
-import type { ScannerPlugin } from '@oselvar/var-core'
-import type { VarConfig, VarGlobs } from './config-types.js'
+import { resolveScannerPlugins } from '@oselvar/var-core'
+import type { ParsedVarConfig, VarConfig, VarGlobs } from './config-types.js'
 
-export type { VarConfig, VarGlobs } from './config-types.js'
+export type { ParsedVarConfig, VarConfig, VarGlobs } from './config-types.js'
 
-const DEFAULT_CONFIG: VarConfig = {
-  // No default spec glob: specs are plain `.md` files, so a greedy default would
-  // parse every README in the repo. A repo must declare `vars` explicitly.
-  vars: { include: [], exclude: [] },
-  steps: ['**/*.steps.ts'],
-  // No default template here — generateSnippet (in @oselvar/var-language)
-  // already falls back to its own DEFAULT_SNIPPET_TEMPLATE when no template
-  // is supplied. Keeping a second copy of that default here would just be
-  // the same value duplicated one layer up, and this package can't import
-  // var-language's snippet-template.ts without creating a circular
-  // dependency (var-language depends on var-core, which this package also
-  // depends on).
-  snippet: {},
+const EMPTY_PARSED: ParsedVarConfig = {
+  // No default docs OR steps globs: a repo must declare both explicitly.
+  // (The old TS-only `**/*.steps.ts` steps default died with the TS-only
+  // format — var.config.json is shared with the Python/Java/Kotlin ports.)
+  docs: { include: [], exclude: [] },
+  steps: [],
+  snippets: {},
   scannerPlugins: [],
 }
 
-// `vars` accepts either a plain glob array (include-only shorthand) or an
-// explicit `{ include, exclude }`. Both normalise to VarGlobs.
-type VarsInput =
-  | ReadonlyArray<string>
-  | { readonly include?: ReadonlyArray<string>; readonly exclude?: ReadonlyArray<string> }
+const KNOWN_KEYS = new Set(['$schema', 'docs', 'steps', 'snippets', 'scannerPlugins'])
+const KNOWN_DOCS_KEYS = new Set(['include', 'exclude'])
 
-type UserConfig = {
-  readonly vars?: VarsInput
-  readonly steps?: ReadonlyArray<string>
-  readonly snippet?: { readonly template?: string }
-  readonly scannerPlugins?: ReadonlyArray<ScannerPlugin>
+function isRecord(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v)
 }
 
-function normalizeVars(vars: VarsInput | undefined): VarGlobs {
-  if (vars === undefined) return DEFAULT_CONFIG.vars
-  if (Array.isArray(vars)) return { include: vars, exclude: [] }
-  const obj = vars as { include?: ReadonlyArray<string>; exclude?: ReadonlyArray<string> }
-  return { include: obj.include ?? [], exclude: obj.exclude ?? [] }
+function stringArray(value: unknown, key: string, sourcePath: string): ReadonlyArray<string> {
+  if (value === undefined) return []
+  if (!Array.isArray(value) || !value.every((v) => typeof v === 'string')) {
+    throw new Error(`${sourcePath}: "${key}" must be an array of strings`)
+  }
+  return value
+}
+
+// Pure. Parses the var.config.json TEXT (no filesystem) so the conformance
+// harness and loadVarConfig share one implementation. Fails loudly — a
+// typo'd config that silently discovers nothing is the failure mode this
+// refuses (see the design spec's error-handling section).
+export function parseVarConfig(jsonText: string, sourcePath: string): ParsedVarConfig {
+  let data: unknown
+  try {
+    data = JSON.parse(jsonText)
+  } catch (e) {
+    throw new Error(`${sourcePath}: invalid JSON: ${(e as Error).message}`)
+  }
+  if (!isRecord(data)) throw new Error(`${sourcePath}: top level must be an object`)
+  for (const key of Object.keys(data)) {
+    if (!KNOWN_KEYS.has(key)) {
+      throw new Error(
+        `${sourcePath}: unknown key "${key}" (known keys: docs, steps, snippets, scannerPlugins)`,
+      )
+    }
+  }
+  let docs: VarGlobs = EMPTY_PARSED.docs
+  if (data.docs !== undefined) {
+    if (!isRecord(data.docs)) throw new Error(`${sourcePath}: "docs" must be an object`)
+    for (const key of Object.keys(data.docs)) {
+      if (!KNOWN_DOCS_KEYS.has(key)) {
+        throw new Error(`${sourcePath}: unknown key "docs.${key}" (known: include, exclude)`)
+      }
+    }
+    docs = {
+      include: stringArray(data.docs.include, 'docs.include', sourcePath),
+      exclude: stringArray(data.docs.exclude, 'docs.exclude', sourcePath),
+    }
+  }
+  let snippets: Readonly<Record<string, string>> = {}
+  if (data.snippets !== undefined) {
+    if (
+      !isRecord(data.snippets) ||
+      !Object.values(data.snippets).every((v) => typeof v === 'string')
+    ) {
+      throw new Error(`${sourcePath}: "snippets" must be an object of strings`)
+    }
+    snippets = data.snippets as Record<string, string>
+  }
+  return {
+    docs,
+    steps: stringArray(data.steps, 'steps', sourcePath),
+    snippets,
+    scannerPlugins: stringArray(data.scannerPlugins, 'scannerPlugins', sourcePath),
+  }
 }
 
 export async function loadVarConfig(cwd: string): Promise<VarConfig> {
-  const candidates = ['var.config.ts', 'var.config.js', 'var.config.mjs']
-  for (const name of candidates) {
-    const path = resolve(cwd, name)
-    if (!existsSync(path)) continue
-    const mod = await import(pathToFileURL(path).href)
-    const cfg = (mod.default ?? mod) as UserConfig
-    return {
-      vars: normalizeVars(cfg.vars),
-      steps: cfg.steps ?? DEFAULT_CONFIG.steps,
-      snippet: cfg.snippet?.template !== undefined ? { template: cfg.snippet.template } : {},
-      scannerPlugins: cfg.scannerPlugins ?? DEFAULT_CONFIG.scannerPlugins,
-    }
+  const path = resolve(cwd, 'var.config.json')
+  const parsed = existsSync(path)
+    ? parseVarConfig(readFileSync(path, 'utf8'), path)
+    : EMPTY_PARSED
+  return {
+    docs: parsed.docs,
+    steps: parsed.steps,
+    snippets: parsed.snippets,
+    scannerPlugins: resolveScannerPlugins(parsed.scannerPlugins),
+    scannerPluginNames: parsed.scannerPlugins,
   }
-  return DEFAULT_CONFIG
 }
