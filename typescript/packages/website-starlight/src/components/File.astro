@@ -15,9 +15,7 @@ const { uri } = Astro.props
 // their presence in the rendered slot is the discriminator.
 const html = await Astro.slots.render('default')
 const hasVersions = html.includes('data-var-version')
-const doc = hasVersions
-  ? undefined
-  : decodeEntities(html.replace(/^\n+/, '').replace(/\n+$/, ''))
+const doc = hasVersions ? undefined : decodeEntities(html.replace(/^\n+/, '').replace(/\n+$/, ''))
 ---
 <div data-var-file data-uri={uri} data-doc={doc} hidden>
   {hasVersions && <Fragment set:html={html} />}

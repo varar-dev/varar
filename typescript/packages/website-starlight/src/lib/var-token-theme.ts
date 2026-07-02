@@ -42,11 +42,12 @@ export const varTokenTheme = EditorView.baseTheme({
   // white mix lifts text contrast) with dark ink and the red squiggle
   // layered above its fill. Scoped to .cm-run-fail so it out-specifies the
   // quiet rule above by class count, not by rule order.
-  '.cm-run-fail .cm-lintRange-error .cm-token-function, .cm-run-fail .cm-lintRange-error .cm-token-parameter': {
-    background: 'color-mix(in srgb, var(--ed-fail-mark) 65%, white)',
-    color: '#17120d',
-    backgroundImage: errorSquiggle,
-    backgroundRepeat: 'repeat-x',
-    backgroundPosition: 'left bottom',
-  },
+  '.cm-run-fail .cm-lintRange-error .cm-token-function, .cm-run-fail .cm-lintRange-error .cm-token-parameter':
+    {
+      background: 'color-mix(in srgb, var(--ed-fail-mark) 65%, white)',
+      color: '#17120d',
+      backgroundImage: errorSquiggle,
+      backgroundRepeat: 'repeat-x',
+      backgroundPosition: 'left bottom',
+    },
 })
