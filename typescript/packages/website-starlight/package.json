@@ -38,5 +38,11 @@
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.9"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oselvar/var.git",
+    "directory": "typescript/packages/website-starlight"
   }
 }
