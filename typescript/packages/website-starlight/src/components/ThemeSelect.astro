@@ -1,0 +1,65 @@
+---
+/**
+ * Starlight `ThemeSelect` override: prepends a palette selector (Jord — the
+ * default earthy palette in custom.css — or Fjord, the teal palette in
+ * themes/fjord.css) next to the built-in dark/light/auto select. The chosen
+ * palette lives in `data-palette` on <html> and persists in localStorage
+ * (`var-palette`); an inline head script in astro.config.mjs re-applies it
+ * before first paint.
+ */
+import Select from '@astrojs/starlight/components/Select.astro'
+import Default from '@astrojs/starlight/components/ThemeSelect.astro'
+---
+
+<var-palette-select>
+  <Select
+    icon="pencil"
+    label="Select palette"
+    options={[
+      { label: 'Jord', selected: true, value: 'jord' },
+      { label: 'Fjord', selected: false, value: 'fjord' },
+    ]}
+    width="6.25em"
+  />
+</var-palette-select>
+<Default><slot /></Default>
+
+<script>
+  type Palette = 'jord' | 'fjord'
+
+  const storageKey = 'var-palette'
+
+  const parsePalette = (value: unknown): Palette => (value === 'fjord' ? 'fjord' : 'jord')
+
+  const loadPalette = (): Palette =>
+    parsePalette(typeof localStorage !== 'undefined' && localStorage.getItem(storageKey))
+
+  function storePalette(palette: Palette): void {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(storageKey, palette)
+    }
+  }
+
+  /** Update <html>, and keep every palette select (header + mobile menu) in sync. */
+  function applyPalette(palette: Palette): void {
+    document.documentElement.dataset.palette = palette
+    document.querySelectorAll<HTMLSelectElement>('var-palette-select select').forEach((select) => {
+      select.value = palette
+    })
+  }
+
+  class VarPaletteSelect extends HTMLElement {
+    constructor() {
+      super()
+      applyPalette(loadPalette())
+      this.querySelector('select')?.addEventListener('change', (e) => {
+        if (e.currentTarget instanceof HTMLSelectElement) {
+          const palette = parsePalette(e.currentTarget.value)
+          applyPalette(palette)
+          storePalette(palette)
+        }
+      })
+    }
+  }
+  customElements.define('var-palette-select', VarPaletteSelect)
+</script>

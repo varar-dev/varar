@@ -11,8 +11,7 @@
     "packages/website-starlight/src/lib/**",
     "packages/website-starlight/src/scripts/editor-mount.ts",
     "packages/website-starlight/src/components/Editor.astro",
-    "packages/website-starlight/src/styles/custom.css",
-    "packages/website-starlight/src/styles/tailwind.css"
+    "packages/website-starlight/src/styles/**"
   ],
   "absolute": true,
   "gitignore": true

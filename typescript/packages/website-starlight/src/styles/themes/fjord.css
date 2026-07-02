@@ -1,0 +1,129 @@
+/*
+ * Fjord — the teal theme (see
+ * docs/superpowers/specs/2026-07-02-named-themes-jord-fjord-design.md).
+ *
+ * Selected via `data-palette='fjord'` on <html>, orthogonal to Starlight's
+ * `data-theme` (dark/light). Without the attribute the Jord palette in
+ * custom.css applies untouched. This file mirrors custom.css block for block
+ * and variable for variable: cold blue-green ramp where Jord has warm browns,
+ * teal accent where Jord has ember orange. The --ed-pass/--ed-fail run-result
+ * colors are semantic (Okabe-Ito, color-blind-safe) and stay identical.
+ *
+ * Cascade note: this file loads after custom.css. The dark block below
+ * (0-2-0) beats custom.css's `:root` (0-1-0); the light block (0-3-0) beats
+ * `:root[data-theme='light']` (0-2-0). Fjord-dark ties with Jord-light in
+ * specificity but the light block re-declares every variable the dark block
+ * declares, so order decides nothing visible.
+ */
+
+:root[data-palette='fjord'] {
+  --sl-color-black: #081114;
+  --sl-color-gray-1: #e3efec;
+  --sl-color-gray-2: #a9c4bf;
+  --sl-color-gray-3: #7e9a95;
+  --sl-color-gray-4: #43625f;
+  --sl-color-gray-5: #24393a;
+  --sl-color-gray-6: #132226;
+  --sl-color-gray-7: #0d181c;
+  --sl-color-white: #e3efec;
+
+  --sl-color-accent-low: #103436;
+  --sl-color-accent: #2fa79c;
+  --sl-color-accent-high: #74d0c2;
+
+  /* Legacy names for the live Editor component — see custom.css. */
+  --surface: #0d181c;
+  --raised: #132226;
+  --sunken: #081114;
+  --ink: #e3efec;
+  --subtle: #a9c4bf;
+  --muted: #7e9a95;
+  --accent: #2fa79c;
+  --accent-contrast: #0d181c;
+  --strong: #2fa79c;
+  --strong-hover: #3db8ac;
+  --highlight: #74d0c2;
+  --line: #43625f;
+  --line-subtle: #24393a;
+
+  /* Editor (CodeMirror) surface + run-result tokens. */
+  --ed-bg: #132226;
+  --ed-text: #e3efec;
+  --ed-gutter: #5f7d7d;
+  --ed-selection: #24393a;
+  --ed-pass-bg: rgba(0, 158, 115, 0.24);
+  --ed-fail-bg: rgba(213, 84, 0, 0.26);
+  --ed-pass-mark: #2fb88e;
+  --ed-fail-mark: #f2772b;
+  --ed-step-bg: #7fa3c9;
+  --ed-step-text: #0d181c;
+  --ed-chip-bg: #97835d;
+  --ed-chip-text: #0d181c;
+  --ed-flash: rgba(127, 163, 201, 0.45);
+
+  /* Editor syntax highlighting. */
+  --syn-keyword: #5cc4ba;
+  --syn-string: #94c489;
+  --syn-comment: #5f7d7d;
+  --syn-function: #6fb3d9;
+  --syn-number: #62b8d9;
+  --syn-heading: #e3efec;
+  --syn-meta: #7e9a95;
+}
+
+:root[data-palette='fjord'][data-theme='light'] {
+  --sl-color-bg: #f3f9f7;
+
+  --sl-color-black: #e7f1ee;
+  --sl-color-gray-1: #1d3436;
+  --sl-color-gray-2: #45625f;
+  --sl-color-gray-3: #64827e;
+  --sl-color-gray-4: #a7c4bd;
+  --sl-color-gray-5: #c9ded7;
+  --sl-color-gray-6: #ddece7;
+  --sl-color-gray-7: #f3f9f7;
+  --sl-color-white: #1d3436;
+
+  --sl-color-accent-low: #cfe8e3;
+  --sl-color-accent: #157a72;
+  --sl-color-accent-high: #3a9c8d;
+
+  /* Legacy names — see custom.css. */
+  --surface: #e7f1ee;
+  --raised: #f3f9f7;
+  --sunken: #ddece7;
+  --ink: #1d3436;
+  --subtle: #45625f;
+  --muted: #64827e;
+  --accent: #157a72;
+  --accent-contrast: #f3f9f7;
+  --strong: #143f3d;
+  --strong-hover: #1d3436;
+  --highlight: #3a9c8d;
+  --line: #a7c4bd;
+  --line-subtle: #c9ded7;
+
+  /* Editor (CodeMirror) surface + run-result tokens. */
+  --ed-bg: #f3f9f7;
+  --ed-text: #1d3436;
+  --ed-gutter: #64827e;
+  --ed-selection: #d3e6df;
+  --ed-pass-bg: rgba(0, 158, 115, 0.15);
+  --ed-fail-bg: rgba(213, 84, 0, 0.15);
+  --ed-pass-mark: #009e73;
+  --ed-fail-mark: #d55e00;
+  --ed-step-bg: #48799b;
+  --ed-step-text: #f3f9f7;
+  --ed-chip-bg: #143f3d;
+  --ed-chip-text: #e7f1ee;
+  --ed-flash: rgba(72, 121, 155, 0.4);
+
+  /* Editor syntax highlighting. */
+  --syn-keyword: #0d6b63;
+  --syn-string: #4a7a4e;
+  --syn-comment: #86a29b;
+  --syn-function: #2a648a;
+  --syn-number: #23788a;
+  --syn-heading: #143f3d;
+  --syn-meta: #64827e;
+}

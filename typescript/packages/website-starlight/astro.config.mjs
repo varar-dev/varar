@@ -10,7 +10,23 @@ export default defineConfig({
   integrations: [
     starlight({
       title: 'Vár',
-      customCss: ['./src/styles/tailwind.css', './src/styles/custom.css'],
+      customCss: [
+        './src/styles/tailwind.css',
+        './src/styles/custom.css',
+        './src/styles/themes/fjord.css',
+      ],
+      components: {
+        ThemeSelect: './src/components/ThemeSelect.astro',
+      },
+      head: [
+        {
+          // Apply the stored palette before first paint (Jord is the
+          // attribute-less default; only Fjord needs marking).
+          tag: 'script',
+          content:
+            "try{if(localStorage.getItem('var-palette')==='fjord')document.documentElement.dataset.palette='fjord'}catch(e){}",
+        },
+      ],
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/oselvar/var' }],
       sidebar: [
         {
