@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Publish every non-private workspace package to npm. Idempotent per package.
+set -euo pipefail
+source "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
+VERSION="$1"
+cd "$REPO_ROOT/typescript"
+
+pnpm install --frozen-lockfile
+pnpm -r build
+
+published=0 skipped=0
+for pkgjson in packages/*/package.json; do
+  name="$(jq -r .name "$pkgjson")"
+  [[ "$(jq -r '.private // false' "$pkgjson")" == "true" ]] && continue
+  if npm view "$name@$VERSION" version >/dev/null 2>&1; then
+    log "npm: $name@$VERSION already published"
+    skipped=$((skipped + 1))
+    continue
+  fi
+  if [[ "${DRY_RUN:-0}" == "1" ]]; then
+    log "npm: would publish $name@$VERSION"
+    continue
+  fi
+  (cd "$(dirname "$pkgjson")" && pnpm publish --access public --no-git-checks)
+  log "npm: published $name@$VERSION"
+  published=$((published + 1))
+done
+log "npm: done ($published published, $skipped already present)"
