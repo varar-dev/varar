@@ -106,9 +106,12 @@ means "empty config", preserving today's behavior.
 
 ### Conformance
 
-`conformance/config/` holds fixture configs — full, minimal, empty file,
-missing keys, unknown plugin name (error case) — plus golden canonical-JSON
-dumps of the parsed result (plugin *names*, not resolved functions). Every
+`conformance/config/` holds fixture configs — full, minimal, empty object,
+missing file, malformed JSON / wrong types / unknown keys (error cases) —
+plus golden canonical-JSON dumps of the parsed result (plugin *names*, not
+resolved functions). An unknown plugin *name* is deliberately not a corpus
+case: names are opaque at parse time in every port; only TypeScript resolves
+them (at load), covered by its own unit test. Every
 port's harness parses each fixture and must match the golden byte-for-byte,
 same as the bundles.
 
