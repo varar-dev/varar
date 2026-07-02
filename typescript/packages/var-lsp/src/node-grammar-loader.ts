@@ -16,12 +16,12 @@ export function createNodeGrammarLoader(): GrammarLoader {
     async load(languageId) {
       const specifier = GRAMMAR_FILES[languageId]
       if (!specifier) throw new Error(`No grammar wasm known for language "${languageId}"`)
-      // The packaged VS Code extension bundles this server to cjs, where
-      // `import.meta.resolve` doesn't exist (esbuild rewrites `import.meta`
-      // to `{}`). The extension's esbuild step copies the grammar wasm files
-      // next to the bundle and sets VAR_GRAMMAR_DIR when forking the server,
-      // so check that override first. Wasm basenames are unique across the
-      // grammar packages, so a flat directory is enough.
+      // The packaged VS Code extension bundles this server without its
+      // node_modules, so `import.meta.resolve` can't reach the grammar
+      // packages there. The extension's esbuild step copies the grammar wasm
+      // files next to the bundle and sets VAR_GRAMMAR_DIR when forking the
+      // server, so check that override first. Wasm basenames are unique
+      // across the grammar packages, so a flat directory is enough.
       const grammarDir = process.env.VAR_GRAMMAR_DIR
       if (grammarDir) {
         return readFile(join(grammarDir, basename(specifier)))

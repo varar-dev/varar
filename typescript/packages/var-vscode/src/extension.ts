@@ -56,9 +56,9 @@ export function activate(context: ExtensionContext): void {
       debug: { module: devServer, transport: TransportKind.stdio, options: { execArgv } },
     }
   } else {
-    const bundledServer = resolve(extReal, 'dist', 'server.cjs')
-    // The cjs bundle has no `import.meta.resolve`, so the grammar loader
-    // can't locate the tree-sitter wasm files itself. esbuild.mjs copies
+    const bundledServer = resolve(extReal, 'dist', 'server.mjs')
+    // The .vsix ships no node_modules, so the grammar loader can't resolve
+    // the tree-sitter wasm files from their packages. esbuild.mjs copies
     // them next to the bundle; point the loader at that directory.
     const bundledDir = resolve(extReal, 'dist')
     const options = { env: { ...process.env, VAR_GRAMMAR_DIR: bundledDir } }

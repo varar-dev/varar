@@ -6,32 +6,45 @@ import { build } from 'esbuild'
 const shared = {
   bundle: true,
   platform: 'node',
-  format: 'cjs',
   target: 'node22',
   sourcemap: true,
   logLevel: 'info',
 }
 
-// The extension itself. `vscode` is provided by the extension host.
+// The extension itself. `vscode` is provided by the extension host, which
+// still loads extension entry points as CommonJS only (microsoft/vscode#130367)
+// — this is the one artifact that must stay cjs.
 await build({
   ...shared,
+  format: 'cjs',
   entryPoints: ['src/extension.ts'],
   outfile: 'dist/extension.cjs',
   external: ['vscode'],
 })
 
 // The LSP server, self-contained so the packaged .vsix needs no node_modules.
-// esbuild rewrites `import.meta` to `{}` in cjs output, but web-tree-sitter's
-// emscripten glue calls `createRequire(import.meta.url)` and
-// `new URL("web-tree-sitter.wasm", import.meta.url)` at load time — both
-// throw on `{}.url`. Shim `import.meta.url` back to a real file URL so the
-// glue resolves paths relative to the bundle, same as an unbundled module.
+// It runs as a forked child process, so the extension host's cjs restriction
+// doesn't apply: bundle it as esm, where `import.meta.url` is real (web-tree-
+// sitter's emscripten glue calls `createRequire(import.meta.url)` and
+// `new URL("web-tree-sitter.wasm", import.meta.url)` at load time). Bundled
+// cjs dependencies still reach for the cjs globals at runtime — `require(...)`
+// for node builtins, and `__filename`/`__dirname` (typescript.js) — which esm
+// doesn't have; the banner recreates them from `import.meta.url`.
 await build({
   ...shared,
+  format: 'esm',
   entryPoints: ['../var-lsp/src/bin.ts'],
-  outfile: 'dist/server.cjs',
-  banner: { js: 'const __importMetaUrl = require("node:url").pathToFileURL(__filename).href;' },
-  define: { 'import.meta.url': '__importMetaUrl' },
+  outfile: 'dist/server.mjs',
+  banner: {
+    js: [
+      'import { createRequire as __cjsCreateRequire } from "node:module";',
+      'import { fileURLToPath as __cjsFileURLToPath } from "node:url";',
+      'import { dirname as __cjsDirname } from "node:path";',
+      'const require = __cjsCreateRequire(import.meta.url);',
+      'const __filename = __cjsFileURLToPath(import.meta.url);',
+      'const __dirname = __cjsDirname(__filename);',
+    ].join(' '),
+  },
 })
 
 // The server's grammar loader falls back to reading these wasm files from
@@ -55,7 +68,7 @@ for (const specifier of [
 
 // web-tree-sitter's own core runtime wasm (distinct from the two grammar
 // wasms above). Its glue resolves this via `import.meta.url` (shimmed
-// above), which points at dist/server.cjs, so the file must sit next to it.
+// above), which points at dist/server.mjs, so the file must sit next to it.
 // var-vscode has no direct dependency on web-tree-sitter — resolve it via
 // var-language's, which does.
 const requireFromLanguage = createRequire(resolve('../var-language/package.json'))

@@ -1,6 +1,6 @@
 **
 !dist/extension.cjs
-!dist/server.cjs
+!dist/server.mjs
 !dist/*.map
 !dist/*.wasm
 !LICENSE
