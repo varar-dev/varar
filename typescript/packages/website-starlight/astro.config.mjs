@@ -6,6 +6,7 @@ import { defineConfig } from 'astro/config'
 
 // https://astro.build/config
 export default defineConfig({
+  site: 'https://var.oselvar.com',
   integrations: [
     starlight({
       title: 'Vár',
@@ -14,11 +15,7 @@ export default defineConfig({
       sidebar: [
         {
           label: 'Start here',
-          items: [
-            'tutorials/try-in-browser',
-            'tutorials/get-started',
-            'tutorials/first-spec',
-          ],
+          items: ['tutorials/try-in-browser', 'tutorials/get-started', 'tutorials/first-spec'],
         },
         {
           label: 'How-to guides',
