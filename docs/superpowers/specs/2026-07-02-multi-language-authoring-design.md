@@ -58,18 +58,22 @@ trivially conformant:
 
 ```json
 {
-  "vars": { "include": ["specs/**/*.md"], "exclude": ["specs/wip/*.md"] },
+  "docs": { "include": ["specs/**/*.md"], "exclude": ["specs/wip/*.md"] },
   "steps": ["**/*.steps.ts", "**/*_steps.py"],
-  "snippet": { "templates": { "typescript": "…", "python": "…" } },
+  "snippets": { "typescript": "…", "python": "…" },
   "scannerPlugins": ["gherkinTables", "gherkinDocStrings"]
 }
 ```
 
-- All keys optional. Missing file or missing key = empty (`vars`/`steps`
-  empty arrays, no templates, no plugins). The old TS-only default
+- The spec-discovery key is named **`docs`** (formerly `vars` in
+  `var.config.ts`). The readers rename their config field to match
+  (e.g. `VarConfig.docs`), so the JSON key and the code speak one language;
+  call sites like the LSP store's `isVarDoc` follow the rename.
+- All keys optional. Missing file or missing key = empty (`docs`/`steps`
+  empty arrays, no snippets, no plugins). The old TS-only default
   `steps: ["**/*.steps.ts"]` dies with the TS-only format — a repo must
-  declare its step globs, exactly as it must declare `vars` today.
-- `snippet.templates` is keyed by language id (`typescript`, `python`,
+  declare its step globs, exactly as it must declare `docs` today.
+- `snippets` is a flat map keyed by language id (`typescript`, `python`,
   `java`, `kotlin`) from day one so the schema never churns; until
   sub-project D, readers only consume the `typescript` key.
 - A JSON Schema, `conformance/config/var.config.schema.json`, is the
@@ -217,11 +221,22 @@ language (same empirical care as the existing `decodeString` /
 ### Snippet generation
 
 `var-language`'s snippet emitter gains one default template per language
-(`typescript`, `python`, `java`, `kotlin`), overridable via A's
-`snippet.templates`. The emit language is chosen by the **target step file's
-extension**: the existing "append to which steps file?" quick-pick already
-names the target file, so the language falls out of the user's choice — no
-guessing, no config-order heuristics.
+(`typescript`, `python`, `java`, `kotlin`), overridable via A's `snippets`
+map. The VS Code extension picks the emit language from the config:
+
+1. Derive the language of each glob in `config.steps` from its extension
+   (`.ts`/`.tsx` → typescript, `.py` → python, `.java` → java, `.kt` →
+   kotlin).
+2. If exactly one language is configured, use it.
+3. If more than one is configured, count the workspace files matching each
+   language's steps globs and pick the language with the most files.
+4. On a tie, pick the language that appears **first in `config.steps`
+   order**.
+
+When the user then chooses a target file in the "append to which steps
+file?" quick-pick, a file whose extension disagrees with the picked language
+re-renders the snippet in the target file's language — the selection
+algorithm chooses the default, the user's file choice always wins.
 
 ### LSP
 
