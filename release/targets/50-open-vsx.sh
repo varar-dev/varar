@@ -12,6 +12,13 @@ if [[ "${DRY_RUN:-0}" == "1" ]]; then
   log "open-vsx: would build .vsix and publish $VERSION"
   exit 0
 fi
+# The namespace must exist before the first publish (ovsx errors with
+# "Unknown publisher" otherwise). Creating it is a one-time act; probe first
+# so re-runs stay quiet. ovsx reads the token from $OVSX_PAT.
+if ! http_ok "https://open-vsx.org/api/oselvar"; then
+  ovsx create-namespace oselvar
+  log "open-vsx: created namespace oselvar"
+fi
 vsix="$(build_vsix "$VERSION")"
 ovsx publish "$vsix"
 log "open-vsx: published $VERSION"

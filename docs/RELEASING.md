@@ -33,7 +33,11 @@ and `npm install -g @vscode/vsce ovsx`. Sign in: `op signin`, `gh auth login`.
 ### 1. npm (`@oselvar` scope — exists)
 Create a granular automation token with publish rights for the `@oselvar`
 scope and the `oselvar-var`-adjacent public packages at
-https://www.npmjs.com/settings → Access Tokens.
+https://www.npmjs.com/settings → Access Tokens. It must be allowed to
+**bypass 2FA** (token setting "Bypass two-factor authentication", or set the
+account's 2FA requirement to "authorization only") — otherwise every
+`npm publish` fails with `EOTP` (one-time password required), which the
+non-interactive release script cannot answer.
 → 1Password item `npm-oselvar`, field `token`.
 
 ### 2. PyPI
@@ -42,6 +46,11 @@ Create an account (enable 2FA) at https://pypi.org. Create an API token
 with a project-scoped token covering oselvar-var, oselvar-var-core,
 oselvar-var-runner, pytest-var, oselvar-var-unittest).
 → item `pypi-oselvar`, field `token` (the full `pypi-...` value).
+
+Note: PyPI rate-limits **new project creation** per account. A first release
+of many packages can die mid-run with `429 Too many new projects created` —
+that is PyPI, not a credential problem. Wait for the limit to reset (hours)
+and re-run the same release command; already-published packages are skipped.
 
 ### 3. Sonatype Central Portal (Maven Central)
 1. Account at https://central.sonatype.com.

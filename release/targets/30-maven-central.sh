@@ -10,10 +10,20 @@ cd "$REPO_ROOT/java"
 
 AUTH="Authorization: Bearer $(printf '%s:%s' "$CENTRAL_USERNAME" "$CENTRAL_PASSWORD" | base64)"
 
+# 0 iff the artifact is already on Central. Dies on 401/403 — an auth failure
+# would otherwise read as "not published" here and then fail the deploy anyway,
+# drowning the real cause in per-artifact curl noise.
 central_published() {
-  curl -fsS -H "$AUTH" \
-    "https://central.sonatype.com/api/v1/publisher/published?namespace=com.oselvar&name=$1&version=$VERSION" \
-    | jq -e '.published == true' >/dev/null
+  local body status
+  body="$(curl -sS -w '\n%{http_code}' -H "$AUTH" \
+    "https://central.sonatype.com/api/v1/publisher/published?namespace=com.oselvar&name=$1&version=$VERSION")"
+  status="${body##*$'\n'}"
+  case "$status" in
+    401 | 403) die "maven: Central Portal rejected the credentials (HTTP $status) — check the sonatype-central item in 1Password (docs/RELEASING.md §3)" ;;
+    200) ;;
+    *) die "maven: unexpected HTTP $status probing $1@$VERSION on Central" ;;
+  esac
+  printf '%s' "${body%$'\n'*}" | jq -e '.published == true' >/dev/null
 }
 
 artifacts=(var-parent var-core var var-runner var-junit var-kotlin var-kotest)
