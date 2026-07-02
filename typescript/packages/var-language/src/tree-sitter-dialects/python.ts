@@ -43,7 +43,7 @@ const SIMPLE_ESCAPES: Readonly<Record<string, string>> = {
   "'": "'",
   '"': '"',
   '\\': '\\',
-  a: '', // BEL — Python's \a
+  a: '\u0007', // BEL — Python's \a
   b: '\b',
   f: '\f',
   n: '\n',

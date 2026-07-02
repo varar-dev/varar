@@ -43,9 +43,9 @@ def _(state, n: int, row=None):
     const scanner = await pythonScanner()
     const defs = scanner.discoverStepDefs(
       'a.steps.py',
-      `@action("I said \\"hi\\"\\n\\ttwice \\u00e9\\z")\ndef _(state):\n    pass\n`,
+      `@action("I said \\"hi\\"\\n\\ttwice \\u00e9\\a\\z")\ndef _(state):\n    pass\n`,
     )
-    expect(defs[0]?.expression).toBe('I said "hi"\n\ttwice é\\z')
+    expect(defs[0]?.expression).toBe('I said "hi"\n\ttwice é\\z')
   })
 
   test('discovers parameter types from string, raw-string, and re.compile regexps', async () => {
