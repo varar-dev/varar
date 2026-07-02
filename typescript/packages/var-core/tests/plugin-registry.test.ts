@@ -15,3 +15,9 @@ test('an unknown name throws, naming the plugin and the known names', () => {
     /unknown scanner plugin "nope".*gherkinTables.*gherkinDocStrings/i,
   )
 })
+
+test('prototype members are not plugins — "constructor" throws like any unknown name', () => {
+  expect(() => resolveScannerPlugins(['constructor'])).toThrowError(
+    /unknown scanner plugin "constructor"/i,
+  )
+})
