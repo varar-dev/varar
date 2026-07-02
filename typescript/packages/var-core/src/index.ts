@@ -74,6 +74,7 @@ export { parse } from './parse.js'
 export type { ExecutionPlan, PlannedExample, PlannedStep } from './plan.js'
 export { plan } from './plan.js'
 export { gherkinDocStrings, gherkinTables } from './plugins/gherkin/index.js'
+export { resolveScannerPlugins } from './plugins/registry.js'
 export type { Reporter, TestSink } from './ports.js'
 export type {
   ParameterTypeInput,
