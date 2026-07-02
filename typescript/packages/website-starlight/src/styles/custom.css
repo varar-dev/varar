@@ -3,8 +3,8 @@
 /*
  * "Norse" by Joël Carrouché (https://www.fontspace.com/norse-font-f21080),
  * freeware, free for personal and commercial use, embedding in web pages
- * permitted — self-hosted below. Splash-page hero heading only; the rest
- * of the site stays on --sl-font.
+ * permitted — self-hosted below. All headings use it; body text stays on
+ * --sl-font.
  */
 @font-face {
   font-family: 'Norse';
@@ -14,7 +14,12 @@
   font-display: swap;
 }
 
-.hero h1 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-family: 'Norse', var(--sl-font);
 }
 

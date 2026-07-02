@@ -29,9 +29,9 @@ import romanNumeralsSource from '../../../../var-examples/roman-numerals/roman-n
 import romanNumeralsSteps from '../../../../var-examples/roman-numerals/roman-numerals.steps.ts?raw';
 import romanNumeralsLogic from '../../../../var-examples/roman-numerals/roman-numerals.ts?raw';
 
-## This is a real spec
+## Examples
 
-Not a snippet — the whole file, unmodified, running in this repo's own test suite. Pick an example, edit it:
+The examples below give a taste of how Vár works. If the markdown disagrees with the code, your tests will fail.
 
 <Tabs syncKey="example">
   <TabItem label="Deep Thought">
@@ -55,9 +55,15 @@ Not a snippet — the whole file, unmodified, running in this repo's own test su
   </TabItem>
   <TabItem label="Roman numerals">
     <Editor>
-      <File uri="file:///roman-numerals.md">{romanNumeralsSource}</File>
+      <File uri="file:///roman-numerals.md">
+        <Version label="Subtractive notation">{romanNumeralsSource}</Version>
+        <Version label="Additive notation">{romanNumeralsSource.replace('IX   ', 'VIIII')}</Version>
+      </File>
       <File uri="file:///roman-numerals.steps.ts">{romanNumeralsSteps}</File>
-      <File uri="file:///roman-numerals.ts">{romanNumeralsLogic}</File>
+      <File uri="file:///roman-numerals.ts">
+        <Version label="Subtractive notation">{romanNumeralsLogic}</Version>
+        <Version label="Additive notation">{romanNumeralsLogic.replace('IX', 'VIIII')}</Version>
+      </File>
     </Editor>
   </TabItem>
 </Tabs>
