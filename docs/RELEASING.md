@@ -18,6 +18,11 @@ every manifest + commit → tag `vX.Y.Z` → publish npm, PyPI, Maven Central,
 VS Code Marketplace, Open VSX (each skipping what already exists) → push →
 GitHub release.
 
+A target can be parked with the `DISABLED=1` variable at the top of its
+`release/targets/*.sh` (it warns and reports OK). Currently parked: PyPI,
+Maven Central, VS Code Marketplace — **only npm and Open VSX publish** until
+the remaining credentials are set up.
+
 ## One-time setup
 
 All secrets live in the 1Password vault **`Vár`** (account `my.1password.com`),
@@ -33,11 +38,11 @@ and `npm install -g @vscode/vsce ovsx`. Sign in: `op signin`, `gh auth login`.
 ### 1. npm (`@oselvar` scope — exists)
 Create a granular automation token with publish rights for the `@oselvar`
 scope and the `oselvar-var`-adjacent public packages at
-https://www.npmjs.com/settings → Access Tokens. It must be allowed to
-**bypass 2FA** (token setting "Bypass two-factor authentication", or set the
-account's 2FA requirement to "authorization only") — otherwise every
-`npm publish` fails with `EOTP` (one-time password required), which the
-non-interactive release script cannot answer.
+https://www.npmjs.com/settings → Access Tokens. The account keeps 2FA on
+publishes (no bypass-2FA token, deliberately): the npm target prompts for a
+one-time password on the terminal right before the first publish and
+re-prompts if it expires mid-run — so run releases from an interactive
+shell, not CI.
 → 1Password item `npm-oselvar`, field `token`.
 
 ### 2. PyPI

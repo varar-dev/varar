@@ -4,11 +4,13 @@ set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
 VERSION="$1"
 
-# DISABLED until the marketplace credentials are set up (docs/RELEASING.md §5:
+# Flip to 0 once the marketplace credentials are set up (docs/RELEASING.md §5:
 # publisher + Azure DevOps PAT → 1Password item `vscode-marketplace`).
-# Delete this block to re-enable.
-warn "marketplace: target disabled — credentials not set up (docs/RELEASING.md §5)"
-exit 0
+DISABLED=1
+if [[ "$DISABLED" == "1" ]]; then
+  warn "marketplace: target disabled — flip DISABLED=0 in ${BASH_SOURCE[0]} to re-enable"
+  exit 0
+fi
 
 listing="$(vsce show oselvar.oselvar-var --json 2>/dev/null || true)"
 if [[ -n "$listing" ]] && jq -e --arg v "$VERSION" '[.versions[]?.version] | index($v) != null' >/dev/null 2>&1 <<<"$listing"; then

@@ -16,6 +16,19 @@ cd "$REPO_ROOT/typescript"
 pnpm install --frozen-lockfile
 pnpm build
 
+# The npm account keeps 2FA on publishes (deliberately — no bypass-2FA token),
+# so every publish needs a one-time password. Prompt on the terminal directly
+# (`/dev/tty`, since op run owns stdin) right before the first publish, reuse
+# the code while it stays valid, and re-prompt once per package if it expires
+# mid-run.
+NPM_OTP=""
+prompt_otp() {
+  { : </dev/tty; } 2>/dev/null ||
+    die "npm: publishing requires an interactive OTP prompt, but there is no terminal"
+  IFS= read -r -p "npm: one-time password (2FA): " NPM_OTP </dev/tty >/dev/tty
+  [[ -n "$NPM_OTP" ]] || die "npm: empty OTP"
+}
+
 published=0 skipped=0
 for pkgjson in packages/*/package.json; do
   name="$(jq -r .name "$pkgjson")"
@@ -29,7 +42,12 @@ for pkgjson in packages/*/package.json; do
     log "npm: would publish $name@$VERSION"
     continue
   fi
-  (cd "$(dirname "$pkgjson")" && pnpm publish --access public --no-git-checks)
+  [[ -n "$NPM_OTP" ]] || prompt_otp
+  if ! (cd "$(dirname "$pkgjson")" && pnpm publish --access public --no-git-checks --otp "$NPM_OTP"); then
+    warn "npm: publish of $name failed — if the OTP expired, enter a fresh one"
+    prompt_otp
+    (cd "$(dirname "$pkgjson")" && pnpm publish --access public --no-git-checks --otp "$NPM_OTP")
+  fi
   log "npm: published $name@$VERSION"
   published=$((published + 1))
 done

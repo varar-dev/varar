@@ -6,6 +6,16 @@
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
 VERSION="$1"
+
+# Flip to 0 when the Central Portal credentials are set up (docs/RELEASING.md
+# §3 → 1Password item `sonatype-central`) and we release the JVM port again.
+# (Parked 2026-07-02: only npm + Open VSX release for now.)
+DISABLED=1
+if [[ "$DISABLED" == "1" ]]; then
+  warn "maven: target disabled — flip DISABLED=0 in ${BASH_SOURCE[0]} to re-enable"
+  exit 0
+fi
+
 cd "$REPO_ROOT/java"
 
 AUTH="Authorization: Bearer $(printf '%s:%s' "$CENTRAL_USERNAME" "$CENTRAL_PASSWORD" | base64)"
