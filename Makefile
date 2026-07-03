@@ -2,7 +2,7 @@
 #
 #   make            # same as `make check`: all three ports
 #   make typescript # pnpm build + pnpm check (lint, typecheck, test, knip, jscpd)
-#   make python     # pytest + ruff
+#   make python     # pytest + ruff + no-reexports gate
 #   make java       # mvn verify (JDK 21, pinned in java/.tool-versions)
 #
 # Each target runs the same gate as that port's CI workflow in .github/workflows/.
@@ -20,7 +20,7 @@ typescript:
 	cd typescript && pnpm install && pnpm build && pnpm check
 
 python:
-	cd python && uv sync && uv run pytest && uv run ruff check
+	cd python && uv sync && uv run pytest && uv run ruff check && uv run python scripts/lint_no_reexports.py
 
 java:
 	cd java && mvn --batch-mode verify
