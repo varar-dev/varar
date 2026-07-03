@@ -3,7 +3,6 @@ import { type Reporter, type ScannerPlugin, toFailure } from '@oselvar/var-core'
 import { examplesWithRuns, planSpec } from '@oselvar/var-runner'
 import { test } from 'vitest'
 
-export { toFailure }
 // Re-exported for the generated virtual modules (see plugin.ts): their module
 // id is the spec's own path in the CONSUMER's project, where pnpm's strict
 // layout only resolves the consumer's direct dependencies. Every bare
@@ -11,6 +10,7 @@ export { toFailure }
 // depend on directly — @oselvar/var-vitest — never a transitive one like
 // @oselvar/var-core.
 export { resolveScannerPlugins } from '@oselvar/var-core'
+export { toFailure }
 
 export type CollectPorts = {
   // Defaults to registering one failing vitest test per diagnostic. The
