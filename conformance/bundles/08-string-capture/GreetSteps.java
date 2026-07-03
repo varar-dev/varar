@@ -14,6 +14,6 @@ public final class GreetSteps implements StepDefinitions {
     public void defineSteps(Registrar registrar) {
         StateBinder<Ctx> s = registrar.defineState(Ctx::new);
 
-        s.action("I greet {string}", (Ctx ctx, String name) -> ctx);
+        s.stimulus("I greet {string}", (Ctx ctx, String name) -> ctx);
     }
 }

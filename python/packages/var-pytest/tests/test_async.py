@@ -15,10 +15,10 @@ ASYNC_STEPS = """\
 import asyncio
 from var import define_state
 
-context, action, sensor = define_state(lambda: {"value": 0})
+stimulus, sensor = define_state(lambda: {"value": 0})
 
 
-@action("I asynchronously add {int}")
+@stimulus("I asynchronously add {int}")
 async def _(state, n):
     await asyncio.sleep(0)   # yield to event loop once
     return {"value": state["value"] + n}

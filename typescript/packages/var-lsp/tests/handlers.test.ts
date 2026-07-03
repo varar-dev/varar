@@ -30,7 +30,7 @@ test('hoverOnMd returns the matching step def expression and source location', a
     )
     writeFileSync(
       join(dir, 'a.steps.ts'),
-      `action('I have {int} cukes', () => {})
+      `stimulus('I have {int} cukes', () => {})
 `,
     )
     writeFileSync(join(dir, 'b.md'), '# B\n\nGiven I have 5 cukes')
@@ -59,7 +59,7 @@ test('definitionFromMd returns the steps.ts location for a matched step', async 
     )
     writeFileSync(
       join(dir, 'a.steps.ts'),
-      `action('I have {int} cukes', () => {})
+      `stimulus('I have {int} cukes', () => {})
 `,
     )
     writeFileSync(join(dir, 'b.md'), '# B\n\nGiven I have 5 cukes')
@@ -95,7 +95,7 @@ test('hover on the second of two adjacent steps returns the second step (off-by-
     )
     writeFileSync(
       join(dir, 'a.steps.ts'),
-      `action('I greet {string}', () => {})
+      `stimulus('I greet {string}', () => {})
 sensor('the greeting is {string}', () => {})
 `,
     )
@@ -127,7 +127,7 @@ test('stepAt resolves the step from a .md match and returns every matched site w
     )
     writeFileSync(
       join(dir, 'a.steps.ts'),
-      `action('I greet {string}', () => {})
+      `stimulus('I greet {string}', () => {})
 `,
     )
     writeFileSync(join(dir, 'a.md'), '# A\n\nGiven I greet "world"\n')
@@ -161,7 +161,7 @@ test('stepAt resolves the step from a .ts cucumber-expression literal position',
     )
     writeFileSync(
       join(dir, 'a.steps.ts'),
-      `action('I greet {string}', () => {})
+      `stimulus('I greet {string}', () => {})
 `,
     )
     writeFileSync(join(dir, 'a.md'), '# A\n\nGiven I greet "world"\n')
@@ -169,10 +169,10 @@ test('stepAt resolves the step from a .ts cucumber-expression literal position',
   try {
     const store = await makeStore(dir)
     const h = buildHandlers(store)
-    // 0-based: line 0, character 8 — inside the 'I greet {string}' literal.
+    // 0-based: line 0, character 12 — inside the 'I greet {string}' literal.
     const result = h.stepAt({
       uri: `file://${join(dir, 'a.steps.ts')}`,
-      position: { line: 0, character: 8 },
+      position: { line: 0, character: 12 },
     })
     expect(result).not.toBeNull()
     expect(result?.expression).toBe('I greet {string}')
@@ -212,7 +212,7 @@ test('renameStep (literal-only) produces a cascade across the step def + every m
     )
     writeFileSync(
       join(dir, 'a.steps.ts'),
-      `action('I greet {string}', () => {})
+      `stimulus('I greet {string}', () => {})
 `,
     )
     writeFileSync(join(dir, 'a.md'), '# A\n\nGiven I greet "world"\n')
@@ -221,11 +221,11 @@ test('renameStep (literal-only) produces a cascade across the step def + every m
   try {
     const store = await makeStore(dir)
     const h = buildHandlers(store)
-    // Cursor on line 0 character 8 of a.steps.ts → inside 'I greet {string}'.
+    // Cursor on line 0 character 12 of a.steps.ts → inside 'I greet {string}'.
     // The user types the new expression directly.
     const result = h.renameStep({
       uri: `file://${join(dir, 'a.steps.ts')}`,
-      position: { line: 0, character: 8 },
+      position: { line: 0, character: 12 },
       newName: 'I welcome {string}',
     })
     expect(result.ok).toBe(true)
@@ -248,7 +248,7 @@ test('planRename returns added/removed fates so the client can prompt', async ()
     )
     writeFileSync(
       join(dir, 'a.steps.ts'),
-      `action('I greet {string}', () => {})
+      `stimulus('I greet {string}', () => {})
 `,
     )
     writeFileSync(join(dir, 'a.md'), '# A\n\nGiven I greet "world"\n')
@@ -259,7 +259,7 @@ test('planRename returns added/removed fates so the client can prompt', async ()
     const h = buildHandlers(store)
     const plan = h.planRename({
       uri: `file://${join(dir, 'a.steps.ts')}`,
-      position: { line: 0, character: 8 },
+      position: { line: 0, character: 12 },
       newName: 'I greet {string} {int} times',
     })
     expect(plan.ok).toBe(true)
@@ -290,8 +290,8 @@ test('planRename surfaces a type change as kept + nameUnchanged:false (the clien
     )
     writeFileSync(
       join(dir, 'a.steps.ts'),
-      `const { action } = defineState(() => ({}), { airport: { regexp: /[A-Z]{3}/ } })
-action('I fly to {string}', () => {})
+      `const { stimulus } = defineState(() => ({}), { airport: { regexp: /[A-Z]{3}/ } })
+stimulus('I fly to {string}', () => {})
 `,
     )
     writeFileSync(join(dir, 'a.md'), '# A\n\nGiven I fly to "world"\n')
@@ -301,7 +301,7 @@ action('I fly to {string}', () => {})
     const h = buildHandlers(store)
     const plan = h.planRename({
       uri: `file://${join(dir, 'a.steps.ts')}`,
-      position: { line: 1, character: 8 },
+      position: { line: 1, character: 12 },
       newName: 'I fly to {airport}',
     })
     expect(plan.ok).toBe(true)
@@ -329,7 +329,7 @@ test('planRename emits a handlerSync that adds a new typed arg when a parameter 
     )
     writeFileSync(
       join(dir, 'a.steps.ts'),
-      `action('I greet {string}', (ctx, name: string) => {})
+      `stimulus('I greet {string}', (ctx, name: string) => {})
 `,
     )
     writeFileSync(join(dir, 'a.md'), '# A\n\nGiven I greet "world"\n')
@@ -339,7 +339,7 @@ test('planRename emits a handlerSync that adds a new typed arg when a parameter 
     const h = buildHandlers(store)
     const plan = h.planRename({
       uri: `file://${join(dir, 'a.steps.ts')}`,
-      position: { line: 0, character: 8 },
+      position: { line: 0, character: 12 },
       newName: 'I greet {string} {int} times',
     })
     expect(plan.ok).toBe(true)
@@ -360,7 +360,7 @@ test('planRename emits a handlerSync that drops a removed arg', async () => {
     )
     writeFileSync(
       join(dir, 'a.steps.ts'),
-      `action('I greet {string} loudly', (ctx, name: string) => {})
+      `stimulus('I greet {string} loudly', (ctx, name: string) => {})
 `,
     )
     writeFileSync(join(dir, 'a.md'), '# A\n\nGiven I greet "world" loudly\n')
@@ -370,7 +370,7 @@ test('planRename emits a handlerSync that drops a removed arg', async () => {
     const h = buildHandlers(store)
     const plan = h.planRename({
       uri: `file://${join(dir, 'a.steps.ts')}`,
-      position: { line: 0, character: 8 },
+      position: { line: 0, character: 12 },
       newName: 'I greet loudly',
     })
     expect(plan.ok).toBe(true)
@@ -389,8 +389,8 @@ test('planRename emits a handlerSync that swaps the TS type when a param type ch
     )
     writeFileSync(
       join(dir, 'a.steps.ts'),
-      `const { action } = defineState(() => ({}), { airport: { regexp: /[A-Z]{3}/ } })
-action('I fly to {string}', (ctx, name: string) => {})
+      `const { stimulus } = defineState(() => ({}), { airport: { regexp: /[A-Z]{3}/ } })
+stimulus('I fly to {string}', (ctx, name: string) => {})
 `,
     )
     writeFileSync(join(dir, 'a.md'), '# A\n\nGiven I fly to "world"\n')
@@ -400,7 +400,7 @@ action('I fly to {string}', (ctx, name: string) => {})
     const h = buildHandlers(store)
     const plan = h.planRename({
       uri: `file://${join(dir, 'a.steps.ts')}`,
-      position: { line: 1, character: 8 },
+      position: { line: 1, character: 12 },
       newName: 'I fly to {airport}',
     })
     expect(plan.ok).toBe(true)
@@ -425,18 +425,18 @@ test('renaming a .py step syncs the def parameters in python shape', async () =>
     )
     writeFileSync(
       join(dir, 'a.steps.py'),
-      '@action("I greet {string}")\ndef _(state, user):\n    pass\n',
+      '@stimulus("I greet {string}")\ndef _(state, user):\n    pass\n',
     )
     writeFileSync(join(dir, 'a.md'), '# A\n\nGiven I greet "world"\n')
   })
   try {
     const store = await makeStore(dir)
     const h = buildHandlers(store)
-    // 0-based: character 9 lands inside the 'I greet {string}' literal
-    // (after the '@action("' prefix).
+    // 0-based: character 13 lands inside the 'I greet {string}' literal
+    // (after the '@stimulus("' prefix).
     const plan = h.planRename({
       uri: `file://${join(dir, 'a.steps.py')}`,
-      position: { line: 0, character: 9 },
+      position: { line: 0, character: 13 },
       newName: 'I greet {string} {int} times',
     })
     expect(plan.ok).toBe(true)
@@ -457,7 +457,7 @@ test('renderExpressionText rebuilds a sentence from an expression + captured val
     )
     writeFileSync(
       join(dir, 'a.steps.ts'),
-      `const { action } = defineState(() => ({}), { airport: { regexp: /[A-Z]{3}/ } })
+      `const { stimulus } = defineState(() => ({}), { airport: { regexp: /[A-Z]{3}/ } })
 `,
     )
   })
@@ -484,7 +484,7 @@ test('renameStep refuses when a parameter is added (Phase 4 territory)', async (
     )
     writeFileSync(
       join(dir, 'a.steps.ts'),
-      `action('I greet {string}', () => {})
+      `stimulus('I greet {string}', () => {})
 `,
     )
     writeFileSync(join(dir, 'a.md'), '# A\n\nGiven I greet "world"\n')
@@ -494,7 +494,7 @@ test('renameStep refuses when a parameter is added (Phase 4 territory)', async (
     const h = buildHandlers(store)
     const result = h.renameStep({
       uri: `file://${join(dir, 'a.steps.ts')}`,
-      position: { line: 0, character: 8 },
+      position: { line: 0, character: 12 },
       newName: 'I greet {string} {int} times',
     })
     expect(result.ok).toBe(false)
@@ -513,7 +513,7 @@ test('renameStep from a .md uses CucumberExpressionGenerator on the new sentence
     )
     writeFileSync(
       join(dir, 'a.steps.ts'),
-      `action('I greet {string}', () => {})
+      `stimulus('I greet {string}', () => {})
 `,
     )
     writeFileSync(join(dir, 'a.md'), '# A\n\nGiven I greet "world"\n')
@@ -544,8 +544,8 @@ test('completions: returns a snippet item per registered step, replacing from li
     )
     writeFileSync(
       join(dir, 'a.steps.ts'),
-      `action('I have {int} cukes', () => {})
-action('I greet {string}', () => {})
+      `stimulus('I have {int} cukes', () => {})
+stimulus('I greet {string}', () => {})
 `,
     )
   })
@@ -578,7 +578,7 @@ test('completions: replace range starts at the first non-whitespace of the line 
     )
     writeFileSync(
       join(dir, 'a.steps.ts'),
-      `action('I greet {string}', () => {})
+      `stimulus('I greet {string}', () => {})
 `,
     )
   })
@@ -610,8 +610,8 @@ test('completions: a custom {airport} type uses its name as the placeholder', as
     )
     writeFileSync(
       join(dir, 'a.steps.ts'),
-      `const { action } = defineState(() => ({}), { airport: { regexp: /[A-Z]{3}/ } })
-action('I fly to {airport}', () => {})
+      `const { stimulus } = defineState(() => ({}), { airport: { regexp: /[A-Z]{3}/ } })
+stimulus('I fly to {airport}', () => {})
 `,
     )
   })
@@ -638,7 +638,7 @@ test('completions: returns nothing for non-.md files', async () => {
     )
     writeFileSync(
       join(dir, 'a.steps.ts'),
-      `action('I greet {string}', () => {})
+      `stimulus('I greet {string}', () => {})
 `,
     )
   })
@@ -666,18 +666,18 @@ test('generateSnippet turns selected text into a step-definition stub (verbatim,
   try {
     const store = await makeStore(dir)
     const h = buildHandlers(store)
-    // No uri/position provided — defaults to 'action'.
+    // No uri/position provided — defaults to 'stimulus'.
     const snippet = h.generateSnippet({ text: 'Given I greet "world"' })
     // No Given/When/Then heuristics — the selection IS the expression.
     expect(snippet.expression).toBe('Given I greet {string}')
-    expect(snippet.fullCode).toMatch(/^action\(/m)
+    expect(snippet.fullCode).toMatch(/^stimulus\(/m)
   } finally {
     cleanup()
   }
 })
 
-test('generateSnippet infers action role when position is before a sensor and nothing else exists', async () => {
-  // before=[], after=['sensor'] → inferStepRole → 'action'
+test('generateSnippet infers stimulus role when position is before a sensor and nothing else exists', async () => {
+  // before=[], after=['sensor'] → inferStepRole → 'stimulus'
   const { dir, cleanup } = tempWorkspace((dir) => {
     writeFileSync(
       join(dir, 'var.config.json'),
@@ -695,20 +695,20 @@ test('generateSnippet infers action role when position is before a sensor and no
       uri: `file://${join(dir, 'b.md')}`,
       position: { line: 1, character: 0 },
     })
-    expect(snippet.fullCode).toMatch(/^action\(/m)
+    expect(snippet.fullCode).toMatch(/^stimulus\(/m)
   } finally {
     cleanup()
   }
 })
 
 test('generateSnippet infers sensor role when position is after all matched steps', async () => {
-  // before=['action'], after=[] → inferStepRole → 'sensor'
+  // before=['stimulus'], after=[] → inferStepRole → 'sensor'
   const { dir, cleanup } = tempWorkspace((dir) => {
     writeFileSync(
       join(dir, 'var.config.json'),
       '{ "docs": { "include": ["**/*.md"], "exclude": [] }, "steps": ["**/*.steps.ts"] }\n',
     )
-    writeFileSync(join(dir, 'a.steps.ts'), `action('I greet {string}', () => {})\n`)
+    writeFileSync(join(dir, 'a.steps.ts'), `stimulus('I greet {string}', () => {})\n`)
     writeFileSync(join(dir, 'b.md'), '# B\n\nGiven I greet "world"\n')
   })
   try {
@@ -732,7 +732,7 @@ test('generateSnippet picks python when it is the only configured step language'
       join(dir, 'var.config.json'),
       '{ "docs": { "include": ["**/*.md"], "exclude": [] }, "steps": ["**/*.steps.py"] }\n',
     )
-    writeFileSync(join(dir, 'a.steps.py'), '@action("existing")\ndef _(state):\n    pass\n')
+    writeFileSync(join(dir, 'a.steps.py'), '@stimulus("existing")\ndef _(state):\n    pass\n')
     writeFileSync(join(dir, 'b.md'), '# B\n\nGiven I have 5 cukes')
   })
   try {
@@ -740,7 +740,7 @@ test('generateSnippet picks python when it is the only configured step language'
     const h = buildHandlers(store)
     const result = h.generateSnippet({ text: 'I have 5 cukes' })
     expect(result.language).toBe('python')
-    expect(result.fullCode).toContain('@action("I have {int} cukes")')
+    expect(result.fullCode).toContain('@stimulus("I have {int} cukes")')
     expect(result.fullCode).toContain('def _(state, count: int):')
   } finally {
     cleanup()
@@ -754,9 +754,9 @@ test('generateSnippet resolves multi-language by file count, ties by config orde
       '{ "docs": { "include": ["**/*.md"], "exclude": [] }, "steps": ["**/*.steps.ts", "**/*.steps.py"] }\n',
     )
     // Two python files vs one typescript file: python wins on count.
-    writeFileSync(join(dir, 'a.steps.ts'), `action('x', () => {})\n`)
-    writeFileSync(join(dir, 'p1.steps.py'), '@action("p1")\ndef _(state):\n    pass\n')
-    writeFileSync(join(dir, 'p2.steps.py'), '@action("p2")\ndef _(state):\n    pass\n')
+    writeFileSync(join(dir, 'a.steps.ts'), `stimulus('x', () => {})\n`)
+    writeFileSync(join(dir, 'p1.steps.py'), '@stimulus("p1")\ndef _(state):\n    pass\n')
+    writeFileSync(join(dir, 'p2.steps.py'), '@stimulus("p2")\ndef _(state):\n    pass\n')
     writeFileSync(join(dir, 'b.md'), '# B\n\nGiven x')
   })
   try {
@@ -774,8 +774,8 @@ test('generateSnippet tie-breaks to the first language in config.steps order', a
       join(dir, 'var.config.json'),
       '{ "docs": { "include": ["**/*.md"], "exclude": [] }, "steps": ["**/*.steps.py", "**/*.steps.ts"] }\n',
     )
-    writeFileSync(join(dir, 'a.steps.ts'), `action('x', () => {})\n`)
-    writeFileSync(join(dir, 'p1.steps.py'), '@action("p1")\ndef _(state):\n    pass\n')
+    writeFileSync(join(dir, 'a.steps.ts'), `stimulus('x', () => {})\n`)
+    writeFileSync(join(dir, 'p1.steps.py'), '@stimulus("p1")\ndef _(state):\n    pass\n')
     writeFileSync(join(dir, 'b.md'), '# B\n\nGiven x')
   })
   try {
@@ -793,7 +793,7 @@ test('generateSnippet honors a config snippets template override for the picked 
       join(dir, 'var.config.json'),
       '{ "docs": { "include": ["**/*.md"], "exclude": [] }, "steps": ["**/*.steps.py"], "snippets": { "python": "PY:{{expression}}" } }\n',
     )
-    writeFileSync(join(dir, 'a.steps.py'), '@action("existing")\ndef _(state):\n    pass\n')
+    writeFileSync(join(dir, 'a.steps.py'), '@stimulus("existing")\ndef _(state):\n    pass\n')
     writeFileSync(join(dir, 'b.md'), '# B\n\nGiven x')
   })
   try {

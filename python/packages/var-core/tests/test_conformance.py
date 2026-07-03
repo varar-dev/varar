@@ -123,7 +123,7 @@ def test_to_registry_artifact_lists_expressions_and_parameter_type_names():
         expression="I have {int} cukes",
         expression_source_file="s.ts",
         expression_source_line=1,
-        kind="action",
+        kind="stimulus",
         handler=lambda *_: None,
     )
     assert to_registry_artifact(r) == {
@@ -140,7 +140,7 @@ def test_to_registry_artifact_reads_parameter_names_ignoring_escaped_braces():
         expression=r"the set \{a, b\} has {int} elements",
         expression_source_file="s.ts",
         expression_source_line=1,
-        kind="action",
+        kind="stimulus",
         handler=lambda *_: None,
     )
     assert to_registry_artifact(r)["steps"][0]["parameterTypeNames"] == ["int"]
@@ -154,7 +154,7 @@ def test_to_registry_artifact_projects_passed_custom_parameter_types() -> None:
         expression="I fly to {airport}",
         expression_source_file="airports.steps",
         expression_source_line=1,
-        kind="action",
+        kind="stimulus",
         handler=lambda *_: None,
     )
     assert to_registry_artifact(r, [{"name": "airport", "regexp": "[A-Z]{3}"}]) == {
@@ -174,7 +174,7 @@ def test_to_plan_artifact_projects_examples_expected_outcome_and_args():
         expression="I have {int} cukes",
         expression_source_file="s.ts",
         expression_source_line=1,
-        kind="action",
+        kind="stimulus",
         handler=lambda *_: None,
     )
     art = to_plan_artifact(plan(parse("e.md", "# A\n\nI have 5 cukes."), r))
@@ -192,7 +192,7 @@ def test_to_plan_artifact_projects_diagnostics_without_message_or_path():
         expression="I have {int} cukes",
         expression_source_file="/abs/s.ts",
         expression_source_line=1,
-        kind="action",
+        kind="stimulus",
         handler=lambda *_: None,
     )
     r = add_step(
@@ -200,7 +200,7 @@ def test_to_plan_artifact_projects_diagnostics_without_message_or_path():
         expression="I have 5 cukes",
         expression_source_file="/abs/s.ts",
         expression_source_line=2,
-        kind="action",
+        kind="stimulus",
         handler=lambda *_: None,
     )
     art = to_plan_artifact(plan(parse("e.md", "# A\n\nI have 5 cukes."), r))
@@ -232,7 +232,7 @@ def test_run_conformance_passing_example_yields_pass_steps_with_structural_conte
         expression="I have {int} cukes",
         expression_source_file="/abs/s.ts",
         expression_source_line=1,
-        kind="action",
+        kind="stimulus",
         handler=lambda *_: None,
     )
     out = run_conformance(parse("e.md", "# A\n\nI have 5 cukes."), r, lambda _name: {})
@@ -262,7 +262,7 @@ def test_run_conformance_expected_failure_example_reads_pass_but_step_carries_fa
         expression="I divide {int} by {int}",
         expression_source_file="/abs/s.ts",
         expression_source_line=1,
-        kind="action",
+        kind="stimulus",
         handler=_divide,
     )
     src = "# D\n\nI divide 1 by 0.\n\n```error\ndivision by zero\n```\n"

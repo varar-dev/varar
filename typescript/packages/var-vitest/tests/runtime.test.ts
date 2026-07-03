@@ -14,11 +14,11 @@ function fakeCtx() {
 
 test('collectVarExamples returns one indexed example per BDD example, with step lines', async () => {
   const calls: string[] = []
-  const { action } = defineState(() => ({}))
-  action('I have {int} cukes', (_ctx, n) => {
+  const { stimulus } = defineState(() => ({}))
+  stimulus('I have {int} cukes', (_ctx, n) => {
     calls.push(`have:${n as number}`)
   })
-  action('I eat {int}', (_ctx, n) => {
+  stimulus('I eat {int}', (_ctx, n) => {
     calls.push(`eat:${n as number}`)
   })
 
@@ -35,8 +35,8 @@ test('collectVarExamples returns one indexed example per BDD example, with step 
 })
 
 test('varTestBody runs the example and attaches a passed varResult to the task meta', async () => {
-  const { action } = defineState(() => ({}))
-  action('I pass', () => {})
+  const { stimulus } = defineState(() => ({}))
+  stimulus('I pass', () => {})
   const examples = collectVarExamples('ok.md', 'I pass.', { reporter: { diagnostic: () => {} } })
   const { ctx, meta } = fakeCtx()
   await varTestBody(examples, 0, 'I pass', 'ok.md')(ctx)
@@ -44,8 +44,8 @@ test('varTestBody runs the example and attaches a passed varResult to the task m
 })
 
 test('varTestBody attaches a failed varResult and rethrows when the example fails', async () => {
-  const { action } = defineState(() => ({}))
-  action('I fail', () => {
+  const { stimulus } = defineState(() => ({}))
+  stimulus('I fail', () => {
     throw new Error('boom')
   })
   const examples = collectVarExamples('bad.md', 'I fail.', { reporter: { diagnostic: () => {} } })
@@ -77,8 +77,8 @@ const cell = (at: ReturnType<typeof sp>, expected: string, actual: string): Cell
 })
 
 async function rethrown(error: Error): Promise<Error & { expected?: string; actual?: string }> {
-  const { action } = defineState(() => ({}))
-  action('It mismatches', () => {
+  const { stimulus } = defineState(() => ({}))
+  stimulus('It mismatches', () => {
     throw error
   })
   const examples = collectVarExamples('diff.md', 'It mismatches.', {

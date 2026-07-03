@@ -81,7 +81,7 @@ test('toRegistryArtifact lists expressions and parsed parameter-type names', () 
     expression: 'I have {int} cukes',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   expect(toRegistryArtifact(r)).toEqual({
@@ -97,7 +97,7 @@ test('toRegistryArtifact reads parameter names from the AST, ignoring escaped br
     expression: 'the set \\{a, b\\} has {int} elements',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   expect(toRegistryArtifact(r).steps[0]?.parameterTypeNames).toEqual(['int'])
@@ -110,7 +110,7 @@ test('toRegistryArtifact projects passed custom parameter types', () => {
     expression: 'I fly to {airport}',
     expressionSourceFile: 'airports.steps',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   expect(toRegistryArtifact(r, [{ name: 'airport', regexp: '[A-Z]{3}' }])).toEqual({
@@ -124,7 +124,7 @@ test('toPlanArtifact projects examples, expectedOutcome and stringified args', (
     expression: 'I have {int} cukes',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   const art = toPlanArtifact(plan(parse('e.md', '# A\n\nI have 5 cukes.'), r))
@@ -145,14 +145,14 @@ test('toPlanArtifact projects diagnostics to portable fields (no message/path)',
     expression: 'I have {int} cukes',
     expressionSourceFile: '/abs/s.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   r = addStep(r, {
     expression: 'I have 5 cukes',
     expressionSourceFile: '/abs/s.ts',
     expressionSourceLine: 2,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   const art = toPlanArtifact(plan(parse('e.md', '# A\n\nI have 5 cukes.'), r))
@@ -167,7 +167,7 @@ test('runConformance: passing example yields pass steps with structural contextK
     expression: 'I have {int} cukes',
     expressionSourceFile: '/abs/s.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   const out = await runConformance(parse('e.md', '# A\n\nI have 5 cukes.'), r, () => ({}))
@@ -192,7 +192,7 @@ test('runConformance: expected-failure example reads pass but the step carries t
     expression: 'I divide {int} by {int}',
     expressionSourceFile: '/abs/s.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: (_c, _a, b) => {
       if (b === 0) throw new Error('division by zero')
     },

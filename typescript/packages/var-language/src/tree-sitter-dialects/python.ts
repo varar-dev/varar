@@ -13,7 +13,7 @@ const STEP_DEFINITION_QUERY = `
       function: (identifier) @function-name
       arguments: (argument_list . (string) @expression)))
   definition: (function_definition) @handler
-  (#match? @function-name "^(context|action|sensor)$")
+  (#match? @function-name "^(stimulus|sensor)$")
 ) @root
 `
 

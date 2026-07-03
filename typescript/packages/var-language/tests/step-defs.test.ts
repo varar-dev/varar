@@ -19,44 +19,44 @@ describe.each(scannerFactories)('$label scanner', ({ create }) => {
   })
 
   test('discovers a single step call with its source range', () => {
-    const source = `import { action } from '@oselvar/var'
-action('I have {int} cukes', (ctx, n) => {})
+    const source = `import { stimulus } from '@oselvar/var'
+stimulus('I have {int} cukes', (ctx, n) => {})
 `
     const defs = scanner.discoverStepDefs('steps.ts', source)
     expect(defs).toHaveLength(1)
     expect(defs[0]?.expression).toBe('I have {int} cukes')
-    expect(defs[0]?.kind).toBe('action')
+    expect(defs[0]?.kind).toBe('stimulus')
     // The expression literal starts at character 8 of line 2 (1-based).
     expect(defs[0]?.expressionRange.start.line).toBe(2)
     expect(defs[0]?.callRange.start.line).toBe(2)
   })
 
   test('discovers multiple step calls across the file', () => {
-    const source = `import { context, action, sensor } from '@oselvar/var'
-context('first', () => {})
-action('second', () => {})
+    const source = `import { stimulus, sensor } from '@oselvar/var'
+stimulus('first', () => {})
+stimulus('second', () => {})
 sensor('third', () => {})
 `
     const defs = scanner.discoverStepDefs('steps.ts', source)
     expect(defs.map((d) => d.expression)).toEqual(['first', 'second', 'third'])
-    expect(defs.map((d) => d.kind)).toEqual(['context', 'action', 'sensor'])
+    expect(defs.map((d) => d.kind)).toEqual(['stimulus', 'stimulus', 'sensor'])
   })
 
-  test('handles the destructured-role pattern: const { action } = defineState(...)', () => {
+  test('handles the destructured-role pattern: const { stimulus } = defineState(...)', () => {
     const source = `import { defineState } from '@oselvar/var'
-const { action } = defineState(() => ({}))
-action('I greet {string}', (ctx, name: string) => {})
+const { stimulus } = defineState(() => ({}))
+stimulus('I greet {string}', (ctx, name: string) => {})
 `
     const defs = scanner.discoverStepDefs('steps.ts', source)
     expect(defs).toHaveLength(1)
     expect(defs[0]?.expression).toBe('I greet {string}')
-    expect(defs[0]?.kind).toBe('action')
+    expect(defs[0]?.kind).toBe('stimulus')
   })
 
   test('ignores `step` in unrelated positions (e.g. shadowed locals, comments)', () => {
-    const source = `// action('not a real step', () => {})
-function action() {}
-const obj = { action: 1 }
+    const source = `// stimulus('not a real step', () => {})
+function stimulus() {}
+const obj = { stimulus: 1 }
 `
     const defs = scanner.discoverStepDefs('steps.ts', source)
     expect(defs).toHaveLength(0)
@@ -69,7 +69,7 @@ const obj = { action: 1 }
 
   test('discovers a paramType from defineState with a regexp literal', () => {
     const source = `import { defineState } from '@oselvar/var-core'
-const { action } = defineState(() => ({}), {
+const { stimulus } = defineState(() => ({}), {
   airport: { regexp: /[A-Z]{3}/, transformer: (r) => r },
 })
 `
@@ -80,7 +80,7 @@ const { action } = defineState(() => ({}), {
   })
 
   test('discovers a paramType from defineState with a string-literal regexp', () => {
-    const source = `const { action } = defineState(() => ({}), {
+    const source = `const { stimulus } = defineState(() => ({}), {
   airport: { regexp: '[A-Z]{3}' },
 })
 `
@@ -109,17 +109,17 @@ const { action } = defineState(() => ({}), {
   })
 
   test('returns empty when defineState has no paramTypes argument', () => {
-    const source = `const { action } = defineState(() => ({ n: 0 }))
+    const source = `const { stimulus } = defineState(() => ({ n: 0 }))
 `
     expect(scanner.discoverParameterTypes('p.ts', source)).toEqual([])
   })
 
   test('captures the handler params range and structured (name, type) entries', () => {
-    const source = `action('I have {int} cukes', (ctx, count: number) => {})
+    const source = `stimulus('I have {int} cukes', (ctx, count: number) => {})
 `
     const defs = scanner.discoverStepDefs('s.ts', source)
     expect(defs).toHaveLength(1)
-    expect(defs[0]?.kind).toBe('action')
+    expect(defs[0]?.kind).toBe('stimulus')
     expect(defs[0]?.handlerParams).toBeDefined()
     expect(defs[0]?.handlerParams?.params).toEqual([
       { name: 'ctx', typeText: '' },
@@ -140,7 +140,7 @@ sensor('do thing', fn)
   })
 
   test('decodes an escaped quote inside the expression string', () => {
-    const source = `action('I said \\'hi\\'', () => {})
+    const source = `stimulus('I said \\'hi\\'', () => {})
 `
     const defs = scanner.discoverStepDefs('s.ts', source)
     expect(defs).toHaveLength(1)

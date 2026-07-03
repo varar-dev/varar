@@ -76,7 +76,7 @@ class ExecuteTest {
 
     @Test
     void collectExamplesReturnsOneQueuedExamplePerPlannedExampleInDocumentOrder() {
-        Registry r = reg("I have {int} cukes", "s.ts", 1, (Fn1) (state, n) -> null, StepKind.ACTION);
+        Registry r = reg("I have {int} cukes", "s.ts", 1, (Fn1) (state, n) -> null, StepKind.STIMULUS);
         Plan.ExecutionPlan p = planOf("# A\n\nI have 5 cukes\n\n# B\n\nI have 9 cukes", r);
         List<Execute.QueuedExample> queued = Execute.collectExamples(p, silentPorts());
         assertEquals(
@@ -87,8 +87,8 @@ class ExecuteTest {
     @Test
     void collectExamplesReportsDiagnosticsViaReporter() {
         Registry r = Registry.createRegistry();
-        r = Registry.addStep(r, "I have {int} cukes", "a.ts", 1, NOOP_HANDLER, StepKind.ACTION);
-        r = Registry.addStep(r, "I have 5 cukes", "a.ts", 2, NOOP_HANDLER, StepKind.ACTION);
+        r = Registry.addStep(r, "I have {int} cukes", "a.ts", 1, NOOP_HANDLER, StepKind.STIMULUS);
+        r = Registry.addStep(r, "I have 5 cukes", "a.ts", 2, NOOP_HANDLER, StepKind.STIMULUS);
         Plan.ExecutionPlan p = planOf("# M\n\nI have 5 cukes", r);
         List<Diagnostics.Diagnostic> got = new ArrayList<>();
         Execute.collectExamples(p, new Execute.ExecutePorts(got::add));
@@ -111,7 +111,7 @@ class ExecuteTest {
                         "s.ts",
                         1,
                         (Fn1) (state, n) -> (state == null ? 0 : (Integer) state) + (Integer) n,
-                        StepKind.ACTION);
+                        StepKind.STIMULUS);
         r =
                 Registry.addStep(
                         r,
@@ -234,7 +234,7 @@ class ExecuteTest {
                                     seen.add(state);
                                     return state;
                                 },
-                        StepKind.ACTION);
+                        StepKind.STIMULUS);
         Plan.ExecutionPlan p = planOf("# A\n\nI record ctx\n\n# B\n\nI record ctx", r);
         int[] calls = {0};
         Function<String, Object> createContext =
@@ -252,7 +252,7 @@ class ExecuteTest {
     void stateIsThreadedAcrossStepsSharingTheSameFileWithinAnExampleNoNewContextPerStep() {
         List<Object> seen = new ArrayList<>();
         Registry r = Registry.createRegistry();
-        r = Registry.addStep(r, "I seed", "s.ts", 1, (Fn0) state -> "seeded", StepKind.ACTION);
+        r = Registry.addStep(r, "I seed", "s.ts", 1, (Fn0) state -> "seeded", StepKind.STIMULUS);
         r =
                 Registry.addStep(
                         r,
@@ -264,7 +264,7 @@ class ExecuteTest {
                                     seen.add(state);
                                     return state;
                                 },
-                        StepKind.ACTION);
+                        StepKind.STIMULUS);
         Plan.ExecutionPlan p = planOf("# A\n\nI seed\nI record ctx", r);
         int[] calls = {0};
         Function<String, Object> createContext =
@@ -295,7 +295,7 @@ class ExecuteTest {
                                     captured.add(table);
                                     return state;
                                 },
-                        StepKind.CONTEXT);
+                        StepKind.STIMULUS);
         String source =
                 """
                 # Library
@@ -330,7 +330,7 @@ class ExecuteTest {
                                     captured.add(body);
                                     return state;
                                 },
-                        StepKind.CONTEXT);
+                        StepKind.STIMULUS);
         String source =
                 """
                 # Library
@@ -528,7 +528,7 @@ class ExecuteTest {
                                     if (((Integer) b) == 0) throw new RuntimeException("division by zero");
                                     return state;
                                 },
-                        StepKind.ACTION);
+                        StepKind.STIMULUS);
         String src = "# D\n\nI divide 1 by 0.\n\n```error\ndivision by zero\n```\n";
         Plan.ExecutionPlan p = planOf(src, r);
         assertDoesNotThrow(() -> Execute.collectExamples(p, silentPorts()).get(0).run().run());
@@ -536,7 +536,7 @@ class ExecuteTest {
 
     @Test
     void errorFenceExampleWhereNoThrowThrowsUnexpectedPassException() {
-        Registry r = reg("I divide {int} by {int}", "s.ts", 1, (Fn2) (state, a, b) -> state, StepKind.ACTION);
+        Registry r = reg("I divide {int} by {int}", "s.ts", 1, (Fn2) (state, a, b) -> state, StepKind.STIMULUS);
         String src = "# D\n\nI divide 1 by 1.\n\n```error\n```\n";
         Plan.ExecutionPlan p = planOf(src, r);
         assertThrows(
@@ -555,7 +555,7 @@ class ExecuteTest {
                                 (state, a, b) -> {
                                     throw new RuntimeException("boom");
                                 },
-                        StepKind.ACTION);
+                        StepKind.STIMULUS);
         String src = "# D\n\nI divide 1 by 0.\n\n```error\ndivision by zero\n```\n";
         Plan.ExecutionPlan p = planOf(src, r);
         RuntimeException ex =
@@ -640,7 +640,7 @@ class ExecuteTest {
 
     @Test
     void observerReceivesAPassObservationPerExecutedStep() {
-        Registry r = reg("I add {int}", "s.ts", 1, (Fn1) (state, n) -> state, StepKind.ACTION);
+        Registry r = reg("I add {int}", "s.ts", 1, (Fn1) (state, n) -> state, StepKind.STIMULUS);
         Plan.ExecutionPlan p = planOf("# A\n\nI add 5.", r);
         List<Execute.StepObservation> obs = new ArrayList<>();
         Execute.ExecutePorts ports = new Execute.ExecutePorts(d -> {}, null, obs::add);
@@ -659,7 +659,7 @@ class ExecuteTest {
                                 state -> {
                                     throw new RuntimeException("kaboom");
                                 },
-                        StepKind.ACTION);
+                        StepKind.STIMULUS);
         Plan.ExecutionPlan p = planOf("# A\n\nI blow up.", r);
         List<Execute.StepObservation> obs = new ArrayList<>();
         Execute.ExecutePorts ports = new Execute.ExecutePorts(d -> {}, null, obs::add);
@@ -686,7 +686,7 @@ class ExecuteTest {
                                 state -> {
                                     throw new RuntimeException("boom");
                                 },
-                        StepKind.ACTION);
+                        StepKind.STIMULUS);
         Plan.ExecutionPlan p = planOf("# A\n\nI throw", r);
         Plan.PlannedStep step = p.examples().get(0).steps().get(0);
         RuntimeException caught =
@@ -714,7 +714,7 @@ class ExecuteTest {
                         "s.ts",
                         1,
                         (Fn0) state -> CompletableFuture.supplyAsync(() -> "hi"),
-                        StepKind.ACTION);
+                        StepKind.STIMULUS);
         r =
                 Registry.addStep(
                         r,
@@ -745,7 +745,7 @@ class ExecuteTest {
                                     f.completeExceptionally(new RuntimeException("async boom"));
                                     return f;
                                 },
-                        StepKind.ACTION);
+                        StepKind.STIMULUS);
         Plan.ExecutionPlan p = planOf("# A\n\nI fail asynchronously", r);
         RuntimeException ex =
                 assertThrows(
@@ -771,7 +771,7 @@ class ExecuteTest {
                                     ran.add("ran");
                                     return state;
                                 },
-                        StepKind.ACTION);
+                        StepKind.STIMULUS);
         Plan.ExecutionPlan p = planOf("# A\n\nI run\n\n# B\n\nI run", r);
         assertDoesNotThrow(() -> Execute.executePlan(p, silentPorts()));
         assertEquals(List.of("ran", "ran"), ran);
@@ -791,7 +791,7 @@ class ExecuteTest {
                                 state -> {
                                     throw new RuntimeException("boom");
                                 },
-                        StepKind.ACTION);
+                        StepKind.STIMULUS);
         r =
                 Registry.addStep(
                         r,
@@ -803,7 +803,7 @@ class ExecuteTest {
                                     secondRan[0] = true;
                                     return state;
                                 },
-                        StepKind.ACTION);
+                        StepKind.STIMULUS);
         Plan.ExecutionPlan p = planOf("# A\n\nI fail\n\n# B\n\nI succeed", r);
         assertThrows(RuntimeException.class, () -> Execute.executePlan(p, silentPorts()));
         assertFalse(secondRan[0]);
@@ -830,7 +830,7 @@ class ExecuteTest {
                         "s.ts",
                         1,
                         (Function<Object, Object>) state -> "ok",
-                        StepKind.ACTION);
+                        StepKind.STIMULUS);
         Plan.ExecutionPlan p = planOf("# A\n\nI use a jdk functional interface", r);
         assertDoesNotThrow(() -> Execute.collectExamples(p, silentPorts()).get(0).run().run());
     }

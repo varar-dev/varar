@@ -89,7 +89,7 @@ class RunTest {
         LoadedSteps loaded = loadWidgetSteps();
         Registry ambiguousRegistry =
                 Registry.addStep(
-                        loaded.registry(), "I have 3 widgets", "extra.ts", 1, NOOP_HANDLER, StepKind.CONTEXT);
+                        loaded.registry(), "I have 3 widgets", "extra.ts", 1, NOOP_HANDLER, StepKind.STIMULUS);
         Plan.ExecutionPlan plan =
                 Run.planSpec("widgets.md", "# Widgets\n\nI have 3 widgets.", ambiguousRegistry);
         assertEquals(1, plan.diagnostics().size());

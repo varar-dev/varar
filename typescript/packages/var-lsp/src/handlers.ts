@@ -139,9 +139,9 @@ export function buildHandlers(store: Store): Handlers {
       // neighbouring matched steps in the same file. The lookup is file-scoped:
       // the workspace index does not expose example/heading boundaries, so steps
       // from other examples in the same .md are included. That is an
-      // accepted approximation — inferStepRole inspects only presence/emptiness
-      // and first action/sensor, and the snippet always offers the other roles
-      // commented out, so a wrong guess is one keystroke to fix.
+      // accepted approximation — inferStepRole inspects only whether any
+      // steps follow, and the snippet always offers the other role commented
+      // out, so a wrong guess is one keystroke to fix.
       const role =
         uri !== undefined && position !== undefined
           ? inferStepRole(neighbourRolesForSelection(store, uri, position))

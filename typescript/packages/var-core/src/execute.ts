@@ -95,20 +95,20 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
           try {
             const returned = await step.stepDef.handler(state, ...step.args, ...extra)
             lastReturn = returned
-            // Dispatch on the step's role. `context`/`action` merge a returned
-            // partial state (or no-op when they return nothing); `sensor`
+            // Dispatch on the step's role. `stimulus` merges a returned
+            // partial state (or no-op when it returns nothing); `sensor`
             // compares its return against the Markdown; an unknown kind is a
             // wiring bug.
             const kind = step.stepDef.kind
-            if (kind === 'context' || kind === 'action') {
-              // A context/action step EVOLVES state: returning a partial state
-              // object shallow-merges onto the current state (re-frozen, then
+            if (kind === 'stimulus') {
+              // A stimulus EVOLVES state: returning a partial state object
+              // shallow-merges onto the current state (re-frozen, then
               // threaded to later steps in this stepfile). Returning nothing is
               // a no-op. Any non-object return is a contract violation.
               if (returned !== undefined) {
                 if (typeof returned !== 'object' || returned === null) {
                   throw new ReturnShapeError(
-                    'a context/action step must return a partial state object or nothing',
+                    'a stimulus must return a partial state object or nothing',
                   )
                 }
                 state = deepFreeze({ ...(state as object), ...(returned as object) })

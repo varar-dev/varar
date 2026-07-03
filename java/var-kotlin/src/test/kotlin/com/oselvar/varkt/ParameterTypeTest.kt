@@ -17,7 +17,7 @@ class ParameterTypeTest {
         val registrar = RegistryRegistrar()
         defineState(::Ctx) {
             parameterType("color", Regex("red|green|blue")) { captures -> captures[0].uppercase() }
-            action("I pick {color}") { c: String -> copy(color = c) }
+            stimulus("I pick {color}") { c: String -> copy(color = c) }
         }.defineSteps(registrar)
 
         val plan = Plan.plan(
@@ -31,7 +31,7 @@ class ParameterTypeTest {
     fun `a step using a not-yet-declared parameter type fails at replay with the cucumber error`() {
         val registrar = RegistryRegistrar()
         val definitions = defineState(::Ctx) {
-            action("I pick {color}") { c: String -> copy(color = c) }
+            stimulus("I pick {color}") { c: String -> copy(color = c) }
             parameterType("color", Regex("red|green|blue")) { captures -> captures[0] }
         }
         assertThrows(UndefinedParameterTypeException::class.java) {

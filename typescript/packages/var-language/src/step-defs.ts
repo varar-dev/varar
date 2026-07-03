@@ -159,13 +159,13 @@ function extractHandlerParams(
   }
 }
 
-const ROLE_NAMES: ReadonlyArray<string> = ['context', 'action', 'sensor']
+const ROLE_NAMES: ReadonlyArray<string> = ['stimulus', 'sensor']
 
 function isStepCall(node: ts.CallExpression): boolean {
-  // Match `context(...)`, `action(...)`, or `sensor(...)` — the three role
-  // call forms. False positives from shadowed locals are filtered out by the
-  // same logic that protects these identifiers — only CallExpressions with
-  // these identifiers qualify, regardless of import shape.
+  // Match `stimulus(...)` or `sensor(...)` — the two role call forms.
+  // False positives from shadowed locals are filtered out by the same logic
+  // that protects these identifiers — only CallExpressions with these
+  // identifiers qualify, regardless of import shape.
   return ts.isIdentifier(node.expression) && ROLE_NAMES.includes(node.expression.text)
 }
 

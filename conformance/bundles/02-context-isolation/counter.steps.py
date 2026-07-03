@@ -1,9 +1,9 @@
 from var import define_state
 
-context, action, sensor = define_state(lambda: {"count": 0})
+stimulus, sensor = define_state(lambda: {"count": 0})
 
 
-@action("I increment")
+@stimulus("I increment")
 def _(state):
     return {"count": state["count"] + 1}
 

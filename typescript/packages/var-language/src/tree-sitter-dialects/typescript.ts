@@ -9,7 +9,7 @@ import { toRange } from './types.js'
 //
 // The leading `.` before `(string)` matters: without it, this query matches
 // a string literal at *any* argument position (e.g. wrongly treating 'text'
-// in `action(someVar, 'text', handler)` as the expression). Verified
+// in `stimulus(someVar, 'text', handler)` as the expression). Verified
 // empirically. The current TS-compiler scanner only ever looks at
 // arguments[0], so this anchors the same way.
 export const STEP_DEFINITION_QUERY = `
@@ -21,7 +21,7 @@ export const STEP_DEFINITION_QUERY = `
     .
     (_)? @handler
   )
-  (#match? @function-name "^(context|action|sensor)$")
+  (#match? @function-name "^(stimulus|sensor)$")
 ) @root
 `
 
@@ -88,7 +88,7 @@ function decodeEscapeSequence(text: string): string {
 // Unlike `ts.StringLiteral.text` (already decoded), a tree-sitter `string`
 // node's children are the two quote tokens plus alternating `string_fragment`
 // (verbatim text) and `escape_sequence` nodes — this reconstructs the decoded
-// value. Verified against `action('I said \'hi\'', ...)`, whose `string` node
+// value. Verified against `stimulus('I said \'hi\'', ...)`, whose `string` node
 // has children `(string_fragment "I said ") (escape_sequence "\'")
 // (string_fragment "hi") (escape_sequence "\'")`.
 function decodeString(node: Node): string {

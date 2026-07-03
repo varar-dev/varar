@@ -15,7 +15,7 @@ const STEP_DEFINITION_QUERY = `
       .
       (value_argument (string_literal) @expression)))
   (annotated_lambda (lambda_literal) @handler)
-  (#match? @function-name "^(context|action|sensor)$")
+  (#match? @function-name "^(stimulus|sensor)$")
 ) @root
 `
 

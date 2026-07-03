@@ -14,6 +14,6 @@ final class GlueForwarder {
     record Ctx() implements State {}
 
     static void forwardAction(StateBinder<Ctx> binder, String expression) {
-        binder.action(expression, (Ctx ctx) -> ctx);
+        binder.stimulus(expression, (Ctx ctx) -> ctx);
     }
 }

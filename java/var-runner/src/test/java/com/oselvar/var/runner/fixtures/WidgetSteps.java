@@ -20,7 +20,7 @@ public final class WidgetSteps implements StepDefinitions {
     @Override
     public void defineSteps(Registrar registrar) {
         var s = registrar.defineState(() -> new Ctx(0));
-        s.context("I have {int} widgets", (Ctx ctx, Integer n) -> new Ctx(n));
+        s.stimulus("I have {int} widgets", (Ctx ctx, Integer n) -> new Ctx(n));
         s.sensor("I should have {int} widgets", (Ctx ctx, Integer expected) -> ctx.count());
     }
 }

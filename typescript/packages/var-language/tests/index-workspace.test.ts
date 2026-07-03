@@ -6,7 +6,7 @@ test('cross-references matched substrings in .md to their step defs', () => {
     stepFiles: [
       {
         path: '/abs/steps/account.steps.ts',
-        source: `action('I have {int} cukes', (ctx, n) => {})
+        source: `stimulus('I have {int} cukes', (ctx, n) => {})
 `,
       },
     ],
@@ -39,8 +39,8 @@ test('ambiguous matches surface as ambiguous-match diagnostics', () => {
     stepFiles: [
       {
         path: '/s.ts',
-        source: `action('I have {int} cukes', () => {})
-action('I have {int} {word}', () => {})
+        source: `stimulus('I have {int} cukes', () => {})
+stimulus('I have {int} {word}', () => {})
 `,
       },
     ],
@@ -62,8 +62,8 @@ test('a custom parameter type defined in *.steps.ts is registered before step co
     stepFiles: [
       {
         path: '/airports.steps.ts',
-        source: `const { action } = defineState(() => ({}), { airport: { regexp: /[A-Z]{3}/ } })
-action('I fly to {airport}', (ctx, code) => {})
+        source: `const { stimulus } = defineState(() => ({}), { airport: { regexp: /[A-Z]{3}/ } })
+stimulus('I fly to {airport}', (ctx, code) => {})
 `,
       },
     ],
@@ -84,7 +84,7 @@ test('a header-bound table highlights the binding paragraph with header words as
     stepFiles: [
       {
         path: '/yahtzee.steps.ts',
-        source: `action('each row lists the dice, the category and the score', (ctx, row) => {})\n`,
+        source: `stimulus('each row lists the dice, the category and the score', (ctx, row) => {})\n`,
       },
     ],
     varFiles: [
@@ -117,7 +117,9 @@ each row lists the dice, the category and the score:
 
 test('a plain (non-header-bound) match carries no headerCellRanges', () => {
   const idx = buildWorkspaceIndex({
-    stepFiles: [{ path: '/s.steps.ts', source: `action('I have {int} cukes', (ctx, n) => {})\n` }],
+    stepFiles: [
+      { path: '/s.steps.ts', source: `stimulus('I have {int} cukes', (ctx, n) => {})\n` },
+    ],
     varFiles: [{ path: '/b.md', source: '# Belly\n\nGiven I have 5 cukes' }],
   })
   expect(idx.matches[0]?.headerCellRanges).toBeUndefined()

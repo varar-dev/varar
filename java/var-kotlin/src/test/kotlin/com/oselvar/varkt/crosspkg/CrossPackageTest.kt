@@ -1,8 +1,8 @@
 package com.oselvar.varkt.crosspkg
 
 import com.oselvar.`var`.RegistryRegistrar
-import com.oselvar.varkt.action
-import com.oselvar.varkt.context
+import com.oselvar.varkt.stimulus
+import com.oselvar.varkt.stimulus
 import com.oselvar.varkt.defineState
 import com.oselvar.varkt.sensor
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -24,10 +24,10 @@ class CrossPackageTest {
     @Test
     fun `the canonical example compiles and registers from a foreign package`() {
         val steps = defineState(::Ctx) {
-            context("I have {int} cukes") { n: Int ->
+            stimulus("I have {int} cukes") { n: Int ->
                 copy(cukes = n)
             }
-            action("I eat {int} cukes") { n: Int ->
+            stimulus("I eat {int} cukes") { n: Int ->
                 copy(cukes = cukes - n)
             }
             sensor("I should have {int} cukes left") {

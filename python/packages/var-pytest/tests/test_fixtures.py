@@ -21,9 +21,9 @@ VAR_CONFIG = """\
 
 STEPS = """\
 from var import define_state
-context, action, sensor = define_state(lambda: {})
+stimulus, sensor = define_state(lambda: {})
 
-@action("I save {int}")
+@stimulus("I save {int}")
 def _(state, n, db, tmp_path):
     db.append((n, str(tmp_path)))
 
@@ -77,9 +77,9 @@ def test_fixtures_injected_into_step_handlers(pytester):
 
 CLASSIFICATION_STEPS = """\
 from var import define_state
-context, action, sensor = define_state(lambda: {})
+stimulus, sensor = define_state(lambda: {})
 
-@action("I store {int} in db")
+@stimulus("I store {int} in db")
 def _(state, n, db):
     db.append(n)
 

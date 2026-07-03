@@ -41,7 +41,7 @@ test('a context/action object return merges into state and threads forward', asy
         expression: 'I greet',
         expressionSourceFile: FILE,
         expressionSourceLine: 1,
-        kind: 'action',
+        kind: 'stimulus',
         handler: () => ({ greeting: 'hi', count: 1 }),
       })
       return addStep(r, {
@@ -70,14 +70,14 @@ test('shallow merge replaces a top-level key and preserves the rest', async () =
         expression: 'step one',
         expressionSourceFile: FILE,
         expressionSourceLine: 1,
-        kind: 'action',
+        kind: 'stimulus',
         handler: () => ({ a: 1, b: 2 }),
       })
       r = addStep(r, {
         expression: 'step two',
         expressionSourceFile: FILE,
         expressionSourceLine: 2,
-        kind: 'action',
+        kind: 'stimulus',
         handler: () => ({ b: 3 }),
       })
       return addStep(r, {
@@ -106,7 +106,7 @@ test('an undefined (void) return from a context/action is a no-op', async () => 
         expression: 'noop',
         expressionSourceFile: FILE,
         expressionSourceLine: 1,
-        kind: 'action',
+        kind: 'stimulus',
         handler: () => undefined,
       })
       return addStep(r, {
@@ -134,7 +134,7 @@ test('mutating the frozen state throws at runtime', async () => {
         expression: 'mutate',
         expressionSourceFile: FILE,
         expressionSourceLine: 1,
-        kind: 'action',
+        kind: 'stimulus',
         handler: (state) => {
           ;(state as { a: number }).a = 2
         },
@@ -155,14 +155,14 @@ test('mutating the post-merge (re-frozen) state throws at runtime', async () => 
         expression: 'step one',
         expressionSourceFile: FILE,
         expressionSourceLine: 1,
-        kind: 'action',
+        kind: 'stimulus',
         handler: () => ({ a: 1 }),
       })
       return addStep(r, {
         expression: 'mutate merged',
         expressionSourceFile: FILE,
         expressionSourceLine: 2,
-        kind: 'action',
+        kind: 'stimulus',
         handler: (state) => {
           ;(state as { a: number }).a = 99
         },

@@ -28,7 +28,7 @@ public final class AirportsSteps implements StepDefinitions {
 
         StateBinder<Ctx> s = registrar.defineState(() -> new Ctx(null));
 
-        s.action("I fly to {airport}", (Ctx ctx, String dest) -> new Ctx(dest));
+        s.stimulus("I fly to {airport}", (Ctx ctx, String dest) -> new Ctx(dest));
 
         s.sensor(
                 "The destination code is {word}",

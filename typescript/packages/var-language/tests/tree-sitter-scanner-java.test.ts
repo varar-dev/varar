@@ -13,14 +13,14 @@ describe('java dialect', () => {
     @Override
     public void defineSteps(Registrar registrar) {
         StateBinder<Ctx> s = registrar.defineState(() -> new Ctx(null));
-        s.action("I fly to {airport}", (Ctx ctx, String dest) -> new Ctx(dest));
+        s.stimulus("I fly to {airport}", (Ctx ctx, String dest) -> new Ctx(dest));
         s.sensor("The count is {int}", (Ctx ctx, Integer n) -> null);
     }
 }
 `
     const defs = scanner.discoverStepDefs('AirportsSteps.java', source)
     expect(defs.map((d) => [d.kind, d.expression])).toEqual([
-      ['action', 'I fly to {airport}'],
+      ['stimulus', 'I fly to {airport}'],
       ['sensor', 'The count is {int}'],
     ])
     expect(defs[0]?.handlerParams?.params).toEqual([
@@ -42,7 +42,7 @@ describe('java dialect', () => {
     const scanner = await javaScanner()
     const defs = scanner.discoverStepDefs(
       'XSteps.java',
-      `class X { void f(StateBinder<C> s) { s.action("I said \\"hi\\"\\n\\u00e9", (C c) -> c); } }\n`,
+      `class X { void f(StateBinder<C> s) { s.stimulus("I said \\"hi\\"\\n\\u00e9", (C c) -> c); } }\n`,
     )
     expect(defs[0]?.expression).toBe('I said "hi"\né')
   })
@@ -62,7 +62,7 @@ describe('java dialect', () => {
     expect(
       scanner.discoverStepDefs(
         'XSteps.java',
-        `class X { void f() { log.action(); other("x"); } }\n`,
+        `class X { void f() { log.stimulus(); other("x"); } }\n`,
       ),
     ).toEqual([])
   })

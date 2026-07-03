@@ -1,7 +1,7 @@
 import { defineState } from '@oselvar/var'
 
-const { action } = defineState(() => ({}))
+const { stimulus } = defineState(() => ({}))
 
 // Both expressions match "I have 5 cukes" → ambiguous-match diagnostic.
-action('I have {int} cukes', () => {})
-action('I have 5 cukes', () => {})
+stimulus('I have {int} cukes', () => {})
+stimulus('I have 5 cukes', () => {})

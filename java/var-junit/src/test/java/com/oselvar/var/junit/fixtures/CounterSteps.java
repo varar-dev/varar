@@ -20,7 +20,7 @@ public final class CounterSteps implements StepDefinitions {
     @Override
     public void defineSteps(Registrar registrar) {
         var s = registrar.defineState(() -> new Ctx(0));
-        s.action("I add {int} to the counter", (Ctx ctx, Integer n) -> new Ctx(ctx.count() + n));
+        s.stimulus("I add {int} to the counter", (Ctx ctx, Integer n) -> new Ctx(ctx.count() + n));
         s.sensor("the counter should be {int}", (Ctx ctx, Integer expected) -> ctx.count());
     }
 }

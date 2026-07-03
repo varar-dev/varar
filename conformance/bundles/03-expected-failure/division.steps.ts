@@ -1,7 +1,7 @@
 import { defineState } from '@oselvar/var'
 
-const { action } = defineState(() => ({}))
+const { stimulus } = defineState(() => ({}))
 
-action('I divide {int} by {int}', (_ctx, _a: number, b: number) => {
+stimulus('I divide {int} by {int}', (_ctx, _a: number, b: number) => {
   if (b === 0) throw new Error('division by zero')
 })

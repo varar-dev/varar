@@ -5,13 +5,13 @@
 // substring, so the error fence is not satisfied at the trace stage.
 package com.oselvar.varkt.conformance.bundle09
 
-import com.oselvar.varkt.action
+import com.oselvar.varkt.stimulus
 import com.oselvar.varkt.defineState
 
 class Ctx
 
 val steps = defineState(::Ctx) {
-    action("I always boom") {
+    stimulus("I always boom") {
         throw RuntimeException("actual different error")
     }
 }

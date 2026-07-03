@@ -29,7 +29,7 @@ class RegistryRegistrarTest {
         @Override
         public void defineSteps(Registrar registrar) {
             StateBinder<Ctx> s = registrar.defineState(() -> new Ctx(null));
-            s.action(
+            s.stimulus(
                     "I convert {int} to roman numerals",
                     (Ctx ctx, Integer n) -> new Ctx(ROMAN.get(n)));
             s.sensor("The result is {word}", (Ctx ctx, String expected) -> ctx.result());
@@ -47,7 +47,7 @@ class RegistryRegistrarTest {
 
         var action = registry.steps().get(0);
         assertEquals("I convert {int} to roman numerals", action.expression());
-        assertEquals(StepKind.ACTION, action.kind());
+        assertEquals(StepKind.STIMULUS, action.kind());
         assertEquals("RegistryRegistrarTest.java", action.expressionSourceFile());
         assertTrue(action.expressionSourceLine() > 0);
 
@@ -68,7 +68,7 @@ class RegistryRegistrarTest {
         record Empty() implements State {}
         RegistryRegistrar registrar = new RegistryRegistrar();
         StateBinder<Empty> s = registrar.defineState(Empty::new);
-        s.action("I do a thing", (Empty state) -> state);
+        s.stimulus("I do a thing", (Empty state) -> state);
 
         IllegalArgumentException ex =
                 assertThrows(

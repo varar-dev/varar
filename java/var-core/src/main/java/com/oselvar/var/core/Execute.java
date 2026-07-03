@@ -22,13 +22,13 @@ import java.util.function.Function;
  * handler that tries to mutate it in place throws at runtime (see {@code
  * execute-state.test.ts}'s {@code "mutating the frozen state throws at runtime"}). That
  * guard exists only because TS/Python's state model is a plain mutable object/dict that
- * gets shallow-merged with each {@code context}/{@code action} return — mutation is
+ * gets shallow-merged with each {@code stimulus} return — mutation is
  * otherwise silently possible and needs to be defended against at runtime.
  *
  * <p><b>Java needs no equivalent and none is ported here.</b> Task 11 committed to a
  * full-replacement {@code record}-based state model ({@code com.oselvar.var.State}):
  * authors declare {@code record Ctx(...) implements State}, and every {@code
- * context}/{@code action} handler returns a brand new, complete {@code Ctx} value —
+ * stimulus} handler returns a brand new, complete {@code Ctx} value —
  * there is no partial merge and no in-place mutation path to guard against. A Java
  * {@code record} is immutable by construction (all fields {@code final}, no setters);
  * the only way to violate that is reflection, which is not a runtime concern this port
@@ -82,7 +82,7 @@ import java.util.function.Function;
  * <h2>Invoking an opaque handler</h2>
  *
  * <p>{@code var-core} has zero compile-time dependency on the {@code var} module's
- * author-facing {@code StateBinder.Context0/1/2}/{@code Sensor0/1/2} interfaces
+ * author-facing {@code StateBinder.Stimulus0/1/2}/{@code Sensor0/1/2} interfaces
  * (hexagonal architecture: the core never imports the facade) — {@link
  * Registry.StepRegistration#handler()} is plain {@link Object}. This executor invokes it
  * purely via reflection, matched by arity (state + captured args + at most one trailing
@@ -240,13 +240,13 @@ public final class Execute {
             try {
                 Object returned = resolve(invokeHandler(step.stepDef().handler(), state, callArgs));
                 lastReturn = returned;
-                // Dispatch on the step's role. context/action REPLACE state with the new,
+                // Dispatch on the step's role. A stimulus REPLACES state with the new,
                 // complete value the handler returned (Task 11's full-replacement model —
-                // no merge, no no-op case: the typed StateBinder.ContextN always returns a
+                // no merge, no no-op case: the typed StateBinder.StimulusN always returns a
                 // full C). sensor compares its return against the Markdown; an unknown
                 // (null) kind is a wiring bug.
                 StepKind kind = step.stepDef().kind();
-                if (kind == StepKind.CONTEXT || kind == StepKind.ACTION) {
+                if (kind == StepKind.STIMULUS) {
                     stateByFile.put(file, returned);
                 } else if (kind == StepKind.SENSOR) {
                     // Header-bound rows are compared after the loop via ex.rowChecks; skip

@@ -7,7 +7,7 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 /**
- * The production {@link Registrar}: every {@code context}/{@code action}/{@code sensor}
+ * The production {@link Registrar}: every {@code stimulus}/{@code sensor}
  * registration is delegated to {@link Registry#addStep}, and every {@link
  * #defineParameterType} call to {@link Registry#defineParameterType} — building a real
  * var-core {@link Registry}, not just recording calls the way {@code RecordingRegistrar}
@@ -100,33 +100,18 @@ public final class RegistryRegistrar implements Registrar {
 
     private final class Binder<C extends State> implements StateBinder<C> {
         @Override
-        public void context(String expression, Context0<C> handler) {
-            register(expression, StepKind.CONTEXT, handler);
+        public void stimulus(String expression, Stimulus0<C> handler) {
+            register(expression, StepKind.STIMULUS, handler);
         }
 
         @Override
-        public <A> void context(String expression, Context1<C, A> handler) {
-            register(expression, StepKind.CONTEXT, handler);
+        public <A> void stimulus(String expression, Stimulus1<C, A> handler) {
+            register(expression, StepKind.STIMULUS, handler);
         }
 
         @Override
-        public <A, B> void context(String expression, Context2<C, A, B> handler) {
-            register(expression, StepKind.CONTEXT, handler);
-        }
-
-        @Override
-        public void action(String expression, Context0<C> handler) {
-            register(expression, StepKind.ACTION, handler);
-        }
-
-        @Override
-        public <A> void action(String expression, Context1<C, A> handler) {
-            register(expression, StepKind.ACTION, handler);
-        }
-
-        @Override
-        public <A, B> void action(String expression, Context2<C, A, B> handler) {
-            register(expression, StepKind.ACTION, handler);
+        public <A, B> void stimulus(String expression, Stimulus2<C, A, B> handler) {
+            register(expression, StepKind.STIMULUS, handler);
         }
 
         @Override

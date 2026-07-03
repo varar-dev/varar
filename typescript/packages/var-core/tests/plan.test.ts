@@ -9,21 +9,21 @@ function reg() {
     expression: 'I have {int} in my account',
     expressionSourceFile: 'steps.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   r = addStep(r, {
     expression: 'I withdraw {int}',
     expressionSourceFile: 'steps.ts',
     expressionSourceLine: 2,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   r = addStep(r, {
     expression: 'I should have {int} left',
     expressionSourceFile: 'steps.ts',
     expressionSourceLine: 3,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   return r
@@ -73,14 +73,14 @@ test('plan emits an ambiguous-match diagnostic and does NOT include the example 
     expression: 'I have {int} cukes',
     expressionSourceFile: 'a.ts',
     expressionSourceLine: 3,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   r = addStep(r, {
     expression: 'I have {int} {word}',
     expressionSourceFile: 'a.ts',
     expressionSourceLine: 8,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   const varDoc = parse('e.md', '# Ambig\n\nGiven I have 5 cukes')
@@ -104,14 +104,14 @@ test('plan turns each list item into its own example (one matched step per item)
     expression: 'I have {int} in my account',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   r = addStep(r, {
     expression: 'I withdraw {int}',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 2,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   const source = '# Bullets\n\n- Given I have 100 in my account\n- When I withdraw 40'
@@ -129,7 +129,7 @@ test('plan walks blockquote content as step-bearing', () => {
     expression: 'I have {int} in my account',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   const source = '# Quote\n\n> Given I have 100 in my account'
@@ -143,7 +143,7 @@ test('a markdown table immediately following a step-bearing block attaches as Da
     expression: 'these users exist',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   const source = `# Users
@@ -165,7 +165,7 @@ test('a table not immediately after a step-bearing block does NOT attach', () =>
     expression: 'these users exist',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   // Paragraph between step and table
@@ -188,7 +188,7 @@ test('a fenced code block immediately following a step-bearing block attaches as
     expression: 'I send the payload',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   const source = `# Payload
@@ -209,7 +209,7 @@ test('a step with NO following fence has no docString', () => {
     expression: 'I send the payload',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   const result = plan(parse('p.md', '# P\nWhen I send the payload'), r)
@@ -238,7 +238,7 @@ test('a header-bound table (paragraph names every header cell) expands into one 
     expression: 'each row lists the dice, the category and the score',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   const source = `# Yahtzee
@@ -273,7 +273,7 @@ test('a table whose paragraph names only SOME header cells keeps whole-table beh
     expression: 'these users exist',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   // "these users exist" names neither `name` nor `age` — no row mode.
@@ -297,7 +297,7 @@ test('header-bound matching is case-sensitive — the paragraph must echo the he
     expression: 'each row lists the Dice and the Score',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   // Headers are lower-case `dice`/`score`; the prose says `Dice`/`Score`.
@@ -319,7 +319,7 @@ test('header-bound rows are named by their cells and nested under the paragraph'
     expression: 'each row lists the dice, the category and the score',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   const source = `# Yahtzee
@@ -353,7 +353,7 @@ test('a header-bound example carries headerCellSpans pointing at the table heade
     expression: 'each row lists the dice, the category and the score',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   const source = `# Yahtzee
@@ -385,7 +385,7 @@ test('a table not attached to a step is allowed — no diagnostic', () => {
     expression: 'I have {int} cukes',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   const source = `# Detached
@@ -407,7 +407,7 @@ test('a header-bound row example carries rowChecks (column, value, cell span)', 
     expression: 'each row lists the dice, the category and the score',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   const source = `# Yahtzee
@@ -432,7 +432,7 @@ test('an `error` fence marks the example expectedOutcome=fail with a message sub
     expression: 'I divide {int} by {int}',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   const src = '# Division\n\nI divide 1 by 0.\n\n```error\ndivision by zero\n```\n'
@@ -448,7 +448,7 @@ test('no `error` fence leaves expectedOutcome undefined', () => {
     expression: 'I divide {int} by {int}',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   const ex = plan(parse('e.md', '# Division\n\nI divide 1 by 1.'), r).examples[0]
@@ -461,7 +461,7 @@ test('an `error` fence with no matching step emits an error-fence-without-step d
     expression: 'I divide {int} by {int}',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   const src = '# Nope\n\nThis prose matches nothing.\n\n```error\nboom\n```\n'
@@ -477,14 +477,14 @@ test('an `error` fence on an ambiguous example emits both diagnostics', () => {
     expression: 'I divide {int} by {int}',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   r = addStep(r, {
     expression: 'I divide 1 by 0',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 2,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   const src = '# Ambiguous\n\nI divide 1 by 0.\n\n```error\nboom\n```\n'
@@ -498,7 +498,7 @@ test('a doc-string step carries the fence body span on its plan', () => {
     expression: 'the payload is',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   const source = `# T

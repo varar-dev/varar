@@ -17,9 +17,9 @@ class PlanTest {
 
     private static Registry reg() {
         Registry r = Registry.createRegistry();
-        r = Registry.addStep(r, "I have {int} in my account", "steps.ts", 1, NOOP_HANDLER, StepKind.ACTION);
-        r = Registry.addStep(r, "I withdraw {int}", "steps.ts", 2, NOOP_HANDLER, StepKind.ACTION);
-        r = Registry.addStep(r, "I should have {int} left", "steps.ts", 3, NOOP_HANDLER, StepKind.ACTION);
+        r = Registry.addStep(r, "I have {int} in my account", "steps.ts", 1, NOOP_HANDLER, StepKind.STIMULUS);
+        r = Registry.addStep(r, "I withdraw {int}", "steps.ts", 2, NOOP_HANDLER, StepKind.STIMULUS);
+        r = Registry.addStep(r, "I should have {int} left", "steps.ts", 3, NOOP_HANDLER, StepKind.STIMULUS);
         return r;
     }
 
@@ -48,8 +48,8 @@ class PlanTest {
     @Test
     void planEmitsAnAmbiguousMatchDiagnosticAndDoesNotIncludeTheExampleSteps() {
         Registry r = Registry.createRegistry();
-        r = Registry.addStep(r, "I have {int} cukes", "a.ts", 3, NOOP_HANDLER, StepKind.ACTION);
-        r = Registry.addStep(r, "I have {int} {word}", "a.ts", 8, NOOP_HANDLER, StepKind.ACTION);
+        r = Registry.addStep(r, "I have {int} cukes", "a.ts", 3, NOOP_HANDLER, StepKind.STIMULUS);
+        r = Registry.addStep(r, "I have {int} {word}", "a.ts", 8, NOOP_HANDLER, StepKind.STIMULUS);
         Ast.VarDoc varDoc = Parse.parse("e.md", "# Ambig\n\nGiven I have 5 cukes");
         Plan.ExecutionPlan result = Plan.plan(varDoc, r);
         assertEquals(1, result.diagnostics().size());
@@ -69,8 +69,8 @@ class PlanTest {
     @Test
     void planTurnsEachListItemIntoItsOwnExampleOneMatchedStepPerItem() {
         Registry r = Registry.createRegistry();
-        r = Registry.addStep(r, "I have {int} in my account", "s.ts", 1, NOOP_HANDLER, StepKind.ACTION);
-        r = Registry.addStep(r, "I withdraw {int}", "s.ts", 2, NOOP_HANDLER, StepKind.ACTION);
+        r = Registry.addStep(r, "I have {int} in my account", "s.ts", 1, NOOP_HANDLER, StepKind.STIMULUS);
+        r = Registry.addStep(r, "I withdraw {int}", "s.ts", 2, NOOP_HANDLER, StepKind.STIMULUS);
         String source = "# Bullets\n\n- Given I have 100 in my account\n- When I withdraw 40";
         Plan.ExecutionPlan result = Plan.plan(Parse.parse("b.md", source), r);
         assertEquals(2, result.examples().size());
@@ -84,7 +84,7 @@ class PlanTest {
     @Test
     void planWalksBlockquoteContentAsStepBearing() {
         Registry r = Registry.createRegistry();
-        r = Registry.addStep(r, "I have {int} in my account", "s.ts", 1, NOOP_HANDLER, StepKind.ACTION);
+        r = Registry.addStep(r, "I have {int} in my account", "s.ts", 1, NOOP_HANDLER, StepKind.STIMULUS);
         String source = "# Quote\n\n> Given I have 100 in my account";
         Plan.ExecutionPlan result = Plan.plan(Parse.parse("q.md", source), r);
         assertEquals(1, result.examples().get(0).steps().size());
@@ -93,7 +93,7 @@ class PlanTest {
     @Test
     void aMarkdownTableImmediatelyFollowingAStepBearingBlockAttachesAsDataTable() {
         Registry r = Registry.createRegistry();
-        r = Registry.addStep(r, "these users exist", "s.ts", 1, NOOP_HANDLER, StepKind.ACTION);
+        r = Registry.addStep(r, "these users exist", "s.ts", 1, NOOP_HANDLER, StepKind.STIMULUS);
         String source =
                 """
                 # Users
@@ -112,7 +112,7 @@ class PlanTest {
     @Test
     void aTableNotImmediatelyAfterAStepBearingBlockDoesNotAttach() {
         Registry r = Registry.createRegistry();
-        r = Registry.addStep(r, "these users exist", "s.ts", 1, NOOP_HANDLER, StepKind.ACTION);
+        r = Registry.addStep(r, "these users exist", "s.ts", 1, NOOP_HANDLER, StepKind.STIMULUS);
         // Paragraph between step and table
         String source =
                 """
@@ -132,7 +132,7 @@ class PlanTest {
     @Test
     void aFencedCodeBlockImmediatelyFollowingAStepBearingBlockAttachesAsDocString() {
         Registry r = Registry.createRegistry();
-        r = Registry.addStep(r, "I send the payload", "s.ts", 1, NOOP_HANDLER, StepKind.ACTION);
+        r = Registry.addStep(r, "I send the payload", "s.ts", 1, NOOP_HANDLER, StepKind.STIMULUS);
         String source =
                 """
                 # Payload
@@ -150,7 +150,7 @@ class PlanTest {
     @Test
     void aStepWithNoFollowingFenceHasNoDocString() {
         Registry r = Registry.createRegistry();
-        r = Registry.addStep(r, "I send the payload", "s.ts", 1, NOOP_HANDLER, StepKind.ACTION);
+        r = Registry.addStep(r, "I send the payload", "s.ts", 1, NOOP_HANDLER, StepKind.STIMULUS);
         Plan.ExecutionPlan result = Plan.plan(Parse.parse("p.md", "# P\nWhen I send the payload"), r);
         assertNull(result.examples().get(0).steps().get(0).docString());
     }
@@ -183,7 +183,7 @@ class PlanTest {
                         "s.ts",
                         1,
                         NOOP_HANDLER,
-                        StepKind.ACTION);
+                        StepKind.STIMULUS);
         String source =
                 """
                 # Yahtzee
@@ -216,7 +216,7 @@ class PlanTest {
     @Test
     void aTableWhoseParagraphNamesOnlySomeHeaderCellsKeepsWholeTableBehaviour() {
         Registry r = Registry.createRegistry();
-        r = Registry.addStep(r, "these users exist", "s.ts", 1, NOOP_HANDLER, StepKind.ACTION);
+        r = Registry.addStep(r, "these users exist", "s.ts", 1, NOOP_HANDLER, StepKind.STIMULUS);
         // "these users exist" names neither `name` nor `age` — no row mode.
         String source =
                 """
@@ -239,7 +239,7 @@ class PlanTest {
         Registry r = Registry.createRegistry();
         r =
                 Registry.addStep(
-                        r, "each row lists the Dice and the Score", "s.ts", 1, NOOP_HANDLER, StepKind.ACTION);
+                        r, "each row lists the Dice and the Score", "s.ts", 1, NOOP_HANDLER, StepKind.STIMULUS);
         // Headers are lower-case `dice`/`score`; the prose says `Dice`/`Score`.
         String source =
                 """
@@ -265,7 +265,7 @@ class PlanTest {
                         "s.ts",
                         1,
                         NOOP_HANDLER,
-                        StepKind.ACTION);
+                        StepKind.STIMULUS);
         String source =
                 """
                 # Yahtzee
@@ -297,7 +297,7 @@ class PlanTest {
         // Tables are valid Markdown on their own. A table that happens not to follow a
         // step-bearing paragraph is just content, not a mistake.
         Registry r = Registry.createRegistry();
-        r = Registry.addStep(r, "I have {int} cukes", "s.ts", 1, NOOP_HANDLER, StepKind.ACTION);
+        r = Registry.addStep(r, "I have {int} cukes", "s.ts", 1, NOOP_HANDLER, StepKind.STIMULUS);
         String source =
                 """
                 # Detached
@@ -323,7 +323,7 @@ class PlanTest {
                         "s.ts",
                         1,
                         NOOP_HANDLER,
-                        StepKind.ACTION);
+                        StepKind.STIMULUS);
         String source =
                 """
                 # Yahtzee
@@ -358,7 +358,7 @@ class PlanTest {
                         "s.ts",
                         1,
                         NOOP_HANDLER,
-                        StepKind.ACTION);
+                        StepKind.STIMULUS);
         String src = "# Division\n\nI divide 1 by 0.\n\n```error\ndivision by zero\n```\n";
         Plan.PlannedExample ex = Plan.plan(Parse.parse("e.md", src), r).examples().get(0);
         assertEquals("fail", ex.expectedOutcome());
@@ -376,7 +376,7 @@ class PlanTest {
                         "s.ts",
                         1,
                         NOOP_HANDLER,
-                        StepKind.ACTION);
+                        StepKind.STIMULUS);
         Plan.PlannedExample ex =
                 Plan.plan(Parse.parse("e.md", "# Division\n\nI divide 1 by 1."), r).examples().get(0);
         assertNull(ex.expectedOutcome());
@@ -392,7 +392,7 @@ class PlanTest {
                         "s.ts",
                         1,
                         NOOP_HANDLER,
-                        StepKind.ACTION);
+                        StepKind.STIMULUS);
         String src = "# Nope\n\nThis prose matches nothing.\n\n```error\nboom\n```\n";
         Plan.ExecutionPlan result = Plan.plan(Parse.parse("e.md", src), r);
         assertEquals(0, result.examples().size());
@@ -404,8 +404,8 @@ class PlanTest {
     @Test
     void anErrorFenceOnAnAmbiguousExampleEmitsBothDiagnostics() {
         Registry r = Registry.createRegistry();
-        r = Registry.addStep(r, "I divide {int} by {int}", "s.ts", 1, NOOP_HANDLER, StepKind.ACTION);
-        r = Registry.addStep(r, "I divide 1 by 0", "s.ts", 2, NOOP_HANDLER, StepKind.ACTION);
+        r = Registry.addStep(r, "I divide {int} by {int}", "s.ts", 1, NOOP_HANDLER, StepKind.STIMULUS);
+        r = Registry.addStep(r, "I divide 1 by 0", "s.ts", 2, NOOP_HANDLER, StepKind.STIMULUS);
         String src = "# Ambiguous\n\nI divide 1 by 0.\n\n```error\nboom\n```\n";
         Plan.ExecutionPlan result = Plan.plan(Parse.parse("e.md", src), r);
         List<Diagnostics.DiagnosticCode> codes =
@@ -424,7 +424,7 @@ class PlanTest {
     void aDocStringStepCarriesTheFenceBodySpanOnItsPlan() {
         Registry r =
                 Registry.addStep(
-                        Registry.createRegistry(), "the payload is", "s.ts", 1, NOOP_HANDLER, StepKind.ACTION);
+                        Registry.createRegistry(), "the payload is", "s.ts", 1, NOOP_HANDLER, StepKind.STIMULUS);
         String source =
                 """
                 # T

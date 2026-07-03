@@ -8,14 +8,14 @@ function makeRegistry() {
     expression: 'I have {int} cucumbers',
     expressionSourceFile: 'steps.ts',
     expressionSourceLine: 1,
-    kind: 'context',
+    kind: 'stimulus',
     handler: () => {},
   })
   r = addStep(r, {
     expression: 'I eat {int} cucumbers',
     expressionSourceFile: 'steps.ts',
     expressionSourceLine: 2,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   r = addStep(r, {

@@ -1,5 +1,5 @@
 import { defineState } from '@oselvar/var'
 
-const { context } = defineState(() => ({ count: 0 }))
+const { stimulus } = defineState(() => ({ count: 0 }))
 
-context('I have {int} items', (_state, _count: number) => {})
+stimulus('I have {int} items', (_state, _count: number) => {})

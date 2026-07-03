@@ -39,7 +39,7 @@ const grammarLoader = createNodeGrammarLoader()
 describe('createStore over a FileSystem', () => {
   it('indexes matches from in-memory step + var files', async () => {
     const fs = fakeFs({
-      '/s.steps.ts': `action('I greet {string}', (ctx, name: string) => {})\n`,
+      '/s.steps.ts': `stimulus('I greet {string}', (ctx, name: string) => {})\n`,
       '/hello.md': `# Hi\n\nFirst I greet "world" okay?\n`,
     })
     const store = createStore({ fs, config, grammarLoader })
@@ -53,7 +53,7 @@ describe('createStore over a FileSystem', () => {
     const store = createStore({ fs, config, grammarLoader })
     await store.reindex()
     expect(store.index().matches.length).toBe(0)
-    await fs.write('/s.steps.ts', `action('I greet {string}', () => {})`)
+    await fs.write('/s.steps.ts', `stimulus('I greet {string}', () => {})`)
     await fs.write('/a.md', `I greet "x"`)
     await store.reindex()
     expect(store.index().matches.length).toBeGreaterThan(0)
@@ -80,7 +80,7 @@ describe('createStore over a FileSystem', () => {
 
   it('falls back to the TypeScript-compiler scanner when no grammarLoader is supplied', async () => {
     const fs = fakeFs({
-      '/s.steps.ts': `action('I greet {string}', (ctx, name: string) => {})\n`,
+      '/s.steps.ts': `stimulus('I greet {string}', (ctx, name: string) => {})\n`,
       '/hello.md': `# Hi\n\nFirst I greet "world" okay?\n`,
     })
     const store = createStore({ fs, config })
@@ -94,7 +94,7 @@ describe('createStore over a FileSystem', () => {
     // files, so the store derives a `['typescript']` language set from disk
     // rather than falling back to the createTreeSitterScanner default.
     const fs = fakeFs({
-      '/s.steps.ts': `action('I greet {string}', (ctx, name: string) => {})\n`,
+      '/s.steps.ts': `stimulus('I greet {string}', (ctx, name: string) => {})\n`,
       '/hello.md': `# Hi\n\nFirst I greet "world" okay?\n`,
     })
     const store = createStore({ fs, config, grammarLoader })

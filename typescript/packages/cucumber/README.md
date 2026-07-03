@@ -16,7 +16,7 @@ features/
   library.feature.md  ->   symlink to library.feature, parsed by var
 
 cucumber/steps/library.steps.ts   cucumber-js handlers (Given/When/Then + hooks)
-steps/library.steps.ts            var handlers (context/action/sensor + defineState)
+steps/library.steps.ts            var handlers (stimulus/sensor + defineState)
 
 src/library.ts                    the shared domain (a tiny library catalogue)
 ```

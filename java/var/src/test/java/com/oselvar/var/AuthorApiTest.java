@@ -25,7 +25,7 @@ class AuthorApiTest {
         public void defineSteps(Registrar registrar) {
             StateBinder<Ctx> s = registrar.defineState(() -> new Ctx(null));
 
-            s.action(
+            s.stimulus(
                     "I convert {int} to roman numerals",
                     (Ctx ctx, Integer n) -> new Ctx(ROMAN.get(n)));
 
@@ -44,7 +44,7 @@ class AuthorApiTest {
 
         var action = steps.get(0);
         assertEquals("I convert {int} to roman numerals", action.expression());
-        assertEquals(StepKind.ACTION, action.kind());
+        assertEquals(StepKind.STIMULUS, action.kind());
 
         var sensor = steps.get(1);
         assertEquals("The result is {word}", sensor.expression());
@@ -53,7 +53,7 @@ class AuthorApiTest {
         // Full-replacement record state model: the action returns a NEW, complete Ctx.
         @SuppressWarnings("unchecked")
         var convert =
-                (StateBinder.Context1<RomanNumeralSteps.Ctx, Integer>) action.handler();
+                (StateBinder.Stimulus1<RomanNumeralSteps.Ctx, Integer>) action.handler();
         assertEquals(
                 new RomanNumeralSteps.Ctx("IX"),
                 convert.apply(new RomanNumeralSteps.Ctx(null), 9));

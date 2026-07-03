@@ -1,8 +1,8 @@
 package com.oselvar.var;
 
 /**
- * The three role-registration methods bound to one state factory — the Java analogue of
- * the {@code (context, action, sensor)} triple TS/Python destructure out of {@code
+ * The role-registration methods bound to one state factory — the Java analogue of the
+ * {@code (stimulus, sensor)} pair TS/Python destructure out of {@code
  * defineState}/{@code define_state}. Obtained from {@link Registrar#defineState}.
  *
  * <p>Handlers are declared as a <em>typed arity ladder</em> (Cucumber-JVM's approach):
@@ -14,7 +14,7 @@ package com.oselvar.var;
  * resolving captures from the Cucumber expression is {@code (State, Object[])}; these
  * typed SAMs are author-facing sugar over that.
  *
- * <p>Because the {@code Context0}/{@code Context1} (and {@code Sensor0}/{@code Sensor1})
+ * <p>Because the {@code Stimulus0}/{@code Stimulus1} (and {@code Sensor0}/{@code Sensor1})
  * overloads are disambiguated by lambda arity, not by parameter type, a capturing
  * handler's parameter type cannot be inferred from a bare {@code (ctx, n) -> …} — write
  * it as {@code (Ctx ctx, Integer n) -> …} with explicit types.
@@ -23,21 +23,21 @@ package com.oselvar.var;
  */
 public interface StateBinder<C extends State> {
 
-    /** context/action handler with no captures: observe {@code state}, return new state. */
+    /** stimulus handler with no captures: observe {@code state}, return new state. */
     @FunctionalInterface
-    interface Context0<C extends State> {
+    interface Stimulus0<C extends State> {
         C apply(C state);
     }
 
-    /** context/action handler with one capture {@code a}: return new state. */
+    /** stimulus handler with one capture {@code a}: return new state. */
     @FunctionalInterface
-    interface Context1<C extends State, A> {
+    interface Stimulus1<C extends State, A> {
         C apply(C state, A a);
     }
 
-    /** context/action handler with two captures {@code a}, {@code b}: return new state. */
+    /** stimulus handler with two captures {@code a}, {@code b}: return new state. */
     @FunctionalInterface
-    interface Context2<C extends State, A, B> {
+    interface Stimulus2<C extends State, A, B> {
         C apply(C state, A a, B b);
     }
 
@@ -59,17 +59,11 @@ public interface StateBinder<C extends State> {
         R apply(C state, A a, B b);
     }
 
-    void context(String expression, Context0<C> handler);
+    void stimulus(String expression, Stimulus0<C> handler);
 
-    <A> void context(String expression, Context1<C, A> handler);
+    <A> void stimulus(String expression, Stimulus1<C, A> handler);
 
-    <A, B> void context(String expression, Context2<C, A, B> handler);
-
-    void action(String expression, Context0<C> handler);
-
-    <A> void action(String expression, Context1<C, A> handler);
-
-    <A, B> void action(String expression, Context2<C, A, B> handler);
+    <A, B> void stimulus(String expression, Stimulus2<C, A, B> handler);
 
     <R> void sensor(String expression, Sensor0<C, R> handler);
 

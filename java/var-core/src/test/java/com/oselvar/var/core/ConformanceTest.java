@@ -122,7 +122,7 @@ class ConformanceTest {
                         r, "airport", java.util.regex.Pattern.compile("[A-Z]{3}"), groups -> groups[0]);
         r =
                 Registry.addStep(
-                        r, "I fly to {airport}", "airports.steps", 1, NOOP_HANDLER, StepKind.ACTION);
+                        r, "I fly to {airport}", "airports.steps", 1, NOOP_HANDLER, StepKind.STIMULUS);
         Map<String, Object> artifact = Conformance.toRegistryArtifact(r);
         assertEquals(
                 List.of(Map.of("name", "airport", "regexp", "[A-Z]{3}")),

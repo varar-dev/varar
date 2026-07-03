@@ -114,13 +114,13 @@ type DeepReadonly<T> = T extends (...args: never[]) => unknown
       ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
       : T
 
-// A context/action handler receives the immutable `state` (deeply readonly) plus
+// A stimulus handler receives the immutable `state` (deeply readonly) plus
 // the args inferred from the expression `E` (built-in parameter types, plus any
 // `Custom` types declared via `defineState`), so `(state, name) => …` types
 // `name` without an annotation and without TS2345. It EVOLVES state by RETURNING
 // a partial state object (shallow-merged by the runtime) — or nothing, for no
 // change. It never mutates `state`.
-type RoleFn<C = unknown, Custom = Record<never, never>> = <E extends string>(
+type StimulusFn<C = unknown, Custom = Record<never, never>> = <E extends string>(
   expression: E,
   handler: (
     state: DeepReadonly<C>,
@@ -157,8 +157,7 @@ export function defineState<
   factory: () => C | Promise<C>,
   paramTypes?: P,
 ): {
-  readonly context: RoleFn<C, CustomRegistry<P>>
-  readonly action: RoleFn<C, CustomRegistry<P>>
+  readonly stimulus: StimulusFn<C, CustomRegistry<P>>
   readonly sensor: SensorFn<C, CustomRegistry<P>>
 } {
   const { sourceFile } = callerLocation()
@@ -172,8 +171,7 @@ export function defineState<
     }
   }
   return {
-    context: (expression, handler) => registerStep(expression, handler as StepHandler, 'context'),
-    action: (expression, handler) => registerStep(expression, handler as StepHandler, 'action'),
+    stimulus: (expression, handler) => registerStep(expression, handler as StepHandler, 'stimulus'),
     sensor: (expression, handler) => registerStep(expression, handler as StepHandler, 'sensor'),
   }
 }

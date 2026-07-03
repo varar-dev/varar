@@ -55,12 +55,11 @@ export function generateSnippet(
   // step captures nothing (a bare '{' block). Other templates ignore it.
   const lambdaParams = handlerArgs.length > 0 ? `${handlerArgs.join(', ')} ->` : ''
   const handlerSignature = `(${args}) => {`
-  const role: StepKind = options.role ?? 'action'
-  const others = (['context', 'action', 'sensor'] as const).filter((k) => k !== role)
+  const role: StepKind = options.role ?? 'stimulus'
+  const alt: StepKind = role === 'stimulus' ? 'sensor' : 'stimulus'
   const fullCode = renderTemplate(options.template ?? emitter.defaultTemplate, {
     role,
-    altA: others[0] as string,
-    altB: others[1] as string,
+    alt,
     expression,
     args,
     lambdaParams,

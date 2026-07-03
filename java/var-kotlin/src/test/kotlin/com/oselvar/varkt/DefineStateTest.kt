@@ -19,10 +19,10 @@ class DefineStateTest {
     // changing this test to `{ -> cukes }`; stop and report instead (the
     // approved API shape would need revisiting with the user).
     private fun canonicalSteps(): StepDefinitions = defineState(::Ctx) {
-        context("I have {int} cukes") { n: Int ->
+        stimulus("I have {int} cukes") { n: Int ->
             copy(cukes = n)
         }
-        action("I eat {int} cukes") { n: Int ->
+        stimulus("I eat {int} cukes") { n: Int ->
             copy(cukes = cukes - n)
         }
         sensor("I should have {int} cukes left") {
@@ -61,7 +61,7 @@ class DefineStateTest {
             steps.map { it.expression() },
         )
         assertEquals(
-            listOf(StepKind.CONTEXT, StepKind.ACTION, StepKind.SENSOR),
+            listOf(StepKind.STIMULUS, StepKind.STIMULUS, StepKind.SENSOR),
             steps.map { it.kind() },
         )
         // Glue-frame skipping (Task 1 + @file:RegistrarGlue on DefineState.kt)

@@ -7,19 +7,19 @@ from var.registry import _reset_builder, build_registry, context_factory
 from var import define_state
 
 
-def test_three_decorators_register_with_correct_kinds() -> None:
+def test_two_decorators_register_with_correct_kinds() -> None:
     _reset_builder()
 
     def factory():
         return {}
 
-    context, action, sensor = define_state(factory)
+    stimulus, sensor = define_state(factory)
 
-    @context("I have set up the world")
+    @stimulus("I have set up the world")
     def setup(state):
         pass
 
-    @action("I do something")
+    @stimulus("I do something")
     def do_something(state):
         pass
 
@@ -30,8 +30,8 @@ def test_three_decorators_register_with_correct_kinds() -> None:
     r = build_registry()
     assert len(r.steps) == 3
     kinds = {s.expression: s.kind for s in r.steps}
-    assert kinds["I have set up the world"] == "context"
-    assert kinds["I do something"] == "action"
+    assert kinds["I have set up the world"] == "stimulus"
+    assert kinds["I do something"] == "stimulus"
     assert kinds["I check the result"] == "sensor"
 
 
@@ -41,9 +41,9 @@ def test_decorators_capture_source_file_and_line() -> None:
     def factory():
         return {}
 
-    context, _action, _sensor = define_state(factory)
+    stimulus, _sensor = define_state(factory)
 
-    @context("a step")
+    @stimulus("a step")
     def my_step(state):
         pass
 
@@ -73,13 +73,13 @@ def test_build_registry_returns_steps_in_registration_order() -> None:
     def factory():
         return {}
 
-    context, action, sensor = define_state(factory)
+    stimulus, sensor = define_state(factory)
 
-    @context("step one")
+    @stimulus("step one")
     def s1(state):
         pass
 
-    @action("step two")
+    @stimulus("step two")
     def s2(state):
         pass
 
@@ -97,9 +97,9 @@ def test_context_factory_returns_callable_that_invokes_registered_factory() -> N
     def factory():
         return {"count": 42}
 
-    context, _action, _sensor = define_state(factory)
+    stimulus, _sensor = define_state(factory)
 
-    @context("some step")
+    @stimulus("some step")
     def step(state):
         pass
 

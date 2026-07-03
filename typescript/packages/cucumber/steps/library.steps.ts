@@ -2,12 +2,12 @@ import { defineState } from '@oselvar/var'
 import { expect } from 'vitest'
 import { type Book, type BorrowError, Library, type Receipt } from '../src/library.js'
 
-const { context, action, sensor } = defineState(() => ({
+const { stimulus, sensor } = defineState(() => ({
   library: new Library(new Date('2026-06-12T00:00:00Z')),
   lastReceipt: undefined as Receipt | BorrowError | undefined,
 }))
 
-context('the library has these books:', (state, rows: ReadonlyArray<ReadonlyArray<string>>) => {
+stimulus('the library has these books:', (state, rows: ReadonlyArray<ReadonlyArray<string>>) => {
   const [header, ...body] = rows
   if (!header) return
   const books = body.map((row) =>
@@ -18,7 +18,7 @@ context('the library has these books:', (state, rows: ReadonlyArray<ReadonlyArra
   state.library.addBooks(books)
 })
 
-action('the member borrows {string}', (state, title: string) => ({
+stimulus('the member borrows {string}', (state, title: string) => ({
   lastReceipt: state.library.borrow(title),
 }))
 

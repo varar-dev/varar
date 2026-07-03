@@ -23,24 +23,14 @@ public final class StepRole {
 
     /**
      * Guesses a step's role from its neighbours, using the canonical document order
-     * context &rarr; action &rarr; sensor. Purely structural — never inspects sentence
-     * words (no Given/When/Then heuristics). The generated snippet always offers the
-     * other roles as commented alternatives, so a wrong guess is cheap to correct.
+     * stimulus &rarr; sensor. Purely structural — never inspects sentence words (no
+     * Given/When/Then heuristics). The generated snippet always offers the other role
+     * as a commented alternative, so a wrong guess is cheap to correct.
+     *
+     * <p>A step with nothing after it is most likely the observation; anything followed
+     * by other steps is most likely driving the software.
      */
     public static StepKind inferStepRole(Neighbours neighbours) {
-        List<StepKind> before = neighbours.before();
-        List<StepKind> after = neighbours.after();
-        if (after.isEmpty()) {
-            return StepKind.SENSOR;
-        }
-        if (after.contains(StepKind.SENSOR)
-                && !before.contains(StepKind.ACTION)
-                && !after.contains(StepKind.ACTION)) {
-            return StepKind.ACTION;
-        }
-        if (before.isEmpty()) {
-            return StepKind.CONTEXT;
-        }
-        return StepKind.ACTION;
+        return neighbours.after().isEmpty() ? StepKind.SENSOR : StepKind.STIMULUS;
     }
 }

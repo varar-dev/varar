@@ -80,7 +80,7 @@ def test_execute_plan_calls_sink_example_for_each_planned_example() -> None:
         expression="I have {int} cukes",
         expression_source_file="s.ts",
         expression_source_line=1,
-        kind="action",
+        kind="stimulus",
         handler=lambda *_: None,
     )
     p = plan(parse("e.md", "# A\n\nGiven I have 5 cukes\n\n# B\n\nGiven I have 9 cukes"), r)
@@ -97,7 +97,7 @@ def test_execute_plan_reports_all_diagnostics_through_reporter() -> None:
         expression="I have {int} cukes",
         expression_source_file="s.ts",
         expression_source_line=1,
-        kind="action",
+        kind="stimulus",
         handler=lambda *_: None,
     )
     r = add_step(
@@ -105,7 +105,7 @@ def test_execute_plan_reports_all_diagnostics_through_reporter() -> None:
         expression="I have 5 cukes",
         expression_source_file="s.ts",
         expression_source_line=2,
-        kind="action",
+        kind="stimulus",
         handler=lambda *_: None,
     )
     p = plan(parse("m.md", "# A\n\nGiven I have 5 cukes"), r)
@@ -132,7 +132,7 @@ def test_sink_example_run_callback_executes_step_handlers_in_order() -> None:
             expression="I add {int}",
             expression_source_file="s.ts",
             expression_source_line=1,
-            kind="action",
+            kind="stimulus",
             handler=lambda _ctx, n: calls.append(f"add:{n}"),
         ),
         expression="I should have {int}",
@@ -158,7 +158,7 @@ def test_execute_plan_augments_thrown_error_with_md_frame() -> None:
         expression="I throw",
         expression_source_file="s.ts",
         expression_source_line=1,
-        kind="action",
+        kind="stimulus",
         handler=_thrower,
     )
     p = plan(parse("e.md", "# A\n\nI throw"), r2)
@@ -184,7 +184,7 @@ def test_execute_plan_invokes_create_context_once_per_example() -> None:
         expression="I record ctx",
         expression_source_file="s.ts",
         expression_source_line=1,
-        kind="action",
+        kind="stimulus",
         handler=lambda ctx: ctx_seen.append(ctx),
     )
     p = plan(parse("e.md", "# A\n\nI record ctx\n\n# B\n\nI record ctx"), r)
@@ -218,7 +218,7 @@ def test_execute_plan_appends_data_table_as_last_handler_arg() -> None:
         expression="these books exist:",
         expression_source_file="s.ts",
         expression_source_line=1,
-        kind="context",
+        kind="stimulus",
         handler=lambda _ctx, *args: captured.extend([args]),
     )
     source = (
@@ -247,7 +247,7 @@ def test_execute_plan_appends_docstring_as_last_handler_arg() -> None:
         expression="the receipt is:",
         expression_source_file="s.ts",
         expression_source_line=1,
-        kind="context",
+        kind="stimulus",
         handler=lambda _ctx, *args: captured.extend([args]),
     )
     source = '# Library\n\nthe receipt is:\n\n```json\n{"ok": true}\n```\n'
@@ -507,7 +507,7 @@ def test_whole_table_action_returning_none_passes() -> None:
         expression="uppercase each one",
         expression_source_file="s.ts",
         expression_source_line=1,
-        kind="action",
+        kind="stimulus",
         handler=lambda *_: None,
     )
     _runs_for(TABLE_DOC, r)[0]()  # should not raise
@@ -520,7 +520,7 @@ def test_doc_string_action_returning_none_passes() -> None:
         expression="the greeting is",
         expression_source_file="s.ts",
         expression_source_line=1,
-        kind="action",
+        kind="stimulus",
         handler=lambda *_: None,
     )
     _runs_for(DOCSTRING_DOC, r)[0]()  # should not raise
@@ -547,7 +547,7 @@ def test_execute_plan_passes_each_example_deduped_step_lines_via_info() -> None:
         expression="I have {int} cukes",
         expression_source_file="inline",
         expression_source_line=1,
-        kind="action",
+        kind="stimulus",
         handler=lambda *_: None,
     )
     r = add_step(
@@ -555,7 +555,7 @@ def test_execute_plan_passes_each_example_deduped_step_lines_via_info() -> None:
         expression="I eat {int} cukes",
         expression_source_file="inline",
         expression_source_line=2,
-        kind="action",
+        kind="stimulus",
         handler=lambda *_: None,
     )
     source = "# T\n\nI have 5 cukes.\nI eat 2 cukes.\n"
@@ -589,7 +589,7 @@ def test_expected_failure_example_a_thrown_step_makes_run_resolve() -> None:
         expression="I divide {int} by {int}",
         expression_source_file="s.ts",
         expression_source_line=1,
-        kind="action",
+        kind="stimulus",
         handler=_handler,
     )
     src = "# D\n\nI divide 1 by 0.\n\n```error\ndivision by zero\n```\n"
@@ -604,7 +604,7 @@ def test_expected_failure_no_throw_makes_run_reject_with_unexpected_pass_error()
         expression="I divide {int} by {int}",
         expression_source_file="s.ts",
         expression_source_line=1,
-        kind="action",
+        kind="stimulus",
         handler=lambda *_: None,
     )
     src = "# D\n\nI divide 1 by 1.\n\n```error\n```\n"
@@ -624,7 +624,7 @@ def test_expected_failure_with_message_substring_mismatch_rejects_with_real_erro
         expression="I divide {int} by {int}",
         expression_source_file="s.ts",
         expression_source_line=1,
-        kind="action",
+        kind="stimulus",
         handler=_handler,
     )
     src = "# D\n\nI divide 1 by 0.\n\n```error\ndivision by zero\n```\n"
@@ -640,7 +640,7 @@ def test_observer_receives_pass_observation_per_executed_step() -> None:
         expression="I add {int}",
         expression_source_file="s.ts",
         expression_source_line=1,
-        kind="action",
+        kind="stimulus",
         handler=lambda *_: None,
     )
     obs: list[StepObservation] = []
@@ -672,7 +672,7 @@ def test_observer_receives_fail_observation_when_a_step_throws() -> None:
         expression="I blow up",
         expression_source_file="s.ts",
         expression_source_line=1,
-        kind="action",
+        kind="stimulus",
         handler=_blowup,
     )
     obs: list[StepObservation] = []
@@ -735,7 +735,7 @@ def test_context_action_return_merges_into_state_and_threads_forward() -> None:
             expression="I greet",
             expression_source_file=FILE,
             expression_source_line=1,
-            kind="action",
+            kind="stimulus",
             handler=lambda *_: {"greeting": "hi", "count": 1},
         )
         return add_step(
@@ -763,7 +763,7 @@ def test_shallow_merge_replaces_top_level_key_and_preserves_rest() -> None:
             expression="step one",
             expression_source_file=FILE,
             expression_source_line=1,
-            kind="action",
+            kind="stimulus",
             handler=lambda *_: {"a": 1, "b": 2},
         )
         r = add_step(
@@ -771,7 +771,7 @@ def test_shallow_merge_replaces_top_level_key_and_preserves_rest() -> None:
             expression="step two",
             expression_source_file=FILE,
             expression_source_line=2,
-            kind="action",
+            kind="stimulus",
             handler=lambda *_: {"b": 3},
         )
         return add_step(
@@ -800,7 +800,7 @@ def test_undefined_return_from_context_action_is_no_op() -> None:
             expression="noop",
             expression_source_file=FILE,
             expression_source_line=1,
-            kind="action",
+            kind="stimulus",
             handler=lambda *_: None,
         )
         return add_step(
@@ -831,7 +831,7 @@ def test_mutating_frozen_state_raises_type_error() -> None:
             expression="mutate",
             expression_source_file=FILE,
             expression_source_line=1,
-            kind="action",
+            kind="stimulus",
             handler=_mutate,
         )
 
@@ -851,7 +851,7 @@ def test_mutating_post_merge_refrozen_state_raises_type_error() -> None:
             expression="step one",
             expression_source_file=FILE,
             expression_source_line=1,
-            kind="action",
+            kind="stimulus",
             handler=lambda *_: {"a": 1},
         )
         return add_step(
@@ -859,7 +859,7 @@ def test_mutating_post_merge_refrozen_state_raises_type_error() -> None:
             expression="mutate merged",
             expression_source_file=FILE,
             expression_source_line=2,
-            kind="action",
+            kind="stimulus",
             handler=_mutate_merged,
         )
 
@@ -1039,7 +1039,7 @@ def test_action_returning_non_dict_raises_return_shape_error() -> None:
             expression="I fly to {word}",
             expression_source_file="s.steps.ts",
             expression_source_line=1,
-            kind="action",
+            kind="stimulus",
             handler=lambda *_: "oops",
         ),
     )
@@ -1055,7 +1055,7 @@ def test_context_step_returning_non_dict_raises_return_shape_error() -> None:
             expression="I set up the world",
             expression_source_file="s.steps.ts",
             expression_source_line=1,
-            kind="context",
+            kind="stimulus",
             handler=lambda *_: "oops",
         ),
     )
@@ -1157,7 +1157,7 @@ def test_async_def_handlers_are_driven_to_completion() -> None:
             expression="set count to {int}",
             expression_source_file="async.ts",
             expression_source_line=1,
-            kind="action",
+            kind="stimulus",
             handler=_async_action,
         ),
         expression="count is {int}",

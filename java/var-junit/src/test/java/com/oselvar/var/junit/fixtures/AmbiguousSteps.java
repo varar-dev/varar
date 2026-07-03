@@ -17,7 +17,7 @@ public final class AmbiguousSteps implements StepDefinitions {
     @Override
     public void defineSteps(Registrar registrar) {
         var s = registrar.defineState(Ctx::new);
-        s.action("I have {int} cukes", (Ctx ctx, Integer n) -> ctx);
-        s.action("I have 5 cukes", (Ctx ctx) -> ctx);
+        s.stimulus("I have {int} cukes", (Ctx ctx, Integer n) -> ctx);
+        s.stimulus("I have 5 cukes", (Ctx ctx) -> ctx);
     }
 }

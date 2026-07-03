@@ -28,12 +28,11 @@ def define_state(
 ) -> tuple[
     Callable[[str], Callable[[Callable], Callable]],
     Callable[[str], Callable[[Callable], Callable]],
-    Callable[[str], Callable[[Callable], Callable]],
 ]:
     """Register *factory* as the context-state constructor for its step file.
 
-    Returns ``(context, action, sensor)`` — each is a decorator factory:
-    ``@context("expression")`` registers the decorated function as a step.
+    Returns ``(stimulus, sensor)`` — each is a decorator factory:
+    ``@stimulus("expression")`` registers the decorated function as a step.
 
     Source location is captured from the decorated function's ``__code__``
     attributes (``co_filename`` / ``co_firstlineno``).
@@ -76,7 +75,7 @@ def define_state(
 
         return decorator_factory
 
-    return _make_decorator("context"), _make_decorator("action"), _make_decorator("sensor")
+    return _make_decorator("stimulus"), _make_decorator("sensor")
 
 
 def context_factory() -> Callable[[str], Any]:

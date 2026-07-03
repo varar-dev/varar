@@ -14,7 +14,7 @@ public final class CounterSteps implements StepDefinitions {
     public void defineSteps(Registrar registrar) {
         StateBinder<Ctx> s = registrar.defineState(() -> new Ctx(0));
 
-        s.action("I increment", (Ctx ctx) -> new Ctx(ctx.count() + 1));
+        s.stimulus("I increment", (Ctx ctx) -> new Ctx(ctx.count() + 1));
 
         s.sensor("The count is {int}", (Ctx ctx, Integer n) -> ctx.count());
     }

@@ -10,7 +10,7 @@ describe('kotlin dialect', () => {
   test('discovers trailing-lambda step calls with kind, expression, and lambda params', async () => {
     const scanner = await kotlinScanner()
     const source = `val steps = defineState(::Ctx) {
-    action("I fly to {airport}") { dest: String ->
+    stimulus("I fly to {airport}") { dest: String ->
         copy(dest = dest)
     }
     sensor("The row is checked") { row: Map<String, String> ->
@@ -20,7 +20,7 @@ describe('kotlin dialect', () => {
 `
     const defs = scanner.discoverStepDefs('airports.steps.kt', source)
     expect(defs.map((d) => [d.kind, d.expression])).toEqual([
-      ['action', 'I fly to {airport}'],
+      ['stimulus', 'I fly to {airport}'],
       ['sensor', 'The row is checked'],
     ])
     expect(defs[0]?.handlerParams?.params).toEqual([{ name: 'dest', typeText: 'String' }])
@@ -43,7 +43,7 @@ describe('kotlin dialect', () => {
     const scanner = await kotlinScanner()
     const defs = scanner.discoverStepDefs(
       'x.steps.kt',
-      `val steps = defineState(::Ctx) {\n    action("costs \\$5\\n\\u00e9") { n: Int -> copy() }\n}\n`,
+      `val steps = defineState(::Ctx) {\n    stimulus("costs \\$5\\n\\u00e9") { n: Int -> copy() }\n}\n`,
     )
     expect(defs[0]?.expression).toBe('costs $5\né')
   })
@@ -52,7 +52,7 @@ describe('kotlin dialect', () => {
     const scanner = await kotlinScanner()
     const source = `val steps = defineState(::Ctx) {
     parameterType("airport", Regex("[A-Z]{3}")) { captures -> captures[0].lowercase() }
-    action("I fly to {airport}") { dest: String -> copy(dest = dest) }
+    stimulus("I fly to {airport}") { dest: String -> copy(dest = dest) }
 }
 `
     const types = scanner.discoverParameterTypes('x.steps.kt', source)

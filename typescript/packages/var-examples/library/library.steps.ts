@@ -20,7 +20,7 @@ const MONTHS = [
 // Custom parameter types are declared inline so their transformer return types
 // flow into the steps: {date} → Date, {money} → number, {title} → string. The
 // step handlers below need no argument annotations as a result.
-const { context, action, sensor } = defineState(
+const { stimulus, sensor } = defineState(
   () => ({
     // library: new Library(),
     member: 'maya',
@@ -46,11 +46,11 @@ const { context, action, sensor } = defineState(
   },
 )
 
-context('Maya has borrowed {string}, due back on {date}', (_state, _title, _due) => {
+stimulus('Maya has borrowed {string}, due back on {date}', (_state, _title, _due) => {
   // ctx.library.checkOut(ctx.member, title, due)
 })
 
-action('she returns it on {date}', (_state, _returned) => {
+stimulus('she returns it on {date}', (_state, _returned) => {
   // ctx.library.checkIn(ctx.member, returned)
 })
 

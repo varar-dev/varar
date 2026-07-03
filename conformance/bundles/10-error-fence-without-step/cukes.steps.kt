@@ -6,11 +6,11 @@
 // needs the one step registered.
 package com.oselvar.varkt.conformance.bundle10
 
-import com.oselvar.varkt.action
+import com.oselvar.varkt.stimulus
 import com.oselvar.varkt.defineState
 
 class Ctx
 
 val steps = defineState(::Ctx) {
-    action("I have {int} cukes") { n: Int -> this }
+    stimulus("I have {int} cukes") { n: Int -> this }
 }

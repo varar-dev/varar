@@ -14,7 +14,7 @@ public final class DivisionSteps implements StepDefinitions {
     public void defineSteps(Registrar registrar) {
         StateBinder<Ctx> s = registrar.defineState(Ctx::new);
 
-        s.action(
+        s.stimulus(
                 "I divide {int} by {int}",
                 (Ctx ctx, Integer a, Integer b) -> {
                     if (b == 0) throw new ArithmeticException("division by zero");

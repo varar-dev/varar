@@ -79,7 +79,7 @@ test('an action that returns a value throws ReturnShapeError', async () => {
       expression: 'I fly to {word}',
       expressionSourceFile: 's.steps.ts',
       expressionSourceLine: 1,
-      kind: 'action',
+      kind: 'stimulus',
       handler: () => 'oops',
     }),
   )
@@ -93,7 +93,7 @@ test('a context step that returns a value throws ReturnShapeError', async () => 
       expression: 'I set up the world',
       expressionSourceFile: 's.steps.ts',
       expressionSourceLine: 1,
-      kind: 'context',
+      kind: 'stimulus',
       handler: () => 'oops',
     }),
   )

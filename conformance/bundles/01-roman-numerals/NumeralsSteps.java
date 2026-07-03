@@ -31,7 +31,7 @@ public final class NumeralsSteps implements StepDefinitions {
     public void defineSteps(Registrar registrar) {
         StateBinder<Ctx> s = registrar.defineState(() -> new Ctx(null));
 
-        s.action(
+        s.stimulus(
                 "I convert {int} to roman numerals",
                 (Ctx ctx, Integer n) -> new Ctx(ROMAN.get(n)));
 

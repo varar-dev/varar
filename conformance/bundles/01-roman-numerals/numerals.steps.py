@@ -1,11 +1,11 @@
 from var import define_state
 
-context, action, sensor = define_state(lambda: {})
+stimulus, sensor = define_state(lambda: {})
 
 ROMAN = {1: "I", 4: "IV", 9: "IX", 40: "XL"}
 
 
-@action("I convert {int} to roman numerals")
+@stimulus("I convert {int} to roman numerals")
 def _(state, n):
     return {"result": ROMAN.get(n)}
 

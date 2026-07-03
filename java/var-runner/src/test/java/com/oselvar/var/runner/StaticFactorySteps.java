@@ -19,7 +19,7 @@ public final class StaticFactorySteps {
     public static StepDefinitions steps() {
         return registrar -> {
             StateBinder<Ctx> s = registrar.defineState(Ctx::new);
-            s.action("I do a static-factory thing", (Ctx ctx) -> ctx);
+            s.stimulus("I do a static-factory thing", (Ctx ctx) -> ctx);
         };
     }
 }

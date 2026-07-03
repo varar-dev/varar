@@ -2,13 +2,13 @@
 
 The package you write step definitions against. Import `defineState`, give it a
 factory for your scenario state (and optionally custom parameter types), and use the
-returned `context` / `action` / `sensor` functions to bind Cucumber-expression steps.
+returned `stimulus` / `sensor` functions to bind Cucumber-expression steps.
 
 ```ts
 import { defineState } from '@oselvar/var'
 
-const { action, sensor } = defineState(() => ({ greeting: '' }))
-action('I greet {string}', (_state, name) => ({ greeting: `Hello, ${name}!` }))
+const { stimulus, sensor } = defineState(() => ({ greeting: '' }))
+stimulus('I greet {string}', (_state, name) => ({ greeting: `Hello, ${name}!` }))
 sensor('the greeting is {string}', (state) => state.greeting)
 ```
 

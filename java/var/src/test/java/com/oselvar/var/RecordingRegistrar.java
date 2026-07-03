@@ -73,33 +73,18 @@ final class RecordingRegistrar implements Registrar {
 
     private final class Binder<C extends State> implements StateBinder<C> {
         @Override
-        public void context(String expression, Context0<C> handler) {
-            record(expression, StepKind.CONTEXT, handler);
+        public void stimulus(String expression, Stimulus0<C> handler) {
+            record(expression, StepKind.STIMULUS, handler);
         }
 
         @Override
-        public <A> void context(String expression, Context1<C, A> handler) {
-            record(expression, StepKind.CONTEXT, handler);
+        public <A> void stimulus(String expression, Stimulus1<C, A> handler) {
+            record(expression, StepKind.STIMULUS, handler);
         }
 
         @Override
-        public <A, B> void context(String expression, Context2<C, A, B> handler) {
-            record(expression, StepKind.CONTEXT, handler);
-        }
-
-        @Override
-        public void action(String expression, Context0<C> handler) {
-            record(expression, StepKind.ACTION, handler);
-        }
-
-        @Override
-        public <A> void action(String expression, Context1<C, A> handler) {
-            record(expression, StepKind.ACTION, handler);
-        }
-
-        @Override
-        public <A, B> void action(String expression, Context2<C, A, B> handler) {
-            record(expression, StepKind.ACTION, handler);
+        public <A, B> void stimulus(String expression, Stimulus2<C, A, B> handler) {
+            record(expression, StepKind.STIMULUS, handler);
         }
 
         @Override

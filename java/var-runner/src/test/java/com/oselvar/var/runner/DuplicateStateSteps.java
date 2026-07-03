@@ -19,14 +19,14 @@ public final class DuplicateStateSteps {
     public static StepDefinitions first() {
         return registrar -> {
             StateBinder<Ctx> s = registrar.defineState(Ctx::new);
-            s.action("the first duplicate-file step", (Ctx ctx) -> ctx);
+            s.stimulus("the first duplicate-file step", (Ctx ctx) -> ctx);
         };
     }
 
     public static StepDefinitions second() {
         return registrar -> {
             StateBinder<Ctx> s = registrar.defineState(Ctx::new);
-            s.action("the second duplicate-file step", (Ctx ctx) -> ctx);
+            s.stimulus("the second duplicate-file step", (Ctx ctx) -> ctx);
         };
     }
 }

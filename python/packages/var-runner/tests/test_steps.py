@@ -2,8 +2,8 @@ from var_runner.steps import load_steps
 
 STEPS = '''
 from var import define_state
-context, action, sensor = define_state(lambda: {"n": 0})
-@action("I add {int}")
+stimulus, sensor = define_state(lambda: {"n": 0})
+@stimulus("I add {int}")
 def _(state, n):
     return {"n": state["n"] + n}
 @sensor("the total is {int}")

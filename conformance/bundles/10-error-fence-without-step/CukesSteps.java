@@ -20,6 +20,6 @@ public final class CukesSteps implements StepDefinitions {
     public void defineSteps(Registrar registrar) {
         StateBinder<Ctx> s = registrar.defineState(Ctx::new);
 
-        s.action("I have {int} cukes", (Ctx ctx, Integer n) -> ctx);
+        s.stimulus("I have {int} cukes", (Ctx ctx, Integer n) -> ctx);
     }
 }

@@ -1,5 +1,5 @@
 import { defineState } from '@oselvar/var'
 
-const { action } = defineState(() => ({}))
+const { stimulus } = defineState(() => ({}))
 
-action('I greet {string}', () => {})
+stimulus('I greet {string}', () => {})

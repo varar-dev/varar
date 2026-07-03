@@ -26,7 +26,7 @@ test('executePlan calls sink.example for each PlannedExample', () => {
     expression: 'I have {int} cukes',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   // With the paragraph-as-test model, each paragraph is its own example and
@@ -49,14 +49,14 @@ test('executePlan reports all diagnostics through reporter.diagnostic', () => {
     expression: 'I have {int} cukes',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   r = addStep(r, {
     expression: 'I have 5 cukes',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 2,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   const p = plan(parse('m.md', '# A\n\nGiven I have 5 cukes'), r)
@@ -76,7 +76,7 @@ test('the sink.example run callback executes the step handlers in order', async 
       expression: 'I add {int}',
       expressionSourceFile: 's.ts',
       expressionSourceLine: 1,
-      kind: 'action',
+      kind: 'stimulus',
       handler: (_ctx, n) => {
         calls.push(`add:${n as number}`)
       },
@@ -110,7 +110,7 @@ test('executePlan augments a thrown error with a .md frame for the failing step'
     expression: 'I throw',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {
       throw new Error('boom')
     },
@@ -153,7 +153,7 @@ test('executePlan invokes createContext once per example and passes the result t
     expression: 'I record ctx',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: (ctx) => {
       ctxSeen.push(ctx)
     },
@@ -182,7 +182,7 @@ test('executePlan appends a data table as the last handler arg (after cucumber a
     expression: 'these books exist:',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'context',
+    kind: 'stimulus',
     handler: (_ctx, ...args) => {
       captured = args
     },
@@ -218,7 +218,7 @@ test('executePlan appends a docstring as the last handler arg', async () => {
     expression: 'the receipt is:',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'context',
+    kind: 'stimulus',
     handler: (_ctx, ...args) => {
       captured = args
     },
@@ -492,7 +492,7 @@ test('a whole-table action returning undefined passes (asserted nothing)', async
     expression: 'uppercase each one',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => undefined,
   })
   await expect(runsFor(TABLE_DOC, r)[0]?.()).resolves.toBeUndefined()
@@ -503,7 +503,7 @@ test('a doc-string action returning undefined passes (asserted nothing)', async 
     expression: 'the greeting is',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => undefined,
   })
   await expect(runsFor(DOCSTRING_DOC, r)[0]?.()).resolves.toBeUndefined()
@@ -527,14 +527,14 @@ test('executePlan passes each example its deduped 1-based step lines via info', 
     expression: 'I have {int} cukes',
     expressionSourceFile: 'inline',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   r = addStep(r, {
     expression: 'I eat {int} cukes',
     expressionSourceFile: 'inline',
     expressionSourceLine: 2,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   // Both steps are in one paragraph (no blank line between them) so the planner
@@ -563,7 +563,7 @@ test('expected-failure example: a thrown step makes the run resolve (pass)', asy
     expression: 'I divide {int} by {int}',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: (_c, _a, b) => {
       if (b === 0) throw new Error('division by zero')
     },
@@ -578,7 +578,7 @@ test('expected-failure example: no throw makes the run reject with UnexpectedPas
     expression: 'I divide {int} by {int}',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   const src = '# D\n\nI divide 1 by 1.\n\n```error\n```\n'
@@ -591,7 +591,7 @@ test('expected-failure with message substring: mismatch rejects with the real er
     expression: 'I divide {int} by {int}',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {
       throw new Error('boom')
     },
@@ -606,7 +606,7 @@ test('observer receives a pass observation per executed step', async () => {
     expression: 'I add {int}',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {},
   })
   const obs: StepObservation[] = []
@@ -624,7 +624,7 @@ test('observer receives a fail observation when a step throws', async () => {
     expression: 'I blow up',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
-    kind: 'action',
+    kind: 'stimulus',
     handler: () => {
       throw new Error('kaboom')
     },

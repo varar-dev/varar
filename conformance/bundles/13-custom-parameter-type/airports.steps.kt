@@ -8,7 +8,7 @@
 // expressions compile eagerly.
 package com.oselvar.varkt.conformance.bundle13
 
-import com.oselvar.varkt.action
+import com.oselvar.varkt.stimulus
 import com.oselvar.varkt.defineState
 import com.oselvar.varkt.sensor
 
@@ -16,7 +16,7 @@ data class Ctx(val dest: String? = null)
 
 val steps = defineState(::Ctx) {
     parameterType("airport", Regex("[A-Z]{3}")) { captures -> captures[0].lowercase() }
-    action("I fly to {airport}") { dest: String ->
+    stimulus("I fly to {airport}") { dest: String ->
         copy(dest = dest)
     }
     sensor("The destination code is {word}") { expected: String ->

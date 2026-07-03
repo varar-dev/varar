@@ -19,7 +19,7 @@ public final class BoomSteps implements StepDefinitions {
     public void defineSteps(Registrar registrar) {
         StateBinder<Ctx> s = registrar.defineState(Ctx::new);
 
-        s.action(
+        s.stimulus(
                 "I always boom",
                 (Ctx ctx) -> {
                     throw new RuntimeException("actual different error");

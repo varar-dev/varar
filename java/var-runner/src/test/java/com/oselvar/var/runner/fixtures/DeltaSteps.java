@@ -18,6 +18,6 @@ public final class DeltaSteps implements StepDefinitions {
     public void defineSteps(Registrar registrar) {
         registrar.defineParameterType("size", Pattern.compile("small|large"), groups -> groups[0]);
         var s = registrar.defineState(() -> new Ctx(""));
-        s.action("delta sets size to {size}", (Ctx ctx, String size) -> new Ctx(size));
+        s.stimulus("delta sets size to {size}", (Ctx ctx, String size) -> new Ctx(size));
     }
 }

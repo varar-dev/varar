@@ -4,7 +4,7 @@ import { type LanguageSpec, toRange } from './types.js'
 
 // Verified against tree-sitter-java 0.23.5 and all 13 conformance bundles
 // (2026-07-02). The receiver is deliberately unconstrained — steps register
-// on whatever the binder variable is called (s.action, binder.sensor, ...).
+// on whatever the binder variable is called (s.stimulus, binder.sensor, ...).
 const STEP_DEFINITION_QUERY = `
 (method_invocation
   name: (identifier) @function-name
@@ -13,7 +13,7 @@ const STEP_DEFINITION_QUERY = `
     (string_literal) @expression
     .
     (_)? @handler)
-  (#match? @function-name "^(context|action|sensor)$")
+  (#match? @function-name "^(stimulus|sensor)$")
 ) @root
 `
 

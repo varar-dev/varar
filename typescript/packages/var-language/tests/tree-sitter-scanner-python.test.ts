@@ -14,7 +14,7 @@ describe('python dialect', () => {
 context, action, sensor = define_state(lambda: {})
 
 
-@action("I fly to {airport}")
+@stimulus("I fly to {airport}")
 def _(state, dest):
     return {"dest": dest}
 
@@ -25,7 +25,7 @@ def _(state, n: int, row=None):
 `
     const defs = scanner.discoverStepDefs('a.steps.py', source)
     expect(defs.map((d) => [d.kind, d.expression])).toEqual([
-      ['action', 'I fly to {airport}'],
+      ['stimulus', 'I fly to {airport}'],
       ['sensor', 'The count is {int}'],
     ])
     expect(defs[0]?.handlerParams?.params).toEqual([
@@ -43,7 +43,7 @@ def _(state, n: int, row=None):
     const scanner = await pythonScanner()
     const defs = scanner.discoverStepDefs(
       'a.steps.py',
-      `@action("I said \\"hi\\"\\n\\ttwice \\u00e9\\a\\z")\ndef _(state):\n    pass\n`,
+      `@stimulus("I said \\"hi\\"\\n\\ttwice \\u00e9\\a\\z")\ndef _(state):\n    pass\n`,
     )
     expect(defs[0]?.expression).toBe('I said "hi"\n\ttwice é\u0007\\z')
   })
@@ -84,7 +84,7 @@ action = "shadowed"
 
   test('a .py file scanned by a scanner without the python dialect yields []', async () => {
     const scanner = await createTreeSitterScanner(createTestGrammarLoader(), ['typescript'])
-    expect(scanner.discoverStepDefs('a.steps.py', '@action("x")\ndef _(s):\n    pass\n')).toEqual(
+    expect(scanner.discoverStepDefs('a.steps.py', '@stimulus("x")\ndef _(s):\n    pass\n')).toEqual(
       [],
     )
   })

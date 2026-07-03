@@ -18,7 +18,7 @@ public final class BetaSteps implements StepDefinitions {
     @Override
     public void defineSteps(Registrar registrar) {
         var s = registrar.defineState(() -> new Ctx(""));
-        s.action("beta sets label to {word}", (Ctx ctx, String label) -> new Ctx(label));
+        s.stimulus("beta sets label to {word}", (Ctx ctx, String label) -> new Ctx(label));
         s.sensor("beta label is {word}", (Ctx ctx, String expected) -> ctx.label());
     }
 }

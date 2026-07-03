@@ -42,7 +42,7 @@ fun <C : Any> defineState(
 }
 
 /**
- * The receiver of a [defineState] block: bare `context`/`action`/`sensor`
+ * The receiver of a [defineState] block: bare `stimulus`/`sensor`
  * calls, one overload per handler arity. Handlers are `suspend` with the state
  * as receiver; they run on the Java engine's synchronous executor via
  * [runBlocking].
@@ -74,12 +74,8 @@ class StepsScope<C : Any> internal constructor(
     internal val binder: StateBinder<StateBox<C>>,
 ) {
 
-    fun context(expression: String, handler: suspend C.() -> C) {
-        binder.context(expression, ContextAdapter<C>(0) { c, _ -> handler(c) })
-    }
-
-    fun action(expression: String, handler: suspend C.() -> C) {
-        binder.action(expression, ContextAdapter<C>(0) { c, _ -> handler(c) })
+    fun stimulus(expression: String, handler: suspend C.() -> C) {
+        binder.stimulus(expression, StimulusAdapter<C>(0) { c, _ -> handler(c) })
     }
 
     fun <R> sensor(expression: String, handler: suspend C.() -> R) {
@@ -101,31 +97,17 @@ class StepsScope<C : Any> internal constructor(
     }
 }
 
-fun <C : Any, A> StepsScope<C>.context(expression: String, handler: suspend C.(A) -> C) {
-    binder.context(
+fun <C : Any, A> StepsScope<C>.stimulus(expression: String, handler: suspend C.(A) -> C) {
+    binder.stimulus(
         expression,
-        ContextAdapter<C>(1) { c, args -> @Suppress("UNCHECKED_CAST") handler(c, args[0] as A) },
+        StimulusAdapter<C>(1) { c, args -> @Suppress("UNCHECKED_CAST") handler(c, args[0] as A) },
     )
 }
 
-fun <C : Any, A, B> StepsScope<C>.context(expression: String, handler: suspend C.(A, B) -> C) {
-    binder.context(
+fun <C : Any, A, B> StepsScope<C>.stimulus(expression: String, handler: suspend C.(A, B) -> C) {
+    binder.stimulus(
         expression,
-        ContextAdapter<C>(2) { c, args -> @Suppress("UNCHECKED_CAST") handler(c, args[0] as A, args[1] as B) },
-    )
-}
-
-fun <C : Any, A> StepsScope<C>.action(expression: String, handler: suspend C.(A) -> C) {
-    binder.action(
-        expression,
-        ContextAdapter<C>(1) { c, args -> @Suppress("UNCHECKED_CAST") handler(c, args[0] as A) },
-    )
-}
-
-fun <C : Any, A, B> StepsScope<C>.action(expression: String, handler: suspend C.(A, B) -> C) {
-    binder.action(
-        expression,
-        ContextAdapter<C>(2) { c, args -> @Suppress("UNCHECKED_CAST") handler(c, args[0] as A, args[1] as B) },
+        StimulusAdapter<C>(2) { c, args -> @Suppress("UNCHECKED_CAST") handler(c, args[0] as A, args[1] as B) },
     )
 }
 
@@ -167,10 +149,10 @@ internal abstract class HandlerAdapter(private val arity: Int) {
     }
 }
 
-internal class ContextAdapter<C : Any>(
+internal class StimulusAdapter<C : Any>(
     arity: Int,
     private val f: suspend (C, List<Any?>) -> C,
-) : HandlerAdapter(arity), StateBinder.Context0<StateBox<C>> {
+) : HandlerAdapter(arity), StateBinder.Stimulus0<StateBox<C>> {
 
     override fun apply(box: StateBox<C>): StateBox<C> = call(box, listOf())
 

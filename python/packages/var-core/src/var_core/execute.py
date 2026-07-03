@@ -1,6 +1,6 @@
 """execute.py — port of var-core/src/execute.ts.
 
-Executes an ExecutionPlan: routes context/action/sensor step returns,
+Executes an ExecutionPlan: routes stimulus/sensor step returns,
 merges immutable state, compares sensor returns via the diff helpers, and
 inverts expected-failure outcomes.
 
@@ -185,14 +185,14 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
 
                         kind = step.step_def.kind
 
-                        if kind in ("context", "action"):
+                        if kind == "stimulus":
                             # Return-merge: a partial dict is shallow-merged into
                             # a new deep-frozen state; None/undefined is a no-op;
                             # any other type is a contract violation.
                             if returned is not None:
                                 if not isinstance(returned, dict):
                                     raise ReturnShapeError(
-                                        "a context/action step must return a partial"
+                                        "a stimulus must return a partial"
                                         " state object or nothing"
                                     )
                                 state = deep_freeze({**state, **returned})
