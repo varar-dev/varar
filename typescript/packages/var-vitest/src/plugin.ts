@@ -122,8 +122,12 @@ export function generateVirtualModule(input: GenerateInput): string {
   const examples = input.examples ?? []
   const header: string[] = [
     "import { test } from 'vitest'",
-    "import { resolveScannerPlugins } from '@oselvar/var-core'",
-    "import { collectVarExamples, varTestBody } from '@oselvar/var-vitest/runtime'",
+    // Everything the generated module needs comes from @oselvar/var-vitest —
+    // the one package the consumer directly depends on. Importing e.g.
+    // @oselvar/var-core here would fail under pnpm's strict node_modules
+    // layout, because the module id (the spec path) resolves in the
+    // consumer's project, where transitive deps are not visible.
+    "import { collectVarExamples, resolveScannerPlugins, varTestBody } from '@oselvar/var-vitest/runtime'",
     ...input.stepImports.map((p) => `import ${JSON.stringify(p)}`),
     `const PATH = ${pathJson}`,
     // Diagnostics and the stale-transform guard register their tests inside

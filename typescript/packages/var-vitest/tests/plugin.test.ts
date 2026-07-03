@@ -30,10 +30,13 @@ describe('generateVirtualModule', () => {
     // Header: everything the tests need, on one line, so the identity line
     // mapping holds for every following line.
     expect(lines[0]).toContain("import { test } from 'vitest'")
+    // Generated code may only import from packages the CONSUMER directly
+    // depends on (@oselvar/var-vitest, vitest) — a bare '@oselvar/var-core'
+    // would not resolve from the spec's path under pnpm's strict layout.
     expect(lines[0]).toContain(
-      "import { collectVarExamples, varTestBody } from '@oselvar/var-vitest/runtime'",
+      "import { collectVarExamples, resolveScannerPlugins, varTestBody } from '@oselvar/var-vitest/runtime'",
     )
-    expect(lines[0]).toContain("import { resolveScannerPlugins } from '@oselvar/var-core'")
+    expect(lines[0]).not.toContain("from '@oselvar/var-core'")
     expect(lines[0]).toContain('import "/abs/account.steps.ts"')
     expect(lines[0]).toContain('const PATH = "/abs/foo.md"')
     expect(lines[0]).toContain('scannerPlugins: resolveScannerPlugins([])')
