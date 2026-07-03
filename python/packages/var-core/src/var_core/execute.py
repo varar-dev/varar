@@ -23,6 +23,7 @@ from var_core.cell_diff import (
 )
 from var_core.deep_freeze import deep_freeze
 from var_core.doc_string_diff import DocStringMismatchError, compare_doc_string
+from var_core.failure_anchor import failure_anchor
 from var_core.param_diff import compare_params
 from var_core.plan import ExecutionPlan, PlannedStep
 from var_core.span import utf16_slice
@@ -343,9 +344,10 @@ def _augment_stack(err: Exception, step: PlannedStep, var_path: str) -> Exceptio
     if not isinstance(err, Exception):
         return err  # type: ignore[return-value]
     label = step.text[:60] + "…" if len(step.text) > 60 else step.text
-    frame = (
-        f"    at {label}"
-        f" ({var_path}:{step.match_span.start_line}:{step.match_span.start_col})"
-    )
+    # Editors resolve the failure's location from this note; failure_anchor
+    # decides where it points, and the conformance trace pins that same rule
+    # across ports.
+    anchor = failure_anchor(err, step.match_span)
+    frame = f"    at {label} ({var_path}:{anchor.start_line}:{anchor.start_col})"
     err.add_note(frame)
     return err

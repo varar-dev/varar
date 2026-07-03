@@ -11,6 +11,14 @@
           },
           "exampleName": "I divide 1 by 0",
           "failure": {
+            "anchor": {
+              "endCol": 16,
+              "endLine": 5,
+              "endOffset": 60,
+              "startCol": 1,
+              "startLine": 5,
+              "startOffset": 45
+            },
             "kind": "thrown",
             "line": 5
           },

@@ -11,6 +11,14 @@
           },
           "exampleName": "10 / A",
           "failure": {
+            "anchor": {
+              "endCol": 5,
+              "endLine": 9,
+              "endOffset": 110,
+              "startCol": 3,
+              "startLine": 9,
+              "startOffset": 108
+            },
             "cells": [
               {
                 "actual": "99",

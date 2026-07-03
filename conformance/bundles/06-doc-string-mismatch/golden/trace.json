@@ -11,6 +11,14 @@
           },
           "exampleName": "I echo the following:",
           "failure": {
+            "anchor": {
+              "endCol": 1,
+              "endLine": 9,
+              "endOffset": 77,
+              "startCol": 1,
+              "startLine": 8,
+              "startOffset": 71
+            },
             "diff": {
               "actual": "goodbye",
               "expected": "hello\n",

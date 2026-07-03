@@ -72,7 +72,9 @@ class RenderTest {
 
         assertTrue(rendered.contains("Hello, world!"), "expected sliced doc body: " + rendered);
         assertTrue(rendered.contains("Goodbye!"), "actual doc body: " + rendered);
-        assertTrue(rendered.contains("line 3"), "failing line: " + rendered);
+        // The failure anchors at the fence BODY (line 6), not the step (line 3) —
+        // the FailureAnchor rule, pinned cross-port by the conformance goldens.
+        assertTrue(rendered.contains("line 6"), "failing line: " + rendered);
     }
 
     @Test

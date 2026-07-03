@@ -122,9 +122,12 @@ public final class Conformance {
     /**
      * Projects a caught step exception to the {@code FailureArtifact} wire shape — port of
      * {@code toFailureArtifact} in {@code conformance.ts}. {@code line} is the failing step's
-     * own 1-based {@code matchSpan.startLine} in the {@code .md} — a deterministic,
-     * language-agnostic source position (never scraped from a stack trace), so every port
-     * reproduces it identically.
+     * own 1-based {@code matchSpan.startLine} in the {@code .md} and {@code anchor} is where
+     * the failure points — the {@link FailureAnchor} rule (first failing cell span / doc
+     * string body / the step's match span). Both are deterministic, language-agnostic source
+     * positions (never scraped from a stack trace), so every port reproduces them
+     * identically; pinning {@code anchor} in the goldens is what keeps each port's
+     * editor-facing failure location (stack augmentation) from drifting.
      *
      * <p>Dispatch order mirrors {@code conformance.ts} exactly: {@link
      * CellDiff.CellMismatchException} (filtered to only the failing cells) &rarr; {@link
@@ -136,11 +139,14 @@ public final class Conformance {
      * {@code kind}/{@code line}; TS's own fallback ({@code return { kind: 'thrown', line }})
      * likewise never adds the error's message/stack to the wire artifact.
      */
-    public static Map<String, Object> toFailureArtifact(Throwable error, int line) {
+    public static Map<String, Object> toFailureArtifact(Throwable error, Span matchSpan) {
+        int line = matchSpan.startLine();
+        Map<String, Object> anchor = span(FailureAnchor.anchor(error, matchSpan));
         if (CellDiff.isCellMismatchException(error)) {
             Map<String, Object> out = new LinkedHashMap<>();
             out.put("kind", "cell-mismatch");
             out.put("line", line);
+            out.put("anchor", anchor);
             List<Object> cells = new ArrayList<>();
             for (CellDiff c : ((CellDiff.CellMismatchException) error).cells()) {
                 if (!c.ok()) cells.add(failureCell(c));
@@ -153,6 +159,7 @@ public final class Conformance {
             Map<String, Object> out = new LinkedHashMap<>();
             out.put("kind", "doc-string-mismatch");
             out.put("line", line);
+            out.put("anchor", anchor);
             Map<String, Object> d = new LinkedHashMap<>();
             d.put("expected", diff.expected());
             d.put("actual", diff.actual());
@@ -160,9 +167,9 @@ public final class Conformance {
             out.put("diff", d);
             return out;
         }
-        if (error instanceof CellDiff.ReturnShapeException) return kindLine("return-shape", line);
-        if (error instanceof Execute.UnexpectedPassException) return kindLine("unexpected-pass", line);
-        return kindLine("thrown", line);
+        if (error instanceof CellDiff.ReturnShapeException) return kindLineAnchor("return-shape", line, anchor);
+        if (error instanceof Execute.UnexpectedPassException) return kindLineAnchor("unexpected-pass", line, anchor);
+        return kindLineAnchor("thrown", line, anchor);
     }
 
     private static Map<String, Object> failureCell(CellDiff c) {
@@ -174,10 +181,11 @@ public final class Conformance {
         return cell;
     }
 
-    private static Map<String, Object> kindLine(String kind, int line) {
+    private static Map<String, Object> kindLineAnchor(String kind, int line, Map<String, Object> anchor) {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("kind", kind);
         out.put("line", line);
+        out.put("anchor", anchor);
         return out;
     }
 
@@ -271,7 +279,7 @@ public final class Conformance {
                     stepTrace.put(
                             "failure",
                             toFailureArtifact(
-                                    chosen != null ? chosen.error() : null, step.matchSpan().startLine()));
+                                    chosen != null ? chosen.error() : null, step.matchSpan()));
                 }
                 steps.add(stepTrace);
             }

@@ -4,6 +4,7 @@ import { isCellMismatchError, ReturnShapeError } from './cell-diff.js'
 import type { DiagnosticCode, Severity } from './diagnostics.js'
 import { isDocStringMismatchError } from './doc-string-diff.js'
 import { collectExamples, isUnexpectedPassError, type StepObservation } from './execute.js'
+import { failureAnchor } from './failure-anchor.js'
 import { plan as buildPlan, type ExecutionPlan } from './plan.js'
 import type { Registry } from './registry.js'
 import type { Span } from './span.js'
@@ -61,6 +62,7 @@ export type FailureArtifact =
   | {
       readonly kind: 'cell-mismatch'
       readonly line: number
+      readonly anchor: Span
       readonly cells: ReadonlyArray<{
         readonly column: string
         readonly expected: string
@@ -71,11 +73,12 @@ export type FailureArtifact =
   | {
       readonly kind: 'doc-string-mismatch'
       readonly line: number
+      readonly anchor: Span
       readonly diff: { readonly expected: string; readonly actual: string; readonly span: Span }
     }
-  | { readonly kind: 'return-shape'; readonly line: number }
-  | { readonly kind: 'thrown'; readonly line: number }
-  | { readonly kind: 'unexpected-pass'; readonly line: number }
+  | { readonly kind: 'return-shape'; readonly line: number; readonly anchor: Span }
+  | { readonly kind: 'thrown'; readonly line: number; readonly anchor: Span }
+  | { readonly kind: 'unexpected-pass'; readonly line: number; readonly anchor: Span }
 
 export type StepTrace = {
   readonly exampleName: string
@@ -198,13 +201,20 @@ export function toPlanArtifact(plan: ExecutionPlan): PlanArtifact {
 }
 
 // `line` is the failing step's own 1-based line in the `.md`
-// (`matchSpan.startLine`) — a deterministic, language-agnostic source position,
-// not a value scraped from a JS stack trace, so every port reproduces it.
-export function toFailureArtifact(error: unknown, line: number): FailureArtifact {
+// (`matchSpan.startLine`) and `anchor` is where the failure points — the
+// failureAnchor rule (first failing cell span / doc string body / the step's
+// match span). Both are deterministic, language-agnostic source positions, not
+// values scraped from a JS stack trace, so every port reproduces them; pinning
+// `anchor` in the goldens is what keeps each port's editor-facing failure
+// location (stack augmentation) from drifting.
+export function toFailureArtifact(error: unknown, matchSpan: Span): FailureArtifact {
+  const line = matchSpan.startLine
+  const anchor = failureAnchor(error, matchSpan)
   if (isCellMismatchError(error)) {
     return {
       kind: 'cell-mismatch',
       line,
+      anchor,
       cells: error.cells
         .filter((c) => !c.ok)
         .map((c) => ({ column: c.column, expected: c.expected, actual: c.actual, span: c.span })),
@@ -214,12 +224,13 @@ export function toFailureArtifact(error: unknown, line: number): FailureArtifact
     return {
       kind: 'doc-string-mismatch',
       line,
+      anchor,
       diff: { expected: error.diff.expected, actual: error.diff.actual, span: error.diff.span },
     }
   }
-  if (error instanceof ReturnShapeError) return { kind: 'return-shape', line }
-  if (isUnexpectedPassError(error)) return { kind: 'unexpected-pass', line }
-  return { kind: 'thrown', line }
+  if (error instanceof ReturnShapeError) return { kind: 'return-shape', line, anchor }
+  if (isUnexpectedPassError(error)) return { kind: 'unexpected-pass', line, anchor }
+  return { kind: 'thrown', line, anchor }
 }
 
 export async function runConformance(
@@ -265,9 +276,7 @@ export async function runConformance(
         matchedExpression: step.stepDef.expression,
         contextKey: { exampleName: name, stepFile: fileStem(step.stepDef.expressionSourceFile) },
         outcome: stepOutcome,
-        ...(stepOutcome === 'fail'
-          ? { failure: toFailureArtifact(o?.error, step.matchSpan.startLine) }
-          : {}),
+        ...(stepOutcome === 'fail' ? { failure: toFailureArtifact(o?.error, step.matchSpan) } : {}),
       }
     })
     traceExamples.push({ name, outcome, steps })

@@ -1,6 +1,7 @@
 import { CellMismatchError, compareRow, compareTable, ReturnShapeError } from './cell-diff.js'
 import { deepFreeze } from './deep-freeze.js'
 import { compareDocString, DocStringMismatchError } from './doc-string-diff.js'
+import { failureAnchor } from './failure-anchor.js'
 import { compareParams } from './param-diff.js'
 import type { ExecutionPlan, PlannedStep } from './plan.js'
 import type { Reporter, TestSink } from './ports.js'
@@ -227,12 +228,9 @@ function augmentStack(err: unknown, step: PlannedStep, varPath: string): unknown
   if (!(err instanceof Error) || typeof err.stack !== 'string') return err
   const label = step.text.length > 60 ? `${step.text.slice(0, 60)}…` : step.text
   // Editors resolve the failure's location from this frame (the VS Code vitest
-  // extension underlines the word at line:col), so a mismatch anchors at its
-  // own first failing span — the cell/fence body — not the step's match start.
-  const anchor =
-    (err instanceof CellMismatchError ? err.cells.find((c) => !c.ok)?.span : undefined) ??
-    (err instanceof DocStringMismatchError ? err.diff.span : undefined) ??
-    step.matchSpan
+  // extension underlines the word at line:col); failureAnchor decides where it
+  // points, and the conformance trace pins that same rule across ports.
+  const anchor = failureAnchor(err, step.matchSpan)
   const frame = `    at ${label} (${varPath}:${anchor.startLine}:${anchor.startCol})`
   const lines = err.stack.split('\n')
   // Find the first existing stack frame (the handler's `.ts` line) and insert

@@ -50,43 +50,66 @@ _SPAN_DICT = {
     "endLine": 7,
     "endCol": 2,
 }
+_CELL_SPAN = Span(start_offset=30, end_offset=33, start_line=9, start_col=3, end_line=9, end_col=6)
+_CELL_SPAN_DICT = {
+    "startOffset": 30,
+    "endOffset": 33,
+    "startLine": 9,
+    "startCol": 3,
+    "endLine": 9,
+    "endCol": 6,
+}
 
 
-def test_to_failure_artifact_projects_cell_mismatch_error():
+def test_to_failure_artifact_projects_cell_mismatch_error_anchored_at_first_failing_cell():
     err = CellMismatchError([
-        CellDiff(column="score", span=_SPAN, expected="9", actual="6", ok=False),
+        CellDiff(column="score", span=_CELL_SPAN, expected="9", actual="6", ok=False),
     ])
-    assert to_failure_artifact(err, 7) == {
+    assert to_failure_artifact(err, _SPAN) == {
         "kind": "cell-mismatch",
         "line": 7,
-        "cells": [{"column": "score", "expected": "9", "actual": "6", "span": _SPAN_DICT}],
+        "anchor": _CELL_SPAN_DICT,
+        "cells": [{"column": "score", "expected": "9", "actual": "6", "span": _CELL_SPAN_DICT}],
     }
 
 
-def test_to_failure_artifact_projects_doc_string_mismatch_error():
-    err = DocStringMismatchError(DocStringDiff(span=_SPAN, expected="a", actual="b"))
-    assert to_failure_artifact(err, 7) == {
+def test_to_failure_artifact_projects_doc_string_mismatch_error_anchored_at_fence_body():
+    err = DocStringMismatchError(DocStringDiff(span=_CELL_SPAN, expected="a", actual="b"))
+    assert to_failure_artifact(err, _SPAN) == {
         "kind": "doc-string-mismatch",
         "line": 7,
-        "diff": {"expected": "a", "actual": "b", "span": _SPAN_DICT},
+        "anchor": _CELL_SPAN_DICT,
+        "diff": {"expected": "a", "actual": "b", "span": _CELL_SPAN_DICT},
     }
 
 
 def test_to_failure_artifact_maps_unexpected_pass_and_opaque_throws():
-    assert to_failure_artifact(UnexpectedPassError(), 4)["kind"] == "unexpected-pass"
-    assert to_failure_artifact(Exception("boom"), 4) == {"kind": "thrown", "line": 4}
+    assert to_failure_artifact(UnexpectedPassError(), _SPAN)["kind"] == "unexpected-pass"
+    assert to_failure_artifact(Exception("boom"), _SPAN) == {
+        "kind": "thrown",
+        "line": 7,
+        "anchor": _SPAN_DICT,
+    }
 
 
-def test_to_failure_artifact_uses_line_verbatim():
-    # No stack scraping: the failing line is the source position the caller
-    # passes (match_span.start_line), so every language port reproduces it.
+def test_to_failure_artifact_takes_line_and_anchor_from_match_span_never_the_stack():
+    # No stack scraping: both are source positions derived from the span the
+    # caller passes, so every language port reproduces them.
     err = Exception("boom")
-    assert to_failure_artifact(err, 4) == {"kind": "thrown", "line": 4}
+    assert to_failure_artifact(err, _SPAN) == {
+        "kind": "thrown",
+        "line": 7,
+        "anchor": _SPAN_DICT,
+    }
 
 
 def test_to_failure_artifact_maps_return_shape_error():
     err = ReturnShapeError("wrong shape")
-    assert to_failure_artifact(err, 5) == {"kind": "return-shape", "line": 5}
+    assert to_failure_artifact(err, _SPAN) == {
+        "kind": "return-shape",
+        "line": 7,
+        "anchor": _SPAN_DICT,
+    }
 
 
 # ---------------------------------------------------------------------------

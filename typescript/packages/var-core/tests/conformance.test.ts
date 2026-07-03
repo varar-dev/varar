@@ -23,39 +23,57 @@ test('canonicalStringify preserves array order', () => {
   expect(canonicalStringify([3, 1, 2])).toBe('[\n  3,\n  1,\n  2\n]\n')
 })
 
-const span = { startOffset: 0, endOffset: 1, startLine: 7, startCol: 1, endLine: 7, endCol: 2 }
+const matchSpan = { startOffset: 0, endOffset: 1, startLine: 7, startCol: 1, endLine: 7, endCol: 2 }
+const cellSpan = {
+  startOffset: 30,
+  endOffset: 33,
+  startLine: 9,
+  startCol: 3,
+  endLine: 9,
+  endCol: 6,
+}
 
-test('toFailureArtifact projects a CellMismatchError to cell-mismatch', () => {
+test('toFailureArtifact projects a CellMismatchError, anchored at the first failing cell', () => {
   const err = new CellMismatchError([
-    { column: 'score', span, expected: '9', actual: '6', ok: false },
+    { column: 'score', span: cellSpan, expected: '9', actual: '6', ok: false },
   ])
-  expect(toFailureArtifact(err, 7)).toEqual({
+  expect(toFailureArtifact(err, matchSpan)).toEqual({
     kind: 'cell-mismatch',
     line: 7,
-    cells: [{ column: 'score', expected: '9', actual: '6', span }],
+    anchor: cellSpan,
+    cells: [{ column: 'score', expected: '9', actual: '6', span: cellSpan }],
   })
 })
 
-test('toFailureArtifact projects a DocStringMismatchError to doc-string-mismatch', () => {
-  const err = new DocStringMismatchError({ span, expected: 'a', actual: 'b' })
-  expect(toFailureArtifact(err, 7)).toEqual({
+test('toFailureArtifact projects a DocStringMismatchError, anchored at the fence body', () => {
+  const err = new DocStringMismatchError({ span: cellSpan, expected: 'a', actual: 'b' })
+  expect(toFailureArtifact(err, matchSpan)).toEqual({
     kind: 'doc-string-mismatch',
     line: 7,
-    diff: { expected: 'a', actual: 'b', span },
+    anchor: cellSpan,
+    diff: { expected: 'a', actual: 'b', span: cellSpan },
   })
 })
 
 test('toFailureArtifact maps UnexpectedPassError and opaque throws', () => {
-  expect(toFailureArtifact(new UnexpectedPassError(), 4).kind).toBe('unexpected-pass')
-  expect(toFailureArtifact(new Error('boom'), 4)).toEqual({ kind: 'thrown', line: 4 })
+  expect(toFailureArtifact(new UnexpectedPassError(), matchSpan).kind).toBe('unexpected-pass')
+  expect(toFailureArtifact(new Error('boom'), matchSpan)).toEqual({
+    kind: 'thrown',
+    line: 7,
+    anchor: matchSpan,
+  })
 })
 
-test('toFailureArtifact uses the line it is given verbatim (the step matchSpan line)', () => {
-  // No stack scraping: the failing line is the source position the caller
-  // passes (matchSpan.startLine), so every language port reproduces it.
+test('toFailureArtifact takes line and anchor from the matchSpan, never the stack', () => {
+  // No stack scraping: both are source positions derived from the span the
+  // caller passes, so every language port reproduces them.
   const err = new Error('boom')
   err.stack = 'Error: boom\n    at handler (s.ts:1:1)\n    at step (e.md:42:7)'
-  expect(toFailureArtifact(err, 4)).toEqual({ kind: 'thrown', line: 4 })
+  expect(toFailureArtifact(err, matchSpan)).toEqual({
+    kind: 'thrown',
+    line: 7,
+    anchor: matchSpan,
+  })
 })
 
 test('toRegistryArtifact lists expressions and parsed parameter-type names', () => {

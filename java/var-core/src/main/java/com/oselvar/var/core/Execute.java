@@ -463,7 +463,10 @@ public final class Execute {
     private static Throwable augmentStack(Throwable err, Plan.PlannedStep step, String varPath) {
         String text = step.text();
         String label = text.length() > 60 ? text.substring(0, 60) + "…" : text;
-        StackTraceElement synthetic = new StackTraceElement("Step", label, varPath, step.matchSpan().startLine());
+        // Editors resolve the failure's location from this frame; FailureAnchor decides where
+        // it points, and the conformance trace pins that same rule across ports.
+        Span anchor = FailureAnchor.anchor(err, step.matchSpan());
+        StackTraceElement synthetic = new StackTraceElement("Step", label, varPath, anchor.startLine());
         StackTraceElement[] original = err.getStackTrace();
         StackTraceElement[] augmented = new StackTraceElement[original.length + 1];
         augmented[0] = synthetic;

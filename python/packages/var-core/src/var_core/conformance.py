@@ -30,6 +30,7 @@ from var_core.ast import (
 from var_core.cell_diff import ReturnShapeError, is_cell_mismatch_error
 from var_core.doc_string_diff import is_doc_string_mismatch_error
 from var_core.execute import CollectPorts, StepObservation, collect_examples, is_unexpected_pass_error
+from var_core.failure_anchor import failure_anchor
 from var_core.plan import ExecutionPlan
 from var_core.plan import plan as build_plan
 from var_core.registry import Registry
@@ -267,16 +268,24 @@ def _file_stem(path: str) -> str:
     return stem
 
 
-def to_failure_artifact(error: object, line: int) -> dict[str, Any]:
+def to_failure_artifact(error: object, match_span: Span) -> dict[str, Any]:
     """Project an execution error to a FailureArtifact dict.
 
-    Port of ``toFailureArtifact`` from conformance.ts.
-    ``line`` is the failing step's ``match_span.start_line`` (1-based).
+    Port of ``toFailureArtifact`` from conformance.ts.  ``line`` is the failing
+    step's ``match_span.start_line`` (1-based) and ``anchor`` is where the
+    failure points — the failure_anchor rule (first failing cell span / doc
+    string body / the step's match span).  Both are deterministic source
+    positions, never scraped from a traceback, so every port reproduces them;
+    pinning ``anchor`` in the goldens is what keeps each port's editor-facing
+    failure location (stack augmentation) from drifting.
     """
+    line = match_span.start_line
+    anchor = _span(failure_anchor(error, match_span))
     if is_cell_mismatch_error(error):
         return {
             "kind": "cell-mismatch",
             "line": line,
+            "anchor": anchor,
             "cells": [
                 {
                     "column": c.column,
@@ -292,6 +301,7 @@ def to_failure_artifact(error: object, line: int) -> dict[str, Any]:
         return {
             "kind": "doc-string-mismatch",
             "line": line,
+            "anchor": anchor,
             "diff": {
                 "expected": error.diff.expected,
                 "actual": error.diff.actual,
@@ -299,10 +309,10 @@ def to_failure_artifact(error: object, line: int) -> dict[str, Any]:
             },
         }
     if isinstance(error, ReturnShapeError):
-        return {"kind": "return-shape", "line": line}
+        return {"kind": "return-shape", "line": line, "anchor": anchor}
     if is_unexpected_pass_error(error):
-        return {"kind": "unexpected-pass", "line": line}
-    return {"kind": "thrown", "line": line}
+        return {"kind": "unexpected-pass", "line": line, "anchor": anchor}
+    return {"kind": "thrown", "line": line, "anchor": anchor}
 
 
 def run_conformance(
@@ -373,7 +383,7 @@ def run_conformance(
             if step_outcome == "fail":
                 step_dict["failure"] = to_failure_artifact(
                     o.error if o is not None else None,
-                    step.match_span.start_line,
+                    step.match_span,
                 )
             steps.append(step_dict)
 
