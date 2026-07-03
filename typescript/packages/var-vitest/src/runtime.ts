@@ -1,5 +1,11 @@
 import { buildRegistry, contextFactory } from '@oselvar/var/registry'
-import { type Reporter, resolveScannerPlugins, toFailure } from '@oselvar/var-core'
+import {
+  isCellMismatchError,
+  isDocStringMismatchError,
+  type Reporter,
+  resolveScannerPlugins,
+  toFailure,
+} from '@oselvar/var-core'
 import { examplesWithRuns, planSpec } from '@oselvar/var-runner'
 import { test } from 'vitest'
 
@@ -72,6 +78,30 @@ export function collectVarExamples(
 // without importing vitest types into the runtime.
 type TaskContext = { readonly task: { readonly meta: { varResult?: unknown } } }
 
+// vitest renders a `- Expected / + Received` diff for any thrown error that
+// carries `expected` and `actual` (and the VS Code vitest extension shows the
+// same pair in its diff peek), so project the mismatch's structured diff onto
+// those two strings before the error crosses into vitest. Presentation only —
+// the pass/fail verdict stays the core's exact string comparison.
+function attachExpectedActual(error: unknown): void {
+  const e = error as { expected?: string; actual?: string }
+  if (isCellMismatchError(error)) {
+    const cells = error.cells.filter((c) => !c.ok)
+    const first = cells[0]
+    if (!first) return
+    if (cells.length === 1) {
+      e.expected = first.expected
+      e.actual = first.actual
+    } else {
+      e.expected = cells.map((c) => `${c.column}: ${c.expected}`).join('\n')
+      e.actual = cells.map((c) => `${c.column}: ${c.actual}`).join('\n')
+    }
+  } else if (isDocStringMismatchError(error)) {
+    e.expected = error.diff.expected
+    e.actual = error.diff.actual
+  }
+}
+
 export function varTestBody(
   examples: ReadonlyArray<CollectedExample>,
   index: number,
@@ -98,6 +128,7 @@ export function varTestBody(
         lines,
         failure: toFailure(error, path, lines[0] ?? 0),
       }
+      attachExpectedActual(error)
       throw error
     }
   }
