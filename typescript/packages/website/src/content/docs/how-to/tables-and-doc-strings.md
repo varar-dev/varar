@@ -54,15 +54,12 @@ Uppercase each one:
 
 ```ts
 sensor('Uppercase each one:', (_state, rows: ReadonlyArray<ReadonlyArray<string>>) => {
-  const reproduced = rows
-    .slice(1)
-    .map(([before]) => ({ before, after: (before ?? '').toUpperCase() }))
-  return [reproduced]
+  return rows.slice(1).map(([before]) => ({ before, after: (before ?? '').toUpperCase() }))
 })
 ```
 
-Vár compares every cell of the returned table against the source, as exact
-strings.
+The table is this sensor's only comparable value, so it is returned bare. Vár
+compares every cell of the returned table against the source, as exact strings.
 
 ## Check a doc string
 
@@ -86,9 +83,19 @@ sensor('Greet {word}:', (_state, name, _body: string) => {
 })
 ```
 
-The comparison is exact equality, **including the trailing newline**. The
-returned tuple carries the step's captured arguments plus the text — here
-`[name, text]`.
+The comparison is exact equality, **including the trailing newline**. This step
+has two comparable values — the captured `{word}` and the doc string — so it
+returns an array with one element per value, in order: `[name, text]`. A step
+whose doc string is its only comparable value returns the text bare:
+
+```ts
+sensor('Greet Bob:', (_state, _body: string) => {
+  return 'Hello, Bob!\n'
+})
+```
+
+See the [sensors reference](/reference/sensors/) for the full return-value
+rules.
 
 ## How failures are reported
 

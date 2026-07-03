@@ -45,6 +45,10 @@ export default defineConfig({
           ],
         },
         {
+          label: 'Reference',
+          items: ['reference/sensors'],
+        },
+        {
           label: 'Understanding Vár',
           items: ['explanation/thin-steps', 'explanation/var-for-cucumber-users'],
         },

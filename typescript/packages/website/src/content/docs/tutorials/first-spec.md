@@ -37,7 +37,7 @@ const { action, sensor } = defineState(() => ({ result: 0 }))
 
 action('expression `{int}+{int}`', (_state, op1, op2) => ({ result: op1 + op2 }))
 
-sensor('evaluate to `{int}`', (state, _expected) => [state.result])
+sensor('evaluate to `{int}`', (state, _expected) => state.result)
 ```
 
 Three things to notice:
@@ -47,7 +47,7 @@ Three things to notice:
 - The **`action`** is the stimulus. It matches `` expression `1+1` `` in the
   prose, computes, and returns a patch to the state.
 - The **`sensor`** is the read-only observation. It returns what the software
-  actually produced — `[state.result]` — and Vár compares that against the `2`
+  actually produced — `state.result` — and Vár compares that against the `2`
   written in the Markdown. You never write an assertion; the document *is* the
   assertion.
 

@@ -17,6 +17,19 @@ This is a multi-language monorepo (ADR 0001). Top level:
   golden/*.json}`) read by every language's conformance harness.
 - `docs/`, `doc/` — shared design docs (ADRs, specs, plans, ARCHITECTURE).
 
+## Documentation
+
+User-facing documentation follows [Diátaxis](https://diataxis.fr): every page is
+one of **tutorial** (learning by doing), **how-to guide** (goal-oriented steps),
+**reference** (facts, lookup), or **explanation** (understanding, background).
+Decide the quadrant before writing and don't mix them in one page.
+
+- User-facing docs live on the website:
+  `typescript/packages/website/src/content/docs/{tutorials,how-to,reference,explanation}`.
+  Published to https://var.oselvar.com.
+- Internal/design docs (ADRs, specs, plans, ARCHITECTURE) stay in `docs/` and
+  `doc/` at the repo root — they are not part of the Diátaxis structure.
+
 ## Architectural principles (non-negotiable)
 
 - **Immutable types.** All data types are `readonly` — no mutable fields, no in-place mutation. Use `ReadonlyArray<T>` and `ReadonlyMap<K, V>`. Updates produce a new value.
@@ -101,12 +114,13 @@ on everything since the last release tag):
 
 ## Return-based comparison
 
-A step may `return` a value; the pure core compares it against what the Markdown says and fails with span-anchored errors:
+A sensor may `return` a value; the pure core compares it against what the Markdown says and fails with span-anchored errors. A sensor's **slots** are its expression parameters in order, then the trailing table/doc string if any. The return maps onto the slots by count (same rule in every port):
 
-- **header-bound table row** — the step returns its computed columns; compared cell-by-cell → `CellMismatchError` (`CellDiff[]`, each with a source `span` + `expected` + `actual`).
-- **whole table** — the step returns the full reproduced table; exact string compare per cell → `CellMismatchError`.
-- **doc string** — the step returns the exact text (including the trailing `\n`); exact equality → `DocStringMismatchError`.
-- **wrong shape/type** → `ReturnShapeError`; **`undefined` return** → pass (no assertion).
+- **zero slots** — nothing to compare; returning anything but `undefined`/`null`/`None` → `ReturnShapeError` (throw to fail, return nothing to pass).
+- **one slot** — the return IS that slot's value, bare — never read as a positional array, so a parameter type transforming to an array is deep-compared as-is.
+- **two or more slots** — the return must be an array/list with exactly one element per slot, compared positionally.
+
+Per slot kind: **inline parameter** — deep-equal against the transformed arg → `CellMismatchError` (`CellDiff[]`, each with a source `span` + `expected` + `actual`); **whole table** — exact string compare per cell → `CellMismatchError`; **doc string** — exact equality including the trailing `\n` → `DocStringMismatchError`. **Header-bound table rows** bypass the slot contract: the step returns its computed columns as a row object, compared cell-by-cell. **Wrong shape** → `ReturnShapeError`; **`undefined` return** → pass (no assertion).
 
 Because the diffs are anchored to source spans (`startOffset`/`endOffset`), editors render them directly (the website CodeMirror reddens the failing source span and shows `actual: …` on hover). These diffs are the basis of the emerging shared run-result format consumed by the editor, the LSP, and future HTML overlays.
 

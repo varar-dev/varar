@@ -41,7 +41,7 @@ A `sensor` reads state and returns values for Vár to compare against the
 Markdown. A sensor never changes state.
 
 ```ts
-sensor('the greeting should be {string}', (state) => [state.greeting])
+sensor('the greeting should be {string}', (state) => state.greeting)
 ```
 
 ## Shallow merge
