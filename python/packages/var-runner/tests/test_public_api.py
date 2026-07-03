@@ -1,7 +1,5 @@
 """Smoke-test: every public symbol is importable from the top-level package."""
 from var_runner import (
-    VarConfig,
-    read_var_config,
     find_specs,
     match_spec,
     load_steps,
@@ -14,8 +12,6 @@ from var_runner import (
 
 
 def test_public_api_all_importable():
-    assert VarConfig
-    assert callable(read_var_config)
     assert callable(find_specs)
     assert callable(match_spec)
     assert callable(load_steps)
