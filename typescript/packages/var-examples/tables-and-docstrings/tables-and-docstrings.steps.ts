@@ -2,13 +2,11 @@ import { defineState } from '@oselvar/var'
 
 const { sensor } = defineState(() => ({}))
 
-// Whole-table mode: the table arrives as string[][] (header row first). Return
-// the tuple [reproducedTable] — Vár compares every cell against the spec.
+// Whole-table mode: the table arrives as string[][] (header row first). It is
+// this sensor's only slot, so return the reproduced table bare — Vár compares
+// every cell against the spec.
 sensor('Uppercase each one:', (_state, rows: ReadonlyArray<ReadonlyArray<string>>) => {
-  const reproduced = rows
-    .slice(1)
-    .map(([before]) => ({ before, after: (before ?? '').toUpperCase() }))
-  return [reproduced]
+  return rows.slice(1).map(([before]) => ({ before, after: (before ?? '').toUpperCase() }))
 })
 
 // Doc-string mode: the post-state args are (name, body); return [name, text].

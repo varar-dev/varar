@@ -10,7 +10,7 @@ VAR_CONFIG = """\
 """
 
 # An action that is async def, returns a partial state dict.
-# A sensor that is async def, returns a tuple so the core can compare params.
+# A sensor that is async def, returns its single slot bare so the core can compare it.
 ASYNC_STEPS = """\
 import asyncio
 from var import define_state
@@ -27,7 +27,7 @@ async def _(state, n):
 @sensor("the async total is {int}")
 async def _(state, expected):
     await asyncio.sleep(0)
-    return (state["value"],)
+    return state["value"]
 """
 
 ASYNC_SPEC = """\

@@ -40,32 +40,24 @@ import java.util.function.Function;
  * records need "no deep-freeze runtime guard ... for the AST layer itself," which
  * applies equally to the state layer given Task 11's choice.
  *
- * <h2>Sensor return-comparison contract (this task's decision)</h2>
+ * <h2>Sensor return-comparison contract (the shared slot model)</h2>
  *
- * <p>TS/Python: a sensor returns an array/tuple positionally aligned with every captured
- * inline argument, plus an optional trailing table/doc-string actual appended at the
- * end; the executor compares each position. Java's {@code Sensor0/1/2} (see {@code
- * com.oselvar.var.StateBinder}) return a single typed value {@code R} — there is no
- * tuple type in the committed author-facing API (confirmed against {@code
- * AuthorApiTest}'s roman-numerals fixture: {@code sensor("The result is {word}", (ctx,
- * expected) -> ctx.result())} returns a bare {@code String}, not a wrapped list). Task
- * 11/12 fixed the registration shape but left this return-to-comparison mapping
- * undecided; this executor resolves it as, in priority order:
+ * <p>All ports share one contract. A sensor's comparison <em>slots</em> are its
+ * expression's captured inline parameters, in order, followed by the trailing data
+ * table or doc string, if any. The return value maps onto the slots by count:
  *
  * <ol>
- *   <li>a trailing data table is attached &rarr; {@code returned} IS the whole
- *       reproduced table, compared via {@link CellDiff#compareTable}.
- *   <li>a trailing doc string is attached &rarr; {@code returned} IS the doc string
- *       content, compared via {@link DocStringDiff#compareDocString}.
- *   <li>otherwise, if the step captured &ge;1 inline parameter &rarr; {@code returned}
- *       is compared against the LAST captured parameter. This is the convention the one
- *       committed example establishes for the 1-capture case, generalized to N&gt;1 by
- *       treating earlier captures as selector/input parameters (e.g. "the {word} shelf
- *       has {int} books" — {@code word} selects, {@code int} is asserted) — there is no
- *       multi-capture sensor anywhere in this port yet to confirm or refute this; see
- *       the Task 18 report's "concerns" section.
- *   <li>otherwise (no captures, no attachment) &rarr; nothing to compare; the sensor is
- *       observation-only.
+ *   <li>zero slots &rarr; nothing to compare; returning a non-{@code null} value is a
+ *       contract violation ({@link CellDiff.ReturnShapeException}) — throw to fail,
+ *       return nothing to pass.
+ *   <li>exactly one slot &rarr; {@code returned} IS that slot's value, bare: an inline
+ *       parameter is compared via {@link ParamDiff#compareParams}, a table via {@link
+ *       CellDiff#compareTable}, a doc string via {@link
+ *       DocStringDiff#compareDocString}. A return value is never read as a positional
+ *       list here, so a parameter type transforming to a {@code List} is compared
+ *       as-is.
+ *   <li>two or more slots &rarr; {@code returned} must be a {@link List} with exactly
+ *       one element per slot; each position is compared against its slot.
  * </ol>
  *
  * <h2>Return-vs-throw parity (flagged by the Task 11 review, resolved here)</h2>
@@ -341,30 +333,52 @@ public final class Execute {
 
     private static void checkSensorReturn(String source, Plan.PlannedStep step, Object returned) {
         if (returned == null) return;
-        if (step.dataTable() != null) {
-            List<CellDiff> bad =
-                    CellDiff.compareTable(returned, step.dataTable()).stream().filter(d -> !d.ok()).toList();
-            if (!bad.isEmpty()) throw new CellDiff.CellMismatchException(bad);
-            return;
+        int extraCount = (step.dataTable() != null || step.docString() != null) ? 1 : 0;
+        int slotCount = step.args().size() + extraCount;
+        if (slotCount == 0) {
+            throw new CellDiff.ReturnShapeException(
+                    "this sensor has no parameters, data table or doc string — nothing to compare"
+                            + " a return value against (throw to fail, return nothing to pass)");
         }
-        if (step.docString() != null) {
-            DocStringDiff diff =
-                    DocStringDiff.compareDocString(returned, step.docString().body(), step.docString().bodySpan());
-            if (diff != null) throw new DocStringDiff.DocStringMismatchException(diff);
-            return;
+        List<Object> slots;
+        if (slotCount == 1) {
+            // The return IS the single slot's value — never read as a positional list,
+            // so a parameter type transforming to a List is compared as-is.
+            slots = List.of(returned);
+        } else {
+            if (!(returned instanceof List<?> list)) {
+                throw new CellDiff.ReturnShapeException(
+                        "a sensor with " + slotCount + " parameters must return a List of "
+                                + slotCount + " values, got "
+                                + returned.getClass().getSimpleName());
+            }
+            if (list.size() != slotCount) {
+                throw new CellDiff.ReturnShapeException(
+                        "sensor return must have " + slotCount + " element(s), got " + list.size());
+            }
+            slots = new ArrayList<>(list);
         }
-        if (!step.args().isEmpty()) {
-            int lastIdx = step.args().size() - 1;
-            Span paramSpan = step.paramSpans().get(lastIdx);
-            String sourceText = source.substring(paramSpan.startOffset(), paramSpan.endOffset());
+        int argCount = step.args().size();
+        if (argCount > 0) {
+            List<String> sourceTexts = step.paramSpans().stream()
+                    .map(s -> source.substring(s.startOffset(), s.endOffset()))
+                    .toList();
             List<CellDiff> diffs =
                     ParamDiff.compareParams(
-                            List.of(returned),
-                            List.of(step.args().get(lastIdx)),
-                            List.of(paramSpan),
-                            List.of(sourceText));
+                            slots.subList(0, argCount), step.args(), step.paramSpans(), sourceTexts);
             List<CellDiff> bad = diffs.stream().filter(d -> !d.ok()).toList();
             if (!bad.isEmpty()) throw new CellDiff.CellMismatchException(bad);
+        }
+        // Trailing table / doc string occupies the last slot.
+        if (step.dataTable() != null) {
+            List<CellDiff> bad = CellDiff.compareTable(slots.get(argCount), step.dataTable()).stream()
+                    .filter(d -> !d.ok())
+                    .toList();
+            if (!bad.isEmpty()) throw new CellDiff.CellMismatchException(bad);
+        } else if (step.docString() != null) {
+            DocStringDiff diff = DocStringDiff.compareDocString(
+                    slots.get(argCount), step.docString().body(), step.docString().bodySpan());
+            if (diff != null) throw new DocStringDiff.DocStringMismatchException(diff);
         }
     }
 

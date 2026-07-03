@@ -126,7 +126,7 @@ test('context/action/sensor register with their kind', () => {
   const { context, action, sensor } = defineState(() => ({}))
   context('a logged-in user', () => {})
   action('I click submit', () => {})
-  sensor('the total is {int}', (_ctx, total: number) => [total])
+  sensor('the total is {int}', (_ctx, total: number) => total)
   const r = buildRegistry()
   expect(r.steps.map((s) => s.kind)).toEqual(['context', 'action', 'sensor'])
 })
@@ -135,7 +135,7 @@ test('defineState returns role functions typed against the state', () => {
   const { context: ctxStep, sensor: sense } = defineState(() => ({ greeting: '' }))
   // context/action EVOLVE state by RETURNING a partial — never by mutating.
   ctxStep('I greet {string}', (_state, name: string) => ({ greeting: `Hello, ${name}!` }))
-  sense('the greeting should be {string}', (state) => [state.greeting])
+  sense('the greeting should be {string}', (state) => state.greeting)
   const r = buildRegistry()
   expect(r.steps).toHaveLength(2)
   expect(r.steps.map((s) => s.kind)).toEqual(['context', 'sensor'])

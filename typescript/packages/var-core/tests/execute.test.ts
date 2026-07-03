@@ -402,7 +402,7 @@ uppercase each one:
 | bdd    | BDD   |`
 
 test('a whole-table sensor returning a mismatched table throws CellMismatchError at the cell span', async () => {
-  // Sensor returning a tuple where [0] is the table (array-of-row-arrays).
+  // The table is the sensor's only slot, so it is returned bare.
   // Row-array format: each row is an array of cell strings in column order.
   const r = addStep(createRegistry(), {
     expression: 'uppercase each one',
@@ -410,10 +410,8 @@ test('a whole-table sensor returning a mismatched table throws CellMismatchError
     expressionSourceLine: 1,
     kind: 'sensor',
     handler: () => [
-      [
-        ['var', 'WRONG'],
-        ['bdd', 'BDD'],
-      ],
+      ['var', 'WRONG'],
+      ['bdd', 'BDD'],
     ],
   })
   const source = TABLE_DOC
@@ -433,17 +431,15 @@ test('a whole-table sensor returning a mismatched table throws CellMismatchError
 })
 
 test('a whole-table sensor returning a matching table passes', async () => {
-  // Sensor returning a tuple where [0] is the table (array-of-row-objects).
+  // The table is the only slot: returned bare, as an array of row objects.
   const r = addStep(createRegistry(), {
     expression: 'uppercase each one',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
     kind: 'sensor',
     handler: () => [
-      [
-        { before: 'var', after: 'VAR' },
-        { before: 'bdd', after: 'BDD' },
-      ],
+      { before: 'var', after: 'VAR' },
+      { before: 'bdd', after: 'BDD' },
     ],
   })
   await expect(runsFor(TABLE_DOC, r)[0]?.()).resolves.toBeUndefined()
@@ -469,13 +465,13 @@ Hello, world!
 \`\`\``
 
 test('a doc-string sensor returning a different string throws DocStringMismatchError at the body span', async () => {
-  // Sensor returning a tuple where [0] is the docstring.
+  // The doc string is the only slot: returned bare.
   const r = addStep(createRegistry(), {
     expression: 'the greeting is',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
     kind: 'sensor',
-    handler: () => ['Goodbye!\n'],
+    handler: () => 'Goodbye!\n',
   })
   const source = DOCSTRING_DOC
   let caught: unknown
@@ -514,13 +510,13 @@ test('a doc-string action returning undefined passes (asserted nothing)', async 
 })
 
 test('a doc-string sensor returning the exact body passes', async () => {
-  // Sensor returning a tuple where [0] is the docstring content.
+  // The doc string is the only slot: echo the exact content bare.
   const r = addStep(createRegistry(), {
     expression: 'the greeting is',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
     kind: 'sensor',
-    handler: ((_ctx, body: string) => [body]) as StepHandler, // echo the exact content as a tuple
+    handler: ((_ctx, body: string) => body) as StepHandler,
   })
   await expect(runsFor(DOCSTRING_DOC, r)[0]?.()).resolves.toBeUndefined()
 })

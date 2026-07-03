@@ -15,7 +15,7 @@ from var_core.execute import (
 )
 from var_core.parse import parse
 from var_core.plan import plan
-from var_core.registry import Registry, add_step, create_registry
+from var_core.registry import Registry, add_step, create_registry, define_parameter_type
 
 
 # ---------------------------------------------------------------------------
@@ -436,7 +436,7 @@ def test_whole_table_sensor_returning_mismatched_table_raises_cell_mismatch_erro
         expression_source_file="s.ts",
         expression_source_line=1,
         kind="sensor",
-        handler=lambda *_: [[["var", "WRONG"], ["bdd", "BDD"]]],
+        handler=lambda *_: [["var", "WRONG"], ["bdd", "BDD"]],
     )
     caught: Any = None
     try:
@@ -459,7 +459,7 @@ def test_whole_table_sensor_returning_matching_table_passes() -> None:
         expression_source_file="s.ts",
         expression_source_line=1,
         kind="sensor",
-        handler=lambda *_: [[{"before": "var", "after": "VAR"}, {"before": "bdd", "after": "BDD"}]],
+        handler=lambda *_: [{"before": "var", "after": "VAR"}, {"before": "bdd", "after": "BDD"}],
     )
     _runs_for(TABLE_DOC, r)[0]()  # should not raise
 
@@ -486,7 +486,7 @@ def test_doc_string_sensor_returning_different_string_raises_doc_string_mismatch
         expression_source_file="s.ts",
         expression_source_line=1,
         kind="sensor",
-        handler=lambda *_: ["Goodbye!\n"],
+        handler=lambda *_: "Goodbye!\n",
     )
     caught: Any = None
     try:
@@ -534,7 +534,7 @@ def test_doc_string_sensor_returning_exact_body_passes() -> None:
         expression_source_file="s.ts",
         expression_source_line=1,
         kind="sensor",
-        handler=lambda _ctx, body: [body],  # echo the content as a 1-tuple
+        handler=lambda _ctx, body: body,  # echo the content bare (only slot)
     )
     _runs_for(DOCSTRING_DOC, r)[0]()  # should not raise
 
@@ -943,6 +943,93 @@ def test_sensor_returning_wrong_tuple_length_raises_return_shape_error() -> None
     assert isinstance(caught[0], ReturnShapeError)
 
 
+def test_single_parameter_sensor_returns_the_bare_value() -> None:
+    """a single-parameter sensor returns the bare value, not a list."""
+    caught = _run_one(
+        "# X\n\nThe total is 42\n",
+        lambda r: add_step(
+            r,
+            expression="The total is {int}",
+            expression_source_file="s.steps.ts",
+            expression_source_line=1,
+            kind="sensor",
+            handler=lambda *_: 42,
+        ),
+    )
+    assert caught[0] is None
+
+
+def test_single_parameter_sensor_wrapping_its_value_fails_the_comparison() -> None:
+    """[42] is compared as-is against 42 — lists are never read as tuples with one slot."""
+    caught = _run_one(
+        "# X\n\nThe total is 42\n",
+        lambda r: add_step(
+            r,
+            expression="The total is {int}",
+            expression_source_file="s.steps.ts",
+            expression_source_line=1,
+            kind="sensor",
+            handler=lambda *_: [42],
+        ),
+    )
+    assert is_cell_mismatch_error(caught[0])
+
+
+def test_single_parameter_transforming_to_a_list_is_deep_compared_bare() -> None:
+    """a single parameter whose type transforms to a list is deep-compared bare."""
+
+    def _register(r: Registry) -> Registry:
+        r = define_parameter_type(
+            r,
+            name="numbers",
+            regexp=r"\d+(?:, \d+)*",
+            transformer=lambda raw: [int(n) for n in raw.split(", ")],
+        )
+        return add_step(
+            r,
+            expression="The dice show {numbers}",
+            expression_source_file="s.steps.ts",
+            expression_source_line=1,
+            kind="sensor",
+            handler=lambda *_: [5, 6],
+        )
+
+    caught = _run_one("# X\n\nThe dice show 5, 6\n", _register)
+    assert caught[0] is None
+
+
+def test_zero_slot_sensor_returning_a_value_raises_return_shape_error() -> None:
+    """a zero-slot sensor returning a value throws ReturnShapeError."""
+    caught = _run_one(
+        "# X\n\nThe alarm fired\n",
+        lambda r: add_step(
+            r,
+            expression="The alarm fired",
+            expression_source_file="s.steps.ts",
+            expression_source_line=1,
+            kind="sensor",
+            handler=lambda *_: True,
+        ),
+    )
+    assert isinstance(caught[0], ReturnShapeError)
+
+
+def test_zero_slot_sensor_returning_none_passes() -> None:
+    """a zero-slot sensor returning None passes."""
+    caught = _run_one(
+        "# X\n\nThe alarm fired\n",
+        lambda r: add_step(
+            r,
+            expression="The alarm fired",
+            expression_source_file="s.steps.ts",
+            expression_source_line=1,
+            kind="sensor",
+            handler=lambda *_: None,
+        ),
+    )
+    assert caught[0] is None
+
+
 def test_action_returning_non_dict_raises_return_shape_error() -> None:
     """an action that returns a non-dict value throws ReturnShapeError."""
     caught = _run_one(
@@ -986,7 +1073,7 @@ def test_sensor_with_trailing_data_table_returning_correct_table_passes() -> Non
             expression_source_file="s.steps.ts",
             expression_source_line=1,
             kind="sensor",
-            handler=lambda *_: [[{"name": "foo", "value": "bar"}]],
+            handler=lambda *_: [{"name": "foo", "value": "bar"}],
         ),
     )
     assert caught[0] is None
@@ -1003,7 +1090,7 @@ def test_sensor_with_trailing_data_table_returning_wrong_cell_raises_cell_mismat
             expression_source_file="s.steps.ts",
             expression_source_line=1,
             kind="sensor",
-            handler=lambda *_: [[{"name": "foo", "value": "WRONG"}]],
+            handler=lambda *_: [{"name": "foo", "value": "WRONG"}],
         ),
     )
     assert is_cell_mismatch_error(caught[0])
@@ -1020,7 +1107,7 @@ def test_sensor_with_trailing_doc_string_returning_exact_content_passes() -> Non
             expression_source_file="s.steps.ts",
             expression_source_line=1,
             kind="sensor",
-            handler=lambda _ctx, body: [body],
+            handler=lambda _ctx, body: body,
         ),
     )
     assert caught[0] is None
@@ -1037,7 +1124,7 @@ def test_sensor_with_trailing_doc_string_returning_wrong_text_raises_doc_string_
             expression_source_file="s.steps.ts",
             expression_source_line=1,
             kind="sensor",
-            handler=lambda _ctx, _body: ["Goodbye!\n"],
+            handler=lambda _ctx, _body: "Goodbye!\n",
         ),
     )
     assert is_doc_string_mismatch_error(caught[0])
@@ -1060,9 +1147,9 @@ def test_async_def_handlers_are_driven_to_completion() -> None:
     async def _async_action(state: Any, n: int) -> dict:
         return {"count": n}
 
-    async def _async_sensor(state: Any, expected: int) -> list:
+    async def _async_sensor(state: Any, expected: int) -> int:
         seen.append(state["count"])
-        return [state["count"]]
+        return state["count"]
 
     r = add_step(
         add_step(

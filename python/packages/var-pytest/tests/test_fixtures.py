@@ -29,7 +29,7 @@ def _(state, n, db, tmp_path):
 
 @sensor("db has {int} entries")
 def _(state, count, db):
-    return (len(db),)
+    return len(db)
 """
 
 SPEC = """\
@@ -86,7 +86,7 @@ def _(state, n, db):
 @sensor("db contains {int}")
 def _(state, expected, db):
     assert db == [expected], f"expected [{expected}], got {db}"
-    return (expected,)
+    return expected
 """
 
 CLASSIFICATION_SPEC = """\

@@ -199,22 +199,42 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
                                 state_by_file[file] = state
 
                         elif kind == "sensor":
-                            # Header-bound rows skip the tuple contract (they return
+                            # Header-bound rows skip the slot contract (they return
                             # a row object compared via compare_row after the loop).
                             if ex.row_checks is None and returned is not None:
-                                if not isinstance(returned, (list, tuple)):
+                                # A sensor's comparison slots are its expression
+                                # parameters followed by the trailing data table or
+                                # doc string, if any. Zero slots: nothing to compare
+                                # against — a returned value is a mistake (raise to
+                                # fail, return nothing to pass). One slot: the return
+                                # IS that slot's value (never a tuple, so a parameter
+                                # type transforming to a list is compared as-is).
+                                # Two or more: a positional list, one per slot.
+                                slot_count = len(step.args) + len(extra)
+                                if slot_count == 0:
                                     raise ReturnShapeError(
-                                        f"a sensor must return a tuple of its arguments"
-                                        f" after state, got {type(returned).__name__}"
+                                        "this sensor has no parameters, data table or"
+                                        " doc string — nothing to compare a return"
+                                        " value against (raise to fail, return"
+                                        " nothing to pass)"
                                     )
-                                expected_len = len(step.args) + len(extra)
-                                if len(returned) != expected_len:
-                                    raise ReturnShapeError(
-                                        f"sensor return must have {expected_len}"
-                                        f" element(s), got {len(returned)}"
-                                    )
+                                if slot_count == 1:
+                                    slots: list[Any] = [returned]
+                                else:
+                                    if not isinstance(returned, (list, tuple)):
+                                        raise ReturnShapeError(
+                                            f"a sensor with {slot_count} parameters"
+                                            f" must return a list of {slot_count}"
+                                            f" values, got {type(returned).__name__}"
+                                        )
+                                    if len(returned) != slot_count:
+                                        raise ReturnShapeError(
+                                            f"sensor return must have {slot_count}"
+                                            f" element(s), got {len(returned)}"
+                                        )
+                                    slots = list(returned)
                                 # Inline parameter comparison.
-                                inline_returned = list(returned[: len(step.args)])
+                                inline_returned = slots[: len(step.args)]
                                 source_texts = [
                                     utf16_slice(
                                         plan.var_doc.source,
@@ -235,12 +255,12 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
                                 ]
                                 if param_diffs:
                                     raise CellMismatchError(param_diffs)
-                                # Trailing table / doc string comparison.
+                                # Trailing table / doc string occupies the last slot.
                                 if step.data_table is not None:
                                     bad = [
                                         d
                                         for d in compare_table(
-                                            returned[len(step.args)], step.data_table
+                                            slots[len(step.args)], step.data_table
                                         )
                                         if not d.ok
                                     ]
@@ -248,7 +268,7 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
                                         raise CellMismatchError(bad)
                                 elif step.doc_string is not None:
                                     diff = compare_doc_string(
-                                        returned[len(step.args)],
+                                        slots[len(step.args)],
                                         step.doc_string.content,
                                         step.doc_string.span,
                                     )

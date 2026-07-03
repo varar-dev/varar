@@ -4,7 +4,7 @@ import { isDocStringMismatchError } from '../src/doc-string-diff.js'
 import { type ExecutePorts, executePlan } from '../src/execute.js'
 import { parse } from '../src/parse.js'
 import { plan } from '../src/plan.js'
-import { addStep, createRegistry, type StepHandler } from '../src/registry.js'
+import { addStep, createRegistry, defineParameterType, type StepHandler } from '../src/registry.js'
 
 // Minimal ports that run the example body and surface the thrown error.
 function runOne(
@@ -110,7 +110,7 @@ test('a sensor with a trailing data table returning the correct table passes', a
       expressionSourceFile: 's.steps.ts',
       expressionSourceLine: 1,
       kind: 'sensor',
-      handler: () => [[{ name: 'foo', value: 'bar' }]],
+      handler: () => [{ name: 'foo', value: 'bar' }],
     }),
   )
   await new Promise((res) => setTimeout(res, 0))
@@ -126,7 +126,7 @@ test('a sensor with a trailing data table returning the wrong cell throws CellMi
       expressionSourceFile: 's.steps.ts',
       expressionSourceLine: 1,
       kind: 'sensor',
-      handler: () => [[{ name: 'foo', value: 'WRONG' }]],
+      handler: () => [{ name: 'foo', value: 'WRONG' }],
     }),
   )
   await new Promise((res) => setTimeout(res, 0))
@@ -141,7 +141,7 @@ test('a sensor with a trailing doc string returning the exact content passes', a
       expressionSourceFile: 's.steps.ts',
       expressionSourceLine: 1,
       kind: 'sensor',
-      handler: ((_ctx, _body: string) => ['Hello, world!\n']) as StepHandler,
+      handler: ((_ctx, _body: string) => 'Hello, world!\n') as StepHandler,
     }),
   )
   await new Promise((res) => setTimeout(res, 0))
@@ -156,9 +156,87 @@ test('a sensor with a trailing doc string returning the wrong text throws DocStr
       expressionSourceFile: 's.steps.ts',
       expressionSourceLine: 1,
       kind: 'sensor',
-      handler: ((_ctx, _body: string) => ['Goodbye!\n']) as StepHandler,
+      handler: ((_ctx, _body: string) => 'Goodbye!\n') as StepHandler,
     }),
   )
   await new Promise((res) => setTimeout(res, 0))
   expect(isDocStringMismatchError(getErr())).toBe(true)
+})
+
+test('a single-parameter sensor returns the bare value, not an array', async () => {
+  const getErr = runOne('# X\n\nThe total is 42\n', (r) =>
+    addStep(r, {
+      expression: 'The total is {int}',
+      expressionSourceFile: 's.steps.ts',
+      expressionSourceLine: 1,
+      kind: 'sensor',
+      handler: () => 42,
+    }),
+  )
+  await new Promise((res) => setTimeout(res, 0))
+  expect(getErr()).toBeUndefined()
+})
+
+test('a single-parameter sensor wrapping its value in an array fails the comparison', async () => {
+  // [42] is compared as-is against 42 — arrays are never read as tuples
+  // when there is only one slot.
+  const getErr = runOne('# X\n\nThe total is 42\n', (r) =>
+    addStep(r, {
+      expression: 'The total is {int}',
+      expressionSourceFile: 's.steps.ts',
+      expressionSourceLine: 1,
+      kind: 'sensor',
+      handler: () => [42],
+    }),
+  )
+  await new Promise((res) => setTimeout(res, 0))
+  expect(isCellMismatchError(getErr())).toBe(true)
+})
+
+test('a single parameter whose type transforms to an array is deep-compared bare', async () => {
+  const register = (r: ReturnType<typeof createRegistry>) => {
+    const withType = defineParameterType(r, {
+      name: 'numbers',
+      regexp: /\d+(?:, \d+)*/,
+      transformer: (raw: string) => raw.split(', ').map(Number),
+    })
+    return addStep(withType, {
+      expression: 'The dice show {numbers}',
+      expressionSourceFile: 's.steps.ts',
+      expressionSourceLine: 1,
+      kind: 'sensor',
+      handler: () => [5, 6],
+    })
+  }
+  const getErr = runOne('# X\n\nThe dice show 5, 6\n', register)
+  await new Promise((res) => setTimeout(res, 0))
+  expect(getErr()).toBeUndefined()
+})
+
+test('a zero-slot sensor returning a value throws ReturnShapeError', async () => {
+  const getErr = runOne('# X\n\nThe alarm fired\n', (r) =>
+    addStep(r, {
+      expression: 'The alarm fired',
+      expressionSourceFile: 's.steps.ts',
+      expressionSourceLine: 1,
+      kind: 'sensor',
+      handler: () => true,
+    }),
+  )
+  await new Promise((res) => setTimeout(res, 0))
+  expect((getErr() as Error).name).toBe('ReturnShapeError')
+})
+
+test('a zero-slot sensor returning undefined passes', async () => {
+  const getErr = runOne('# X\n\nThe alarm fired\n', (r) =>
+    addStep(r, {
+      expression: 'The alarm fired',
+      expressionSourceFile: 's.steps.ts',
+      expressionSourceLine: 1,
+      kind: 'sensor',
+      handler: () => undefined,
+    }),
+  )
+  await new Promise((res) => setTimeout(res, 0))
+  expect(getErr()).toBeUndefined()
 })

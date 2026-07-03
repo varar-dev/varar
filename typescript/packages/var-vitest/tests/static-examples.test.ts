@@ -3,7 +3,7 @@ import { discoverStaticExamples } from '../src/static-examples.js'
 
 const STEPS = `import { defineState } from '@oselvar/var'
 const { sensor } = defineState(() => ({}))
-sensor('the answer is {int}', () => [42])
+sensor('the answer is {int}', () => 42)
 `
 
 test('discovers only examples with matched steps, named by the whole paragraph', () => {
@@ -21,7 +21,7 @@ test('matches expressions that use a custom parameter type', () => {
 const { sensor } = defineState(() => ({}), {
   color: { regexp: /red|green/ },
 })
-sensor('the light is {color}', () => ['green'])
+sensor('the light is {color}', () => 'green')
 `
   const examples = discoverStaticExamples({
     varPath: '/abs/light.md',

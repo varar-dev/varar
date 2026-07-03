@@ -147,6 +147,76 @@ class ExecuteTest {
         assertEquals("42", source.substring(span.startOffset(), span.endOffset()));
     }
 
+    @Test
+    void aSensorWithTwoParametersReturnsAPositionalListComparedAgainstEveryCapture() {
+        Registry r =
+                reg(
+                        "I should have {int} cukes in my {word} belly",
+                        "s.ts",
+                        1,
+                        (Fn2) (state, count, name) -> List.of(count, name),
+                        StepKind.SENSOR);
+        Plan.ExecutionPlan p = planOf("# X\n\nI should have 3 cukes in my big belly", r);
+        assertDoesNotThrow(() -> Execute.collectExamples(p, silentPorts()).get(0).run().run());
+    }
+
+    @Test
+    void aSensorWithTwoParametersReturningANonListThrowsReturnShapeException() {
+        Registry r =
+                reg(
+                        "I should have {int} cukes in my {word} belly",
+                        "s.ts",
+                        1,
+                        (Fn2) (state, count, name) -> 3,
+                        StepKind.SENSOR);
+        Plan.ExecutionPlan p = planOf("# X\n\nI should have 3 cukes in my big belly", r);
+        assertThrows(
+                CellDiff.ReturnShapeException.class,
+                () -> Execute.collectExamples(p, silentPorts()).get(0).run().run());
+    }
+
+    @Test
+    void aSensorWithTwoParametersReturningTheWrongLengthThrowsReturnShapeException() {
+        Registry r =
+                reg(
+                        "I should have {int} cukes in my {word} belly",
+                        "s.ts",
+                        1,
+                        (Fn2) (state, count, name) -> List.of(3),
+                        StepKind.SENSOR);
+        Plan.ExecutionPlan p = planOf("# X\n\nI should have 3 cukes in my big belly", r);
+        assertThrows(
+                CellDiff.ReturnShapeException.class,
+                () -> Execute.collectExamples(p, silentPorts()).get(0).run().run());
+    }
+
+    @Test
+    void aSingleParameterSensorWrappingItsValueInAListFailsTheComparison() {
+        // List.of(42) is compared as-is against 42 — a return value is never read as a
+        // positional list when there is only one slot.
+        Registry r = reg("the answer is {int}", "s.ts", 1, (Fn1) (state, expected) -> List.of(42), StepKind.SENSOR);
+        Plan.ExecutionPlan p = planOf("# Q\n\nthe answer is 42.", r);
+        assertThrows(
+                CellDiff.CellMismatchException.class,
+                () -> Execute.collectExamples(p, silentPorts()).get(0).run().run());
+    }
+
+    @Test
+    void aZeroSlotSensorReturningAValueThrowsReturnShapeException() {
+        Registry r = reg("the alarm fired", "s.ts", 1, (Fn0) state -> true, StepKind.SENSOR);
+        Plan.ExecutionPlan p = planOf("# X\n\nthe alarm fired", r);
+        assertThrows(
+                CellDiff.ReturnShapeException.class,
+                () -> Execute.collectExamples(p, silentPorts()).get(0).run().run());
+    }
+
+    @Test
+    void aZeroSlotSensorReturningNullPasses() {
+        Registry r = reg("the alarm fired", "s.ts", 1, (Fn0) state -> null, StepKind.SENSOR);
+        Plan.ExecutionPlan p = planOf("# X\n\nthe alarm fired", r);
+        assertDoesNotThrow(() -> Execute.collectExamples(p, silentPorts()).get(0).run().run());
+    }
+
     // -----------------------------------------------------------------------------------------
     // createContext: once per (example, file), reused across steps in the same file
     // -----------------------------------------------------------------------------------------
@@ -654,7 +724,7 @@ class ExecuteTest {
                         (Fn0)
                                 state -> {
                                     seen.add(state);
-                                    return state;
+                                    return null;
                                 },
                         StepKind.SENSOR);
         Plan.ExecutionPlan p = planOf("# A\n\nI greet asynchronously\nobserve", r);

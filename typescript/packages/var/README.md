@@ -9,7 +9,7 @@ import { defineState } from '@oselvar/var'
 
 const { action, sensor } = defineState(() => ({ greeting: '' }))
 action('I greet {string}', (_state, name) => ({ greeting: `Hello, ${name}!` }))
-sensor('the greeting is {string}', (state) => [state.greeting])
+sensor('the greeting is {string}', (state) => state.greeting)
 ```
 
 This is a thin stateful shell over the pure `@oselvar/var-core`. Adapters use the

@@ -10,8 +10,9 @@ import com.oselvar.var.StepDefinitions;
  * 04-tables-and-docstrings}).
  *
  * <p>The TS/Python originals receive the doc string as a trailing argument after the
- * expression's own captures ({@code (ctx, doc) => [doc]}) and return it so the pure
- * core's {@code compareDocString} can check it against the source doc string. Java's
+ * expression's own captures ({@code (ctx, doc) => doc}) and return it bare (it is the
+ * sensor's only slot) so the pure core's {@code compareDocString} can check it against
+ * the source doc string. Java's
  * executor ({@code Execute}, Task 18) passes the doc string the same way — as the last
  * handler argument, after any inline captures — so this sensor takes it explicitly and
  * echoes it back verbatim; equal content passes.

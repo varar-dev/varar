@@ -116,21 +116,38 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
               }
             } else if (kind === 'sensor') {
               // Header-bound rows are compared after the loop via ex.rowChecks;
-              // skip the tuple contract for them (they return a row object).
+              // skip the slot contract for them (they return a row object).
               if (!ex.rowChecks && returned !== undefined) {
-                if (!Array.isArray(returned)) {
+                // A sensor's comparison slots are its expression parameters
+                // followed by the trailing data table or doc string, if any.
+                // Zero slots: nothing to compare against — a returned value
+                // is a mistake (throw to fail, return nothing to pass).
+                // One slot: the return IS that slot's value (never a tuple,
+                // so a parameter type transforming to an array is compared
+                // as-is). Two or more: a positional array, one per slot.
+                const slotCount = step.args.length + extra.length
+                let slots: ReadonlyArray<unknown>
+                if (slotCount === 0) {
                   throw new ReturnShapeError(
-                    `a sensor must return a tuple of its arguments after state, got ${typeof returned}`,
+                    'this sensor has no parameters, data table or doc string — nothing to compare a return value against (throw to fail, return nothing to pass)',
                   )
+                } else if (slotCount === 1) {
+                  slots = [returned]
+                } else {
+                  if (!Array.isArray(returned)) {
+                    throw new ReturnShapeError(
+                      `a sensor with ${slotCount} parameters must return an array of ${slotCount} values, got ${typeof returned}`,
+                    )
+                  }
+                  if (returned.length !== slotCount) {
+                    throw new ReturnShapeError(
+                      `sensor return must have ${slotCount} element(s), got ${returned.length}`,
+                    )
+                  }
+                  slots = returned
                 }
-                const expectedLen = step.args.length + extra.length
-                if (returned.length !== expectedLen) {
-                  throw new ReturnShapeError(
-                    `sensor return must have ${expectedLen} element(s), got ${returned.length}`,
-                  )
-                }
-                // Inline parameters: returned[0..args.length) vs captured args.
-                const inlineReturned = returned.slice(0, step.args.length)
+                // Inline parameters: slots[0..args.length) vs captured args.
+                const inlineReturned = slots.slice(0, step.args.length)
                 const sourceTexts = step.paramSpans.map((s) =>
                   plan.varDoc.source.slice(s.startOffset, s.endOffset),
                 )
@@ -141,16 +158,15 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
                   sourceTexts,
                 ).filter((d) => !d.ok)
                 if (paramDiffs.length > 0) throw new CellMismatchError(paramDiffs)
-                // Trailing table / doc string: the extra, if any, is at
-                // index step.args.length in the returned tuple.
+                // Trailing table / doc string occupies the last slot.
                 if (step.dataTable) {
-                  const bad = compareTable(returned[step.args.length], step.dataTable).filter(
+                  const bad = compareTable(slots[step.args.length], step.dataTable).filter(
                     (d) => !d.ok,
                   )
                   if (bad.length > 0) throw new CellMismatchError(bad)
                 } else if (step.docString) {
                   const diff = compareDocString(
-                    returned[step.args.length],
+                    slots[step.args.length],
                     step.docString.content,
                     step.docString.span,
                   )
