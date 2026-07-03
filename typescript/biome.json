@@ -3,6 +3,7 @@
   "files": {
     "includes": [
       "**",
+      "!**/coverage",
       "!**/dist",
       "!**/node_modules",
       "!**/.astro",

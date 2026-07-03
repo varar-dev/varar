@@ -11,6 +11,7 @@
     "build": "pnpm -r --filter '!@oselvar/website' --filter '!@oselvar/website' build",
     "typecheck": "tsc -p tsconfig.tests.json",
     "test": "NODE_OPTIONS=\"--import tsx\" vitest run",
+    "test:coverage": "NODE_OPTIONS=\"--import tsx\" vitest run --coverage",
     "test:watch": "NODE_OPTIONS=\"--import tsx\" vitest",
     "lint": "biome check . && node scripts/lint-no-reexports.mjs",
     "lint:fix": "biome check --write .",
@@ -23,6 +24,7 @@
   "devDependencies": {
     "@biomejs/biome": "^2.5.2",
     "@types/node": "^26.1.0",
+    "@vitest/coverage-v8": "^4.1.9",
     "jscpd": "^5.0.11",
     "knip": "^6.24.0",
     "tsx": "^4.22.5",
