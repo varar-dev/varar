@@ -9,6 +9,18 @@ This file is generated from conventional commit messages by
 [git-cliff](https://git-cliff.org) (`make changelog`) — do not edit it by
 hand. The `[Unreleased]` section is refreshed by CI on every push to `main`.
 
+## [Unreleased]
+
+### TypeScript (npm)
+
+- Added: **var-vitest:** Cell and doc string mismatches render vitest's expected/received diff in the terminal and VS Code peek view
+- Added: Cell mismatches diff the authored line against the actual values and anchor editors at the first failing cell
+- Added: **var-vitest:** Cell mismatch diffs show only the differing values, not the whole step text
+
+### Specification (all ports)
+
+- Added: Conformance pins each failure's anchor span, so a mismatch points at its first failing cell in every port
+
 ## [0.2.0] - 2026-07-03
 
 ### TypeScript (npm)
