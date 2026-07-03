@@ -2,84 +2,66 @@
 
 One command releases every port, lockstep-versioned:
 
-    make release VERSION=0.1.0
+    make release
+
+The version is inferred from the conventional commits since the last release
+tag (`git-cliff --bumped-version`): while on 0.x, a breaking change bumps
+minor and everything else bumps patch. Pass `VERSION=x.y.z` only to override
+the inference — e.g. the deliberate jump to 1.0.0, which is never inferred.
+
+CHANGELOG.md needs no preparation: it is generated from commit messages
+(`make changelog`; CI refreshes `[Unreleased]` on every push to `main`), and
+the release folds `[Unreleased]` into the new version's section, which
+becomes the GitHub release notes. The script refuses to run if that section
+would be empty (no `feat`/`fix`/`perf`/breaking commits since the last tag).
 
 Idempotent: if anything fails, fix the cause and re-run the **same** command.
 Already-published artifacts are detected (registry probes) and skipped.
-`DRY_RUN=1 release/release.sh 0.1.0` shows the plan without publishing;
+`DRY_RUN=1 release/release.sh` shows the plan without publishing;
 `SKIP_GATE=1` skips `make check` when resuming a run that already passed it.
-
-Before releasing: rename `## [Unreleased]` in `CHANGELOG.md` to
-`## [x.y.z]` and commit. The release script refuses to run without that
-section — it becomes the GitHub release notes.
 
 What a release does: preflight checks → `make check` → stamp version into
 every manifest + commit → tag `vX.Y.Z` → publish npm, PyPI, Maven Central,
 VS Code Marketplace, Open VSX (each skipping what already exists) → push →
 GitHub release.
 
+Run releases from an interactive shell, not CI: npm keeps 2FA on publishes
+(deliberately — no bypass-2FA token), so each npm publish opens a browser
+`npmjs.com/auth/cli/...` challenge answered with 1Password/passkey.
+
 A target can be parked with the `DISABLED=1` variable at the top of its
 `release/targets/*.sh` (it warns and reports OK). Currently parked: PyPI,
-Maven Central, VS Code Marketplace — **only npm and Open VSX publish** until
-the remaining credentials are set up.
+Maven Central, VS Code Marketplace — **only npm and Open VSX publish**.
 
-## One-time setup
+## Credentials
 
 All secrets live in the 1Password vault **`Vár`** (account `my.1password.com`),
-injected via `op run` with the references in `release/release.env`. The env file
-references the vault by ID because `op://` URIs reject non-ASCII vault names.
-The seven items already exist with `PLACEHOLDER-set-me` values — the setup steps
-below replace those values with real tokens. Never put a real secret in the
-repo or your shell profile.
+injected via `op run` from the references in `release/release.env` (the vault
+is referenced by ID because `op://` URIs reject non-ASCII names). One-time
+setup is complete — these notes are for rotating a token or rebuilding a
+machine. Never put a real secret in the repo or your shell profile.
 
 Local tools (macOS): `brew install pnpm uv maven gh gnupg 1password-cli jq`
 and `npm install -g @vscode/vsce ovsx`. Sign in: `op signin`, `gh auth login`.
 
-### 1. npm (`@oselvar` scope — exists)
-Create a granular automation token with publish rights for the `@oselvar`
-scope and the `oselvar-var`-adjacent public packages at
-https://www.npmjs.com/settings → Access Tokens. The account keeps 2FA on
-publishes (no bypass-2FA token, deliberately): each publish triggers npm's
-**browser-based 2FA** — a `npmjs.com/auth/cli/...` page opens and the
-challenge is answered with 1Password/passkey. One browser round-trip per
-package being published, so run releases from an interactive shell, not CI.
-→ 1Password item `npm-oselvar`, field `token`.
-
-### 2. PyPI
-Create an account (enable 2FA) at https://pypi.org. Create an API token
-(account-scoped for the first release; after the packages exist, replace it
-with a project-scoped token covering oselvar-var, oselvar-var-core,
-oselvar-var-runner, pytest-var, oselvar-var-unittest).
-→ item `pypi-oselvar`, field `token` (the full `pypi-...` value).
-
-Note: PyPI rate-limits **new project creation** per account. A first release
-of many packages can die mid-run with `429 Too many new projects created` —
-that is PyPI, not a credential problem. Wait for the limit to reset (hours)
-and re-run the same release command; already-published packages are skipped.
-
-### 3. Sonatype Central Portal (Maven Central)
-1. Account at https://central.sonatype.com.
-2. Register namespace `com.oselvar`; verify via the DNS TXT record it gives
-   you on `oselvar.com`.
-3. Generate a publishing token (Account → Generate User Token).
-→ item `sonatype-central`, fields `username` and `token`.
-
-### 4. GPG signing key
-    gpg --quick-generate-key "Oselvar Ltd <aslak@oselvar.com>" ed25519 sign never
-    gpg --keyserver keyserver.ubuntu.com --send-keys <KEYID>
-→ item `maven-gpg`, field `passphrase`; attach an export
-(`gpg --export-secret-keys --armor <KEYID>`) as a document for backup.
-
-### 5. VS Code Marketplace
-Publisher `oselvar` at https://marketplace.visualstudio.com/manage. Create an
-Azure DevOps PAT with the **Marketplace → Manage** scope.
-→ item `vscode-marketplace`, field `pat`.
-
-### 6. Open VSX
-Eclipse Foundation account at https://open-vsx.org, sign the publisher
-agreement, create the namespace (`ovsx create-namespace oselvar -p <token>`),
-generate an access token.
-→ item `open-vsx`, field `pat`.
+- **npm** — granular automation token with publish rights for the `@oselvar`
+  scope (npmjs.com → Settings → Access Tokens). → `npm-oselvar`, field `token`.
+- **PyPI** — project-scoped API token covering oselvar-var, oselvar-var-core,
+  oselvar-var-runner, pytest-var, oselvar-var-unittest. → `pypi-oselvar`,
+  field `token`. Publishing *new* projects is rate-limited per account: a
+  `429 Too many new projects created` mid-run is PyPI, not credentials —
+  wait (hours) and re-run; published packages are skipped.
+- **Sonatype Central Portal (Maven Central)** — user token from
+  central.sonatype.com (Account → Generate User Token); namespace
+  `com.oselvar` is already DNS-verified. → `sonatype-central`, fields
+  `username` and `token`.
+- **GPG** — ed25519 signing key for Oselvar Ltd, public key on
+  keyserver.ubuntu.com. → `maven-gpg`, field `passphrase`, with an armored
+  secret-key export attached as backup.
+- **VS Code Marketplace** — Azure DevOps PAT with the **Marketplace →
+  Manage** scope, publisher `oselvar`. → `vscode-marketplace`, field `pat`.
+- **Open VSX** — access token for the Eclipse Foundation account, namespace
+  `oselvar`. → `open-vsx`, field `pat`.
 
 ## Adding a new language port (Rust, Go, .NET, ...)
 
@@ -87,5 +69,5 @@ generate an access token.
 2. Drop `release/targets/NN-<registry>.sh` following the existing contract:
    probe first (`is <name>@<version> already there?`), publish only what is
    missing, honor `DRY_RUN=1`, exit non-zero only on real failure.
-3. Add the registry credential to `release/release.env` (`op://<vault-id>/...` (see `release/release.env`))
-   and its setup here.
+3. Add the registry credential to `release/release.env` and its rotation
+   notes here.
