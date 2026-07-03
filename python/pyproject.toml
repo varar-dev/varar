@@ -8,7 +8,11 @@ oselvar-var-core = { workspace = true }
 oselvar-var-runner = { workspace = true }
 
 [dependency-groups]
-dev = ["pytest>=8", "ruff>=0.6"]
+dev = [
+    "pytest>=8",
+    "pytest-cov>=7",
+    "ruff>=0.6",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["packages"]
@@ -26,3 +30,19 @@ addopts = "--import-mode=importlib"
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+
+# Coverage is opt-in (not in addopts, so plain pytest runs stay fast):
+#   uv run pytest --cov
+# Text summary on stdout; HTML in htmlcov/; lcov in coverage.lcov for
+# editor/CI integrations. Mirrors typescript's `pnpm test:coverage`.
+[tool.coverage.run]
+source_pkgs = ["var", "var_config", "var_core", "var_pytest", "var_runner", "var_unittest"]
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.coverage.html]
+directory = "htmlcov"
+
+[tool.coverage.lcov]
+output = "coverage.lcov"
