@@ -46,7 +46,7 @@ export default defineConfig({
         },
         {
           label: 'Reference',
-          items: ['reference/sensors'],
+          items: ['reference/stimulus', 'reference/sensors'],
         },
         {
           label: 'Understanding Vár',

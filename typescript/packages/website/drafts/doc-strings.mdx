@@ -18,9 +18,9 @@ Hello, world!
 ````
 
 ```ts
-action('The rendered greeting is:', (state, body) => {
+stimulus('The rendered greeting is:', (state, body) => {
   // body === 'Hello, world!\n'
-  // A context/action step can return a partial to record the result.
+  // A stimulus can return a partial to record the result.
   return { lastRendered: body }
 })
 ```

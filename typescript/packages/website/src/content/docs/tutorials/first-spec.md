@@ -33,9 +33,9 @@ Nothing runs yet — no step matches our sentence. Create
 ```ts
 import { defineState } from '@oselvar/var'
 
-const { action, sensor } = defineState(() => ({ result: 0 }))
+const { stimulus, sensor } = defineState(() => ({ result: 0 }))
 
-action('expression `{int}+{int}`', (_state, op1, op2) => ({ result: op1 + op2 }))
+stimulus('expression `{int}+{int}`', (_state, op1, op2) => ({ result: op1 + op2 }))
 
 sensor('evaluate to `{int}`', (state, _expected) => state.result)
 ```
@@ -44,8 +44,8 @@ Three things to notice:
 
 - **`defineState`** declares the state each example starts from — a fresh
   `{ result: 0 }` every run, so examples never leak into each other.
-- The **`action`** is the stimulus. It matches `` expression `1+1` `` in the
-  prose, computes, and returns a patch to the state.
+- The **`stimulus`** drives the software. It matches `` expression `1+1` `` in
+  the prose, computes, and returns a patch to the state.
 - The **`sensor`** is the read-only observation. It returns what the software
   actually produced — `state.result` — and Vár compares that against the `2`
   written in the Markdown. You never write an assertion; the document *is* the

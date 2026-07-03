@@ -18,18 +18,18 @@ class instances held in state are handled.
 `defineState` takes a factory that produces the initial state for each example:
 
 ```ts
-const { context, action, sensor } = defineState(() => ({ greeting: '', count: 0 }))
+const { stimulus, sensor } = defineState(() => ({ greeting: '', count: 0 }))
 ```
 
-## context / action: return a partial to evolve state
+## stimulus: return a partial to evolve state
 
-A `context` or `action` handler returns a partial state object. The runtime
+A `stimulus` handler returns a partial state object. The runtime
 shallow-merges it onto the current state and threads the result to the next
 step. Returning nothing leaves state unchanged.
 
 ```ts
-action('I greet {string}', (state, name) => ({ greeting: `Hello, ${name}!` }))
-action('I add {int}', (state, n) => ({ count: state.count + n }))
+stimulus('I greet {string}', (state, name) => ({ greeting: `Hello, ${name}!` }))
+stimulus('I add {int}', (state, n) => ({ count: state.count + n }))
 ```
 
 Handlers may still perform side effects (call the system under test); only the
@@ -52,7 +52,7 @@ deep-merged:
 
 ```ts
 // state: { user: { name: 'a', age: 30 } }
-action('rename', (state) => ({ user: { name: 'b' } }))
+stimulus('rename', (state) => ({ user: { name: 'b' } }))
 // result: { user: { name: 'b' } } — `age` is gone.
 ```
 
@@ -69,7 +69,7 @@ itself cannot be reassigned (return new state for that).
 
 ```ts
 // `library` is a class instance — its methods can mutate internal state freely.
-action('I add books', (state) => {
+stimulus('I add books', (state) => {
   const receipt = state.library.addBooks(['Dune', 'Foundation'])
   return { lastReceipt: receipt } // plain-data field updated via return
 })

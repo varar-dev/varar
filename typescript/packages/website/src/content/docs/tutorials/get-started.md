@@ -59,9 +59,9 @@ The steps file binds those phrases to code:
 ```ts
 import { defineState } from '@oselvar/var'
 
-const { action, sensor } = defineState(() => ({ greeting: '' }))
+const { stimulus, sensor } = defineState(() => ({ greeting: '' }))
 
-action('I greet {string}', (_state, name: string) => ({ greeting: `Hello, ${name}!` }))
+stimulus('I greet {string}', (_state, name: string) => ({ greeting: `Hello, ${name}!` }))
 
 sensor('the greeting is {string}', (state, _expected: string) => state.greeting)
 ```
@@ -84,11 +84,11 @@ The Markdown file just ran as a test, and the software kept its word.
 ## 4. Watch it fail on purpose
 
 Never trust a test you haven't seen fail. Open
-`var-examples/steps/01-hello.steps.ts` and change the greeting the action
+`var-examples/steps/01-hello.steps.ts` and change the greeting the stimulus
 produces:
 
 ```ts
-action('I greet {string}', (_state, name: string) => ({ greeting: `Hi, ${name}!` }))
+stimulus('I greet {string}', (_state, name: string) => ({ greeting: `Hi, ${name}!` }))
 ```
 
 Run Vár again:

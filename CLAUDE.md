@@ -126,7 +126,7 @@ Because the diffs are anchored to source spans (`startOffset`/`endOffset`), edit
 
 ## What's intentionally absent
 
-- No `Given`/`When`/`Then` named exports — three role functions (`context`/`action`/`sensor`, bound via `defineState`) chosen by what a step does, not by a keyword. Keywords are author-side narration, never matched.
+- No `Given`/`When`/`Then` named exports — two role functions (`stimulus`/`sensor`, bound via `defineState`) chosen by what a step does, not by a keyword. Keywords are author-side narration, never matched. The arrange/act (given/when) concepts remain useful narration, but they share one mechanism: `stimulus`.
 - No lifecycle hooks in the BDD layer — use the adapter's native `beforeEach`/`afterEach`.
 - No tags in v1.
 - No Gherkin AST, no `cucumber-messages`. The parser emits its own minimal immutable AST.

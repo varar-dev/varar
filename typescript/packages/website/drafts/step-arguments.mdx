@@ -16,11 +16,11 @@ the `{…}` **parameters** in the cucumber expression, and Vár infers those typ
 directly from the expression string. **You don't annotate them.**
 
 ```ts
-const { action } = defineState(() => ({ greeting: '' }))
+const { stimulus } = defineState(() => ({ greeting: '' }))
 
 // `name` is inferred as string — no annotation needed.
-action('I greet {string}', (state, name) => {
-  // context/action steps EVOLVE state by RETURNING a partial — never by
+stimulus('I greet {string}', (state, name) => {
+  // stimulus steps EVOLVE state by RETURNING a partial — never by
   // mutating. The returned object is shallow-merged onto the current state.
   return { greeting: `Hello, ${name}!` }
 })
@@ -68,7 +68,7 @@ const { context } = defineState(() => ({ member: 'maya' }), {
 })
 
 // {date} → Date, {string} → string, both inferred.
-context('borrowed {string}, due back on {date}', (_state, title, due) => {
+stimulus('borrowed {string}, due back on {date}', (_state, title, due) => {
   // `title` is string, `due` is Date.
 })
 ```

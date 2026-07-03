@@ -74,7 +74,7 @@ Open `var-examples/hello-var/hello-var.steps.ts` and change the greeting it
 produces:
 
 ```ts
-action('I greet {string}', (_state, name) => ({ greeting: `Hi, ${name}!` }))
+stimulus('I greet {string}', (_state, name) => ({ greeting: `Hi, ${name}!` }))
 ```
 
 Run var again:

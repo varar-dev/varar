@@ -6,7 +6,14 @@ description: The sensor return-value contract — slots, bare values, positional
 A sensor is a read-only observation. It reads state, returns what the software
 actually produced, and Vár compares that against what the Markdown claims. A
 sensor never changes state, and you never write an assertion — the document is
-the assertion.
+the assertion. It is one of Vár's two step kinds — the other is the
+[stimulus](/reference/stimulus/), which drives the software.
+
+The word comes from Martin Fowler's
+[Harness Engineering](https://martinfowler.com/articles/harness-engineering.html):
+a test harness surrounds the system with instruments the way a hardware rig
+does — you drive the system with stimuli and read its behaviour back through
+sensors, rather than reaching inside it.
 
 ```ts
 const { sensor } = defineState(() => ({ total: 0 }))
