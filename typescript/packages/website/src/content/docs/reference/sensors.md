@@ -16,10 +16,15 @@ does — you drive the system with stimuli and read its behaviour back through
 sensors, rather than reaching inside it.
 
 ```ts
-const { sensor } = defineState(() => ({ total: 0 }))
+const { stimulus, sensor } = defineState(() => ({ total: 0 }))
 
+stimulus('I add {int}', (state, n) => ({ total: state.total + n }))
 sensor('the total is {int}', (state) => state.total)
 ```
+
+In your prose the sensor is the *then* — the expected outcome; see
+[Given, When, Then are narration](/reference/stimulus/#given-when-then-are-narration)
+for how the concepts map onto the two step kinds.
 
 This page is the reference for what a sensor may return and how each return
 value is compared. The rules are identical in every port (TypeScript, Python,
