@@ -34,12 +34,12 @@ describe('generateVirtualModule', () => {
     // depends on (@oselvar/var-vitest, vitest) — a bare '@oselvar/var-core'
     // would not resolve from the spec's path under pnpm's strict layout.
     expect(lines[0]).toContain(
-      "import { collectVarExamples, resolveScannerPlugins, varTestBody } from '@oselvar/var-vitest/runtime'",
+      "import { collectVarExamples, varTestBody } from '@oselvar/var-vitest/runtime'",
     )
     expect(lines[0]).not.toContain("from '@oselvar/var-core'")
     expect(lines[0]).toContain('import "/abs/account.steps.ts"')
     expect(lines[0]).toContain('const PATH = "/abs/foo.md"')
-    expect(lines[0]).toContain('scannerPlugins: resolveScannerPlugins([])')
+    expect(lines[0]).toContain('scannerPlugins: []')
     // Line 2 is filler, line 3 carries the static test registration: a string
     // literal name (so editors can discover it without running anything) and a
     // body looked up by index at runtime.
@@ -89,16 +89,14 @@ describe('generateVirtualModule', () => {
     expect(out.match(/test\(/g)).toHaveLength(1)
   })
 
-  test('resolves configured scanner-plugin names via var-core so scannerPlugins reach the runtime', () => {
+  test('inlines configured scanner-plugin names so the runtime can resolve them via var-core', () => {
     const out = generateVirtualModule({
       varPath: '/abs/foo.md',
       stepImports: [],
       scannerPluginNames: ['gherkinTables', 'gherkinDocStrings'],
       examples: [],
     })
-    expect(out).toContain(
-      'scannerPlugins: resolveScannerPlugins(["gherkinTables","gherkinDocStrings"])',
-    )
+    expect(out).toContain('scannerPlugins: ["gherkinTables","gherkinDocStrings"]')
   })
 })
 

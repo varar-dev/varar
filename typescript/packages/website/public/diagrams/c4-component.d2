@@ -5,8 +5,9 @@
 # package's package.json — but dependencies already implied by a drawn path
 # are omitted for readability: most packages also declare a direct dep on
 # @oselvar/var-core (its types are imported directly, and pnpm's strict
-# layout requires declaring everything you import), and var-vitest likewise
-# declares var / var-config. See each package.json for the full list.
+# layout requires declaring everything you import), and var-vitest / var-cli
+# likewise declare var-config (and var-vitest var). See each package.json
+# for the full list.
 # Boundaries follow the hexagonal architecture: pure functional core,
 # imperative shell (adapters), editor tooling — plus the static-analysis
 # layer shared by the test-runner and editor paths.

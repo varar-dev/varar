@@ -13,9 +13,6 @@ import { SEMANTIC_LEGEND, semanticTokenData } from './semantic-tokens.js'
 import { createStore, type Store, type StoreDeps } from './store.js'
 import { uriToPath } from './uri.js'
 
-// Keep these re-exports so knip continues to count the workspace deps as used
-// in the build. T6 onward uses them directly.
-export type { StepDef } from '@oselvar/var-language'
 // FileSystem is the port external adapters implement (node-file-system.ts
 // internally, idb-file-system.ts in the website packages) — it must be
 // public for those adapters to type against it.

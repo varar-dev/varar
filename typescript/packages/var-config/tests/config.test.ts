@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, test } from 'vitest'
 import { loadVarConfig, parseVarConfig } from '../src/config.js'
+import { findFiles } from '../src/find-files.js'
 
 test('parseVarConfig reads all four keys', () => {
   const parsed = parseVarConfig(
@@ -101,6 +102,33 @@ test('loadVarConfig rejects an unknown plugin name', async () => {
   try {
     writeFileSync(join(dir, 'var.config.json'), '{ "scannerPlugins": ["nope"] }\n')
     await expect(loadVarConfig(dir)).rejects.toThrowError(/unknown scanner plugin "nope"/i)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('findFiles resolves include globs to absolute paths', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'var-config-find-'))
+  try {
+    writeFileSync(join(dir, 'a.md'), '# Spec A\n')
+    writeFileSync(join(dir, 'b.md'), '# Spec B\n')
+    const files = findFiles(dir, ['*.md'])
+    expect(files).toHaveLength(2)
+    expect(files.every((f) => f.startsWith(dir))).toBe(true)
+    expect(files.map((f) => f.split('/').at(-1)).sort()).toEqual(['a.md', 'b.md'])
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('findFiles respects exclude globs', () => {
+  const dir = mkdtempSync(join(tmpdir(), 'var-config-find-excl-'))
+  try {
+    writeFileSync(join(dir, 'a.md'), '# Spec A\n')
+    writeFileSync(join(dir, 'wip.md'), '# WIP\n')
+    const files = findFiles(dir, ['*.md'], ['wip.md'])
+    expect(files).toHaveLength(1)
+    expect(files[0]).toMatch(/a\.md$/)
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }

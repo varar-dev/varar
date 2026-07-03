@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
+import { findFiles, loadVarConfig } from '@oselvar/var-config'
 import { createRegistry, parse, plan } from '@oselvar/var-core'
-import { findSpecs, readVarConfig } from '@oselvar/var-runner'
 
 export type LintOptions = {
   readonly cwd: string
@@ -21,11 +21,11 @@ type Item = {
 }
 
 export async function runLint(opts: LintOptions): Promise<LintResult> {
-  const cfg = await readVarConfig(opts.cwd)
+  const cfg = await loadVarConfig(opts.cwd)
   // A CLI `--globs` override is include-only; excludes live in var.config.json.
   const varGlobs =
     opts.globs && opts.globs.length > 0 ? { include: opts.globs, exclude: [] } : cfg.docs
-  const files = findSpecs(opts.cwd, varGlobs.include, varGlobs.exclude)
+  const files = findFiles(opts.cwd, varGlobs.include, varGlobs.exclude)
   const registry = createRegistry()
   const items: Item[] = []
   for (const path of files) {

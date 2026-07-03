@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
+import { findFiles, loadVarConfig } from '@oselvar/var-config'
 import type { ScannerPlugin } from '@oselvar/var-core'
-import { findSpecs, readVarConfig } from '@oselvar/var-runner'
 import type { Plugin } from 'vite'
 import { configDefaults } from 'vitest/config'
 import { discoverStaticExamples, type StaticExample } from './static-examples.js'
@@ -44,7 +44,7 @@ export function varVitestPlugin(options: VarVitestPluginOptions = {}): Plugin {
       // made absolute against `cwd`; setting `test.exclude` *replaces* vitest's
       // defaults, so re-add `configDefaults.exclude` to keep `node_modules` &c.
       // out.
-      const cfg = await readVarConfig(cwd)
+      const cfg = await loadVarConfig(cwd)
       const abs = (g: string) => resolve(cwd, g)
       return {
         // Force a single @oselvar/var (and @oselvar/var-core) module instance.
@@ -61,9 +61,9 @@ export function varVitestPlugin(options: VarVitestPluginOptions = {}): Plugin {
       }
     },
     async configResolved() {
-      const cfg = await readVarConfig(cwd)
-      stepFiles = findSpecs(cwd, cfg.steps)
-      specFiles = new Set(findSpecs(cwd, cfg.docs.include, cfg.docs.exclude))
+      const cfg = await loadVarConfig(cwd)
+      stepFiles = findFiles(cwd, cfg.steps)
+      specFiles = new Set(findFiles(cwd, cfg.docs.include, cfg.docs.exclude))
       scannerPlugins = cfg.scannerPlugins
       pluginNames = cfg.scannerPluginNames
       const abs = resolve(cwd, 'var.config.json')
@@ -99,9 +99,9 @@ export type GenerateInput = {
   readonly varPath: string
   readonly stepImports: ReadonlyArray<string>
   readonly source?: string
-  // Scanner-plugin NAMES from var.config.json. The generated module
-  // re-resolves them via var-core's registry — functions can't be
-  // serialized into generated source, names can.
+  // Scanner-plugin NAMES from var.config.json. The generated module passes
+  // them to collectVarExamples, which resolves them against var-core's
+  // registry — functions can't be serialized into generated source, names can.
   readonly scannerPluginNames: ReadonlyArray<string>
   // Statically discovered examples (see discoverStaticExamples). Each one
   // becomes a `test("literal name", ...)` call placed at its own markdown
@@ -127,14 +127,14 @@ export function generateVirtualModule(input: GenerateInput): string {
     // @oselvar/var-core here would fail under pnpm's strict node_modules
     // layout, because the module id (the spec path) resolves in the
     // consumer's project, where transitive deps are not visible.
-    "import { collectVarExamples, resolveScannerPlugins, varTestBody } from '@oselvar/var-vitest/runtime'",
+    "import { collectVarExamples, varTestBody } from '@oselvar/var-vitest/runtime'",
     ...input.stepImports.map((p) => `import ${JSON.stringify(p)}`),
     `const PATH = ${pathJson}`,
     // Diagnostics and the stale-transform guard register their tests inside
     // collectVarExamples, so the only `test(...)` callsites in this module
     // are the real per-example ones below — static AST discovery sees an
     // exact test tree.
-    `const EXAMPLES = collectVarExamples(PATH, ${sourceJson}, { scannerPlugins: resolveScannerPlugins(${pluginNamesJson}), expectedCount: ${examples.length} })`,
+    `const EXAMPLES = collectVarExamples(PATH, ${sourceJson}, { scannerPlugins: ${pluginNamesJson}, expectedCount: ${examples.length} })`,
   ]
   const testCall = (ex: StaticExample, i: number): string => {
     const nameJson = JSON.stringify(ex.name)

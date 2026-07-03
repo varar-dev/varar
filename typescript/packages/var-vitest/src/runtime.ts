@@ -1,16 +1,7 @@
 import { buildRegistry, contextFactory } from '@oselvar/var/registry'
-import { type Reporter, type ScannerPlugin, toFailure } from '@oselvar/var-core'
+import { type Reporter, resolveScannerPlugins, toFailure } from '@oselvar/var-core'
 import { examplesWithRuns, planSpec } from '@oselvar/var-runner'
 import { test } from 'vitest'
-
-// Re-exported for the generated virtual modules (see plugin.ts): their module
-// id is the spec's own path in the CONSUMER's project, where pnpm's strict
-// layout only resolves the consumer's direct dependencies. Every bare
-// specifier emitted into generated code must therefore be a package consumers
-// depend on directly — @oselvar/var-vitest — never a transitive one like
-// @oselvar/var-core.
-export { resolveScannerPlugins } from '@oselvar/var-core'
-export { toFailure }
 
 export type CollectPorts = {
   // Defaults to registering one failing vitest test per diagnostic. The
@@ -18,9 +9,12 @@ export type CollectPorts = {
   // static AST test discovery on the transformed spec never see a phantom
   // `test(...)` callsite — only the real per-example ones.
   readonly reporter?: Reporter
-  // Opt-in scanner plugins (e.g. Gherkin tables, Gherkin doc strings) that
-  // the var-vitest plugin forwards from var.config.json.
-  readonly scannerPlugins?: ReadonlyArray<ScannerPlugin>
+  // Opt-in scanner-plugin NAMES (e.g. 'gherkinTables') that the var-vitest
+  // plugin forwards from var.config.json. Resolved here against var-core's
+  // registry: the generated virtual module resolves in the CONSUMER's
+  // project, where pnpm's strict layout only sees direct dependencies — so
+  // it may import @oselvar/var-vitest but never @oselvar/var-core.
+  readonly scannerPlugins?: ReadonlyArray<string>
   // The number of examples the build-time static plan produced. When the
   // runtime plan disagrees (a step definition the static scanner could not
   // see appeared or vanished), a failing guard test is registered instead of
@@ -52,7 +46,12 @@ export function collectVarExamples(
       }),
   }
   const registry = buildRegistry()
-  const p = planSpec(path, source, registry, ports.scannerPlugins)
+  const p = planSpec(
+    path,
+    source,
+    registry,
+    ports.scannerPlugins && resolveScannerPlugins(ports.scannerPlugins),
+  )
   const examples = examplesWithRuns(p, contextFactory(), reporter).map(({ example, run }) => ({
     name: example.name,
     lines: [...new Set(example.steps.map((s) => s.matchSpan.startLine))],

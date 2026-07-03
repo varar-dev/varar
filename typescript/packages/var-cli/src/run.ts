@@ -1,13 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { relative } from 'node:path'
+import { findFiles, loadVarConfig } from '@oselvar/var-config'
 import type { Diagnostic } from '@oselvar/var-core'
-import {
-  examplesWithRuns,
-  findSpecs,
-  loadSteps,
-  planSpec,
-  readVarConfig,
-} from '@oselvar/var-runner'
+import { examplesWithRuns, loadSteps, planSpec } from '@oselvar/var-runner'
 
 export type RunOptions = {
   readonly cwd: string
@@ -19,11 +14,11 @@ export type RunOptions = {
 export type RunResult = { readonly exitCode: number }
 
 export async function runRun(opts: RunOptions): Promise<RunResult> {
-  const cfg = await readVarConfig(opts.cwd)
+  const cfg = await loadVarConfig(opts.cwd)
   // A CLI `--globs` override is include-only; excludes live in var.config.json.
   const varGlobs =
     opts.globs && opts.globs.length > 0 ? { include: opts.globs, exclude: [] } : cfg.docs
-  const varFiles = findSpecs(opts.cwd, varGlobs.include, varGlobs.exclude)
+  const varFiles = findFiles(opts.cwd, varGlobs.include, varGlobs.exclude)
 
   const { registry, createContext } = await loadSteps(cfg.steps, opts.cwd)
 

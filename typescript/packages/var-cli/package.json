@@ -22,6 +22,7 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@oselvar/var-config": "workspace:*",
     "@oselvar/var-core": "workspace:*",
     "@oselvar/var-runner": "workspace:*"
   },
