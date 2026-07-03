@@ -19,6 +19,15 @@ export default defineConfig({
       include: ['packages/*/src/**'],
       exclude: ['packages/website/**'],
       reporter: ['text', 'html', 'lcov'],
+      // Ratchet: ~2 points under the levels measured when thresholds were
+      // introduced (2026-07-03: statements 80.3, branches 71.5, functions
+      // 82.9, lines 83.0). Raise as coverage grows; never lower.
+      thresholds: {
+        statements: 78,
+        branches: 69,
+        functions: 80,
+        lines: 81,
+      },
     },
   },
 })

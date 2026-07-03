@@ -19,7 +19,7 @@
     "knip": "knip",
     "jscpd": "jscpd packages",
     "install:vscode": "pnpm -r --filter @oselvar/var-lsp --filter oselvar-var build && node scripts/install-vscode.mjs",
-    "check": "pnpm lint && pnpm typecheck && pnpm test && pnpm knip && pnpm jscpd"
+    "check": "pnpm lint && pnpm typecheck && pnpm test:coverage && pnpm knip && pnpm jscpd"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.2",
