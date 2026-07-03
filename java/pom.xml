@@ -111,6 +111,27 @@
         </plugin>
       </plugins>
     </pluginManagement>
+    <plugins>
+      <!-- Coverage: every module's `mvn verify` writes target/site/jacoco/
+           (HTML + XML). Mirrors typescript's `pnpm test:coverage` and
+           python's `pytest` coverage run. Confirmed on repo1.maven.org
+           maven-metadata.xml 2026-07-03: <latest>/<release> both 0.8.15. -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>0.8.15</version>
+        <executions>
+          <execution>
+            <goals><goal>prepare-agent</goal></goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>verify</phase>
+            <goals><goal>report</goal></goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
   </build>
 
   <profiles>
