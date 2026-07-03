@@ -21,7 +21,7 @@ typescript:
 	cd typescript && pnpm install && pnpm build && pnpm check
 
 python:
-	cd python && uv sync && uv run pytest && uv run ruff check && uv run python scripts/lint_no_reexports.py
+	cd python && uv sync && uv run pytest --cov && uv run ruff check && uv run python scripts/lint_no_reexports.py
 
 java:
 	cd java && mvn --batch-mode verify

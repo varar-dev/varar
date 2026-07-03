@@ -40,6 +40,11 @@ source_pkgs = ["var", "var_config", "var_core", "var_pytest", "var_runner", "var
 
 [tool.coverage.report]
 show_missing = true
+# Ratchet: ~2 points under the level measured when the threshold was
+# introduced (2026-07-03: 66%). Raise as coverage grows; never lower.
+# NOTE var_pytest's own plugin modules load before pytest-cov starts
+# measuring, so their coverage is understated — the real level is higher.
+fail_under = 64
 
 [tool.coverage.html]
 directory = "htmlcov"
