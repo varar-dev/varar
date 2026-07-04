@@ -6,11 +6,13 @@ on:
     paths:
       - 'python/**'
       - 'conformance/**'
+      - 'doc/examples/**'
       - '.github/workflows/python.yml'
   pull_request:
     paths:
       - 'python/**'
       - 'conformance/**'
+      - 'doc/examples/**'
       - '.github/workflows/python.yml'
   workflow_dispatch:
 
@@ -34,3 +36,7 @@ jobs:
       - run: uv run ruff check
 
       - run: uv run python scripts/lint_no_reexports.py
+
+      # Standalone sample project (see doc/examples and python/examples-pytest).
+      - run: uv run pytest
+        working-directory: python/examples-pytest

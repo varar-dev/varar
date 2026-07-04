@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!-- A standalone consumer sample: deliberately NOT a module of the var-parent
+       build. It depends only on released com.oselvar artifacts from Maven
+       Central, exactly like a user's own project would. -->
+  <groupId>com.example</groupId>
+  <artifactId>var-examples-java-junit-maven</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>jar</packaging>
+
+  <properties>
+    <maven.compiler.release>21</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+  <dependencies>
+    <dependency>
+      <groupId>com.oselvar</groupId>
+      <artifactId>var-junit</artifactId>
+      <version>0.3.0</version>
+      <scope>test</scope>
+    </dependency>
+    <!-- Maven Surefire only discovers class-based tests, so the sample uses a
+         JUnit @Suite (see RunVarSpecs) to hand the spec corpus to the "var"
+         engine. -->
+    <dependency>
+      <groupId>org.junit.platform</groupId>
+      <artifactId>junit-platform-suite</artifactId>
+      <version>6.1.1</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <version>3.5.2</version>
+        <configuration>
+          <!-- A suite class that stops matching Surefire's naming convention
+               would otherwise pass silently with zero tests. -->
+          <failIfNoTests>true</failIfNoTests>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+</project>

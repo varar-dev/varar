@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "var-examples-pytest"
+version = "0.0.1"
+description = "Standalone sample: run Markdown specs as pytest tests with Vár"
+# 3.12+: the out-of-root docs globs (../../doc/examples) rely on
+# pathlib's walk_up relative paths.
+requires-python = ">=3.12"
+dependencies = ["pytest>=8", "pytest-var"]
+
+# PyPI publishing of the Vár packages is parked, so this sample resolves them
+# from the sibling uv workspace via path sources. Once the packages are on
+# PyPI, replace this whole table with nothing — the plain dependency above is
+# all a real project needs. The transitive set is listed because pytest-var
+# pins its internal dependencies exactly (==0.3.0).
+[tool.uv.sources]
+pytest-var = { path = "../packages/var-pytest", editable = true }
+oselvar-var = { path = "../packages/var", editable = true }
+oselvar-var-core = { path = "../packages/var-core", editable = true }
+oselvar-var-config = { path = "../packages/var-config", editable = true }
+oselvar-var-runner = { path = "../packages/var-runner", editable = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/yahtzee_example"]
+
+[tool.pytest.ini_options]
+addopts = "--rootdir=."
+testpaths = ["../../doc/examples"]

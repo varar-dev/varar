@@ -6,11 +6,13 @@ on:
     paths:
       - 'java/**'
       - 'conformance/**'
+      - 'doc/examples/**'
       - '.github/workflows/java.yml'
   pull_request:
     paths:
       - 'java/**'
       - 'conformance/**'
+      - 'doc/examples/**'
       - '.github/workflows/java.yml'
   workflow_dispatch:
 
@@ -30,3 +32,17 @@ jobs:
           cache: maven
 
       - run: mvn --batch-mode verify
+
+      # Standalone sample projects (see doc/examples and java/examples-*):
+      # they consume the released com.oselvar artifacts from Maven Central.
+      - run: mvn --batch-mode test
+        working-directory: java/examples-java-junit-maven
+
+      - run: ./gradlew --console=plain test
+        working-directory: java/examples-java-junit-gradle
+
+      - run: ./gradlew --console=plain test
+        working-directory: java/examples-kotlin-junit
+
+      - run: ./gradlew --console=plain test
+        working-directory: java/examples-kotlin-kotest

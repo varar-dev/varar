@@ -6,11 +6,15 @@ on:
     paths:
       - 'typescript/**'
       - 'conformance/**'
+      - 'doc/examples/**'
+      - 'var.config.json'
       - '.github/workflows/typescript.yml'
   pull_request:
     paths:
       - 'typescript/**'
       - 'conformance/**'
+      - 'doc/examples/**'
+      - 'var.config.json'
       - '.github/workflows/typescript.yml'
   workflow_dispatch:
 
