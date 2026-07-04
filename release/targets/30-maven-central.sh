@@ -7,10 +7,9 @@ set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
 VERSION="$1"
 
-# Flip to 0 when the Central Portal credentials are set up (docs/RELEASING.md
-# §3 → 1Password item `sonatype-central`) and we release the JVM port again.
-# (Parked 2026-07-02: only npm + Open VSX release for now.)
-DISABLED=1
+# Flip to 1 to park this target (it warns and reports OK). Credentials:
+# docs/RELEASING.md → 1Password item `sonatype-central`.
+DISABLED=0
 if [[ "$DISABLED" == "1" ]]; then
   warn "maven: target disabled — flip DISABLED=0 in ${BASH_SOURCE[0]} to re-enable"
   exit 0
@@ -36,7 +35,7 @@ central_published() {
   printf '%s' "${body%$'\n'*}" | jq -e '.published == true' >/dev/null
 }
 
-artifacts=(var-parent var-core var var-runner var-junit var-kotlin var-kotest)
+artifacts=(var-parent var-core var-config var var-runner var-junit var-kotlin var-kotest)
 missing=()
 for artifact in "${artifacts[@]}"; do
   central_published "$artifact" || missing+=("$artifact")

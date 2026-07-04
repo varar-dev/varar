@@ -31,7 +31,7 @@ Run releases from an interactive shell, not CI: npm keeps 2FA on publishes
 
 A target can be parked with the `DISABLED=1` variable at the top of its
 `release/targets/*.sh` (it warns and reports OK). Currently parked: PyPI,
-Maven Central, VS Code Marketplace — **only npm and Open VSX publish**.
+VS Code Marketplace — **npm, Maven Central and Open VSX publish**.
 
 ## Credentials
 
@@ -53,8 +53,11 @@ and `npm install -g @vscode/vsce ovsx`. Sign in: `op signin`, `gh auth login`.
   wait (hours) and re-run; published packages are skipped.
 - **Sonatype Central Portal (Maven Central)** — user token from
   central.sonatype.com (Account → Generate User Token); namespace
-  `com.oselvar` is already DNS-verified. → `sonatype-central`, fields
-  `username` and `token`.
+  `com.oselvar` is DNS-verified (2026-07-04) on that account. If it ever needs
+  re-verifying, the portal issues a fresh code to publish as a TXT record on
+  oselvar.com — a deploy from an account without the verified namespace fails
+  with "Namespace 'com.oselvar' is not allowed". → `sonatype-central`, fields
+  `username` and `password` (both halves of the generated user token).
 - **GPG** — ed25519 signing key for Oselvar Ltd, public key on
   keyserver.ubuntu.com. → `maven-gpg`, field `passphrase`, with an armored
   secret-key export attached as backup.
