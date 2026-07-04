@@ -259,7 +259,15 @@ class VarExampleDescriptorTest {
                 Path.of("src/test/resources/examplefixture/widgets.md").toAbsolutePath();
         assertTrue(Files.isRegularFile(widgetsFile), "fixture must exist on disk for this FileSelector-based test");
 
-        writeConfig(workspace, "src/test/resources/examplefixture/**/*.md");
+        // docs globs resolve against the config root (the workspace), not the JVM
+        // working directory — so the include is the fixture's workspace-relative path.
+        String docsInclude = workspace
+                .toAbsolutePath()
+                .normalize()
+                .relativize(widgetsFile.normalize())
+                .toString()
+                .replace('\\', '/');
+        writeConfig(workspace, docsInclude);
         EngineDiscoveryResults results =
                 EngineTestKit.engine("var")
                         .selectors(selectFile(widgetsFile.toFile()))

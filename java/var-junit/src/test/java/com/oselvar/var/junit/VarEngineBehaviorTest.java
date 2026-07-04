@@ -3,6 +3,7 @@ package com.oselvar.var.junit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClasspathResource;
+import static org.junit.platform.engine.discovery.DiscoverySelectors.selectDirectory;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectUniqueId;
 import static org.junit.platform.testkit.engine.EventConditions.event;
 import static org.junit.platform.testkit.engine.EventConditions.finishedWithFailure;
@@ -161,6 +162,33 @@ class VarEngineBehaviorTest {
                 "adding WidgetSteps back to steps (comma-separated) must recover both examples --"
                         + " proving the zero-examples result above was really steps at work, not"
                         + " e.g. widgets.md being unparsable for an unrelated reason");
+    }
+
+    /**
+     * A spec that is a symlink (e.g. a project linking its specs from a shared corpus) must match
+     * {@code docsInclude} by its apparent path, not its target's: {@code selectFile(File)}
+     * canonicalizes — dereferencing the link into a {@code ../corpus/...} relative path no
+     * {@code *.md} glob matches — so {@code resolve(DirectorySelector)} uses the raw-path
+     * {@code selectFile(String)} variant instead (mirrors Python's {@code
+     * test_symlinked_spec_matches_by_apparent_path}).
+     */
+    @Test
+    void symlinkedSpecDiscoveredByItsApparentPath(@TempDir Path workspace) throws Exception {
+        Path corpus = Files.createDirectory(workspace.resolve("corpus"));
+        Files.writeString(
+                corpus.resolve("widgets.md"),
+                "# Widgets\n\nI have 3 widgets. I should have 3 widgets.\n",
+                StandardCharsets.UTF_8);
+        Path project = Files.createDirectory(workspace.resolve("project"));
+        Files.createSymbolicLink(project.resolve("widgets.md"), corpus.resolve("widgets.md"));
+        writeConfig(project, "*.md", WIDGET_STEPS);
+
+        EngineExecutionResults results = EngineTestKit.engine("var")
+                .selectors(selectDirectory(project.toString()))
+                .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, project.toString())
+                .execute();
+
+        assertEquals(1, results.testEvents().succeeded().count(), "the symlinked spec's example runs");
     }
 
     private static EngineDiscoveryResults discoverMixed(Path workspace) throws Exception {

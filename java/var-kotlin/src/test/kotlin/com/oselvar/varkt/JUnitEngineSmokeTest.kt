@@ -16,24 +16,19 @@ import org.junit.platform.testkit.engine.EngineTestKit
  */
 class JUnitEngineSmokeTest {
 
-    // VarFileSelectorResolver relativizes a FileSelector's path against the module's working
-    // directory (Maven/Surefire's basedir) before testing it against docsInclude (see its
-    // javadoc + Discovery.matchSpec). @TempDir sits outside that basedir entirely, so the include
-    // value must be the SAME relativized string the resolver itself computes -- and, on macOS,
-    // DiscoverySelectors.selectFile canonicalizes the FileSelector's path (resolving the
-    // /var -> /private/var symlink), while @TempDir's raw path does not, so this must relativize
-    // the REAL (symlink-resolved) path, not just the absolute one, or matchSpec silently
-    // mismatches and discovery resolves zero test events.
-    private val moduleRoot: Path = Path.of("").toAbsolutePath().normalize().toRealPath()
-
+    // VarFileSelectorResolver relativizes a FileSelector's path against the config root
+    // (var.config.root) before testing it against docsInclude, so a spec written INTO the
+    // workspace just needs the bare filename as its include. On macOS
+    // DiscoverySelectors.selectFile(File) canonicalizes (resolving @TempDir's
+    // /var -> /private/var symlink), so the root must be canonicalized the same way or the
+    // relativization silently mismatches and discovery resolves zero test events.
     private fun runSpec(dir: Path, body: String) =
         Files.writeString(dir.resolve("cukes.md"), body).let { spec ->
-            val relativeInclude = moduleRoot.relativize(spec.toRealPath()).toString().replace('\\', '/')
             Files.writeString(
                 dir.resolve("var.config.json"),
                 """
                 {
-                  "docs": { "include": ["$relativeInclude"], "exclude": [] },
+                  "docs": { "include": ["cukes.md"], "exclude": [] },
                   "steps": ["com.oselvar.varkt.fixtures.CukeSteps"]
                 }
                 """.trimIndent(),
@@ -43,7 +38,7 @@ class JUnitEngineSmokeTest {
             // duplicated here rather than referenced.
             EngineTestKit.engine("var")
                 .selectors(selectFile(spec.toFile()))
-                .configurationParameter("var.config.root", dir.toString())
+                .configurationParameter("var.config.root", dir.toRealPath().toString())
                 .execute()
         }
 

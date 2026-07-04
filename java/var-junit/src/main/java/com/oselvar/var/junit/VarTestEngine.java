@@ -41,7 +41,10 @@ public final class VarTestEngine extends HierarchicalTestEngine<VarEngineExecuti
         engineDescriptor.setLoadedSteps(loadedSteps);
         DiscoveryIssueReporter issueReporter =
                 DiscoveryIssueReporter.forwarding(discoveryRequest.getDiscoveryListener(), uniqueId);
-        new DiscoverySelectorResolver(config, loadedSteps)
+        new DiscoverySelectorResolver(
+                        config,
+                        ConfigBridge.rootFrom(discoveryRequest.getConfigurationParameters()),
+                        loadedSteps)
                 .resolveSelectors(discoveryRequest, engineDescriptor, issueReporter);
         return engineDescriptor;
     }

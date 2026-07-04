@@ -67,7 +67,13 @@ final class VarFileSelectorResolver implements SelectorResolver {
 
     private final VarConfig config;
     private final StepLoader.LoadedSteps loadedSteps;
-    private final Path root = Path.of("").toAbsolutePath().normalize();
+
+    /**
+     * The directory var.config.json was loaded from ({@code var.config.root}, default the JVM
+     * working directory) — docs globs and spec paths are relative to it, so pointing the
+     * parameter at another directory relocates config and file matching together.
+     */
+    private final Path root;
 
     /**
      * One {@link VarFileDescriptor} per {@code specPath}, reused across every {@code resolve(...)}
@@ -75,8 +81,9 @@ final class VarFileSelectorResolver implements SelectorResolver {
      */
     private final Map<String, VarFileDescriptor> fileDescriptors = new HashMap<>();
 
-    VarFileSelectorResolver(VarConfig config, StepLoader.LoadedSteps loadedSteps) {
+    VarFileSelectorResolver(VarConfig config, Path root, StepLoader.LoadedSteps loadedSteps) {
         this.config = config;
+        this.root = root.toAbsolutePath().normalize();
         this.loadedSteps = loadedSteps;
     }
 
@@ -105,7 +112,10 @@ final class VarFileSelectorResolver implements SelectorResolver {
         try (Stream<Path> walk = Files.walk(dir)) {
             walk.filter(Files::isRegularFile)
                     .filter(p -> p.getFileName().toString().endsWith(".md"))
-                    .forEach(p -> selectors.add(DiscoverySelectors.selectFile(p.toFile())));
+                    // selectFile(String), not selectFile(File): the File overload
+                    // canonicalizes, dereferencing symlinks — a symlinked spec must
+                    // match docsInclude by its apparent path, not its target's.
+                    .forEach(p -> selectors.add(DiscoverySelectors.selectFile(p.toString())));
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
@@ -246,9 +256,13 @@ final class VarFileSelectorResolver implements SelectorResolver {
      * other).
      */
     private DiscoverySelector fileSelectorFor(String specPath) {
-        Path candidate = root.resolve(specPath);
+        // normalize() lexically: a ..-laden specPath (spec outside the config root)
+        // resolved against root must not be handed to the filesystem raw — physical
+        // ..-traversal through a symlinked ancestor diverges from the lexical path.
+        Path candidate = root.resolve(specPath).normalize();
         if (Files.isRegularFile(candidate)) {
-            return DiscoverySelectors.selectFile(candidate.toFile());
+            // selectFile(String), not selectFile(File) — see resolve(DirectorySelector).
+            return DiscoverySelectors.selectFile(candidate.toString());
         }
         return DiscoverySelectors.selectClasspathResource(specPath);
     }

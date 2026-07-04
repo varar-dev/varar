@@ -19,7 +19,15 @@ public final class ConfigBridge {
     private ConfigBridge() {}
 
     public static VarConfig fromConfigurationParameters(ConfigurationParameters params) {
-        Path root = params.get(CONFIG_ROOT_KEY).map(Path::of).orElse(Path.of(""));
-        return VarConfig.load(root);
+        return VarConfig.load(rootFrom(params));
+    }
+
+    /**
+     * The directory {@code var.config.json} was loaded from — the same root file-based spec
+     * discovery must resolve {@code docs} globs against ({@link VarFileSelectorResolver}), so
+     * pointing {@code var.config.root} elsewhere relocates config and matching together.
+     */
+    static Path rootFrom(ConfigurationParameters params) {
+        return params.get(CONFIG_ROOT_KEY).map(Path::of).orElse(Path.of(""));
     }
 }

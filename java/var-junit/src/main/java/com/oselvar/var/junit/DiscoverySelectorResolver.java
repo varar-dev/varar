@@ -2,6 +2,7 @@ package com.oselvar.var.junit;
 
 import com.oselvar.var.config.VarConfig;
 import com.oselvar.var.runner.StepLoader;
+import java.nio.file.Path;
 import org.junit.platform.commons.io.ResourceFilter;
 import org.junit.platform.engine.EngineDiscoveryRequest;
 import org.junit.platform.engine.support.discovery.DiscoveryIssueReporter;
@@ -62,8 +63,8 @@ final class DiscoverySelectorResolver {
 
     private final EngineDiscoveryRequestResolver<VarEngineDescriptor> resolver;
 
-    DiscoverySelectorResolver(VarConfig config, StepLoader.LoadedSteps loadedSteps) {
-        VarFileSelectorResolver fileSelectorResolver = new VarFileSelectorResolver(config, loadedSteps);
+    DiscoverySelectorResolver(VarConfig config, Path root, StepLoader.LoadedSteps loadedSteps) {
+        VarFileSelectorResolver fileSelectorResolver = new VarFileSelectorResolver(config, root, loadedSteps);
         this.resolver =
                 EngineDiscoveryRequestResolver.<VarEngineDescriptor>builder()
                         .addResourceContainerSelectorResolver(

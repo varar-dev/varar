@@ -43,14 +43,14 @@ import org.junit.platform.testkit.engine.EngineTestKit;
  * FileSelector} ({@link org.junit.platform.engine.discovery.DiscoverySelectors#selectFile}), not
  * a classpath-resource selector — resolved by {@link VarFileSelectorResolver#resolve(
  * org.junit.platform.engine.discovery.FileSelector, org.junit.platform.engine.support.discovery.
- * SelectorResolver.Context)}, which relativizes the selected file against the module's working
- * directory (Maven/Surefire's basedir for this module) to test it against {@code
- * docsInclude}/{@code docsExclude}. {@link #BUNDLES_DIR} mirrors {@code var}'s own
- * {@code ConformanceTest} — two levels up from the module directory to the repo root's {@code
- * conformance/} — and each bundle's exact relative path (no wildcards needed; only one file is
- * ever selected) becomes the config's {@code docs.include} value, written into a per-case {@code
- * @TempDir} var.config.json ({@link ConfigBridge#CONFIG_ROOT_KEY} points at it), so no OTHER
- * bundle's {@code example.md} can accidentally satisfy this request. The config's {@code steps}
+ * SelectorResolver.Context)}, which relativizes the selected file against the config root
+ * ({@link ConfigBridge#CONFIG_ROOT_KEY}, here the per-case {@code @TempDir} workspace) to test
+ * it against {@code docsInclude}/{@code docsExclude}. {@link #BUNDLES_DIR} mirrors {@code var}'s
+ * own {@code ConformanceTest} — two levels up from the module directory to the repo root's
+ * {@code conformance/} — and each bundle's exact workspace-relative path (no wildcards needed;
+ * only one file is ever selected) becomes the config's {@code docs.include} value, written into
+ * that workspace's var.config.json, so no OTHER bundle's {@code example.md} can accidentally
+ * satisfy this request. The config's {@code steps}
  * names the one fixture class {@link StepLoader} should load, exactly as {@link
  * VarEngineBehaviorTest} already proves end to end for classpath-resource specs — this task is
  * the same mechanism for a real-file spec.
@@ -202,7 +202,14 @@ class ConformanceDogfoodTest {
         Path exampleMd = bundleDir.resolve("example.md");
         assertTrue(Files.isRegularFile(exampleMd), () -> "missing bundle spec: " + exampleMd.toAbsolutePath());
 
-        String docsInclude = exampleMd.toString().replace('\\', '/');
+        // docs globs resolve against the config root (the workspace), not the JVM
+        // working directory — so the include is the spec's workspace-relative path.
+        String docsInclude = workspace
+                .toAbsolutePath()
+                .normalize()
+                .relativize(exampleMd.toAbsolutePath().normalize())
+                .toString()
+                .replace('\\', '/');
         Files.writeString(
                 workspace.resolve("var.config.json"),
                 """
