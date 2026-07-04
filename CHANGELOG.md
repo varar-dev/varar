@@ -9,6 +9,16 @@ This file is generated from conventional commit messages by
 [git-cliff](https://git-cliff.org) (`make changelog`) — do not edit it by
 hand. The `[Unreleased]` section is refreshed by CI on every push to `main`.
 
+## [Unreleased]
+
+### Python (PyPI)
+
+- Fixed: **var-runner:** Symlinked specs match the docs globs by their apparent path
+
+### Java & Kotlin (Maven Central)
+
+- Fixed: **var-junit:** Symlinked specs are discovered, and docs globs resolve against var.config.root
+
 ## [0.3.0] - 2026-07-04
 
 ### TypeScript (npm)
