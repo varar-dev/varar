@@ -79,7 +79,7 @@ else
   if git diff --quiet; then
     log "manifests and changelog already at $VERSION"
   else
-    git add CHANGELOG.md typescript/packages/*/package.json python/packages/*/pyproject.toml python/uv.lock java/pom.xml java/*/pom.xml
+    git add CHANGELOG.md typescript/packages/*/package.json python/packages/*/pyproject.toml python/uv.lock java/pom.xml java/*/pom.xml java/*/build.gradle.kts
     git commit -m "Release $TAG"
     log "committed version stamp + changelog"
   fi
@@ -116,6 +116,22 @@ if [[ "$FAILED" == "0" && "$DRY_RUN" != "1" ]]; then
   else
     changelog_body "$VERSION" | gh release create "$TAG" --title "$TAG" --notes-file -
     log "created GitHub release $TAG"
+  fi
+fi
+
+# ── 7.5 Back to a SNAPSHOT placeholder ───────────────────────────────────────
+# Trunk gates the java sample projects against the local build (mvn install →
+# mavenLocal), so between releases java must NOT carry the released version —
+# a local install would shadow the immutable release in ~/.m2.
+if [[ "$FAILED" == "0" && "$DRY_RUN" != "1" ]]; then
+  if grep -q -- '-SNAPSHOT' java/pom.xml; then
+    log "java already on a SNAPSHOT placeholder"
+  else
+    release/bump-java-snapshot.sh
+    git add java/pom.xml java/*/pom.xml java/*/build.gradle.kts
+    git commit -m "chore(release): java back to a SNAPSHOT placeholder after $TAG"
+    git push origin main
+    log "java bumped to the post-$VERSION SNAPSHOT placeholder"
   fi
 fi
 

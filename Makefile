@@ -26,7 +26,7 @@ python:
 	cd python/examples-pytest && uv run pytest
 
 java:
-	cd java && mvn --batch-mode verify
+	cd java && mvn --batch-mode install
 	cd java/examples-java-junit-maven && mvn --batch-mode test
 	cd java/examples-java-junit-gradle && ./gradlew --console=plain test
 	cd java/examples-kotlin-junit && ./gradlew --console=plain test

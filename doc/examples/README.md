@@ -7,11 +7,15 @@ standalone sample you can copy as the starting point for a real project:
 | Sample project | Stack | Run with |
 | --- | --- | --- |
 | [`typescript/examples`](../../typescript/examples) | TypeScript + vitest (workspace deps — the dogfood suite) | `pnpm test` from `typescript/` |
-| [`java/examples-kotlin-junit`](../../java/examples-kotlin-junit) | Kotlin + JUnit + Gradle (Maven Central artifacts) | `./gradlew test` |
-| [`java/examples-kotlin-kotest`](../../java/examples-kotlin-kotest) | Kotlin + Kotest + Gradle (Maven Central artifacts) | `./gradlew test` |
-| [`java/examples-java-junit-maven`](../../java/examples-java-junit-maven) | Java + JUnit + Maven (Maven Central artifacts) | `mvn test` |
-| [`java/examples-java-junit-gradle`](../../java/examples-java-junit-gradle) | Java + JUnit + Gradle (Maven Central artifacts) | `./gradlew test` |
+| [`java/examples-kotlin-junit`](../../java/examples-kotlin-junit) | Kotlin + JUnit + Gradle | `./gradlew test` |
+| [`java/examples-kotlin-kotest`](../../java/examples-kotlin-kotest) | Kotlin + Kotest + Gradle | `./gradlew test` |
+| [`java/examples-java-junit-maven`](../../java/examples-java-junit-maven) | Java + JUnit + Maven | `mvn test` |
+| [`java/examples-java-junit-gradle`](../../java/examples-java-junit-gradle) | Java + JUnit + Gradle | `./gradlew test` |
 | [`python/examples-pytest`](../../python/examples-pytest) | Python + pytest (path deps until PyPI publishing resumes) | `uv run pytest` |
+
+The JVM samples consume the SNAPSHOT that `mvn install` (run from `java/`)
+puts into the local Maven repository — run that first. Each sample's README
+says what to change to use the released artifacts instead.
 
 The TypeScript project implements every example (the website embeds several
 of them); the other ports implement a feature-covering subset — `hello-var`

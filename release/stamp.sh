@@ -29,4 +29,7 @@ python3 release/stamp_python.py "$VERSION"
 log "stamping Java modules"
 (cd java && mvn --batch-mode --quiet versions:set -DnewVersion="$VERSION" -DgenerateBackupPoms=false)
 
+log "stamping Java sample projects"
+stamp_java_samples "$VERSION"
+
 log "stamped $VERSION"

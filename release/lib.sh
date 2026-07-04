@@ -15,6 +15,19 @@ is_semver() { [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; }
 # 0 iff the URL answers 2xx.
 http_ok() { curl -fsSL -o /dev/null "$1" 2>/dev/null; }
 
+# Rewrite the var version the java sample projects consume. On trunk that's
+# the SNAPSHOT installed into mavenLocal by `mvn install` (see the Makefile's
+# java target); release/stamp.sh points it at the release version for the
+# stamp commit, and release/bump-java-snapshot.sh moves it to the next
+# placeholder afterwards. perl -pi, not sed -i: BSD/GNU-portable in-place.
+stamp_java_samples() {
+  local version="$1"
+  perl -pi -e "s/^val varVersion = \".*\"/val varVersion = \"$version\"/" \
+    java/examples-*/build.gradle.kts
+  perl -pi -e "s|<var\.version>[^<]*</var\.version>|<var.version>$version</var.version>|" \
+    java/examples-java-junit-maven/pom.xml
+}
+
 # Everything before v0.1.0 predates the conventional-commit convention; that
 # release is kept verbatim in cliff.toml's `footer`, and generation starts here.
 CHANGELOG_SINCE="v0.1.0"

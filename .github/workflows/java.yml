@@ -31,10 +31,12 @@ jobs:
           java-version: '21'
           cache: maven
 
-      - run: mvn --batch-mode verify
+      # install, not verify: the sample projects below resolve the workspace's
+      # SNAPSHOT from the local repository (mavenLocal).
+      - run: mvn --batch-mode install
 
       # Standalone sample projects (see doc/examples and java/examples-*):
-      # they consume the released com.oselvar artifacts from Maven Central.
+      # they consume the SNAPSHOT installed above, so they gate trunk.
       - run: mvn --batch-mode test
         working-directory: java/examples-java-junit-maven
 

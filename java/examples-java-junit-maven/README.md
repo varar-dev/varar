@@ -2,12 +2,17 @@
 
 A small, standalone sample project that runs Markdown specs as tests with
 [Vár](https://var.oselvar.com), using the Java author API and the JUnit
-Platform engine (`var-junit`). It depends only on released artifacts from
-Maven Central — copy it as the starting point for your own project.
+Platform engine (`var-junit`).
+
+In this repo the sample consumes the SNAPSHOT that `mvn install` (run from
+`java/`) puts into the local Maven repository, so it always gates the code
+on trunk. To copy it as the starting point for your own project, set
+`<var.version>` in `pom.xml` to the latest release on Maven Central.
 
 ## Run it
 
 ```sh
+(cd .. && mvn install)   # once, or after changing the library
 mvn test
 ```
 
