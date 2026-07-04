@@ -15,9 +15,12 @@ This is a multi-language monorepo (ADR 0001). Top level:
   `java/.tool-versions`).
 - `conformance/` — language-neutral corpus (`bundles/<n>/{example.md, *.steps.ts,
   golden/*.json}`) read by every language's conformance harness.
-- `doc/` — shared design docs (ADRs, specs, plans, ARCHITECTURE) and the
-  language-neutral example corpus (`doc/examples/<name>/<name>.md`) run by each
-  port's examples project.
+- `doc/` — shared design docs (ADRs, specs, plans, ARCHITECTURE).
+- `examples/` — one standalone sample project per language/test-framework
+  combo, mirroring the `oselvar/var-examples` repo 1:1 (synced there on every
+  release by `release/targets/60-var-examples.sh`). The `.md` specs sit at
+  each project's root; `typescript-vitest` holds the originals, the other
+  projects symlink their subset (the sync dereferences symlinks).
 
 ## Documentation
 
@@ -63,11 +66,12 @@ pnpm workspace · biome · vitest (for the core's own tests) · knip · jscpd ·
 - **Trunk-based development.** We commit small, working increments straight to `main` — no long-lived feature branches. Keep each commit self-contained and green (build + tests pass), so trunk is always releasable.
 - **Type-check is a separate gate.** vitest runs source through esbuild/tsx, which strips types without checking them — a fully green suite can still fail `tsc`. Run `pnpm -r build` (exit 0) before calling any change done, especially after touching a shared type, an AST node, or a package's public exports (new required fields and new exports are the usual culprits). Note `pnpm build` excludes both website packages — the Starlight website is built (and deployed to https://var.oselvar.com) only by the `deploy-website` CI job via `pnpm --filter @oselvar/website... build`; the legacy `packages/website` is never built. To check the website locally: `pnpm --filter @oselvar/website build`.
   - `pnpm -r build` only type-checks each package's `src/` (its `tsconfig.json` emits with `rootDir: src`). **Test files (`tests/**`) are type-checked by `pnpm typecheck`** (root `tsconfig.tests.json`, `noEmit`, covers every non-website package's `tests/`). It's part of `pnpm check`, so run `pnpm check` (or `pnpm typecheck` alone) after touching tests — a green vitest run does *not* mean the tests type-check. Note `expectTypeOf` assertions are validated here by `tsc`, not by vitest (we don't run `vitest --typecheck`).
-- **Dogfood specs**: the language-neutral `.md` specs live in `doc/examples/<name>/`
-  at the repo root; the TypeScript step definitions live in `typescript/examples/`
-  (package `@oselvar/examples`, workspace deps, never released). The repo-root
-  `var.config.json` wires the two together and is loaded with the repo root as cwd
-  (vitest plugin + reporter, LSP when the repo root is the workspace folder).
+- **Dogfood specs**: `examples/typescript-vitest` (package
+  `@oselvar/example-typescript-vitest`, a pnpm workspace member via
+  `../examples/typescript-vitest`, workspace deps, never released) holds the
+  original `.md` specs at its root plus their `steps/*.steps.ts`, and runs in
+  the root vitest workspace. The JVM samples consume the SNAPSHOT installed by
+  `mvn install`; the Python sample uses uv path sources.
 
 ## Commit messages & changelog
 
@@ -116,9 +120,10 @@ on everything since the last release tag):
   the single source of truth for "what is a spec", consulted by the runner, the LSP, and
   the vitest plugin alike — the plugin drives vitest's own `include`/`exclude` from it.
 - Step definition files: `*.steps.ts`.
-- Config: `var.config.json` at the repo root (globs `doc/examples/**/*.md` +
-  `typescript/examples/**/*.steps.ts`). Each language's examples project keeps
-  its own `var.config.json` too (e.g. `java/examples-kotlin-junit/`).
+- Config: every example project in `examples/` carries its own `var.config.json`
+  (docs `*.md` at the project root, steps per language). The repo-root
+  `var.config.json` mirrors `examples/typescript-vitest` for the LSP when the
+  repo root is the workspace folder.
 
 ## Return-based comparison
 

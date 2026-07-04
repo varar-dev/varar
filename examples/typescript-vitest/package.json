@@ -1,21 +1,24 @@
 {
-  "name": "@oselvar/examples",
+  "name": "@oselvar/example-typescript-vitest",
   "version": "0.3.0",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@oselvar/var": "workspace:*",
     "@oselvar/var-core": "workspace:*",
     "@oselvar/var-vitest": "workspace:*",
+    "@types/node": "^26.1.0",
+    "typescript": "^6.0.3",
     "vitest": "^4.1.9"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/oselvar/var.git",
-    "directory": "typescript/examples"
+    "directory": "examples/typescript-vitest"
   }
 }

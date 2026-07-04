@@ -2,17 +2,14 @@
 
 A small, standalone sample project that runs Markdown specs as tests with
 [Vár](https://var.oselvar.com), using the Java author API and the JUnit
-Platform engine (`var-junit`).
+Platform engine (`var-junit`). Copy it as the starting point for your own
+project.
 
-In this repo the sample consumes the SNAPSHOT that `mvn install` (run from
-`java/`) puts into the local Maven repository, so it always gates the code
-on trunk. To copy it as the starting point for your own project, set
-`<var.version>` in `pom.xml` to the latest release on Maven Central.
+The `.md` files at the project root are the specs — they run as tests.
 
 ## Run it
 
 ```sh
-(cd .. && mvn install)   # once, or after changing the library
 mvn test
 ```
 
@@ -21,9 +18,7 @@ Each example in the Markdown specs becomes one JUnit test.
 ## How it fits together
 
 - **`var.config.json`** is the single source of truth: `docs.include` globs
-  the Markdown specs (here they live outside the project, in the repo's
-  shared [`doc/examples/`](../../doc/examples) corpus — in your project they
-  can sit anywhere), and `steps` lists the fully-qualified step-definition
+  the Markdown specs, and `steps` lists the fully-qualified step-definition
   classes.
 - **`src/test/java/examples/*Steps.java`** implement `StepDefinitions`: a
   `defineSteps(Registrar)` method binds a state record and registers
@@ -34,3 +29,10 @@ Each example in the Markdown specs becomes one JUnit test.
   — the engine itself needs no wiring beyond having `var-junit` on the test
   classpath. The `*Test` suffix matters: Surefire only scans classes matching
   its naming convention.
+
+## Versioning note
+
+In the `oselvar/var` monorepo `<var.version>` is the SNAPSHOT that
+`mvn install` (run from `java/`) puts into the local Maven repository, so the
+sample gates trunk; in `oselvar/var-examples` the release sync pins it to the
+released Maven Central artifacts.

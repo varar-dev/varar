@@ -79,7 +79,7 @@ else
   if git diff --quiet; then
     log "manifests and changelog already at $VERSION"
   else
-    git add CHANGELOG.md typescript/packages/*/package.json python/packages/*/pyproject.toml python/uv.lock java/pom.xml java/*/pom.xml java/*/build.gradle.kts
+    git add CHANGELOG.md typescript/packages/*/package.json python/packages/*/pyproject.toml python/uv.lock java/pom.xml java/*/pom.xml examples/*/build.gradle.kts examples/java-junit-maven/pom.xml
     git commit -m "Release $TAG"
     log "committed version stamp + changelog"
   fi
@@ -128,7 +128,7 @@ if [[ "$FAILED" == "0" && "$DRY_RUN" != "1" ]]; then
     log "java already on a SNAPSHOT placeholder"
   else
     release/bump-java-snapshot.sh
-    git add java/pom.xml java/*/pom.xml java/*/build.gradle.kts
+    git add java/pom.xml java/*/pom.xml examples/*/build.gradle.kts examples/java-junit-maven/pom.xml
     git commit -m "chore(release): java back to a SNAPSHOT placeholder after $TAG"
     git push origin main
     log "java bumped to the post-$VERSION SNAPSHOT placeholder"

@@ -32,7 +32,7 @@ wheels = [
 [[package]]
 name = "oselvar-var"
 version = "0.3.0"
-source = { editable = "../packages/var" }
+source = { editable = "../../python/packages/var" }
 dependencies = [
     { name = "cucumber-expressions" },
     { name = "oselvar-var-core" },
@@ -41,18 +41,18 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "cucumber-expressions", specifier = "==20.0.0" },
-    { name = "oselvar-var-core", editable = "../packages/var-core" },
+    { name = "oselvar-var-core", editable = "../../python/packages/var-core" },
 ]
 
 [[package]]
 name = "oselvar-var-config"
 version = "0.3.0"
-source = { editable = "../packages/var-config" }
+source = { editable = "../../python/packages/var-config" }
 
 [[package]]
 name = "oselvar-var-core"
 version = "0.3.0"
-source = { editable = "../packages/var-core" }
+source = { editable = "../../python/packages/var-core" }
 dependencies = [
     { name = "cucumber-expressions" },
 ]
@@ -63,7 +63,7 @@ requires-dist = [{ name = "cucumber-expressions", specifier = "==20.0.0" }]
 [[package]]
 name = "oselvar-var-runner"
 version = "0.3.0"
-source = { editable = "../packages/var-runner" }
+source = { editable = "../../python/packages/var-runner" }
 dependencies = [
     { name = "oselvar-var" },
     { name = "oselvar-var-config" },
@@ -71,8 +71,8 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "oselvar-var", editable = "../packages/var" },
-    { name = "oselvar-var-config", editable = "../packages/var-config" },
+    { name = "oselvar-var", editable = "../../python/packages/var" },
+    { name = "oselvar-var-config", editable = "../../python/packages/var-config" },
 ]
 
 [[package]]
@@ -121,7 +121,7 @@ wheels = [
 [[package]]
 name = "pytest-var"
 version = "0.3.0"
-source = { editable = "../packages/var-pytest" }
+source = { editable = "../../python/packages/var-pytest" }
 dependencies = [
     { name = "oselvar-var" },
     { name = "oselvar-var-config" },
@@ -131,14 +131,14 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "oselvar-var", editable = "../packages/var" },
-    { name = "oselvar-var-config", editable = "../packages/var-config" },
-    { name = "oselvar-var-runner", editable = "../packages/var-runner" },
+    { name = "oselvar-var", editable = "../../python/packages/var" },
+    { name = "oselvar-var-config", editable = "../../python/packages/var-config" },
+    { name = "oselvar-var-runner", editable = "../../python/packages/var-runner" },
     { name = "pytest", specifier = ">=8" },
 ]
 
 [[package]]
-name = "var-examples-pytest"
+name = "var-example-python-pytest"
 version = "0.0.1"
 source = { editable = "." }
 dependencies = [
@@ -149,5 +149,5 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "pytest", specifier = ">=8" },
-    { name = "pytest-var", editable = "../packages/var-pytest" },
+    { name = "pytest-var", editable = "../../python/packages/var-pytest" },
 ]

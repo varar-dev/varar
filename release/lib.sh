@@ -23,9 +23,9 @@ http_ok() { curl -fsSL -o /dev/null "$1" 2>/dev/null; }
 stamp_java_samples() {
   local version="$1"
   perl -pi -e "s/^val varVersion = \".*\"/val varVersion = \"$version\"/" \
-    java/examples-*/build.gradle.kts
+    examples/*/build.gradle.kts
   perl -pi -e "s|<var\.version>[^<]*</var\.version>|<var.version>$version</var.version>|" \
-    java/examples-java-junit-maven/pom.xml
+    examples/java-junit-maven/pom.xml
 }
 
 # Everything before v0.1.0 predates the conventional-commit convention; that

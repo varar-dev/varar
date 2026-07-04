@@ -6,13 +6,13 @@ on:
     paths:
       - 'java/**'
       - 'conformance/**'
-      - 'doc/examples/**'
+      - 'examples/**'
       - '.github/workflows/java.yml'
   pull_request:
     paths:
       - 'java/**'
       - 'conformance/**'
-      - 'doc/examples/**'
+      - 'examples/**'
       - '.github/workflows/java.yml'
   workflow_dispatch:
 
@@ -35,16 +35,16 @@ jobs:
       # SNAPSHOT from the local repository (mavenLocal).
       - run: mvn --batch-mode install
 
-      # Standalone sample projects (see doc/examples and java/examples-*):
+      # Standalone sample projects (see examples/):
       # they consume the SNAPSHOT installed above, so they gate trunk.
       - run: mvn --batch-mode test
-        working-directory: java/examples-java-junit-maven
+        working-directory: examples/java-junit-maven
 
       - run: ./gradlew --console=plain test
-        working-directory: java/examples-java-junit-gradle
+        working-directory: examples/java-junit-gradle
 
       - run: ./gradlew --console=plain test
-        working-directory: java/examples-kotlin-junit
+        working-directory: examples/kotlin-junit
 
       - run: ./gradlew --console=plain test
-        working-directory: java/examples-kotlin-kotest
+        working-directory: examples/kotlin-kotest

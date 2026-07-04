@@ -2,9 +2,9 @@
 #
 #   make            # same as `make check`: all three ports
 #   make typescript # pnpm build + pnpm check (lint, typecheck, test, knip, jscpd)
-#   make python     # pytest + ruff + no-reexports gate + examples-pytest sample
-#   make java       # mvn verify (JDK 21, pinned in java/.tool-versions) + the
-#                   # four examples-* sample projects (Maven/Gradle, Java/Kotlin)
+#   make python     # pytest + ruff + no-reexports gate + examples/python-pytest
+#   make java       # mvn install (JDK 21, pinned in java/.tool-versions) + the
+#                   # four JVM sample projects in examples/ (Maven/Gradle, Java/Kotlin)
 #   make coverage   # test with coverage in all three ports (reports below)
 #
 # Each target runs the same gate as that port's CI workflow in .github/workflows/.
@@ -23,14 +23,14 @@ typescript:
 
 python:
 	cd python && uv sync && uv run pytest --cov && uv run ruff check && uv run python scripts/lint_no_reexports.py
-	cd python/examples-pytest && uv run pytest
+	cd examples/python-pytest && uv run pytest
 
 java:
 	cd java && mvn --batch-mode install
-	cd java/examples-java-junit-maven && mvn --batch-mode test
-	cd java/examples-java-junit-gradle && ./gradlew --console=plain test
-	cd java/examples-kotlin-junit && ./gradlew --console=plain test
-	cd java/examples-kotlin-kotest && ./gradlew --console=plain test
+	cd examples/java-junit-maven && mvn --batch-mode test
+	cd examples/java-junit-gradle && ./gradlew --console=plain test
+	cd examples/kotlin-junit && ./gradlew --console=plain test
+	cd examples/kotlin-kotest && ./gradlew --console=plain test
 
 # Coverage reports: typescript/coverage/index.html, python/htmlcov/index.html,
 # java/<module>/target/site/jacoco/index.html (jacoco runs on every verify).

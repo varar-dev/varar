@@ -13,5 +13,5 @@ import org.junit.platform.suite.api.Suite;
  */
 @Suite
 @IncludeEngines("var")
-@SelectDirectories("../../doc/examples")
+@SelectDirectories(".")
 public class RunVarSpecsTest {}

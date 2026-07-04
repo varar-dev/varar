@@ -10,7 +10,7 @@ const repoRoot = new URL('..', import.meta.url).pathname
 // Reporters are root-level in vitest 4 workspace mode — project reporters are ignored.
 export default defineConfig({
   test: {
-    projects: ['packages/*/vitest.config.ts', 'examples/vitest.config.ts'],
+    projects: ['packages/*/vitest.config.ts', '../examples/typescript-vitest/vitest.config.ts'],
     reporters: ['default', new VarResultsReporter({ cwd: repoRoot })],
     // Coverage is root-level in vitest 4 workspace mode, like reporters.
     // Opt-in via `pnpm test:coverage`; reports land in coverage/ (text
