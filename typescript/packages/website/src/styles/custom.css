@@ -1,9 +1,19 @@
-/* IBM Plex Serif — static weights; Starlight uses 400 for body and 600/700
-   for emphasis and UI accents. */
-@import '@fontsource/ibm-plex-serif/400.css';
-@import '@fontsource/ibm-plex-serif/400-italic.css';
-@import '@fontsource/ibm-plex-serif/600.css';
-@import '@fontsource/ibm-plex-serif/700.css';
+/* STIX Two Text (prose) — static weights; Starlight uses 400 for body and
+   600/700 for emphasis and UI accents. Self-hosted via @fontsource: served
+   from our own origin, so no third-party DNS/TLS round-trip or render-blocking
+   external stylesheet — faster and steadier than the Google Fonts CDN. */
+@import '@fontsource/stix-two-text/400.css';
+@import '@fontsource/stix-two-text/400-italic.css';
+@import '@fontsource/stix-two-text/600.css';
+@import '@fontsource/stix-two-text/700.css';
+
+/* JetBrains Mono (code) — used by Markdown code (`` `code` `` and fenced
+   blocks, via --sl-font-mono) and the CodeMirror editor. 400-italic covers the
+   editor's italicised comments. */
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/400-italic.css';
+@import '@fontsource/jetbrains-mono/600.css';
+@import '@fontsource/jetbrains-mono/700.css';
 
 /*
  * "Norse" by Joël Carrouché (https://www.fontspace.com/norse-font-f21080),
@@ -63,7 +73,8 @@ h6 {
  */
 
 :root {
-  --sl-font: 'IBM Plex Serif', Georgia, serif;
+  --sl-font: 'STIX Two Text', Georgia, serif;
+  --sl-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   /* One background everywhere. Starlight paints the header/nav and sidebar
      with their own tints (gray-6 here) — a visible two-tone step against the
@@ -134,7 +145,8 @@ h6 {
 }
 
 :root[data-theme='light'] {
-  --sl-font: 'IBM Plex Serif', Georgia, serif;
+  --sl-font: 'STIX Two Text', Georgia, serif;
+  --sl-font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   /* Same story as :root — the header/nav uses gray-7 in light mode; give the
      page the identical light cream. */

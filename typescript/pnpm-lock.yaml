@@ -261,9 +261,12 @@ importers:
       '@codemirror/view':
         specifier: ^6.43.4
         version: 6.43.4
-      '@fontsource/ibm-plex-serif':
-        specifier: ^5.2.7
-        version: 5.2.7
+      '@fontsource/jetbrains-mono':
+        specifier: ^5.2.8
+        version: 5.2.8
+      '@fontsource/stix-two-text':
+        specifier: ^5.2.8
+        version: 5.2.8
       '@lezer/highlight':
         specifier: ^1.2.3
         version: 1.2.3
@@ -889,8 +892,11 @@ packages:
   '@expressive-code/plugin-text-markers@0.44.0':
     resolution: {integrity: sha512-0/m3A5b+lz2upyNq+wzZ1S69HRoJmyFs5LsR42lVZ9pmGRlBiSBYQpvqlji4DBj1+Riamxc0AvcCr5kuzOQeWA==}
 
-  '@fontsource/ibm-plex-serif@5.2.7':
-    resolution: {integrity: sha512-04owmc2OQQ/DAMjXjEMJc+7V4dBVmR01aIFOg4cuqS8pQ4HbvtlYs/u6+O0vCt21EMx5M/azIbgx43iKyisEOA==}
+  '@fontsource/jetbrains-mono@5.2.8':
+    resolution: {integrity: sha512-6w8/SG4kqvIMu7xd7wt6x3idn1Qux3p9N62s6G3rfldOUYHpWcc2FKrqf+Vo44jRvqWj2oAtTHrZXEP23oSKwQ==}
+
+  '@fontsource/stix-two-text@5.2.8':
+    resolution: {integrity: sha512-izSPaqTexWhwhY8jKHg3O9J4KeC2Q5hXkqYt+1Ak2a7POMZ9sJKVlqJYByfAjRR/Lnla9jFIwZf9XYbQG9GNfA==}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -4373,7 +4379,9 @@ snapshots:
     dependencies:
       '@expressive-code/core': 0.44.0
 
-  '@fontsource/ibm-plex-serif@5.2.7': {}
+  '@fontsource/jetbrains-mono@5.2.8': {}
+
+  '@fontsource/stix-two-text@5.2.8': {}
 
   '@img/colour@1.1.0': {}
 

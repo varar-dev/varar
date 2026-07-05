@@ -7,6 +7,9 @@ import { tags as t } from '@lezer/highlight'
 // site's light/dark theme automatically.
 const varEditorTheme = EditorView.theme({
   '&': { background: 'var(--ed-bg)', color: 'var(--ed-text)' },
+  // Match the site's code font. CodeMirror's base theme sets `.cm-scroller` to
+  // bare `monospace`; override it so the editor uses JetBrains Mono too.
+  '.cm-scroller': { fontFamily: 'var(--sl-font-mono)' },
   '.cm-gutters': {
     background: 'var(--ed-bg)',
     color: 'var(--ed-gutter)',

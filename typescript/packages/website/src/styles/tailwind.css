@@ -12,6 +12,10 @@
  * custom properties are defined per-theme in custom.css, alongside --sl-color-*.
  */
 @theme inline {
+  /* The `font-mono` utility (editor tabs, version button) tracks the same
+     JetBrains Mono stack as Markdown code and CodeMirror. */
+  --font-mono: var(--sl-font-mono);
+
   --color-surface: var(--surface);
   --color-raised: var(--raised);
   --color-sunken: var(--sunken);
