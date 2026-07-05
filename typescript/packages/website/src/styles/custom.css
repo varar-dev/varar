@@ -236,6 +236,6 @@ h6 {
   --sl-font: 'Atkinson Hyperlegible', system-ui, sans-serif;
 }
 :root[data-font-code='atkinson'] {
-  --sl-font-mono: 'Atkinson Hyperlegible Mono', ui-monospace, SFMono-Regular, Menlo, Consolas,
-    monospace;
+  --sl-font-mono:
+    'Atkinson Hyperlegible Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
