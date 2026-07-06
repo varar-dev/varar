@@ -13,6 +13,7 @@ hand. The `[Unreleased]` section is refreshed by CI on every push to `main`.
 
 ### Python (PyPI)
 
+- Added: **var-unittest:** Run Markdown specs as unittest tests — generate_tests(globals()) in one test module is the entire integration
 - Fixed: **var-runner:** Symlinked specs match the docs globs by their apparent path
 
 ### Java & Kotlin (Maven Central)
