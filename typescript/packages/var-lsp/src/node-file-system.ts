@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { glob as nativeGlob } from 'node:fs/promises'
 import { matchesGlob, relative, resolve } from 'node:path'
-import type { FileSystem } from './file-system.js'
+import type { FileSystem } from './file-system.ts'
 
 const glob = nativeGlob as unknown as (
   pattern: string,

@@ -1,6 +1,6 @@
-import type { VarDoc } from './ast.js'
-import { type ScannerPlugin, scan } from './scanner.js'
-import { structure } from './structurer.js'
+import type { VarDoc } from './ast.ts'
+import { type ScannerPlugin, scan } from './scanner.ts'
+import { structure } from './structurer.ts'
 
 export function parse(
   path: string,

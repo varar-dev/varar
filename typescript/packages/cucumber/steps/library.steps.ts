@@ -1,6 +1,6 @@
 import { defineState } from '@oselvar/var'
 import { expect } from 'vitest'
-import { type Book, type BorrowError, Library, type Receipt } from '../src/library.js'
+import { type Book, type BorrowError, Library, type Receipt } from '../src/library.ts'
 
 const { stimulus, sensor } = defineState(() => ({
   library: new Library(new Date('2026-06-12T00:00:00Z')),

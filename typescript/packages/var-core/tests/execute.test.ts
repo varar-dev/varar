@@ -1,11 +1,11 @@
 import { expect, test } from 'vitest'
-import { type CellMismatchError, isCellMismatchError, ReturnShapeError } from '../src/cell-diff.js'
-import type { Diagnostic } from '../src/diagnostics.js'
-import { type DocStringMismatchError, isDocStringMismatchError } from '../src/doc-string-diff.js'
-import { executePlan, isUnexpectedPassError, type StepObservation } from '../src/execute.js'
-import { parse } from '../src/parse.js'
-import { plan } from '../src/plan.js'
-import { addStep, createRegistry, type StepHandler } from '../src/registry.js'
+import { type CellMismatchError, isCellMismatchError, ReturnShapeError } from '../src/cell-diff.ts'
+import type { Diagnostic } from '../src/diagnostics.ts'
+import { type DocStringMismatchError, isDocStringMismatchError } from '../src/doc-string-diff.ts'
+import { executePlan, isUnexpectedPassError, type StepObservation } from '../src/execute.ts'
+import { parse } from '../src/parse.ts'
+import { plan } from '../src/plan.ts'
+import { addStep, createRegistry, type StepHandler } from '../src/registry.ts'
 
 async function runOnly(p: ReturnType<typeof plan>, observer?: { step(o: StepObservation): void }) {
   let run: (() => void | Promise<void>) | undefined

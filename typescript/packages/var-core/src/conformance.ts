@@ -1,13 +1,13 @@
 import { type CucumberExpression, type Node, NodeType } from '@cucumber/cucumber-expressions'
-import type { Fence, Table, VarDoc } from './ast.js'
-import { isCellMismatchError, ReturnShapeError } from './cell-diff.js'
-import type { DiagnosticCode, Severity } from './diagnostics.js'
-import { isDocStringMismatchError } from './doc-string-diff.js'
-import { collectExamples, isUnexpectedPassError, type StepObservation } from './execute.js'
-import { failureAnchor } from './failure-anchor.js'
-import { plan as buildPlan, type ExecutionPlan } from './plan.js'
-import type { Registry } from './registry.js'
-import type { Span } from './span.js'
+import type { Fence, Table, VarDoc } from './ast.ts'
+import { isCellMismatchError, ReturnShapeError } from './cell-diff.ts'
+import type { DiagnosticCode, Severity } from './diagnostics.ts'
+import { isDocStringMismatchError } from './doc-string-diff.ts'
+import { collectExamples, isUnexpectedPassError, type StepObservation } from './execute.ts'
+import { failureAnchor } from './failure-anchor.ts'
+import { plan as buildPlan, type ExecutionPlan } from './plan.ts'
+import type { Registry } from './registry.ts'
+import type { Span } from './span.ts'
 
 // ---- Artifact types (the serialized contract) -----------------------------
 

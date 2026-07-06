@@ -1,6 +1,6 @@
 import { expectTypeOf, test } from 'vitest'
-import type { Diagnostic } from '../src/diagnostics.js'
-import type { Reporter, TestSink } from '../src/ports.js'
+import type { Diagnostic } from '../src/diagnostics.ts'
+import type { Reporter, TestSink } from '../src/ports.ts'
 
 test('TestSink declares example(name, run, info?)', () => {
   expectTypeOf<TestSink['example']>().toEqualTypeOf<

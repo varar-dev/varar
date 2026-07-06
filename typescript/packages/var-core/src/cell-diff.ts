@@ -1,5 +1,5 @@
-import type { Row, Table } from './ast.js'
-import type { Span } from './span.js'
+import type { Row, Table } from './ast.ts'
+import type { Span } from './span.ts'
 
 // One checked column of one header-bound row: the input the comparison needs.
 export type RowCheck = {

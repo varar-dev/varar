@@ -1,6 +1,6 @@
 import type { Node } from 'web-tree-sitter'
-import type { HandlerParam, HandlerParams } from '../step-defs.js'
-import { type LanguageSpec, toRange } from './types.js'
+import type { HandlerParam, HandlerParams } from '../step-defs.ts'
+import { type LanguageSpec, toRange } from './types.ts'
 
 // Verified against @tree-sitter-grammars/tree-sitter-kotlin 1.1.0 and all 13
 // conformance bundles (2026-07-02). A DSL step is a trailing-lambda call: the

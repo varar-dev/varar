@@ -1,7 +1,7 @@
 import type { CellDiff, DocStringDiff } from '@oselvar/var-core'
 import { CellMismatchError, DocStringMismatchError, ReturnShapeError } from '@oselvar/var-core'
 import { expect, test } from 'vitest'
-import { renderFailure } from '../src/render.js'
+import { renderFailure } from '../src/render.ts'
 
 const PATH = 'spec.md'
 const SOURCE = '# Spec\n\nSome step.\n'

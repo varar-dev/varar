@@ -8,7 +8,7 @@ import {
   _resetBuilder,
   buildRegistry,
   contextFactory,
-} from '../src/registry.js'
+} from '../src/registry.ts'
 
 const BUNDLES = resolve(import.meta.dirname, '../../../../conformance/bundles')
 const UPDATE = process.env.VAR_UPDATE_GOLDENS === '1'

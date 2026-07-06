@@ -1,6 +1,6 @@
 import { readFile } from 'node:fs/promises'
 import { fileURLToPath } from 'node:url'
-import type { GrammarLoader } from '../src/grammar-loader.js'
+import type { GrammarLoader } from '../src/grammar-loader.ts'
 
 const GRAMMAR_FILES: Readonly<Record<string, string>> = {
   typescript: 'tree-sitter-typescript/tree-sitter-typescript.wasm',

@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { discoverStaticExamples } from '../src/static-examples.js'
+import { discoverStaticExamples } from '../src/static-examples.ts'
 
 const STEPS = `import { defineState } from '@oselvar/var'
 const { sensor } = defineState(() => ({}))

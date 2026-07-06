@@ -1,4 +1,4 @@
-import type { InlineOffset } from './ast.js'
+import type { InlineOffset } from './ast.ts'
 
 export type StrippedInline = {
   readonly text: string

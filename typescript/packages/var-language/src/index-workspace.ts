@@ -7,8 +7,8 @@ import {
   type Registry,
   type ScannerPlugin,
 } from '@oselvar/var-core'
-import { createTypeScriptScanner, type StepDefScanner } from './scanner.js'
-import type { Range, StepDef } from './step-defs.js'
+import { createTypeScriptScanner, type StepDefScanner } from './scanner.ts'
+import type { Range, StepDef } from './step-defs.ts'
 
 export type WorkspaceInput = {
   readonly stepFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>

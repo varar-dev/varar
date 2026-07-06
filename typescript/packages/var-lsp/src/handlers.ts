@@ -24,9 +24,9 @@ import type {
   StepAtMatch,
   StepAtResult,
   StepGlob,
-} from './protocol.js'
-import type { Store } from './store.js'
-import { uriToPath } from './uri.js'
+} from './protocol.ts'
+import type { Store } from './store.ts'
+import { uriToPath } from './uri.ts'
 
 type HoverParams = { readonly uri: string; readonly position: Position }
 type HoverResult = { readonly contents: string } | null

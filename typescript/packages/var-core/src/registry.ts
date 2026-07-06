@@ -3,7 +3,7 @@ import {
   ParameterType,
   ParameterTypeRegistry,
 } from '@cucumber/cucumber-expressions'
-import type { StepKind } from './step-role.js'
+import type { StepKind } from './step-role.ts'
 
 export type StepHandler = (
   state: unknown,

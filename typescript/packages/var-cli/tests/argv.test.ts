@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { parseArgv } from '../src/argv.js'
+import { parseArgv } from '../src/argv.ts'
 
 test('parses a subcommand with positionals', () => {
   const r = parseArgv(['lint', 'packages/**/*.md'])

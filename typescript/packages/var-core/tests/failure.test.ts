@@ -1,8 +1,8 @@
 import { expect, test } from 'vitest'
-import { CellMismatchError, ReturnShapeError } from '../src/cell-diff.js'
-import { DocStringMismatchError } from '../src/doc-string-diff.js'
-import { toFailure } from '../src/failure.js'
-import { spanFromOffsets } from '../src/span.js'
+import { CellMismatchError, ReturnShapeError } from '../src/cell-diff.ts'
+import { DocStringMismatchError } from '../src/doc-string-diff.ts'
+import { toFailure } from '../src/failure.ts'
+import { spanFromOffsets } from '../src/span.ts'
 
 test('toFailure extracts cells from a CellMismatchError', () => {
   const source = 'a | 5 |'

@@ -1,5 +1,5 @@
-import { ReturnShapeError } from './cell-diff.js'
-import type { Span } from './span.js'
+import { ReturnShapeError } from './cell-diff.ts'
+import type { Span } from './span.ts'
 
 // A doc-string content difference: the fence body's source range plus the
 // expected (authored) and actual (returned) strings.

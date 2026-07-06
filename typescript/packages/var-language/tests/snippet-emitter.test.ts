@@ -5,7 +5,7 @@ import {
   createPythonSnippetEmitter,
   createTypeScriptSnippetEmitter,
   emitterForLanguage,
-} from '../src/snippet-emitter.js'
+} from '../src/snippet-emitter.ts'
 
 test('maps a Number-typed parameter type to "number"', () => {
   const emitter = createTypeScriptSnippetEmitter()

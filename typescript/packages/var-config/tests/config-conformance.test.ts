@@ -3,7 +3,7 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { canonicalStringify } from '@oselvar/var-core'
 import { expect, test } from 'vitest'
-import { parseVarConfig } from '../src/config.js'
+import { parseVarConfig } from '../src/config.ts'
 
 // tests/ -> var-config -> packages -> typescript -> repo root. (import.meta.url,
 // not __dirname — this is an ESM package and vitest runs test files as ESM.)

@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { parse } from '../src/parse.js'
+import { parse } from '../src/parse.ts'
 
 test('parse returns a VarDoc whose Examples come from paragraphs and carry the heading stack', () => {
   const source = '# Hello\n\nbody'

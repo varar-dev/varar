@@ -1,5 +1,5 @@
 import { CucumberExpression, type Node, NodeType } from '@cucumber/cucumber-expressions'
-import type { Registry } from './registry.js'
+import type { Registry } from './registry.ts'
 
 // A cucumber expression broken down into its top-level segments. Positions
 // (`start`/`end`) are character offsets within the original expression

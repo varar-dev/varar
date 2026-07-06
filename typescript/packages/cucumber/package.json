@@ -4,10 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "NODE_OPTIONS=\"--import tsx\" cucumber-js && pnpm test:var && pnpm test:var-vitest",
-    "test:cucumber": "NODE_OPTIONS=\"--import tsx\" cucumber-js",
-    "test:var": "NODE_OPTIONS=\"--import tsx\" node ../var-cli/src/bin.ts run",
-    "test:var-vitest": "NODE_OPTIONS=\"--import tsx\" vitest run"
+    "test": "cucumber-js && pnpm test:var && pnpm test:var-vitest",
+    "test:cucumber": "cucumber-js",
+    "test:var": "node ../var-cli/src/bin.ts run",
+    "test:var-vitest": "vitest run"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^13.0.0",
@@ -16,7 +16,6 @@
     "@oselvar/var-core": "workspace:*",
     "@oselvar/var-vitest": "workspace:*",
     "@types/node": "^26.1.0",
-    "tsx": "^4.22.5",
     "vitest": "^4.1.9"
   },
   "license": "MIT",

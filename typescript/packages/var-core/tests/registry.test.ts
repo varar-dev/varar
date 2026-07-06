@@ -1,6 +1,6 @@
 import { ParameterTypeRegistry } from '@cucumber/cucumber-expressions'
 import { expect, test } from 'vitest'
-import { addStep, createRegistry, defineParameterType } from '../src/registry.js'
+import { addStep, createRegistry, defineParameterType } from '../src/registry.ts'
 
 test('createRegistry returns an empty registry with default parameter types', () => {
   const r = createRegistry()

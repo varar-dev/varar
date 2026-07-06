@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from 'vitest'
-import { buildWorkspaceIndex } from './index-workspace.js'
-import type { StepDefScanner } from './scanner.js'
+import { buildWorkspaceIndex } from './index-workspace.ts'
+import type { StepDefScanner } from './scanner.ts'
 
 describe('buildWorkspaceIndex scanner injection', () => {
   it('uses the injected scanner instead of the default', () => {

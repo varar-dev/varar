@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import { loadVarConfig } from '@oselvar/var-config'
 import { createConnection, ProposedFeatures } from 'vscode-languageserver/node'
-import { createNodeFileSystem } from './node-file-system.js'
-import { createNodeGrammarLoader } from './node-grammar-loader.js'
-import { registerHandlers } from './server.js'
+import { createNodeFileSystem } from './node-file-system.ts'
+import { createNodeGrammarLoader } from './node-grammar-loader.ts'
+import { registerHandlers } from './server.ts'
 
 const connection = createConnection(ProposedFeatures.all)
 registerHandlers(connection, async (rootUri) => {

@@ -1,5 +1,5 @@
-import type { Block, Example, Fence, Table, VarDoc } from './ast.js'
-import { spanFromOffsets } from './span.js'
+import type { Block, Example, Fence, Table, VarDoc } from './ast.ts'
+import { spanFromOffsets } from './span.ts'
 
 // Every paragraph / list item / blockquote becomes a candidate example. The
 // names come later (the planner takes the first sentence). Headings are

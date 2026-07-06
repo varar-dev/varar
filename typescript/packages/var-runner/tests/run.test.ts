@@ -1,6 +1,6 @@
 import { addStep, createRegistry, type Diagnostic } from '@oselvar/var-core'
 import { expect, test } from 'vitest'
-import { examplesWithRuns, planSpec, RecordingReporter } from '../src/run.js'
+import { examplesWithRuns, planSpec, RecordingReporter } from '../src/run.ts'
 
 function makeRegistry() {
   let r = createRegistry()

@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { registerHandlers } from '../src/server.js'
+import { registerHandlers } from '../src/server.ts'
 
 test('registerHandlers is a function', () => {
   expect(typeof registerHandlers).toBe('function')

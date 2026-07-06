@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import * as varApi from '../src/index.js'
+import * as varApi from '../src/index.ts'
 
 test('public surface exposes parse, plan, registry, and types', () => {
   expect(typeof varApi.parse).toBe('function')

@@ -1,11 +1,11 @@
 import { createRegistry } from '@oselvar/var-core'
 import { expect, test } from 'vitest'
-import { generateSnippet } from '../src/snippet.js'
+import { generateSnippet } from '../src/snippet.ts'
 import {
   createJavaSnippetEmitter,
   createKotlinSnippetEmitter,
   createPythonSnippetEmitter,
-} from '../src/snippet-emitter.js'
+} from '../src/snippet-emitter.ts'
 
 test('python snippet renders a decorated def with typed args', () => {
   const s = generateSnippet('I have 5 cukes', createRegistry(), {

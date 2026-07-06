@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-import { parseArgv } from './argv.js'
-import { runInit } from './init.js'
-import { runLint } from './lint.js'
-import { runRun } from './run.js'
+import { parseArgv } from './argv.ts'
+import { runInit } from './init.ts'
+import { runLint } from './lint.ts'
+import { runRun } from './run.ts'
 
 const parsed = parseArgv(process.argv.slice(2))
 

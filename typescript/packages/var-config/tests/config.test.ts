@@ -2,8 +2,8 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, test } from 'vitest'
-import { loadVarConfig, parseVarConfig } from '../src/config.js'
-import { findFiles } from '../src/find-files.js'
+import { loadVarConfig, parseVarConfig } from '../src/config.ts'
+import { findFiles } from '../src/find-files.ts'
 
 test('parseVarConfig reads all four keys', () => {
   const parsed = parseVarConfig(

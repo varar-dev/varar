@@ -1,6 +1,6 @@
 import type { MatchRef } from '@oselvar/var-language'
 import { describe, expect, it } from 'vitest'
-import { SEMANTIC_LEGEND, semanticTokenData } from './semantic-tokens.js'
+import { SEMANTIC_LEGEND, semanticTokenData } from './semantic-tokens.ts'
 
 function r(sl: number, sc: number, el: number, ec: number) {
   return { start: { line: sl, character: sc }, end: { line: el, character: ec } }

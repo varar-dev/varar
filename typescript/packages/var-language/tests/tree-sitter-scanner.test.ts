@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
-import { createTreeSitterScanner } from '../src/tree-sitter-scanner.js'
-import { createTestGrammarLoader } from './test-grammar-loader.js'
+import { createTreeSitterScanner } from '../src/tree-sitter-scanner.ts'
+import { createTestGrammarLoader } from './test-grammar-loader.ts'
 
 describe('createTreeSitterScanner', () => {
   test('discovers a step call and a parameter type', async () => {

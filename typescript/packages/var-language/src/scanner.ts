@@ -3,7 +3,7 @@ import {
   discoverStepDefs,
   type ParameterTypeDef,
   type StepDef,
-} from './step-defs.js'
+} from './step-defs.ts'
 
 export interface StepDefScanner {
   discoverStepDefs(path: string, source: string): ReadonlyArray<StepDef>

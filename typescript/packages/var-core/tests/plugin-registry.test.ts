@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { resolveScannerPlugins } from '../src/plugins/registry.js'
+import { resolveScannerPlugins } from '../src/plugins/registry.ts'
 
 test('resolves known plugin names to ScannerPlugin instances', () => {
   const plugins = resolveScannerPlugins(['gherkinTables', 'gherkinDocStrings'])

@@ -1,7 +1,7 @@
-import type { Block, InlineOffset } from './ast.js'
-import { stripInline } from './inline.js'
-import { type Span, spanFromOffsets } from './span.js'
-import { parseRowCells } from './table-cells.js'
+import type { Block, InlineOffset } from './ast.ts'
+import { stripInline } from './inline.ts'
+import { type Span, spanFromOffsets } from './span.ts'
+import { parseRowCells } from './table-cells.ts'
 
 // A scanner-line representation that plugins receive verbatim. Plugins use
 // the offsets to materialize span info on the blocks they produce.

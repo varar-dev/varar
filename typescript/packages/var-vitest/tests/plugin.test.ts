@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { generateVirtualModule, isVarSpecId, varVitestPlugin } from '../src/plugin.js'
+import { generateVirtualModule, isVarSpecId, varVitestPlugin } from '../src/plugin.ts'
 
 describe('isVarSpecId', () => {
   const specs = new Set(['/abs/docs/hello.md', '/abs/docs/airport.md'])

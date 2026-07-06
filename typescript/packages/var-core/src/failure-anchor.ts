@@ -1,6 +1,6 @@
-import { isCellMismatchError } from './cell-diff.js'
-import { isDocStringMismatchError } from './doc-string-diff.js'
-import type { Span } from './span.js'
+import { isCellMismatchError } from './cell-diff.ts'
+import { isDocStringMismatchError } from './doc-string-diff.ts'
+import type { Span } from './span.ts'
 
 // Where a failure POINTS in the .md: a mismatch anchors at its first failing
 // span (the cell, the doc string fence body), anything else at the fallback —

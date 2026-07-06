@@ -1,4 +1,4 @@
-import type { Registry, StepRegistration } from './registry.js'
+import type { Registry, StepRegistration } from './registry.ts'
 
 export type ParamSpan = { readonly start: number; readonly end: number }
 

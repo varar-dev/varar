@@ -1,8 +1,8 @@
 import type { Node } from 'web-tree-sitter'
-import type { HandlerParam, HandlerParams } from '../step-defs.js'
-import { decodeSimpleOrHexEscape } from './escape-decode.js'
-import type { LanguageSpec } from './types.js'
-import { toRange } from './types.js'
+import type { HandlerParam, HandlerParams } from '../step-defs.ts'
+import { decodeSimpleOrHexEscape } from './escape-decode.ts'
+import type { LanguageSpec } from './types.ts'
+import { toRange } from './types.ts'
 
 // Capture names follow cucumber/language-service's convention
 // (@root/@function-name/@expression/@name) rather than inventing new ones.

@@ -4,7 +4,7 @@ import { findFiles, loadVarConfig } from '@oselvar/var-config'
 import type { ScannerPlugin } from '@oselvar/var-core'
 import type { Plugin } from 'vite'
 import { configDefaults } from 'vitest/config'
-import { discoverStaticExamples, type StaticExample } from './static-examples.js'
+import { discoverStaticExamples, type StaticExample } from './static-examples.ts'
 
 export type VarVitestPluginOptions = {
   readonly cwd?: string

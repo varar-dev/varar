@@ -1,26 +1,26 @@
-export type { GrammarLoader } from './grammar-loader.js'
-export type { DiagnosticRef, MatchRef, WorkspaceIndex, WorkspaceInput } from './index-workspace.js'
-export { buildWorkspaceIndex } from './index-workspace.js'
-export type { StepDefScanner } from './scanner.js'
-export { createTypeScriptScanner } from './scanner.js'
-export type { Snippet } from './snippet.js'
-export { generateSnippet } from './snippet.js'
-export type { SnippetEmitter } from './snippet-emitter.js'
+export type { GrammarLoader } from './grammar-loader.ts'
+export type { DiagnosticRef, MatchRef, WorkspaceIndex, WorkspaceInput } from './index-workspace.ts'
+export { buildWorkspaceIndex } from './index-workspace.ts'
+export type { StepDefScanner } from './scanner.ts'
+export { createTypeScriptScanner } from './scanner.ts'
+export type { Snippet } from './snippet.ts'
+export { generateSnippet } from './snippet.ts'
+export type { SnippetEmitter } from './snippet-emitter.ts'
 export {
   createJavaSnippetEmitter,
   createKotlinSnippetEmitter,
   createPythonSnippetEmitter,
   createTypeScriptSnippetEmitter,
   emitterForLanguage,
-} from './snippet-emitter.js'
+} from './snippet-emitter.ts'
 export {
   DEFAULT_SNIPPET_TEMPLATE,
   JAVA_SNIPPET_TEMPLATE,
   KOTLIN_SNIPPET_TEMPLATE,
   PYTHON_SNIPPET_TEMPLATE,
-} from './snippet-template.js'
-export type { ParameterTypeDef, Position, Range, StepDef } from './step-defs.js'
-export { discoverParameterTypes, discoverStepDefs } from './step-defs.js'
-export { renderTemplate } from './template.js'
-export { createTreeSitterScanner, languageIdForPath } from './tree-sitter-scanner.js'
+} from './snippet-template.ts'
+export type { ParameterTypeDef, Position, Range, StepDef } from './step-defs.ts'
+export { discoverParameterTypes, discoverStepDefs } from './step-defs.ts'
+export { renderTemplate } from './template.ts'
+export { createTreeSitterScanner, languageIdForPath } from './tree-sitter-scanner.ts'
 export const VERSION = '0.0.0'

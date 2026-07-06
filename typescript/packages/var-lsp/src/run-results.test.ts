@@ -1,6 +1,6 @@
 import { hashSource, type SpecResults } from '@oselvar/var-core'
 import { describe, expect, it } from 'vitest'
-import { createRunResultsStore, runLspDiagnostics } from './run-results.js'
+import { createRunResultsStore, runLspDiagnostics } from './run-results.ts'
 
 const SOURCE = 'x 6 y'
 const SPEC: SpecResults = {

@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
-import { defineState } from '../src/index.js'
-import { _customParameterTypes, _resetBuilder } from '../src/registry.js'
+import { defineState } from '../src/index.ts'
+import { _customParameterTypes, _resetBuilder } from '../src/registry.ts'
 
 test('_customParameterTypes projects name and regexp source', () => {
   _resetBuilder()

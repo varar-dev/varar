@@ -1,4 +1,4 @@
-import { type Span, spanFromOffsets } from './span.js'
+import { type Span, spanFromOffsets } from './span.ts'
 
 // Split a `| a | b |` table row into trimmed cells and the source span of
 // each cell's trimmed text. Works for Markdown rows (no leading space) and

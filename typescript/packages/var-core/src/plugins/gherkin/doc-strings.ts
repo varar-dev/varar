@@ -1,6 +1,6 @@
-import type { Fence } from '../../ast.js'
-import type { ScannerPlugin } from '../../scanner.js'
-import { spanFromOffsets } from '../../span.js'
+import type { Fence } from '../../ast.ts'
+import type { ScannerPlugin } from '../../scanner.ts'
+import { spanFromOffsets } from '../../span.ts'
 
 // Gherkin doc strings open and close with either `"""` or `'''` on their own
 // line (allowing leading whitespace). An optional language identifier can

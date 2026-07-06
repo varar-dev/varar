@@ -1,10 +1,10 @@
-import { CellMismatchError, compareRow, compareTable, ReturnShapeError } from './cell-diff.js'
-import { deepFreeze } from './deep-freeze.js'
-import { compareDocString, DocStringMismatchError } from './doc-string-diff.js'
-import { failureAnchor } from './failure-anchor.js'
-import { compareParams } from './param-diff.js'
-import type { ExecutionPlan, PlannedStep } from './plan.js'
-import type { Reporter, TestSink } from './ports.js'
+import { CellMismatchError, compareRow, compareTable, ReturnShapeError } from './cell-diff.ts'
+import { deepFreeze } from './deep-freeze.ts'
+import { compareDocString, DocStringMismatchError } from './doc-string-diff.ts'
+import { failureAnchor } from './failure-anchor.ts'
+import { compareParams } from './param-diff.ts'
+import type { ExecutionPlan, PlannedStep } from './plan.ts'
+import type { Reporter, TestSink } from './ports.ts'
 
 export class UnexpectedPassError extends Error {
   constructor(message = 'expected the example to fail, but it passed') {

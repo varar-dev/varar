@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { buildWorkspaceIndex } from '../src/index-workspace.js'
+import { buildWorkspaceIndex } from '../src/index-workspace.ts'
 
 test('cross-references matched substrings in .md to their step defs', () => {
   const idx = buildWorkspaceIndex({

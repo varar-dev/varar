@@ -1,5 +1,5 @@
 import type { Node } from 'web-tree-sitter'
-import type { HandlerParams, Position, Range } from '../step-defs.js'
+import type { HandlerParams, Position, Range } from '../step-defs.ts'
 
 export type LanguageId = 'typescript' | 'typescript-tsx' | 'python' | 'java' | 'kotlin'
 

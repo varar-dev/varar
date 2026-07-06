@@ -9,7 +9,7 @@ import type {
   Row,
   Table,
   ThematicBreak,
-} from '../src/ast.js'
+} from '../src/ast.ts'
 
 test('Block includes all v1 block kinds', () => {
   expectTypeOf<Block>().toEqualTypeOf<

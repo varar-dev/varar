@@ -3,7 +3,7 @@ import {
   JAVA_SNIPPET_TEMPLATE,
   KOTLIN_SNIPPET_TEMPLATE,
   PYTHON_SNIPPET_TEMPLATE,
-} from './snippet-template.js'
+} from './snippet-template.ts'
 
 // Owns every language-shaped construct of generated step-definition source:
 // the type-name mapping, the 'name: Type' vs 'Type name' param shape, the

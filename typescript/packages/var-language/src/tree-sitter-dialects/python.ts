@@ -1,7 +1,7 @@
 import type { Node } from 'web-tree-sitter'
-import type { HandlerParam, HandlerParams } from '../step-defs.js'
-import { decodeSimpleOrHexEscape } from './escape-decode.js'
-import { type LanguageSpec, toRange } from './types.js'
+import type { HandlerParam, HandlerParams } from '../step-defs.ts'
+import { decodeSimpleOrHexEscape } from './escape-decode.ts'
+import { type LanguageSpec, toRange } from './types.ts'
 
 // Verified against tree-sitter-python 0.25.0 and all 13 conformance bundles
 // (2026-07-02): the decorator's call carries the role name and expression;

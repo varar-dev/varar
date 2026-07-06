@@ -8,9 +8,9 @@ import {
   type StepDefScanner,
   type WorkspaceIndex,
 } from '@oselvar/var-language'
-import type { FileSystem } from './file-system.js'
+import type { FileSystem } from './file-system.ts'
 
-export type { FileSystem } from './file-system.js'
+export type { FileSystem } from './file-system.ts'
 
 export type StoreDeps = {
   readonly fs: FileSystem

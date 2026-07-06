@@ -16,7 +16,11 @@ export class Library {
   private readonly shelf: Book[] = []
   // Today is fixed by the test (Cucumber's Before hook / vitest's
   // beforeEach) so receipts stay reproducible.
-  constructor(private readonly today: Date) {}
+  private readonly today: Date
+
+  constructor(today: Date) {
+    this.today = today
+  }
 
   addBooks(books: ReadonlyArray<Book>): void {
     this.shelf.push(...books)

@@ -1,7 +1,7 @@
-import type { Row, Table } from '../../ast.js'
-import type { RawLine, ScannerPlugin } from '../../scanner.js'
-import { spanFromOffsets } from '../../span.js'
-import { parseRowCells } from '../../table-cells.js'
+import type { Row, Table } from '../../ast.ts'
+import type { RawLine, ScannerPlugin } from '../../scanner.ts'
+import { spanFromOffsets } from '../../span.ts'
+import { parseRowCells } from '../../table-cells.ts'
 
 // Gherkin tables are a contiguous run of `| ... |` rows, with no separator
 // row between the header and the body (Markdown requires `|---|`; Gherkin

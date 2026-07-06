@@ -1,14 +1,14 @@
 import type { StepKind } from '@oselvar/var-core'
 import { Language, type Node, Parser, Query, type QueryMatch } from 'web-tree-sitter'
-import type { GrammarLoader } from './grammar-loader.js'
-import type { StepDefScanner } from './scanner.js'
-import type { ParameterTypeDef, StepDef } from './step-defs.js'
-import { javaSpec } from './tree-sitter-dialects/java.js'
-import { kotlinSpec } from './tree-sitter-dialects/kotlin.js'
-import { pythonSpec } from './tree-sitter-dialects/python.js'
-import type { LanguageId, LanguageSpec } from './tree-sitter-dialects/types.js'
-import { toRange } from './tree-sitter-dialects/types.js'
-import { typescriptSpec } from './tree-sitter-dialects/typescript.js'
+import type { GrammarLoader } from './grammar-loader.ts'
+import type { StepDefScanner } from './scanner.ts'
+import type { ParameterTypeDef, StepDef } from './step-defs.ts'
+import { javaSpec } from './tree-sitter-dialects/java.ts'
+import { kotlinSpec } from './tree-sitter-dialects/kotlin.ts'
+import { pythonSpec } from './tree-sitter-dialects/python.ts'
+import type { LanguageId, LanguageSpec } from './tree-sitter-dialects/types.ts'
+import { toRange } from './tree-sitter-dialects/types.ts'
+import { typescriptSpec } from './tree-sitter-dialects/typescript.ts'
 
 type Dialect = {
   readonly parser: Parser

@@ -1,7 +1,7 @@
 import { DEFAULT_SNIPPET_TEMPLATE } from '@oselvar/var-language'
 import { describe, expect, it } from 'vitest'
-import { createNodeGrammarLoader } from './node-grammar-loader.js'
-import { createStore, type FileSystem } from './store.js'
+import { createNodeGrammarLoader } from './node-grammar-loader.ts'
+import { createStore, type FileSystem } from './store.ts'
 
 function fakeFs(files: Record<string, string>): FileSystem {
   const map = new Map(Object.entries(files))

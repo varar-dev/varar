@@ -3,8 +3,8 @@ import {
   diffExpressions,
   expressionSegments,
   renderExpression,
-} from '../src/expression-segments.js'
-import { createRegistry, defineParameterType } from '../src/registry.js'
+} from '../src/expression-segments.ts'
+import { createRegistry, defineParameterType } from '../src/registry.ts'
 
 test('segments a simple expression with one parameter', () => {
   const r = createRegistry()

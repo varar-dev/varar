@@ -12,7 +12,7 @@ It assumes Vár is already set up in your repo. If not, start with
 ## 1. Install the adapter
 
 ```bash
-pnpm add -D @oselvar/var-vitest vitest tsx
+pnpm add -D @oselvar/var-vitest vitest
 ```
 
 Your step definitions keep importing `@oselvar/var` — never the adapter.
@@ -55,17 +55,7 @@ by the `var` CLI and the language server, so all three always agree.
 ## 4. Run
 
 ```bash
-NODE_OPTIONS="--import tsx" npx vitest run
-```
-
-Or put it in `package.json` so nobody has to remember the flag:
-
-```json
-{
-  "scripts": {
-    "test": "NODE_OPTIONS=\"--import tsx\" vitest run"
-  }
-}
+npx vitest run
 ```
 
 Your `.md` specs now appear as test files in vitest's output, watch mode, and

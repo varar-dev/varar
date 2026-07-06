@@ -2,7 +2,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, test } from 'vitest'
-import { runInit } from '../src/init.js'
+import { runInit } from '../src/init.ts'
 
 test('scaffolds var.config.json and an example .md + steps file', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'var-init-'))

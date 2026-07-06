@@ -1,6 +1,6 @@
-import type { CellDiff } from './cell-diff.js'
-import { deepEqual } from './deep-equal.js'
-import type { Span } from './span.js'
+import type { CellDiff } from './cell-diff.ts'
+import { deepEqual } from './deep-equal.ts'
+import type { Span } from './span.ts'
 
 // Compare a sensor's returned inline actuals against the values captured from
 // the document. `expected` is the captured arguments, `sourceTexts` the matched

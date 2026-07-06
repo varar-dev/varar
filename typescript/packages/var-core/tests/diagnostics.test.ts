@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
-import { ambiguousMatch } from '../src/diagnostics.js'
-import { spanFromOffsets } from '../src/span.js'
+import { ambiguousMatch } from '../src/diagnostics.ts'
+import { spanFromOffsets } from '../src/span.ts'
 
 test('ambiguousMatch builds a diagnostic listing all candidates', () => {
   const span = spanFromOffsets('I have 5 cukes in my belly', 0, 26)

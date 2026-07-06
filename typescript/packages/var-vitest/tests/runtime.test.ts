@@ -2,7 +2,7 @@ import { defineState } from '@oselvar/var'
 import { _resetBuilder } from '@oselvar/var/registry'
 import { type CellDiff, CellMismatchError, DocStringMismatchError } from '@oselvar/var-core'
 import { afterEach, beforeEach, expect, test } from 'vitest'
-import { collectVarExamples, varTestBody } from '../src/runtime.js'
+import { collectVarExamples, varTestBody } from '../src/runtime.ts'
 
 beforeEach(() => _resetBuilder())
 afterEach(() => _resetBuilder())

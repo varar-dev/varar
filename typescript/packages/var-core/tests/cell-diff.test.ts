@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import type { Table } from '../src/ast.js'
+import type { Table } from '../src/ast.ts'
 import {
   CellMismatchError,
   compareRow,
@@ -7,8 +7,8 @@ import {
   isCellMismatchError,
   ReturnShapeError,
   type RowCheck,
-} from '../src/cell-diff.js'
-import { parse } from '../src/parse.js'
+} from '../src/cell-diff.ts'
+import { parse } from '../src/parse.ts'
 
 const span = { startLine: 1, startCol: 1, endLine: 1, endCol: 2, startOffset: 0, endOffset: 1 }
 const checks: ReadonlyArray<RowCheck> = [

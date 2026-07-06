@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { CellMismatchError } from '../src/cell-diff.js'
+import { CellMismatchError } from '../src/cell-diff.ts'
 import {
   canonicalStringify,
   runConformance,
@@ -7,12 +7,12 @@ import {
   toPlanArtifact,
   toRegistryArtifact,
   toVarDocArtifact,
-} from '../src/conformance.js'
-import { DocStringMismatchError } from '../src/doc-string-diff.js'
-import { UnexpectedPassError } from '../src/execute.js'
-import { parse } from '../src/parse.js'
-import { plan } from '../src/plan.js'
-import { addStep, createRegistry, defineParameterType } from '../src/registry.js'
+} from '../src/conformance.ts'
+import { DocStringMismatchError } from '../src/doc-string-diff.ts'
+import { UnexpectedPassError } from '../src/execute.ts'
+import { parse } from '../src/parse.ts'
+import { plan } from '../src/plan.ts'
+import { addStep, createRegistry, defineParameterType } from '../src/registry.ts'
 
 test('canonicalStringify sorts keys recursively and ends with a newline', () => {
   const out = canonicalStringify({ b: 1, a: { d: 2, c: 3 } })

@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, test } from 'vitest'
-import { runLint } from '../src/lint.js'
+import { runLint } from '../src/lint.ts'
 
 test('exit code 0 when no diagnostics found', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'var-lint-clean-'))

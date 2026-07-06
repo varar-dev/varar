@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
-import { findHits, resolveHits } from '../src/matcher.js'
-import { addStep, createRegistry } from '../src/registry.js'
+import { findHits, resolveHits } from '../src/matcher.ts'
+import { addStep, createRegistry } from '../src/registry.ts'
 
 function reg() {
   let r = createRegistry()

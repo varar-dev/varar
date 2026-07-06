@@ -1,7 +1,7 @@
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { expect, test } from 'vitest'
-import { loadSteps } from '../src/steps.js'
+import { loadSteps } from '../src/steps.ts'
 
 // Fixture step files live within the package directory so Node can resolve
 // @oselvar/var from this package's own node_modules.

@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
-import type { VarDoc } from '../src/ast.js'
-import { scan } from '../src/scanner.js'
-import { structure } from '../src/structurer.js'
+import type { VarDoc } from '../src/ast.ts'
+import { scan } from '../src/scanner.ts'
+import { structure } from '../src/structurer.ts'
 
 test('every paragraph becomes a candidate Example, scoped by the headings above it', () => {
   const source =

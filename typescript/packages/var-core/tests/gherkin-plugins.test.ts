@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
-import { gherkinDocStrings } from '../src/plugins/gherkin/doc-strings.js'
-import { gherkinTables } from '../src/plugins/gherkin/tables.js'
-import { scan } from '../src/scanner.js'
+import { gherkinDocStrings } from '../src/plugins/gherkin/doc-strings.ts'
+import { gherkinTables } from '../src/plugins/gherkin/tables.ts'
+import { scan } from '../src/scanner.ts'
 
 test('gherkinTables recognises pipe rows without a |---| separator', () => {
   const source = '| title | author |\n| Lolita | Nabokov |\n| 1984 | Orwell |\n'

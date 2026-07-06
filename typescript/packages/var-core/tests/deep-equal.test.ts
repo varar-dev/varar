@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { deepEqual } from '../src/deep-equal.js'
+import { deepEqual } from '../src/deep-equal.ts'
 
 test('primitives compare by value', () => {
   expect(deepEqual(3, 3)).toBe(true)

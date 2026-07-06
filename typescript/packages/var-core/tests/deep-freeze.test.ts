@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { deepFreeze } from '../src/deep-freeze.js'
+import { deepFreeze } from '../src/deep-freeze.ts'
 
 test('deepFreeze freezes nested objects and arrays', () => {
   const o = deepFreeze({ a: { b: 1 }, list: [{ c: 2 }] })

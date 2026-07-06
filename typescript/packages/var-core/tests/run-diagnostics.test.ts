@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
-import { hashSource } from '../src/hash.js'
-import type { SpecResults } from '../src/result.js'
-import { runResultDiagnostics } from '../src/run-diagnostics.js'
+import { hashSource } from '../src/hash.ts'
+import type { SpecResults } from '../src/result.ts'
+import { runResultDiagnostics } from '../src/run-diagnostics.ts'
 
 function results(source: string, examples: SpecResults['examples']): SpecResults {
   return { version: 1, specPath: 's.md', sourceHash: hashSource(source), examples }

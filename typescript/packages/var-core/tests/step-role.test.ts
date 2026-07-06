@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { inferStepRole } from '../src/step-role.js'
+import { inferStepRole } from '../src/step-role.ts'
 
 test('nothing after → sensor (expectation last)', () => {
   expect(inferStepRole({ before: ['stimulus'], after: [] })).toBe('sensor')

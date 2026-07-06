@@ -1,10 +1,10 @@
-import type { Block, Fence, InlineOffset, Table, VarDoc } from './ast.js'
-import type { RowCheck } from './cell-diff.js'
-import { ambiguousMatch, type Diagnostic, errorFenceWithoutStep } from './diagnostics.js'
-import { findHits, type Hit, resolveHits } from './matcher.js'
-import type { Registry, StepRegistration } from './registry.js'
-import { splitSentences } from './sentences.js'
-import { type Span, spanFromOffsets } from './span.js'
+import type { Block, Fence, InlineOffset, Table, VarDoc } from './ast.ts'
+import type { RowCheck } from './cell-diff.ts'
+import { ambiguousMatch, type Diagnostic, errorFenceWithoutStep } from './diagnostics.ts'
+import { findHits, type Hit, resolveHits } from './matcher.ts'
+import type { Registry, StepRegistration } from './registry.ts'
+import { splitSentences } from './sentences.ts'
+import { type Span, spanFromOffsets } from './span.ts'
 
 export type ExecutionPlan = {
   readonly varDoc: VarDoc

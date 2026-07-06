@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
-import type { Table } from '../src/ast.js'
-import { parse } from '../src/parse.js'
-import { scan } from '../src/scanner.js'
+import type { Table } from '../src/ast.ts'
+import { parse } from '../src/parse.ts'
+import { scan } from '../src/scanner.ts'
 
 test('scan finds a single h1 heading', () => {
   const blocks = scan('# Hello')

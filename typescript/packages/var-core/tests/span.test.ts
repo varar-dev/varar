@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { spanFromOffsets } from '../src/span.js'
+import { spanFromOffsets } from '../src/span.ts'
 
 test('spanFromOffsets computes line and column for a single-line source', () => {
   const source = 'hello world'

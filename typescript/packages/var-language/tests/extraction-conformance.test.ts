@@ -2,8 +2,8 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, test } from 'vitest'
-import { createTreeSitterScanner } from '../src/tree-sitter-scanner.js'
-import { createTestGrammarLoader } from './test-grammar-loader.js'
+import { createTreeSitterScanner } from '../src/tree-sitter-scanner.ts'
+import { createTestGrammarLoader } from './test-grammar-loader.ts'
 
 // ADR 0001's "per-language fixtures, shared expectations" applied to the
 // extraction seam: for every conformance bundle, each language's steps

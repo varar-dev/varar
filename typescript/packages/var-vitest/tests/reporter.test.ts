@@ -6,7 +6,7 @@ import {
   collectFromModules,
   resultFilePath,
   toSpecPath,
-} from '../src/reporter.js'
+} from '../src/reporter.ts'
 
 const passed = { name: 'A', status: 'passed' as const, lines: [3] }
 const failed = {

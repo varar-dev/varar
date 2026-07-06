@@ -1,6 +1,6 @@
-import { isCellMismatchError } from './cell-diff.js'
-import { isDocStringMismatchError } from './doc-string-diff.js'
-import type { CellFailure, ExampleResult } from './result.js'
+import { isCellMismatchError } from './cell-diff.ts'
+import { isDocStringMismatchError } from './doc-string-diff.ts'
+import type { CellFailure, ExampleResult } from './result.ts'
 
 // Recover the 1-based failing line from the `<specPath>:line:col` frame
 // executePlan injects (see execute.ts augmentStack). Internal — not exported

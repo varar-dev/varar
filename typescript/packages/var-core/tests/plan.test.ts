@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
-import { parse } from '../src/parse.js'
-import { plan } from '../src/plan.js'
-import { addStep, createRegistry } from '../src/registry.js'
+import { parse } from '../src/parse.ts'
+import { plan } from '../src/plan.ts'
+import { addStep, createRegistry } from '../src/registry.ts'
 
 function reg() {
   let r = createRegistry()

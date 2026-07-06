@@ -56,8 +56,8 @@
   - [ ] CLI codemod for migrating from Cucumber.
 - [ ] `var-cli` build is broken (TS6 can't resolve `node:fs` without
       `@types/node`). Cucumber's `test:var` invokes `node ../var-cli/src/bin.ts
-      run` via tsx as a workaround — once the build is fixed, switch back to
-      the `var` bin.
+      run` (Node runs the TS source natively) as a workaround — once the build
+      is fixed, switch back to the `var` bin.
 
 ## Code quality
 

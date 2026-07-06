@@ -1,7 +1,7 @@
 import { CucumberExpressionGenerator } from '@cucumber/cucumber-expressions'
 import type { Registry, StepKind } from '@oselvar/var-core'
-import { createTypeScriptSnippetEmitter, type SnippetEmitter } from './snippet-emitter.js'
-import { renderTemplate } from './template.js'
+import { createTypeScriptSnippetEmitter, type SnippetEmitter } from './snippet-emitter.ts'
+import { renderTemplate } from './template.ts'
 
 export type Snippet = {
   readonly expression: string

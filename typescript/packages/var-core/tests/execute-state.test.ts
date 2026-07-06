@@ -1,8 +1,8 @@
 import { expect, test } from 'vitest'
-import { type ExecutePorts, executePlan } from '../src/execute.js'
-import { parse } from '../src/parse.js'
-import { plan } from '../src/plan.js'
-import { addStep, createRegistry } from '../src/registry.js'
+import { type ExecutePorts, executePlan } from '../src/execute.ts'
+import { parse } from '../src/parse.ts'
+import { plan } from '../src/plan.ts'
+import { addStep, createRegistry } from '../src/registry.ts'
 
 // Runs one example. `createContext` seeds the initial state; step handlers may
 // capture what they receive via closures. Returns a getter for the caught error.

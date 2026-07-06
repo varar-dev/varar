@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, test } from 'vitest'
-import { createTypeScriptScanner, type StepDefScanner } from '../src/scanner.js'
-import { createTreeSitterScanner } from '../src/tree-sitter-scanner.js'
-import { createTestGrammarLoader } from './test-grammar-loader.js'
+import { createTypeScriptScanner, type StepDefScanner } from '../src/scanner.ts'
+import { createTreeSitterScanner } from '../src/tree-sitter-scanner.ts'
+import { createTestGrammarLoader } from './test-grammar-loader.ts'
 
 const scannerFactories: ReadonlyArray<{
   readonly label: string

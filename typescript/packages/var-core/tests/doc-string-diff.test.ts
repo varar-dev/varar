@@ -1,10 +1,10 @@
 import { expect, test } from 'vitest'
-import { ReturnShapeError } from '../src/cell-diff.js'
+import { ReturnShapeError } from '../src/cell-diff.ts'
 import {
   compareDocString,
   DocStringMismatchError,
   isDocStringMismatchError,
-} from '../src/doc-string-diff.js'
+} from '../src/doc-string-diff.ts'
 
 const span = { startLine: 1, startCol: 1, endLine: 1, endCol: 6, startOffset: 0, endOffset: 6 }
 

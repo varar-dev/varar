@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { renderTemplate } from '../src/template.js'
+import { renderTemplate } from '../src/template.ts'
 
 test('substitutes {{name}} placeholders from vars', () => {
   expect(renderTemplate('Hello {{name}}!', { name: 'world' })).toBe('Hello world!')

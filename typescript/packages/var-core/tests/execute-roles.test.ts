@@ -1,10 +1,10 @@
 import { expect, test } from 'vitest'
-import { isCellMismatchError } from '../src/cell-diff.js'
-import { isDocStringMismatchError } from '../src/doc-string-diff.js'
-import { type ExecutePorts, executePlan } from '../src/execute.js'
-import { parse } from '../src/parse.js'
-import { plan } from '../src/plan.js'
-import { addStep, createRegistry, defineParameterType, type StepHandler } from '../src/registry.js'
+import { isCellMismatchError } from '../src/cell-diff.ts'
+import { isDocStringMismatchError } from '../src/doc-string-diff.ts'
+import { type ExecutePorts, executePlan } from '../src/execute.ts'
+import { parse } from '../src/parse.ts'
+import { plan } from '../src/plan.ts'
+import { addStep, createRegistry, defineParameterType, type StepHandler } from '../src/registry.ts'
 
 // Minimal ports that run the example body and surface the thrown error.
 function runOne(

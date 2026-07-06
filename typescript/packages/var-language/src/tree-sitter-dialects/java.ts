@@ -1,6 +1,6 @@
 import type { Node } from 'web-tree-sitter'
-import type { HandlerParam, HandlerParams } from '../step-defs.js'
-import { type LanguageSpec, toRange } from './types.js'
+import type { HandlerParam, HandlerParams } from '../step-defs.ts'
+import { type LanguageSpec, toRange } from './types.ts'
 
 // Verified against tree-sitter-java 0.23.5 and all 13 conformance bundles
 // (2026-07-02). The receiver is deliberately unconstrained — steps register

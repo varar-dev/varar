@@ -1,5 +1,5 @@
-import { hashSource } from './hash.js'
-import type { SpecResults } from './result.js'
+import { hashSource } from './hash.ts'
+import type { SpecResults } from './result.ts'
 
 // One renderable failure: a source-offset range plus a human message. Offsets
 // are absolute source positions (== CodeMirror positions); `to` is exclusive.

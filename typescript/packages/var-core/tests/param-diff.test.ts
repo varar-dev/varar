@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
-import { compareParams } from '../src/param-diff.js'
-import { spanFromOffsets } from '../src/span.js'
+import { compareParams } from '../src/param-diff.ts'
+import { spanFromOffsets } from '../src/span.ts'
 
 const span = (s: number, e: number) =>
   spanFromOffsets('I should have 3 cukes in my big belly', s, e)

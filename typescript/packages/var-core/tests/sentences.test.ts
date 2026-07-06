@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { splitSentences } from '../src/sentences.js'
+import { splitSentences } from '../src/sentences.ts'
 
 test('splits a paragraph on periods, question marks, exclamation marks', () => {
   const text = 'First sentence. Second one? Third one!'

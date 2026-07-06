@@ -5,18 +5,14 @@ import { describe, expect, test } from 'vitest'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const BIN_TS = resolve(HERE, '..', 'src', 'bin.ts')
-const WORKSPACE_ROOT = resolve(HERE, '..', '..', '..')
-const TSX = resolve(WORKSPACE_ROOT, 'node_modules', '.bin', 'tsx')
 const FIXTURES = resolve(HERE, 'fixtures')
 
 function run(args: ReadonlyArray<string>, cwd: string) {
-  // Drop the outer vitest process's NODE_OPTIONS (`--import tsx`, which would
-  // conflict with invoking the tsx binary directly below). Filter stderr of
-  // Node's one-time `ExperimentalWarning: globSync` notice (emitted by
+  // Node runs the TS source directly via native type stripping. Filter stderr
+  // of Node's one-time `ExperimentalWarning: globSync` notice (emitted by
   // @oselvar/var-config's file finder) so the assertions below test the
   // CLI's own output, not engine warnings.
-  const { NODE_OPTIONS: _drop, ...rest } = process.env
-  return spawnSync(TSX, [BIN_TS, ...args], { cwd, encoding: 'utf8', env: rest })
+  return spawnSync(process.execPath, [BIN_TS, ...args], { cwd, encoding: 'utf8' })
 }
 
 function filterWarnings(stderr: string): string {

@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { stripInline } from '../src/inline.js'
+import { stripInline } from '../src/inline.ts'
 
 test('strips bold and italic markers, preserving inner text', () => {
   const { text, map } = stripInline('Given I have **100** in *my* account', 10)

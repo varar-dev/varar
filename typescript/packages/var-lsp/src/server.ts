@@ -7,16 +7,16 @@ import {
   TextDocuments,
 } from 'vscode-languageserver'
 import { TextDocument } from 'vscode-languageserver-textdocument'
-import { buildHandlers } from './handlers.js'
-import { createRunResultsStore, type LspDiagnostic, runLspDiagnostics } from './run-results.js'
-import { SEMANTIC_LEGEND, semanticTokenData } from './semantic-tokens.js'
-import { createStore, type Store, type StoreDeps } from './store.js'
-import { uriToPath } from './uri.js'
+import { buildHandlers } from './handlers.ts'
+import { createRunResultsStore, type LspDiagnostic, runLspDiagnostics } from './run-results.ts'
+import { SEMANTIC_LEGEND, semanticTokenData } from './semantic-tokens.ts'
+import { createStore, type Store, type StoreDeps } from './store.ts'
+import { uriToPath } from './uri.ts'
 
 // FileSystem is the port external adapters implement (node-file-system.ts
 // internally, idb-file-system.ts in the website packages) — it must be
 // public for those adapters to type against it.
-export type { FileSystem } from './file-system.js'
+export type { FileSystem } from './file-system.ts'
 
 // vscode-languageserver 10's `onRequest(method, handler)` overload mis-infers the
 // result generic from a discriminated `{ ok: true } | { ok: false }` union (it

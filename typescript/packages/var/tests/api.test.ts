@@ -1,6 +1,6 @@
 import { beforeEach, expect, expectTypeOf, test } from 'vitest'
-import { defineState } from '../src/index.js'
-import { _resetBuilder, buildRegistry, contextFactory } from '../src/registry.js'
+import { defineState } from '../src/index.ts'
+import { _resetBuilder, buildRegistry, contextFactory } from '../src/registry.ts'
 
 beforeEach(() => _resetBuilder())
 

@@ -3,10 +3,10 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { loadVarConfig } from '@oselvar/var-config'
 import { expect, test } from 'vitest'
-import { buildHandlers } from '../src/handlers.js'
-import { createNodeFileSystem } from '../src/node-file-system.js'
-import { createNodeGrammarLoader } from '../src/node-grammar-loader.js'
-import { createStore } from '../src/store.js'
+import { buildHandlers } from '../src/handlers.ts'
+import { createNodeFileSystem } from '../src/node-file-system.ts'
+import { createNodeGrammarLoader } from '../src/node-grammar-loader.ts'
+import { createStore } from '../src/store.ts'
 
 function tempWorkspace(setup: (dir: string) => void): { dir: string; cleanup: () => void } {
   const dir = realpathSync(mkdtempSync(join(tmpdir(), 'var-lsp-')))

@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { addStep, createRegistry, parse, plan } from '../src/index.js'
+import { addStep, createRegistry, parse, plan } from '../src/index.ts'
 
 test('end-to-end: a complete BDD file with headings, prose, list, table, and fence', () => {
   let r = createRegistry()

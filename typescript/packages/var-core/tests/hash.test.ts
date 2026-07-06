@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest'
-import { hashSource } from '../src/hash.js'
+import { hashSource } from '../src/hash.ts'
 
 test('hashSource is deterministic for the same input', () => {
   expect(hashSource('abc')).toBe(hashSource('abc'))
