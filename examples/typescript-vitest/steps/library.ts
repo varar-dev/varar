@@ -12,20 +12,18 @@ export function addMoney(a: Money, b: Money): Money {
   return { currency: a.currency, value: a.value + b.value }
 }
 
-// `due` and the dates passed below are ISO dates like 2026-06-01 — immutable
-// and comparable as plain strings.
 export type Loan = {
   readonly title: string
-  readonly due: string
+  readonly due: Date
 }
 
 const MS_PER_DAY = 24 * 60 * 60 * 1000
 
-export function lateFee(loan: Loan, returnedOn: string): Money {
-  const daysLate = Math.max(0, (Date.parse(returnedOn) - Date.parse(loan.due)) / MS_PER_DAY)
+export function lateFee(loan: Loan, returnedOn: Date): Money {
+  const daysLate = Math.max(0, (returnedOn.getTime() - loan.due.getTime()) / MS_PER_DAY)
   return GBP(daysLate * FEE_PER_DAY.value)
 }
 
-export function mayBorrow(loans: ReadonlyArray<Loan>, on: string): boolean {
-  return loans.every((loan) => loan.due >= on)
+export function mayBorrow(loans: ReadonlyArray<Loan>, on: Date): boolean {
+  return loans.every((loan) => loan.due.getTime() >= on.getTime())
 }

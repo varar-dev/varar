@@ -8,9 +8,11 @@ const { stimulus, sensor } = defineState(
   () => ({ loans: [] as ReadonlyArray<Loan>, fee: GBP(0), granted: false }),
   {
     date: {
-      // June 6, 2026 → the ISO date 2026-06-06 (en-CA formats as YYYY-MM-DD)
+      // June 6, 2026 ⇄ a Date. (Temporal.PlainDate would fit better — swap it
+      // in once Node ships Temporal unflagged; today it's behind --harmony-temporal.)
       regexp: /[A-Z][a-z]+ \d{1,2}, \d{4}/,
-      parse: (raw: string) => new Date(raw).toLocaleDateString('en-CA'),
+      parse: (raw: string) => new Date(raw),
+      format: (d: Date) => d.toLocaleDateString('en-US', { dateStyle: 'long' }),
     },
     money: {
       // £2.50 and 50p, both as GBP Money. The amount is cucumber-expressions'

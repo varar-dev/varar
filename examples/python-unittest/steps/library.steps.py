@@ -9,6 +9,11 @@ def to_date(raw):
     return datetime.strptime(raw, "%B %d, %Y").date()
 
 
+def format_date(d):
+    """date(2026, 6, 6) → June 6, 2026 (no %-d — day padding flags are not portable)."""
+    return f"{d:%B} {d.day}, {d.year}"
+
+
 def to_money(raw):
     """£2.50 and 50p, both as GBP Money."""
     return gbp(float(raw[:-1]) / 100) if raw.endswith("p") else gbp(float(raw[1:]))
@@ -25,6 +30,7 @@ stimulus, sensor = define_state(
         "date": {
             "regexp": r"[A-Z][a-z]+ \d{1,2}, \d{4}",
             "parse": to_date,
+            "format": format_date,
         },
         "money": {
             # £2.50 and 50p, both as GBP Money. The amount is cucumber-expressions'

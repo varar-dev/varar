@@ -15,7 +15,7 @@ public final class LibrarySteps implements StepDefinitions {
 
     record Ctx(List<Library.Loan> loans, Library.Money fee, boolean granted) implements State {}
 
-    /** June 6, 2026 → LocalDate 2026-06-06. */
+    /** June 6, 2026 ⇄ LocalDate 2026-06-06 — one formatter drives both parse and format. */
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.ENGLISH);
 
     /** £2.50 and 50p, both as GBP Money. */
@@ -37,7 +37,8 @@ public final class LibrarySteps implements StepDefinitions {
         registrar.defineParameterType(
                 "date",
                 Pattern.compile("[A-Z][a-z]+ \\d{1,2}, \\d{4}"),
-                groups -> LocalDate.parse(groups[0], DATE));
+                groups -> LocalDate.parse(groups[0], DATE),
+                DATE::format);
         // £2.50 and 50p, both as GBP Money. The amount is cucumber-expressions'
         // float regexp, minus the scientific notation.
         registrar.defineParameterType(
