@@ -124,27 +124,36 @@ Notes:
 - Detection is **pure and registry-free** — it consumes the already-built
   `VarDoc` and `ExecutionPlan`. No new I/O in the core.
 
-## Gate and write (the shell, per port)
+## Gate and write — writer vs read-only gate
 
-Read `var.lock.json` once at the start of a run. For each spec, after planning,
-run `detectDrift`. Then:
+There are two roles, split like a lockfile's `install` vs `ci`:
 
-| Situation | Run outcome | `var.lock.json` |
-| --- | --- | --- |
-| No drift | pass/fail on the examples as today | rewrite spec entry = current live candidates |
-| Drift, **not** in update mode | **FAIL** — message names each drifted example + `spec:line` | **leave untouched** (baseline keeps the old example so it stays red until fixed or accepted) |
-| Drift, update mode | pass | rewrite spec entry = current live candidates (accepts the drift) |
+- **`var run` is the writer.** Read `var.lock.json`, `detectDrift` per spec, then:
+
+  | Situation | Run outcome | `var.lock.json` |
+  | --- | --- | --- |
+  | No drift | pass/fail on the examples as today | rewrite spec entry = current live candidates |
+  | Drift, **not** in update mode | **FAIL** — a `drift` diagnostic per example + non-zero exit | **leave untouched** (keeps the old example so it stays red until fixed or accepted) |
+  | Drift, update mode (`--update` / `VAR_UPDATE`) | pass | rewrite spec entry = current live candidates (accepts the drift) |
+
+- **Framework adapters (vitest, later pytest/JUnit/Kotest) are a read-only
+  gate.** They read the baseline and fail on drift, but never write it — so a
+  plain `npm test` never silently rewrites a committed file. Recording and
+  accepting is the explicit `var run` step (analogous to `npm install`
+  updating the lockfile while `npm ci` only checks it). `VAR_UPDATE` skips the
+  gate so a re-record via `var run --update` isn't blocked by a red suite first.
 
 - On drift the entry is **not** rewritten — otherwise the drifted example would
   vanish from the baseline and never fail again. New examples added in the same
-  edit are baselined on the next clean (or update-mode) run.
+  edit are baselined on the next clean (or update-mode) `var run`.
 - The failure must surface through each framework's **native** failure channel:
   a red test (vitest/pytest/JUnit/Kotest) or non-zero exit (`var run`), so CI
-  gates without any Vár-specific tooling. This mirrors the existing
-  `var:stale-spec-transform` guard test in `var-vitest/src/runtime.ts` — drift
-  registers an analogous `var:drift` failing test at **collection time** (where
-  the worker has source + plan), reading its spec's baseline entry from
-  `var.lock.json`.
+  gates without any Vár-specific tooling. In vitest the plugin reads
+  `var.lock.json` at build time and **inlines this spec's baseline** into the
+  generated `collectVarExamples(...)` call (the generated module can't import
+  `var-core` under pnpm's layout); at collection time the runtime runs
+  `detectDrift` and emits each drift through the reporter, which registers a
+  failing `var:diagnostic:drift` test — same rail as `ambiguous-match`.
 
 ## Reporting — one rail, every surface
 

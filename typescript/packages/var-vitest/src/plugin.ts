@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
-import { resolve } from 'node:path'
+import { relative, resolve, sep } from 'node:path'
 import { findFiles, loadVarConfig } from '@oselvar/var-config'
-import type { ScannerPlugin } from '@oselvar/var-core'
+import { parseVarLock, type ScannerPlugin, type SpecBaseline } from '@oselvar/var-core'
 import type { Plugin } from 'vite'
 import { configDefaults } from 'vitest/config'
 import { discoverStaticExamples, type StaticExample } from './static-examples.ts'
@@ -35,6 +35,8 @@ export function varVitestPlugin(options: VarVitestPluginOptions = {}): Plugin {
   // Absolute path to var.config.json when one exists — watched so a config
   // edit re-transforms specs in watch mode.
   let configJsonPath: string | undefined
+  // Absolute path to the committed drift baseline (var.lock.json).
+  const lockPath = resolve(cwd, 'var.lock.json')
   return {
     name: '@oselvar/var-vitest',
     async config() {
@@ -78,18 +80,26 @@ export function varVitestPlugin(options: VarVitestPluginOptions = {}): Plugin {
       // every spec in watch mode.
       for (const f of stepFiles) this.addWatchFile(f)
       if (configJsonPath) this.addWatchFile(configJsonPath)
+      // Editing the baseline re-transforms so the drift gate reflects it.
+      this.addWatchFile(lockPath)
       const examples = discoverStaticExamples({
         varPath,
         source,
         stepFiles: stepFiles.map((path) => ({ path, source: readFileSync(path, 'utf8') })),
         scannerPlugins,
       })
+      // This spec's baseline entry from var.lock.json (POSIX path, relative to
+      // cwd), injected so the runtime can run the read-only drift gate.
+      const specPath = relative(cwd, varPath).split(sep).join('/')
+      const lock = existsSync(lockPath) ? parseVarLock(readFileSync(lockPath, 'utf8')) : null
+      const baseline = lock?.specs[specPath] ?? null
       return generateVirtualModule({
         varPath,
         stepImports: stepFiles,
         source,
         scannerPluginNames: pluginNames,
         examples,
+        baseline,
       })
     },
   }
@@ -107,6 +117,9 @@ export type GenerateInput = {
   // becomes a `test("literal name", ...)` call placed at its own markdown
   // line/column.
   readonly examples?: ReadonlyArray<StaticExample>
+  // This spec's drift baseline from var.lock.json (or null when unbaselined),
+  // inlined so the runtime can run the read-only drift gate.
+  readonly baseline?: SpecBaseline | null
 }
 
 // The generated module preserves an IDENTITY LINE MAPPING to the markdown
@@ -119,6 +132,7 @@ export function generateVirtualModule(input: GenerateInput): string {
   const sourceJson = JSON.stringify(input.source ?? '')
   const pathJson = JSON.stringify(input.varPath)
   const pluginNamesJson = JSON.stringify(input.scannerPluginNames)
+  const baselineJson = JSON.stringify(input.baseline ?? null)
   const examples = input.examples ?? []
   const header: string[] = [
     "import { test } from 'vitest'",
@@ -134,7 +148,7 @@ export function generateVirtualModule(input: GenerateInput): string {
     // collectVarExamples, so the only `test(...)` callsites in this module
     // are the real per-example ones below — static AST discovery sees an
     // exact test tree.
-    `const EXAMPLES = collectVarExamples(PATH, ${sourceJson}, { scannerPlugins: ${pluginNamesJson}, expectedCount: ${examples.length} })`,
+    `const EXAMPLES = collectVarExamples(PATH, ${sourceJson}, { scannerPlugins: ${pluginNamesJson}, expectedCount: ${examples.length}, baseline: ${baselineJson} })`,
   ]
   const testCall = (ex: StaticExample, i: number): string => {
     const nameJson = JSON.stringify(ex.name)

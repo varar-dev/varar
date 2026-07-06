@@ -89,6 +89,29 @@ describe('generateVirtualModule', () => {
     expect(out.match(/test\(/g)).toHaveLength(1)
   })
 
+  test('inlines the spec baseline so the runtime can run the read-only drift gate', () => {
+    const out = generateVirtualModule({
+      varPath: '/abs/foo.md',
+      stepImports: [],
+      source: 'The answer is 42.\n',
+      scannerPluginNames: [],
+      examples: [{ name: 'The answer is 42', line: 1, col: 1 }],
+      baseline: { sourceHash: 'fnv1a:00000000', examples: [{ name: 'The answer is 42', line: 1 }] },
+    })
+    expect(out).toContain('"sourceHash":"fnv1a:00000000"')
+    expect(out).toContain('baseline:')
+  })
+
+  test('inlines a null baseline when the spec is not yet in var.lock.json', () => {
+    const out = generateVirtualModule({
+      varPath: '/abs/foo.md',
+      stepImports: [],
+      scannerPluginNames: [],
+      examples: [],
+    })
+    expect(out).toContain('baseline: null')
+  })
+
   test('inlines configured scanner-plugin names so the runtime can resolve them via var-core', () => {
     const out = generateVirtualModule({
       varPath: '/abs/foo.md',

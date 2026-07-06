@@ -1,11 +1,30 @@
 import { defineState } from '@oselvar/var'
 import { _resetBuilder } from '@oselvar/var/registry'
-import { type CellDiff, CellMismatchError, DocStringMismatchError } from '@oselvar/var-core'
+import {
+  type CellDiff,
+  CellMismatchError,
+  type Diagnostic,
+  DocStringMismatchError,
+  type SpecBaseline,
+} from '@oselvar/var-core'
 import { afterEach, beforeEach, expect, test } from 'vitest'
 import { collectVarExamples, varTestBody } from '../src/runtime.ts'
 
 beforeEach(() => _resetBuilder())
-afterEach(() => _resetBuilder())
+afterEach(() => {
+  _resetBuilder()
+  delete process.env.VAR_UPDATE
+})
+
+// Capture diagnostics instead of the default reporter (which would register
+// real vitest tests inside this test file).
+function capturingReporter(): {
+  reporter: { diagnostic: (d: Diagnostic) => void }
+  diags: Diagnostic[]
+} {
+  const diags: Diagnostic[] = []
+  return { reporter: { diagnostic: (d) => diags.push(d) }, diags }
+}
 
 function fakeCtx() {
   const meta: { varResult?: { name: string; status: string; lines: ReadonlyArray<number> } } = {}
@@ -32,6 +51,42 @@ test('collectVarExamples returns one indexed example per BDD example, with step 
   expect(examples[0]?.lines).toEqual([3])
   await examples[0]?.run()
   expect(calls).toEqual(['have:5', 'eat:2'])
+})
+
+test('the drift gate reports a baseline example that no longer matches', () => {
+  // No steps registered, so "The vault is sealed." matches nothing; the
+  // baseline says it was an example → drift.
+  const baseline: SpecBaseline = {
+    sourceHash: 'fnv1a:00000000',
+    examples: [{ name: 'The vault is sealed', line: 1 }],
+  }
+  const { reporter, diags } = capturingReporter()
+  collectVarExamples('vault.md', 'The vault is sealed.', { reporter, baseline })
+  expect(diags.map((d) => d.code)).toContain('drift')
+  expect(diags.find((d) => d.code === 'drift')?.message).toContain('The vault is sealed')
+})
+
+test('the drift gate stays quiet when the baseline example still matches', () => {
+  const { stimulus } = defineState(() => ({}))
+  stimulus('I open the vault', () => {})
+  const baseline: SpecBaseline = {
+    sourceHash: 'fnv1a:00000000',
+    examples: [{ name: 'I open the vault', line: 1 }],
+  }
+  const { reporter, diags } = capturingReporter()
+  collectVarExamples('vault.md', 'I open the vault.', { reporter, baseline })
+  expect(diags.map((d) => d.code)).not.toContain('drift')
+})
+
+test('VAR_UPDATE skips the drift gate', () => {
+  process.env.VAR_UPDATE = '1'
+  const baseline: SpecBaseline = {
+    sourceHash: 'fnv1a:00000000',
+    examples: [{ name: 'The vault is sealed', line: 1 }],
+  }
+  const { reporter, diags } = capturingReporter()
+  collectVarExamples('vault.md', 'The vault is sealed.', { reporter, baseline })
+  expect(diags).toEqual([])
 })
 
 test('varTestBody runs the example and attaches a passed varResult to the task meta', async () => {

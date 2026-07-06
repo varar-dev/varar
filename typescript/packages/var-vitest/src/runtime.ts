@@ -1,10 +1,13 @@
 import { buildRegistry, contextFactory } from '@oselvar/var/registry'
 import {
   type CellDiff,
+  detectDrift,
+  driftDiagnostics,
   isCellMismatchError,
   isDocStringMismatchError,
   type Reporter,
   resolveScannerPlugins,
+  type SpecBaseline,
   toFailure,
 } from '@oselvar/var-core'
 import { examplesWithRuns, planSpec } from '@oselvar/var-runner'
@@ -27,6 +30,12 @@ export type CollectPorts = {
   // see appeared or vanished), a failing guard test is registered instead of
   // letting the suites silently diverge.
   readonly expectedCount?: number
+  // This spec's committed drift baseline (from var.lock.json), injected by the
+  // plugin. When present, drift is detected and reported as a diagnostic (a
+  // failing `var:diagnostic:drift` test) — a read-only gate. The baseline is
+  // written only by `var run`; VAR_UPDATE=1 skips the gate so you can
+  // re-record it there without vitest going red first.
+  readonly baseline?: SpecBaseline | null
 }
 
 export type CollectedExample = {
@@ -59,6 +68,17 @@ export function collectVarExamples(
     registry,
     ports.scannerPlugins && resolveScannerPlugins(ports.scannerPlugins),
   )
+  // Read-only drift gate: a paragraph the baseline recorded as an example that
+  // now matches no step surfaces as a drift diagnostic (a failing test) unless
+  // VAR_UPDATE is set (then re-record via `var run --update`).
+  if (ports.baseline) {
+    const update = process.env.VAR_UPDATE === '1' || process.env.VAR_UPDATE === 'true'
+    if (!update) {
+      for (const d of driftDiagnostics(detectDrift(ports.baseline, p.varDoc, p))) {
+        reporter.diagnostic(d)
+      }
+    }
+  }
   const examples = examplesWithRuns(p, contextFactory(), reporter).map(({ example, run }) => ({
     name: example.name,
     lines: [...new Set(example.steps.map((s) => s.matchSpan.startLine))],
