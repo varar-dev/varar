@@ -4,7 +4,7 @@ version = "0.3.0"
 description = "Shared spec discovery + run orchestration for var runners"
 requires-python = ">=3.11"
 license = "MIT"
-dependencies = ["oselvar-var==0.3.0", "oselvar-var-config"]
+dependencies = ["oselvar-var==0.3.0", "oselvar-var-config==0.3.0"]
 
 [build-system]
 requires = ["hatchling"]

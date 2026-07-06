@@ -46,8 +46,12 @@ and `npm install -g @vscode/vsce ovsx`. Sign in: `op signin`, `gh auth login`.
 
 - **npm** — granular automation token with publish rights for the `@oselvar`
   scope (npmjs.com → Settings → Access Tokens). → `npm-oselvar`, field `token`.
-- **PyPI** — project-scoped API token covering oselvar-var, oselvar-var-core,
-  oselvar-var-runner, pytest-var, oselvar-var-unittest. → `pypi-oselvar`,
+- **PyPI** — project-scoped API token covering oselvar-var, oselvar-var-config,
+  oselvar-var-core, oselvar-var-runner, pytest-var, oselvar-var-unittest.
+  NOTE a project-scoped token cannot *create* a project: for names not yet on
+  PyPI (2026-07-06: oselvar-var, oselvar-var-unittest — only the other four
+  exist, at 0.1.0), first publish with an account-scoped token, then re-scope.
+  → `pypi-oselvar`,
   field `token`. Publishing *new* projects is rate-limited per account: a
   `429 Too many new projects created` mid-run is PyPI, not credentials —
   wait (hours) and re-run; published packages are skipped.

@@ -4,7 +4,7 @@ version = "0.3.0"
 description = "unittest adapter for Markdown-native BDD"
 requires-python = ">=3.11"
 license = "MIT"
-dependencies = ["oselvar-var==0.3.0", "oselvar-var-config", "oselvar-var-core==0.3.0", "oselvar-var-runner==0.3.0"]
+dependencies = ["oselvar-var==0.3.0", "oselvar-var-config==0.3.0", "oselvar-var-core==0.3.0", "oselvar-var-runner==0.3.0"]
 
 [build-system]
 requires = ["hatchling"]
