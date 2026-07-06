@@ -70,7 +70,7 @@ const obj = { stimulus: 1 }
   test('discovers a paramType from defineState with a regexp literal', () => {
     const source = `import { defineState } from '@oselvar/var-core'
 const { stimulus } = defineState(() => ({}), {
-  airport: { regexp: /[A-Z]{3}/, transformer: (r) => r },
+  airport: { regexp: /[A-Z]{3}/, parse: (r) => r },
 })
 `
     const defs = scanner.discoverParameterTypes('p.ts', source)

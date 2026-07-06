@@ -56,7 +56,7 @@ from var import define_state
 context, action, sensor = define_state(
     lambda: {},
     param_types={
-        "airport": {"regexp": "[A-Z]{3}", "transformer": lambda code: code.lower()},
+        "airport": {"regexp": "[A-Z]{3}", "parse": lambda code: code.lower()},
         "iata": {"regexp": r"[A-Z]{3}\\d"},
         "code": {"regexp": re.compile(r"[0-9]+")},
     },

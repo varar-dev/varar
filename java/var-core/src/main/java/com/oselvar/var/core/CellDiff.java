@@ -21,10 +21,47 @@ import java.util.Map;
  * Map<String, Object>} convention already used for JSON-object-shaped values elsewhere in this
  * port (see {@code CanonicalJson}).
  */
-public record CellDiff(String column, Span span, String expected, String actual, boolean ok) {
+public record CellDiff(
+        String column,
+        Span span,
+        String expected,
+        String actual,
+        boolean ok,
+        Object expectedValue,
+        Object actualValue,
+        boolean formatted) {
+
+    /**
+     * The pre-{@code format} raw values ({@code expectedValue}/{@code actualValue}) are
+     * populated on the inline-parameter path (where comparison is deep equality over
+     * transformed values — see {@link ParamDiff#compareParams}) so adapters can hand them
+     * to their test framework's structural differ; {@code formatted} is true when the
+     * parameter type's {@code format} rendered {@code actual}, telling adapters to prefer
+     * the document-notation display pair over the raw values. Neither is ever serialized
+     * into run results or conformance artifacts ({@code Conformance.failureCell} projects
+     * only {@code column}/{@code expected}/{@code actual}/{@code span}). This convenience
+     * constructor keeps the row/table comparison paths (and their tests) on the original
+     * five components, with {@code null} raw values.
+     */
+    public CellDiff(String column, Span span, String expected, String actual, boolean ok) {
+        this(column, span, expected, actual, ok, null, null, false);
+    }
 
     /** One checked column of one header-bound row: the input the comparison needs. */
     public record RowCheck(String column, String value, Span span) {}
+
+    /**
+     * Display rules 2–4 of the mismatch-rendering chain (rule 1, the parameter type's
+     * {@code format}, applies only on the inline-parameter path — see {@link ParamDiff}):
+     * a string as-is, any other primitive/boxed primitive via {@link String#valueOf}, and
+     * anything else as a best-effort {@link String#valueOf} — the port-native fallback
+     * that is deliberately outside conformance (bundles that pin an object-valued actual
+     * must give the parameter type a {@code format}).
+     */
+    public static String renderCellValue(Object value) {
+        if (value instanceof String s) return s;
+        return String.valueOf(value);
+    }
 
     /**
      * Compares a row step's returned value against the row's cells. Only columns present on
@@ -36,7 +73,7 @@ public record CellDiff(String column, Span span, String expected, String actual,
         List<CellDiff> diffs = new ArrayList<>();
         for (RowCheck check : checks) {
             if (!obj.containsKey(check.column())) continue;
-            String actual = String.valueOf(obj.get(check.column()));
+            String actual = renderCellValue(obj.get(check.column()));
             diffs.add(new CellDiff(check.column(), check.span(), check.value(), actual, actual.equals(check.value())));
         }
         return List.copyOf(diffs);
@@ -94,7 +131,7 @@ public record CellDiff(String column, Span span, String expected, String actual,
      * every column of every data row is checked (the header row is labels, never compared).
      * {@code returned} may be a {@code List} of {@code List} (data rows, positional) or a {@code
      * List} of {@code Map} (keyed by header cell). Cells compare as exact strings ({@code
-     * String.valueOf(value).equals(cellText)}). {@code null} → no checks. Type/shape problems
+     * renderCellValue(value).equals(cellText)}). {@code null} → no checks. Type/shape problems
      * throw {@link ReturnShapeException}.
      */
     public static List<CellDiff> compareTable(Object returned, Ast.Table input) {
@@ -136,7 +173,7 @@ public record CellDiff(String column, Span span, String expected, String actual,
                     actualValue = rec.get(column);
                 }
                 String expected = j < row.cells().size() ? row.cells().get(j) : "";
-                String actual = String.valueOf(actualValue);
+                String actual = renderCellValue(actualValue);
                 Span span = j < row.cellSpans().size() ? row.cellSpans().get(j) : row.span();
                 diffs.add(new CellDiff(column, span, expected, actual, actual.equals(expected)));
             }

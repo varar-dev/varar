@@ -2,7 +2,7 @@ import type { Block, Fence, InlineOffset, Table, VarDoc } from './ast.ts'
 import type { RowCheck } from './cell-diff.ts'
 import { ambiguousMatch, type Diagnostic, errorFenceWithoutStep } from './diagnostics.ts'
 import { findHits, type Hit, resolveHits } from './matcher.ts'
-import type { Registry, StepRegistration } from './registry.ts'
+import type { ParameterFormat, Registry, StepRegistration } from './registry.ts'
 import { splitSentences } from './sentences.ts'
 import { type Span, spanFromOffsets } from './span.ts'
 
@@ -51,6 +51,9 @@ export type PlannedStep = {
   readonly paramSpans: ReadonlyArray<Span>
   readonly stepDef: StepRegistration
   readonly args: ReadonlyArray<unknown>
+  // Per-argument display formatters from the matched parameter types,
+  // aligned with `args`. Presentation only — see param-diff.ts.
+  readonly formats: ReadonlyArray<ParameterFormat | undefined>
   readonly dataTable?: Table
   readonly docString?: {
     readonly content: string
@@ -93,6 +96,7 @@ export function plan(varDoc: VarDoc, registry: Registry): ExecutionPlan {
           paramSpans: hit.paramSpans.map((p) => liftSpan(varDoc.source, block, p.start, p.end)),
           stepDef: hit.stepDef,
           args: hit.args,
+          formats: hit.formats,
         }))
         stepsByBlock.set(idx, blockSteps)
       }

@@ -1,9 +1,11 @@
 package com.oselvar.var.core;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
@@ -74,18 +76,27 @@ public final class Plan {
         }
     }
 
-    /** One matched step: its text, source span, captured-parameter spans, args, and attachments. */
+    /**
+     * One matched step: its text, source span, captured-parameter spans, args, and attachments.
+     * {@code formats} is copied from the {@link Matcher.Hit} — each captured argument's
+     * parameter-type display formatter, aligned 1:1 with {@code args} ({@code null} entries
+     * when the type has none) — so the executor can render parameter mismatches without
+     * reaching back into the registry. Copied null-tolerantly ({@code List.copyOf} rejects
+     * nulls).
+     */
     public record PlannedStep(
             String text,
             Span matchSpan,
             List<Span> paramSpans,
             Registry.StepRegistration stepDef,
             List<Object> args,
+            List<Function<Object, String>> formats,
             Ast.Table dataTable,
             Ast.Fence docString) {
         public PlannedStep {
             paramSpans = List.copyOf(paramSpans);
             args = List.copyOf(args);
+            formats = Collections.unmodifiableList(new ArrayList<>(formats));
         }
     }
 
@@ -128,6 +139,7 @@ public final class Plan {
                                 paramSpans,
                                 hit.stepDef(),
                                 hit.args(),
+                                hit.formats(),
                                 null,
                                 null));
                     }
@@ -159,6 +171,7 @@ public final class Plan {
                             bound.step().paramSpans(),
                             bound.step().stepDef(),
                             rowArgs,
+                            bound.step().formats(),
                             null,
                             null);
                     List<CellDiff.RowCheck> rowChecks = new ArrayList<>(headerCells.size());
@@ -219,6 +232,7 @@ public final class Plan {
                                 step.paramSpans(),
                                 step.stepDef(),
                                 step.args(),
+                                step.formats(),
                                 attachAt.dataTable(),
                                 attachAt.docString()));
                     } else {
@@ -294,7 +308,8 @@ public final class Plan {
                         h.matchStart() + sentence.startOffset(),
                         h.matchEnd() + sentence.startOffset(),
                         h.args(),
-                        paramSpans));
+                        paramSpans,
+                        h.formats()));
             }
             Matcher.ResolvedSteps resolved = Matcher.resolveHits(adjusted);
             if (resolved instanceof Matcher.Ambiguous ambiguous) {

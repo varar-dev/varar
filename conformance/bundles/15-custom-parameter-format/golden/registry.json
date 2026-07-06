@@ -1,0 +1,16 @@
+{
+  "parameterTypes": [
+    {
+      "name": "money",
+      "regexp": "£\\d+\\.\\d{2}"
+    }
+  ],
+  "steps": [
+    {
+      "expression": "The late fee is {money}",
+      "parameterTypeNames": [
+        "money"
+      ]
+    }
+  ]
+}

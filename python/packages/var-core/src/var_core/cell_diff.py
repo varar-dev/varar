@@ -30,6 +30,31 @@ class CellDiff:
     expected: str
     actual: str
     ok: bool
+    # The raw pre-display values, present on the inline-parameter path (where
+    # comparison is deep equality over transformed values). Adapter-facing;
+    # never serialized into run results or conformance artifacts.
+    expected_value: Any = None
+    actual_value: Any = None
+    # True when the parameter type's ``format`` rendered ``actual`` — the
+    # display pair is document notation, and adapters should prefer it over
+    # the raw values in their expected/actual projection.
+    formatted: bool = False
+
+
+def render_cell_value(value: Any) -> str:
+    """Display rules 2-4 of the mismatch-rendering chain.
+
+    Rule 1, the parameter type's ``format``, applies only on the
+    inline-parameter path — see param_diff.py. A string renders as-is, any
+    other primitive via ``str``, anything else via ``repr``. The ``repr``
+    fallback is port-native and deliberately outside conformance — bundles
+    that pin an object actual must use ``format``.
+    """
+    if isinstance(value, str):
+        return value
+    if value is None or isinstance(value, (bool, int, float)):
+        return str(value)
+    return repr(value)
 
 
 def compare_row(
@@ -47,7 +72,7 @@ def compare_row(
     for check in checks:
         if check.column not in returned:
             continue
-        actual = str(returned[check.column])
+        actual = render_cell_value(returned[check.column])
         diffs.append(
             CellDiff(
                 column=check.column,
@@ -144,7 +169,7 @@ def compare_table(
                 actual_value = rec[column]
 
             expected = row.cells[j] if j < len(row.cells) else ""
-            actual = str(actual_value)
+            actual = render_cell_value(actual_value)
             span: Span = row.cell_spans[j] if j < len(row.cell_spans) else row.span  # type: ignore[assignment]
             diffs.append(
                 CellDiff(

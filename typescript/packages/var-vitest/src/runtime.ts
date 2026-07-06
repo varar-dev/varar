@@ -93,15 +93,30 @@ function renderCells(cells: ReadonlyArray<CellDiff>, key: 'expected' | 'actual')
 // vitest renders a `- Expected / + Received` diff for any thrown error that
 // carries `expected` and `actual` (and the VS Code vitest extension shows the
 // same pair in its diff peek), so project the mismatch's structured diff onto
-// those two strings before the error crosses into vitest. Presentation only —
-// the pass/fail verdict stays the core's exact string comparison.
+// that pair before the error crosses into vitest. A `format`-rendered cell
+// diffs as its document-notation strings ("£2.55" vs "£2.50") — that pair IS
+// the diff the author asked for by writing a format. Only an UNFORMATTED
+// single object mismatch attaches the raw values instead, so vitest renders
+// a structural object diff rather than two JSON strings. Presentation only —
+// the pass/fail verdict stays the core's comparison.
 function attachExpectedActual(error: unknown): void {
-  const e = error as { expected?: string; actual?: string }
+  const e = error as { expected?: unknown; actual?: unknown }
   if (isCellMismatchError(error)) {
     const bad = error.cells
       .filter((c) => !c.ok)
       .sort((a, b) => a.span.startOffset - b.span.startOffset)
     if (bad.length === 0) return
+    const single = bad.length === 1 ? (bad[0] as CellDiff) : undefined
+    if (
+      single &&
+      !single.formatted &&
+      'actualValue' in single &&
+      typeof single.actualValue === 'object'
+    ) {
+      e.expected = single.expectedValue
+      e.actual = single.actualValue
+      return
+    }
     e.expected = renderCells(bad, 'expected')
     e.actual = renderCells(bad, 'actual')
   } else if (isDocStringMismatchError(error)) {

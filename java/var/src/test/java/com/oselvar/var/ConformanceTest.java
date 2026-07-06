@@ -102,6 +102,7 @@ class ConformanceTest {
             case "12-combining-marks" -> new com.oselvar.var.conformance.bundle12.GreetSteps();
             case "13-custom-parameter-type" -> new com.oselvar.var.conformance.bundle13.AirportsSteps();
             case "14-stateless-steps" -> new com.oselvar.var.conformance.bundle14.SquaresSteps();
+            case "15-custom-parameter-format" -> new com.oselvar.var.conformance.bundle15.MoneySteps();
             default -> throw new IllegalStateException("No Java step fixture registered for bundle " + bundleName);
         };
     }

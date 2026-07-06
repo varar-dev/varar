@@ -18,7 +18,8 @@ type Entry = {
 type CustomTypeDef = {
   readonly name: string
   readonly regexp: RegExp | ReadonlyArray<RegExp>
-  readonly transformer: (...captures: string[]) => unknown
+  readonly parse?: (...captures: string[]) => unknown
+  readonly format?: (value: unknown) => string
 }
 
 let steps: Entry[] = []
@@ -35,7 +36,7 @@ function registerStep(expression: string, handler: StepHandler, kind: StepKind):
 
 // ─── Argument-type inference from the cucumber expression ───
 // var's own port of cucumber-expressions' parameter grammar: map an expression
-// literal's `{name}` placeholders to the types their transformers produce.
+// literal's `{name}` placeholders to the types their parse functions produce.
 // (Deliberately kept here rather than upstreamed — the parameter-extraction
 // grammar is small and stable, and var's needs are narrow.) The one
 // var-specific choice is the `AnyArg` fallback for a name with no known type:
@@ -49,7 +50,7 @@ function registerStep(expression: string, handler: StepHandler, kind: StepKind):
 // biome-ignore lint/suspicious/noExplicitAny: intentional flexible fallback slot
 type AnyArg = any
 
-// Built-in cucumber parameter-type name → the type its transformer produces.
+// Built-in cucumber parameter-type name → the type its parse function produces.
 interface BuiltInParameterTypes {
   int: number
   float: number
@@ -139,16 +140,32 @@ type SensorFn<C = unknown, Custom = Record<never, never>> = <E extends string, R
   handler: (state: DeepReadonly<C>, ...args: HandlerArgs<E, Custom>) => R | Promise<R>,
 ) => void
 
-// A custom parameter type, declared inline in `defineState` so its transformer's
-// return type can be captured for inference (and registered for matching).
-type ParamTypeDef<T> = {
+// A custom parameter type, declared inline in `defineState` so its parse
+// function's return type can be captured for inference (and registered for
+// matching). `parse` is optional — omitted, the parameter is the matched
+// text. `format` is the inverse: value → the document's notation, used only
+// to display the actual side of a parameter mismatch.
+//
+// `format` is contravariant in its value, so a plain `ParamTypeDef<unknown>`
+// bound would reject `(m: Money) => string`. The constraint is therefore
+// SELF-REFERENTIAL (`P extends { [K in keyof P]: ParamTypeDefOf<P[K]> }`):
+// each def's `format` parameter is tied to that same def's `parse` return,
+// which both checks the pairing and contextually types an unannotated
+// `format: (m) => …`.
+type ParamTypeDefOf<D> = {
   readonly regexp: RegExp | ReadonlyArray<RegExp>
-  readonly transformer: (...captures: string[]) => T
+  readonly parse?: (...captures: string[]) => unknown
+  readonly format?: (
+    value: D extends { parse: (...captures: string[]) => infer T } ? T : string,
+  ) => string
 }
 
 // Record of parameter-type definitions → `{ name: producedType }`, the custom
 // registry that drives `{name}` → type inference for this stepfile's steps.
-type CustomRegistry<P> = { [K in keyof P]: P[K] extends ParamTypeDef<infer T> ? T : never }
+// No parse function means the parameter stays the matched text: string.
+type CustomRegistry<P> = {
+  [K in keyof P]: P[K] extends { parse: (...captures: string[]) => infer T } ? T : string
+}
 
 // The factory is OPTIONAL: a step file whose steps are pure (nothing to
 // arrange, nothing to evolve) calls `defineState()` bare and its handlers
@@ -156,7 +173,7 @@ type CustomRegistry<P> = { [K in keyof P]: P[K] extends ParamTypeDef<infer T> ? 
 // stimulus can only return `{}`/nothing and a sensor can't read phantom fields.
 export function defineState<
   C = Record<string, never>,
-  P extends Record<string, ParamTypeDef<unknown>> = Record<never, never>,
+  P extends { [K in keyof P]: ParamTypeDefOf<P[K]> } = Record<never, never>,
 >(
   factory?: () => C | Promise<C>,
   paramTypes?: P,
@@ -170,8 +187,17 @@ export function defineState<
   }
   contextFactoriesByFile.set(sourceFile, (factory ?? (() => ({}))) as () => unknown)
   if (paramTypes) {
-    for (const [name, def] of Object.entries(paramTypes)) {
-      customTypes.push({ name, regexp: def.regexp, transformer: def.transformer })
+    // The self-referential bound on P (see ParamTypeDefOf) has no string
+    // index, so Object.entries types values as unknown — reassert the
+    // runtime shape, which every P member satisfies by construction.
+    const defs = paramTypes as Record<string, Omit<CustomTypeDef, 'name'>>
+    for (const [name, def] of Object.entries(defs)) {
+      customTypes.push({
+        name,
+        regexp: def.regexp,
+        ...(def.parse ? { parse: def.parse } : {}),
+        ...(def.format ? { format: def.format } : {}),
+      })
     }
   }
   return {
@@ -193,7 +219,8 @@ export function buildRegistry(): Registry {
     r = defineParameterTypeCore(r, {
       name: t.name,
       regexp: t.regexp as RegExp | ReadonlyArray<RegExp>,
-      transformer: t.transformer,
+      ...(t.parse ? { parse: t.parse } : {}),
+      ...(t.format ? { format: t.format } : {}),
     })
   }
   for (const e of steps) {

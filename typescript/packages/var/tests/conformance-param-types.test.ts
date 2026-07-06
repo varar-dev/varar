@@ -5,7 +5,7 @@ import { _customParameterTypes, _resetBuilder } from '../src/registry.ts'
 test('_customParameterTypes projects name and regexp source', () => {
   _resetBuilder()
   defineState(() => ({}), {
-    airport: { regexp: /[A-Z]{3}/, transformer: (code: string) => code.toLowerCase() },
+    airport: { regexp: /[A-Z]{3}/, parse: (code: string) => code.toLowerCase() },
   })
   expect(_customParameterTypes()).toEqual([{ name: 'airport', regexp: '[A-Z]{3}' }])
   _resetBuilder()
@@ -15,7 +15,7 @@ test('_customParameterTypes projects name and regexp source', () => {
 test('_customParameterTypes rejects the regexp-array form for now', () => {
   _resetBuilder()
   defineState(() => ({}), {
-    code: { regexp: [/[A-Z]{3}/, /[0-9]{3}/], transformer: (c: string) => c },
+    code: { regexp: [/[A-Z]{3}/, /[0-9]{3}/], parse: (c: string) => c },
   })
   expect(() => _customParameterTypes()).toThrowError(/not supported/i)
   _resetBuilder()

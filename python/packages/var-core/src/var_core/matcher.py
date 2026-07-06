@@ -48,6 +48,10 @@ class Hit:
     match_end: int  # UTF-16 offset in sentence
     args: tuple  # matched argument values (typed by their ParameterType)
     param_spans: tuple[ParamSpan, ...]  # UTF-16 spans per captured parameter
+    # Each captured argument's parameter-type display formatter (or None),
+    # aligned 1:1 with args. Resolved here because only the matcher sees
+    # which parameter type produced each argument.
+    formats: tuple = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -127,6 +131,10 @@ def find_hits(sentence: str, registry: Registry) -> tuple[Hit, ...]:
 
             # Build args tuple
             args: tuple = tuple(arg.value for arg in (arguments or []))
+            formats: tuple = tuple(
+                registry.formats.get(arg.parameter_type.name)
+                for arg in (arguments or [])
+            )
 
             # Build param_spans — convert code-point group offsets to UTF-16.
             param_spans: list[ParamSpan] = []
@@ -155,6 +163,7 @@ def find_hits(sentence: str, registry: Registry) -> tuple[Hit, ...]:
                     match_end=to_utf16_offset(sentence, m.end()),
                     args=args,
                     param_spans=tuple(param_spans),
+                    formats=formats,
                 )
             )
 

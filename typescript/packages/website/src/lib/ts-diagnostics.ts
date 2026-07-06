@@ -49,9 +49,9 @@ const AMBIENT = `declare module '@oselvar/var' {
     expression: E,
     handler: (state: DeepReadonly<C>, ...args: HandlerArgs<E, Custom>) => R | Promise<R>,
   ) => void
-  type ParamTypeDef<T> = { regexp: RegExp | readonly RegExp[]; transformer: (...captures: string[]) => T }
-  type CustomRegistry<P> = { [K in keyof P]: P[K] extends ParamTypeDef<infer T> ? T : never }
-  export function defineState<C = Record<string, never>, P extends Record<string, ParamTypeDef<unknown>> = Record<never, never>>(
+  type ParamTypeDefOf<D> = { regexp: RegExp | readonly RegExp[]; parse?: (...captures: string[]) => unknown; format?: (value: D extends { parse: (...captures: string[]) => infer T } ? T : string) => string }
+  type CustomRegistry<P> = { [K in keyof P]: P[K] extends { parse: (...captures: string[]) => infer T } ? T : string }
+  export function defineState<C = Record<string, never>, P extends { [K in keyof P]: ParamTypeDefOf<P[K]> } = Record<never, never>>(
     factory?: () => C | Promise<C>,
     paramTypes?: P,
   ): {

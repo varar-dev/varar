@@ -1,5 +1,5 @@
 import { defineState } from '@oselvar/var'
-import { FEE_PENCE_PER_DAY, type Loan, lateFee, mayBorrow } from './library'
+import { addMoney, FEE_PER_DAY, GBP, type Loan, lateFee, type Money, mayBorrow } from './library'
 
 const MONTHS = [
   'January',
@@ -16,17 +16,17 @@ const MONTHS = [
   'December',
 ] as const
 
-// Custom parameter types are declared inline so their transformer return types
-// flow into the steps: {date} → Date, {money} → pence, {title} → string. The
+// Custom parameter types are declared inline so their parse return types
+// flow into the steps: {date} → Date, {money} → Money, {title} → string. The
 // step handlers below need no argument annotations as a result.
 const { stimulus, sensor } = defineState(
-  () => ({ loans: [] as ReadonlyArray<Loan>, feePence: 0, granted: false }),
+  () => ({ loans: [] as ReadonlyArray<Loan>, fee: GBP(0), granted: false }),
   {
     date: {
       // June 6th → the ISO date 2026-06-06 (the spec's year is 2026)
       regexp:
         /(?:January|February|March|April|May|June|July|August|September|October|November|December) \d{1,2}(?:st|nd|rd|th)/,
-      transformer: (raw: string) => {
+      parse: (raw: string) => {
         const [month = '', day = ''] = raw.split(' ')
         const mm = String(MONTHS.indexOf(month as (typeof MONTHS)[number]) + 1).padStart(2, '0')
         const dd = String(Number.parseInt(day, 10)).padStart(2, '0')
@@ -34,16 +34,22 @@ const { stimulus, sensor } = defineState(
       },
     },
     money: {
-      // £2.50 and 50p, both as pence
-      regexp: /£\d+(?:\.\d{2})?|\d+p/,
-      transformer: (raw: string) =>
-        raw.startsWith('£') ? Math.round(Number(raw.slice(1)) * 100) : Number.parseInt(raw, 10),
+      // £2.50 and 50p, both as GBP Money. The amount is cucumber-expressions'
+      // float regexp, minus the scientific notation.
+      regexp: /£(?=.*\d.*)[-+]?\d*(?:\.(?=\d.*))?\d*|\d+p/,
+      parse: (raw: string): Money =>
+        raw.endsWith('p')
+          ? GBP(Number.parseFloat(raw) / 100)
+          : GBP(Number.parseFloat(raw.slice(1))),
+      // The inverse: mismatches render as £2.60 / 50p, not as a Money dump.
+      format: (m: Money) =>
+        m.value < 1 ? `${Math.round(m.value * 100)}p` : `£${m.value.toFixed(2)}`,
     },
     title: {
       // Emphasis (*Emma*) is stripped before matching, so a title is a
       // Title Case run in the plain prose
       regexp: /[A-Z][a-z]+(?: [A-Z][a-z]+)*/,
-      transformer: (raw: string) => raw,
+      parse: (raw: string) => raw,
     },
   },
 )
@@ -53,12 +59,12 @@ stimulus('borrowed {title}, due back on {date}', (state, title, due) => ({
 }))
 
 stimulus('returns it on {date}', (state, returnedOn) => ({
-  feePence: state.loans.reduce((fee, loan) => fee + lateFee(loan, returnedOn), 0),
+  fee: state.loans.reduce((fee, loan) => addMoney(fee, lateFee(loan, returnedOn)), GBP(0)),
 }))
 
-sensor('owes a {money} late fee', (state) => state.feePence)
+sensor('owes a {money} late fee', (state) => state.fee)
 
-sensor('{money} for each day overdue', () => FEE_PENCE_PER_DAY)
+sensor('{money} for each day overdue', () => FEE_PER_DAY)
 
 stimulus('asks to borrow {title} on {date}', (state, _title, on) => ({
   granted: mayBorrow(state.loans, on),

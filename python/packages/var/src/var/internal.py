@@ -65,7 +65,8 @@ def define_state(
                 {
                     "name": name,
                     "regexp": defn["regexp"],
-                    "transformer": defn.get("transformer"),
+                    "parse": defn.get("parse"),
+                    "format": defn.get("format"),
                 }
             )
 
@@ -115,8 +116,10 @@ def build_registry() -> Registry:
     r = create_registry()
     for t in _custom_types:
         kwargs: dict[str, Any] = {"name": t["name"], "regexp": t["regexp"]}
-        if t.get("transformer") is not None:
-            kwargs["transformer"] = t["transformer"]
+        if t.get("parse") is not None:
+            kwargs["parse"] = t["parse"]
+        if t.get("format") is not None:
+            kwargs["format"] = t["format"]
         r = define_parameter_type(r, **kwargs)
     for e in _steps:
         r = add_step(

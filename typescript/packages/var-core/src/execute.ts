@@ -156,6 +156,7 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
                   step.args,
                   step.paramSpans,
                   sourceTexts,
+                  step.formats,
                 ).filter((d) => !d.ok)
                 if (paramDiffs.length > 0) throw new CellMismatchError(paramDiffs)
                 // Trailing table / doc string occupies the last slot.

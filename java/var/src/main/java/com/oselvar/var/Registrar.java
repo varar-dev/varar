@@ -61,9 +61,25 @@ public interface Registrar {
      *
      * @param name the {@code {name}} placeholder this type matches
      * @param regexp the pattern a placeholder occurrence must match
-     * @param transformer maps the matched capture group(s) to the argument value a
+     * @param parse maps the matched capture group(s) to the argument value a
      *     handler receives for this placeholder
-     * @param <T> the type the transformer produces
+     * @param <T> the type {@code parse} produces
      */
-    <T> void defineParameterType(String name, Pattern regexp, Function<String[], T> transformer);
+    <T> void defineParameterType(String name, Pattern regexp, Function<String[], T> parse);
+
+    /**
+     * As {@link #defineParameterType(String, Pattern, Function)}, additionally declaring
+     * {@code format} — the inverse of {@code parse}, rendering a value of this type back
+     * in the document's notation. Display-only: when a sensor's returned value mismatches
+     * a transformed inline parameter, the failure's expected/actual strings render
+     * through {@code format}; it never affects matching or the comparison verdict.
+     *
+     * @param name the {@code {name}} placeholder this type matches
+     * @param regexp the pattern a placeholder occurrence must match
+     * @param parse maps the matched capture group(s) to the argument value a
+     *     handler receives for this placeholder
+     * @param format renders a value of this type in the document's notation
+     * @param <T> the type {@code parse} produces and {@code format} renders
+     */
+    <T> void defineParameterType(String name, Pattern regexp, Function<String[], T> parse, Function<T, String> format);
 }

@@ -1,12 +1,12 @@
 from var import define_state
 
-# Custom {airport} parameter type: IATA code, lowercased by the transformer.
+# Custom {airport} parameter type: IATA code, lowercased by the parse function.
 # The lowercasing is asserted by the sensor (the .md says "lhr"), so an
-# identity transformer fails this bundle — proving transformers execute.
+# identity parse fails this bundle — proving parse functions execute.
 stimulus, sensor = define_state(
     lambda: {},
     param_types={
-        "airport": {"regexp": "[A-Z]{3}", "transformer": lambda code: code.lower()}
+        "airport": {"regexp": "[A-Z]{3}", "parse": lambda code: code.lower()}
     },
 )
 

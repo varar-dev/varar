@@ -45,6 +45,9 @@ class PlannedStep:
     param_spans: tuple[Span, ...]
     step_def: StepRegistration
     args: tuple
+    # Per-argument display formatters from the matched parameter types,
+    # aligned with args. Presentation only — see param_diff.py.
+    formats: tuple = ()
     data_table: Table | None = None
     doc_string: DocString | None = None
 
@@ -166,6 +169,7 @@ def _plan_block(text: str, registry: Registry) -> _BlockPlan:
                         )
                         for p in h.param_spans
                     ),
+                    formats=h.formats,
                 )
             )
         resolved = resolve_hits(tuple(adjusted))
@@ -338,6 +342,7 @@ def plan(var_doc: VarDoc, registry: Registry) -> ExecutionPlan:
                         ),
                         step_def=hit.step_def,
                         args=hit.args,
+                        formats=hit.formats,
                     )
                     for hit in result.steps
                 ]
@@ -366,6 +371,7 @@ def plan(var_doc: VarDoc, registry: Registry) -> ExecutionPlan:
                     param_spans=binding_step.param_spans,
                     step_def=binding_step.step_def,
                     args=(*binding_step.args, row_object),
+                    formats=binding_step.formats,
                 )
                 row_checks = tuple(
                     RowCheck(
@@ -445,6 +451,7 @@ def plan(var_doc: VarDoc, registry: Registry) -> ExecutionPlan:
                             param_spans=step.param_spans,
                             step_def=step.step_def,
                             args=step.args,
+                            formats=step.formats,
                             data_table=data_table,
                             doc_string=doc_string,
                         )

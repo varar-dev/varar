@@ -7,8 +7,10 @@ import io.cucumber.cucumberexpressions.ParameterType;
 import io.cucumber.cucumberexpressions.ParameterTypeRegistry;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
@@ -40,11 +42,13 @@ import java.util.regex.Pattern;
 public record Registry(
         List<StepRegistration> steps,
         ParameterTypeRegistry parameterTypes,
-        List<CustomParameterType> customParameterTypes) {
+        List<CustomParameterType> customParameterTypes,
+        Map<String, Function<Object, String>> formats) {
 
     public Registry {
         steps = List.copyOf(steps);
         customParameterTypes = List.copyOf(customParameterTypes);
+        formats = Map.copyOf(formats);
     }
 
     /**
@@ -70,7 +74,7 @@ public record Registry(
 
     /** An empty registry with a fresh default {@link ParameterTypeRegistry}. */
     public static Registry createRegistry() {
-        return new Registry(List.of(), new ParameterTypeRegistry(Locale.ENGLISH), List.of());
+        return new Registry(List.of(), new ParameterTypeRegistry(Locale.ENGLISH), List.of(), Map.of());
     }
 
     /**
@@ -105,7 +109,7 @@ public record Registry(
         Expression compiled = new ExpressionFactory(registry.parameterTypes()).createExpression(expression);
         List<StepRegistration> next = new ArrayList<>(registry.steps());
         next.add(new StepRegistration(expression, expressionSourceFile, expressionSourceLine, handler, compiled, kind));
-        return new Registry(next, registry.parameterTypes(), registry.customParameterTypes());
+        return new Registry(next, registry.parameterTypes(), registry.customParameterTypes(), registry.formats());
     }
 
     /**
@@ -117,12 +121,31 @@ public record Registry(
      * every step subsequently compiled against this registry — but callers MUST use the
      * returned {@link Registry} (not the argument) to observe the tracked custom type.
      *
-     * @param transformer maps the matched capture group(s) to the argument value; unlike
+     * @param parse maps the matched capture group(s) to the argument value; unlike
      *     TS/Python there is no implicit identity default — callers pass one explicitly
      */
     public static <T> Registry defineParameterType(
-            Registry registry, String name, Pattern regexp, Function<String[], T> transformer) {
-        CaptureGroupTransformer<T> adapted = groups -> transformer.apply(groups);
+            Registry registry, String name, Pattern regexp, Function<String[], T> parse) {
+        return defineParameterType(registry, name, regexp, parse, null);
+    }
+
+    /**
+     * As {@link #defineParameterType(Registry, String, Pattern, Function)}, additionally
+     * retaining {@code format} — the inverse of {@code parse}, rendering a value back in
+     * the document's notation. Display-only: it is consulted solely when a sensor's
+     * returned value mismatches a transformed inline parameter (see {@link ParamDiff});
+     * it never influences matching or the comparison verdict. Kept in a parallel
+     * name-keyed map on this record because the underlying {@code cucumber-expressions}
+     * {@link ParameterType} cannot carry it — mirroring the TS port's {@code formats}
+     * map beside its {@code ParameterTypeRegistry}.
+     *
+     * @param parse maps the matched capture group(s) to the argument value
+     * @param format renders a value of this type in the document's notation; {@code
+     *     null} means no formatter (mismatches fall back to the generic rendering chain)
+     */
+    public static <T> Registry defineParameterType(
+            Registry registry, String name, Pattern regexp, Function<String[], T> parse, Function<T, String> format) {
+        CaptureGroupTransformer<T> adapted = groups -> parse.apply(groups);
         // TS passes `null` for `type` (a JS ParameterType tolerates it, deanonymizing
         // later); this library's constructor `Objects.requireNonNull`s it (confirmed via
         // decompiled bytecode) — `Object.class` is the same stand-in the library's own
@@ -138,6 +161,14 @@ public record Registry(
         registry.parameterTypes().defineParameterType(parameterType);
         List<CustomParameterType> recorded = new ArrayList<>(registry.customParameterTypes());
         recorded.add(new CustomParameterType(name, regexp.pattern()));
-        return new Registry(registry.steps(), registry.parameterTypes(), recorded);
+        Map<String, Function<Object, String>> formats = registry.formats();
+        if (format != null) {
+            Map<String, Function<Object, String>> next = new LinkedHashMap<>(registry.formats());
+            @SuppressWarnings("unchecked")
+            Function<Object, String> erased = (Function<Object, String>) format;
+            next.put(name, erased);
+            formats = next;
+        }
+        return new Registry(registry.steps(), registry.parameterTypes(), recorded, formats);
     }
 }

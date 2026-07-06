@@ -11,6 +11,7 @@ import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -110,6 +111,7 @@ public final class StepLoader {
     public static LoadedSteps loadSteps(List<String> stepClassNames, ClassLoader loader) {
         List<Registry.StepRegistration> mergedSteps = new ArrayList<>();
         List<Registry.CustomParameterType> mergedCustomParameterTypes = new ArrayList<>();
+        Map<String, Function<Object, String>> mergedFormats = new LinkedHashMap<>();
         ParameterTypeRegistry parameterTypes = null;
         Map<String, Supplier<? extends State>> factoriesByFile = new HashMap<>();
 
@@ -134,6 +136,9 @@ public final class StepLoader {
                     requireNoDuplicateParameterTypeName(mergedCustomParameterTypes, cpt);
                     mergedCustomParameterTypes.add(cpt);
                 }
+                // Display formatters are keyed by type name; duplicate names were
+                // rejected just above, so this union never overwrites an entry.
+                mergedFormats.putAll(own.formats());
 
                 if (!own.steps().isEmpty()) {
                     String file = own.steps().get(0).expressionSourceFile();
@@ -159,7 +164,8 @@ public final class StepLoader {
                 parameterTypes != null
                         ? parameterTypes
                         : Registry.createRegistry().parameterTypes(),
-                mergedCustomParameterTypes);
+                mergedCustomParameterTypes,
+                mergedFormats);
         Map<String, Supplier<? extends State>> resolvedFactories = Map.copyOf(factoriesByFile);
         Function<String, Object> createContext = file -> {
             Supplier<? extends State> factory = resolvedFactories.get(file);

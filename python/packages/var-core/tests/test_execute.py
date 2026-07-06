@@ -983,7 +983,7 @@ def test_single_parameter_transforming_to_a_list_is_deep_compared_bare() -> None
             r,
             name="numbers",
             regexp=r"\d+(?:, \d+)*",
-            transformer=lambda raw: [int(n) for n in raw.split(", ")],
+            parse=lambda raw: [int(n) for n in raw.split(", ")],
         )
         return add_step(
             r,

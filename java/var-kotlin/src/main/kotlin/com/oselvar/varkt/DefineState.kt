@@ -87,13 +87,37 @@ internal constructor(
      * Registers a custom cucumber-expression parameter type. Must appear BEFORE any step whose
      * expression uses `{name}` — the underlying registrar compiles each expression eagerly against
      * the types registered so far (same ordering rule as the Java author API).
+     *
+     * [parse] turns the matched text into the value handlers receive; the optional [format] is its
+     * inverse — value back to the document's notation — used only to render the actual side of a
+     * parameter mismatch, never for matching or the comparison verdict. [format] is a named
+     * parameter before the trailing [parse] lambda:
+     * ```kotlin
+     * parameterType("money", Regex("""£\d+\.\d{2}"""), format = { "£%.2f".format(it.value) }) {
+     *     groups -> Money.gbp(groups[0].substring(1).toBigDecimal())
+     * }
+     * ```
      */
-    fun parameterType(name: String, regexp: Regex, transformer: (Array<String>) -> Any?) {
-        registrar.defineParameterType(
-            name,
-            regexp.toPattern(),
-            Function<Array<String>, Any?> { captures -> transformer(captures) },
-        )
+    fun <T> parameterType(
+        name: String,
+        regexp: Regex,
+        format: ((T) -> String)? = null,
+        parse: (Array<String>) -> T,
+    ) {
+        if (format == null) {
+            registrar.defineParameterType(
+                name,
+                regexp.toPattern(),
+                Function<Array<String>, T> { captures -> parse(captures) },
+            )
+        } else {
+            registrar.defineParameterType(
+                name,
+                regexp.toPattern(),
+                Function<Array<String>, T> { captures -> parse(captures) },
+                Function<T, String> { value -> format(value) },
+            )
+        }
     }
 }
 

@@ -11,8 +11,8 @@ import java.util.regex.Pattern;
  * Java sibling of {@code airports.steps.ts}/{@code airports.steps.py}/{@code
  * airports.steps.kt} (bundle {@code 13-custom-parameter-type}) — the first fixture
  * exercising {@link Registrar#defineParameterType}: a custom {@code {airport}} type
- * (IATA code, lowercased by the transformer). The lowercasing is asserted by the
- * sensor (the .md says "lhr"), so an identity transformer fails this bundle. The
+ * (IATA code, lowercased by the parse function). The lowercasing is asserted by the
+ * sensor (the .md says "lhr"), so an identity parse fails this bundle. The
  * parameter type MUST be registered before the steps — expressions compile eagerly.
  */
 public final class AirportsSteps implements StepDefinitions {

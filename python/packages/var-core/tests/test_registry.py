@@ -45,13 +45,13 @@ def test_define_parameter_type_makes_custom_type_available() -> None:
     assert len(r2.steps) == 1
 
 
-def test_define_parameter_type_transformer_applied_at_runtime() -> None:
+def test_define_parameter_type_parse_applied_at_runtime() -> None:
     r = create_registry()
     r = define_parameter_type(
         r,
         name="airport",
         regexp=re.compile(r"[A-Z]{3}"),
-        transformer=lambda raw: raw.lower(),
+        parse=lambda raw: raw.lower(),
     )
     r = add_step(
         r,

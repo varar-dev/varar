@@ -198,7 +198,7 @@ test('a single parameter whose type transforms to an array is deep-compared bare
     const withType = defineParameterType(r, {
       name: 'numbers',
       regexp: /\d+(?:, \d+)*/,
-      transformer: (raw: string) => raw.split(', ').map(Number),
+      parse: (raw: string) => raw.split(', ').map(Number),
     })
     return addStep(withType, {
       expression: 'The dice show {numbers}',

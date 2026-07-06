@@ -1,4 +1,4 @@
-import type { Registry, StepRegistration } from './registry.ts'
+import type { ParameterFormat, Registry, StepRegistration } from './registry.ts'
 
 export type ParamSpan = { readonly start: number; readonly end: number }
 
@@ -9,6 +9,10 @@ export type Hit = {
   readonly matchEnd: number
   readonly args: ReadonlyArray<unknown>
   readonly paramSpans: ReadonlyArray<ParamSpan>
+  // Each captured argument's parameter-type display formatter (or undefined),
+  // aligned 1:1 with `args`. Resolved here because only the matcher sees which
+  // parameter type produced each argument.
+  readonly formats: ReadonlyArray<ParameterFormat | undefined>
 }
 
 export function findHits(sentence: string, registry: Registry): ReadonlyArray<Hit> {
@@ -19,6 +23,7 @@ export function findHits(sentence: string, registry: Registry): ReadonlyArray<Hi
     for (let m = re.exec(sentence); m !== null; m = re.exec(sentence)) {
       const matched = step.compiled.match(m[0])
       const args = matched?.map((a) => a.getValue(undefined)) ?? []
+      const formats = matched?.map((a) => registry.formats.get(a.parameterType.name ?? '')) ?? []
       // Each Argument.group carries the parameter's start/end within m[0];
       // shift by m.index so paramSpans are sentence-relative like matchStart.
       const paramSpans: ParamSpan[] = []
@@ -35,6 +40,7 @@ export function findHits(sentence: string, registry: Registry): ReadonlyArray<Hi
         matchEnd: m.index + m[0].length,
         args,
         paramSpans,
+        formats,
       })
       if (m[0].length === 0) re.lastIndex++
     }

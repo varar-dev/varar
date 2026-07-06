@@ -101,11 +101,11 @@ test('built-in parameter types are inferred from the expression (no annotations)
 
 test('custom parameter types declared in defineState are inferred (Tier 2)', () => {
   // TYPE-LEVEL assertions (fire via tsconfig.tests.json under `pnpm typecheck`).
-  // The transformer return types form the registry: {airport} → string,
+  // The parse return types form the registry: {airport} → string,
   // {date} → Date. Built-ins still resolve alongside them.
   const { stimulus: act, sensor: sense } = defineState(() => ({ from: '' }), {
-    airport: { regexp: /[A-Z]{3}/, transformer: (code: string) => code },
-    date: { regexp: /.+/, transformer: (s: string) => new Date(s) },
+    airport: { regexp: /[A-Z]{3}/, parse: (code: string) => code },
+    date: { regexp: /.+/, parse: (s: string) => new Date(s) },
   })
   act('fly from {airport} to {airport} on {date}', (_ctx, from, to, when) => {
     expectTypeOf(from).toEqualTypeOf<string>()

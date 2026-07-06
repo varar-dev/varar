@@ -52,8 +52,14 @@ public final class RegistryRegistrar implements Registrar {
     }
 
     @Override
-    public <T> void defineParameterType(String name, Pattern regexp, Function<String[], T> transformer) {
-        registry = Registry.defineParameterType(registry, name, regexp, transformer);
+    public <T> void defineParameterType(String name, Pattern regexp, Function<String[], T> parse) {
+        registry = Registry.defineParameterType(registry, name, regexp, parse);
+    }
+
+    @Override
+    public <T> void defineParameterType(
+            String name, Pattern regexp, Function<String[], T> parse, Function<T, String> format) {
+        registry = Registry.defineParameterType(registry, name, regexp, parse, format);
     }
 
     private void register(String expression, StepKind kind, Object handler) {

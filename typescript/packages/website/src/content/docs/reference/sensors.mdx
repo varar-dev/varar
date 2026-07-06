@@ -77,7 +77,7 @@ Kotlin, Python).
 A sensor's **slots** are the values Vár will compare, in order:
 
 1. each parameter captured by the expression (`{int}`, `{word}`, `{string}`,
-   custom types), left to right;
+   [custom types](/reference/custom-parameters/)), left to right;
 2. the trailing data table or doc string, if the step has one (always last, at
    most one).
 
@@ -164,13 +164,13 @@ array — so wrapping it (`return [state.total]`) fails the comparison, because
 `[42]` is not `42`.
 
 This also resolves what would otherwise be an ambiguity with custom parameter
-types whose transformer produces an array:
+types whose `parse` produces an array:
 
 <Tabs syncKey="lang">
   <TabItem label="TypeScript">
     ```ts
     const { sensor } = defineState(() => ({ dice: [5, 6] }), {
-      numbers: { regexp: /\d+(?:, \d+)*/, transformer: (raw) => raw.split(', ').map(Number) },
+      numbers: { regexp: /\d+(?:, \d+)*/, parse: (raw) => raw.split(', ').map(Number) },
     })
 
     // "The dice show 5, 6" — {numbers} transforms to [5, 6]
@@ -210,7 +210,7 @@ types whose transformer produces an array:
         {
             "numbers": {
                 "regexp": r"\d+(?:, \d+)*",
-                "transformer": lambda raw: [int(n) for n in raw.split(", ")],
+                "parse": lambda raw: [int(n) for n in raw.split(", ")],
             }
         },
     )
@@ -296,7 +296,7 @@ last element:
 ## What each slot kind compares
 
 - **Inline parameter** — deep equality against the transformed captured value
-  (so `{int}` compares numbers, a custom type compares whatever its transformer
+  (so `{int}` compares numbers, a custom type compares whatever its parse function
   produced). A mismatch is a `CellMismatchError` anchored to the parameter's
   span in the Markdown.
 - **Whole table** — the returned table (array of row-arrays or row-objects) is

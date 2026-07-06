@@ -11,7 +11,7 @@ def test_projects_name_and_pattern_source():
     define_state(
         lambda: {},
         param_types={
-            "airport": {"regexp": re.compile(r"[A-Z]{3}"), "transformer": lambda code: code.lower()}
+            "airport": {"regexp": re.compile(r"[A-Z]{3}"), "parse": lambda code: code.lower()}
         },
     )
     assert _custom_parameter_types() == [{"name": "airport", "regexp": "[A-Z]{3}"}]

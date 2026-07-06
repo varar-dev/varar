@@ -2,9 +2,9 @@
 
 // Kotlin sibling of airports.steps.ts / airports.steps.py / AirportsSteps.java
 // (bundle 13-custom-parameter-type) — exercises StepsScope.parameterType: a
-// custom {airport} type (IATA code, lowercased by the transformer). The
+// custom {airport} type (IATA code, lowercased by the parse function). The
 // lowercasing is asserted by the sensor (the .md says "lhr"), so an identity
-// transformer fails this bundle. parameterType MUST precede the steps —
+// parse fails this bundle. parameterType MUST precede the steps —
 // expressions compile eagerly.
 package com.oselvar.varkt.conformance.bundle13
 

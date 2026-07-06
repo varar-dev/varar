@@ -1,9 +1,9 @@
 """Registry for step definitions — port of var-core/src/registry.ts."""
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from re import Pattern
-from typing import Any, Callable, Optional, Union
+from typing import Any, Callable, Mapping, Optional, Union
 
 from cucumber_expressions.expression import CucumberExpression
 from cucumber_expressions.parameter_type import ParameterType
@@ -16,6 +16,10 @@ StepHandler = Callable[..., Any]
 
 # Accepted regexp forms for define_parameter_type
 RegexpInput = Union[str, Pattern, list[Union[str, Pattern]]]
+
+# A parameter type's display formatter: value -> the document's notation.
+# Presentation only — never part of matching or comparison verdicts.
+ParameterFormat = Callable[[Any], str]
 
 
 @dataclass(frozen=True)
@@ -32,11 +36,14 @@ class StepRegistration:
 class Registry:
     steps: tuple[StepRegistration, ...]
     parameter_types: ParameterTypeRegistry
+    # Per parameter-type display formatters, keyed by type name. Kept beside
+    # the cucumber-expressions registry because ParameterType can't carry one.
+    formats: Mapping[str, ParameterFormat] = field(default_factory=dict)
 
 
 def create_registry() -> Registry:
     """Return an empty registry with a fresh default ParameterTypeRegistry."""
-    return Registry(steps=(), parameter_types=ParameterTypeRegistry())
+    return Registry(steps=(), parameter_types=ParameterTypeRegistry(), formats={})
 
 
 def add_step(
@@ -71,7 +78,11 @@ def add_step(
         compiled=compiled,
         kind=kind,
     )
-    return Registry(steps=(*registry.steps, reg), parameter_types=registry.parameter_types)
+    return Registry(
+        steps=(*registry.steps, reg),
+        parameter_types=registry.parameter_types,
+        formats=registry.formats,
+    )
 
 
 def define_parameter_type(
@@ -79,9 +90,10 @@ def define_parameter_type(
     *,
     name: str,
     regexp: RegexpInput,
-    transformer: Optional[Callable[..., Any]] = None,
+    parse: Optional[Callable[..., Any]] = None,
     use_for_snippets: bool = True,
     prefer_for_regexp_match: bool = False,
+    format: Optional[ParameterFormat] = None,
 ) -> Registry:
     """Register a custom parameter type with the shared ParameterTypeRegistry.
 
@@ -97,8 +109,8 @@ def define_parameter_type(
     else:
         regexps = list(regexp)
 
-    # Default transformer: identity — return the first (and usually only) group
-    effective_transformer: Callable[..., Any] = transformer if transformer is not None else (
+    # Default parse: identity — return the first (and usually only) group
+    effective_parse: Callable[..., Any] = parse if parse is not None else (
         lambda *groups: groups[0]
     )
 
@@ -106,10 +118,16 @@ def define_parameter_type(
         name,
         regexps,
         None,
-        effective_transformer,
+        effective_parse,
         use_for_snippets,
         prefer_for_regexp_match,
     )
     registry.parameter_types.define_parameter_type(pt)
-    # Return the same object — the mutation is in the ParameterTypeRegistry
-    return registry
+    if format is None:
+        # Return the same object — the mutation is in the ParameterTypeRegistry
+        return registry
+    return Registry(
+        steps=registry.steps,
+        parameter_types=registry.parameter_types,
+        formats={**registry.formats, name: format},
+    )

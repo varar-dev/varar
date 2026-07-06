@@ -2,8 +2,10 @@ package com.oselvar.var.core;
 
 import io.cucumber.cucumberexpressions.Argument;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
@@ -52,17 +54,27 @@ public final class Matcher {
     /** UTF-16 {@code start}/{@code end} of one captured parameter within the sentence. */
     public record ParamSpan(int start, int end) {}
 
-    /** One successful expression match inside a sentence. */
+    /**
+     * One successful expression match inside a sentence. {@code formats} carries each
+     * captured argument's parameter-type display formatter, aligned 1:1 with {@code
+     * args} ({@code null} entries for arguments whose parameter type has none) —
+     * resolved here because only the matcher sees which parameter type produced each
+     * argument. It may contain {@code null}s, so it is defensively copied via {@link
+     * Collections#unmodifiableList} rather than {@code List.copyOf} (which rejects
+     * nulls).
+     */
     public record Hit(
             String expression,
             Registry.StepRegistration stepDef,
             int matchStart,
             int matchEnd,
             List<Object> args,
-            List<ParamSpan> paramSpans) {
+            List<ParamSpan> paramSpans,
+            List<Function<Object, String>> formats) {
         public Hit {
             args = List.copyOf(args);
             paramSpans = List.copyOf(paramSpans);
+            formats = Collections.unmodifiableList(new ArrayList<>(formats));
         }
     }
 
@@ -111,8 +123,10 @@ public final class Matcher {
 
                 List<Object> args = new ArrayList<>(arguments.size());
                 List<ParamSpan> paramSpans = new ArrayList<>();
+                List<Function<Object, String>> formats = new ArrayList<>(arguments.size());
                 for (Argument<?> arg : arguments) {
                     args.add(arg.getValue());
+                    formats.add(registry.formats().get(arg.getParameterType().getName()));
                     int start = arg.getGroup().getStart();
                     int end = arg.getGroup().getEnd();
                     if (start >= 0 && end >= 0) {
@@ -121,7 +135,13 @@ public final class Matcher {
                 }
 
                 hits.add(new Hit(
-                        step.expression(), step, scan.start(), scan.start() + matchedText.length(), args, paramSpans));
+                        step.expression(),
+                        step,
+                        scan.start(),
+                        scan.start() + matchedText.length(),
+                        args,
+                        paramSpans,
+                        formats));
             }
         }
         return List.copyOf(hits);

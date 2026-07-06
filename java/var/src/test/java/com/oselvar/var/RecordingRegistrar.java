@@ -17,7 +17,8 @@ final class RecordingRegistrar implements Registrar {
 
     record Registration(String expression, StepKind kind, Object handler, String sourceFile, int sourceLine) {}
 
-    record ParamTypeRegistration(String name, Pattern regexp, Function<String[], ?> transformer) {}
+    record ParamTypeRegistration(
+            String name, Pattern regexp, Function<String[], ?> parse, Function<?, String> format) {}
 
     private final List<Registration> steps = new ArrayList<>();
     private final List<Supplier<? extends State>> factories = new ArrayList<>();
@@ -42,8 +43,14 @@ final class RecordingRegistrar implements Registrar {
     }
 
     @Override
-    public <T> void defineParameterType(String name, Pattern regexp, Function<String[], T> transformer) {
-        paramTypes.add(new ParamTypeRegistration(name, regexp, transformer));
+    public <T> void defineParameterType(String name, Pattern regexp, Function<String[], T> parse) {
+        paramTypes.add(new ParamTypeRegistration(name, regexp, parse, null));
+    }
+
+    @Override
+    public <T> void defineParameterType(
+            String name, Pattern regexp, Function<String[], T> parse, Function<T, String> format) {
+        paramTypes.add(new ParamTypeRegistration(name, regexp, parse, format));
     }
 
     private void record(String expression, StepKind kind, Object handler) {

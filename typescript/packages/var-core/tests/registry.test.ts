@@ -42,7 +42,7 @@ test('defineParameterType returned step actually matches the regex at runtime', 
   r = defineParameterType(r, {
     name: 'airport',
     regexp: /[A-Z]{3}/,
-    transformer: (raw) => raw.toLowerCase(),
+    parse: (raw) => raw.toLowerCase(),
   })
   r = addStep(r, {
     expression: 'I fly to {airport}',

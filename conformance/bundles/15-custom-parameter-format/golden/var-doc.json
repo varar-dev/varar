@@ -1,0 +1,124 @@
+{
+  "examples": [
+    {
+      "body": [
+        {
+          "inlineMap": [
+            {
+              "sourceOffset": 72,
+              "textOffset": 0
+            },
+            {
+              "sourceOffset": 73,
+              "textOffset": 1
+            },
+            {
+              "sourceOffset": 74,
+              "textOffset": 2
+            },
+            {
+              "sourceOffset": 75,
+              "textOffset": 3
+            },
+            {
+              "sourceOffset": 76,
+              "textOffset": 4
+            },
+            {
+              "sourceOffset": 77,
+              "textOffset": 5
+            },
+            {
+              "sourceOffset": 78,
+              "textOffset": 6
+            },
+            {
+              "sourceOffset": 79,
+              "textOffset": 7
+            },
+            {
+              "sourceOffset": 80,
+              "textOffset": 8
+            },
+            {
+              "sourceOffset": 81,
+              "textOffset": 9
+            },
+            {
+              "sourceOffset": 82,
+              "textOffset": 10
+            },
+            {
+              "sourceOffset": 83,
+              "textOffset": 11
+            },
+            {
+              "sourceOffset": 84,
+              "textOffset": 12
+            },
+            {
+              "sourceOffset": 85,
+              "textOffset": 13
+            },
+            {
+              "sourceOffset": 86,
+              "textOffset": 14
+            },
+            {
+              "sourceOffset": 87,
+              "textOffset": 15
+            },
+            {
+              "sourceOffset": 88,
+              "textOffset": 16
+            },
+            {
+              "sourceOffset": 89,
+              "textOffset": 17
+            },
+            {
+              "sourceOffset": 90,
+              "textOffset": 18
+            },
+            {
+              "sourceOffset": 91,
+              "textOffset": 19
+            },
+            {
+              "sourceOffset": 92,
+              "textOffset": 20
+            },
+            {
+              "sourceOffset": 93,
+              "textOffset": 21
+            }
+          ],
+          "kind": "paragraph",
+          "span": {
+            "endCol": 23,
+            "endLine": 5,
+            "endOffset": 94,
+            "startCol": 1,
+            "startLine": 5,
+            "startOffset": 72
+          },
+          "text": "The late fee is £2.55."
+        }
+      ],
+      "scopeStack": [
+        "Custom parameter format",
+        "A wrong fee renders in document notation"
+      ],
+      "span": {
+        "endCol": 23,
+        "endLine": 5,
+        "endOffset": 94,
+        "startCol": 1,
+        "startLine": 5,
+        "startOffset": 72
+      }
+    }
+  ],
+  "orphanAttachments": [],
+  "path": "example.md"
+}

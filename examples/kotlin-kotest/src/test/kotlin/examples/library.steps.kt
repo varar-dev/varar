@@ -6,6 +6,7 @@ import com.oselvar.varkt.defineState
 import com.oselvar.varkt.sensor
 import com.oselvar.varkt.stimulus
 import java.time.LocalDate
+import java.util.Locale
 
 data class LibraryCtx(
     val loans: List<Loan> = emptyList(),
@@ -52,7 +53,16 @@ val librarySteps =
         ) { groups ->
             toDate(groups[0])
         }
-        parameterType("money", Regex("£\\d+(?:\\.\\d{2})?|\\d+p")) { groups -> toPence(groups[0]) }
+        parameterType(
+            "money",
+            Regex("£\\d+(?:\\.\\d{2})?|\\d+p"),
+            // The inverse: mismatches render as £2.60 / 50p, not a bare pence int.
+            format = { pence ->
+                if (pence < 100) "${pence}p" else "£%.2f".format(Locale.ROOT, pence / 100.0)
+            },
+        ) { groups ->
+            toPence(groups[0])
+        }
         // Emphasis (*Emma*) is stripped before matching, so a title is a
         // Title Case run in the plain prose.
         parameterType("title", Regex("[A-Z][a-z]+(?: [A-Z][a-z]+)*")) { groups -> groups[0] }

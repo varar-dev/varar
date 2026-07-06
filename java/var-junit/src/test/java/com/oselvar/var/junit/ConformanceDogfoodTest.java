@@ -150,7 +150,13 @@ class ConformanceDogfoodTest {
                                 "13-custom-parameter-type", "com.oselvar.var.conformance.bundle13.AirportsSteps", 1, 0),
                         // 14-stateless-steps/golden/trace.json: one example, "pass" -- the
                         // step file declares no state factory (factory-less defineState()).
-                        new BundleCase("14-stateless-steps", "com.oselvar.var.conformance.bundle14.SquaresSteps", 1, 0))
+                        new BundleCase("14-stateless-steps", "com.oselvar.var.conformance.bundle14.SquaresSteps", 1, 0),
+                        // 15-custom-parameter-format/golden/trace.json: one example, outcome
+                        // "fail" -- the sensor deliberately returns the wrong Money, so the
+                        // cell mismatch (rendered "£2.60" via the type's format) is a genuine
+                        // failure, no error fence involved.
+                        new BundleCase(
+                                "15-custom-parameter-format", "com.oselvar.var.conformance.bundle15.MoneySteps", 0, 1))
                 .map(bundleCase -> Named.of(bundleCase.bundleName(), bundleCase));
     }
 

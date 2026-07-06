@@ -365,8 +365,8 @@ public final class Execute {
             List<String> sourceTexts = step.paramSpans().stream()
                     .map(s -> source.substring(s.startOffset(), s.endOffset()))
                     .toList();
-            List<CellDiff> diffs =
-                    ParamDiff.compareParams(slots.subList(0, argCount), step.args(), step.paramSpans(), sourceTexts);
+            List<CellDiff> diffs = ParamDiff.compareParams(
+                    slots.subList(0, argCount), step.args(), step.paramSpans(), sourceTexts, step.formats());
             List<CellDiff> bad = diffs.stream().filter(d -> !d.ok()).toList();
             if (!bad.isEmpty()) throw new CellDiff.CellMismatchException(bad);
         }

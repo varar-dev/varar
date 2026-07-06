@@ -1,0 +1,172 @@
+---
+title: Custom Parameters
+description: Declare domain-specific parameter types — regexp, parse and format — and how parameter mismatches are rendered.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components';
+
+A custom parameter lets your prose speak your domain's notation — `£2.55`,
+`June 6th`, `LHR` — while your steps receive real domain values. You declare it
+once, next to the state it belongs to, and every step expression in that file
+can use it as a `{name}` placeholder.
+
+<Tabs syncKey="lang">
+  <TabItem label="TypeScript">
+    ```ts
+    const { stimulus, sensor } = defineState(() => ({ fee: GBP(0) }), {
+      money: {
+        regexp: /£\d+\.\d{2}/,
+        parse: (raw) => GBP(Number.parseFloat(raw.slice(1))),
+        format: (m) => `£${m.value.toFixed(2)}`,
+      },
+    })
+
+    sensor('owes a {money} late fee', (state) => state.fee)
+    ```
+  </TabItem>
+  <TabItem label="Java">
+    ```java
+    // inside defineSteps(Registrar registrar)
+    registrar.defineParameterType(
+            "money",
+            Pattern.compile("£\\d+\\.\\d{2}"),
+            groups -> GBP.of(new BigDecimal(groups[0].substring(1))),
+            money -> "£" + money.value().setScale(2));
+
+    s.sensor("owes a {money} late fee", (Ctx ctx, Money expected) -> ctx.fee());
+    ```
+  </TabItem>
+  <TabItem label="Kotlin">
+    ```kotlin
+    val steps = defineState(::Ctx) {
+        parameterType(
+            "money",
+            Regex("""£\d+\.\d{2}"""),
+            format = { "£%.2f".format(it.value) },
+        ) { groups -> Money.gbp(groups[0].substring(1).toBigDecimal()) }
+
+        sensor("owes a {money} late fee") { _: Money -> fee }
+    }
+    ```
+  </TabItem>
+  <TabItem label="Python">
+    ```python
+    stimulus, sensor = define_state(
+        lambda: {"fee": gbp(0)},
+        {
+            "money": {
+                "regexp": r"£\d+\.\d{2}",
+                "parse": lambda raw: gbp(Decimal(raw[1:])),
+                "format": lambda m: f"£{m.value:.2f}",
+            }
+        },
+    )
+
+
+    @sensor("owes a {money} late fee")
+    def _(state, expected):
+        return state["fee"]
+    ```
+  </TabItem>
+</Tabs>
+
+This page is the reference for the three fields of a custom parameter type and
+for how a parameter mismatch is rendered. The rules are identical in every port
+(TypeScript, Java, Kotlin, Python).
+
+## The three fields
+
+| Field         | Direction         | Role                                                        |
+| ------------- | ----------------- | ----------------------------------------------------------- |
+| `regexp`      | —                 | which spans of prose this parameter matches                 |
+| `parse` | document → value  | turn the matched text into the value your handlers receive  |
+| `format`      | value → document  | turn a value back into the document's notation (mismatch display) |
+
+### `regexp`
+
+The pattern that recognizes the parameter inside a sentence.
+
+- **No capture groups.** The whole match is the parameter. Use non-capturing
+  groups — `(?:st|nd|rd|th)` — where you need alternation or repetition.
+- Matching runs against the plain sentence text, after Markdown emphasis is
+  stripped — `*Emma*` in the document reaches your regexp as `Emma`.
+- The pattern participates in step matching, so keep it anchored to real
+  notation. A pattern that matches everywhere makes every sentence a step
+  candidate.
+
+### `parse`
+
+Turns the matched text into the value your step handlers receive — a number, a
+date, a domain object. If omitted, the parameter is the matched text itself
+(TypeScript and Python; the Java and Kotlin signatures always take one).
+
+In TypeScript, the parse function's return type flows into the handlers: with the
+`money` type above, a handler for `'owes a {money} late fee'` receives a typed
+`Money` argument with no annotation needed.
+
+The transformed value — not the raw text — is what a
+[sensor's](/reference/sensors/) return is deep-compared against.
+
+### `format`
+
+The inverse of `parse`: turns a value back into the document's notation.
+It has exactly one job — rendering the **actual** value when a sensor's return
+doesn't match the document.
+
+Without `format`, a failure has to fall back to a generic rendering of your
+domain object:
+
+```text
+CellMismatchError: arg 1: expected £2.55 but was {"currency":"GBP","value":2.6}
+```
+
+With `format`, both sides of the diff speak the document's language:
+
+```text
+CellMismatchError: arg 1: expected £2.55 but was £2.60
+```
+
+`format` never affects whether a comparison passes — the verdict is always
+deep equality on the transformed values. It only affects how a failure reads.
+
+## How a mismatch is rendered
+
+When a sensor's returned value differs from a transformed parameter, the
+failure carries one span-anchored diff per parameter. The **expected** side is
+always the document's own text at the parameter's span. The **actual** side is
+rendered by the first rule that applies:
+
+1. the parameter type's `format`, when it defines one — the document's
+   notation, identical in every port;
+2. a string value is used as-is;
+3. any other primitive (number, boolean, …) is stringified;
+4. anything else falls back to the port's native rendering —
+   `JSON.stringify` in TypeScript, `repr()` in Python, `toString()` on the
+   JVM. This keeps the message informative, but it is port-specific: if you
+   care how a domain object reads in a failure, give its parameter type a
+   `format`.
+
+Because every diff is anchored to a source span, editors highlight the exact
+failing characters in the Markdown and show the rendered actual value in
+place. Test frameworks that support an expected/actual pair (vitest, for
+example) receive the `format`-rendered strings, so their diff also reads
+`£2.55` vs `£2.60`; only when no `format` exists do they receive the raw
+values instead, so an object mismatch still gets the framework's structural
+`- Expected / + Received` diff rather than two JSON strings.
+
+## Built-in parameter types
+
+The [Cucumber Expressions](https://github.com/cucumber/cucumber-expressions)
+built-ins are always available and need no declaration: `{int}`, `{float}`,
+`{double}`, `{byte}`, `{short}`, `{long}`, `{biginteger}`, `{bigdecimal}`,
+`{word}`, `{string}` and the anonymous `{}`. Each produces the obvious value
+in its port (`{int}` is a `number` in TypeScript, an `Integer` in Java, an
+`Int` in Kotlin, an `int` in Python). Their values are primitives or strings,
+so mismatch rendering never needs a `format` for them.
+
+## Scope
+
+Custom parameter types are declared per step file, alongside
+`defineState` / `define_state` / the registrar. A type declared in one step
+file is not visible to another file's expressions — like state, parameter
+types are a per-file concern.

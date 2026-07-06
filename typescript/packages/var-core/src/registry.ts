@@ -19,13 +19,20 @@ export type StepRegistration = {
   readonly kind?: StepKind
 }
 
+// A parameter type's display formatter: value → the document's notation.
+// Presentation only — never part of matching or comparison verdicts.
+export type ParameterFormat = (value: unknown) => string
+
 export type Registry = {
   readonly steps: ReadonlyArray<StepRegistration>
   readonly parameterTypes: ParameterTypeRegistry
+  // Per parameter-type display formatters, keyed by type name. Kept beside
+  // the cucumber-expressions registry because ParameterType can't carry one.
+  readonly formats: ReadonlyMap<string, ParameterFormat>
 }
 
 export function createRegistry(): Registry {
-  return { steps: [], parameterTypes: new ParameterTypeRegistry() }
+  return { steps: [], parameterTypes: new ParameterTypeRegistry(), formats: new Map() }
 }
 
 export type StepInput = Omit<StepRegistration, 'compiled'>
@@ -39,7 +46,7 @@ export function addStep(registry: Registry, input: StepInput): Registry {
   }
   const compiled = new CucumberExpression(input.expression, registry.parameterTypes)
   const next: StepRegistration = { ...input, compiled }
-  return { steps: [...registry.steps, next], parameterTypes: registry.parameterTypes }
+  return { ...registry, steps: [...registry.steps, next] }
 }
 
 export type ParameterTypeInput<T = unknown> = {
@@ -47,13 +54,16 @@ export type ParameterTypeInput<T = unknown> = {
   readonly regexp: RegExp | string | ReadonlyArray<RegExp | string>
   // Identity by default — turns the matched substring into the handler's
   // argument. Override to coerce (e.g. number, Date, domain object).
-  readonly transformer?: (...groups: string[]) => T
+  readonly parse?: (...groups: string[]) => T
   // Whether this type can be auto-suggested when generating a snippet from
   // arbitrary text. Defaults to true.
   readonly useForSnippets?: boolean
   // Take priority over built-in {string}/{int}/etc. when generating a regex
   // for an existing string match. Rarely needed.
   readonly preferForRegexpMatch?: boolean
+  // Inverse of `parse`: render a value in the document's notation.
+  // Used only to display the actual side of a parameter mismatch.
+  readonly format?: (value: T) => string
 }
 
 export function defineParameterType<T = unknown>(
@@ -66,11 +76,14 @@ export function defineParameterType<T = unknown>(
     input.name,
     input.regexp as RegExp | string | RegExp[] | string[],
     null,
-    input.transformer ?? ((raw: string) => raw as unknown as T),
+    input.parse ?? ((raw: string) => raw as unknown as T),
     input.useForSnippets ?? true,
     input.preferForRegexpMatch ?? false,
     false,
   )
   registry.parameterTypes.defineParameterType(pt)
-  return registry
+  if (!input.format) return registry
+  const formats = new Map(registry.formats)
+  formats.set(input.name, input.format as ParameterFormat)
+  return { ...registry, formats }
 }

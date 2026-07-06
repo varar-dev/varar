@@ -250,6 +250,7 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
                                         list(step.args),
                                         list(step.param_spans),
                                         source_texts,
+                                        list(step.formats),
                                     )
                                     if not d.ok
                                 ]

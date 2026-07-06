@@ -1,0 +1,48 @@
+{
+  "examples": [
+    {
+      "name": "The late fee is £2.55",
+      "outcome": "fail",
+      "steps": [
+        {
+          "contextKey": {
+            "exampleName": "The late fee is £2.55",
+            "stepFile": "money.steps"
+          },
+          "exampleName": "The late fee is £2.55",
+          "failure": {
+            "anchor": {
+              "endCol": 22,
+              "endLine": 5,
+              "endOffset": 93,
+              "startCol": 17,
+              "startLine": 5,
+              "startOffset": 88
+            },
+            "cells": [
+              {
+                "actual": "£2.60",
+                "column": "arg 1",
+                "expected": "£2.55",
+                "span": {
+                  "endCol": 22,
+                  "endLine": 5,
+                  "endOffset": 93,
+                  "startCol": 17,
+                  "startLine": 5,
+                  "startOffset": 88
+                }
+              }
+            ],
+            "kind": "cell-mismatch",
+            "line": 5
+          },
+          "matchedExpression": "The late fee is {money}",
+          "ordinal": 1,
+          "outcome": "fail",
+          "stepText": "The late fee is £2.55"
+        }
+      ]
+    }
+  ]
+}

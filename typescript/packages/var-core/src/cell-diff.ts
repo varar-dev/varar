@@ -15,6 +15,31 @@ export type CellDiff = {
   readonly expected: string
   readonly actual: string
   readonly ok: boolean
+  // The raw pre-display values, present on the inline-parameter path (where
+  // comparison is deep equality over transformed values). Adapters hand them
+  // to their test framework's structural differ; they are never serialized
+  // into run results or conformance artifacts.
+  readonly expectedValue?: unknown
+  readonly actualValue?: unknown
+  // True when the parameter type's `format` rendered `actual` — the display
+  // pair is document notation, and adapters should prefer it over the raw
+  // values in their expected/actual projection.
+  readonly formatted?: boolean
+}
+
+// Display rules 2–4 of the mismatch-rendering chain (rule 1, the parameter
+// type's `format`, applies only on the inline-parameter path — see
+// param-diff.ts): a string as-is, any other primitive stringified, anything
+// else as best-effort JSON. The JSON fallback is port-native and deliberately
+// outside conformance — bundles that pin an object actual must use `format`.
+export function renderCellValue(value: unknown): string {
+  if (typeof value === 'string') return value
+  if (typeof value !== 'object' || value === null) return String(value)
+  try {
+    return JSON.stringify(value) ?? String(value)
+  } catch {
+    return String(value)
+  }
 }
 
 // Compare a row step's returned object against the row's cells. Only columns
@@ -29,7 +54,7 @@ export function compareRow(
   const diffs: CellDiff[] = []
   for (const check of checks) {
     if (!(check.column in obj)) continue
-    const actual = String(obj[check.column])
+    const actual = renderCellValue(obj[check.column])
     diffs.push({
       column: check.column,
       span: check.span,
@@ -114,7 +139,7 @@ export function compareTable(returned: unknown, input: Table): ReadonlyArray<Cel
         actualValue = rec[column]
       }
       const expected = row.cells[j] ?? ''
-      const actual = String(actualValue)
+      const actual = renderCellValue(actualValue)
       diffs.push({
         column,
         span: row.cellSpans[j] ?? row.span,

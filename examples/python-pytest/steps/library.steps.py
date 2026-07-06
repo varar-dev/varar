@@ -39,9 +39,14 @@ stimulus, sensor = define_state(
                 r"|July|August|September|October|November|December)"
                 r" \d{1,2}(?:st|nd|rd|th)"
             ),
-            "transformer": to_date,
+            "parse": to_date,
         },
-        "money": {"regexp": r"£\d+(?:\.\d{2})?|\d+p", "transformer": to_pence},
+        "money": {
+            "regexp": r"£\d+(?:\.\d{2})?|\d+p",
+            "parse": to_pence,
+            # The inverse: mismatches render as £2.60 / 50p, not a bare pence int.
+            "format": lambda pence: f"{pence}p" if pence < 100 else f"£{pence / 100:.2f}",
+        },
         # Emphasis (*Emma*) is stripped before matching, so a title is a
         # Title Case run in the plain prose.
         "title": {"regexp": r"[A-Z][a-z]+(?: [A-Z][a-z]+)*"},

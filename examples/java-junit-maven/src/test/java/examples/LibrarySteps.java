@@ -6,6 +6,7 @@ import com.oselvar.var.StateBinder;
 import com.oselvar.var.StepDefinitions;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -50,7 +51,11 @@ public final class LibrarySteps implements StepDefinitions {
                         + " \\d{1,2}(?:st|nd|rd|th)"),
                 groups -> toDate(groups[0]));
         registrar.defineParameterType(
-                "money", Pattern.compile("£\\d+(?:\\.\\d{2})?|\\d+p"), groups -> toPence(groups[0]));
+                "money",
+                Pattern.compile("£\\d+(?:\\.\\d{2})?|\\d+p"),
+                groups -> toPence(groups[0]),
+                // The inverse: mismatches render as £2.60 / 50p, not a bare pence int.
+                pence -> pence < 100 ? pence + "p" : String.format(Locale.ROOT, "£%.2f", pence / 100.0));
         // Emphasis (*Emma*) is stripped before matching, so a title is a
         // Title Case run in the plain prose.
         registrar.defineParameterType("title", Pattern.compile("[A-Z][a-z]+(?: [A-Z][a-z]+)*"), groups -> groups[0]);
