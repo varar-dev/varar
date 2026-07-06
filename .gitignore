@@ -6,6 +6,10 @@ coverage
 *.timestamp-*
 .superpowers
 .var/
+
+# var.lock.json baselines written by var-cli integration tests (temp fixtures)
+typescript/packages/var-cli/tests/fixtures/run-basic/var.lock.json
+typescript/packages/var-cli/tests/fixtures/drift-tmp-*/
 .claude/*
 !.claude/skills/
 

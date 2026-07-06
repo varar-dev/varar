@@ -24,6 +24,7 @@ async function main(): Promise<void> {
           '',
           'Usage:',
           '  var run [globs]        run markdown spec examples (no test runner)',
+          '  var run --update       accept drift and re-record var.lock.json',
           '  var lint [globs]       check for missing/ambiguous/orphan steps',
           '  var init               scaffold a new project',
           '',
@@ -41,7 +42,7 @@ async function main(): Promise<void> {
       break
     }
     case 'run': {
-      const result = await runRun({ ...io, globs })
+      const result = await runRun({ ...io, globs, update: parsed.flags.update === true })
       process.exitCode = result.exitCode
       break
     }

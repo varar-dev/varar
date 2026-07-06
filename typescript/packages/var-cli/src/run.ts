@@ -1,14 +1,17 @@
 import { readFileSync } from 'node:fs'
-import { relative } from 'node:path'
+import { relative, sep } from 'node:path'
 import { findFiles, loadVarConfig } from '@oselvar/var-config'
-import type { Diagnostic } from '@oselvar/var-core'
-import { examplesWithRuns, loadSteps, planSpec } from '@oselvar/var-runner'
+import { type Diagnostic, driftDiagnostics, reconcileDrift } from '@oselvar/var-core'
+import { createFileBaselineStore, examplesWithRuns, loadSteps, planSpec } from '@oselvar/var-runner'
 
 export type RunOptions = {
   readonly cwd: string
   readonly writeStdout: (s: string) => void
   readonly writeStderr: (s: string) => void
   readonly globs?: ReadonlyArray<string> | undefined
+  // Accept all current drift and re-record the baseline (snapshot-update
+  // semantics). Also enabled by the VAR_UPDATE environment variable.
+  readonly update?: boolean
 }
 
 export type RunResult = { readonly exitCode: number }
@@ -21,6 +24,9 @@ export async function runRun(opts: RunOptions): Promise<RunResult> {
   const varFiles = findFiles(opts.cwd, varGlobs.include, varGlobs.exclude)
 
   const { registry, createContext } = await loadSteps(cfg.steps, opts.cwd)
+  const baselineStore = createFileBaselineStore(opts.cwd)
+  const update =
+    opts.update === true || process.env.VAR_UPDATE === '1' || process.env.VAR_UPDATE === 'true'
 
   let passed = 0
   let failed = 0
@@ -54,6 +60,20 @@ export async function runRun(opts: RunOptions): Promise<RunResult> {
         failed++
       }
     }
+
+    // Reconcile drift against the committed baseline. On a clean run this
+    // records/updates var.lock.json; an unacknowledged drift is reported as an
+    // error diagnostic (non-zero exit) and leaves the baseline untouched.
+    const specPath = rel.split(sep).join('/')
+    const drifts = await reconcileDrift({
+      store: baselineStore,
+      specPath,
+      source,
+      varDoc: execution.varDoc,
+      plan: execution,
+      update,
+    })
+    for (const d of driftDiagnostics(drifts)) reporter.diagnostic(d)
   }
 
   const total = passed + failed
