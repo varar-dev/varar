@@ -3,11 +3,20 @@ import { hashSource } from './hash.ts'
 import { deriveExampleName, type ExecutionPlan } from './plan.ts'
 import type { Span } from './span.ts'
 
+// A baseline example is re-identified in the edited source by text: an exact
+// name match, else the most word-similar paragraph at or above this threshold.
+// So you may move a paragraph anywhere and reword up to ~half its words and Vár
+// still recognizes it; edit it past this point and Vár treats it as a fresh
+// paragraph (remove + add), not drift. Tune here — a single number, ported
+// byte-identically to every language.
+export const DRIFT_SIMILARITY_THRESHOLD = 0.5
+
 // One example-producing paragraph, as recorded in the committed baseline.
 // `name` is the paragraph's normalized primary text (identical to the planned
 // example's name); `line` is the 1-based start line of its primary block. Both
-// are match keys for drift: `name` catches a step rename (Markdown unchanged),
-// `line` catches an in-place typo (text changed at the same line).
+// re-identify the example after edits: `name` for exact/similarity matching
+// (survives moves), `line` only to break ties between equally-similar
+// paragraphs (prefer the nearest).
 export type BaselineExample = {
   readonly name: string
   readonly line: number
@@ -46,6 +55,25 @@ function isLive(candidateSpan: Span, plan: ExecutionPlan): boolean {
   return plan.examples.some((pe) => within(pe.span, candidateSpan))
 }
 
+// Lower-cased word tokens (Unicode letters/digits) of a paragraph name. The
+// unit of similarity — chosen because a word set is trivially portable across
+// languages (no shared string-distance library needed).
+function tokenize(text: string): ReadonlySet<string> {
+  const set = new Set<string>()
+  for (const m of text.toLowerCase().matchAll(/[\p{L}\p{N}]+/gu)) set.add(m[0])
+  return set
+}
+
+// Jaccard overlap of two token sets: |A∩B| / |A∪B|. 1 when identical, 0 when
+// disjoint. Two empty sets count as identical.
+function similarity(a: ReadonlySet<string>, b: ReadonlySet<string>): number {
+  if (a.size === 0 && b.size === 0) return 1
+  let intersection = 0
+  for (const t of a) if (b.has(t)) intersection++
+  const union = a.size + b.size - intersection
+  return union === 0 ? 0 : intersection / union
+}
+
 // The current example-producing paragraphs, in document order — what a clean
 // run records as the new baseline for a spec.
 export function liveExamples(varDoc: VarDoc, plan: ExecutionPlan): ReadonlyArray<BaselineExample> {
@@ -71,6 +99,12 @@ export function deriveSpecBaseline(
 // Detect drift for one spec: paragraphs the baseline recorded as examples that
 // now match zero steps. Pure — no `sourceHash` short-circuit, because a step
 // definition can be renamed with the Markdown (and its hash) untouched.
+//
+// Each baseline example is re-identified in the current source by text: the
+// most word-similar paragraph at or above DRIFT_SIMILARITY_THRESHOLD (an exact
+// name scores 1). This is position-independent, so moving a paragraph never
+// looks like drift, and rewording within the threshold keeps its identity.
+//   matched & live → not drift · matched & dead → DRIFT · no match → remove+add
 export function detectDrift(
   baseline: SpecBaseline | undefined,
   varDoc: VarDoc,
@@ -79,16 +113,33 @@ export function detectDrift(
   if (!baseline) return [] // no baseline yet (first run) — nothing to compare
   const candidates = varDoc.examples
   const names = candidates.map((c) => deriveExampleName(c.body))
+  const tokens = names.map(tokenize)
   const live = candidates.map((c) => isLive(c.span, plan))
 
   const drifts: Drift[] = []
   for (const b of baseline.examples) {
-    // Match by name first (step-rename case), then by line (in-place typo case).
-    let idx = names.indexOf(b.name)
-    if (idx < 0) idx = candidates.findIndex((c) => c.span.startLine === b.line)
-    if (idx < 0) continue // paragraph deleted / moved — a deliberate removal, not drift
-    if (live[idx]) continue // still an example — not drift
-    drifts.push({ name: b.name, line: candidates[idx]?.span.startLine ?? b.line })
+    const bTokens = tokenize(b.name)
+    // Pick the most-similar candidate at/above the threshold; break ties toward
+    // the paragraph nearest the baseline's recorded line.
+    let bestIdx = -1
+    let bestScore = 0
+    for (let i = 0; i < candidates.length; i++) {
+      const score = similarity(bTokens, tokens[i] as ReadonlySet<string>)
+      if (score < DRIFT_SIMILARITY_THRESHOLD) continue
+      const line = candidates[i]?.span.startLine ?? 0
+      const bestLine = candidates[bestIdx]?.span.startLine ?? 0
+      if (
+        bestIdx < 0 ||
+        score > bestScore ||
+        (score === bestScore && Math.abs(line - b.line) < Math.abs(bestLine - b.line))
+      ) {
+        bestIdx = i
+        bestScore = score
+      }
+    }
+    if (bestIdx < 0) continue // no recognizable paragraph — a rewrite/removal, not drift
+    if (live[bestIdx]) continue // still an example — not drift
+    drifts.push({ name: b.name, line: candidates[bestIdx]?.span.startLine ?? b.line })
   }
   return drifts
 }

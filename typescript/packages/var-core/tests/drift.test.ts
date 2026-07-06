@@ -116,6 +116,47 @@ test('a newly added prose paragraph is not drift', () => {
   expect(detectDrift(baseline, afterDoc, plan(afterDoc, reg()))).toEqual([])
 })
 
+test('moving an example (unchanged text) never drifts, wherever it lands', () => {
+  const before = 'I withdraw 40.\n\nI withdraw 10.'
+  const beforeDoc = parse('w.md', before)
+  const baseline = deriveSpecBaseline(before, beforeDoc, plan(beforeDoc, reg()))
+  // Same two examples, order swapped.
+  const after = 'I withdraw 10.\n\nI withdraw 40.'
+  const afterDoc = parse('w.md', after)
+  expect(detectDrift(baseline, afterDoc, plan(afterDoc, reg()))).toEqual([])
+})
+
+test('moving AND rewording an example that still matches does not drift', () => {
+  const before = 'I withdraw 40.\n\nI withdraw 10.'
+  const beforeDoc = parse('w.md', before)
+  const baseline = deriveSpecBaseline(before, beforeDoc, plan(beforeDoc, reg()))
+  // Second example reworded (10 → 11, still matches {int}) and moved to the top.
+  const after = 'I withdraw 11.\n\nI withdraw 40.'
+  const afterDoc = parse('w.md', after)
+  expect(detectDrift(baseline, afterDoc, plan(afterDoc, reg()))).toEqual([])
+})
+
+test('move + reword + prose landing on the old line does not false-positive', () => {
+  // The exact case a raw line-number fallback got wrong: the example moves and
+  // is reworded (still matches), and unrelated prose now sits at its old line.
+  const before = 'I withdraw 40.'
+  const beforeDoc = parse('w.md', before)
+  const baseline = deriveSpecBaseline(before, beforeDoc, plan(beforeDoc, reg()))
+  const after = 'Just some notes.\n\nI withdraw 41.'
+  const afterDoc = parse('w.md', after)
+  expect(detectDrift(baseline, afterDoc, plan(afterDoc, reg()))).toEqual([])
+})
+
+test('a paragraph rewritten past recognition is a remove+add, not drift', () => {
+  const before = 'I withdraw 40.'
+  const beforeDoc = parse('w.md', before)
+  const baseline = deriveSpecBaseline(before, beforeDoc, plan(beforeDoc, reg()))
+  // Wholly different prose (no word overlap) → below the similarity threshold.
+  const after = 'The branch closed years ago.'
+  const afterDoc = parse('w.md', after)
+  expect(detectDrift(baseline, afterDoc, plan(afterDoc, reg()))).toEqual([])
+})
+
 test('a header-bound table records its binding paragraph once', () => {
   const source =
     'Each row gives a decimal and a roman number:\n\n| decimal | roman |\n| ------: | :---- |\n| 3 | III |\n| 9 | IX |\n'
