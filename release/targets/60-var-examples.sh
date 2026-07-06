@@ -66,10 +66,13 @@ perl -0pi -e 's|<!-- On trunk this is the SNAPSHOT that `mvn install` \(run from
 # Pin the TypeScript sample to the released npm packages.
 perl -pi -e "s/\"workspace:\\*\"/\"^$VERSION\"/g" "$DEST"/typescript-vitest/package.json
 
-# Point the Python samples' uv sources at the release tag (PyPI is parked;
-# git+tag sources give users a working test run with nothing else cloned).
-# Drops the editable flag — a pinned tag is not editable.
-perl -pi -e "s|\\{ path = \"\\.\\./\\.\\./python/packages/([^\"]+)\", editable = true \\}|{ git = \"https://github.com/oselvar/var\", subdirectory = \"python/packages/\$1\", tag = \"$TAG\" }|" \
+# Pin the Python samples to the released PyPI version: delete the
+# [tool.uv.sources] path-source table (with its comment block) and pin the
+# adapter dependency. Never rewrite to git sources — this monorepo is
+# private, so anonymous CI in var-examples cannot fetch git+tag pins.
+perl -0pi -e 's|(#[^\n]*\n)+\[tool\.uv\.sources\]\n([\w.-]+ = \{ path = [^\n]+\n)+\n||' \
+  "$DEST"/python-*/pyproject.toml
+perl -pi -e "s/\"(pytest-var|oselvar-var[\\w-]*)\"/\"\$1==$VERSION\"/" \
   "$DEST"/python-*/pyproject.toml
 
 git -C "$DEST" add -A

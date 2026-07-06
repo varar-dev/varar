@@ -30,9 +30,9 @@ that generates one `TestCase` per spec, which plain `python -m unittest`
 
 ## Versioning note
 
-The Vár Python packages are not on PyPI yet, so `[tool.uv.sources]` in
-`pyproject.toml` resolves them from source: path sources in the
-`oselvar/var` monorepo (gating trunk), rewritten by the release sync to
-git+tag sources in `oselvar/var-examples`. Once they're published, that
-table disappears — the plain `oselvar-var-unittest` dependency is all a
-real project needs.
+In the [oselvar/var](https://github.com/oselvar/var) monorepo this sample
+resolves the Vár packages from `[tool.uv.sources]` path sources, gating
+trunk against the local build. The release sync to
+[oselvar/var-examples](https://github.com/oselvar/var-examples) deletes
+that table and pins the released PyPI version — there, the plain
+`oselvar-var-unittest` dependency is all a real project needs.

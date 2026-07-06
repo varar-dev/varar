@@ -9,12 +9,12 @@ description = "Standalone sample: run Markdown specs as unittest tests with Vár
 requires-python = ">=3.12"
 dependencies = ["oselvar-var-unittest"]
 
-# PyPI publishing of the Vár packages is parked, so this sample resolves them
-# straight from the source tree: path sources in the oselvar/var monorepo,
-# rewritten to git+tag sources when synced to oselvar/var-examples. Once the
-# packages are on PyPI, this whole table disappears — the plain dependency
-# above is all a real project needs. The transitive set is listed because
-# oselvar-var-unittest pins its internal dependencies exactly (==<version>).
+# In this monorepo the Vár packages resolve from source (editable path
+# sources), so the sample gates trunk against the local build. The release
+# sync to oselvar/var-examples deletes this whole table and pins the released
+# PyPI version — the plain dependency above is all a real project needs. The
+# transitive set is listed because oselvar-var-unittest pins its internal
+# dependencies exactly (==<version>).
 [tool.uv.sources]
 oselvar-var-unittest = { path = "../../python/packages/var-unittest", editable = true }
 oselvar-var = { path = "../../python/packages/var", editable = true }
