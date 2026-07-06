@@ -1,5 +1,4 @@
-import type { Block, InlineOffset } from './ast.ts'
-import { stripInline } from './inline.ts'
+import type { Block, SegmentOffset } from './ast.ts'
 import { type Span, spanFromOffsets } from './span.ts'
 import { parseRowCells } from './table-cells.ts'
 
@@ -145,33 +144,31 @@ function tryHeading(source: string, line: RawLine): Block | undefined {
 function tryListItem(source: string, line: RawLine): Block | undefined {
   const ul = UL_RE.exec(line.text)
   if (ul) {
-    const rawText = ul[3] ?? ''
+    const text = ul[3] ?? ''
     const markerStart = line.startOffset + (ul[1] ?? '').length
     const markerEnd = markerStart + (ul[2] ?? '').length
-    const textStart = line.startOffset + line.text.indexOf(rawText)
-    const { text, map: inlineMap } = stripInline(rawText, textStart)
+    const textStart = line.startOffset + line.text.indexOf(text)
     return {
       kind: 'list_item',
       ordered: false,
       text,
       span: spanFromOffsets(source, line.startOffset, line.endOffset),
-      inlineMap,
+      segmentMap: [{ textOffset: 0, sourceOffset: textStart }],
       markerSpan: spanFromOffsets(source, markerStart, markerEnd),
     }
   }
   const ol = OL_RE.exec(line.text)
   if (ol) {
-    const rawText = ol[4] ?? ''
+    const text = ol[4] ?? ''
     const markerStart = line.startOffset + (ol[1] ?? '').length
     const markerEnd = markerStart + (ol[2] ?? '').length + (ol[3] ?? '').length
-    const textStart = line.startOffset + line.text.indexOf(rawText)
-    const { text, map: inlineMap } = stripInline(rawText, textStart)
+    const textStart = line.startOffset + line.text.indexOf(text)
     return {
       kind: 'list_item',
       ordered: true,
       text,
       span: spanFromOffsets(source, line.startOffset, line.endOffset),
-      inlineMap,
+      segmentMap: [{ textOffset: 0, sourceOffset: textStart }],
       markerSpan: spanFromOffsets(source, markerStart, markerEnd),
     }
   }
@@ -188,13 +185,14 @@ function tryBlockquote(
   const m = BQ_RE.exec(first.text)
   if (!m) return undefined
 
-  const firstSegmentRaw = m[1] ?? ''
-  const firstSegmentSourceBase = first.startOffset + first.text.indexOf(firstSegmentRaw)
-  const firstStripped = stripInline(firstSegmentRaw, firstSegmentSourceBase)
-
-  const strippedSegments: string[] = [firstStripped.text]
-  const inlineMap: InlineOffset[] = [...firstStripped.map]
-  let joinedTextOffset = firstStripped.text.length
+  // Each quoted line drops its `> ` prefix — block structure, not text — so
+  // the joined text needs one segment entry per line to map back to source.
+  const firstSegment = m[1] ?? ''
+  const segments: string[] = [firstSegment]
+  const segmentMap: SegmentOffset[] = [
+    { textOffset: 0, sourceOffset: first.startOffset + first.text.indexOf(firstSegment) },
+  ]
+  let joinedTextOffset = firstSegment.length
 
   let i = startIdx + 1
   let endOffset = first.endOffset
@@ -203,28 +201,23 @@ function tryBlockquote(
     if (!ln) break
     const next = BQ_RE.exec(ln.text)
     if (!next) break
-    const segmentRaw = next[1] ?? ''
-    const segmentSourceBase = ln.startOffset + ln.text.indexOf(segmentRaw)
-    const stripped = stripInline(segmentRaw, segmentSourceBase)
-
+    const segment = next[1] ?? ''
     joinedTextOffset += 1 // newline separator
-    for (const entry of stripped.map) {
-      inlineMap.push({
-        textOffset: joinedTextOffset + entry.textOffset,
-        sourceOffset: entry.sourceOffset,
-      })
-    }
-    strippedSegments.push(stripped.text)
-    joinedTextOffset += stripped.text.length
+    segmentMap.push({
+      textOffset: joinedTextOffset,
+      sourceOffset: ln.startOffset + ln.text.indexOf(segment),
+    })
+    segments.push(segment)
+    joinedTextOffset += segment.length
     endOffset = ln.endOffset
     i++
   }
   return {
     quote: {
       kind: 'blockquote',
-      text: strippedSegments.join('\n'),
+      text: segments.join('\n'),
       span: spanFromOffsets(source, first.startOffset, endOffset),
-      inlineMap,
+      segmentMap,
     },
     next: i,
   }
@@ -260,14 +253,12 @@ function consumeParagraph(
   if (!last) throw new Error('invariant: endIdx out of range')
   const startOffset = first.startOffset
   const endOffset = last.endOffset
-  const rawText = source.slice(startOffset, endOffset)
-  const { text, map: inlineMap } = stripInline(rawText, startOffset)
   return {
     paragraph: {
       kind: 'paragraph',
-      text,
+      text: source.slice(startOffset, endOffset),
       span: spanFromOffsets(source, startOffset, endOffset),
-      inlineMap,
+      segmentMap: [{ textOffset: 0, sourceOffset: startOffset }],
     },
     next: endIdx + 1,
   }

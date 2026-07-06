@@ -21,14 +21,13 @@ from var_core.ast import (
     Blockquote,
     Fence,
     Heading,
-    InlineOffset,
     ListItem,
     Paragraph,
     Row,
+    SegmentOffset,
     Table,
     ThematicBreak,
 )
-from var_core.inline import strip_inline
 from var_core.span import span_from_offsets, to_utf16_offset, utf16_len, utf16_slice
 from var_core.table_cells import parse_row_cells
 
@@ -209,37 +208,35 @@ def try_heading(source: str, line: RawLine) -> Block | None:
 def try_list_item(source: str, line: RawLine) -> Block | None:
     ul = UL_RE.match(line.text)
     if ul:
-        raw_text = ul.group(3) or ""
+        text = ul.group(3) or ""
         marker_start = line.start_offset + utf16_len(ul.group(1) or "")
         marker_end = marker_start + utf16_len(ul.group(2) or "")
         # str.find returns code-point index; convert to UTF-16 delta before
         # adding to the UTF-16 line.start_offset (mirrors TS indexOf).
-        cp_idx = line.text.find(raw_text)
+        cp_idx = line.text.find(text)
         text_start = line.start_offset + to_utf16_offset(line.text, cp_idx)
-        text, inline_map = strip_inline(raw_text, text_start)
         return ListItem(
             text=text,
             span=span_from_offsets(source, line.start_offset, line.end_offset),
-            inline_map=inline_map,
+            segment_map=(SegmentOffset(text_offset=0, source_offset=text_start),),
             ordered=False,
             marker_span=span_from_offsets(source, marker_start, marker_end),
         )
     ol = OL_RE.match(line.text)
     if ol:
-        raw_text = ol.group(4) or ""
+        text = ol.group(4) or ""
         marker_start = line.start_offset + utf16_len(ol.group(1) or "")
         marker_end = (
             marker_start
             + utf16_len(ol.group(2) or "")
             + utf16_len(ol.group(3) or "")
         )
-        cp_idx = line.text.find(raw_text)
+        cp_idx = line.text.find(text)
         text_start = line.start_offset + to_utf16_offset(line.text, cp_idx)
-        text, inline_map = strip_inline(raw_text, text_start)
         return ListItem(
             text=text,
             span=span_from_offsets(source, line.start_offset, line.end_offset),
-            inline_map=inline_map,
+            segment_map=(SegmentOffset(text_offset=0, source_offset=text_start),),
             ordered=True,
             marker_span=span_from_offsets(source, marker_start, marker_end),
         )
@@ -258,17 +255,19 @@ def try_blockquote(
     if not m:
         return None
 
-    first_segment_raw = m.group(1) or ""
-    cp_idx = first.text.find(first_segment_raw)
-    first_segment_source_base = first.start_offset + to_utf16_offset(
-        first.text, cp_idx
-    )
-    first_text, first_map = strip_inline(first_segment_raw, first_segment_source_base)
-
-    stripped_segments: list[str] = [first_text]
-    inline_map: list[InlineOffset] = list(first_map)
-    # joinedTextOffset tracks UTF-16 units written to the joined text so far.
-    joined_text_offset = utf16_len(first_text)
+    # Each quoted line drops its `> ` prefix — block structure, not text — so
+    # the joined text needs one segment entry per line to map back to source.
+    first_segment = m.group(1) or ""
+    cp_idx = first.text.find(first_segment)
+    segments: list[str] = [first_segment]
+    segment_map: list[SegmentOffset] = [
+        SegmentOffset(
+            text_offset=0,
+            source_offset=first.start_offset + to_utf16_offset(first.text, cp_idx),
+        )
+    ]
+    # joined_text_offset tracks UTF-16 units written to the joined text so far.
+    joined_text_offset = utf16_len(first_segment)
 
     i = start_idx + 1
     end_offset = first.end_offset
@@ -277,29 +276,25 @@ def try_blockquote(
         next_m = BQ_RE.match(ln.text)
         if not next_m:
             break
-        segment_raw = next_m.group(1) or ""
-        cp_idx2 = ln.text.find(segment_raw)
-        segment_source_base = ln.start_offset + to_utf16_offset(ln.text, cp_idx2)
-        seg_text, seg_map = strip_inline(segment_raw, segment_source_base)
-
+        segment = next_m.group(1) or ""
+        cp_idx2 = ln.text.find(segment)
         joined_text_offset += 1  # newline separator (1 UTF-16 unit)
-        for entry in seg_map:
-            inline_map.append(
-                InlineOffset(
-                    text_offset=joined_text_offset + entry.text_offset,
-                    source_offset=entry.source_offset,
-                )
+        segment_map.append(
+            SegmentOffset(
+                text_offset=joined_text_offset,
+                source_offset=ln.start_offset + to_utf16_offset(ln.text, cp_idx2),
             )
-        stripped_segments.append(seg_text)
-        joined_text_offset += utf16_len(seg_text)
+        )
+        segments.append(segment)
+        joined_text_offset += utf16_len(segment)
         end_offset = ln.end_offset
         i += 1
 
     return (
         Blockquote(
-            text="\n".join(stripped_segments),
+            text="\n".join(segments),
             span=span_from_offsets(source, first.start_offset, end_offset),
-            inline_map=tuple(inline_map),
+            segment_map=tuple(segment_map),
         ),
         i,
     )
@@ -348,13 +343,11 @@ def consume_paragraph(
     end_offset = last.end_offset
     # Use utf16_slice to extract the raw text via UTF-16 offsets (mirrors
     # TS source.slice(startOffset, endOffset) which uses UTF-16 indices).
-    raw_text = utf16_slice(source, start_offset, end_offset)
-    text, inline_map = strip_inline(raw_text, start_offset)
     return (
         Paragraph(
-            text=text,
+            text=utf16_slice(source, start_offset, end_offset),
             span=span_from_offsets(source, start_offset, end_offset),
-            inline_map=inline_map,
+            segment_map=(SegmentOffset(text_offset=0, source_offset=start_offset),),
         ),
         end_idx + 1,
     )

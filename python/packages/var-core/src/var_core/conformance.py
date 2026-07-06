@@ -19,10 +19,10 @@ from var_core.ast import (
     Example,
     Fence,
     Heading,
-    InlineOffset,
     ListItem,
     Paragraph,
     Row,
+    SegmentOffset,
     Table,
     ThematicBreak,
     VarDoc,
@@ -99,10 +99,10 @@ def _span(s: Span) -> dict[str, Any]:
     }
 
 
-def _inline(io: InlineOffset) -> dict[str, Any]:
+def _segment(so: SegmentOffset) -> dict[str, Any]:
     return {
-        "textOffset": io.text_offset,
-        "sourceOffset": io.source_offset,
+        "textOffset": so.text_offset,
+        "sourceOffset": so.source_offset,
     }
 
 
@@ -120,7 +120,7 @@ def _block(b: Heading | Paragraph | ListItem | Blockquote | Table | Fence | Them
             "kind": b.kind,
             "text": b.text,
             "span": _span(b.span),  # type: ignore[arg-type]
-            "inlineMap": [_inline(io) for io in b.inline_map],
+            "segmentMap": [_segment(so) for so in b.segment_map],
         }
     if isinstance(b, Heading):
         return {
@@ -134,7 +134,7 @@ def _block(b: Heading | Paragraph | ListItem | Blockquote | Table | Fence | Them
             "kind": b.kind,
             "text": b.text,
             "span": _span(b.span),  # type: ignore[arg-type]
-            "inlineMap": [_inline(io) for io in b.inline_map],
+            "segmentMap": [_segment(so) for so in b.segment_map],
             "ordered": b.ordered,
             "markerSpan": _span(b.marker_span),  # type: ignore[arg-type]
         }
@@ -143,7 +143,7 @@ def _block(b: Heading | Paragraph | ListItem | Blockquote | Table | Fence | Them
             "kind": b.kind,
             "text": b.text,
             "span": _span(b.span),  # type: ignore[arg-type]
-            "inlineMap": [_inline(io) for io in b.inline_map],
+            "segmentMap": [_segment(so) for so in b.segment_map],
         }
     if isinstance(b, Table):
         return {

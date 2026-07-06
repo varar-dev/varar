@@ -6,10 +6,10 @@ export type {
   Example,
   Fence,
   Heading,
-  InlineOffset,
   ListItem,
   Paragraph,
   Row,
+  SegmentOffset,
   Table,
   ThematicBreak,
   VarDoc,
@@ -73,8 +73,6 @@ export type { ExpressionDiff, ExpressionSegment, ParamFate } from './expression-
 export { diffExpressions, expressionSegments, renderExpression } from './expression-segments.ts'
 export { toFailure } from './failure.ts'
 export { hashSource } from './hash.ts'
-export type { StrippedInline } from './inline.ts'
-export { stripInline } from './inline.ts'
 export type { AmbiguityCollision, Hit, ResolvedSteps } from './matcher.ts'
 export { findHits, resolveHits } from './matcher.ts'
 export { compareParams } from './param-diff.ts'

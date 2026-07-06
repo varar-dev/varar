@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import pytest
 
-from var_core.ast import Fence, InlineOffset, Paragraph
+from var_core.ast import Blockquote, Fence, Paragraph, SegmentOffset
 from var_core.scanner import scan
 from var_core.span import Span
 
@@ -73,14 +73,39 @@ def test_paragraph_span_covers_full_multi_line_range() -> None:
     assert p1.span.end_line == 2
 
 
-def test_paragraph_inline_map_maps_text_offsets_to_source_offsets() -> None:
+def test_paragraph_segment_map_maps_text_offsets_to_source_offsets() -> None:
     source = "# Heading\n\nhello world"
     blocks = scan(source)
     paragraph = next((b for b in blocks if b.kind == "paragraph"), None)
     assert paragraph is not None
     assert isinstance(paragraph, Paragraph)
     # "hello world" lives at source offset 11 (after "# Heading\n\n")
-    assert paragraph.inline_map[0] == InlineOffset(text_offset=0, source_offset=11)
+    assert paragraph.segment_map[0] == SegmentOffset(text_offset=0, source_offset=11)
+
+
+def test_inline_markup_is_never_stripped_block_text_is_the_raw_source() -> None:
+    source = "Maya borrowed *Emma*, see [docs](https://x.test) and `code`."
+    blocks = scan(source)
+    paragraph = next((b for b in blocks if b.kind == "paragraph"), None)
+    assert paragraph is not None
+    assert isinstance(paragraph, Paragraph)
+    assert paragraph.text == source
+
+
+def test_blockquote_text_drops_prefix_per_line_with_one_segment_entry_each() -> None:
+    source = "> first *line*\n> second line"
+    blocks = scan(source)
+    quote = next((b for b in blocks if b.kind == "blockquote"), None)
+    assert quote is not None
+    assert isinstance(quote, Blockquote)
+    assert quote.text == "first *line*\nsecond line"
+    assert quote.segment_map == (
+        SegmentOffset(text_offset=0, source_offset=2),
+        SegmentOffset(
+            text_offset=len("first *line*\n"),
+            source_offset=len("> first *line*\n> "),
+        ),
+    )
 
 
 # ── Astral-character paragraph (UTF-16 offset assertion) ─────────────────────

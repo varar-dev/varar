@@ -21,13 +21,11 @@ private val DATE_FORMAT = DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.ENG
 
 /** £2.50 and 50p, both as GBP Money. */
 private fun toMoney(raw: String): Money =
-    if (raw.endsWith("p")) gbp(raw.dropLast(1).toDouble() / 100)
-    else gbp(raw.drop(1).toDouble())
+    if (raw.endsWith("p")) gbp(raw.dropLast(1).toDouble() / 100) else gbp(raw.drop(1).toDouble())
 
 /** The inverse: mismatches render as £2.60 / 50p, not as a Money dump. */
 private fun formatMoney(m: Money): String =
-    if (m.value < 1) "${(m.value * 100).roundToInt()}p"
-    else "£%.2f".format(Locale.ROOT, m.value)
+    if (m.value < 1) "${(m.value * 100).roundToInt()}p" else "£%.2f".format(Locale.ROOT, m.value)
 
 val librarySteps =
     defineState(::LibraryCtx) {
@@ -47,15 +45,23 @@ val librarySteps =
         ) { groups ->
             toMoney(groups[0])
         }
-        // Emphasis (*Emma*) is stripped before matching, so a title is a
-        // Title Case run in the plain prose.
-        parameterType("title", Regex("[A-Z][a-z]+(?: [A-Z][a-z]+)*")) { groups -> groups[0] }
+        // The emphasised run IS the parameter: the markers live in the pattern,
+        // parse strips them, format restores them. Markup is notation, like £2.50.
+        parameterType(
+            "title",
+            Regex("""\*[^*]+\*"""),
+            format = { "*$it*" },
+        ) { groups ->
+            groups[0].removeSurrounding("*")
+        }
 
         stimulus("borrowed {title}, due back on {date}") { title: String, due: LocalDate ->
             copy(loans = loans + Loan(title, due))
         }
         stimulus("returns it on {date}") { returnedOn: LocalDate ->
-            copy(fee = loans.fold(gbp(0.0)) { acc, loan -> addMoney(acc, lateFee(loan, returnedOn)) })
+            copy(
+                fee = loans.fold(gbp(0.0)) { acc, loan -> addMoney(acc, lateFee(loan, returnedOn)) }
+            )
         }
         sensor("owes a {money} late fee") { _: Money -> fee }
         sensor("{money} for each day overdue") { _: Money -> FEE_PER_DAY }

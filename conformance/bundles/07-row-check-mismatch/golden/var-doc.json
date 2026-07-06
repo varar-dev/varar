@@ -3,125 +3,13 @@
     {
       "body": [
         {
-          "inlineMap": [
+          "kind": "paragraph",
+          "segmentMap": [
             {
               "sourceOffset": 39,
               "textOffset": 0
-            },
-            {
-              "sourceOffset": 40,
-              "textOffset": 1
-            },
-            {
-              "sourceOffset": 41,
-              "textOffset": 2
-            },
-            {
-              "sourceOffset": 42,
-              "textOffset": 3
-            },
-            {
-              "sourceOffset": 43,
-              "textOffset": 4
-            },
-            {
-              "sourceOffset": 44,
-              "textOffset": 5
-            },
-            {
-              "sourceOffset": 45,
-              "textOffset": 6
-            },
-            {
-              "sourceOffset": 46,
-              "textOffset": 7
-            },
-            {
-              "sourceOffset": 47,
-              "textOffset": 8
-            },
-            {
-              "sourceOffset": 48,
-              "textOffset": 9
-            },
-            {
-              "sourceOffset": 49,
-              "textOffset": 10
-            },
-            {
-              "sourceOffset": 50,
-              "textOffset": 11
-            },
-            {
-              "sourceOffset": 51,
-              "textOffset": 12
-            },
-            {
-              "sourceOffset": 52,
-              "textOffset": 13
-            },
-            {
-              "sourceOffset": 53,
-              "textOffset": 14
-            },
-            {
-              "sourceOffset": 54,
-              "textOffset": 15
-            },
-            {
-              "sourceOffset": 55,
-              "textOffset": 16
-            },
-            {
-              "sourceOffset": 56,
-              "textOffset": 17
-            },
-            {
-              "sourceOffset": 57,
-              "textOffset": 18
-            },
-            {
-              "sourceOffset": 58,
-              "textOffset": 19
-            },
-            {
-              "sourceOffset": 59,
-              "textOffset": 20
-            },
-            {
-              "sourceOffset": 60,
-              "textOffset": 21
-            },
-            {
-              "sourceOffset": 61,
-              "textOffset": 22
-            },
-            {
-              "sourceOffset": 62,
-              "textOffset": 23
-            },
-            {
-              "sourceOffset": 63,
-              "textOffset": 24
-            },
-            {
-              "sourceOffset": 64,
-              "textOffset": 25
-            },
-            {
-              "sourceOffset": 65,
-              "textOffset": 26
-            },
-            {
-              "sourceOffset": 66,
-              "textOffset": 27
-            },
-            {
-              "sourceOffset": 67,
-              "textOffset": 28
             }
           ],
-          "kind": "paragraph",
           "span": {
             "endCol": 30,
             "endLine": 5,

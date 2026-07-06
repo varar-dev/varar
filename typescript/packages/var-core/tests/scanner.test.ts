@@ -65,13 +65,33 @@ test('paragraph span covers the full multi-line range', () => {
   expect(p1.span.endLine).toBe(2)
 })
 
-test('paragraph inlineMap maps text offsets to source offsets', () => {
+test('paragraph segmentMap maps text offsets to source offsets', () => {
   const source = '# Heading\n\nhello world'
   const blocks = scan(source)
   const paragraph = blocks.find((b) => b.kind === 'paragraph')
   if (paragraph?.kind !== 'paragraph') throw new Error('expected paragraph')
   // 'hello world' lives at source offset 11 (after '# Heading\n\n')
-  expect(paragraph.inlineMap[0]).toEqual({ textOffset: 0, sourceOffset: 11 })
+  expect(paragraph.segmentMap[0]).toEqual({ textOffset: 0, sourceOffset: 11 })
+})
+
+test('inline markup is never stripped — block text is the raw source', () => {
+  const source = 'Maya borrowed *Emma*, see [docs](https://x.test) and `code`.'
+  const blocks = scan(source)
+  const paragraph = blocks.find((b) => b.kind === 'paragraph')
+  if (paragraph?.kind !== 'paragraph') throw new Error('expected paragraph')
+  expect(paragraph.text).toBe(source)
+})
+
+test('blockquote text drops the > prefix per line with one segment entry each', () => {
+  const source = '> first *line*\n> second line'
+  const blocks = scan(source)
+  const quote = blocks.find((b) => b.kind === 'blockquote')
+  if (quote?.kind !== 'blockquote') throw new Error('expected blockquote')
+  expect(quote.text).toBe('first *line*\nsecond line')
+  expect(quote.segmentMap).toEqual([
+    { textOffset: 0, sourceOffset: 2 },
+    { textOffset: 'first *line*\n'.length, sourceOffset: '> first *line*\n> '.length },
+  ])
 })
 
 test('scan recognizes a fenced code block with info string', () => {

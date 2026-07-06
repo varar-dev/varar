@@ -27,9 +27,7 @@ public final class LibrarySteps implements StepDefinitions {
 
     /** The inverse: mismatches render as £2.60 / 50p, not as a Money dump. */
     private static String formatMoney(Library.Money m) {
-        return m.value() < 1
-                ? Math.round(m.value() * 100) + "p"
-                : String.format(Locale.ROOT, "£%.2f", m.value());
+        return m.value() < 1 ? Math.round(m.value() * 100) + "p" : String.format(Locale.ROOT, "£%.2f", m.value());
     }
 
     @Override
@@ -46,9 +44,13 @@ public final class LibrarySteps implements StepDefinitions {
                 Pattern.compile("£(?=.*\\d.*)[-+]?\\d*(?:\\.(?=\\d.*))?\\d*|\\d+p"),
                 groups -> toMoney(groups[0]),
                 LibrarySteps::formatMoney);
-        // Emphasis (*Emma*) is stripped before matching, so a title is a
-        // Title Case run in the plain prose.
-        registrar.defineParameterType("title", Pattern.compile("[A-Z][a-z]+(?: [A-Z][a-z]+)*"), groups -> groups[0]);
+        // The emphasised run IS the parameter: the markers live in the pattern,
+        // parse strips them, format restores them. Markup is notation, like £2.50.
+        registrar.defineParameterType(
+                "title",
+                Pattern.compile("\\*[^*]+\\*"),
+                groups -> groups[0].substring(1, groups[0].length() - 1),
+                title -> "*" + title + "*");
 
         StateBinder<Ctx> s = registrar.defineState(() -> new Ctx(List.of(), Library.gbp(0), false));
 

@@ -27,10 +27,11 @@ const { stimulus, sensor } = defineState(
         m.value < 1 ? `${Math.round(m.value * 100)}p` : `£${m.value.toFixed(2)}`,
     },
     title: {
-      // Emphasis (*Emma*) is stripped before matching, so a title is a
-      // Title Case run in the plain prose
-      regexp: /[A-Z][a-z]+(?: [A-Z][a-z]+)*/,
-      parse: (raw: string) => raw,
+      // The emphasised run IS the parameter: the markers live in the pattern,
+      // parse strips them, format restores them. Markup is notation, like £2.50.
+      regexp: /\*[^*]+\*/,
+      parse: (raw: string) => raw.slice(1, -1),
+      format: (t: string) => `*${t}*`,
     },
   },
 )

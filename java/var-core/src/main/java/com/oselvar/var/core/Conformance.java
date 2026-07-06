@@ -493,7 +493,7 @@ public final class Conformance {
         out.put("kind", "paragraph");
         out.put("text", p.text());
         out.put("span", span(p.span()));
-        out.put("inlineMap", inlineMap(p.inlineMap()));
+        out.put("segmentMap", segmentMap(p.segmentMap()));
         return out;
     }
 
@@ -502,7 +502,7 @@ public final class Conformance {
         out.put("kind", "list_item");
         out.put("text", l.text());
         out.put("span", span(l.span()));
-        out.put("inlineMap", inlineMap(l.inlineMap()));
+        out.put("segmentMap", segmentMap(l.segmentMap()));
         out.put("ordered", l.ordered());
         out.put("markerSpan", span(l.markerSpan()));
         return out;
@@ -513,7 +513,7 @@ public final class Conformance {
         out.put("kind", "blockquote");
         out.put("text", b.text());
         out.put("span", span(b.span()));
-        out.put("inlineMap", inlineMap(b.inlineMap()));
+        out.put("segmentMap", segmentMap(b.segmentMap()));
         return out;
     }
 
@@ -551,11 +551,11 @@ public final class Conformance {
         return out;
     }
 
-    private static List<Object> inlineMap(List<Ast.InlineOffset> inlineMap) {
-        return inlineMap.stream().<Object>map(Conformance::inlineOffset).toList();
+    private static List<Object> segmentMap(List<Ast.SegmentOffset> segmentMap) {
+        return segmentMap.stream().<Object>map(Conformance::segmentOffset).toList();
     }
 
-    private static Map<String, Object> inlineOffset(Ast.InlineOffset o) {
+    private static Map<String, Object> segmentOffset(Ast.SegmentOffset o) {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("textOffset", o.textOffset());
         out.put("sourceOffset", o.sourceOffset());

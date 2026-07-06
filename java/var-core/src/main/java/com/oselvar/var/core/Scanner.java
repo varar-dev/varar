@@ -1,9 +1,8 @@
 package com.oselvar.var.core;
 
 import com.oselvar.var.core.Ast.Block;
-import com.oselvar.var.core.Ast.InlineOffset;
 import com.oselvar.var.core.Ast.Row;
-import com.oselvar.var.core.Inline.InlineResult;
+import com.oselvar.var.core.Ast.SegmentOffset;
 import com.oselvar.var.core.TableCells.RowCells;
 import java.util.ArrayList;
 import java.util.List;
@@ -136,29 +135,27 @@ public final class Scanner {
     private static Block tryListItem(String source, RawLine line) {
         Matcher ul = UL_RE.matcher(line.text());
         if (ul.find()) {
-            String rawText = ul.group(3);
+            String text = ul.group(3);
             int markerStart = line.startOffset() + ul.group(1).length();
             int markerEnd = markerStart + ul.group(2).length();
-            int textStart = line.startOffset() + line.text().indexOf(rawText);
-            InlineResult stripped = Inline.stripInline(rawText, textStart);
+            int textStart = line.startOffset() + line.text().indexOf(text);
             return new Ast.ListItem(
-                    stripped.text(),
+                    text,
                     Span.spanFromOffsets(source, line.startOffset(), line.endOffset()),
-                    stripped.map(),
+                    List.of(new SegmentOffset(0, textStart)),
                     false,
                     Span.spanFromOffsets(source, markerStart, markerEnd));
         }
         Matcher ol = OL_RE.matcher(line.text());
         if (ol.find()) {
-            String rawText = ol.group(4);
+            String text = ol.group(4);
             int markerStart = line.startOffset() + ol.group(1).length();
             int markerEnd = markerStart + ol.group(2).length() + ol.group(3).length();
-            int textStart = line.startOffset() + line.text().indexOf(rawText);
-            InlineResult stripped = Inline.stripInline(rawText, textStart);
+            int textStart = line.startOffset() + line.text().indexOf(text);
             return new Ast.ListItem(
-                    stripped.text(),
+                    text,
                     Span.spanFromOffsets(source, line.startOffset(), line.endOffset()),
-                    stripped.map(),
+                    List.of(new SegmentOffset(0, textStart)),
                     true,
                     Span.spanFromOffsets(source, markerStart, markerEnd));
         }
@@ -172,14 +169,14 @@ public final class Scanner {
         Matcher m = BQ_RE.matcher(first.text());
         if (!m.find()) return null;
 
-        String firstSegmentRaw = m.group(1);
-        int firstSegmentSourceBase = first.startOffset() + first.text().indexOf(firstSegmentRaw);
-        InlineResult firstStripped = Inline.stripInline(firstSegmentRaw, firstSegmentSourceBase);
-
-        List<String> strippedSegments = new ArrayList<>();
-        strippedSegments.add(firstStripped.text());
-        List<InlineOffset> inlineMap = new ArrayList<>(firstStripped.map());
-        int joinedTextOffset = firstStripped.text().length();
+        // Each quoted line drops its `> ` prefix — block structure, not text — so
+        // the joined text needs one segment entry per line to map back to source.
+        String firstSegment = m.group(1);
+        List<String> segments = new ArrayList<>();
+        segments.add(firstSegment);
+        List<SegmentOffset> segmentMap = new ArrayList<>();
+        segmentMap.add(new SegmentOffset(0, first.startOffset() + first.text().indexOf(firstSegment)));
+        int joinedTextOffset = firstSegment.length();
 
         int i = startIdx + 1;
         int endOffset = first.endOffset();
@@ -187,23 +184,17 @@ public final class Scanner {
             RawLine ln = lines.get(i);
             Matcher next = BQ_RE.matcher(ln.text());
             if (!next.find()) break;
-            String segmentRaw = next.group(1);
-            int segmentSourceBase = ln.startOffset() + ln.text().indexOf(segmentRaw);
-            InlineResult stripped = Inline.stripInline(segmentRaw, segmentSourceBase);
-
+            String segment = next.group(1);
             joinedTextOffset += 1; // newline separator
-            for (InlineOffset entry : stripped.map()) {
-                inlineMap.add(new InlineOffset(joinedTextOffset + entry.textOffset(), entry.sourceOffset()));
-            }
-            strippedSegments.add(stripped.text());
-            joinedTextOffset += stripped.text().length();
+            segmentMap.add(new SegmentOffset(
+                    joinedTextOffset, ln.startOffset() + ln.text().indexOf(segment)));
+            segments.add(segment);
+            joinedTextOffset += segment.length();
             endOffset = ln.endOffset();
             i++;
         }
         Ast.Blockquote quote = new Ast.Blockquote(
-                String.join("\n", strippedSegments),
-                Span.spanFromOffsets(source, first.startOffset(), endOffset),
-                inlineMap);
+                String.join("\n", segments), Span.spanFromOffsets(source, first.startOffset(), endOffset), segmentMap);
         return new BlockquoteResult(quote, i);
     }
 
@@ -228,10 +219,10 @@ public final class Scanner {
         RawLine last = lines.get(endIdx);
         int startOffset = first.startOffset();
         int endOffset = last.endOffset();
-        String rawText = source.substring(startOffset, endOffset);
-        InlineResult stripped = Inline.stripInline(rawText, startOffset);
         Ast.Paragraph paragraph = new Ast.Paragraph(
-                stripped.text(), Span.spanFromOffsets(source, startOffset, endOffset), stripped.map());
+                source.substring(startOffset, endOffset),
+                Span.spanFromOffsets(source, startOffset, endOffset),
+                List.of(new SegmentOffset(0, startOffset)));
         return new ParagraphResult(paragraph, endIdx + 1);
     }
 

@@ -191,11 +191,14 @@ with a few guards so real prose doesn't fragment:
 - A `.` inside a number (`3.14`), a known abbreviation (`e.g.`, `i.e.`, `etc.`,
   `cf.`, `vs.`), or before a lowercase letter is not a boundary.
 
-Matching runs against **formatting-stripped** text: emphasis (`*`, `_`) is
-removed and links `[text](url)` reduce to `text`, so `I withdraw *30*` matches
-the same step as `I withdraw 30`. Inline code spans are kept literally. Vár maps
-every stripped position back to the original source, so a mismatch still
-highlights the exact characters in your Markdown.
+Matching runs against the **raw text** of the sentence — inline markup and
+all. `I withdraw *30*` is four characters longer than `I withdraw 30` and
+matches only an expression that says so. Block markers are different: they
+are structure, not text, so a list item's `- ` bullet and a blockquote's `> `
+prefix never reach the matcher. If a marked-up run is data, make it a
+[custom parameter](/reference/custom-parameters/) whose regexp includes the
+markers and whose `parse` strips them — markup is notation, and Vár never
+edits your prose behind your back.
 
 ## Expected-to-fail examples
 

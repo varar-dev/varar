@@ -15,8 +15,8 @@ class AstTest {
     private static final Span SPAN = new Span(0, 5, 1, 1, 1, 6);
 
     @Test
-    void inlineOffsetExposesBothOffsets() {
-        Ast.InlineOffset offset = new Ast.InlineOffset(3, 7);
+    void segmentOffsetExposesBothOffsets() {
+        Ast.SegmentOffset offset = new Ast.SegmentOffset(3, 7);
         assertEquals(3, offset.textOffset());
         assertEquals(7, offset.sourceOffset());
     }
@@ -31,28 +31,29 @@ class AstTest {
     }
 
     @Test
-    void paragraphExposesFieldsAndDefensivelyCopiesInlineMap() {
-        List<Ast.InlineOffset> mutable = new ArrayList<>();
-        mutable.add(new Ast.InlineOffset(0, 0));
+    void paragraphExposesFieldsAndDefensivelyCopiesSegmentMap() {
+        List<Ast.SegmentOffset> mutable = new ArrayList<>();
+        mutable.add(new Ast.SegmentOffset(0, 0));
         Ast.Paragraph paragraph = new Ast.Paragraph("Some text.", SPAN, mutable);
 
         assertEquals("Some text.", paragraph.text());
         assertEquals(SPAN, paragraph.span());
-        assertEquals(1, paragraph.inlineMap().size());
+        assertEquals(1, paragraph.segmentMap().size());
 
         // Mutating the caller's list after construction must not affect the record.
-        mutable.add(new Ast.InlineOffset(1, 1));
-        assertEquals(1, paragraph.inlineMap().size());
+        mutable.add(new Ast.SegmentOffset(1, 1));
+        assertEquals(1, paragraph.segmentMap().size());
 
         // The record's own list must be unmodifiable.
         assertThrows(
-                UnsupportedOperationException.class, () -> paragraph.inlineMap().add(new Ast.InlineOffset(2, 2)));
+                UnsupportedOperationException.class,
+                () -> paragraph.segmentMap().add(new Ast.SegmentOffset(2, 2)));
         assertTrue(paragraph instanceof Ast.Block);
     }
 
     @Test
-    void listItemExposesFieldsAndDefensivelyCopiesInlineMap() {
-        List<Ast.InlineOffset> mutable = new ArrayList<>(List.of(new Ast.InlineOffset(0, 0)));
+    void listItemExposesFieldsAndDefensivelyCopiesSegmentMap() {
+        List<Ast.SegmentOffset> mutable = new ArrayList<>(List.of(new Ast.SegmentOffset(0, 0)));
         Span markerSpan = new Span(0, 2, 1, 1, 1, 3);
         Ast.ListItem listItem = new Ast.ListItem("An item", SPAN, mutable, true, markerSpan);
 
@@ -61,20 +62,20 @@ class AstTest {
         assertTrue(listItem.ordered());
         assertEquals(markerSpan, listItem.markerSpan());
         assertThrows(
-                UnsupportedOperationException.class, () -> listItem.inlineMap().add(new Ast.InlineOffset(1, 1)));
+                UnsupportedOperationException.class, () -> listItem.segmentMap().add(new Ast.SegmentOffset(1, 1)));
         assertTrue(listItem instanceof Ast.Block);
     }
 
     @Test
-    void blockquoteExposesFieldsAndDefensivelyCopiesInlineMap() {
-        List<Ast.InlineOffset> mutable = new ArrayList<>(List.of(new Ast.InlineOffset(0, 0)));
+    void blockquoteExposesFieldsAndDefensivelyCopiesSegmentMap() {
+        List<Ast.SegmentOffset> mutable = new ArrayList<>(List.of(new Ast.SegmentOffset(0, 0)));
         Ast.Blockquote blockquote = new Ast.Blockquote("Quoted", SPAN, mutable);
 
         assertEquals("Quoted", blockquote.text());
         assertEquals(SPAN, blockquote.span());
         assertThrows(
                 UnsupportedOperationException.class,
-                () -> blockquote.inlineMap().add(new Ast.InlineOffset(1, 1)));
+                () -> blockquote.segmentMap().add(new Ast.SegmentOffset(1, 1)));
         assertTrue(blockquote instanceof Ast.Block);
     }
 

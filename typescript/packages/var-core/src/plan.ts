@@ -1,4 +1,4 @@
-import type { Block, Fence, InlineOffset, Table, VarDoc } from './ast.ts'
+import type { Block, Fence, SegmentOffset, Table, VarDoc } from './ast.ts'
 import type { RowCheck } from './cell-diff.ts'
 import { ambiguousMatch, type Diagnostic, errorFenceWithoutStep } from './diagnostics.ts'
 import { findHits, type Hit, resolveHits } from './matcher.ts'
@@ -323,25 +323,25 @@ function liftSpan(source: string, block: Block, blockStart: number, blockEnd: nu
   if (block.kind !== 'paragraph' && block.kind !== 'list_item' && block.kind !== 'blockquote') {
     return block.span
   }
-  return liftFromInlineMap(source, block.inlineMap, blockStart, blockEnd)
+  return liftFromSegmentMap(source, block.segmentMap, blockStart, blockEnd)
 }
 
-function liftFromInlineMap(
+function liftFromSegmentMap(
   source: string,
-  inlineMap: ReadonlyArray<InlineOffset>,
+  segmentMap: ReadonlyArray<SegmentOffset>,
   blockStart: number,
   blockEnd: number,
 ): Span {
-  const start = liftInlineOffset(inlineMap, blockStart)
-  const end = liftInlineOffset(inlineMap, blockEnd)
+  const start = liftSegmentOffset(segmentMap, blockStart)
+  const end = liftSegmentOffset(segmentMap, blockEnd)
   return spanFromOffsets(source, start, end)
 }
 
-function liftInlineOffset(inlineMap: ReadonlyArray<InlineOffset>, textOffset: number): number {
-  let best = inlineMap[0]
-  for (const entry of inlineMap) {
+function liftSegmentOffset(segmentMap: ReadonlyArray<SegmentOffset>, textOffset: number): number {
+  let best = segmentMap[0]
+  for (const entry of segmentMap) {
     if (entry.textOffset <= textOffset) best = entry
   }
-  if (!best) throw new Error('empty inlineMap')
+  if (!best) throw new Error('empty segmentMap')
   return best.sourceOffset + (textOffset - best.textOffset)
 }

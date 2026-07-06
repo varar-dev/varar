@@ -1,7 +1,7 @@
 import pytest
 from dataclasses import FrozenInstanceError
 from var_core.span import span_from_offsets
-from var_core.ast import Paragraph, InlineOffset, VarDoc
+from var_core.ast import Paragraph, SegmentOffset, VarDoc
 
 
 def test_nodes_construct_and_are_frozen():
@@ -9,7 +9,7 @@ def test_nodes_construct_and_are_frozen():
         kind="paragraph",
         text="hi",
         span=span_from_offsets("hi", 0, 2),
-        inline_map=(InlineOffset(0, 0),),
+        segment_map=(SegmentOffset(0, 0),),
     )
     assert p.text == "hi" and p.kind == "paragraph"
     with pytest.raises(FrozenInstanceError):

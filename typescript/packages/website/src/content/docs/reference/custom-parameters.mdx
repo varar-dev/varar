@@ -88,8 +88,21 @@ The pattern that recognizes the parameter inside a sentence.
 
 - **No capture groups.** The whole match is the parameter. Use non-capturing
   groups — `(?:st|nd|rd|th)` — where you need alternation or repetition.
-- Matching runs against the plain sentence text, after Markdown emphasis is
-  stripped — `*Emma*` in the document reaches your regexp as `Emma`.
+- Matching runs against the raw sentence text — markup and all. `*Emma*`
+  reaches your regexp as `*Emma*`, so when the marked-up run *is* your
+  parameter, put the markers in the pattern and strip them in `parse`:
+
+  ```ts
+  title: {
+    regexp: /\*[^*]+\*/,
+    parse: (raw) => raw.slice(1, -1),
+    format: (t) => `*${t}*`,
+  }
+  ```
+
+  The same recipe works for any markup — bold (`/\*\*[^*]+\*\*/`), AsciiDoc
+  underscores (`/_[^_]+_/`), quotes. Markup is notation, exactly like
+  `£2.50`.
 - The pattern participates in step matching, so keep it anchored to real
   notation. A pattern that matches everywhere makes every sentence a step
   candidate.

@@ -27,10 +27,13 @@ public final class Ast {
     private Ast() {}
 
     /**
-     * Maps an offset into a block's flattened/sentence-split text back to the
-     * corresponding offset in the original source.
+     * Maps a block-text offset to its source offset. Block text is the raw
+     * source minus BLOCK markers only (list bullets, blockquote {@code >}
+     * prefixes), so a paragraph or list item has a single entry and a
+     * blockquote one entry per quoted line. Inline markup is never stripped —
+     * see {@code doc/superpowers/specs/2026-07-06-explicit-inline-format-plugins-design.md}.
      */
-    public record InlineOffset(int textOffset, int sourceOffset) {}
+    public record SegmentOffset(int textOffset, int sourceOffset) {}
 
     /**
      * A markdown block node, as matched by the structurer. The closed set of
@@ -44,24 +47,24 @@ public final class Ast {
     public record Heading(int level, String text, Span span) implements Block {}
 
     /** A markdown paragraph. */
-    public record Paragraph(String text, Span span, List<InlineOffset> inlineMap) implements Block {
+    public record Paragraph(String text, Span span, List<SegmentOffset> segmentMap) implements Block {
         public Paragraph {
-            inlineMap = List.copyOf(inlineMap);
+            segmentMap = List.copyOf(segmentMap);
         }
     }
 
     /** A single list item ({@code -}/{@code *} or numbered). */
-    public record ListItem(String text, Span span, List<InlineOffset> inlineMap, boolean ordered, Span markerSpan)
+    public record ListItem(String text, Span span, List<SegmentOffset> segmentMap, boolean ordered, Span markerSpan)
             implements Block {
         public ListItem {
-            inlineMap = List.copyOf(inlineMap);
+            segmentMap = List.copyOf(segmentMap);
         }
     }
 
     /** A markdown blockquote ({@code >}). */
-    public record Blockquote(String text, Span span, List<InlineOffset> inlineMap) implements Block {
+    public record Blockquote(String text, Span span, List<SegmentOffset> segmentMap) implements Block {
         public Blockquote {
-            inlineMap = List.copyOf(inlineMap);
+            segmentMap = List.copyOf(segmentMap);
         }
     }
 

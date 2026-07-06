@@ -39,9 +39,13 @@ stimulus, sensor = define_state(
             "parse": to_money,
             "format": format_money,
         },
-        # Emphasis (*Emma*) is stripped before matching, so a title is a
-        # Title Case run in the plain prose.
-        "title": {"regexp": r"[A-Z][a-z]+(?: [A-Z][a-z]+)*"},
+        # The emphasised run IS the parameter: the markers live in the pattern,
+        # parse strips them, format restores them. Markup is notation, like £2.50.
+        "title": {
+            "regexp": r"\*[^*]+\*",
+            "parse": lambda raw: raw[1:-1],
+            "format": lambda t: f"*{t}*",
+        },
     },
 )
 

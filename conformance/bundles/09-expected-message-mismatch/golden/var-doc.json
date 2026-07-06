@@ -3,65 +3,13 @@
     {
       "body": [
         {
-          "inlineMap": [
+          "kind": "paragraph",
+          "segmentMap": [
             {
               "sourceOffset": 68,
               "textOffset": 0
-            },
-            {
-              "sourceOffset": 69,
-              "textOffset": 1
-            },
-            {
-              "sourceOffset": 70,
-              "textOffset": 2
-            },
-            {
-              "sourceOffset": 71,
-              "textOffset": 3
-            },
-            {
-              "sourceOffset": 72,
-              "textOffset": 4
-            },
-            {
-              "sourceOffset": 73,
-              "textOffset": 5
-            },
-            {
-              "sourceOffset": 74,
-              "textOffset": 6
-            },
-            {
-              "sourceOffset": 75,
-              "textOffset": 7
-            },
-            {
-              "sourceOffset": 76,
-              "textOffset": 8
-            },
-            {
-              "sourceOffset": 77,
-              "textOffset": 9
-            },
-            {
-              "sourceOffset": 78,
-              "textOffset": 10
-            },
-            {
-              "sourceOffset": 79,
-              "textOffset": 11
-            },
-            {
-              "sourceOffset": 80,
-              "textOffset": 12
-            },
-            {
-              "sourceOffset": 81,
-              "textOffset": 13
             }
           ],
-          "kind": "paragraph",
           "span": {
             "endCol": 15,
             "endLine": 5,

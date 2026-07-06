@@ -78,6 +78,7 @@ export default defineConfig({
           items: [
             'explanation/given-when-then',
             'explanation/thin-steps',
+            'explanation/markup-is-yours',
             'explanation/var-for-cucumber-users',
           ],
         },

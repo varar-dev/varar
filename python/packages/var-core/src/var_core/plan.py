@@ -11,7 +11,7 @@ import re
 from dataclasses import dataclass
 from typing import Literal
 
-from var_core.ast import Block, Example, Fence, InlineOffset, Table, VarDoc
+from var_core.ast import Block, Example, Fence, SegmentOffset, Table, VarDoc
 from var_core.cell_diff import RowCheck
 from var_core.diagnostics import (
     AmbiguousInput,
@@ -89,21 +89,21 @@ class ExecutionPlan:
 # ---------------------------------------------------------------------------
 
 
-def _lift_inline_offset(
-    inline_map: tuple[InlineOffset, ...],
+def _lift_segment_offset(
+    segment_map: tuple[SegmentOffset, ...],
     text_offset: int,
 ) -> int:
-    """Mirror liftInlineOffset from plan.ts.
+    """Mirror liftSegmentOffset from plan.ts.
 
-    Walk inline_map to find the best entry whose text_offset <= the given
+    Walk segment_map to find the best entry whose text_offset <= the given
     text_offset, then map source_offset + delta back to a source offset.
     """
-    best: InlineOffset | None = inline_map[0] if inline_map else None
-    for entry in inline_map:
+    best: SegmentOffset | None = segment_map[0] if segment_map else None
+    for entry in segment_map:
         if entry.text_offset <= text_offset:
             best = entry
     if best is None:
-        raise ValueError("empty inline_map")
+        raise ValueError("empty segment_map")
     return best.source_offset + (text_offset - best.text_offset)
 
 
@@ -111,15 +111,15 @@ def _lift_span(source: str, block: Block, block_start: int, block_end: int) -> S
     """Mirror liftSpan from plan.ts.
 
     Maps a UTF-16 [block_start, block_end) offset range within the block's
-    plain text back to a source-document Span.  Only paragraph / list_item /
-    blockquote blocks carry an inline_map; for other block kinds the block's
+    text back to a source-document Span.  Only paragraph / list_item /
+    blockquote blocks carry a segment_map; for other block kinds the block's
     own span is returned unchanged.
     """
     if block.kind not in ("paragraph", "list_item", "blockquote"):
         return block.span  # type: ignore[return-value]
-    inline_map: tuple[InlineOffset, ...] = block.inline_map  # type: ignore[union-attr]
-    start_src = _lift_inline_offset(inline_map, block_start)
-    end_src = _lift_inline_offset(inline_map, block_end)
+    segment_map: tuple[SegmentOffset, ...] = block.segment_map  # type: ignore[union-attr]
+    start_src = _lift_segment_offset(segment_map, block_start)
+    end_src = _lift_segment_offset(segment_map, block_end)
     return span_from_offsets(source, start_src, end_src)
 
 

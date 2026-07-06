@@ -11,10 +11,15 @@ export type Paragraph = {
   readonly kind: 'paragraph'
   readonly text: string
   readonly span: Span
-  readonly inlineMap: ReadonlyArray<InlineOffset>
+  readonly segmentMap: ReadonlyArray<SegmentOffset>
 }
 
-export type InlineOffset = {
+// Maps a block-text offset to its source offset. Block text is the raw
+// source minus BLOCK markers only (list bullets, blockquote `>` prefixes),
+// so a paragraph or list item has a single entry and a blockquote one entry
+// per quoted line. Inline markup is never stripped — see
+// doc/superpowers/specs/2026-07-06-explicit-inline-format-plugins-design.md.
+export type SegmentOffset = {
   readonly textOffset: number
   readonly sourceOffset: number
 }
@@ -23,7 +28,7 @@ export type ListItem = {
   readonly kind: 'list_item'
   readonly text: string
   readonly span: Span
-  readonly inlineMap: ReadonlyArray<InlineOffset>
+  readonly segmentMap: ReadonlyArray<SegmentOffset>
   readonly ordered: boolean
   readonly markerSpan: Span
 }
@@ -32,7 +37,7 @@ export type Blockquote = {
   readonly kind: 'blockquote'
   readonly text: string
   readonly span: Span
-  readonly inlineMap: ReadonlyArray<InlineOffset>
+  readonly segmentMap: ReadonlyArray<SegmentOffset>
 }
 
 export type Row = {

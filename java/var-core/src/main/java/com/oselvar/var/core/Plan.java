@@ -447,36 +447,36 @@ public final class Plan {
     }
 
     /**
-     * Maps a {@code [blockStart, blockEnd)} UTF-16 offset range within a block's flattened text
-     * back to a source-document {@link Span}, via that block's {@code inlineMap}. Non-text-bearing
-     * blocks (which carry no inline map) return their own span unchanged — mirrors {@code
-     * liftSpan}'s defensive fallback in plan.ts.
+     * Maps a {@code [blockStart, blockEnd)} UTF-16 offset range within a block's text back to a
+     * source-document {@link Span}, via that block's {@code segmentMap}. Non-text-bearing blocks
+     * (which carry no segment map) return their own span unchanged — mirrors {@code liftSpan}'s
+     * defensive fallback in plan.ts.
      */
     private static Span liftSpan(String source, Ast.Block block, int blockStart, int blockEnd) {
-        List<Ast.InlineOffset> inlineMap =
+        List<Ast.SegmentOffset> segmentMap =
                 switch (block) {
-                    case Ast.Paragraph p -> p.inlineMap();
-                    case Ast.ListItem l -> l.inlineMap();
-                    case Ast.Blockquote b -> b.inlineMap();
+                    case Ast.Paragraph p -> p.segmentMap();
+                    case Ast.ListItem l -> l.segmentMap();
+                    case Ast.Blockquote b -> b.segmentMap();
                     default -> null;
                 };
-        if (inlineMap == null) return spanOf(block);
-        return liftFromInlineMap(source, inlineMap, blockStart, blockEnd);
+        if (segmentMap == null) return spanOf(block);
+        return liftFromSegmentMap(source, segmentMap, blockStart, blockEnd);
     }
 
-    private static Span liftFromInlineMap(
-            String source, List<Ast.InlineOffset> inlineMap, int blockStart, int blockEnd) {
-        int start = liftInlineOffset(inlineMap, blockStart);
-        int end = liftInlineOffset(inlineMap, blockEnd);
+    private static Span liftFromSegmentMap(
+            String source, List<Ast.SegmentOffset> segmentMap, int blockStart, int blockEnd) {
+        int start = liftSegmentOffset(segmentMap, blockStart);
+        int end = liftSegmentOffset(segmentMap, blockEnd);
         return Span.spanFromOffsets(source, start, end);
     }
 
-    private static int liftInlineOffset(List<Ast.InlineOffset> inlineMap, int textOffset) {
-        Ast.InlineOffset best = inlineMap.isEmpty() ? null : inlineMap.get(0);
-        for (Ast.InlineOffset entry : inlineMap) {
+    private static int liftSegmentOffset(List<Ast.SegmentOffset> segmentMap, int textOffset) {
+        Ast.SegmentOffset best = segmentMap.isEmpty() ? null : segmentMap.get(0);
+        for (Ast.SegmentOffset entry : segmentMap) {
             if (entry.textOffset() <= textOffset) best = entry;
         }
-        if (best == null) throw new IllegalStateException("empty inlineMap");
+        if (best == null) throw new IllegalStateException("empty segmentMap");
         return best.sourceOffset() + (textOffset - best.textOffset());
     }
 

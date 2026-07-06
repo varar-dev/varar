@@ -9,9 +9,9 @@ import com.oselvar.var.core.Ast.Block;
 import com.oselvar.var.core.Ast.Blockquote;
 import com.oselvar.var.core.Ast.Fence;
 import com.oselvar.var.core.Ast.Heading;
-import com.oselvar.var.core.Ast.InlineOffset;
 import com.oselvar.var.core.Ast.ListItem;
 import com.oselvar.var.core.Ast.Paragraph;
+import com.oselvar.var.core.Ast.SegmentOffset;
 import com.oselvar.var.core.Ast.Table;
 import com.oselvar.var.core.Ast.ThematicBreak;
 import java.util.List;
@@ -100,7 +100,7 @@ class ScannerTest {
     }
 
     @Test
-    void paragraphInlineMapMapsTextOffsetsToSourceOffsets() {
+    void paragraphSegmentMapMapsTextOffsetsToSourceOffsets() {
         String source = "# Heading\n\nhello world";
         List<Block> blocks = Scanner.scan(source);
         Paragraph paragraph = blocks.stream()
@@ -109,14 +109,26 @@ class ScannerTest {
                 .findFirst()
                 .orElseThrow();
         // 'hello world' lives at source offset 11 (after '# Heading\n\n')
-        assertEquals(new InlineOffset(0, 11), paragraph.inlineMap().get(0));
+        assertEquals(new SegmentOffset(0, 11), paragraph.segmentMap().get(0));
+    }
+
+    @Test
+    void inlineMarkupIsNeverStrippedBlockTextIsTheRawSource() {
+        String source = "Maya borrowed *Emma*, see [docs](https://x.test) and `code`.";
+        List<Block> blocks = Scanner.scan(source);
+        Paragraph paragraph = blocks.stream()
+                .filter(Paragraph.class::isInstance)
+                .map(Paragraph.class::cast)
+                .findFirst()
+                .orElseThrow();
+        assertEquals(source, paragraph.text());
     }
 
     /**
      * U+1F389 PARTY POPPER is a surrogate pair (2 UTF-16 code units). Source "🎉 hello" is 8
      * UTF-16 units total (2 + space + "hello"[5] = 2+1+5=8). The paragraph's span end_offset must
      * be 8, not 7 (a code-point count would be wrong here) — proving the scanner-level span
-     * computation holds at the astral boundary, not just Span/Inline/TableCells in isolation.
+     * computation holds at the astral boundary, not just Span/TableCells in isolation.
      */
     @Test
     void astralParagraphSpanEndOffsetIsUtf16CodeUnits() {
@@ -275,6 +287,19 @@ class ScannerTest {
         assertEquals(1, blocks.size());
         Blockquote bq = assertInstanceOf(Blockquote.class, blocks.get(0));
         assertEquals("Given I have 100\nWhen I withdraw 40", bq.text());
+    }
+
+    @Test
+    void blockquoteTextDropsThePrefixPerLineWithOneSegmentEntryEach() {
+        String source = "> first *line*\n> second line";
+        List<Block> blocks = Scanner.scan(source);
+        Blockquote quote = assertInstanceOf(Blockquote.class, blocks.get(0));
+        assertEquals("first *line*\nsecond line", quote.text());
+        assertEquals(
+                List.of(
+                        new SegmentOffset(0, 2),
+                        new SegmentOffset("first *line*\n".length(), "> first *line*\n> ".length())),
+                quote.segmentMap());
     }
 
     // ── helpers ───────────────────────────────────────────────────────────

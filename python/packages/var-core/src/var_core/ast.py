@@ -6,8 +6,13 @@ from typing import Union
 from var_core.span import Span
 
 
+# Maps a block-text offset to its source offset. Block text is the raw
+# source minus BLOCK markers only (list bullets, blockquote `>` prefixes),
+# so a paragraph or list item has a single entry and a blockquote one entry
+# per quoted line. Inline markup is never stripped — see
+# doc/superpowers/specs/2026-07-06-explicit-inline-format-plugins-design.md.
 @dataclass(frozen=True, slots=True)
-class InlineOffset:
+class SegmentOffset:
     text_offset: int
     source_offset: int
 
@@ -29,7 +34,7 @@ class Paragraph:
     kind: str = "paragraph"
     text: str = ""
     span: Span | None = None
-    inline_map: tuple[InlineOffset, ...] = ()
+    segment_map: tuple[SegmentOffset, ...] = ()
 
     def __post_init__(self) -> None:
         if self.span is None:
@@ -41,7 +46,7 @@ class ListItem:
     kind: str = "list_item"
     text: str = ""
     span: Span | None = None
-    inline_map: tuple[InlineOffset, ...] = ()
+    segment_map: tuple[SegmentOffset, ...] = ()
     ordered: bool = False
     marker_span: Span | None = None
 
@@ -57,7 +62,7 @@ class Blockquote:
     kind: str = "blockquote"
     text: str = ""
     span: Span | None = None
-    inline_map: tuple[InlineOffset, ...] = ()
+    segment_map: tuple[SegmentOffset, ...] = ()
 
     def __post_init__(self) -> None:
         if self.span is None:
