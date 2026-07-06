@@ -37,6 +37,9 @@ jobs:
 
       - run: uv run python scripts/lint_no_reexports.py
 
-      # Standalone sample project (see examples/python-pytest).
+      # Standalone sample projects (see examples/python-*).
       - run: uv run pytest
         working-directory: examples/python-pytest
+
+      - run: uv run python -m unittest
+        working-directory: examples/python-unittest

@@ -66,11 +66,11 @@ perl -0pi -e 's|<!-- On trunk this is the SNAPSHOT that `mvn install` \(run from
 # Pin the TypeScript sample to the released npm packages.
 perl -pi -e "s/\"workspace:\\*\"/\"^$VERSION\"/g" "$DEST"/typescript-vitest/package.json
 
-# Point the Python sample's uv sources at the release tag (PyPI is parked;
-# git+tag sources give users a working `uv run pytest` with nothing else
-# cloned). Drops the editable flag — a pinned tag is not editable.
+# Point the Python samples' uv sources at the release tag (PyPI is parked;
+# git+tag sources give users a working test run with nothing else cloned).
+# Drops the editable flag — a pinned tag is not editable.
 perl -pi -e "s|\\{ path = \"\\.\\./\\.\\./python/packages/([^\"]+)\", editable = true \\}|{ git = \"https://github.com/oselvar/var\", subdirectory = \"python/packages/\$1\", tag = \"$TAG\" }|" \
-  "$DEST"/python-pytest/pyproject.toml
+  "$DEST"/python-*/pyproject.toml
 
 git -C "$DEST" add -A
 if git -C "$DEST" diff --cached --quiet; then

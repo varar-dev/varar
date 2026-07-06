@@ -17,8 +17,7 @@ whole team, and checked against the code on every test run.
 | [`java-junit-maven`](java-junit-maven) | Java + JUnit + Maven | `mvn test` | [![java-junit-maven](https://github.com/oselvar/var-examples/actions/workflows/java-junit-maven.yml/badge.svg)](https://github.com/oselvar/var-examples/actions/workflows/java-junit-maven.yml) |
 | [`java-junit-gradle`](java-junit-gradle) | Java + JUnit + Gradle | `./gradlew test` | [![java-junit-gradle](https://github.com/oselvar/var-examples/actions/workflows/java-junit-gradle.yml/badge.svg)](https://github.com/oselvar/var-examples/actions/workflows/java-junit-gradle.yml) |
 | [`python-pytest`](python-pytest) | Python + pytest | `uv run pytest` | [![python-pytest](https://github.com/oselvar/var-examples/actions/workflows/python-pytest.yml/badge.svg)](https://github.com/oselvar/var-examples/actions/workflows/python-pytest.yml) |
-
-(`python-unittest` will join once the var-unittest adapter ships.)
+| [`python-unittest`](python-unittest) | Python + unittest | `uv run python -m unittest` | [![python-unittest](https://github.com/oselvar/var-examples/actions/workflows/python-unittest.yml/badge.svg)](https://github.com/oselvar/var-examples/actions/workflows/python-unittest.yml) |
 
 `typescript-vitest` implements the full example set; the other projects
 implement a feature-covering subset — `hello-var` (basic steps),

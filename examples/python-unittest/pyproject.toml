@@ -1,0 +1,26 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "var-example-python-unittest"
+version = "0.0.1"
+description = "Standalone sample: run Markdown specs as unittest tests with Vár"
+requires-python = ">=3.12"
+dependencies = ["oselvar-var-unittest"]
+
+# PyPI publishing of the Vár packages is parked, so this sample resolves them
+# straight from the source tree: path sources in the oselvar/var monorepo,
+# rewritten to git+tag sources when synced to oselvar/var-examples. Once the
+# packages are on PyPI, this whole table disappears — the plain dependency
+# above is all a real project needs. The transitive set is listed because
+# oselvar-var-unittest pins its internal dependencies exactly (==<version>).
+[tool.uv.sources]
+oselvar-var-unittest = { path = "../../python/packages/var-unittest", editable = true }
+oselvar-var = { path = "../../python/packages/var", editable = true }
+oselvar-var-core = { path = "../../python/packages/var-core", editable = true }
+oselvar-var-config = { path = "../../python/packages/var-config", editable = true }
+oselvar-var-runner = { path = "../../python/packages/var-runner", editable = true }
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/roman_numerals_example", "src/yahtzee_example"]

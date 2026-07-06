@@ -26,6 +26,7 @@ typescript:
 python:
 	cd python && uv sync && uv run pytest --cov && uv run ruff check && uv run python scripts/lint_no_reexports.py
 	cd examples/python-pytest && uv run pytest
+	cd examples/python-unittest && uv run python -m unittest
 
 # spotless:apply first, so a local run prettifies instead of failing the bound
 # spotless:check (CI runs plain `mvn install`, where drift fails the build).
