@@ -1,6 +1,6 @@
 from var import define_state
 
-stimulus, sensor = define_state(lambda: {})
+stimulus, sensor = define_state()
 
 
 @sensor("life, the universe and everything is {int}")

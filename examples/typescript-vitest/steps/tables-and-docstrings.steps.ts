@@ -1,6 +1,6 @@
 import { defineState } from '@oselvar/var'
 
-const { sensor } = defineState(() => ({}))
+const { sensor } = defineState()
 
 // Whole-table mode: the table arrives as string[][] (header row first). It is
 // this sensor's only slot, so return the reproduced table bare — Vár compares

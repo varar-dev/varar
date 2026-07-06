@@ -1,7 +1,7 @@
 from var import define_state
 from yahtzee_example import score
 
-stimulus, sensor = define_state(lambda: {})
+stimulus, sensor = define_state()
 
 
 # Header-bound table: the paragraph names every header cell (dice, category,

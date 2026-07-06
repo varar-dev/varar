@@ -1,6 +1,6 @@
 from var import define_state
 
-stimulus, sensor = define_state(lambda: {})
+stimulus, sensor = define_state()
 
 
 # Whole-table mode: the table arrives as a list of rows (header row first).

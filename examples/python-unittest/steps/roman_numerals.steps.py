@@ -1,7 +1,7 @@
 from roman_numerals_example import to_roman
 from var import define_state
 
-stimulus, sensor = define_state(lambda: {})
+stimulus, sensor = define_state()
 
 
 @sensor("a decimal and a roman number")

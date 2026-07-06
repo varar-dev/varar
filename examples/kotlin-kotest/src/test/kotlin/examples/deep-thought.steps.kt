@@ -5,9 +5,6 @@ package examples
 import com.oselvar.varkt.defineState
 import com.oselvar.varkt.sensor
 
-class DeepThoughtCtx
-
-val deepThoughtSteps =
-    defineState(::DeepThoughtCtx) {
-        sensor("life, the universe and everything is {int}") { _: Int -> 42 }
-    }
+val deepThoughtSteps = defineState {
+    sensor("life, the universe and everything is {int}") { _: Int -> 42 }
+}
