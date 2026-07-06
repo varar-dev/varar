@@ -1,10 +1,17 @@
-import type { SpecResults } from '@oselvar/var-core'
+import type { Drift, SpecResults } from '@oselvar/var-core'
 
 export type RunInput = {
   varPath: string
   varSource: string
   stepFiles: ReadonlyArray<{ path: string; source: string }>
   exampleIndex?: number
+  // Accept all current drift for this spec (snapshot-update semantics).
+  update?: boolean
+}
+
+export type RunOutcome = {
+  results: SpecResults
+  drifts: ReadonlyArray<Drift>
 }
 
 // The worker is shared across every editor group on the page (one worker,
@@ -13,7 +20,7 @@ export type RunInput = {
 // (e.g. two examples on the same page both scheduling a run on load), and
 // responses are not guaranteed to arrive in call order.
 type WorkerRequest = RunInput & { requestId: number }
-type WorkerResponse = { requestId: number; results: SpecResults }
+type WorkerResponse = { requestId: number; results: SpecResults; drifts: ReadonlyArray<Drift> }
 
 let worker: Worker | null = null
 let nextRequestId = 0
@@ -23,14 +30,14 @@ function spawn(): Worker {
   return worker
 }
 
-export function runSpec(input: RunInput, timeoutMs = 5000): Promise<SpecResults> {
+export function runSpec(input: RunInput, timeoutMs = 5000): Promise<RunOutcome> {
   const w = worker ?? spawn()
   const requestId = nextRequestId++
-  return new Promise<SpecResults>((resolve, reject) => {
+  return new Promise<RunOutcome>((resolve, reject) => {
     const onMessage = (e: MessageEvent<WorkerResponse>) => {
       if (e.data.requestId !== requestId) return // another call's response
       cleanup()
-      resolve(e.data.results)
+      resolve({ results: e.data.results, drifts: e.data.drifts ?? [] })
     }
     const onError = (e: ErrorEvent) => {
       cleanup()

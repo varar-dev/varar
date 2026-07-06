@@ -1,23 +1,41 @@
 import { buildRegistry, contextFactory } from '@oselvar/var/registry'
 import {
+  type BaselineStore,
+  type Drift,
   type ExampleResult,
   executePlan,
   hashSource,
   parse,
   plan,
+  reconcileDrift,
   type SpecResults,
   type TestSink,
   toFailure,
 } from '@oselvar/var-core'
 
+export type RunOutcome = {
+  readonly results: SpecResults
+  readonly drifts: ReadonlyArray<Drift>
+}
+
+export type RunSpecOptions = {
+  readonly exampleIndex?: number
+  // When present, drift is reconciled against this store (in-memory in the
+  // browser). Omit to skip drift entirely.
+  readonly baselineStore?: BaselineStore
+  // Accept all current drift: re-record the baseline instead of reporting it.
+  readonly update?: boolean
+}
+
 export async function runRegisteredSpec(
   varPath: string,
   varSource: string,
-  exampleIndex?: number,
-): Promise<SpecResults> {
+  options: RunSpecOptions = {},
+): Promise<RunOutcome> {
   const registry = buildRegistry()
   const varDoc = parse(varPath, varSource, [])
   const full = plan(varDoc, registry)
+  const { exampleIndex } = options
   const examples =
     exampleIndex == null ? full.examples : full.examples.filter((_, i) => i === exampleIndex)
   const toRun = { ...full, examples }
@@ -52,5 +70,26 @@ export async function runRegisteredSpec(
 
   executePlan(toRun, { sink, reporter: { diagnostic() {} }, createContext })
   await Promise.all(pending)
-  return { version: 1, specPath: varPath, sourceHash: hashSource(varSource), examples: out }
+  const results: SpecResults = {
+    version: 1,
+    specPath: varPath,
+    sourceHash: hashSource(varSource),
+    examples: out,
+  }
+
+  // Drift is reconciled against the FULL plan (never a single-example filter),
+  // so running one example can't make the others look drifted.
+  const drifts =
+    options.baselineStore && exampleIndex == null
+      ? await reconcileDrift({
+          store: options.baselineStore,
+          specPath: varPath,
+          source: varSource,
+          varDoc,
+          plan: full,
+          update: options.update,
+        })
+      : []
+
+  return { results, drifts }
 }

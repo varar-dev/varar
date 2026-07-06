@@ -1,8 +1,9 @@
 import * as varRuntime from '@oselvar/var'
 import { _resetBuilder } from '@oselvar/var/registry'
 import * as varCore from '@oselvar/var-core'
-import { hashSource, type SpecResults } from '@oselvar/var-core'
+import { type Drift, hashSource, type SpecResults } from '@oselvar/var-core'
 import * as ts from 'typescript'
+import { createMemoryBaselineStore } from './memory-baseline-store.ts'
 import { runRegisteredSpec } from './run-spec.ts'
 
 type RunInput = {
@@ -10,7 +11,12 @@ type RunInput = {
   varSource: string
   stepFiles: ReadonlyArray<{ path: string; source: string }>
   exampleIndex?: number
+  update?: boolean
 }
+
+// One baseline store for the whole page (all specs keyed inside var.lock.json),
+// living as long as the worker. Drift is measured against it across edits.
+const baselineStore = createMemoryBaselineStore()
 // Mirrors run-client.ts's WorkerRequest/WorkerResponse — the requestId lets
 // the client (a single worker shared by every editor group on the page)
 // match each response back to the call that made it, since runs from
@@ -83,13 +89,20 @@ function createModuleLoader(files: ReadonlyArray<SourceFile>) {
 self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
   const { requestId, ...input } = e.data
   let results: SpecResults
+  let drifts: ReadonlyArray<Drift> = []
   try {
     _resetBuilder()
     const loader = createModuleLoader(input.stepFiles)
     // Only .steps.ts files run eagerly (they register steps as a side effect);
     // plain .ts library files load lazily when a steps file imports them.
     for (const f of input.stepFiles) if (f.path.endsWith('.steps.ts')) loader.load(f)
-    results = await runRegisteredSpec(input.varPath, input.varSource, input.exampleIndex)
+    const outcome = await runRegisteredSpec(input.varPath, input.varSource, {
+      exampleIndex: input.exampleIndex,
+      baselineStore,
+      update: input.update,
+    })
+    results = outcome.results
+    drifts = outcome.drifts
   } catch (err) {
     const e2 = err as Error
     results = {
@@ -110,5 +123,5 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
       ],
     }
   }
-  ;(self as unknown as Worker).postMessage({ requestId, results })
+  ;(self as unknown as Worker).postMessage({ requestId, results, drifts })
 }

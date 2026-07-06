@@ -70,6 +70,7 @@ The examples below give a taste of how Vár works. If the markdown disagrees wit
       <File uri="file:///library.md">
         <Version label="Fix it">{librarySource}</Version>
         <Version label="Break it">{librarySource.replace('£2.50', '£3.00').replace('the library agrees', 'the library refuses')}</Version>
+        <Version label="Reword (drift)">{librarySource.replace('due back on June 12', 'due on June 12').replace('asks to borrow *Hyperion*', 'wants to borrow *Hyperion*').replace('the library agrees', 'the library says yes')}</Version>
       </File>
       <File uri="file:///library.steps.ts">{librarySteps}</File>
       <File uri="file:///library.ts">{libraryLogic}</File>
@@ -81,6 +82,8 @@ The examples below give a taste of how Vár works. If the markdown disagrees wit
       <File uri="file:///library_example.py">{libraryLogicPython}</File>
     </Editor>
     Each paragraph runs as its own example with fresh state — arrange, act and assert in plain prose. See [Stimulus](/reference/stimulus/) for how state evolves.
+
+    Cycle the version button to **Reword (drift)**: the *Ben* paragraph is reworded so it no longer matches any step. Instead of silently dropping to prose (losing that test), Vár flags it as **drift** — an amber marker on the paragraph — and offers **Accept as prose** to acknowledge it. See [Examples › Drift detection](/reference/examples/#drift-detection).
   </TabItem>
   <TabItem label="Roman numerals">
     <Editor>

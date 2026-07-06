@@ -10,7 +10,7 @@ import { lineNumbers } from '@codemirror/view'
 import { hashSource } from '@oselvar/var-core'
 import { basicSetup, EditorView, minimalSetup } from 'codemirror'
 import { flashExtension, type GenerateSnippet, stepGenAffordance } from '../lib/cm-generate-step.ts'
-import { setRunResults, varRunExtension } from '../lib/cm-run.ts'
+import { setDrift, setRunResults, varRunExtension } from '../lib/cm-run.ts'
 import { semanticTokens } from '../lib/cm-semantic-tokens.ts'
 import { varEditorThemeExt } from '../lib/cm-var-theme.ts'
 import { planReplay, type ReplayOp } from '../lib/replay-plan.ts'
@@ -249,7 +249,11 @@ function mountEditor(editorEl: HTMLElement): void {
     if (runTimer) clearTimeout(runTimer)
     runTimer = setTimeout(() => void runNow(), 300)
   }
-  const runNow = async (): Promise<void> => {
+  // Number of drifted paragraphs from the last run — drives the Accept button.
+  let driftCount = 0
+  // `update: true` accepts the current drift (snapshot-update semantics): the
+  // run re-records the baseline instead of reporting drift.
+  const runNow = async (update = false): Promise<void> => {
     const mdEntry = [...views.entries()].find(([u]) => u.endsWith('.md'))
     if (!mdEntry) return
     const [, mdView] = mdEntry
@@ -261,28 +265,36 @@ function mountEditor(editorEl: HTMLElement): void {
     const [input] = groupRunInputs(editors, new Map([['editor', []]]))
     if (!input) return
     try {
-      const results = await runSpec({
+      const { results, drifts } = await runSpec({
         varPath: input.varPath,
         varSource: input.varSource,
         stepFiles: input.stepFiles,
+        update,
       })
-      mdView.dispatch({ effects: setRunResults.of(results) })
+      mdView.dispatch({ effects: [setRunResults.of(results), setDrift.of(drifts)] })
+      driftCount = drifts.length
+      renderDriftBtn()
     } catch (err) {
       mdView.dispatch({
-        effects: setRunResults.of({
-          version: 1,
-          specPath: input.varPath,
-          sourceHash: hashSource(input.varSource),
-          examples: [
-            {
-              name: 'error',
-              status: 'failed',
-              lines: [1],
-              failure: { line: 1, message: String(err), stack: String(err) },
-            },
-          ],
-        }),
+        effects: [
+          setRunResults.of({
+            version: 1,
+            specPath: input.varPath,
+            sourceHash: hashSource(input.varSource),
+            examples: [
+              {
+                name: 'error',
+                status: 'failed',
+                lines: [1],
+                failure: { line: 1, message: String(err), stack: String(err) },
+              },
+            ],
+          }),
+          setDrift.of([]),
+        ],
       })
+      driftCount = 0
+      renderDriftBtn()
     }
   }
 
@@ -340,6 +352,27 @@ function mountEditor(editorEl: HTMLElement): void {
       if (busyUri === uri) busyUri = null
       renderVersionBtn()
     })
+  })
+
+  // Drift affordance — a floating button in the mount's bottom-right that
+  // appears only when the last run reported drift. Clicking it accepts the
+  // drift (re-runs in update mode), re-recording the in-memory baseline so the
+  // now-prose paragraph is no longer flagged.
+  const driftBtn = document.createElement('button')
+  driftBtn.type = 'button'
+  driftBtn.className =
+    'fe-drift-btn absolute bottom-2 right-2 z-10 px-2 py-0.5 font-mono text-[12px] rounded-none border border-line bg-surface text-ink cursor-pointer hover:bg-raised'
+  driftBtn.style.display = 'none'
+  function renderDriftBtn(): void {
+    if (driftCount > 0) {
+      driftBtn.style.display = ''
+      driftBtn.textContent = `⚠ ${driftCount} drifted — Accept as prose`
+    } else {
+      driftBtn.style.display = 'none'
+    }
+  }
+  driftBtn.addEventListener('click', () => {
+    void runNow(true)
   })
 
   function showFile(uri: string, focus = true): void {
@@ -458,6 +491,7 @@ function mountEditor(editorEl: HTMLElement): void {
   }
 
   mount.appendChild(versionBtn)
+  mount.appendChild(driftBtn)
   renderVersionBtn()
   applySiteLang()
   onLangChange(applySiteLang)
