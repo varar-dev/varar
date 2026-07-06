@@ -9,6 +9,12 @@ This file is generated from conventional commit messages by
 [git-cliff](https://git-cliff.org) (`make changelog`) — do not edit it by
 hand. The `[Unreleased]` section is refreshed by CI on every push to `main`.
 
+## [Unreleased]
+
+### Specification (all ports)
+
+- Added: The state factory argument to defineState/define_state is now optional — step files with pure steps can omit it
+
 ## [0.3.1] - 2026-07-06
 
 ### Python (PyPI)
