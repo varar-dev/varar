@@ -40,6 +40,14 @@ export {
   toVarDocArtifact,
 } from './conformance.ts'
 export { deepEqual } from './deep-equal.ts'
+export type { BaselineExample, Drift, SpecBaseline, VarLock } from './drift.ts'
+export {
+  detectDrift,
+  deriveSpecBaseline,
+  liveExamples,
+  parseVarLock,
+  stringifyVarLock,
+} from './drift.ts'
 export type {
   AmbiguousInput,
   Candidate,

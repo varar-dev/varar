@@ -297,7 +297,7 @@ function planBlock(text: string, registry: Registry): BlockPlan {
   return { steps: allSteps, ambiguities: allAmbiguities }
 }
 
-function deriveExampleName(body: ReadonlyArray<Block>): string {
+export function deriveExampleName(body: ReadonlyArray<Block>): string {
   const primary = body.find(
     (b) => b.kind === 'paragraph' || b.kind === 'list_item' || b.kind === 'blockquote',
   )
