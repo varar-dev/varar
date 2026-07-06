@@ -1,0 +1,72 @@
+---
+title: Example projects
+description: Standalone sample projects — one per language and test framework — all running the same Markdown specs with Vár.
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+The [oselvar/var-examples](https://github.com/oselvar/var-examples) repository
+holds one small, standalone project per language/test-framework combination.
+Each is a complete project you can copy as the starting point for your own.
+
+They all run the **same Markdown specs** — including the ones you can try on
+the [front page](/). The `.md` files are identical across projects; only the
+step definitions change language. That is the point: the spec belongs to the
+whole team, the language is an implementation detail.
+
+<CardGrid>
+  <Card title="TypeScript + Vitest" icon="seti:typescript">
+    The full example set, and the project the interactive editors on this
+    site mirror. Run with `pnpm test`.
+
+    [Browse typescript-vitest →](https://github.com/oselvar/var-examples/tree/main/typescript-vitest)
+  </Card>
+  <Card title="Java + JUnit + Maven" icon="seti:java">
+    Step definitions as `StepDefinitions` classes, run by the JUnit Platform
+    `var` engine. Run with `mvn test`.
+
+    [Browse java-junit-maven →](https://github.com/oselvar/var-examples/tree/main/java-junit-maven)
+  </Card>
+  <Card title="Java + JUnit + Gradle" icon="seti:java">
+    The same Java step definitions as the Maven project, built with Gradle.
+    Run with `./gradlew test`.
+
+    [Browse java-junit-gradle →](https://github.com/oselvar/var-examples/tree/main/java-junit-gradle)
+  </Card>
+  <Card title="Kotlin + JUnit" icon="seti:kotlin">
+    Step definitions in the Kotlin DSL — top-level `defineState` with
+    state-receiver lambdas. Run with `./gradlew test`.
+
+    [Browse kotlin-junit →](https://github.com/oselvar/var-examples/tree/main/kotlin-junit)
+  </Card>
+  <Card title="Kotlin + Kotest" icon="seti:kotlin">
+    The same Kotlin step definitions, registered as a Kotest `VarSpec`
+    instead of the JUnit suite. Run with `./gradlew test`.
+
+    [Browse kotlin-kotest →](https://github.com/oselvar/var-examples/tree/main/kotlin-kotest)
+  </Card>
+  <Card title="Python + pytest" icon="seti:python">
+    Step definitions as decorated functions, collected by the pytest-var
+    plugin. Run with `uv run pytest`.
+
+    [Browse python-pytest →](https://github.com/oselvar/var-examples/tree/main/python-pytest)
+  </Card>
+</CardGrid>
+
+## What each project contains
+
+The specs sit at each project's root as plain `.md` files. `typescript-vitest`
+carries the full set; the other projects share a feature-covering subset:
+
+| Spec | Shows |
+| --- | --- |
+| `hello-var.md` | basic stimulus/sensor steps |
+| `deep-thought.md` | the front page's one-sensor example |
+| `roman-numerals.md` | header-bound table rows |
+| `yahtzee.md` | header-bound table rows over a richer domain |
+| `tables-and-docstrings.md` | whole-table and doc-string checks |
+
+The projects are synced from the
+[oselvar/var](https://github.com/oselvar/var) monorepo's `examples/` directory
+on every release, pinned to the released package versions — so send changes
+there, not to var-examples.

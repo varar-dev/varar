@@ -22,8 +22,8 @@ whole team, and checked against the code on every test run.
 
 `typescript-vitest` implements the full example set; the other projects
 implement a feature-covering subset — `hello-var` (basic steps),
-`tables-and-docstrings` (whole tables + doc strings) and `yahtzee`
-(header-bound table rows).
+`deep-thought` (a one-sensor spec), `tables-and-docstrings` (whole tables +
+doc strings), and `yahtzee` and `roman-numerals` (header-bound table rows).
 
 ## Where these files live
 

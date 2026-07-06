@@ -54,7 +54,7 @@ export default defineConfig({
         },
         {
           label: 'Reference',
-          items: ['reference/stimulus', 'reference/sensors'],
+          items: ['reference/stimulus', 'reference/sensors', 'reference/example-projects'],
         },
         {
           label: 'Understanding Vár',
