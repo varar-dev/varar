@@ -223,14 +223,16 @@ h6 {
 }
 
 /*
- * Header font selectors. The prose font (--sl-font) and code font
+ * Header font selectors (dev-only). The prose font (--sl-font) and code font
  * (--sl-font-mono) default to STIX Two Text / JetBrains Mono in :root above;
- * the header selects (src/components/ThemeSelect.astro) set data-font-prose /
- * data-font-code on <html> to switch either one to Atkinson Hyperlegible. These
- * selectors are [0,2,0] — matching :root[data-theme='light'] — so fonts stay
- * out of the light/dark blocks to avoid a specificity tie. Headings keep Norse
- * regardless (see the h1–h6 rule above). An inline head script in
- * astro.config.mjs re-applies the stored choice before first paint.
+ * the dev-only header selects (src/components/ThemeSelect.astro) set
+ * data-font-prose / data-font-code on <html> to switch either one to Atkinson
+ * Hyperlegible — production always ships the defaults. These selectors are
+ * [0,2,0] — matching :root[data-theme='light'] — so fonts stay out of the
+ * light/dark blocks to avoid a specificity tie. Headings keep Norse regardless
+ * (see the h1–h6 rule above). An inline head script (the var-restore-prefs
+ * integration in astro.config.mjs) re-applies the stored choice before first
+ * paint in dev.
  */
 :root[data-font-prose='atkinson'] {
   --sl-font: 'Atkinson Hyperlegible', system-ui, sans-serif;

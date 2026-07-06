@@ -12,55 +12,67 @@
  * - Prose font selector (STIX Two Text or Atkinson Hyperlegible) → `data-font-prose`.
  * - Code font selector (JetBrains Mono or Atkinson Hyperlegible Mono) → `data-font-code`.
  *
+ * The palette and font selectors are design-exploration tools and render only
+ * in dev; production ships the defaults (Jord, STIX, JetBrains Mono). The
+ * language selector is functional and renders everywhere.
+ *
  * Each choice persists in localStorage (`var-lang` / `var-palette` /
- * `var-font-prose` / `var-font-code`); an inline head script in
- * astro.config.mjs re-applies them before first paint. The font attributes
- * drive --sl-font / --sl-font-mono via the override rules in custom.css;
- * headings stay on Norse regardless.
+ * `var-font-prose` / `var-font-code`); an inline head script (the
+ * var-restore-prefs integration in astro.config.mjs) re-applies them before
+ * first paint. The font attributes drive --sl-font / --sl-font-mono via the
+ * override rules in custom.css; headings stay on Norse regardless.
  */
 import Select from '@astrojs/starlight/components/Select.astro'
 import Default from '@astrojs/starlight/components/ThemeSelect.astro'
 import LangSelect from './LangSelect.astro'
+
+const dev = import.meta.env.DEV
 ---
 
 <var-lang-select>
   <LangSelect />
 </var-lang-select>
-<var-palette-select>
-  <Select
-    icon="pencil"
-    label="Select palette"
-    options={[
-      { label: 'Jord', selected: true, value: 'jord' },
-      { label: 'Fjord', selected: false, value: 'fjord' },
-      { label: 'Ild', selected: false, value: 'ild' },
-      { label: 'Fjeld', selected: false, value: 'fjeld' },
-    ]}
-    width="6.25em"
-  />
-</var-palette-select>
-<var-font-select data-font-kind="prose">
-  <Select
-    icon="open-book"
-    label="Select prose font"
-    options={[
-      { label: 'STIX', selected: true, value: 'stix' },
-      { label: 'Atkinson', selected: false, value: 'atkinson' },
-    ]}
-    width="7em"
-  />
-</var-font-select>
-<var-font-select data-font-kind="code">
-  <Select
-    icon="code-branch"
-    label="Select code font"
-    options={[
-      { label: 'JetBrains', selected: true, value: 'jetbrains' },
-      { label: 'Atkinson', selected: false, value: 'atkinson' },
-    ]}
-    width="7.5em"
-  />
-</var-font-select>
+{
+  dev && (
+    <>
+      <var-palette-select>
+        <Select
+          icon="pencil"
+          label="Select palette"
+          options={[
+            { label: 'Jord', selected: true, value: 'jord' },
+            { label: 'Fjord', selected: false, value: 'fjord' },
+            { label: 'Ild', selected: false, value: 'ild' },
+            { label: 'Fjeld', selected: false, value: 'fjeld' },
+          ]}
+          width="6.25em"
+        />
+      </var-palette-select>
+      <var-font-select data-font-kind="prose">
+        <Select
+          icon="open-book"
+          label="Select prose font"
+          options={[
+            { label: 'STIX', selected: true, value: 'stix' },
+            { label: 'Atkinson', selected: false, value: 'atkinson' },
+          ]}
+          width="7em"
+        />
+      </var-font-select>
+      <var-font-select data-font-kind="code">
+        <Select
+          icon="code-branch"
+          label="Select code font"
+          options={[
+            { label: 'JetBrains', selected: true, value: 'jetbrains' },
+            { label: 'Atkinson', selected: false, value: 'atkinson' },
+          ]}
+          width="7.5em"
+        />
+      </var-font-select>
+    </>
+  )
+}
 <Default><slot /></Default>
 
 <script>
@@ -149,43 +161,6 @@ import LangSelect from './LangSelect.astro'
 
   type Palette = 'jord' | 'fjord' | 'ild' | 'fjeld'
 
-  const storageKey = 'var-palette'
-
-  const parsePalette = (value: unknown): Palette =>
-    value === 'fjord' || value === 'ild' || value === 'fjeld' ? value : 'jord'
-
-  const loadPalette = (): Palette =>
-    parsePalette(typeof localStorage !== 'undefined' && localStorage.getItem(storageKey))
-
-  function storePalette(palette: Palette): void {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(storageKey, palette)
-    }
-  }
-
-  /** Update <html>, and keep every palette select (header + mobile menu) in sync. */
-  function applyPalette(palette: Palette): void {
-    document.documentElement.dataset.palette = palette
-    document.querySelectorAll<HTMLSelectElement>('var-palette-select select').forEach((select) => {
-      select.value = palette
-    })
-  }
-
-  class VarPaletteSelect extends HTMLElement {
-    constructor() {
-      super()
-      applyPalette(loadPalette())
-      this.querySelector('select')?.addEventListener('change', (e) => {
-        if (e.currentTarget instanceof HTMLSelectElement) {
-          const palette = parsePalette(e.currentTarget.value)
-          applyPalette(palette)
-          storePalette(palette)
-        }
-      })
-    }
-  }
-  customElements.define('var-palette-select', VarPaletteSelect)
-
   // Font selectors — prose (--sl-font) and code (--sl-font-mono). Each swaps
   // its default family for Atkinson Hyperlegible via a data-* attribute on
   // <html>; the actual font-family values live in custom.css.
@@ -198,50 +173,98 @@ import LangSelect from './LangSelect.astro'
     fallback: string
   }
 
-  const FONTS: Record<FontKind, FontConfig> = {
-    prose: { storageKey: 'var-font-prose', attr: 'fontProse', alt: 'atkinson', fallback: 'stix' },
-    code: { storageKey: 'var-font-code', attr: 'fontCode', alt: 'atkinson', fallback: 'jetbrains' },
-  }
+  // The palette/font selects render only in dev; Vite strips this whole block
+  // from production bundles.
+  if (import.meta.env.DEV) {
+    const storageKey = 'var-palette'
 
-  const parseFont = (kind: FontKind, value: unknown): string =>
-    value === FONTS[kind].alt ? FONTS[kind].alt : FONTS[kind].fallback
+    const parsePalette = (value: unknown): Palette =>
+      value === 'fjord' || value === 'ild' || value === 'fjeld' ? value : 'jord'
 
-  const loadFont = (kind: FontKind): string =>
-    parseFont(
-      kind,
-      typeof localStorage !== 'undefined' && localStorage.getItem(FONTS[kind].storageKey),
-    )
+    const loadPalette = (): Palette =>
+      parsePalette(typeof localStorage !== 'undefined' && localStorage.getItem(storageKey))
 
-  function storeFont(kind: FontKind, value: string): void {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(FONTS[kind].storageKey, value)
+    function storePalette(palette: Palette): void {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(storageKey, palette)
+      }
     }
-  }
 
-  /** Update <html>, and keep both matching font selects (header + mobile menu) in sync. */
-  function applyFont(kind: FontKind, value: string): void {
-    document.documentElement.dataset[FONTS[kind].attr] = value
-    document
-      .querySelectorAll<HTMLSelectElement>(`var-font-select[data-font-kind="${kind}"] select`)
-      .forEach((select) => {
-        select.value = value
-      })
-  }
-
-  class VarFontSelect extends HTMLElement {
-    constructor() {
-      super()
-      const kind = this.dataset.fontKind
-      if (kind !== 'prose' && kind !== 'code') return
-      applyFont(kind, loadFont(kind))
-      this.querySelector('select')?.addEventListener('change', (e) => {
-        if (e.currentTarget instanceof HTMLSelectElement) {
-          const value = parseFont(kind, e.currentTarget.value)
-          applyFont(kind, value)
-          storeFont(kind, value)
-        }
-      })
+    /** Update <html>, and keep every palette select (header + mobile menu) in sync. */
+    function applyPalette(palette: Palette): void {
+      document.documentElement.dataset.palette = palette
+      document
+        .querySelectorAll<HTMLSelectElement>('var-palette-select select')
+        .forEach((select) => {
+          select.value = palette
+        })
     }
+
+    class VarPaletteSelect extends HTMLElement {
+      constructor() {
+        super()
+        applyPalette(loadPalette())
+        this.querySelector('select')?.addEventListener('change', (e) => {
+          if (e.currentTarget instanceof HTMLSelectElement) {
+            const palette = parsePalette(e.currentTarget.value)
+            applyPalette(palette)
+            storePalette(palette)
+          }
+        })
+      }
+    }
+    customElements.define('var-palette-select', VarPaletteSelect)
+
+    const FONTS: Record<FontKind, FontConfig> = {
+      prose: { storageKey: 'var-font-prose', attr: 'fontProse', alt: 'atkinson', fallback: 'stix' },
+      code: {
+        storageKey: 'var-font-code',
+        attr: 'fontCode',
+        alt: 'atkinson',
+        fallback: 'jetbrains',
+      },
+    }
+
+    const parseFont = (kind: FontKind, value: unknown): string =>
+      value === FONTS[kind].alt ? FONTS[kind].alt : FONTS[kind].fallback
+
+    const loadFont = (kind: FontKind): string =>
+      parseFont(
+        kind,
+        typeof localStorage !== 'undefined' && localStorage.getItem(FONTS[kind].storageKey),
+      )
+
+    function storeFont(kind: FontKind, value: string): void {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(FONTS[kind].storageKey, value)
+      }
+    }
+
+    /** Update <html>, and keep both matching font selects (header + mobile menu) in sync. */
+    function applyFont(kind: FontKind, value: string): void {
+      document.documentElement.dataset[FONTS[kind].attr] = value
+      document
+        .querySelectorAll<HTMLSelectElement>(`var-font-select[data-font-kind="${kind}"] select`)
+        .forEach((select) => {
+          select.value = value
+        })
+    }
+
+    class VarFontSelect extends HTMLElement {
+      constructor() {
+        super()
+        const kind = this.dataset.fontKind
+        if (kind !== 'prose' && kind !== 'code') return
+        applyFont(kind, loadFont(kind))
+        this.querySelector('select')?.addEventListener('change', (e) => {
+          if (e.currentTarget instanceof HTMLSelectElement) {
+            const value = parseFont(kind, e.currentTarget.value)
+            applyFont(kind, value)
+            storeFont(kind, value)
+          }
+        })
+      }
+    }
+    customElements.define('var-font-select', VarFontSelect)
   }
-  customElements.define('var-font-select', VarFontSelect)
 </script>

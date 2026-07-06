@@ -10,10 +10,32 @@ import { defineConfig } from 'astro/config'
 // fs.allow boundary), so the dev server must be allowed to read it.
 const repoRoot = fileURLToPath(new URL('../../..', import.meta.url))
 
+// Re-apply stored choices before first paint (the defaults — TypeScript, Jord
+// palette, STIX prose, JetBrains code — are attribute-less; only a non-default
+// choice needs marking). The palette/font selects are dev-only design tools
+// (see src/components/ThemeSelect.astro), so production restores only the
+// language and always renders the default appearance.
+const restoreLang =
+  "var l=localStorage.getItem('var-lang');if(l==='java'||l==='kotlin'||l==='python')d.lang=l;"
+const restoreAppearance =
+  "var p=localStorage.getItem('var-palette');if(p==='fjord'||p==='ild'||p==='fjeld')d.palette=p;if(localStorage.getItem('var-font-prose')==='atkinson')d.fontProse='atkinson';if(localStorage.getItem('var-font-code')==='atkinson')d.fontCode='atkinson';"
+
+/** @returns {import('astro').AstroIntegration} */
+const restorePrefs = () => ({
+  name: 'var-restore-prefs',
+  hooks: {
+    'astro:config:setup': ({ command, injectScript }) => {
+      const body = command === 'dev' ? restoreLang + restoreAppearance : restoreLang
+      injectScript('head-inline', `try{var d=document.documentElement.dataset;${body}}catch(e){}`)
+    },
+  },
+})
+
 // https://astro.build/config
 export default defineConfig({
   site: 'https://var.oselvar.com',
   integrations: [
+    restorePrefs(),
     starlight({
       title: 'Vár',
       customCss: [
@@ -26,17 +48,6 @@ export default defineConfig({
       components: {
         ThemeSelect: './src/components/ThemeSelect.astro',
       },
-      head: [
-        {
-          // Apply the stored language, palette and font choices before first
-          // paint (the defaults — TypeScript, Jord palette, STIX prose,
-          // JetBrains code — are attribute-less; only a non-default choice
-          // needs marking).
-          tag: 'script',
-          content:
-            "try{var d=document.documentElement.dataset;var l=localStorage.getItem('var-lang');if(l==='java'||l==='kotlin'||l==='python')d.lang=l;var p=localStorage.getItem('var-palette');if(p==='fjord'||p==='ild'||p==='fjeld')d.palette=p;if(localStorage.getItem('var-font-prose')==='atkinson')d.fontProse='atkinson';if(localStorage.getItem('var-font-code')==='atkinson')d.fontCode='atkinson'}catch(e){}",
-        },
-      ],
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/oselvar/var' }],
       sidebar: [
         {
