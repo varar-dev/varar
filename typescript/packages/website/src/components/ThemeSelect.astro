@@ -20,20 +20,11 @@
  */
 import Select from '@astrojs/starlight/components/Select.astro'
 import Default from '@astrojs/starlight/components/ThemeSelect.astro'
+import LangSelect from './LangSelect.astro'
 ---
 
 <var-lang-select>
-  <Select
-    icon="translate"
-    label="Select programming language"
-    options={[
-      { label: 'TypeScript', selected: true, value: 'ts' },
-      { label: 'Java', selected: false, value: 'java' },
-      { label: 'Kotlin', selected: false, value: 'kotlin' },
-      { label: 'Python', selected: false, value: 'python' },
-    ]}
-    width="8.5em"
-  />
+  <LangSelect />
 </var-lang-select>
 <var-palette-select>
   <Select

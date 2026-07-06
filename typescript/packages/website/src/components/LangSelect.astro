@@ -1,0 +1,108 @@
+---
+/**
+ * The programming-language dropdown: Starlight's `Select.astro` markup and
+ * styles, with one difference — the label icon is the *selected* language's
+ * Seti logo instead of a fixed glyph. Every language's icon renders stacked
+ * in the trigger and CSS shows the one matching `data-lang` on <html>, so the
+ * right logo appears before first paint (the inline head script in
+ * astro.config.mjs sets the attribute) and swaps with no JavaScript.
+ *
+ * Adding a language needs only a new entry in SITE_LANGS / LANG_LABELS /
+ * LANG_ICONS (site-lang.ts) — Starlight bundles the full Seti file-icon set,
+ * which already has seti:go, seti:rust, seti:c-sharp, seti:swift, and most
+ * other languages we could port to.
+ */
+import { Icon } from '@astrojs/starlight/components'
+import { LANG_ICONS, LANG_LABELS, SITE_LANGS } from '../lib/site-lang'
+
+type IconName = Parameters<typeof Icon>[0]['name']
+
+// One visibility rule per language. TypeScript is the attribute-less default:
+// the head script only marks non-default choices on <html>, so it must match
+// both `data-lang="ts"` and no attribute at all.
+const shows = (lang: string): string =>
+  lang === 'ts'
+    ? `:root[data-lang='ts'] .var-lang-icon-ts, :root:not([data-lang]) .var-lang-icon-ts`
+    : `:root[data-lang='${lang}'] .var-lang-icon-${lang}`
+const iconCss = `.var-lang-icon{display:none}${SITE_LANGS.map(
+  (lang) => `${shows(lang)}{display:block}`,
+).join('')}`
+---
+
+<label style="--sl-select-width: 8.5em">
+  <span class="sr-only">Select programming language</span>
+  {
+    SITE_LANGS.map((lang) => (
+      <Icon
+        name={LANG_ICONS[lang] as IconName}
+        class={`icon label-icon var-lang-icon var-lang-icon-${lang}`}
+      />
+    ))
+  }
+  <select autocomplete="off">
+    {SITE_LANGS.map((lang) => <option value={lang} selected={lang === 'ts'}>{LANG_LABELS[lang]}</option>)}
+  </select>
+  <Icon name="down-caret" class="icon caret" />
+</label>
+<Fragment set:html={`<style>${iconCss}</style>`} />
+
+<!-- Layout styles below are a copy of Starlight's Select.astro, so this
+     control sits pixel-identical next to the palette/font/theme selects. -->
+<style>
+  label {
+    --sl-label-icon-size: 0.875rem;
+    --sl-caret-size: 1.25rem;
+    --sl-inline-padding: 0.5rem;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    color: var(--sl-color-gray-2);
+  }
+
+  label:hover {
+    color: var(--sl-color-white);
+  }
+
+  .icon {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+  }
+
+  select {
+    border: 0;
+    padding-block: 0.625rem;
+    padding-inline: calc(var(--sl-label-icon-size) + var(--sl-inline-padding) + 0.25rem)
+      calc(var(--sl-caret-size) + var(--sl-inline-padding) + 0.25rem);
+    margin-inline: calc(var(--sl-inline-padding) * -1);
+    width: calc(var(--sl-select-width) + var(--sl-inline-padding) * 2);
+    background-color: transparent;
+    text-overflow: ellipsis;
+    color: inherit;
+    cursor: pointer;
+    appearance: none;
+  }
+
+  option {
+    background-color: var(--sl-color-bg-nav);
+    color: var(--sl-color-gray-1);
+  }
+
+  @media (min-width: 50rem) {
+    select {
+      font-size: var(--sl-text-sm);
+    }
+  }
+
+  .label-icon {
+    font-size: var(--sl-label-icon-size);
+    inset-inline-start: 0;
+  }
+
+  .caret {
+    font-size: var(--sl-caret-size);
+    inset-inline-end: 0;
+  }
+</style>

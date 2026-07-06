@@ -19,6 +19,17 @@ export const LANG_LABELS: Readonly<Record<SiteLang, string>> = {
   python: 'Python',
 }
 
+// Seti file-type icons bundled with Starlight — the header dropdown shows the
+// selected language's logo. The set covers most languages we could ever port
+// to (seti:go, seti:rust, seti:c-sharp, seti:swift, seti:scala, …), so adding
+// a language here is all it takes.
+export const LANG_ICONS: Readonly<Record<SiteLang, string>> = {
+  ts: 'seti:typescript',
+  java: 'seti:java',
+  kotlin: 'seti:kotlin',
+  python: 'seti:python',
+}
+
 export const LANG_CHANGE_EVENT = 'var-lang-change'
 
 const storageKey = 'var-lang'
