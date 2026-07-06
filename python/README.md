@@ -19,7 +19,7 @@ uv run ruff check
 | `oselvar-var-config` / `var_config` | reads `var.config.json` — the shared config file for all var tools |
 | `oselvar-var-runner` / `var_runner` | shared imperative shell: discovery, step loading, run orchestration, failure rendering |
 | `pytest-var` / `var_pytest` | pytest plugin: `.md` specs as first-class tests |
-| `oselvar-var-unittest` / `var_unittest` | unittest adapter (skeleton) |
+| `oselvar-var-unittest` / `var_unittest` | unittest adapter: `generate_tests(globals())` in one test module |
 
 ## Run Markdown specs as live var tests (dogfood)
 

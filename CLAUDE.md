@@ -10,7 +10,8 @@ This is a multi-language monorepo (ADR 0001). Top level:
   adapter, **and** the shared authoring/LSP/VS Code/website platform). **Run all
   pnpm / vitest / tsc commands from `typescript/`.** Package paths in this file
   (e.g. `packages/var/src/...`) are relative to `typescript/`.
-- `python/` — the uv workspace for the Python port (skeleton today; see issue #2).
+- `python/` — the uv workspace for the Python port (core, runner, pytest +
+  unittest adapters).
 - `java/` — the Maven multi-module workspace for the Java port (JDK 21, pinned in
   `java/.tool-versions`).
 - `conformance/` — language-neutral corpus (`bundles/<n>/{example.md, *.steps.ts,
@@ -71,7 +72,7 @@ pnpm workspace · biome · vitest (for the core's own tests) · knip · jscpd ·
   `../examples/typescript-vitest`, workspace deps, never released) holds the
   original `.md` specs at its root plus their `steps/*.steps.ts`, and runs in
   the root vitest workspace. The JVM samples consume the SNAPSHOT installed by
-  `mvn install`; the Python sample uses uv path sources.
+  `mvn install`; the Python samples use uv path sources.
 
 ## Commit messages & changelog
 
