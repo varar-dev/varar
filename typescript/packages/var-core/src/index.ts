@@ -61,6 +61,7 @@ export {
   driftDiagnostics,
   liveExamples,
   parseVarLock,
+  reconcileDrift,
   stringifyVarLock,
 } from './drift.ts'
 export type { ExecutePorts, ExecutionObserver, QueuedExample, StepObservation } from './execute.ts'

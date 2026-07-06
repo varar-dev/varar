@@ -2,6 +2,7 @@ import type { VarDoc } from './ast.ts'
 import { type Diagnostic, driftDetected } from './diagnostics.ts'
 import { hashSource } from './hash.ts'
 import { deriveExampleName, type ExecutionPlan } from './plan.ts'
+import type { BaselineStore } from './ports.ts'
 import type { Span } from './span.ts'
 
 // A baseline example is re-identified in the edited source by text: an exact
@@ -153,6 +154,35 @@ export function detectDrift(
 // (CLI exit, vitest/pytest test, LSP squiggle, browser editor) reports drift.
 export function driftDiagnostics(drifts: ReadonlyArray<Drift>): ReadonlyArray<Diagnostic> {
   return drifts.map((d) => driftDetected({ name: d.name, span: d.span }))
+}
+
+// One spec's baseline reconciliation against a BaselineStore — the shared
+// read → detect → write step every runner uses (browser and Node alike; only
+// the store differs). Returns the drifts to report.
+//   - `update` accepts all drift: re-record the baseline, report nothing.
+//   - otherwise detect drift; rewrite the baseline only on a clean run, so an
+//     unacknowledged drift keeps its old baseline entry (and stays red).
+export async function reconcileDrift(opts: {
+  readonly store: BaselineStore
+  readonly specPath: string
+  readonly source: string
+  readonly varDoc: VarDoc
+  readonly plan: ExecutionPlan
+  readonly update?: boolean
+}): Promise<ReadonlyArray<Drift>> {
+  const text = await opts.store.read()
+  const lock = text ? parseVarLock(text) : null
+  const baseline = lock?.specs[opts.specPath]
+  const drifts = opts.update ? [] : detectDrift(baseline, opts.varDoc, opts.plan)
+  if (opts.update || drifts.length === 0) {
+    const nextSpec = deriveSpecBaseline(opts.source, opts.varDoc, opts.plan)
+    const nextLock: VarLock = {
+      version: 1,
+      specs: { ...(lock?.specs ?? {}), [opts.specPath]: nextSpec },
+    }
+    await opts.store.write(stringifyVarLock(nextLock))
+  }
+  return drifts
 }
 
 function isBaselineExample(v: unknown): v is BaselineExample {

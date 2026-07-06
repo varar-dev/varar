@@ -6,13 +6,29 @@ import {
   driftDiagnostics,
   liveExamples,
   parseVarLock,
+  reconcileDrift,
   stringifyVarLock,
   type VarLock,
 } from '../src/drift.ts'
 import { hashSource } from '../src/hash.ts'
 import { parse } from '../src/parse.ts'
 import { plan } from '../src/plan.ts'
+import type { BaselineStore } from '../src/ports.ts'
 import { addStep, createRegistry, type Registry } from '../src/registry.ts'
+
+// A minimal in-memory BaselineStore, like the browser's.
+function memoryStore(initial: string | null = null): BaselineStore & { contents: string | null } {
+  const store = {
+    contents: initial,
+    read() {
+      return store.contents
+    },
+    write(contents: string) {
+      store.contents = contents
+    },
+  }
+  return store
+}
 
 // Drift carries a full paragraph span; pin only the stable name+line in most
 // assertions.
@@ -206,6 +222,59 @@ test('driftDiagnostics projects drift onto error-severity diagnostics', () => {
   expect(diags[0]?.code).toBe('drift')
   expect(diags[0]?.message).toContain('I withdraw 40')
   expect(diags[0]?.span.startLine).toBe(1)
+})
+
+test('reconcileDrift records a baseline on the first run and reports no drift', async () => {
+  const source = 'I withdraw 40.'
+  const varDoc = parse('w.md', source)
+  const store = memoryStore()
+  const drifts = await reconcileDrift({
+    store,
+    specPath: 'w.md',
+    source,
+    varDoc,
+    plan: plan(varDoc, reg()),
+  })
+  expect(drifts).toEqual([])
+  const lock = parseVarLock(store.contents ?? '')
+  expect(lock?.specs['w.md']?.examples).toEqual([{ name: 'I withdraw 40', line: 1 }])
+})
+
+test('reconcileDrift reports drift and preserves the baseline (stays red)', async () => {
+  const source = 'I withdraw 40.'
+  const varDoc = parse('w.md', source)
+  const store = memoryStore()
+  await reconcileDrift({ store, specPath: 'w.md', source, varDoc, plan: plan(varDoc, reg(true)) })
+  const before = store.contents
+  // The step is gone now — same source no longer matches.
+  const drifts = await reconcileDrift({
+    store,
+    specPath: 'w.md',
+    source,
+    varDoc,
+    plan: plan(varDoc, reg(false)),
+  })
+  expect(bare(drifts)).toEqual([{ name: 'I withdraw 40', line: 1 }])
+  expect(store.contents).toBe(before) // baseline untouched while drift is unacknowledged
+})
+
+test('reconcileDrift in update mode accepts drift and re-records the baseline', async () => {
+  const source = 'I withdraw 40.'
+  const varDoc = parse('w.md', source)
+  const store = memoryStore()
+  await reconcileDrift({ store, specPath: 'w.md', source, varDoc, plan: plan(varDoc, reg(true)) })
+  // Accept: the paragraph is now intentionally prose.
+  const drifts = await reconcileDrift({
+    store,
+    specPath: 'w.md',
+    source,
+    varDoc,
+    plan: plan(varDoc, reg(false)),
+    update: true,
+  })
+  expect(drifts).toEqual([])
+  // Baseline no longer lists the accepted example.
+  expect(parseVarLock(store.contents ?? '')?.specs['w.md']?.examples).toEqual([])
 })
 
 test('parseVarLock round-trips a valid lock', () => {
