@@ -1,7 +1,9 @@
 import { expect, test } from 'vitest'
 import {
+  type Drift,
   deriveSpecBaseline,
   detectDrift,
+  driftDiagnostics,
   liveExamples,
   parseVarLock,
   stringifyVarLock,
@@ -11,6 +13,12 @@ import { hashSource } from '../src/hash.ts'
 import { parse } from '../src/parse.ts'
 import { plan } from '../src/plan.ts'
 import { addStep, createRegistry, type Registry } from '../src/registry.ts'
+
+// Drift carries a full paragraph span; pin only the stable name+line in most
+// assertions.
+function bare(drifts: ReadonlyArray<Drift>): ReadonlyArray<{ name: string; line: number }> {
+  return drifts.map((d) => ({ name: d.name, line: d.line }))
+}
 
 // Registry with a single withdraw step; pass `false` for an empty registry
 // (the step was renamed/deleted).
@@ -82,7 +90,7 @@ test('a renamed/deleted step definition drifts (Markdown unchanged, matched by n
   const baseline = deriveSpecBaseline(source, varDoc, plan(varDoc, reg(true)))
   // Same source, but the step is gone now.
   const drift = detectDrift(baseline, varDoc, plan(varDoc, reg(false)))
-  expect(drift).toEqual([{ name: 'I withdraw 40', line: 1 }])
+  expect(bare(drift)).toEqual([{ name: 'I withdraw 40', line: 1 }])
 })
 
 test('an in-place typo drifts (text changed, matched by line)', () => {
@@ -94,7 +102,7 @@ test('an in-place typo drifts (text changed, matched by line)', () => {
   const afterDoc = parse('w.md', after)
   const drift = detectDrift(baseline, afterDoc, plan(afterDoc, reg()))
   // Reports the baseline's name; anchors at the current (same) line.
-  expect(drift).toEqual([{ name: 'I withdraw 40', line: 1 }])
+  expect(bare(drift)).toEqual([{ name: 'I withdraw 40', line: 1 }])
 })
 
 test('a deleted paragraph is not drift', () => {
@@ -172,7 +180,32 @@ test('a header-bound binding paragraph that stops matching drifts', () => {
   const varDoc = parse('r.md', source)
   const baseline = deriveSpecBaseline(source, varDoc, plan(varDoc, romanReg(true)))
   const drift = detectDrift(baseline, varDoc, plan(varDoc, romanReg(false)))
-  expect(drift).toEqual([{ name: 'Each row gives a decimal and a roman number:', line: 1 }])
+  expect(bare(drift)).toEqual([{ name: 'Each row gives a decimal and a roman number:', line: 1 }])
+})
+
+test('a drift carries the drifted paragraph span', () => {
+  const source = 'Some prose first.\n\nI withdraw 40.'
+  const varDoc = parse('w.md', source)
+  const baseline = deriveSpecBaseline(source, varDoc, plan(varDoc, reg(true)))
+  const [drift] = detectDrift(baseline, varDoc, plan(varDoc, reg(false)))
+  if (!drift) throw new Error('expected a drift')
+  // The example is on line 3; the span covers that paragraph, not line 1's prose.
+  expect(drift.line).toBe(3)
+  expect(drift.span.startLine).toBe(3)
+  expect(source.slice(drift.span.startOffset, drift.span.endOffset)).toBe('I withdraw 40.')
+})
+
+test('driftDiagnostics projects drift onto error-severity diagnostics', () => {
+  const source = 'I withdraw 40.'
+  const varDoc = parse('w.md', source)
+  const baseline = deriveSpecBaseline(source, varDoc, plan(varDoc, reg(true)))
+  const drifts = detectDrift(baseline, varDoc, plan(varDoc, reg(false)))
+  const diags = driftDiagnostics(drifts)
+  expect(diags).toHaveLength(1)
+  expect(diags[0]?.severity).toBe('error')
+  expect(diags[0]?.code).toBe('drift')
+  expect(diags[0]?.message).toContain('I withdraw 40')
+  expect(diags[0]?.span.startLine).toBe(1)
 })
 
 test('parseVarLock round-trips a valid lock', () => {

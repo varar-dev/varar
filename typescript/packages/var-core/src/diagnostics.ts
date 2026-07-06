@@ -9,7 +9,7 @@ export type Diagnostic = {
   readonly span: Span
 }
 
-export type DiagnosticCode = 'ambiguous-match' | 'error-fence-without-step'
+export type DiagnosticCode = 'ambiguous-match' | 'error-fence-without-step' | 'drift'
 
 export type Candidate = {
   readonly expression: string
@@ -31,6 +31,21 @@ export function ambiguousMatch(input: AmbiguousInput): Diagnostic {
     severity: 'error',
     code: 'ambiguous-match',
     message: `Ambiguous step: "${input.text}"\nMatched by:\n${lines}`,
+    span: input.span,
+  }
+}
+
+// A paragraph the baseline recorded as an example no longer matches any step:
+// drift. Rides the shared Diagnostic rail so every surface reports it the same
+// way — a non-zero CLI exit, a failing vitest/pytest test, an LSP squiggle.
+// `span` points at the drifted paragraph. Cleared by accepting (update mode).
+export function driftDetected(input: { readonly name: string; readonly span: Span }): Diagnostic {
+  return {
+    severity: 'error',
+    code: 'drift',
+    message:
+      `This paragraph was an example and no longer matches any step (drift): "${input.name}".\n` +
+      'Fix the step so it matches again, or accept it as prose (run in update mode).',
     span: input.span,
   }
 }

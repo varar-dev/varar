@@ -11,3 +11,13 @@ export interface TestSink {
 export interface Reporter {
   diagnostic(d: Diagnostic): void
 }
+
+// Persistence port for the drift baseline (`var.lock.json`). The core owns the
+// format (parseVarLock / stringifyVarLock) and reads/writes raw text through
+// this port, so adapters stay dumb I/O: a filesystem store on Node (CLI,
+// vitest), an in-memory store in the browser. `read` returns the whole
+// lockfile's contents, or null when there is no baseline yet.
+export interface BaselineStore {
+  read(): string | null | Promise<string | null>
+  write(contents: string): void | Promise<void>
+}

@@ -1,4 +1,5 @@
 import type { VarDoc } from './ast.ts'
+import { type Diagnostic, driftDetected } from './diagnostics.ts'
 import { hashSource } from './hash.ts'
 import { deriveExampleName, type ExecutionPlan } from './plan.ts'
 import type { Span } from './span.ts'
@@ -36,9 +37,12 @@ export type VarLock = {
 }
 
 // A paragraph that the baseline says was an example and now matches zero steps.
+// `line` anchors line-based reporting; `span` covers the paragraph for editor
+// decorations and LSP diagnostics.
 export type Drift = {
   readonly name: string
   readonly line: number
+  readonly span: Span
 }
 
 // Is `inner` positioned within `outer` (offset containment)? A planned
@@ -138,10 +142,17 @@ export function detectDrift(
       }
     }
     if (bestIdx < 0) continue // no recognizable paragraph — a rewrite/removal, not drift
-    if (live[bestIdx]) continue // still an example — not drift
-    drifts.push({ name: b.name, line: candidates[bestIdx]?.span.startLine ?? b.line })
+    const candidate = candidates[bestIdx]
+    if (!candidate || live[bestIdx]) continue // still an example — not drift
+    drifts.push({ name: b.name, line: candidate.span.startLine, span: candidate.span })
   }
   return drifts
+}
+
+// Project drifts onto the shared Diagnostic rail — the single way every surface
+// (CLI exit, vitest/pytest test, LSP squiggle, browser editor) reports drift.
+export function driftDiagnostics(drifts: ReadonlyArray<Drift>): ReadonlyArray<Diagnostic> {
+  return drifts.map((d) => driftDetected({ name: d.name, span: d.span }))
 }
 
 function isBaselineExample(v: unknown): v is BaselineExample {

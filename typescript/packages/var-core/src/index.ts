@@ -47,7 +47,7 @@ export type {
   DiagnosticCode,
   Severity,
 } from './diagnostics.ts'
-export { ambiguousMatch } from './diagnostics.ts'
+export { ambiguousMatch, driftDetected } from './diagnostics.ts'
 export type { DocStringDiff } from './doc-string-diff.ts'
 export {
   compareDocString,
@@ -58,6 +58,7 @@ export type { BaselineExample, Drift, SpecBaseline, VarLock } from './drift.ts'
 export {
   deriveSpecBaseline,
   detectDrift,
+  driftDiagnostics,
   liveExamples,
   parseVarLock,
   stringifyVarLock,
@@ -81,7 +82,7 @@ export type { ExecutionPlan, PlannedExample, PlannedStep } from './plan.ts'
 export { plan } from './plan.ts'
 export { gherkinDocStrings, gherkinTables } from './plugins/gherkin/index.ts'
 export { resolveScannerPlugins } from './plugins/registry.ts'
-export type { Reporter, TestSink } from './ports.ts'
+export type { BaselineStore, Reporter, TestSink } from './ports.ts'
 export type {
   ParameterTypeInput,
   Registry,
