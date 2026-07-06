@@ -1,6 +1,6 @@
 from datetime import date
 
-from library_example import FEE_PENCE_PER_DAY, late_fee, may_borrow
+from library_example import FEE_PER_DAY, add_money, gbp, late_fee, may_borrow
 from var import define_state
 
 MONTHS = [
@@ -25,13 +25,18 @@ def to_date(raw):
     return date(2026, MONTHS.index(month) + 1, int(day[:-2]))
 
 
-def to_pence(raw):
-    """£2.50 and 50p, both as pence."""
-    return round(float(raw[1:]) * 100) if raw.startswith("£") else int(raw[:-1])
+def to_money(raw):
+    """£2.50 and 50p, both as GBP Money."""
+    return gbp(float(raw[:-1]) / 100) if raw.endswith("p") else gbp(float(raw[1:]))
+
+
+def format_money(m):
+    """The inverse: mismatches render as £2.60 / 50p, not as a Money dump."""
+    return f"{round(m.value * 100)}p" if m.value < 1 else f"£{m.value:.2f}"
 
 
 stimulus, sensor = define_state(
-    lambda: {"loans": (), "fee_pence": 0, "granted": False},
+    lambda: {"loans": (), "fee": gbp(0), "granted": False},
     {
         "date": {
             "regexp": (
@@ -42,10 +47,11 @@ stimulus, sensor = define_state(
             "parse": to_date,
         },
         "money": {
-            "regexp": r"£\d+(?:\.\d{2})?|\d+p",
-            "parse": to_pence,
-            # The inverse: mismatches render as £2.60 / 50p, not a bare pence int.
-            "format": lambda pence: f"{pence}p" if pence < 100 else f"£{pence / 100:.2f}",
+            # £2.50 and 50p, both as GBP Money. The amount is cucumber-expressions'
+            # float regexp, minus the scientific notation.
+            "regexp": r"£(?=.*\d.*)[-+]?\d*(?:\.(?=\d.*))?\d*|\d+p",
+            "parse": to_money,
+            "format": format_money,
         },
         # Emphasis (*Emma*) is stripped before matching, so a title is a
         # Title Case run in the plain prose.
@@ -61,17 +67,20 @@ def _(state, title, due):
 
 @stimulus("returns it on {date}")
 def _(state, returned_on):
-    return {"fee_pence": sum(late_fee(loan, returned_on) for loan in state["loans"])}
+    fee = gbp(0)
+    for loan in state["loans"]:
+        fee = add_money(fee, late_fee(loan, returned_on))
+    return {"fee": fee}
 
 
 @sensor("owes a {money} late fee")
 def _(state, expected):
-    return state["fee_pence"]
+    return state["fee"]
 
 
 @sensor("{money} for each day overdue")
 def _(state, expected):
-    return FEE_PENCE_PER_DAY
+    return FEE_PER_DAY
 
 
 @stimulus("asks to borrow {title} on {date}")

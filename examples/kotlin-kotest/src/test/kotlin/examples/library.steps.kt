@@ -7,10 +7,11 @@ import com.oselvar.varkt.sensor
 import com.oselvar.varkt.stimulus
 import java.time.LocalDate
 import java.util.Locale
+import kotlin.math.roundToInt
 
 data class LibraryCtx(
     val loans: List<Loan> = emptyList(),
-    val feePence: Int = 0,
+    val fee: Money = gbp(0.0),
     val granted: Boolean = false,
 )
 
@@ -36,10 +37,15 @@ private fun toDate(raw: String): LocalDate {
     return LocalDate.of(2026, MONTHS.indexOf(month) + 1, day.dropLast(2).toInt())
 }
 
-/** £2.50 and 50p, both as pence. */
-private fun toPence(raw: String): Int =
-    if (raw.startsWith("£")) Math.round(raw.drop(1).toDouble() * 100).toInt()
-    else raw.dropLast(1).toInt()
+/** £2.50 and 50p, both as GBP Money. */
+private fun toMoney(raw: String): Money =
+    if (raw.endsWith("p")) gbp(raw.dropLast(1).toDouble() / 100)
+    else gbp(raw.drop(1).toDouble())
+
+/** The inverse: mismatches render as £2.60 / 50p, not as a Money dump. */
+private fun formatMoney(m: Money): String =
+    if (m.value < 1) "${(m.value * 100).roundToInt()}p"
+    else "£%.2f".format(Locale.ROOT, m.value)
 
 val librarySteps =
     defineState(::LibraryCtx) {
@@ -53,15 +59,14 @@ val librarySteps =
         ) { groups ->
             toDate(groups[0])
         }
+        // £2.50 and 50p, both as GBP Money. The amount is cucumber-expressions'
+        // float regexp, minus the scientific notation.
         parameterType(
             "money",
-            Regex("£\\d+(?:\\.\\d{2})?|\\d+p"),
-            // The inverse: mismatches render as £2.60 / 50p, not a bare pence int.
-            format = { pence ->
-                if (pence < 100) "${pence}p" else "£%.2f".format(Locale.ROOT, pence / 100.0)
-            },
+            Regex("""£(?=.*\d.*)[-+]?\d*(?:\.(?=\d.*))?\d*|\d+p"""),
+            format = ::formatMoney,
         ) { groups ->
-            toPence(groups[0])
+            toMoney(groups[0])
         }
         // Emphasis (*Emma*) is stripped before matching, so a title is a
         // Title Case run in the plain prose.
@@ -71,10 +76,10 @@ val librarySteps =
             copy(loans = loans + Loan(title, due))
         }
         stimulus("returns it on {date}") { returnedOn: LocalDate ->
-            copy(feePence = loans.sumOf { loan -> lateFee(loan, returnedOn) })
+            copy(fee = loans.fold(gbp(0.0)) { acc, loan -> addMoney(acc, lateFee(loan, returnedOn)) })
         }
-        sensor("owes a {money} late fee") { _: Int -> feePence }
-        sensor("{money} for each day overdue") { _: Int -> FEE_PENCE_PER_DAY }
+        sensor("owes a {money} late fee") { _: Money -> fee }
+        sensor("{money} for each day overdue") { _: Money -> FEE_PER_DAY }
         stimulus("asks to borrow {title} on {date}") { _: String, on: LocalDate ->
             copy(granted = mayBorrow(loans, on))
         }
