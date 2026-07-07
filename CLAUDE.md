@@ -87,10 +87,10 @@ on everything since the last release tag):
   (they appear in the changelog and bump the version); `chore`, `docs`,
   `refactor`, `test`, `build`, `ci`, `style`, `revert` are not.
 - **Scope names the consumer.** `feat`/`fix`/`perf` (and anything breaking)
-  must be scoped `ts`, `py`, `java`, `vscode`, or `spec`, optionally
+  must be scoped `ts`, `py`, `java`, `ruby`, `vscode`, or `spec`, optionally
   `/package`: `feat(ts/var-vitest): …`, `fix(py/var-core): …`,
   `refactor(java/var-junit)!: …`. The scope decides which changelog section
-  the entry lands in (npm / PyPI / Maven Central / VS Code / all ports).
+  the entry lands in (npm / PyPI / Maven Central / RubyGems / VS Code / all ports).
   Work that ships nothing to a consumer — website, CI, tooling — is a
   `chore(website): …` or similar, never a `feat`: it would bump the version
   while appearing in no changelog section.

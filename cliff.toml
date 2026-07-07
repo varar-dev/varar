@@ -6,9 +6,9 @@
 # that release is kept verbatim in `footer` below).
 #
 # The changelog is organised for CONSUMERS: one section per distribution
-# channel (npm, PyPI, Maven Central, VS Code Marketplace), derived from the
-# commit scope. See "Commit messages & changelog" in CLAUDE.md for the scope
-# convention (`ts/var-vitest`, `py/var-core`, `java`, `vscode`, `spec`, …).
+# channel (npm, PyPI, Maven Central, RubyGems, VS Code Marketplace), derived
+# from the commit scope. See "Commit messages & changelog" in CLAUDE.md for the
+# scope convention (`ts/var-vitest`, `py/var-core`, `java`, `ruby`, `vscode`, `spec`, …).
 
 [changelog]
 header = """
@@ -66,6 +66,7 @@ body = """
 {{- self::section(title="TypeScript (npm)", key="ts", commits=commits) }}
 {{- self::section(title="Python (PyPI)", key="py", commits=commits) }}
 {{- self::section(title="Java & Kotlin (Maven Central)", key="java", commits=commits) }}
+{{- self::section(title="Ruby (RubyGems)", key="ruby", commits=commits) }}
 {{- self::section(title="VS Code extension (Marketplace & Open VSX)", key="vscode", commits=commits) }}
 {{- self::section(title="Specification (all ports)", key="spec", commits=commits) }}
 """
