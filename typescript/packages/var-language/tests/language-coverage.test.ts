@@ -45,7 +45,10 @@ describe('language coverage (drift gate)', () => {
   test('every languages.json language has a tree-sitter dialect', async () => {
     for (const lang of languages) {
       const id = languageIdForPath(`example${lang.ext}`)
-      expect(id, `no tree-sitter LanguageId maps the ${lang.label} extension "${lang.ext}"`).toBeDefined()
+      expect(
+        id,
+        `no tree-sitter LanguageId maps the ${lang.label} extension "${lang.ext}"`,
+      ).toBeDefined()
       // Building the scanner loads the dialect and its grammar wasm; it throws
       // if either the dialect (SPECS) or the test grammar loader is missing.
       await expect(
@@ -74,7 +77,9 @@ describe('language coverage (drift gate)', () => {
         const body = group.split('</Tabs>')[0] ?? ''
         for (const label of labels) {
           if (!body.includes(`label="${label}"`)) {
-            failures.push(`${path.replace(DOCS_DIR, 'docs')}: a lang tab group is missing "${label}"`)
+            failures.push(
+              `${path.replace(DOCS_DIR, 'docs')}: a lang tab group is missing "${label}"`,
+            )
           }
         }
       }
