@@ -8,8 +8,22 @@ RSpec::Core::RakeTask.new(:spec) do |t|
   t.rspec_opts = '-Ispec --require spec_helper'
 end
 
-# Formatting + linting. `rake rubocop:autocorrect` (or `-A`) applies fixes.
-RuboCop::RakeTask.new
+# Formatting + linting. `rake rubocop:autocorrect` (or `-A`) applies fixes. Also
+# lints the example projects' Ruby source with this same config (--config), so
+# no warning or error slips through anywhere in the port. Only the .rb source
+# dirs are added (not the Gemfile/Rakefile — tool-mandated names the FileName
+# cop rejects); the ruby-minitest steps/lib are symlinks into ruby-rspec, so its
+# shared files are covered via ruby-rspec.
+RuboCop::RakeTask.new do |task|
+  task.patterns = [
+    '.',
+    '../examples/ruby-rspec/lib',
+    '../examples/ruby-rspec/steps',
+    '../examples/ruby-rspec/spec',
+    '../examples/ruby-minitest/test'
+  ]
+  task.options = ['--config', '.rubocop.yml']
+end
 
 desc 'Fail if var-core requires the facade/runner (functional-core purity gate)'
 task :lint_no_reexports do

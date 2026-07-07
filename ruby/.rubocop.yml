@@ -19,6 +19,11 @@ Layout/LineLength:
 Style/Documentation:
   Enabled: false
 
+# Rakefile is a fixed, tool-mandated name (rake looks for it), not snake_case code.
+Naming/FileName:
+  Exclude:
+    - '**/Rakefile'
+
 # The ported algorithms mirror the reference's short parameter names (a, b, n,
 # …); enforcing a minimum length would fragment that parallel.
 Naming/MethodParameterName:

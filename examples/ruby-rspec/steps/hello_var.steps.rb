@@ -1,11 +1,13 @@
-require "oselvar/var"
+# frozen_string_literal: true
 
-param, stimulus, sensor = steps { { greeting: "", result: 0 } }
+require 'oselvar/var'
 
-stimulus.("I greet {string}") { |_state, name| { greeting: "Hello, #{name}!" } }
+_, stimulus, sensor = steps { { greeting: '', result: 0 } }
 
-sensor.("the greeting should be {string}") { |state, _expected| state[:greeting] }
+stimulus.call('I greet {string}') { |_state, name| { greeting: "Hello, #{name}!" } }
 
-stimulus.("expression `{int}+{int}`") { |_state, a, b| { result: a + b } }
+sensor.call('the greeting should be {string}') { |state, _expected| state[:greeting] }
 
-sensor.("evaluate to `{int}`") { |state, _expected| state[:result] }
+stimulus.call('expression `{int}+{int}`') { |_state, a, b| { result: a + b } }
+
+sensor.call('evaluate to `{int}`') { |state, _expected| state[:result] }

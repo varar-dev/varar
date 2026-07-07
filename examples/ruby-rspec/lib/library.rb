@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "date"
+require 'date'
 
 module Library
   Money = Data.define(:currency, :value)
@@ -8,7 +8,7 @@ module Library
   module_function
 
   def gbp(value)
-    Money.new(currency: "GBP", value: value)
+    Money.new(currency: 'GBP', value: value)
   end
 
   FEE_PER_DAY = gbp(0.5)

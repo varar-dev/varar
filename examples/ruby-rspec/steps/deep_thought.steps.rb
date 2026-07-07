@@ -1,5 +1,7 @@
-require "oselvar/var"
+# frozen_string_literal: true
 
-param, stimulus, sensor = steps
+require 'oselvar/var'
 
-sensor.("life, the universe and everything is {int}") { |_state, _answer| 42 }
+_, _, sensor = steps
+
+sensor.call('life, the universe and everything is {int}') { |_state, _answer| 42 }
