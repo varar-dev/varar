@@ -1,41 +1,46 @@
 import { describe, expect, test } from 'vitest'
 import { createTreeSitterScanner } from '../src/tree-sitter-scanner.ts'
+import { bundleFixture } from './bundle-fixtures.ts'
 import { createTestGrammarLoader } from './test-grammar-loader.ts'
 
+// (kind, expression) and parameter-type extraction are proven across every
+// bundle and language by extraction-conformance.test.ts. This file covers the
+// Python-specific pieces: handler-param extraction (from real, executed bundle
+// fixtures) plus escape decoding and the `re.compile`/raw-string regexp forms
+// that no bundle uses.
 async function pythonScanner() {
   return createTreeSitterScanner(createTestGrammarLoader(), ['python'])
 }
 
 describe('python dialect', () => {
-  test('discovers decorated step defs with kind, expression, and handler params', async () => {
+  test('extracts handler params (simple, default, splat) from bundle fixtures', async () => {
     const scanner = await pythonScanner()
-    const source = `from var import steps
 
-param, stimulus, sensor = steps(lambda: {})
-
-
-@stimulus("I fly to {airport}")
-def _(state, dest):
-    return {"dest": dest}
-
-
-@sensor("The count is {int}")
-def _(state, n: int, row=None):
-    pass
-`
-    const defs = scanner.discoverStepDefs('a.steps.py', source)
-    expect(defs.map((d) => [d.kind, d.expression])).toEqual([
-      ['stimulus', 'I fly to {airport}'],
-      ['sensor', 'The count is {int}'],
-    ])
-    expect(defs[0]?.handlerParams?.params).toEqual([
+    const simple = bundleFixture('01-roman-numerals', '.py')
+    const simpleDefs = scanner.discoverStepDefs(simple.name, simple.source)
+    expect(simpleDefs.map((d) => d.kind)).toEqual(['stimulus', 'sensor'])
+    expect(simpleDefs[0]?.handlerParams?.params).toEqual([
       { name: 'state', typeText: '' },
-      { name: 'dest', typeText: '' },
+      { name: 'n', typeText: '' },
     ])
-    expect(defs[1]?.handlerParams?.params).toEqual([
+    expect(simpleDefs[1]?.handlerParams?.params).toEqual([
       { name: 'state', typeText: '' },
-      { name: 'n', typeText: 'int' },
+      { name: 'expected', typeText: '' },
+    ])
+
+    // 07: a default parameter (`row=None`).
+    const dflt = bundleFixture('07-row-check-mismatch', '.py')
+    expect(scanner.discoverStepDefs(dflt.name, dflt.source)[0]?.handlerParams?.params).toEqual([
+      { name: 'state', typeText: '' },
       { name: 'row', typeText: '' },
+    ])
+
+    // 11: a splat parameter — Python surfaces it with its leading star.
+    const splat = bundleFixture('11-emoji-offsets', '.py')
+    expect(scanner.discoverStepDefs(splat.name, splat.source)[0]?.handlerParams?.params).toEqual([
+      { name: 'state', typeText: '' },
+      { name: 's', typeText: '' },
+      { name: '*extra', typeText: '' },
     ])
   })
 
@@ -45,22 +50,18 @@ def _(state, n: int, row=None):
       'a.steps.py',
       `@stimulus("I said \\"hi\\"\\n\\ttwice \\u00e9\\a\\z")\ndef _(state):\n    pass\n`,
     )
-    expect(defs[0]?.expression).toBe('I said "hi"\n\ttwice é\u0007\\z')
+    expect(defs[0]?.expression).toBe('I said "hi"\n\ttwice é\\z')
   })
 
-  test('discovers parameter types from string, raw-string, and re.compile regexps', async () => {
+  test('resolves parameter-type regexps from raw strings and re.compile (no bundle uses these)', async () => {
     const scanner = await pythonScanner()
     const source = `import re
-from var import steps
-
-param, stimulus, sensor = steps(lambda: {})
-param("airport", "[A-Z]{3}", parse=lambda code: code.lower())
 param("iata", r"[A-Z]{3}\\d")
 param("code", re.compile(r"[0-9]+"))
 `
-    const types = scanner.discoverParameterTypes('a.steps.py', source)
-    expect(types.map((t) => [t.name, t.regexp])).toEqual([
-      ['airport', '[A-Z]{3}'],
+    expect(
+      scanner.discoverParameterTypes('a.steps.py', source).map((t) => [t.name, t.regexp]),
+    ).toEqual([
       ['iata', '[A-Z]{3}\\d'],
       ['code', '[0-9]+'],
     ])

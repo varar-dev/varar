@@ -1,50 +1,46 @@
 import { describe, expect, test } from 'vitest'
 import { createTreeSitterScanner } from '../src/tree-sitter-scanner.ts'
+import { bundleFixture } from './bundle-fixtures.ts'
 import { createTestGrammarLoader } from './test-grammar-loader.ts'
 
+// (kind, expression) and parameter-type extraction are proven across every
+// bundle and language by extraction-conformance.test.ts. This file covers the
+// Ruby-specific pieces that test doesn't: handler-param extraction (sourced
+// from real, executed bundle fixtures, not inline strings) and the
+// language-specific escape rules and false-positive guards.
 async function rubyScanner() {
   return createTreeSitterScanner(createTestGrammarLoader(), ['ruby'])
 }
 
 describe('ruby dialect', () => {
-  test('discovers block-DSL step defs with kind, expression, and handler params', async () => {
+  test('extracts handler params (simple, do…end, optional, splat) from bundle fixtures', async () => {
     const scanner = await rubyScanner()
-    const source = `require 'oselvar/var'
 
-steps(count: 0) do
-  stimulus('I fly to {airport}') { |state, dest| { dest: dest } }
-
-  sensor('The count is {int}') do |state, n, _row = nil|
-    state[:count]
-  end
-end
-`
-    const defs = scanner.discoverStepDefs('a.steps.rb', source)
-    expect(defs.map((d) => [d.kind, d.expression])).toEqual([
-      ['stimulus', 'I fly to {airport}'],
-      ['sensor', 'The count is {int}'],
-    ])
-    // Brace block params.
-    expect(defs[0]?.handlerParams?.params).toEqual([
-      { name: 'state', typeText: '' },
-      { name: 'dest', typeText: '' },
-    ])
-    // do…end block params, including an optional parameter.
-    expect(defs[1]?.handlerParams?.params).toEqual([
-      { name: 'state', typeText: '' },
+    // 01: a brace block and a do…end block, plain params.
+    const simple = bundleFixture('01-roman-numerals', '.rb')
+    const simpleDefs = scanner.discoverStepDefs(simple.name, simple.source)
+    expect(simpleDefs.map((d) => d.kind)).toEqual(['stimulus', 'sensor'])
+    expect(simpleDefs[0]?.handlerParams?.params).toEqual([
+      { name: '_state', typeText: '' },
       { name: 'n', typeText: '' },
+    ])
+    expect(simpleDefs[1]?.handlerParams?.params).toEqual([
+      { name: 'state', typeText: '' },
+      { name: 'expected', typeText: '' },
+    ])
+
+    // 07: an optional block parameter (`|_state, _row = nil|`).
+    const optional = bundleFixture('07-row-check-mismatch', '.rb')
+    const optionalDefs = scanner.discoverStepDefs(optional.name, optional.source)
+    expect(optionalDefs[0]?.handlerParams?.params).toEqual([
+      { name: '_state', typeText: '' },
       { name: '_row', typeText: '' },
     ])
-  })
 
-  test('the surrounding steps(...) call and splat params do not confuse extraction', async () => {
-    const scanner = await rubyScanner()
-    const defs = scanner.discoverStepDefs(
-      'a.steps.rb',
-      `steps do\n  sensor('I greet {string}') { |_state, _s, *_extra| nil }\nend\n`,
-    )
-    expect(defs.map((d) => [d.kind, d.expression])).toEqual([['sensor', 'I greet {string}']])
-    expect(defs[0]?.handlerParams?.params).toEqual([
+    // 11: a splat block parameter (`|_state, _s, *_extra|`).
+    const splat = bundleFixture('11-emoji-offsets', '.rb')
+    const splatDefs = scanner.discoverStepDefs(splat.name, splat.source)
+    expect(splatDefs[0]?.handlerParams?.params).toEqual([
       { name: '_state', typeText: '' },
       { name: '_s', typeText: '' },
       { name: '_extra', typeText: '' },
@@ -65,17 +61,13 @@ end
     expect(double[0]?.expression).toBe('said "hi"\n\ttab é')
   })
 
-  test('discovers parameter types from single- and double-quoted regexps', async () => {
+  test('ignores stimulus/sensor/param calls that have a receiver', async () => {
     const scanner = await rubyScanner()
-    const source = `steps do
-  param('airport', '[A-Z]{3}', parse: ->(code) { code.downcase })
-  param("money", '£\\d+\\.\\d{2}', parse: ->(raw) { raw })
-end
-`
-    const types = scanner.discoverParameterTypes('a.steps.rb', source)
-    expect(types.map((t) => [t.name, t.regexp])).toEqual([
-      ['airport', '[A-Z]{3}'],
-      ['money', '£\\d+\\.\\d{2}'],
-    ])
+    // Only the bare DSL calls are step defs; `logger.stimulus(...)` is not.
+    const defs = scanner.discoverStepDefs(
+      'a.steps.rb',
+      `steps do\n  logger.stimulus('nope') { |_s| nil }\n  sensor('yes') { |_s| nil }\nend\n`,
+    )
+    expect(defs.map((d) => [d.kind, d.expression])).toEqual([['sensor', 'yes']])
   })
 })

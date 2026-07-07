@@ -1,31 +1,46 @@
 import { describe, expect, test } from 'vitest'
 import { createTreeSitterScanner } from '../src/tree-sitter-scanner.ts'
+import { bundleFixture } from './bundle-fixtures.ts'
 import { createTestGrammarLoader } from './test-grammar-loader.ts'
 
+// (kind, expression) and parameter-type extraction (including Pattern.compile,
+// via bundle 13) are proven across every bundle by extraction-conformance.test.ts.
+// This file covers the Java-specific pieces: typed lambda-param extraction
+// (from real, executed bundle fixtures) plus escapes, the bare-identifier
+// lambda form, and false-positive guards.
 async function javaScanner() {
   return createTreeSitterScanner(createTestGrammarLoader(), ['java'])
 }
 
 describe('java dialect', () => {
-  test('discovers binder method calls with kind, expression, and typed lambda params', async () => {
+  test('extracts typed lambda params (incl. nested generics) from bundle fixtures', async () => {
     const scanner = await javaScanner()
-    const source = `public final class AirportsSteps implements StepDefinitions {
-    @Override
-    public void defineSteps(Registrar registrar) {
-        var s = registrar.steps(() -> new Ctx(null));
-        s.stimulus("I fly to {airport}", (Ctx ctx, String dest) -> new Ctx(dest));
-        s.sensor("The count is {int}", (Ctx ctx, Integer n) -> null);
-    }
-}
-`
-    const defs = scanner.discoverStepDefs('AirportsSteps.java', source)
-    expect(defs.map((d) => [d.kind, d.expression])).toEqual([
-      ['stimulus', 'I fly to {airport}'],
-      ['sensor', 'The count is {int}'],
-    ])
-    expect(defs[0]?.handlerParams?.params).toEqual([
+
+    const simple = bundleFixture('01-roman-numerals', '.java')
+    const simpleDefs = scanner.discoverStepDefs(simple.name, simple.source)
+    expect(simpleDefs.map((d) => d.kind)).toEqual(['stimulus', 'sensor'])
+    expect(simpleDefs[0]?.handlerParams?.params).toEqual([
       { name: 'ctx', typeText: 'Ctx' },
-      { name: 'dest', typeText: 'String' },
+      { name: 'n', typeText: 'Integer' },
+    ])
+    expect(simpleDefs[1]?.handlerParams?.params).toEqual([
+      { name: 'ctx', typeText: 'Ctx' },
+      { name: 'expected', typeText: 'String' },
+    ])
+
+    // 07: a generic parameter type (Map<String, String>).
+    const map = bundleFixture('07-row-check-mismatch', '.java')
+    expect(scanner.discoverStepDefs(map.name, map.source)[0]?.handlerParams?.params).toEqual([
+      { name: 'ctx', typeText: 'Ctx' },
+      { name: 'row', typeText: 'Map<String, String>' },
+    ])
+
+    // 11: a nested generic (List<List<String>>).
+    const nested = bundleFixture('11-emoji-offsets', '.java')
+    expect(scanner.discoverStepDefs(nested.name, nested.source)[0]?.handlerParams?.params).toEqual([
+      { name: 'ctx', typeText: 'Ctx' },
+      { name: 'name', typeText: 'String' },
+      { name: 'table', typeText: 'List<List<String>>' },
     ])
   })
 
@@ -45,17 +60,6 @@ describe('java dialect', () => {
       `class X { void f(StateBinder<C> s) { s.stimulus("I said \\"hi\\"\\n\\u00e9", (C c) -> c); } }\n`,
     )
     expect(defs[0]?.expression).toBe('I said "hi"\né')
-  })
-
-  test('discovers param with Pattern.compile', async () => {
-    const scanner = await javaScanner()
-    const source = `class X { void f(Registrar registrar) {
-        var s = registrar.steps(() -> new Ctx(null));
-        s.param("airport", Pattern.compile("[A-Z]{3}"), groups -> groups[0]);
-    } }
-`
-    const types = scanner.discoverParameterTypes('XSteps.java', source)
-    expect(types.map((t) => [t.name, t.regexp])).toEqual([['airport', '[A-Z]{3}']])
   })
 
   test('ignores unrelated method calls', async () => {

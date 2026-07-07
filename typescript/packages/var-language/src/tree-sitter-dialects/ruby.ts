@@ -11,6 +11,7 @@ import { type LanguageSpec, toRange } from './types.ts'
 // excludes it.
 const STEP_DEFINITION_QUERY = `
 (call
+  !receiver
   method: (identifier) @function-name
   arguments: (argument_list . (string) @expression)
   block: [(block) (do_block)] @handler
@@ -23,6 +24,7 @@ const STEP_DEFINITION_QUERY = `
 // arguments are not anchored, so they're ignored.
 const PARAMETER_TYPE_QUERY = `
 (call
+  !receiver
   method: (identifier) @function-name
   arguments: (argument_list
     .
