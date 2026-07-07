@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "json"
+require 'json'
 
 module Oselvar
   module Var
@@ -17,24 +17,24 @@ module Oselvar
         module_function
 
         def canonical_stringify(value)
-          "#{encode(value, "", sort_keys: true)}\n"
+          "#{encode(value, '', sort_keys: true)}\n"
         end
 
         def ordered_stringify(value)
-          "#{encode(value, "", sort_keys: false)}\n"
+          "#{encode(value, '', sort_keys: false)}\n"
         end
 
         def encode(value, indent, sort_keys:)
           case value
           when Hash
-            return "{}" if value.empty?
+            return '{}' if value.empty?
 
             keys = sort_keys ? value.keys.sort : value.keys
             inner = "#{indent}  "
             items = keys.map { |key| "#{inner}#{key.to_s.to_json}: #{encode(value[key], inner, sort_keys: sort_keys)}" }
             "{\n#{items.join(",\n")}\n#{indent}}"
           when Array
-            return "[]" if value.empty?
+            return '[]' if value.empty?
 
             inner = "#{indent}  "
             items = value.map { |element| "#{inner}#{encode(element, inner, sort_keys: sort_keys)}" }

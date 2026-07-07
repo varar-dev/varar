@@ -25,7 +25,7 @@ module Oselvar
 
         def initialize(cells)
           @cells = cells
-          super(cells.map { |c| "#{c.column}: expected #{c.expected} but was #{c.actual}" }.join("; "))
+          super(cells.map { |c| "#{c.column}: expected #{c.expected} but was #{c.actual}" }.join('; '))
         end
       end
 
@@ -73,9 +73,9 @@ module Oselvar
             raise ReturnShapeError, "expected #{data_rows.length} row(s), got #{returned.length}"
           end
 
-          all_arrays = returned.all? { |r| r.is_a?(Array) }
-          all_records = returned.all? { |r| r.is_a?(Hash) }
-          raise ReturnShapeError, "table rows must be all arrays or all objects" if !all_arrays && !all_records
+          all_arrays = returned.all?(Array)
+          all_records = returned.all?(Hash)
+          raise ReturnShapeError, 'table rows must be all arrays or all objects' if !all_arrays && !all_records
 
           diffs = []
           data_rows.each_with_index do |row, i|
@@ -92,10 +92,11 @@ module Oselvar
 
                 actual_value = ret[column]
               end
-              expected = j < row.cells.length ? row.cells[j] : ""
+              expected = j < row.cells.length ? row.cells[j] : ''
               actual = render_cell_value(actual_value)
               span = j < row.cell_spans.length ? row.cell_spans[j] : row.span
-              diffs << CellDiff.new(column: column, span: span, expected: expected, actual: actual, ok: actual == expected)
+              diffs << CellDiff.new(column: column, span: span, expected: expected, actual: actual,
+                                    ok: actual == expected)
             end
           end
           diffs

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "minitest"
-require "oselvar/var/runner"
+require 'minitest'
+require 'oselvar/var/runner'
 
 module Oselvar
   module Var
@@ -13,7 +13,7 @@ module Oselvar
     #   require "oselvar/var/minitest"
     #   Oselvar::Var::Minitest.generate_tests
     module Minitest
-      VERSION = "0.3.2"
+      VERSION = '0.3.2'
 
       module_function
 
@@ -23,7 +23,7 @@ module Oselvar
         cfg = Config.read_var_config(root)
         loaded = Runner.load_steps(cfg.steps, root)
         store = Runner.create_file_baseline_store(root)
-        update = %w[1 true].include?(ENV.fetch("VAR_UPDATE", nil))
+        update = %w[1 true].include?(ENV.fetch('VAR_UPDATE', nil))
 
         Runner.find_specs(cfg.docs_include, cfg.docs_exclude, root).each do |spec_path|
           klass = build_test_case(spec_path, root, loaded, store, update)
@@ -33,7 +33,7 @@ module Oselvar
 
       def build_test_case(spec_path, root, loaded, store, update)
         rel = Runner.rel_posix(spec_path, root)
-        source = File.read(spec_path, encoding: "UTF-8")
+        source = File.read(spec_path, encoding: 'UTF-8')
         plan = Runner.plan_spec(File.basename(spec_path), source, loaded.registry)
         pairs = Runner.examples_with_runs(plan, loaded.create_context, Runner::RecordingReporter.new)
 
@@ -71,8 +71,8 @@ module Oselvar
 
       # Project arbitrary text onto a valid identifier fragment.
       def identifier(text)
-        ident = text.gsub(/\W+/, "_").gsub(/\A_+|_+\z/, "")
-        ident = "example" if ident.empty?
+        ident = text.gsub(/\W+/, '_').gsub(/\A_+|_+\z/, '')
+        ident = 'example' if ident.empty?
         ident = "_#{ident}" if ident.match?(/\A\d/)
         ident
       end

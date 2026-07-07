@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "oselvar/var"
-require "oselvar/var/registry"
+require 'oselvar/var'
+require 'oselvar/var/registry'
 
 module Oselvar
   module Var

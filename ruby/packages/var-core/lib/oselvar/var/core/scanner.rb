@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "oselvar/var/core/span"
-require "oselvar/var/core/ast"
-require "oselvar/var/core/table_cells"
+require 'oselvar/var/core/span'
+require 'oselvar/var/core/ast'
+require 'oselvar/var/core/table_cells'
 
 module Oselvar
   module Var
@@ -121,7 +121,7 @@ module Oselvar
             current_u16 += ch.ord > 0xFFFF ? 2 : 1
           end
 
-          out << RawLine.new(text: source[start_cp..] || "", start_offset: start_u16, end_offset: current_u16)
+          out << RawLine.new(text: source[start_cp..] || '', start_offset: start_u16, end_offset: current_u16)
           out
         end
 
@@ -137,16 +137,16 @@ module Oselvar
 
           Heading.new(
             level: m[1].length,
-            text: (m[2] || "").strip,
+            text: (m[2] || '').strip,
             span: Offsets.span_from_offsets(source, line.start_offset, line.end_offset)
           )
         end
 
         def try_list_item(source, line)
           if (ul = UL_RE.match(line.text))
-            text = ul[3] || ""
-            marker_start = line.start_offset + Offsets.utf16_len(ul[1] || "")
-            marker_end = marker_start + Offsets.utf16_len(ul[2] || "")
+            text = ul[3] || ''
+            marker_start = line.start_offset + Offsets.utf16_len(ul[1] || '')
+            marker_end = marker_start + Offsets.utf16_len(ul[2] || '')
             cp_idx = line.text.index(text)
             text_start = line.start_offset + Offsets.to_utf16_offset(line.text, cp_idx)
             return ListItem.new(
@@ -159,9 +159,9 @@ module Oselvar
           end
 
           if (ol = OL_RE.match(line.text))
-            text = ol[4] || ""
-            marker_start = line.start_offset + Offsets.utf16_len(ol[1] || "")
-            marker_end = marker_start + Offsets.utf16_len(ol[2] || "") + Offsets.utf16_len(ol[3] || "")
+            text = ol[4] || ''
+            marker_start = line.start_offset + Offsets.utf16_len(ol[1] || '')
+            marker_end = marker_start + Offsets.utf16_len(ol[2] || '') + Offsets.utf16_len(ol[3] || '')
             cp_idx = line.text.index(text)
             text_start = line.start_offset + Offsets.to_utf16_offset(line.text, cp_idx)
             return ListItem.new(
@@ -183,7 +183,7 @@ module Oselvar
           m = BQ_RE.match(first.text)
           return nil unless m
 
-          first_segment = m[1] || ""
+          first_segment = m[1] || ''
           cp_idx = first.text.index(first_segment)
           segments = [first_segment]
           segment_map = [
@@ -201,7 +201,7 @@ module Oselvar
             next_m = BQ_RE.match(ln.text)
             break unless next_m
 
-            segment = next_m[1] || ""
+            segment = next_m[1] || ''
             cp_idx2 = ln.text.index(segment)
             joined_text_offset += 1 # newline separator
             segment_map << SegmentOffset.new(
@@ -225,7 +225,7 @@ module Oselvar
         end
 
         def consume_paragraph(source, lines, start_idx, plugins)
-          raise "invariant: start_idx out of range" if start_idx >= lines.length
+          raise 'invariant: start_idx out of range' if start_idx >= lines.length
 
           first = lines[start_idx]
           end_idx = start_idx
@@ -265,8 +265,8 @@ module Oselvar
           open_m = FENCE_RE.match(start.text)
           return nil unless open_m
 
-          fence_marker = open_m[1] || ""
-          info = (open_m[2] || "").strip
+          fence_marker = open_m[1] || ''
+          info = (open_m[2] || '').strip
 
           i = start_idx + 1
           body_start = nil
@@ -276,7 +276,7 @@ module Oselvar
           while i < lines.length
             ln = lines[i]
             close_m = FENCE_RE.match(ln.text)
-            if close_m && (close_m[1] || "").length >= fence_marker.length
+            if close_m && (close_m[1] || '').length >= fence_marker.length
               end_offset = ln.end_offset
               break
             end
@@ -285,7 +285,7 @@ module Oselvar
             i += 1
           end
 
-          body = body_start.nil? || body_end.nil? ? "" : Offsets.utf16_slice(source, body_start, body_end)
+          body = body_start.nil? || body_end.nil? ? '' : Offsets.utf16_slice(source, body_start, body_end)
 
           fallback = start.end_offset
           body_span = Offsets.span_from_offsets(source, body_start || fallback, body_end || fallback)
@@ -308,7 +308,8 @@ module Oselvar
           return nil unless ROW_RE.match?(header_line.text)
           return nil unless DELIM_RE.match?(delim_line.text)
 
-          header_cells, header_cell_spans = TableCells.parse_row_cells(header_line.text, header_line.start_offset, source)
+          header_cells, header_cell_spans = TableCells.parse_row_cells(header_line.text, header_line.start_offset,
+                                                                       source)
           header = Row.new(
             cells: header_cells,
             cell_spans: header_cell_spans,

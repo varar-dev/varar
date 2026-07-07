@@ -18,8 +18,8 @@ module Oselvar
             "  '#{c.expression}'    at #{c.source_file}:#{c.source_line}"
           end.join("\n")
           Diagnostic.new(
-            severity: "error",
-            code: "ambiguous-match",
+            severity: 'error',
+            code: 'ambiguous-match',
             message: "Ambiguous step: \"#{input.text}\"\nMatched by:\n#{lines}",
             span: input.span
           )
@@ -27,20 +27,20 @@ module Oselvar
 
         def drift_detected(name, span)
           Diagnostic.new(
-            severity: "error",
-            code: "drift",
+            severity: 'error',
+            code: 'drift',
             message: "This paragraph was an example and no longer matches any step (drift): \"#{name}\".\n" \
-                     "Fix the step so it matches again, or accept it as prose (run in update mode).",
+                     'Fix the step so it matches again, or accept it as prose (run in update mode).',
             span: span
           )
         end
 
         def error_fence_without_step(span)
           Diagnostic.new(
-            severity: "error",
-            code: "error-fence-without-step",
-            message: "This `error` fence marks the example as expected-to-fail, " \
-                     "but the example has no step to run.",
+            severity: 'error',
+            code: 'error-fence-without-step',
+            message: 'This `error` fence marks the example as expected-to-fail, ' \
+                     'but the example has no step to run.',
             span: span
           )
         end

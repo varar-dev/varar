@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "oselvar/var/internal"
+require 'oselvar/var/internal'
 
 module Oselvar
   module Var

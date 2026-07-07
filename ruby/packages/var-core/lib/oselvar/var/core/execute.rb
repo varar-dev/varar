@@ -1,18 +1,18 @@
 # frozen_string_literal: true
 
-require "oselvar/var/core/span"
-require "oselvar/var/core/deep_freeze"
-require "oselvar/var/core/cell_diff"
-require "oselvar/var/core/doc_string_diff"
-require "oselvar/var/core/param_diff"
-require "oselvar/var/core/failure_anchor"
+require 'oselvar/var/core/span'
+require 'oselvar/var/core/deep_freeze'
+require 'oselvar/var/core/cell_diff'
+require 'oselvar/var/core/doc_string_diff'
+require 'oselvar/var/core/param_diff'
+require 'oselvar/var/core/failure_anchor'
 
 module Oselvar
   module Var
     module Core
       # Raised when an expected-to-fail example passes unexpectedly.
       class UnexpectedPassError < StandardError
-        def initialize(message = "expected the example to fail, but it passed")
+        def initialize(message = 'expected the example to fail, but it passed')
           super
         end
       end
@@ -76,26 +76,29 @@ module Oselvar
                 returned = step.step_def.handler.call(state, *step.args, *extra)
                 last_return = returned
                 case step.step_def.kind
-                when "stimulus"
+                when 'stimulus'
                   unless returned.nil?
-                    raise ReturnShapeError, "a stimulus must return a partial state object or nothing" unless returned.is_a?(Hash)
+                    unless returned.is_a?(Hash)
+                      raise ReturnShapeError,
+                            'a stimulus must return a partial state object or nothing'
+                    end
 
                     state = DeepFreeze.deep_freeze(state.merge(returned))
                     state_by_file[file] = state
                   end
-                when "sensor"
+                when 'sensor'
                   compare_sensor_return(plan, ex, step, returned, extra) if ex.row_checks.nil? && !returned.nil?
                 else
                   raise ReturnShapeError, "unknown step kind: #{step.step_def.kind}"
                 end
               rescue StandardError => e
                 augmented = augment_stack(e, step, var_path)
-                observer&.call(observation(ex, example_index, i + 1, file, "fail", augmented))
+                observer&.call(observation(ex, example_index, i + 1, file, 'fail', augmented))
                 thrown = augmented
                 break
               end
 
-              observer&.call(observation(ex, example_index, i + 1, file, "pass"))
+              observer&.call(observation(ex, example_index, i + 1, file, 'pass'))
             end
 
             # Header-bound row checks (after all steps).
@@ -105,13 +108,13 @@ module Oselvar
                 last_step = ex.steps.last
                 augmented = augment_stack(CellMismatchError.new(bad), last_step, var_path)
                 observer&.call(observation(ex, example_index, ex.steps.length,
-                                           last_step.step_def.expression_source_file, "fail", augmented))
+                                           last_step.step_def.expression_source_file, 'fail', augmented))
                 thrown = augmented
               end
             end
 
             # Expected-failure inversion.
-            if ex.expected_outcome == "fail"
+            if ex.expected_outcome == 'fail'
               if thrown.nil?
                 error = UnexpectedPassError.new
                 last = ex.steps.last
@@ -131,30 +134,41 @@ module Oselvar
         def compare_sensor_return(plan, _ex, step, returned, extra)
           slot_count = step.args.length + extra.length
           if slot_count.zero?
-            raise ReturnShapeError, "this sensor has no parameters, data table or doc string — " \
-                                    "nothing to compare a return value against (raise to fail, return nothing to pass)"
+            raise ReturnShapeError, 'this sensor has no parameters, data table or doc string — ' \
+                                    'nothing to compare a return value against (raise to fail, return nothing to pass)'
           end
 
           if slot_count == 1
             slots = [returned]
           else
-            raise ReturnShapeError, "a sensor with #{slot_count} parameters must return a list of #{slot_count} values, got #{returned.class}" unless returned.is_a?(Array)
-            raise ReturnShapeError, "sensor return must have #{slot_count} element(s), got #{returned.length}" unless returned.length == slot_count
+            unless returned.is_a?(Array)
+              raise ReturnShapeError,
+                    "a sensor with #{slot_count} parameters must return a list of " \
+                    "#{slot_count} values, got #{returned.class}"
+            end
+            unless returned.length == slot_count
+              raise ReturnShapeError,
+                    "sensor return must have #{slot_count} element(s), got #{returned.length}"
+            end
 
             slots = returned
           end
 
           inline_returned = slots[0...step.args.length]
-          source_texts = step.param_spans.map { |s| Offsets.utf16_slice(plan.var_doc.source, s.start_offset, s.end_offset) }
-          param_diffs = ParamDiff.compare_params(inline_returned, step.args, step.param_spans, source_texts, step.formats).reject(&:ok)
-          raise CellMismatchError.new(param_diffs) unless param_diffs.empty?
+          source_texts = step.param_spans.map do |s|
+            Offsets.utf16_slice(plan.var_doc.source, s.start_offset, s.end_offset)
+          end
+          param_diffs = ParamDiff.compare_params(inline_returned, step.args, step.param_spans, source_texts,
+                                                 step.formats).reject(&:ok)
+          raise CellMismatchError, param_diffs unless param_diffs.empty?
 
           if step.data_table
             bad = CellDiffs.compare_table(slots[step.args.length], step.data_table).reject(&:ok)
-            raise CellMismatchError.new(bad) unless bad.empty?
+            raise CellMismatchError, bad unless bad.empty?
           elsif step.doc_string
-            diff = DocStringDiffs.compare_doc_string(slots[step.args.length], step.doc_string.content, step.doc_string.span)
-            raise DocStringMismatchError.new(diff) unless diff.nil?
+            diff = DocStringDiffs.compare_doc_string(slots[step.args.length], step.doc_string.content,
+                                                     step.doc_string.span)
+            raise DocStringMismatchError, diff unless diff.nil?
           end
         end
 

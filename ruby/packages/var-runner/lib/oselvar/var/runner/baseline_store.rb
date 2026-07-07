@@ -8,11 +8,11 @@ module Oselvar
       # only moves raw text. Port of baseline_store.py.
       class FileBaselineStore
         def initialize(root)
-          @path = File.join(root.to_s, "var.lock.json")
+          @path = File.join(root.to_s, 'var.lock.json')
         end
 
         def read
-          File.exist?(@path) ? File.read(@path, encoding: "UTF-8") : nil
+          File.exist?(@path) ? File.read(@path, encoding: 'UTF-8') : nil
         end
 
         def write(contents)

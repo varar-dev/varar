@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "set"
-
 module Oselvar
   module Var
     module Core
@@ -12,7 +10,7 @@ module Oselvar
       Sentence = Data.define(:text, :start_offset, :end_offset)
 
       module Sentences
-        ABBREVIATIONS = Set.new(["e.g.", "i.e.", "etc.", "cf.", "vs."]).freeze
+        ABBREVIATIONS = Set.new(['e.g.', 'i.e.', 'etc.', 'cf.', 'vs.']).freeze
 
         module_function
 
@@ -26,7 +24,7 @@ module Oselvar
           j = 0
           while j < n
             c = text[j]
-            if c == "`" || c == '"'
+            if ['`', '"'].include?(c)
               close = text.index(c, j + 1)
               break if close.nil?
 
@@ -45,15 +43,15 @@ module Oselvar
               next
             end
             ch = text[i]
-            if ["\n", ".", "!", "?"].include?(ch)
-              if ch == "." && inside_number_or_abbrev?(text, i)
+            if ["\n", '.', '!', '?'].include?(ch)
+              if ch == '.' && inside_number_or_abbrev?(text, i)
                 i += 1
                 next
               end
               stop = i + 1
               push_segment(out, text, segment_start, stop, cp_to_u16)
               i = stop
-              i += 1 while i < n && [" ", "\n"].include?(text[i])
+              i += 1 while i < n && [' ', "\n"].include?(text[i])
               segment_start = i
               next
             end
@@ -77,8 +75,8 @@ module Oselvar
         end
 
         def inside_number_or_abbrev?(text, dot_pos)
-          prev = dot_pos.positive? ? text[dot_pos - 1] : ""
-          nxt = dot_pos + 1 < text.length ? text[dot_pos + 1] : ""
+          prev = dot_pos.positive? ? text[dot_pos - 1] : ''
+          nxt = dot_pos + 1 < text.length ? text[dot_pos + 1] : ''
           return true if digit?(prev) && digit?(nxt)
 
           ABBREVIATIONS.each do |abbrev|

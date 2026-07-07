@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "pathname"
+require 'pathname'
 
 module Oselvar
   module Var
@@ -11,28 +11,28 @@ module Oselvar
       # full_match semantics), matching the other ports' hand-rolled compiler
       # rather than Ruby's Dir glob. Port of _glob_to_regex.
       def glob_to_regex(pattern)
-        result = +""
+        result = +''
         i = 0
         n = pattern.length
         while i < n
           c = pattern[i]
-          if c == "/" && pattern[i, 4] == "/**/"
-            result << "/(?:.+/)?"
+          if c == '/' && pattern[i, 4] == '/**/'
+            result << '/(?:.+/)?'
             i += 4
-          elsif c == "/" && pattern[i, 3] == "/**" && i + 3 == n
-            result << "(?:/.*)?"
+          elsif c == '/' && pattern[i, 3] == '/**' && i + 3 == n
+            result << '(?:/.*)?'
             i += 3
-          elsif c == "*" && pattern[i, 3] == "**/"
-            result << "(?:.*/)?"
+          elsif c == '*' && pattern[i, 3] == '**/'
+            result << '(?:.*/)?'
             i += 3
-          elsif c == "*" && pattern[i, 2] == "**"
-            result << ".*"
+          elsif c == '*' && pattern[i, 2] == '**'
+            result << '.*'
             i += 2
-          elsif c == "*"
-            result << "[^/]*"
+          elsif c == '*'
+            result << '[^/]*'
             i += 1
-          elsif c == "?"
-            result << "[^/]"
+          elsif c == '?'
+            result << '[^/]'
             i += 1
           else
             result << Regexp.escape(c)

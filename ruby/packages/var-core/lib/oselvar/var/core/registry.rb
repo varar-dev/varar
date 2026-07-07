@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-require "cucumber/cucumber_expressions/cucumber_expression"
-require "cucumber/cucumber_expressions/parameter_type"
-require "cucumber/cucumber_expressions/parameter_type_registry"
+require 'cucumber/cucumber_expressions/cucumber_expression'
+require 'cucumber/cucumber_expressions/parameter_type'
+require 'cucumber/cucumber_expressions/parameter_type_registry'
 
 module Oselvar
   module Var

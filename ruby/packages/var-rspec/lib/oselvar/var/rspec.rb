@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "rspec/core"
-require "oselvar/var/runner"
+require 'rspec/core'
+require 'oselvar/var/runner'
 
 module Oselvar
   module Var
@@ -13,7 +13,7 @@ module Oselvar
     #   require "oselvar/var/rspec"
     #   Oselvar::Var::RSpec.generate
     module RSpec
-      VERSION = "0.3.2"
+      VERSION = '0.3.2'
 
       module_function
 
@@ -23,7 +23,7 @@ module Oselvar
         cfg = Config.read_var_config(root)
         loaded = Runner.load_steps(cfg.steps, root)
         store = Runner.create_file_baseline_store(root)
-        update = %w[1 true].include?(ENV.fetch("VAR_UPDATE", nil))
+        update = %w[1 true].include?(ENV.fetch('VAR_UPDATE', nil))
 
         Runner.find_specs(cfg.docs_include, cfg.docs_exclude, root).each do |spec_path|
           define_group(spec_path, root, loaded, store, update)
@@ -32,7 +32,7 @@ module Oselvar
 
       def define_group(spec_path, root, loaded, store, update)
         rel = Runner.rel_posix(spec_path, root)
-        source = File.read(spec_path, encoding: "UTF-8")
+        source = File.read(spec_path, encoding: 'UTF-8')
         plan = Runner.plan_spec(File.basename(spec_path), source, loaded.registry)
         pairs = Runner.examples_with_runs(plan, loaded.create_context, Runner::RecordingReporter.new)
         drifts = Core::Drifts.reconcile_drift(store, rel, source, plan.var_doc, plan, update: update)

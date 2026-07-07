@@ -16,12 +16,12 @@ module Oselvar
 
         def hash_source(source)
           h = FNV_OFFSET
-          data = source.encode("UTF-16LE").bytes
+          data = source.encode('UTF-16LE').bytes
           (0...data.length).step(2) do |i|
             unit = data[i] | (data[i + 1] << 8)
             h = ((h ^ unit) * FNV_PRIME) & MASK
           end
-          format("fnv1a:%08x", h)
+          format('fnv1a:%08x', h)
         end
       end
     end

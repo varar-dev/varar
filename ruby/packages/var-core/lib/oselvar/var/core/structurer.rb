@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "oselvar/var/core/span"
-require "oselvar/var/core/ast"
+require 'oselvar/var/core/span'
+require 'oselvar/var/core/ast'
 
 module Oselvar
   module Var
@@ -20,13 +20,13 @@ module Oselvar
 
           blocks.each do |block|
             case block.kind
-            when "heading"
+            when 'heading'
               # Pop deeper-or-equal-level entries before pushing the new heading.
               scope_stack.pop while !scope_stack.empty? && scope_stack.last[0] >= block.level
               scope_stack << [block.level, block.text]
               attachment_open = false
 
-            when "paragraph", "list_item", "blockquote"
+            when 'paragraph', 'list_item', 'blockquote'
               # Merge a block into the previous example when that example's last
               # block is an attachment (table/fence) with no blank line between.
               if attachment_open && last_example_idx >= 0
@@ -55,7 +55,7 @@ module Oselvar
               last_example_idx = examples.length - 1
               attachment_open = true
 
-            when "table", "fence"
+            when 'table', 'fence'
               if attachment_open && last_example_idx >= 0
                 prev = examples[last_example_idx]
                 new_span = Offsets.span_from_offsets(source, prev.span.start_offset, block.span.end_offset)
@@ -68,7 +68,7 @@ module Oselvar
                 orphan_attachments << block
               end
 
-            when "thematic_break"
+            when 'thematic_break'
               attachment_open = false
             end
           end

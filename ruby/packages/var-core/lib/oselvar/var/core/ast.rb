@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "oselvar/var/core/span"
+require 'oselvar/var/core/span'
 
 module Oselvar
   module Var
@@ -12,33 +12,33 @@ module Oselvar
       SegmentOffset = Data.define(:text_offset, :source_offset)
 
       Heading = Data.define(:level, :text, :span) do
-        def kind = "heading"
+        def kind = 'heading'
       end
 
       Paragraph = Data.define(:text, :span, :segment_map) do
-        def kind = "paragraph"
+        def kind = 'paragraph'
       end
 
       ListItem = Data.define(:text, :span, :segment_map, :ordered, :marker_span) do
-        def kind = "list_item"
+        def kind = 'list_item'
       end
 
       Blockquote = Data.define(:text, :span, :segment_map) do
-        def kind = "blockquote"
+        def kind = 'blockquote'
       end
 
       Row = Data.define(:cells, :cell_spans, :span)
 
       Table = Data.define(:span, :header, :rows) do
-        def kind = "table"
+        def kind = 'table'
       end
 
       Fence = Data.define(:span, :info, :body, :body_span) do
-        def kind = "fence"
+        def kind = 'fence'
       end
 
       ThematicBreak = Data.define(:span) do
-        def kind = "thematic_break"
+        def kind = 'thematic_break'
       end
 
       Example = Data.define(:scope_stack, :span, :body)

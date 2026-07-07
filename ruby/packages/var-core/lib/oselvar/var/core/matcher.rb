@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "oselvar/var/core/span"
+require 'oselvar/var/core/span'
 
 module Oselvar
   module Var
@@ -32,8 +32,8 @@ module Oselvar
         def unanchored_pattern(step)
           regexp = step.compiled.instance_variable_get(:@tree_regexp).regexp
           source = regexp.source
-          source = source[1..] if source.start_with?("^")
-          source = source[0...-1] if source.end_with?("$")
+          source = source[1..] if source.start_with?('^')
+          source = source[0...-1] if source.end_with?('$')
           Regexp.new(source, regexp.options)
         end
 
@@ -82,7 +82,7 @@ module Oselvar
 
         # Select the best non-overlapping hits, or report ambiguities.
         def resolve_hits(hits)
-          return ResolvedSteps.new(kind: "ok") if hits.empty?
+          return ResolvedSteps.new(kind: 'ok') if hits.empty?
 
           # Stable sort by (match_start asc, length desc); the original index
           # breaks ties so equal-key order follows registration order (Ruby's
@@ -116,7 +116,7 @@ module Oselvar
             i = j
           end
 
-          return ResolvedSteps.new(kind: "ambiguous", collisions: collisions) unless collisions.empty?
+          return ResolvedSteps.new(kind: 'ambiguous', collisions: collisions) unless collisions.empty?
 
           steps = []
           cursor = -1
@@ -126,7 +126,7 @@ module Oselvar
             steps << hit
             cursor = hit.match_end
           end
-          ResolvedSteps.new(kind: "ok", steps: steps)
+          ResolvedSteps.new(kind: 'ok', steps: steps)
         end
       end
     end

@@ -1,0 +1,43 @@
+plugins:
+  - rubocop-rake
+  - rubocop-rspec
+
+AllCops:
+  TargetRubyVersion: 3.2
+  NewCops: enable
+  SuggestExtensions: false
+
+# A language port faithfully mirrors the reference implementations' structure;
+# the size/complexity metrics fight that faithfulness, so relax them rather than
+# fragment the ported algorithms.
+Metrics:
+  Enabled: false
+
+Layout/LineLength:
+  Max: 120
+
+Style/Documentation:
+  Enabled: false
+
+# The ported algorithms mirror the reference's short parameter names (a, b, n,
+# …); enforcing a minimum length would fragment that parallel.
+Naming/MethodParameterName:
+  MinNameLength: 1
+
+# The conformance harnesses describe corpus stages as strings ("plan
+# conformance"), reproduce the reference test structure, and generate examples
+# from a corpus list (locals shared into each generated `it`), so a few of
+# RSpec's opinionated cops don't fit.
+RSpec/DescribeClass:
+  Enabled: false
+RSpec/ExampleLength:
+  Enabled: false
+RSpec/MultipleExpectations:
+  Enabled: false
+RSpec/LeakyConstantDeclaration:
+  Enabled: false
+RSpec/LeakyLocalVariable:
+  Enabled: false
+# The hash determinism test deliberately compares two calls with the same input.
+RSpec/IdenticalEqualityAssertion:
+  Enabled: false

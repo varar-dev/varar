@@ -7,9 +7,9 @@
 #                   # projects in examples/) + mvn install (JDK 21, pinned in
 #                   # java/.tool-versions) + the four JVM sample projects in
 #                   # examples/ (Maven/Gradle, Java/Kotlin)
-#   make ruby       # bundle + rake (rspec + purity gate) + examples/ruby-rspec
-#                   # and examples/ruby-minitest (Ruby 3.2, pinned in
-#                   # ruby/.tool-versions)
+#   make ruby       # bundle + rake (rubocop + rspec + purity gate) +
+#                   # examples/ruby-rspec and examples/ruby-minitest (Ruby 3.2,
+#                   # pinned in ruby/.tool-versions)
 #   make coverage   # test with coverage in all three ports (reports below)
 #
 # Each target runs the same gate as that port's CI workflow in .github/workflows/.

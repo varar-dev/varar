@@ -36,6 +36,7 @@ module Oselvar
           count = 0
           source.each_char.with_index do |ch, i|
             return i if count >= u16
+
             count += ch.ord > 0xFFFF ? 2 : 1
           end
           source.length

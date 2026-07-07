@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "oselvar/var/core"
+require 'oselvar/var/core'
 
 module Oselvar
   module Var
@@ -18,12 +18,10 @@ module Oselvar
         # +factory+ is a callable (or nil for empty state); +source_file+ keys
         # the per-file context factory. Raises if called twice for one file.
         def register(factory, source_file)
-          if @context_factories_by_file.key?(source_file)
-            raise "steps() called more than once in #{source_file}"
-          end
+          raise "steps() called more than once in #{source_file}" if @context_factories_by_file.key?(source_file)
 
           @context_factories_by_file[source_file] = factory || -> { {} }
-          [param_registrar, registrar("stimulus"), registrar("sensor")]
+          [param_registrar, registrar('stimulus'), registrar('sensor')]
         end
 
         # (step_file) -> state: invoke the file's factory, or {} if none.
@@ -73,9 +71,9 @@ module Oselvar
             regexp = regexp.source if regexp.is_a?(Regexp)
             unless regexp.is_a?(String)
               raise "parameter type #{type[:name].inspect}: regexp arrays are not supported " \
-                    "by the conformance projection yet"
+                    'by the conformance projection yet'
             end
-            { "name" => type[:name], "regexp" => regexp }
+            { 'name' => type[:name], 'regexp' => regexp }
           end
         end
 

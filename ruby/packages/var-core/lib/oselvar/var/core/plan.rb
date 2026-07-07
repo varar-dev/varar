@@ -1,19 +1,21 @@
 # frozen_string_literal: true
 
-require "oselvar/var/core/span"
-require "oselvar/var/core/ast"
-require "oselvar/var/core/cell_diff"
-require "oselvar/var/core/diagnostics"
-require "oselvar/var/core/matcher"
-require "oselvar/var/core/sentences"
+require 'oselvar/var/core/span'
+require 'oselvar/var/core/ast'
+require 'oselvar/var/core/cell_diff'
+require 'oselvar/var/core/diagnostics'
+require 'oselvar/var/core/matcher'
+require 'oselvar/var/core/sentences'
 
 module Oselvar
   module Var
     module Core
       DocString = Data.define(:content, :content_type, :span)
 
-      PlannedStep = Data.define(:text, :match_span, :param_spans, :step_def, :args, :formats, :data_table, :doc_string) do
-        def initialize(text:, match_span:, param_spans:, step_def:, args:, formats: [], data_table: nil, doc_string: nil)
+      PlannedStep = Data.define(:text, :match_span, :param_spans, :step_def, :args, :formats, :data_table,
+                                :doc_string) do
+        def initialize(text:, match_span:, param_spans:, step_def:, args:, formats: [], data_table: nil,
+                       doc_string: nil)
           super
         end
       end
@@ -99,7 +101,7 @@ module Oselvar
               table.rows.each do |row|
                 row_object = {}
                 table.header.cells.each_with_index do |cell_name, i|
-                  row_object[cell_name] = i < row.cells.length ? row.cells[i] : ""
+                  row_object[cell_name] = i < row.cells.length ? row.cells[i] : ''
                 end
                 row_step = PlannedStep.new(
                   text: binding_step.text,
@@ -112,12 +114,12 @@ module Oselvar
                 row_checks = table.header.cells.each_with_index.map do |cell_name, i|
                   RowCheck.new(
                     column: cell_name,
-                    value: i < row.cells.length ? row.cells[i] : "",
+                    value: i < row.cells.length ? row.cells[i] : '',
                     span: i < row.cell_spans.length ? row.cell_spans[i] : row.span
                   )
                 end
                 examples << PlannedExample.new(
-                  name: row.cells.join(" / "),
+                  name: row.cells.join(' / '),
                   scope_stack: ex.scope_stack + [binding_step.text],
                   span: row.span,
                   steps: [row_step],
@@ -129,16 +131,16 @@ module Oselvar
             end
 
             # Error fence detection.
-            error_fence = ex.body.find { |b| b.kind == "fence" && b.info == "error" }
+            error_fence = ex.body.find { |b| b.kind == 'fence' && b.info == 'error' }
 
             # Pass 2: attach trailing table / fence to the last step of a block.
             attachments = {}
             (1...ex.body.length).each do |idx|
               here = ex.body[idx]
-              if here.kind == "table" && steps_by_block.key?(idx - 1)
+              if here.kind == 'table' && steps_by_block.key?(idx - 1)
                 _prev_data, prev_doc = attachments[idx - 1] || [nil, nil]
                 attachments[idx - 1] = [here, prev_doc]
-              elsif here.kind == "fence" && here.info != "error" && steps_by_block.key?(idx - 1)
+              elsif here.kind == 'fence' && here.info != 'error' && steps_by_block.key?(idx - 1)
                 prev_data, = attachments[idx - 1] || [nil, nil]
                 attachments[idx - 1] = [
                   prev_data,
@@ -177,7 +179,7 @@ module Oselvar
             expected_outcome = nil
             expected_error_message = nil
             if error_fence
-              expected_outcome = "fail"
+              expected_outcome = 'fail'
               msg = error_fence.body.strip
               expected_error_message = msg unless msg.empty?
             end
@@ -208,14 +210,17 @@ module Oselvar
                 match_start: h.match_start + sentence.start_offset,
                 match_end: h.match_end + sentence.start_offset,
                 args: h.args,
-                param_spans: h.param_spans.map { |p| ParamSpan.new(start: p.start + sentence.start_offset, end: p.end + sentence.start_offset) },
+                param_spans: h.param_spans.map do |p|
+                  ParamSpan.new(start: p.start + sentence.start_offset, end: p.end + sentence.start_offset)
+                end,
                 formats: h.formats
               )
             end
             resolved = Matcher.resolve_hits(adjusted)
-            if resolved.kind == "ambiguous"
+            if resolved.kind == 'ambiguous'
               resolved.collisions.each do |c|
-                all_ambiguities << Ambiguity.new(match_start: c.match_start, match_end: c.match_end, candidates: c.candidates)
+                all_ambiguities << Ambiguity.new(match_start: c.match_start, match_end: c.match_end,
+                                                 candidates: c.candidates)
               end
             elsif !resolved.steps.empty?
               all_steps.concat(resolved.steps)
@@ -235,7 +240,7 @@ module Oselvar
           body = ex.body
           (1...body.length).each do |idx|
             here = body[idx]
-            next unless here.kind == "table"
+            next unless here.kind == 'table'
 
             above = body[idx - 1]
             next unless %w[paragraph list_item blockquote].include?(above.kind)
@@ -258,16 +263,16 @@ module Oselvar
 
         def derive_example_name(body)
           primary = body.find { |b| %w[paragraph list_item blockquote].include?(b.kind) }
-          return "" if primary.nil?
+          return '' if primary.nil?
 
-          name = primary.text.gsub(/\s+/, " ").strip
-          name.sub(/[.!?]$/, "")
+          name = primary.text.gsub(/\s+/, ' ').strip
+          name.sub(/[.!?]$/, '')
         end
 
         def lift_segment_offset(segment_map, text_offset)
           best = segment_map.first
           segment_map.each { |entry| best = entry if entry.text_offset <= text_offset }
-          raise "empty segment_map" if best.nil?
+          raise 'empty segment_map' if best.nil?
 
           best.source_offset + (text_offset - best.text_offset)
         end

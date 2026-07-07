@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-require "oselvar/var/core/scanner"
-require "oselvar/var/core/structurer"
+require 'oselvar/var/core/scanner'
+require 'oselvar/var/core/structurer'
 
 module Oselvar
   module Var

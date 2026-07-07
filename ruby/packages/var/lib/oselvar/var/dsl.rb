@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "oselvar/var/internal"
+require 'oselvar/var/internal'
 
 # `steps` as a top-level method, available in any step file after
 # `require "oselvar/var"` (idiomatic for BDD step DSLs, like Cucumber-Ruby's

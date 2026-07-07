@@ -1,11 +1,10 @@
 # frozen_string_literal: true
 
-require "json"
-require "set"
-require "oselvar/var/core/hash"
-require "oselvar/var/core/diagnostics"
-require "oselvar/var/core/plan"
-require "oselvar/var/core/canonical_json"
+require 'json'
+require 'oselvar/var/core/hash'
+require 'oselvar/var/core/diagnostics'
+require 'oselvar/var/core/plan'
+require 'oselvar/var/core/canonical_json'
 
 module Oselvar
   module Var
@@ -88,13 +87,13 @@ module Oselvar
 
               line = candidate.span.start_line
               best_line = best_idx >= 0 ? candidates[best_idx].span.start_line : 0
-              if best_idx < 0 || score > best_score ||
-                 (score == best_score && (line - b.line).abs < (best_line - b.line).abs)
-                best_idx = i
-                best_score = score
-              end
+              next unless best_idx.negative? || score > best_score ||
+                          (score == best_score && (line - b.line).abs < (best_line - b.line).abs)
+
+              best_idx = i
+              best_score = score
             end
-            next if best_idx < 0
+            next if best_idx.negative?
             next if live[best_idx]
 
             Drift.new(name: b.name, line: candidates[best_idx].span.start_line, span: candidates[best_idx].span)
@@ -123,14 +122,10 @@ module Oselvar
         end
 
         def parse_var_lock(text)
-          parsed = begin
-            JSON.parse(text)
-          rescue JSON::ParserError, TypeError
-            return nil
-          end
-          return nil unless parsed.is_a?(::Hash) && parsed["version"] == 1
+          parsed = JSON.parse(text)
+          return nil unless parsed.is_a?(::Hash) && parsed['version'] == 1
 
-          specs_raw = parsed["specs"]
+          specs_raw = parsed['specs']
           return nil unless specs_raw.is_a?(::Hash)
 
           specs = {}
@@ -141,13 +136,15 @@ module Oselvar
             specs[path] = baseline
           end
           VarLock.new(version: 1, specs: specs)
+        rescue JSON::ParserError, TypeError
+          nil
         end
 
         def parse_spec_baseline(value)
           return nil unless value.is_a?(::Hash)
 
-          source_hash = value["sourceHash"]
-          examples_raw = value["examples"]
+          source_hash = value['sourceHash']
+          examples_raw = value['examples']
           return nil unless source_hash.is_a?(String) && examples_raw.is_a?(Array)
 
           examples = []
@@ -163,8 +160,8 @@ module Oselvar
         def parse_baseline_example(value)
           return nil unless value.is_a?(::Hash)
 
-          name = value["name"]
-          line = value["line"]
+          name = value['name']
+          line = value['line']
           return nil unless name.is_a?(String) && line.is_a?(Integer)
 
           BaselineExample.new(name: name, line: line)
@@ -178,11 +175,11 @@ module Oselvar
           lock.specs.keys.sort.each do |path|
             baseline = lock.specs[path]
             specs[path] = {
-              "sourceHash" => baseline.source_hash,
-              "examples" => baseline.examples.map { |e| { "name" => e.name, "line" => e.line } }
+              'sourceHash' => baseline.source_hash,
+              'examples' => baseline.examples.map { |e| { 'name' => e.name, 'line' => e.line } }
             }
           end
-          CanonicalJson.ordered_stringify({ "version" => 1, "specs" => specs })
+          CanonicalJson.ordered_stringify({ 'version' => 1, 'specs' => specs })
         end
       end
     end

@@ -16,8 +16,8 @@ module Oselvar
         # nothing after it is most likely the observation; anything followed by
         # other steps is most likely driving the software.
         def infer_step_role(neighbours)
-          after = neighbours[:after] || neighbours["after"] || []
-          after.empty? ? "sensor" : "stimulus"
+          after = neighbours[:after] || neighbours['after'] || []
+          after.empty? ? 'sensor' : 'stimulus'
         end
       end
     end

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "oselvar/var/core/cell_diff"
+require 'oselvar/var/core/cell_diff'
 
 module Oselvar
   module Var

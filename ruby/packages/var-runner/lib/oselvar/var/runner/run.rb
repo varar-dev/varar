@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "oselvar/var/core"
+require 'oselvar/var/core'
 
 module Oselvar
   module Var

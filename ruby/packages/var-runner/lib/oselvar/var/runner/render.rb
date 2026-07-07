@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-require "oselvar/var/core"
+require 'oselvar/var/core'
 
 module Oselvar
   module Var
@@ -14,7 +14,7 @@ module Oselvar
         when Core::CellMismatchError
           lines = ["Cell mismatch in #{path}:"]
           failing = error.cells.reject(&:ok)
-          lines << "  (no failing cells)" if failing.empty?
+          lines << '  (no failing cells)' if failing.empty?
           failing.each do |cell|
             lines << "  line #{cell.span.start_line} | column '#{cell.column}' — " \
                      "expected: #{cell.expected.inspect}, actual: #{cell.actual.inspect}"
@@ -22,8 +22,8 @@ module Oselvar
           lines.join("\n")
         when Core::DocStringMismatchError
           diff = error.diff
-          "Doc string mismatch at line #{diff.span.start_line}:\n" \
-            "  expected: #{diff.expected.inspect}\n  actual:   #{diff.actual.inspect}"
+          "Doc string mismatch at line #{diff.span.start_line}:\n  " \
+            "expected: #{diff.expected.inspect}\n  actual:   #{diff.actual.inspect}"
         when Core::ReturnShapeError
           error.message
         else
