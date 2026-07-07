@@ -23,7 +23,7 @@ SKIP_GATE="${SKIP_GATE:-0}"
 export OP_ACCOUNT="${OP_ACCOUNT:-my.1password.com}"
 
 # ── 1. Preflight (fail fast, zero side effects) ─────────────────────────────
-for tool in git git-cliff node pnpm uv mvn gh vsce ovsx op gpg curl jq python3 make; do
+for tool in git git-cliff node pnpm uv mvn gem gh vsce ovsx op gpg curl jq python3 make; do
   require_tool "$tool"
 done
 
