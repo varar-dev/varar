@@ -52,6 +52,7 @@ rsync -a --copy-links \
   --exclude '__pycache__/' \
   --exclude '.pytest_cache/' \
   --exclude 'uv.lock' \
+  --exclude 'Gemfile.lock' \
   examples/ "$DEST"/
 
 # Pin the JVM samples to the released Maven Central artifacts (idempotent even
@@ -77,6 +78,12 @@ perl -0pi -e 's|(#[^\n]*\n)+\[tool\.uv\.sources\]\n([\w.-]+ = \{ path = [^\n]+\n
   "$DEST"/python-*/pyproject.toml
 perl -pi -e "s/\"(pytest-var|oselvar-var[\\w-]*)\"/\"\$1==$VERSION\"/" \
   "$DEST"/python-*/pyproject.toml
+
+# Pin the Ruby samples to the released RubyGems version: swap each path source
+# for an exact version constraint. Gemfile.lock is excluded from the sync
+# (above), so `bundle install` regenerates it against the pins.
+perl -pi -e "s|, path: \"\\.\\./\\.\\./ruby/packages/[\\w-]+\"|, \"$VERSION\"|" \
+  "$DEST"/ruby-*/Gemfile
 
 git -C "$DEST" add -A
 if git -C "$DEST" diff --cached --quiet; then

@@ -10,7 +10,7 @@
 #   make ruby       # bundle + rake (rubocop + rspec + purity gate) +
 #                   # examples/ruby-rspec and examples/ruby-minitest (Ruby 3.2,
 #                   # pinned in ruby/.tool-versions)
-#   make coverage   # test with coverage in all three ports (reports below)
+#   make coverage   # test with coverage in all four ports (reports below)
 #
 # Each target runs the same gate as that port's CI workflow in .github/workflows/.
 
@@ -46,13 +46,15 @@ ruby:
 	cd examples/ruby-minitest && bundle install && bundle exec rake test
 
 # Coverage reports: typescript/coverage/index.html, python/htmlcov/index.html,
-# java/<module>/target/site/jacoco/index.html (jacoco runs on every verify).
-# lcov files (typescript/coverage/lcov.info, python/coverage.lcov) feed
-# editor gutters and CI integrations.
+# java/<module>/target/site/jacoco/index.html (jacoco runs on every verify),
+# ruby/coverage/index.html. lcov files (typescript/coverage/lcov.info,
+# python/coverage.lcov, ruby/coverage/lcov.info) feed editor gutters and CI
+# integrations.
 coverage:
 	cd typescript && pnpm install && pnpm test:coverage
 	cd python && uv sync && uv run pytest --cov --cov-report=term --cov-report=html --cov-report=lcov
 	cd java && mvn --batch-mode verify
+	cd ruby && bundle install && COVERAGE=1 bundle exec rake spec
 
 # Regenerate CHANGELOG.md from conventional commits (releases + Unreleased).
 changelog:
