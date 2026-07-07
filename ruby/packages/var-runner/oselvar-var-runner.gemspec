@@ -10,7 +10,9 @@ Gem::Specification.new do |s|
   s.homepage = 'https://var.oselvar.com'
   s.license = 'MIT'
   s.required_ruby_version = '>= 3.2'
-  s.files = Dir['lib/**/*.rb']
+  s.files = Dir['lib/**/*.rb'] + Dir['exe/*']
+  s.bindir = 'exe'
+  s.executables = ['var']
   s.require_paths = ['lib']
 
   s.add_dependency 'oselvar-var', '0.3.2'
