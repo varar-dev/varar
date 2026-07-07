@@ -9,6 +9,7 @@ const GRAMMAR_FILES: Readonly<Record<string, string>> = {
   python: 'tree-sitter-python/tree-sitter-python.wasm',
   java: 'tree-sitter-java/tree-sitter-java.wasm',
   kotlin: '@tree-sitter-grammars/tree-sitter-kotlin/tree-sitter-kotlin.wasm',
+  ruby: 'tree-sitter-ruby/tree-sitter-ruby.wasm',
 }
 
 export function createNodeGrammarLoader(): GrammarLoader {

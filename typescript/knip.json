@@ -29,6 +29,7 @@
         "@tree-sitter-grammars/tree-sitter-kotlin",
         "tree-sitter-java",
         "tree-sitter-python",
+        "tree-sitter-ruby",
         "tree-sitter-typescript"
       ]
     },
@@ -38,6 +39,7 @@
         "@tree-sitter-grammars/tree-sitter-kotlin",
         "tree-sitter-java",
         "tree-sitter-python",
+        "tree-sitter-ruby",
         "tree-sitter-typescript"
       ]
     },

@@ -6,6 +6,7 @@ import type { ParameterTypeDef, StepDef } from './step-defs.ts'
 import { javaSpec } from './tree-sitter-dialects/java.ts'
 import { kotlinSpec } from './tree-sitter-dialects/kotlin.ts'
 import { pythonSpec } from './tree-sitter-dialects/python.ts'
+import { rubySpec } from './tree-sitter-dialects/ruby.ts'
 import type { LanguageId, LanguageSpec } from './tree-sitter-dialects/types.ts'
 import { toRange } from './tree-sitter-dialects/types.ts'
 import { typescriptSpec } from './tree-sitter-dialects/typescript.ts'
@@ -24,6 +25,7 @@ const SPECS: Readonly<Partial<Record<LanguageId, LanguageSpec>>> = {
   java: javaSpec,
   kotlin: kotlinSpec,
   python: pythonSpec,
+  ruby: rubySpec,
   typescript: typescriptSpec,
   'typescript-tsx': typescriptSpec,
 }
@@ -34,6 +36,7 @@ const EXTENSIONS: ReadonlyArray<readonly [string, LanguageId]> = [
   ['.py', 'python'],
   ['.java', 'java'],
   ['.kt', 'kotlin'],
+  ['.rb', 'ruby'],
 ]
 
 export function languageIdForPath(path: string): LanguageId | undefined {

@@ -17,6 +17,7 @@ const FIXTURE_MATCHERS: ReadonlyArray<readonly [string, (f: string) => boolean]>
   ['python', (f) => f.endsWith('.steps.py')],
   ['java', (f) => f.endsWith('Steps.java')],
   ['kotlin', (f) => f.endsWith('.steps.kt')],
+  ['ruby', (f) => f.endsWith('.steps.rb')],
 ]
 
 const bundles = readdirSync(BUNDLES_DIR, { withFileTypes: true })
@@ -32,6 +33,7 @@ describe('extraction conformance across languages', () => {
         'python',
         'java',
         'kotlin',
+        'ruby',
       ])
       const dir = join(BUNDLES_DIR, bundle)
       const files = readdirSync(dir)
