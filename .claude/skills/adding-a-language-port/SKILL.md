@@ -8,10 +8,14 @@ description: Use when starting or reviewing a new var language port (Java, Kotli
 ## Overview
 
 var is hexagonal + multi-language (ADR 0001). TypeScript is the reference
-implementation; Python is the second port and the completed precedent this
-skill generalizes from. Every port follows the same four-package shape and is
-proven correct by reproducing the shared `conformance/bundles/*/golden/*.json`
-byte-for-byte — never by writing fresh tests against a new spec.
+implementation; **Python, Java, and Kotlin are complete ports**. Python is the
+closest precedent for a *full pipeline* port (no runtime sharing, like Ruby or
+Go would be); Kotlin is the precedent for a *facade over an existing engine*
+(it shares the JVM with Java — see the last section). Every port follows the
+same package shape and is proven correct by reproducing the shared
+`conformance/bundles/*/golden/*.json` byte-for-byte — never by writing fresh
+tests against a new spec (the one carve-out is **drift**, which is unit-gated —
+see its stage below).
 
 Two docs are the primary source for this skill and are worth reading in full
 before starting a new port, not just skimming this summary:
@@ -35,26 +39,34 @@ before starting a new port, not just skimming this summary:
 - Reviewing a new port's package layout or PR for architectural drift from
   the established shape.
 
-## The four-package shape
+## The package shape
 
 Every language ends up with (at least) these packages — same names as
-TypeScript/Python, translated to the target ecosystem's naming idiom:
+TypeScript/Python, translated to the target ecosystem's naming idiom. A port
+that ships two adapters (e.g. Python's pytest + unittest) is **six packages**,
+not four:
 
 | Package | Depends on | Owns | Never touches |
 |---|---|---|---|
-| `<lang>-core` (e.g. `var-core` / `var_core`) | nothing runtime-ish | pure pipeline: parse → match → plan → execute, diffs, conformance projections | filesystem, network, globals, time, test-framework types |
+| `<lang>-core` (e.g. `var-core` / `var_core`) | nothing runtime-ish | pure pipeline: parse → match → plan → execute, diffs, drift, conformance projections | filesystem, network, globals, time, test-framework types |
 | `<lang>` facade (e.g. `@oselvar/var` / `var`) | `<lang>-core` | author API only: `defineState`/`define_state` (context/action/sensor), `registry` glue subpath | pipeline internals directly (goes through core) |
-| `<lang>-runner` (e.g. `var-runner`) | facade + core | imperative shell: spec/step discovery (globs), config parsing, `load_steps`, `run_spec`/`plan_spec`, failure rendering | any one test framework's types |
-| `<lang>-<framework>` (e.g. `var-vitest`, `var-pytest`) | `<lang>-runner` | one test-framework binding: collection (one test item per example), fixture/DI bridging, reporting | pipeline logic (delegates to runner/core) |
+| `<lang>-config` (e.g. `@oselvar/var-config` / `var_config`) | nothing (pure) | the `var.config.json` reader — strict, fail-loud; its own conformance corpus | filesystem beyond reading the one config file |
+| `<lang>-runner` (e.g. `var-runner`) | facade + config + core | imperative shell: spec/step discovery (globs), `load_steps`, `run_spec`/`plan_spec`, failure rendering, the filesystem `BaselineStore` (drift) | any one test framework's types |
+| `<lang>-<framework>` (e.g. `var-vitest`, `var-pytest`) | `<lang>-runner` | one test-framework binding: collection (one test item per example), fixture/DI bridging, reporting, the drift gate | pipeline logic (delegates to runner/core) |
 
-`var-core`/`var` were originally one package in Python and were later split to
-mirror this shape exactly (see the "split" plan) — **start a new port already
-split**, don't repeat that refactor.
+`var-config` is a **distinct shared package**, not folded into the runner — it
+has its own byte-for-byte conformance corpus at `conformance/config/cases/`
+(see below). `var-core`/`var` were originally one package in Python and were
+later split to mirror this shape exactly (see the "split" plan) — **start a new
+port already split**, don't repeat that refactor.
 
 ## Process (mirrors the Python precedent)
 
 1. **ADR** only if *which* language is still an open strategic question —
-   skip if already decided (Java, then Kotlin, are already chosen).
+   skip if already decided. (Java and Kotlin are done; a *new* language whose
+   selection isn't obviously implied by ADR 0001 — e.g. Ruby, which ADR 0001
+   explicitly set aside as the second language — still warrants a short ADR
+   recording why it's being picked up now.)
 2. **Design spec doc(s)** in `doc/superpowers/specs/YYYY-MM-DD-<lang>-*.md`.
    Split into the same two sub-projects Python used: (a) the pure core +
    facade, (b) the runner + one test-framework adapter. Each doc names the
@@ -83,11 +95,38 @@ gated milestone:
    bundle needs a **`steps.<ext>` fixture** authored in the new language,
    co-located in `conformance/bundles/<n>/`, registering the same expressions
    and deterministic handlers as the existing `*.steps.ts`.
+   **Cucumber-expressions is a *library dependency*, not a hand-port.** Depend
+   on the official cucumber-expressions package for the target language, pinned
+   to the **same version every other port uses** (currently `20.0.0` — TS
+   `@cucumber/cucumber-expressions@^20.0.0`, PyPI `cucumber-expressions==20.0.0`,
+   Maven `io.cucumber:cucumber-expressions:20.0.0`, RubyGems
+   `cucumber-cucumber-expressions` — mind ecosystem naming quirks). Do **not**
+   reimplement the expression grammar/regex generation; the `matcher` module
+   ports only var's own hit-resolution, ambiguity detection, and offset-shifting
+   *around* the library. Parameter-type names come from the compiled expression
+   AST (parameter nodes), never parsed from `{...}`; a custom type's `regexp`
+   serializes as its bare source.
 3. **`plan.json`** — matching + planning (per-step match/param spans, data
    table/doc string attachment, `error`-fence → expected-failure semantics,
    ambiguity diagnostics).
 4. **`trace.json`** — execution (return-merge state, diffs, structured
    `FailureArtifact`s, per-example outcomes).
+5. **drift (unit-gated, NOT golden-gated)** — port `hash` (FNV-1a over UTF-16
+   code units → `fnv1a:<8 hex>`; drift depends on it) then `drift` + the
+   `BaselineStore` port. Drift re-identifies examples by Jaccard word-similarity
+   (`DRIFT_SIMILARITY_THRESHOLD = 0.5`, ported byte-identically), flags a
+   paragraph that *was* an example and now matches zero steps, reports on the
+   Diagnostic rail (code `drift`), and persists a `var.lock.json` baseline.
+   **This stage has no conformance golden** (bundles carry no baseline), so it
+   is the one core feature proven by **translating the unit tests**
+   (`hash.test.ts`, `drift.test.ts`) rather than reproducing goldens. Note
+   `var.lock.json` uses its *own* serializer — `JSON.stringify(_, null, 2) +
+   "\n"` with spec paths sorted but **insertion-order keys otherwise**
+   (`version, specs`; per spec `sourceHash, examples`; per example `name,
+   line`) — NOT the recursive alphabetical key-sort of `canonical_json`. Drift
+   is already ported to TS, Python, and the JVM; follow the closest precedent
+   (`python/packages/var-core/src/var_core/{hash,drift}.py`, Java
+   `Drift.java`/`Hash.java`).
 
 The first three stages each have a named projection function
 (`toVarDocArtifact`, `toRegistryArtifact`, `toPlanArtifact`) in
@@ -111,6 +150,15 @@ The serializer that turns pipeline output into what's compared against
 - Step-def files referenced **by stem**, not extension — `numerals.steps.ts`
   and `numerals.steps.py` both serialize as `"numerals.steps"`, so goldens
   are shared across every language's fixture for the same bundle.
+
+**Library vs. hand-roll.** A language with a conformant stdlib JSON writer
+(TS `JSON.stringify`, Python `json.dumps`, Ruby `JSON`) still cannot use it
+raw — none sort keys recursively, and you must append the trailing `\n`
+yourself. Configure the stdlib writer (2-space indent, non-ASCII raw) and wrap
+it with your own recursive key-sort. A language with no conformant writer (Java
+has none in the stdlib) hand-rolls the whole serializer — port the algorithm,
+don't pull in Jackson/Gson. Either way, prove it byte-exact against a golden in
+the first task.
 
 ## The portability gotcha: string offset units
 
@@ -142,23 +190,54 @@ convention is, but keep names *parallel* for reviewability):
 `span, ast, inline, table_cells, sentences, scanner, structurer, parse,
 step_role, registry, matcher, plan, diagnostics, execute, deep_freeze,
 cell_diff, doc_string_diff, param_diff, failure, result, canonical_json,
-conformance` — plus the facade module (`internal`/`define_state`) holding
-`defineState` and the module-scope accumulator.
+conformance, hash, drift` — plus the `BaselineStore` port interface and the
+facade module (`internal`/`define_state`) holding `defineState` and the
+module-scope accumulator. (`hash` + `drift` are the drift feature — see stage
+5; they *are* required, they're just unit-gated rather than golden-gated.)
 
 Each module's TS source file **and** its `*.test.ts` are the authoritative
 spec — translate the test first (watch it fail), then the implementation.
 
 Not everything under `typescript/packages/var-core/src/` belongs on this
-list: files like `config.ts`, `find-files.ts`, `ports.ts`, `hash.ts`, and
-`node.ts` are TS-runner/ports concerns (or not yet mirrored in the Python
-port at all) rather than pure-pipeline modules. If a `.ts` file in that
-directory isn't in the list above and doesn't have a `python/packages/var-core/src/var_core/*.py`
-counterpart, don't assume it needs porting for v1 — confirm against the
-design docs first.
+list: files like `config.ts` and `find-files.ts` are `var-config`/runner
+concerns, and `ports.ts` declares the port interfaces (`TestSink`, `Reporter`,
+`BaselineStore`) that adapters implement. If a `.ts` file in that directory
+isn't in the list above and doesn't have a
+`python/packages/var-core/src/var_core/*.py` counterpart, don't assume it needs
+porting for v1 — confirm against the design docs first. (`hash.ts` *used* to be
+on the "skip for v1" list; drift promoted it to required.)
+
+## Author-API fork points (decide explicitly, don't copy blindly)
+
+The facade shape is **not** identical across ports — two decisions legitimately
+fork on the target language's idioms. Record your choice in the design doc:
+
+- **Registration mechanism.** TS/Python use a **module-scope mutable
+  accumulator**: importing a `*.steps` file runs `define_state(...)` for its
+  side effect, and the runner reads the accumulator (`_resetBuilder` between
+  runs). Java/Kotlin deliberately diverged to an **injected-per-run Registrar**
+  — `StepDefinitions.defineSteps(registrar)` is replayed against a fresh sink
+  each run, no global mutable state — because the JVM has no clean
+  import-for-side-effect story. Dynamic languages (Ruby, Python) can take the
+  accumulator; stricter ones often want the injected Registrar.
+- **State evolution.** TS/Python thread a **shallow partial-merge** state (a
+  `stimulus` returns a `Partial<C>`/dict that's merged over the running state).
+  Java/Kotlin use **full-replacement immutable value** state (a `stimulus`
+  returns the whole next state). This changes the executor's merge step and the
+  sensor slot contract, so decide it in Task 1 — it's the single biggest
+  author-API fork.
 
 ## Test-framework adapter pattern
 
-Modeled on `var-vitest` (TS) and `var-pytest` (Python):
+Modeled on `var-vitest` (TS), `var-pytest`/`var-unittest` (Python), and
+`var-junit`/`var-kotest` (JVM). **Each framework needs its own
+integration-mechanism decision recorded as an ADR** (the precedent is
+`doc/adr/0003-java-junit-integration.md`, which chose a custom JUnit Platform
+`TestEngine`). The contract that decision must satisfy is identical everywhere —
+*one independently selectable/reportable test per Markdown example, failures
+anchored to the `.md` span* — but the mechanism differs per framework: a custom
+TestEngine (JUnit), a `pytest_collect_file` hook (pytest), a generated
+`TestCase` subclass per spec (unittest), a `FunSpec` subclass (Kotest), etc.
 
 - **Collection**: one test item per *example* (not per file), independently
   selectable/reportable, with the item's location pointing at the `.md`
@@ -188,6 +267,50 @@ Modeled on `var-vitest` (TS) and `var-pytest` (Python):
   re-derive failure text from scratch in the adapter.
 - **Async**: if the language has an async/coroutine convention, the executor
   should drive it transparently; the adapter needs no special casing.
+- **Drift gate**: each adapter reconciles every spec against `var.lock.json`
+  via the runner's filesystem `BaselineStore` + `reconcileDrift`, surfaces a
+  `drift` diagnostic on the same Diagnostic rail as `ambiguous-match` (a drifted
+  example fails the suite), writes the baseline on a clean run, and honours an
+  `--update`/acknowledgment path (ADR 0002 — never silently accept drift). Add
+  a per-adapter drift test with a `var.lock.json` fixture (precedent:
+  `var-pytest`/`var-unittest` `tests/test_drift.py`, `var-kotest`'s
+  `kotest-drift/` resources).
+
+## Repo integration checklist
+
+Beyond the packages, every port wires the same mechanical scaffolding into the
+monorepo — easy to forget because none of it is exercised by the conformance
+suite:
+
+- **`<lang>/` workspace** at the repo root, using that ecosystem's workspace
+  tool (pnpm / uv / Maven reactor / Bundler `path:` gems).
+- **Root `Makefile` target** (`make <lang>`) running that port's full gate
+  (build + tests + lint + the example projects), threaded into `check:`. Update
+  the Makefile header comment.
+- **`.github/workflows/<lang>.yml`** — triggered on `<lang>/**`,
+  `conformance/**`, `examples/**`, and the workflow file; runs the same gate as
+  the Makefile target, then the example projects.
+- **Standalone `examples/<lang>-<framework>/` consumer projects** — one per
+  adapter, **not** workspace members: they depend on the released (or
+  locally-installed) artifacts exactly like a user's project, carry their own
+  `var.config.json`, and implement the feature-covering subset (`hello-var`,
+  `deep-thought`, `tables-and-docstrings`, `yahtzee`, `roman-numerals`). Their
+  `.md` specs are symlinks to the `typescript-vitest` originals (the release
+  sync dereferences them). Add rows to `examples/README.md`.
+- **`release/targets/NN-<registry>.sh`** publishing the port's packages to its
+  registry (npm / PyPI / Maven Central / RubyGems), plus adding the port to the
+  release channels; the `oselvar/var-examples` sync (`60-var-examples.sh`)
+  already picks up new `examples/<lang>-*` projects.
+
+## Config conformance corpus (a distinct byte-for-byte gate)
+
+`var-config` has its own corpus at `conformance/config/cases/*/`, separate from
+`conformance/bundles/`. Each case holds a `var.config.json` plus either a
+`golden.json` (parse succeeds → project to the canonical shape, serialize with
+your `canonical_json`, byte-compare) or an `expect-error.txt` marker (loading
+must **raise** — the txt is human-only, not asserted). Reproduce all cases
+(currently 8: `empty-object, full, invalid-json, minimal, no-config-file,
+null-values, unknown-key, wrong-type`) before the config reader is "done".
 
 ## What's shared — don't reimplement per language
 
@@ -197,7 +320,7 @@ how many languages exist; a new port does not touch them:
 | Layer | Status |
 |---|---|
 | Markdown example parser → AST | Shared (each language's *core* still runs its own parse — "shared" means shared *algorithm*/spec, proven via conformance, not shared code across runtimes) |
-| Cucumber-expression matching semantics | Shared spec (same expression grammar/version across languages) |
+| Cucumber-expression matching semantics | Shared **library** — depend on the official cucumber-expressions package pinned to the same version (20.0.0) every port uses; do not hand-port the grammar |
 | Step-definition **extraction** from host source for the LSP | Per-language, but **not yet built for any language beyond TS** — out of scope for a v1 runtime port |
 | LSP feature functions, editor integration | TS/shared-layer only today; a tree-sitter adoption ADR is a placeholder, not yet implemented |
 | Snippet / step-def generation | Per-language port, but deferred unless trivially available — don't block the runtime port on it |
@@ -226,7 +349,8 @@ how many languages exist; a new port does not touch them:
 | Reference implementation (facade) | `typescript/packages/var/src/{index,internal,registry}.ts`, `python/packages/var/src/var/{__init__,internal,registry}.py` |
 | Reference implementation (runner) | `typescript/packages/var-runner/src/*.ts`, `python/packages/var-runner/src/var_runner/*.py` |
 | Reference implementation (test-framework adapter) | `typescript/packages/var-vitest/src/*.ts`, `python/packages/var-pytest/src/var_pytest/*.py` |
-| The conformance corpus + goldens | `conformance/bundles/*/{example.md, *.steps.ts, *.steps.py, golden/*.json}` |
+| Reference implementation (drift, unit-gated) | `typescript/packages/var-core/src/{drift,hash}.ts` + `tests/{drift,hash}.test.ts`; mirror at `python/packages/var-core/src/var_core/{drift,hash}.py`; `java/var-core/.../{Drift,Hash}.java` |
+| The conformance corpus + goldens | `conformance/bundles/*/{example.md, *.steps.{ts,py,kt}, *Steps.java, golden/*.json}` — 15 bundles, four artifacts each; **plus** the config corpus `conformance/config/cases/*/{var.config.json, golden.json|expect-error.txt}` |
 
 ## Common mistakes
 
@@ -247,14 +371,27 @@ how many languages exist; a new port does not touch them:
   means debugging two unknowns at once.
 - **Hand-writing new conformance tests instead of reusing the shared
   corpus.** The whole point of the corpus is one set of expectations
-  checked against every language's fixture — don't fork it per language.
+  checked against every language's fixture — don't fork it per language. (The
+  sole exception is **drift**, which has no golden — there you *do* translate the
+  TS unit tests, `hash.test.ts`/`drift.test.ts`.)
 
-## For a Java → Kotlin sequence specifically
+## Full port vs. facade over an existing engine (RESOLVED by Kotlin)
 
-If Kotlin follows Java shortly after, decide **before** starting Java whether
-Kotlin will (a) port independently against the same TS reference like every
-other language, or (b) consume Java's `<lang>-core` directly (both compile to
-JVM bytecode, so a Kotlin facade could sit on the Java engine without a
-separate port). Option (b) is not what Python/TypeScript did for each other
-and would be a new pattern — treat it as a decision to write down explicitly
-in the design doc, not something to improvise mid-port.
+Some ports don't re-port the pipeline at all. The rule, now settled:
+
+- A new language that **shares a runtime with an existing port** can be a thin
+  **facade over that port's engine** — no second pipeline, no full four-artifact
+  conformance run. **Kotlin did exactly this over Java**: `var-kotlin`
+  (`com.oselvar.varkt`) is an author-facade + Kotest adapter sitting on the
+  compiled Java `var-core`; both are JVM bytecode. Its conformance scope is the
+  **registry stage only** (its `*.steps.kt` fixtures prove registration);
+  parse/plan/trace stay proven by the Java engine's already-green corpus.
+- A language with **no runtime interop** with any existing port (TypeScript,
+  Python, and a future Ruby/Go) must do a **full pipeline port** against the TS
+  reference, gated on all four artifacts.
+
+So the decision is mechanical: *does the target language share a runtime with an
+already-ported one?* If yes, consider the facade route and write it down in the
+design doc (registry-only conformance). If no, it's a full port. For a Java →
+Kotlin-style pairing, still decide **before** starting the first of the two
+which one owns the engine.
