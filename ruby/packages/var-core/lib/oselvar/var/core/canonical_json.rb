@@ -5,38 +5,39 @@ require "json"
 module Oselvar
   module Var
     module Core
-      # Serialize a value to canonical JSON, byte-for-byte compatible with
-      # JS `JSON.stringify(sortKeys(value), null, 2) + "\n"`:
-      # recursively key-sorted objects, 2-space indent, LF, trailing newline,
-      # non-ASCII emitted raw, empty containers as `{}`/`[]`.
+      # JSON serializers byte-for-byte compatible with JS `JSON.stringify(v, null, 2)`:
+      # 2-space indent, LF, trailing newline, non-ASCII raw, empty containers as
+      # {}/[]. `canonical_stringify` recursively sorts object keys (the goldens);
+      # `ordered_stringify` preserves insertion order (var.lock.json).
       #
-      # Ruby's JSON.pretty_generate renders empty arrays/objects as "[\n\n]",
-      # diverging from JS, so the container layout is hand-rolled. Scalar
-      # encoding (string escaping, numbers, booleans, null) is delegated to the
-      # stdlib, which matches JS: escapes " \ \b \f \n \r \t and control chars
-      # as \uXXXX, keeps non-ASCII raw, does not escape "/".
+      # The container layout is hand-rolled because Ruby's JSON.pretty_generate
+      # renders empty arrays/objects as "[\n\n]". Scalar encoding is delegated to
+      # the stdlib, which matches JS (escapes " \ control chars, keeps non-ASCII raw).
       module CanonicalJson
         module_function
 
         def canonical_stringify(value)
-          "#{encode(value, "")}\n"
+          "#{encode(value, "", sort_keys: true)}\n"
         end
 
-        def encode(value, indent)
+        def ordered_stringify(value)
+          "#{encode(value, "", sort_keys: false)}\n"
+        end
+
+        def encode(value, indent, sort_keys:)
           case value
           when Hash
             return "{}" if value.empty?
 
+            keys = sort_keys ? value.keys.sort : value.keys
             inner = "#{indent}  "
-            items = value.keys.sort.map do |key|
-              "#{inner}#{key.to_s.to_json}: #{encode(value[key], inner)}"
-            end
+            items = keys.map { |key| "#{inner}#{key.to_s.to_json}: #{encode(value[key], inner, sort_keys: sort_keys)}" }
             "{\n#{items.join(",\n")}\n#{indent}}"
           when Array
             return "[]" if value.empty?
 
             inner = "#{indent}  "
-            items = value.map { |element| "#{inner}#{encode(element, inner)}" }
+            items = value.map { |element| "#{inner}#{encode(element, inner, sort_keys: sort_keys)}" }
             "[\n#{items.join(",\n")}\n#{indent}]"
           else
             value.to_json
