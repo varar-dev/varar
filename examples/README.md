@@ -18,11 +18,16 @@ whole team, and checked against the code on every test run.
 | [`java-junit-gradle`](java-junit-gradle) | Java + JUnit + Gradle | `./gradlew test` | [![java-junit-gradle](https://github.com/oselvar/var-examples/actions/workflows/java-junit-gradle.yml/badge.svg)](https://github.com/oselvar/var-examples/actions/workflows/java-junit-gradle.yml) |
 | [`python-pytest`](python-pytest) | Python + pytest | `uv run pytest` | [![python-pytest](https://github.com/oselvar/var-examples/actions/workflows/python-pytest.yml/badge.svg)](https://github.com/oselvar/var-examples/actions/workflows/python-pytest.yml) |
 | [`python-unittest`](python-unittest) | Python + unittest | `uv run python -m unittest` | [![python-unittest](https://github.com/oselvar/var-examples/actions/workflows/python-unittest.yml/badge.svg)](https://github.com/oselvar/var-examples/actions/workflows/python-unittest.yml) |
+| [`ruby-rspec`](ruby-rspec) | Ruby + RSpec | `bundle exec rspec` | [![ruby-rspec](https://github.com/oselvar/var-examples/actions/workflows/ruby-rspec.yml/badge.svg)](https://github.com/oselvar/var-examples/actions/workflows/ruby-rspec.yml) |
+| [`ruby-minitest`](ruby-minitest) | Ruby + Minitest | `bundle exec rake test` | [![ruby-minitest](https://github.com/oselvar/var-examples/actions/workflows/ruby-minitest.yml/badge.svg)](https://github.com/oselvar/var-examples/actions/workflows/ruby-minitest.yml) |
 
 `typescript-vitest` implements the full example set; the other projects
 implement a feature-covering subset — `hello-var` (basic steps),
 `deep-thought` (a one-sensor spec), `tables-and-docstrings` (whole tables +
-doc strings), and `yahtzee` and `roman-numerals` (header-bound table rows).
+doc strings), `yahtzee` and `roman-numerals` (header-bound table rows), and
+`library` (custom parameter types that pair `parse` with `format`, so a
+mismatch renders in the document's own notation — money, dates, and an
+emphasised title where the markup *is* the parameter).
 
 ## Where these files live
 

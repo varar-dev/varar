@@ -1,0 +1,39 @@
+name: Ruby
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ruby/**'
+      - 'conformance/**'
+      - 'examples/**'
+      - '.github/workflows/ruby.yml'
+  pull_request:
+    paths:
+      - 'ruby/**'
+      - 'conformance/**'
+      - 'examples/**'
+      - '.github/workflows/ruby.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+
+      # The six-gem workspace: conformance harness (four artifacts × 15 bundles +
+      # drift/hash units + the config corpus) + the functional-core purity gate.
+      - run: bundle install && bundle exec rake
+        working-directory: ruby
+
+      # Standalone sample projects (see examples/ruby-*).
+      - run: bundle install && bundle exec rspec
+        working-directory: examples/ruby-rspec
+
+      - run: bundle install && bundle exec rake test
+        working-directory: examples/ruby-minitest

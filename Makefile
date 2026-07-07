@@ -1,19 +1,22 @@
 # Build and test every language port from the repo root.
 #
-#   make            # same as `make check`: all three ports
+#   make            # same as `make check`: all four ports
 #   make typescript # pnpm build + pnpm check (lint, typecheck, test, knip, jscpd)
 #   make python     # pytest + ruff + no-reexports gate + examples/python-pytest
 #   make java       # spotless:apply (formats Java + Kotlin, incl. the JVM sample
 #                   # projects in examples/) + mvn install (JDK 21, pinned in
 #                   # java/.tool-versions) + the four JVM sample projects in
 #                   # examples/ (Maven/Gradle, Java/Kotlin)
+#   make ruby       # bundle + rake (rspec + purity gate) + examples/ruby-rspec
+#                   # and examples/ruby-minitest (Ruby 3.2, pinned in
+#                   # ruby/.tool-versions)
 #   make coverage   # test with coverage in all three ports (reports below)
 #
 # Each target runs the same gate as that port's CI workflow in .github/workflows/.
 
-.PHONY: check commits typescript python java coverage changelog release
+.PHONY: check commits typescript python java ruby coverage changelog release
 
-check: commits typescript python java
+check: commits typescript python java ruby
 
 # Commits since the last release tag must be conventional (they drive the
 # changelog and the version bump — see cliff.toml and CLAUDE.md).
@@ -36,6 +39,11 @@ java:
 	cd examples/java-junit-gradle && ./gradlew --console=plain test
 	cd examples/kotlin-junit && ./gradlew --console=plain test
 	cd examples/kotlin-kotest && ./gradlew --console=plain test
+
+ruby:
+	cd ruby && bundle install && bundle exec rake
+	cd examples/ruby-rspec && bundle install && bundle exec rspec
+	cd examples/ruby-minitest && bundle install && bundle exec rake test
 
 # Coverage reports: typescript/coverage/index.html, python/htmlcov/index.html,
 # java/<module>/target/site/jacoco/index.html (jacoco runs on every verify).
