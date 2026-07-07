@@ -1,0 +1,41 @@
+---
+/**
+ * A `<Tabs syncKey="lang">` group showing one command per language, driven by
+ * the shared `languages.json` manifest so the install/scaffold/run commands on
+ * the docs never drift from what each port actually ships. Because it uses the
+ * site-wide `lang` sync key, every group on the page — and the header language
+ * dropdown — move together.
+ *
+ * `kind` picks which command to show. For `scaffold`, ports without a `var`
+ * CLI (the JVM) have no command, so their tab explains the copy-paste route
+ * instead.
+ */
+import { Code, TabItem, Tabs } from '@astrojs/starlight/components'
+import { LANGUAGES } from '../lib/site-lang'
+
+interface Props {
+  kind: 'install' | 'scaffold' | 'run'
+}
+
+const { kind } = Astro.props
+---
+
+<Tabs syncKey="lang">
+  {
+    LANGUAGES.map((lang) => {
+      const block = lang[kind]
+      return (
+        <TabItem label={lang.label}>
+          {block ? (
+            <Code code={block.code} lang={block.lang} />
+          ) : (
+            <p>
+              The JVM ports have no <code>var</code> CLI yet — create the files shown below by
+              hand.
+            </p>
+          )}
+        </TabItem>
+      )
+    })
+  }
+</Tabs>

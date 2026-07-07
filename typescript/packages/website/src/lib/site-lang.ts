@@ -4,40 +4,74 @@
 // the TypeScript default, matching the other header selects). Everything
 // that shows code — the interactive editors, Starlight's synced code tabs —
 // follows it via the change event.
+//
+// The set of supported languages, their labels, icons, file extensions and
+// install/scaffold/run commands all come from the repo-root `languages.json`
+// — the single source of truth shared with the docs (install tabs), the
+// pre-paint restore script in astro.config.mjs, and the per-port scaffolders.
+// Add a language there (and to the SiteLang union below) and every consumer
+// picks it up.
+
+import languagesData from '../../../../../languages.json'
 
 export type SiteLang = 'ts' | 'java' | 'kotlin' | 'python' | 'ruby'
 
-export const SITE_LANGS: ReadonlyArray<SiteLang> = ['ts', 'java', 'kotlin', 'python', 'ruby']
+/** A block of shell / build-file text plus the fence language it renders as. */
+export type CommandBlock = {
+  readonly lang: string
+  readonly code: string
+}
+
+/** One entry in `languages.json`. */
+export type Language = {
+  readonly id: SiteLang
+  readonly label: string
+  /** Seti file-type icon name bundled with Starlight (e.g. `seti:ruby`). */
+  readonly icon: string
+  /** Step-definition file extension, including the dot (e.g. `.rb`). */
+  readonly ext: string
+  /** Glob a scaffolded project uses to discover this language's steps. */
+  readonly stepsGlob: string
+  /** Whether the port ships a `var` CLI (TS/Python/Ruby) or is copy-paste (JVM). */
+  readonly hasCli: boolean
+  readonly install: CommandBlock
+  /** The scaffold command, or null for ports without a CLI. */
+  readonly scaffold: CommandBlock | null
+  readonly run: CommandBlock
+}
+
+// `languages.json` is data, so its inferred type widens `id` to `string`; the
+// cast pins it to the SiteLang union. Keep the union above in step with the
+// ids in the manifest — those are the only two places the language set lives.
+export const LANGUAGES: ReadonlyArray<Language> = languagesData as ReadonlyArray<Language>
+
+export const SITE_LANGS: ReadonlyArray<SiteLang> = LANGUAGES.map((l) => l.id)
 
 // Starlight <TabItem> labels ↔ SiteLang. The labels double as the values
 // Starlight persists for `syncKey="lang"` tab groups, so they must match the
 // TabItem labels used in docs pages exactly.
-export const LANG_LABELS: Readonly<Record<SiteLang, string>> = {
-  ts: 'TypeScript',
-  java: 'Java',
-  kotlin: 'Kotlin',
-  python: 'Python',
-  ruby: 'Ruby',
-}
+export const LANG_LABELS: Readonly<Record<SiteLang, string>> = Object.fromEntries(
+  LANGUAGES.map((l) => [l.id, l.label]),
+) as Record<SiteLang, string>
 
 // Seti file-type icons bundled with Starlight — the header dropdown shows the
-// selected language's logo. The set covers most languages we could ever port
-// to (seti:go, seti:rust, seti:c-sharp, seti:swift, seti:scala, …), so adding
-// a language here is all it takes.
-export const LANG_ICONS: Readonly<Record<SiteLang, string>> = {
-  ts: 'seti:typescript',
-  java: 'seti:java',
-  kotlin: 'seti:kotlin',
-  python: 'seti:python',
-  ruby: 'seti:ruby',
-}
+// selected language's logo.
+export const LANG_ICONS: Readonly<Record<SiteLang, string>> = Object.fromEntries(
+  LANGUAGES.map((l) => [l.id, l.icon]),
+) as Record<SiteLang, string>
+
+// Step-file extension → language, for the interactive editor tabs.
+const LANG_BY_EXT: ReadonlyMap<string, SiteLang> = new Map(LANGUAGES.map((l) => [l.ext, l.id]))
 
 export const LANG_CHANGE_EVENT = 'var-lang-change'
 
 const storageKey = 'var-lang'
 
+// Every language except the attribute-less TypeScript default.
+const NON_DEFAULT_LANGS: ReadonlyArray<SiteLang> = SITE_LANGS.filter((l) => l !== 'ts')
+
 export const parseLang = (value: unknown): SiteLang =>
-  value === 'java' || value === 'kotlin' || value === 'python' || value === 'ruby' ? value : 'ts'
+  NON_DEFAULT_LANGS.includes(value as SiteLang) ? (value as SiteLang) : 'ts'
 
 export const langOfLabel = (label: string): SiteLang | undefined =>
   SITE_LANGS.find((lang) => LANG_LABELS[lang] === label)
@@ -45,11 +79,9 @@ export const langOfLabel = (label: string): SiteLang | undefined =>
 // Maps a code file extension to its language; undefined for language-neutral
 // files (the .md spec) that are shown regardless of the site language.
 export function langOfPath(path: string): SiteLang | undefined {
-  if (path.endsWith('.ts')) return 'ts'
-  if (path.endsWith('.java')) return 'java'
-  if (path.endsWith('.kt')) return 'kotlin'
-  if (path.endsWith('.py')) return 'python'
-  if (path.endsWith('.rb')) return 'ruby'
+  for (const [ext, lang] of LANG_BY_EXT) {
+    if (path.endsWith(ext)) return lang
+  }
   return undefined
 }
 

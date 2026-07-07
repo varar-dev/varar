@@ -1,0 +1,63 @@
+[
+  {
+    "id": "ts",
+    "label": "TypeScript",
+    "icon": "seti:typescript",
+    "ext": ".ts",
+    "stepsGlob": "var-examples/**/*.steps.ts",
+    "hasCli": true,
+    "install": { "lang": "bash", "code": "pnpm add -D @oselvar/var @oselvar/var-cli" },
+    "scaffold": { "lang": "bash", "code": "pnpm exec var init" },
+    "run": { "lang": "bash", "code": "pnpm exec var run" }
+  },
+  {
+    "id": "java",
+    "label": "Java",
+    "icon": "seti:java",
+    "ext": ".java",
+    "stepsGlob": "var-examples/**/*Steps.java",
+    "hasCli": false,
+    "install": {
+      "lang": "xml",
+      "code": "<!-- pom.xml — use the latest release from Maven Central -->\n<dependency>\n  <groupId>com.oselvar</groupId>\n  <artifactId>var-junit</artifactId>\n  <version>0.3.1</version>\n  <scope>test</scope>\n</dependency>"
+    },
+    "scaffold": null,
+    "run": { "lang": "bash", "code": "mvn test" }
+  },
+  {
+    "id": "kotlin",
+    "label": "Kotlin",
+    "icon": "seti:kotlin",
+    "ext": ".kt",
+    "stepsGlob": "var-examples/**/*.steps.kt",
+    "hasCli": false,
+    "install": {
+      "lang": "kotlin",
+      "code": "// build.gradle.kts — use the latest release from Maven Central\ntestImplementation(\"com.oselvar:var-kotlin:0.3.1\")\ntestImplementation(\"com.oselvar:var-junit:0.3.1\")"
+    },
+    "scaffold": null,
+    "run": { "lang": "bash", "code": "./gradlew test" }
+  },
+  {
+    "id": "python",
+    "label": "Python",
+    "icon": "seti:python",
+    "ext": ".py",
+    "stepsGlob": "var-examples/**/*.steps.py",
+    "hasCli": true,
+    "install": { "lang": "bash", "code": "uv add --dev pytest-var" },
+    "scaffold": { "lang": "bash", "code": "uv run var init" },
+    "run": { "lang": "bash", "code": "uv run pytest" }
+  },
+  {
+    "id": "ruby",
+    "label": "Ruby",
+    "icon": "seti:ruby",
+    "ext": ".rb",
+    "stepsGlob": "var-examples/**/*.steps.rb",
+    "hasCli": true,
+    "install": { "lang": "bash", "code": "bundle add oselvar-var-rspec" },
+    "scaffold": { "lang": "bash", "code": "bundle exec var init" },
+    "run": { "lang": "bash", "code": "bundle exec rspec" }
+  }
+]

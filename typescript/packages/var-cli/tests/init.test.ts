@@ -2,6 +2,7 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'no
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, test } from 'vitest'
+import languages from '../../../../languages.json' with { type: 'json' }
 import { runInit } from '../src/init.ts'
 
 test('scaffolds var.config.json and an example .md + steps file', async () => {
@@ -16,6 +17,22 @@ test('scaffolds var.config.json and an example .md + steps file', async () => {
     expect(stepsTs).toContain('steps')
     expect(stepsTs).toContain('({ greeting:')
     expect(stepsTs).not.toContain('ctx.greeting =')
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+})
+
+test('the scaffolded config uses the steps glob declared for TypeScript in languages.json', async () => {
+  // Guards against the CLI's init template drifting from the shared language
+  // manifest (the single source of truth every port scaffolds from).
+  const ts = languages.find((l) => l.id === 'ts')
+  expect(ts).toBeDefined()
+  const dir = mkdtempSync(join(tmpdir(), 'var-init-manifest-'))
+  try {
+    await runInit({ cwd: dir, writeStdout: () => {} })
+    const config = JSON.parse(readFileSync(join(dir, 'var.config.json'), 'utf8'))
+    expect(config.steps).toContain(ts?.stepsGlob)
+    expect(ts?.stepsGlob.endsWith(ts.ext)).toBe(true)
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }

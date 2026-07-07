@@ -36,7 +36,7 @@ function collectPageSeed(): Record<string, string> {
     const uri = fileEl.dataset.uri
     if (!uri) continue
     // Only the executable world goes to the language server: specs (.md) and
-    // TypeScript. Java/Kotlin/Python tabs are display-only.
+    // TypeScript. Java/Kotlin/Python/Ruby tabs are display-only.
     const fileLang = langOfPath(uri)
     if (fileLang !== undefined && fileLang !== 'ts') continue
     const path = uri.replace(/^file:\/\/\//, '/')
