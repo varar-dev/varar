@@ -10,6 +10,8 @@ coverage
 # var.lock.json baselines written by var-cli integration tests (temp fixtures)
 typescript/packages/var-cli/tests/fixtures/run-basic/var.lock.json
 typescript/packages/var-cli/tests/fixtures/drift-tmp-*/
+# var.lock.json written by the Python conformance dogfood command
+python/var.lock.json
 .claude/*
 !.claude/skills/
 

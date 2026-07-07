@@ -264,6 +264,7 @@ source = { editable = "packages/var-pytest" }
 dependencies = [
     { name = "oselvar-var" },
     { name = "oselvar-var-config" },
+    { name = "oselvar-var-core" },
     { name = "oselvar-var-runner" },
     { name = "pytest" },
 ]
@@ -272,6 +273,7 @@ dependencies = [
 requires-dist = [
     { name = "oselvar-var", editable = "packages/var" },
     { name = "oselvar-var-config", editable = "packages/var-config" },
+    { name = "oselvar-var-core", editable = "packages/var-core" },
     { name = "oselvar-var-runner", editable = "packages/var-runner" },
     { name = "pytest", specifier = ">=8" },
 ]

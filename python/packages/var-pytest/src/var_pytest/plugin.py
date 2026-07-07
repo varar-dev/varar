@@ -1,17 +1,36 @@
 from __future__ import annotations
 
 import dataclasses
+import os
 from pathlib import Path
 
 import pytest
 
 from var_config import read_var_config
+from var_core.diagnostics import drift_detected
+from var_core.drift import reconcile_drift
+from var_runner.baseline_store import create_file_baseline_store
 from var_runner.discovery import match_spec
 from var_runner.run import RecordingReporter, examples_with_runs, plan_spec
 from var_runner.steps import load_steps
 from var_pytest.fixtures import _active_request, get_active_request, wrap_registry_for_fixtures
 
-_STASH: dict = {}  # keyed by config id → (VarConfig, LoadedSteps, root)
+_STASH: dict = {}  # keyed by config id → (VarConfig, LoadedSteps, root, store)
+
+
+def pytest_addoption(parser: pytest.Parser) -> None:
+    parser.addoption(
+        "--var-update",
+        action="store_true",
+        default=False,
+        help="Accept drift and re-record var.lock.json (also via VAR_UPDATE=1).",
+    )
+
+
+def _update_mode(config: pytest.Config) -> bool:
+    if config.getoption("--var-update", default=False):
+        return True
+    return os.environ.get("VAR_UPDATE") in ("1", "true")
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -20,7 +39,7 @@ def pytest_configure(config: pytest.Config) -> None:
     loaded = load_steps(cfg.steps, root)
     wrapped_registry = wrap_registry_for_fixtures(loaded.registry, get_active_request)
     loaded = dataclasses.replace(loaded, registry=wrapped_registry)
-    _STASH[id(config)] = (cfg, loaded, root)
+    _STASH[id(config)] = (cfg, loaded, root, create_file_baseline_store(root))
 
 
 def pytest_unconfigure(config: pytest.Config) -> None:
@@ -30,7 +49,7 @@ def pytest_unconfigure(config: pytest.Config) -> None:
 def pytest_collect_file(file_path: Path, parent: pytest.Collector):
     if file_path.suffix != ".md":
         return None
-    cfg, _loaded, root = _STASH[id(parent.config)]
+    cfg, _loaded, root, _store = _STASH[id(parent.config)]
     if not match_spec(file_path, cfg.docs_include, cfg.docs_exclude, root):
         return None
     return VarFile.from_parent(parent, path=file_path)
@@ -38,7 +57,7 @@ def pytest_collect_file(file_path: Path, parent: pytest.Collector):
 
 class VarFile(pytest.File):
     def collect(self):
-        _cfg, loaded, _root = _STASH[id(self.config)]
+        _cfg, loaded, root, store = _STASH[id(self.config)]
         source = self.path.read_text(encoding="utf-8")
         execution_plan = plan_spec(self.path.name, source, loaded.registry)
         pairs = examples_with_runs(execution_plan, loaded.create_context, RecordingReporter())
@@ -52,6 +71,48 @@ class VarFile(pytest.File):
             seen[base] = idx + 1
             name = base if idx == 0 else f"{base}[{idx}]"
             yield VarItem.from_parent(self, name=name, example=example, run=run, source=source)
+
+        # Reconcile drift against var.lock.json: a clean run records/updates the
+        # baseline; a paragraph that was an example and no longer matches any
+        # step yields a failing item (unless --var-update / VAR_UPDATE accepts).
+        try:
+            spec_path = self.path.relative_to(root).as_posix()
+        except ValueError:
+            spec_path = self.path.name
+        drifts = reconcile_drift(
+            store,
+            spec_path,
+            source,
+            execution_plan.var_doc,
+            execution_plan,
+            update=_update_mode(self.config),
+        )
+        for d in drifts:
+            yield VarDriftItem.from_parent(
+                self,
+                name=f"var:drift:{d.line}",
+                message=drift_detected(d.name, d.span).message,
+                line=d.line,
+            )
+
+
+class VarDriftItem(pytest.Item):
+    """A failing item for a drifted paragraph — the pytest surface of the
+    drift gate. Accept it with --var-update / VAR_UPDATE=1."""
+
+    def __init__(self, *, message, line, **kw):
+        super().__init__(**kw)
+        self._message = message
+        self._line = line
+
+    def runtest(self) -> None:
+        raise AssertionError(self._message)
+
+    def repr_failure(self, excinfo: object) -> str:
+        return self._message
+
+    def reportinfo(self):
+        return self.path, self._line - 1, self.name
 
 
 class VarItem(pytest.Item):
