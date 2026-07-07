@@ -241,8 +241,12 @@ Implementation order (each increment green on its own):
    `BaselineStore`. Since Python has no `var run`, the **test runner is the
    writer** (syrupy-style): the pytest and unittest adapters record on a clean
    run and gate on drift; `--var-update` / `VAR_UPDATE=1` accepts.
-5. ⬜ **JVM:** port to `var-core` (Java) + wire JUnit engine and Kotest, with the
-   `-Dvar.update` surface.
+5. ✅ **JVM:** `Hash` (matching the pinned TS vectors), the byte-identical
+   `var.lock.json` (a dedicated serializer + a minimal JSON reader, since the
+   project ships no JSON library), `detectDrift` / `reconcileDrift`, and the
+   `BaselineStore`. The JUnit engine adds a failing drift leaf per drift at
+   discovery; Kotest's `VarSpec` registers a failing drift test. Accept with
+   `-Dvar.update` (or `VAR_UPDATE=1`).
 
 Out of scope: whole-file deletion/rename (the spec is gone, not drifted);
 paragraph deletion (deliberate); interactive acknowledgment.

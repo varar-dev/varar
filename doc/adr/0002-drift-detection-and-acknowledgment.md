@@ -1,9 +1,21 @@
 # ADR 0002 — Spec drift detection and explicit acknowledgment
 
-- **Status:** Accepted — **not yet implemented**
+- **Status:** Accepted — **implemented** across all ports (2026-07-07)
 - **Date:** 2026-07-01
 - **Deciders:** Aslak Hellesøy
 - **Tags:** runtime, run-result, drift, cross-language, hashing
+
+> **Implementation note (2026-07-07).** Shipped in TypeScript, Python, and the
+> JVM, tracked by
+> [the drift-detection design spec](../superpowers/specs/2026-07-06-drift-detection-design.md).
+> Two refinements to this ADR emerged in build:
+> (1) **No `sourceHash` short-circuit** for detection — a step rename leaves the
+> Markdown (and its hash) untouched yet is the primary drift case, so detection
+> always re-plans; the fingerprint is recorded but not used to gate detection.
+> (2) **Writer vs read-only gate.** `var run` (and the Python/JVM test runners,
+> which have no separate CLI) is the writer that records/accepts; vitest is a
+> read-only gate. Re-identification uses **text similarity** (Jaccard ≥ 0.5), so
+> moving and rewording examples never false-alarm.
 
 ## Context
 
