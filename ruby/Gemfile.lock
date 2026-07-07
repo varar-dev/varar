@@ -1,0 +1,78 @@
+PATH
+  remote: packages/var-config
+  specs:
+    oselvar-var-config (0.3.2)
+
+PATH
+  remote: packages/var-core
+  specs:
+    oselvar-var-core (0.3.2)
+      cucumber-cucumber-expressions (= 20.0.0)
+
+PATH
+  remote: packages/var-minitest
+  specs:
+    oselvar-var-minitest (0.3.2)
+      minitest (~> 5.20)
+      oselvar-var-runner (= 0.3.2)
+
+PATH
+  remote: packages/var-rspec
+  specs:
+    oselvar-var-rspec (0.3.2)
+      oselvar-var-runner (= 0.3.2)
+      rspec-core (~> 3.13)
+
+PATH
+  remote: packages/var-runner
+  specs:
+    oselvar-var-runner (0.3.2)
+      oselvar-var (= 0.3.2)
+      oselvar-var-config (= 0.3.2)
+
+PATH
+  remote: packages/var
+  specs:
+    oselvar-var (0.3.2)
+      cucumber-cucumber-expressions (= 20.0.0)
+      oselvar-var-core (= 0.3.2)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    bigdecimal (4.1.2)
+    cucumber-cucumber-expressions (20.0.0)
+      bigdecimal
+    diff-lcs (1.6.2)
+    minitest (5.27.0)
+    rake (13.4.2)
+    rspec (3.13.2)
+      rspec-core (~> 3.13.0)
+      rspec-expectations (~> 3.13.0)
+      rspec-mocks (~> 3.13.0)
+    rspec-core (3.13.6)
+      rspec-support (~> 3.13.0)
+    rspec-expectations (3.13.5)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.13.0)
+    rspec-mocks (3.13.8)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.13.0)
+    rspec-support (3.13.7)
+
+PLATFORMS
+  arm64-darwin-23
+
+DEPENDENCIES
+  minitest (~> 5.20)
+  oselvar-var!
+  oselvar-var-config!
+  oselvar-var-core!
+  oselvar-var-minitest!
+  oselvar-var-rspec!
+  oselvar-var-runner!
+  rake
+  rspec (~> 3.13)
+
+BUNDLED WITH
+   2.4.10

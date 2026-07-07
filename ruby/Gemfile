@@ -1,0 +1,18 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+# The six workspace gems, wired via path so they resolve against the local
+# source (the release sync rewrites these to published versions).
+gem "oselvar-var-core", path: "packages/var-core"
+gem "oselvar-var", path: "packages/var"
+gem "oselvar-var-config", path: "packages/var-config"
+gem "oselvar-var-runner", path: "packages/var-runner"
+gem "oselvar-var-rspec", path: "packages/var-rspec"
+gem "oselvar-var-minitest", path: "packages/var-minitest"
+
+group :development, :test do
+  gem "rake"
+  gem "rspec", "~> 3.13"
+  gem "minitest", "~> 5.20"
+end

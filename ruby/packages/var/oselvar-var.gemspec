@@ -1,0 +1,18 @@
+# frozen_string_literal: true
+
+Gem::Specification.new do |s|
+  s.name = "oselvar-var"
+  s.version = "0.3.2"
+  s.summary = "Markdown-native BDD — author API (define_state)"
+  s.description = "The Vár author facade: define_state and the step-registration accumulator."
+  s.authors = ["Aslak Hellesøy"]
+  s.email = ["aslak@oselvar.com"]
+  s.homepage = "https://var.oselvar.com"
+  s.license = "MIT"
+  s.required_ruby_version = ">= 3.2"
+  s.files = Dir["lib/**/*.rb"]
+  s.require_paths = ["lib"]
+
+  s.add_dependency "oselvar-var-core", "0.3.2"
+  s.add_dependency "cucumber-cucumber-expressions", "20.0.0"
+end

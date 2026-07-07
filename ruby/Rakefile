@@ -1,0 +1,15 @@
+# frozen_string_literal: true
+
+require "rspec/core/rake_task"
+
+RSpec::Core::RakeTask.new(:spec) do |t|
+  t.pattern = "packages/**/spec/**/*_spec.rb"
+  t.rspec_opts = "-Ispec --require spec_helper"
+end
+
+desc "Fail if var-core requires the facade/runner (functional-core purity gate)"
+task :lint_no_reexports do
+  ruby "scripts/lint_no_reexports.rb"
+end
+
+task default: %i[spec lint_no_reexports]

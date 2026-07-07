@@ -1,0 +1,18 @@
+# frozen_string_literal: true
+
+Gem::Specification.new do |s|
+  s.name = "oselvar-var-minitest"
+  s.version = "0.3.2"
+  s.summary = "Markdown-native BDD — run Markdown specs as Minitest tests"
+  s.description = "Minitest adapter: one selectable test per Markdown example, with a drift gate."
+  s.authors = ["Aslak Hellesøy"]
+  s.email = ["aslak@oselvar.com"]
+  s.homepage = "https://var.oselvar.com"
+  s.license = "MIT"
+  s.required_ruby_version = ">= 3.2"
+  s.files = Dir["lib/**/*.rb"]
+  s.require_paths = ["lib"]
+
+  s.add_dependency "oselvar-var-runner", "0.3.2"
+  s.add_dependency "minitest", "~> 5.20"
+end
