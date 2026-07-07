@@ -3,6 +3,19 @@
 > Repo is now multi-language: `packages/...` paths below are relative to the
 > `typescript/` workspace (see CLAUDE.md → Repository layout).
 
+## Platforms
+- [ ] .NET
+- [ ] Go
+
+## Docs
+
+- [ ] How to generate step functions
+- [ ] Vocab
+  - [ ] port -> platform
+  - [ ] step definition -> step function
+  - [ ] examples -> tests (let's not be pedantic - use established vocabulary)
+  - [ ] spec -> depends....
+
 ## Website
 
 - [x] Simpler frontpage
@@ -32,8 +45,9 @@
 - [ ] Code Lens "➜ N references" above each `step('…')` with click-to-jump
       back to every matched .md caller.
 - [ ] Find References (reverse): from a step def → all matched .md sites.
-- [ ] Package .vsix and publish to the VSCode Marketplace + Open VSX.
-- [ ] Run button for each example.
+- [x] Package .vsix and publish to the VSCode Marketplace + Open VSX.
+- [x] Run button for each example.
+- [ ] Mention it in the docs
 
 ## Runtime adapters & CI
 
