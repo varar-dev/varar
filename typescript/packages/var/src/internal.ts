@@ -261,21 +261,48 @@ export function _resetBuilder(): void {
   customTypes = []
 }
 
+// Parse one stack frame into its file path and line, stripping the engine's
+// framing: V8's `at fn (path:line:col)` / `at path:line:col`, and Firefox/JSC's
+// `fn@url:line:col` / `@url:line:col`. The file class excludes `@`, `(` and
+// whitespace so the function-name prefix never leaks into the path — the paths
+// must compare equal across frames of the same module (see below).
+function parseFrame(line: string): { file: string; line: number } | undefined {
+  const m = /(?:@|\(|\s)?([^\s@(]+):(\d+):\d+\)?\s*$/.exec(line)
+  return m ? { file: m[1] ?? '', line: Number(m[2] ?? 0) } : undefined
+}
+
 function callerLocation(): { sourceFile: string; sourceLine: number } {
-  const stack = new Error('locate').stack ?? ''
-  const lines = stack.split('\n').slice(1)
-  // Find the first frame that's NOT in this module's source/dist.
-  let callerIdx = -1
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i] ?? ''
-    if (line.includes('/var/src/internal') || line.includes('/var/dist/internal')) {
+  return _callerLocationFromStack(new Error('locate').stack ?? '')
+}
+
+// Split out from callerLocation so it can be unit-tested against real V8,
+// SpiderMonkey and JSC stack strings without a browser.
+//
+// The deepest parseable frame is callerLocation's own — its file identifies
+// *this* module: a real source path when loaded from disk (`.../var/src/…` or
+// `.../var/dist/…`), or a bundled chunk when a runner bundles the package (the
+// website's Web Worker). Every internal frame — callerLocation, defineState,
+// registerStep, the stimulus/sensor closures — shares that file, so the first
+// frame with a *different* file is the step author's. Keying on file identity
+// instead of a hardcoded `/var/src/internal` substring is what makes this work
+// once bundled: the old substring never appears in a minified chunk, and on
+// engines whose stack omits the `Error:` header (Firefox/JSC) defineState and
+// registerStep would otherwise resolve to different internal frames, keying the
+// context factory under mismatched paths — the exact cause of a lost state
+// factory (`state.<field> is undefined`) in the bundled worker.
+export function _callerLocationFromStack(stack: string): {
+  sourceFile: string
+  sourceLine: number
+} {
+  let selfFile: string | undefined
+  for (const line of stack.split('\n')) {
+    const frame = parseFrame(line)
+    if (!frame) continue
+    if (selfFile === undefined) {
+      selfFile = frame.file
       continue
     }
-    callerIdx = i
-    break
+    if (frame.file !== selfFile) return { sourceFile: frame.file, sourceLine: frame.line }
   }
-  const caller = lines[callerIdx] ?? lines[1] ?? ''
-  const m = /([^\s(]+):(\d+):\d+\)?$/.exec(caller)
-  if (!m) return { sourceFile: '<unknown>', sourceLine: 0 }
-  return { sourceFile: m[1] ?? '<unknown>', sourceLine: Number(m[2] ?? 0) }
+  return { sourceFile: '<unknown>', sourceLine: 0 }
 }
