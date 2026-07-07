@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "specs": {
+    "specs/sealed.md": {
+      "sourceHash": "fnv1a:0",
+      "examples": [
+        {
+          "name": "The vault is sealed",
+          "line": 1
+        }
+      ]
+    }
+  }
+}

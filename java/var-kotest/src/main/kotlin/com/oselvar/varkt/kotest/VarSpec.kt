@@ -1,6 +1,8 @@
 package com.oselvar.varkt.kotest
 
 import com.oselvar.`var`.config.VarConfig
+import com.oselvar.`var`.core.Drift
+import com.oselvar.`var`.runner.BaselineStores
 import com.oselvar.`var`.runner.Discovery
 import com.oselvar.`var`.runner.Render
 import com.oselvar.`var`.runner.Run
@@ -29,6 +31,11 @@ abstract class VarSpec(root: Path = Path.of(".")) : FunSpec() {
     init {
         val config = VarConfig.load(root)
         val loaded = StepLoader.loadSteps(config.steps(), javaClass.classLoader)
+        val baselineStore = BaselineStores.file(root)
+        val update =
+            System.getProperty("var.update") == "true" ||
+                System.getenv("VAR_UPDATE") == "1" ||
+                System.getenv("VAR_UPDATE") == "true"
         for (specPath in Discovery.findSpecs(config.docsInclude(), config.docsExclude(), root)) {
             val rel =
                 root
@@ -40,6 +47,10 @@ abstract class VarSpec(root: Path = Path.of(".")) : FunSpec() {
             val source = Files.readString(specPath)
             val plan = Run.planSpec(rel, source, loaded.registry())
             val runs = Run.examplesWithRuns(plan, loaded.createContext(), Run.RecordingReporter())
+            // Reconcile drift: a clean run records/updates var.lock.json; a paragraph that was
+            // an example and no longer matches becomes a failing test (accept with -Dvar.update).
+            val drifts =
+                Drift.reconcileDrift(baselineStore, rel, source, plan.varDoc(), plan, update)
             context(rel) {
                 for (exampleRun in runs) {
                     test(exampleRun.example().name()) {
@@ -54,6 +65,9 @@ abstract class VarSpec(root: Path = Path.of(".")) : FunSpec() {
                             )
                         }
                     }
+                }
+                for (drift in drifts) {
+                    test("drift: ${drift.name()}") { throw AssertionError(Drift.message(drift)) }
                 }
             }
         }
