@@ -1,4 +1,6 @@
 import {
+  type CodeAction,
+  CodeActionKind,
   type Connection,
   type Diagnostic,
   InsertTextFormat,
@@ -60,6 +62,9 @@ export function registerHandlers(
         // No triggerCharacters — we want the suggestions to appear via the
         // user's invocation (Ctrl+Space) and as they type letters.
         completionProvider: { resolveProvider: false },
+        // "Accept as prose" on a drift diagnostic, executed via a server command.
+        codeActionProvider: { codeActionKinds: [CodeActionKind.QuickFix] },
+        executeCommandProvider: { commands: ['var.acceptDrift'] },
         semanticTokensProvider: {
           legend: {
             tokenTypes: [...SEMANTIC_LEGEND.tokenTypes],
@@ -148,6 +153,34 @@ export function registerHandlers(
     // client-side projections of the workspace index.
     void connection.sendNotification('var/didIndex')
   }
+
+  // Offer "Accept as prose" wherever a drift diagnostic covers the request
+  // range. The action carries a server command; the client rounds back through
+  // executeCommand below.
+  connection.onCodeAction((params) => {
+    const drifted = params.context.diagnostics.filter((d) => d.code === 'drift')
+    if (drifted.length === 0) return []
+    const action: CodeAction = {
+      title: 'Accept as prose (var drift)',
+      kind: CodeActionKind.QuickFix,
+      diagnostics: drifted,
+      command: {
+        title: 'Accept as prose',
+        command: 'var.acceptDrift',
+        arguments: [params.textDocument.uri],
+      },
+    }
+    return [action]
+  })
+
+  connection.onExecuteCommand(async (params) => {
+    if (params.command !== 'var.acceptDrift' || !store) return
+    const uri = params.arguments?.[0] as string | undefined
+    if (!uri) return
+    await store.acceptDrift(uriToPath(uri))
+    await store.reindex()
+    afterReindex()
+  })
 
   connection.onHover((params) => {
     if (!handlers) return null

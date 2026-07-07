@@ -1,8 +1,20 @@
 import type { VarConfig } from '@oselvar/var-config'
-import { createRegistry } from '@oselvar/var-core'
+import {
+  createRegistry,
+  deriveSpecBaseline,
+  detectDrift,
+  driftDetected,
+  parse,
+  parseVarLock,
+  plan,
+  type Registry,
+  stringifyVarLock,
+  type VarLock,
+} from '@oselvar/var-core'
 import {
   buildWorkspaceIndex,
   createTreeSitterScanner,
+  type DiagnosticRef,
   type GrammarLoader,
   languageIdForPath,
   type StepDefScanner,
@@ -36,7 +48,68 @@ export type Store = {
   // Whether a file is a var spec — i.e. it was discovered by the `docs` globs.
   // There is no `.md` extension to key off of; the config defines specs.
   isVarDoc(path: string): boolean
+  // Accept drift for one spec: re-record its var.lock.json baseline to the
+  // current live examples, so a now-prose paragraph is no longer flagged. The
+  // caller reindexes afterwards to clear the squiggle.
+  acceptDrift(varPath: string): Promise<void>
   fs(): FileSystem
+}
+
+// Drift diagnostics for the workspace: for each spec with a var.lock.json
+// baseline entry, a paragraph that was an example and now matches no step.
+// Returns [] when there is no baseline (e.g. the browser, whose memory FS has
+// no var.lock.json — drift there is shown via the run pipeline, not the LSP).
+async function driftDiagnosticRefs(
+  fs: FileSystem,
+  config: VarConfig,
+  varFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>,
+  registry: Registry,
+): Promise<DiagnosticRef[]> {
+  const [lockAbs] = await fs.list({ include: ['var.lock.json'], exclude: [] })
+  if (!lockAbs) return []
+  let lockText: string
+  try {
+    lockText = await fs.read(lockAbs)
+  } catch {
+    return []
+  }
+  const lock = parseVarLock(lockText)
+  if (!lock) return []
+  // var.lock.json sits at the workspace root; trim it to get the root prefix
+  // (string-only, so this stays free of node:path for the browser build).
+  const root = lockAbs.slice(0, lockAbs.length - 'var.lock.json'.length).replace(/[/\\]+$/, '')
+  const refs: DiagnosticRef[] = []
+  for (const vf of varFiles) {
+    const specPath = toSpecPath(root, vf.path)
+    const baseline = lock.specs[specPath]
+    if (!baseline) continue
+    const varDoc = parse(vf.path, vf.source, config.scannerPlugins)
+    const executionPlan = plan(varDoc, registry)
+    for (const drift of detectDrift(baseline, varDoc, executionPlan)) {
+      const diag = driftDetected({ name: drift.name, span: drift.span })
+      refs.push({
+        varPath: vf.path,
+        code: diag.code,
+        // A warning (amber) in the editor — same as the browser — while the
+        // runner treats drift as a hard failure.
+        severity: 'warning',
+        message: diag.message,
+        range: {
+          start: { line: drift.span.startLine, character: drift.span.startCol },
+          end: { line: drift.span.endLine, character: drift.span.endCol },
+        },
+      })
+    }
+  }
+  return refs
+}
+
+function toSpecPath(root: string, abs: string): string {
+  const rel = abs.startsWith(root) ? abs.slice(root.length) : abs
+  return rel
+    .replace(/^[/\\]+/, '')
+    .split('\\')
+    .join('/')
 }
 
 export function createStore(deps: StoreDeps): Store {
@@ -86,6 +159,13 @@ export function createStore(deps: StoreDeps): Store {
         scannerPlugins: config.scannerPlugins,
         ...(scanner ? { scanner } : {}),
       })
+      // Drift is a run-result concern, but the LSP surfaces it live: a
+      // paragraph the committed var.lock.json recorded as an example that now
+      // matches no step gets a warning squiggle. Additive to the index's own
+      // parse/plan diagnostics.
+      const drift = await driftDiagnosticRefs(fs, config, varFiles, current.registry)
+      if (drift.length > 0)
+        current = { ...current, diagnostics: [...current.diagnostics, ...drift] }
     },
     index: () => current,
     snippetTemplate: (language) =>
@@ -95,6 +175,22 @@ export function createStore(deps: StoreDeps): Store {
     // Delegates to the filesystem port so unsaved editor buffers (which the
     // disk-backed index can't see) are still recognised as spec docs.
     isVarDoc: (path) => fs.matches(path, config.docs),
+    async acceptDrift(varPath) {
+      const [lockAbs] = await fs.list({ include: ['var.lock.json'], exclude: [] })
+      // No baseline file yet → nothing has been recorded, so nothing to accept.
+      if (!lockAbs) return
+      const existing = parseVarLock(await fs.read(lockAbs).catch(() => ''))
+      const root = lockAbs.slice(0, lockAbs.length - 'var.lock.json'.length).replace(/[/\\]+$/, '')
+      const specPath = toSpecPath(root, varPath)
+      const source = await fs.read(varPath)
+      const varDoc = parse(varPath, source, config.scannerPlugins)
+      const baseline = deriveSpecBaseline(source, varDoc, plan(varDoc, current.registry))
+      const next: VarLock = {
+        version: 1,
+        specs: { ...(existing?.specs ?? {}), [specPath]: baseline },
+      }
+      await fs.write(lockAbs, stringifyVarLock(next))
+    },
     fs: () => fs,
   }
 }

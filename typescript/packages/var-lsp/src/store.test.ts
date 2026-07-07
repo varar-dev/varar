@@ -70,6 +70,69 @@ describe('createStore over a FileSystem', () => {
     expect(store.isVarDoc('/s.steps.ts')).toBe(false)
   })
 
+  it('surfaces a drift warning for a baseline example that no longer matches', async () => {
+    // The baseline says "The vault is sealed" was an example; no step matches
+    // it now → drift.
+    const lock = {
+      version: 1,
+      specs: {
+        'vault.md': { sourceHash: 'fnv1a:0', examples: [{ name: 'The vault is sealed', line: 1 }] },
+      },
+    }
+    const fs = fakeFs({
+      '/s.steps.ts': `stimulus('I open the vault', () => {})\n`,
+      '/vault.md': 'The vault is sealed.\n',
+      '/var.lock.json': JSON.stringify(lock),
+    })
+    const store = createStore({ fs, config, grammarLoader })
+    await store.reindex()
+    const drift = store.index().diagnostics.filter((d) => d.code === 'drift')
+    expect(drift).toHaveLength(1)
+    expect(drift[0]?.varPath).toBe('/vault.md')
+    expect(drift[0]?.severity).toBe('warning')
+    expect(drift[0]?.message).toContain('The vault is sealed')
+  })
+
+  it('acceptDrift re-records the baseline so the drift clears on reindex', async () => {
+    const lock = {
+      version: 1,
+      specs: {
+        'vault.md': { sourceHash: 'fnv1a:0', examples: [{ name: 'The vault is sealed', line: 1 }] },
+      },
+    }
+    const fs = fakeFs({
+      '/s.steps.ts': `stimulus('I open the vault', () => {})\n`,
+      '/vault.md': 'The vault is sealed.\n',
+      '/var.lock.json': JSON.stringify(lock),
+    })
+    const store = createStore({ fs, config, grammarLoader })
+    await store.reindex()
+    expect(store.index().diagnostics.filter((d) => d.code === 'drift')).toHaveLength(1)
+    await store.acceptDrift('/vault.md')
+    await store.reindex()
+    expect(store.index().diagnostics.filter((d) => d.code === 'drift')).toHaveLength(0)
+    // The now-prose paragraph is gone from the persisted baseline.
+    const written = JSON.parse(await fs.read('/var.lock.json'))
+    expect(written.specs['vault.md'].examples).toEqual([])
+  })
+
+  it('no drift warning when the baseline example still matches', async () => {
+    const lock = {
+      version: 1,
+      specs: {
+        'vault.md': { sourceHash: 'fnv1a:0', examples: [{ name: 'I open the vault', line: 1 }] },
+      },
+    }
+    const fs = fakeFs({
+      '/s.steps.ts': `stimulus('I open the vault', () => {})\n`,
+      '/vault.md': 'I open the vault.\n',
+      '/var.lock.json': JSON.stringify(lock),
+    })
+    const store = createStore({ fs, config, grammarLoader })
+    await store.reindex()
+    expect(store.index().diagnostics.filter((d) => d.code === 'drift')).toHaveLength(0)
+  })
+
   it('snippetTemplate takes a language and returns undefined when it is not configured', async () => {
     const fs = fakeFs({ '/s.steps.ts': '', '/a.md': '# none\n' })
     const store = createStore({ fs, config, grammarLoader })
