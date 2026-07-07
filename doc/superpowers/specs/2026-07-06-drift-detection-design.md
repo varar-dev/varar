@@ -228,15 +228,17 @@ ports.
 
 Implementation order (each increment green on its own):
 
-1. **var-core (pure):** baseline types (`VarLock`, `SpecBaseline`, `Drift`),
-   `detectDrift`, and pure serialize/parse for `var.lock.json`. Unit-tested in
-   isolation. *(This spec's first commit.)*
-2. **TS shell:** `var run` (var-cli) and vitest (var-vitest) read the lockfile,
-   gate via `detectDrift`, register `var:drift`, honor update mode, and write
-   the lockfile. Dogfood on `examples/typescript-vitest`.
-3. **Python:** port `hash.py` + the run-result/baseline read-write + the same
+1. ✅ **var-core (pure):** baseline types (`VarLock`, `SpecBaseline`, `Drift`),
+   similarity-based `detectDrift`, `reconcileDrift`, the `BaselineStore` port,
+   the `drift` diagnostic, and pure serialize/parse for `var.lock.json`.
+2. ✅ **TS shell:** `var run` (writer + gate, `--update` / `VAR_UPDATE`) and
+   vitest (read-only gate, baseline inlined by the plugin). Node `fs`
+   `BaselineStore` in var-runner.
+3. ✅ **Editors:** in-browser interactive demo (in-memory store, amber marker,
+   Accept button) and the LSP (drift warning + "Accept as prose" quick fix).
+4. ⬜ **Python:** port `hash.py` + the run-result/baseline read-write + the same
    `detect_drift`; wire the pytest and unittest adapters.
-4. **JVM:** port to `var-core` (Java) + wire JUnit engine and Kotest, with the
+5. ⬜ **JVM:** port to `var-core` (Java) + wire JUnit engine and Kotest, with the
    `-Dvar.update` surface.
 
 Out of scope: whole-file deletion/rename (the spec is gone, not drifted);
