@@ -5,9 +5,9 @@
 // that shows code — the interactive editors, Starlight's synced code tabs —
 // follows it via the change event.
 
-export type SiteLang = 'ts' | 'java' | 'kotlin' | 'python'
+export type SiteLang = 'ts' | 'java' | 'kotlin' | 'python' | 'ruby'
 
-export const SITE_LANGS: ReadonlyArray<SiteLang> = ['ts', 'java', 'kotlin', 'python']
+export const SITE_LANGS: ReadonlyArray<SiteLang> = ['ts', 'java', 'kotlin', 'python', 'ruby']
 
 // Starlight <TabItem> labels ↔ SiteLang. The labels double as the values
 // Starlight persists for `syncKey="lang"` tab groups, so they must match the
@@ -17,6 +17,7 @@ export const LANG_LABELS: Readonly<Record<SiteLang, string>> = {
   java: 'Java',
   kotlin: 'Kotlin',
   python: 'Python',
+  ruby: 'Ruby',
 }
 
 // Seti file-type icons bundled with Starlight — the header dropdown shows the
@@ -28,6 +29,7 @@ export const LANG_ICONS: Readonly<Record<SiteLang, string>> = {
   java: 'seti:java',
   kotlin: 'seti:kotlin',
   python: 'seti:python',
+  ruby: 'seti:ruby',
 }
 
 export const LANG_CHANGE_EVENT = 'var-lang-change'
@@ -35,7 +37,7 @@ export const LANG_CHANGE_EVENT = 'var-lang-change'
 const storageKey = 'var-lang'
 
 export const parseLang = (value: unknown): SiteLang =>
-  value === 'java' || value === 'kotlin' || value === 'python' ? value : 'ts'
+  value === 'java' || value === 'kotlin' || value === 'python' || value === 'ruby' ? value : 'ts'
 
 export const langOfLabel = (label: string): SiteLang | undefined =>
   SITE_LANGS.find((lang) => LANG_LABELS[lang] === label)
@@ -47,6 +49,7 @@ export function langOfPath(path: string): SiteLang | undefined {
   if (path.endsWith('.java')) return 'java'
   if (path.endsWith('.kt')) return 'kotlin'
   if (path.endsWith('.py')) return 'python'
+  if (path.endsWith('.rb')) return 'ruby'
   return undefined
 }
 

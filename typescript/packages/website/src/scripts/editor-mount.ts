@@ -4,6 +4,7 @@ import { markdown } from '@codemirror/lang-markdown'
 import { python } from '@codemirror/lang-python'
 import { foldGutter, StreamLanguage } from '@codemirror/language'
 import { kotlin } from '@codemirror/legacy-modes/mode/clike'
+import { ruby } from '@codemirror/legacy-modes/mode/ruby'
 import { LSPClient, languageServerExtensions } from '@codemirror/lsp-client'
 import { Annotation, EditorSelection, EditorState, type Extension } from '@codemirror/state'
 import { lineNumbers } from '@codemirror/view'
@@ -426,6 +427,8 @@ function mountEditor(editorEl: HTMLElement): void {
         return StreamLanguage.define(kotlin)
       case 'python':
         return python()
+      case 'ruby':
+        return StreamLanguage.define(ruby)
       default:
         return markdown()
     }
