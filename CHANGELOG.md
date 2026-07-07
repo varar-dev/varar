@@ -25,6 +25,7 @@ hand. The `[Unreleased]` section is refreshed by CI on every push to `main`.
 
 - Added: **var-core:** Detect spec drift with a byte-identical var.lock.json baseline
 - Added: **var-pytest:** Pytest and unittest gate on spec drift, writing var.lock.json
+- Added: **var-runner:** Scaffold a starter project with `var init`
 
 ### Java & Kotlin (Maven Central)
 
@@ -34,6 +35,11 @@ hand. The `[Unreleased]` section is refreshed by CI on every push to `main`.
 
 ### Ruby (RubyGems)
 
+- ⚠️ **Breaking:** **var:** Block-based step DSL
+  step files no longer destructure `steps` into
+`param, stimulus, sensor` and call them with `.call`/`.()`. Move the
+registrations into a `steps(...) do … end` block and pass the initial state as
+an argument instead of a factory block.
 - Added: **var-core:** Scaffold the ruby workspace and port the UTF-16 span layer
 - Added: **var-core:** Parse Markdown specs to a var-doc AST with UTF-16 spans
 - Added: **var-core:** Register step definitions via cucumber-expressions
@@ -42,10 +48,12 @@ hand. The `[Unreleased]` section is refreshed by CI on every push to `main`.
 - Added: **var-core:** Detect spec drift with a byte-identical var.lock.json baseline
 - Added: **var-config:** Read var.config.json
 - Added: **var-rspec:** Run Markdown specs as RSpec examples
+- Added: **var-runner:** Scaffold a starter project with `var init`
 
 ### VS Code extension (Marketplace & Open VSX)
 
 - Added: Drift shows as an editor warning with an "Accept as prose" quick fix
+- Added: Recognize Ruby step definitions in the editor
 - Fixed: Kotlin parameter types declared with raw-string regexes are now discovered
 
 ### Specification (all ports)
