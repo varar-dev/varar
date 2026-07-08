@@ -1,0 +1,33 @@
+---
+import Editor from '$components/Editor.astro';
+import File from '$components/File.astro';
+import Version from '$components/Version.astro';
+import librarySource from '$examples/typescript-vitest/library.md?raw';
+import librarySteps from '$examples/typescript-vitest/steps/library.steps.ts?raw';
+import libraryLogic from '$examples/typescript-vitest/steps/library.ts?raw';
+import libraryStepsJava from '$examples/java-junit-maven/src/test/java/examples/LibrarySteps.java?raw';
+import libraryLogicJava from '$examples/java-junit-maven/src/test/java/examples/Library.java?raw';
+import libraryStepsKotlin from '$examples/kotlin-junit/src/test/kotlin/examples/library.steps.kt?raw';
+import libraryLogicKotlin from '$examples/kotlin-junit/src/test/kotlin/examples/Library.kt?raw';
+import libraryStepsPython from '$examples/python-pytest/steps/library.steps.py?raw';
+import libraryLogicPython from '$examples/python-pytest/src/library_example/__init__.py?raw';
+import libraryStepsRuby from '$examples/ruby-rspec/steps/library.steps.rb?raw';
+import libraryLogicRuby from '$examples/ruby-rspec/lib/library.rb?raw';
+---
+<Editor>
+  <File uri="file:///library.md">
+    <Version label="Fix it">{librarySource}</Version>
+    <Version label="Break it">{librarySource.replace('£2.50', '£3.00').replace('the library agrees', 'the library refuses')}</Version>
+    <Version label="Reword (drift)">{librarySource.replace('due back on June 12', 'due on June 12').replace('asks to borrow *Hyperion*', 'wants to borrow *Hyperion*').replace('the library agrees', 'the library says yes')}</Version>
+  </File>
+  <File uri="file:///library.steps.ts">{librarySteps}</File>
+  <File uri="file:///library.ts">{libraryLogic}</File>
+  <File uri="file:///LibrarySteps.java">{libraryStepsJava}</File>
+  <File uri="file:///Library.java">{libraryLogicJava}</File>
+  <File uri="file:///library.steps.kt">{libraryStepsKotlin}</File>
+  <File uri="file:///Library.kt">{libraryLogicKotlin}</File>
+  <File uri="file:///library.steps.py">{libraryStepsPython}</File>
+  <File uri="file:///library_example.py">{libraryLogicPython}</File>
+  <File uri="file:///library.steps.rb">{libraryStepsRuby}</File>
+  <File uri="file:///library.rb">{libraryLogicRuby}</File>
+</Editor>

@@ -1,0 +1,35 @@
+---
+import Editor from '$components/Editor.astro';
+import File from '$components/File.astro';
+import Version from '$components/Version.astro';
+import romanNumeralsSource from '$examples/typescript-vitest/roman-numerals.md?raw';
+import romanNumeralsSteps from '$examples/typescript-vitest/steps/roman-numerals.steps.ts?raw';
+import romanNumeralsLogic from '$examples/typescript-vitest/steps/roman-numerals.ts?raw';
+import romanNumeralsStepsJava from '$examples/java-junit-maven/src/test/java/examples/RomanNumeralsSteps.java?raw';
+import romanNumeralsLogicJava from '$examples/java-junit-maven/src/test/java/examples/RomanNumerals.java?raw';
+import romanNumeralsStepsKotlin from '$examples/kotlin-junit/src/test/kotlin/examples/roman-numerals.steps.kt?raw';
+import romanNumeralsLogicKotlin from '$examples/kotlin-junit/src/test/kotlin/examples/RomanNumerals.kt?raw';
+import romanNumeralsStepsPython from '$examples/python-pytest/steps/roman_numerals.steps.py?raw';
+import romanNumeralsLogicPython from '$examples/python-pytest/src/roman_numerals_example/__init__.py?raw';
+import romanNumeralsStepsRuby from '$examples/ruby-rspec/steps/roman_numerals.steps.rb?raw';
+import romanNumeralsLogicRuby from '$examples/ruby-rspec/lib/roman_numerals.rb?raw';
+---
+<Editor>
+  <File uri="file:///roman-numerals.md">
+    <Version label="Subtractive notation">{romanNumeralsSource}</Version>
+    <Version label="Additive notation">{romanNumeralsSource.replace('IX   ', 'VIIII')}</Version>
+  </File>
+  <File uri="file:///roman-numerals.steps.ts">{romanNumeralsSteps}</File>
+  <File uri="file:///roman-numerals.ts">
+    <Version label="Subtractive notation">{romanNumeralsLogic}</Version>
+    <Version label="Additive notation">{romanNumeralsLogic.replace('IX', 'VIIII')}</Version>
+  </File>
+  <File uri="file:///RomanNumeralsSteps.java">{romanNumeralsStepsJava}</File>
+  <File uri="file:///RomanNumerals.java">{romanNumeralsLogicJava}</File>
+  <File uri="file:///roman-numerals.steps.kt">{romanNumeralsStepsKotlin}</File>
+  <File uri="file:///RomanNumerals.kt">{romanNumeralsLogicKotlin}</File>
+  <File uri="file:///roman_numerals.steps.py">{romanNumeralsStepsPython}</File>
+  <File uri="file:///roman_numerals_example.py">{romanNumeralsLogicPython}</File>
+  <File uri="file:///roman_numerals.steps.rb">{romanNumeralsStepsRuby}</File>
+  <File uri="file:///roman_numerals.rb">{romanNumeralsLogicRuby}</File>
+</Editor>

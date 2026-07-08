@@ -4,11 +4,7 @@ description: Break an executable spec, watch it fail, and mend it — nothing to
 ---
 
 import { Steps } from '@astrojs/starlight/components';
-import Editor from '$components/Editor.astro';
-import File from '$components/File.astro';
-import Version from '$components/Version.astro';
-import deepThoughtSource from '$examples/typescript-vitest/deep-thought.md?raw';
-import deepThoughtSteps from '$examples/typescript-vitest/steps/deep-thought.steps.ts?raw';
+import DeepThoughtEditor from '$components/examples/DeepThoughtEditor.astro';
 
 In this tutorial we'll read an [oath](/explanation/oaths/), break it, mend it, and then break it from the other side.
 The interactive example uses TypeScript, because we can run that in the browser.
@@ -22,13 +18,7 @@ You can select a different language in the top-right corner of the page, but you
    The **deep-thought.md** file is ordinary Markdown prose — no special
    syntax, no keywords. One sentence in it makes a checkable claim, or an *oath*.
 
-   <Editor>
-      <File uri="file:///deep-thought.md">
-        <Version label="Mend the oath">{deepThoughtSource}</Version>
-        <Version label="Break the oath">{deepThoughtSource.replace('42', '41')}</Version>
-      </File>
-      <File uri="file:///deep-thought.steps.ts">{deepThoughtSteps}</File>
-    </Editor>
+   <DeepThoughtEditor />
 
 2. Break the oath
 
