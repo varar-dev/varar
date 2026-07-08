@@ -9,7 +9,7 @@ This file is generated from conventional commit messages by
 [git-cliff](https://git-cliff.org) (`make changelog`) — do not edit it by
 hand. The `[Unreleased]` section is refreshed by CI on every push to `main`.
 
-## [0.4.1] - 2026-07-08
+## [Unreleased]
 
 ### TypeScript (npm)
 
