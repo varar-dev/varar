@@ -16,7 +16,7 @@
     "@oselvar/var-core": "workspace:*",
     "@oselvar/var-vitest": "workspace:*",
     "@types/node": "^26.1.0",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.10"
   },
   "license": "MIT",
   "repository": {
