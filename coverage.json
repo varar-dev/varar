@@ -1,0 +1,58 @@
+[
+  {
+    "port": "ts",
+    "label": "TypeScript",
+    "lines": {
+      "covered": 1900,
+      "total": 2302,
+      "pct": 82.5
+    },
+    "branches": {
+      "covered": 1193,
+      "total": 1670,
+      "pct": 71.4
+    }
+  },
+  {
+    "port": "jvm",
+    "label": "Java / Kotlin",
+    "lines": {
+      "covered": 2083,
+      "total": 2416,
+      "pct": 86.2
+    },
+    "branches": {
+      "covered": 951,
+      "total": 1239,
+      "pct": 76.8
+    }
+  },
+  {
+    "port": "python",
+    "label": "Python",
+    "lines": {
+      "covered": 1301,
+      "total": 1979,
+      "pct": 65.7
+    },
+    "branches": {
+      "covered": 0,
+      "total": 0,
+      "pct": null
+    }
+  },
+  {
+    "port": "ruby",
+    "label": "Ruby",
+    "lines": {
+      "covered": 1334,
+      "total": 1467,
+      "pct": 90.9
+    },
+    "branches": {
+      "covered": 0,
+      "total": 0,
+      "pct": null
+    }
+  }
+]

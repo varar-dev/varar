@@ -49,12 +49,14 @@ ruby:
 # java/<module>/target/site/jacoco/index.html (jacoco runs on every verify),
 # ruby/coverage/index.html. lcov files (typescript/coverage/lcov.info,
 # python/coverage.lcov, ruby/coverage/lcov.info) feed editor gutters and CI
-# integrations.
+# integrations. scripts/coverage-summary.sh then distils all five ports into the
+# tracked coverage.json and refreshes the coverage table in README.md.
 coverage:
 	cd typescript && pnpm install && pnpm test:coverage
 	cd python && uv sync && uv run pytest --cov --cov-report=term --cov-report=html --cov-report=lcov
 	cd java && mvn --batch-mode verify
 	cd ruby && bundle install && COVERAGE=1 bundle exec rake spec
+	scripts/coverage-summary.sh
 
 # Regenerate CHANGELOG.md from conventional commits (releases + Unreleased).
 changelog:
