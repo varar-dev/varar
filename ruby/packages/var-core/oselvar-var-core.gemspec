@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = 'oselvar-var-core'
-  s.version = '0.3.2'
+  s.version = '0.4.2'
   s.summary = 'Markdown-native BDD — pure functional core engine'
   s.description = 'The pure functional pipeline (parse, match, plan, execute, drift) behind Vár.'
   s.authors = ['Aslak Hellesøy']

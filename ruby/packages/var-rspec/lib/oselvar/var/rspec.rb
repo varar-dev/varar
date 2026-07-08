@@ -13,7 +13,7 @@ module Oselvar
     #   require "oselvar/var/rspec"
     #   Oselvar::Var::RSpec.generate
     module RSpec
-      VERSION = '0.3.2'
+      VERSION = '0.4.2'
 
       module_function
 

@@ -6,10 +6,16 @@ lockstep across every port: one `vX.Y.Z` git tag releases npm, PyPI,
 Maven Central, the VS Code Marketplace, and Open VSX together.
 
 This file is generated from conventional commit messages by
-[git-cliff](https://git-cliff.org) (`make changelog`) — do not edit it by
-hand. The `[Unreleased]` section is refreshed by CI on every push to `main`.
+[git-cliff](https://git-cliff.org) — do not edit it by hand. It is written at
+release time by `make prepare`; preview the next release with `make changelog`.
 
-## [Unreleased]
+## [0.4.2] - 2026-07-08
+
+### Java & Kotlin (Maven Central)
+
+- Fixed: **var-config:** Reject leading-dot JSON numbers and position invalid \u escape errors
+
+## [0.4.1] - 2026-07-08
 
 ### TypeScript (npm)
 

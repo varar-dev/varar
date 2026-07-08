@@ -10,7 +10,7 @@ module Oselvar
     # rendering, and the filesystem drift baseline store. Depends on the facade
     # and config; never on a test framework. Port of var-runner.
     module Runner
-      VERSION = '0.3.2'
+      VERSION = '0.4.2'
     end
   end
 end

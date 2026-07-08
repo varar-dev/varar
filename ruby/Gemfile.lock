@@ -1,41 +1,41 @@
 PATH
   remote: packages/var-config
   specs:
-    oselvar-var-config (0.3.2)
+    oselvar-var-config (0.4.2)
 
 PATH
   remote: packages/var-core
   specs:
-    oselvar-var-core (0.3.2)
+    oselvar-var-core (0.4.2)
       cucumber-cucumber-expressions (= 20.0.0)
 
 PATH
   remote: packages/var-minitest
   specs:
-    oselvar-var-minitest (0.3.2)
+    oselvar-var-minitest (0.4.2)
       minitest (~> 5.20)
-      oselvar-var-runner (= 0.3.2)
+      oselvar-var-runner (= 0.4.2)
 
 PATH
   remote: packages/var-rspec
   specs:
-    oselvar-var-rspec (0.3.2)
-      oselvar-var-runner (= 0.3.2)
+    oselvar-var-rspec (0.4.2)
+      oselvar-var-runner (= 0.4.2)
       rspec-core (~> 3.13)
 
 PATH
   remote: packages/var-runner
   specs:
-    oselvar-var-runner (0.3.2)
-      oselvar-var (= 0.3.2)
-      oselvar-var-config (= 0.3.2)
+    oselvar-var-runner (0.4.2)
+      oselvar-var (= 0.4.2)
+      oselvar-var-config (= 0.4.2)
 
 PATH
   remote: packages/var
   specs:
-    oselvar-var (0.3.2)
+    oselvar-var (0.4.2)
       cucumber-cucumber-expressions (= 20.0.0)
-      oselvar-var-core (= 0.3.2)
+      oselvar-var-core (= 0.4.2)
 
 GEM
   remote: https://rubygems.org/

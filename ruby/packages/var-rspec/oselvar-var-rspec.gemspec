@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = 'oselvar-var-rspec'
-  s.version = '0.3.2'
+  s.version = '0.4.2'
   s.summary = 'Markdown-native BDD — run Markdown specs as RSpec examples'
   s.description = 'RSpec adapter: one selectable example per Markdown example, with a drift gate.'
   s.authors = ['Aslak Hellesøy']
@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
   s.files = Dir['lib/**/*.rb']
   s.require_paths = ['lib']
 
-  s.add_dependency 'oselvar-var-runner', '0.3.2'
+  s.add_dependency 'oselvar-var-runner', '0.4.2'
   s.add_dependency 'rspec-core', '~> 3.13'
   s.metadata['rubygems_mfa_required'] = 'true'
 end

@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = 'oselvar-var-minitest'
-  s.version = '0.3.2'
+  s.version = '0.4.2'
   s.summary = 'Markdown-native BDD — run Markdown specs as Minitest tests'
   s.description = 'Minitest adapter: one selectable test per Markdown example, with a drift gate.'
   s.authors = ['Aslak Hellesøy']
@@ -14,6 +14,6 @@ Gem::Specification.new do |s|
   s.require_paths = ['lib']
 
   s.add_dependency 'minitest', '~> 5.20'
-  s.add_dependency 'oselvar-var-runner', '0.3.2'
+  s.add_dependency 'oselvar-var-runner', '0.4.2'
   s.metadata['rubygems_mfa_required'] = 'true'
 end
