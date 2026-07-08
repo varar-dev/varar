@@ -10,8 +10,8 @@ the mechanism are decoupled:
 
 | Concept (in your prose)   | Mechanism                          |
 | ------------------------- | ---------------------------------- |
-| arrange / context / given | [`stimulus`](/reference/stimulus/) |
-| act / action / when       | [`stimulus`](/reference/stimulus/) |
+| arrange / context / given | [`stimulus`](/reference/stimuli/) |
+| act / action / when       | [`stimulus`](/reference/stimuli/) |
 | assert / outcome / then   | [`sensor`](/reference/sensors/)    |
 
 Arranging state and acting on it are the same mechanism — both evolve state —

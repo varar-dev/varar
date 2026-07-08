@@ -4,7 +4,7 @@ description: Executable markdown documentation for humans and agents. Turn your 
 template: splash # Remove or comment out this line to display the site sidebar on this page.
 hero:
   title: Be honest
-  tagline: Your oaths, enforced.
+  tagline: Vár ensures your code does what your docs say.<br>Your oaths, enforced.
   image:
     file: ../../assets/var-logo.webp
   actions:
@@ -12,7 +12,7 @@ hero:
       link: /tutorials/get-started/
       icon: rocket
     - text: Try Vár in your browser
-      link: /tutorials/try-in-browser/
+      link: /tutorials/try-var/
       icon: laptop
       variant: minimal
 ---
@@ -50,11 +50,9 @@ import romanNumeralsLogicPython from '$examples/python-pytest/src/roman_numerals
 import romanNumeralsStepsRuby from '$examples/ruby-rspec/steps/roman_numerals.steps.rb?raw';
 import romanNumeralsLogicRuby from '$examples/ruby-rspec/lib/roman_numerals.rb?raw';
 
-You have requirements. Somewhere, tests get written. But are they testing what you
-actually need? Whether you're having conversations, writing specs, or using PRDs,
-something gets lost in translation. Vár closes that gap. It ties your requirements
-directly to the tests, making sure everyone keeps their word. Your oath becomes
-enforceable. Break it, and we catch it. Every time.
+Entropy is everywhere. Code and tests tend to drift apart from documentation and specifications in subtle ways.
+Vár closes that gap by making your documentation *executable*.
+When a programmer or coding agent breaks the oath, Vár catches it. Every time.
 
 ## Examples
 
@@ -76,7 +74,7 @@ The examples below give a taste of how Vár works. If the markdown disagrees wit
       <File uri="file:///deep_thought.steps.py">{deepThoughtStepsPython}</File>
       <File uri="file:///deep_thought.steps.rb">{deepThoughtStepsRuby}</File>
     </Editor>
-    New to this? [Take the guided tour of this example](/tutorials/try-in-browser/).
+    New to this? [Take the guided tour of this example](/tutorials/try-var/).
   </TabItem>
   <TabItem label="Library">
     <Editor>
@@ -96,7 +94,7 @@ The examples below give a taste of how Vár works. If the markdown disagrees wit
       <File uri="file:///library.steps.rb">{libraryStepsRuby}</File>
       <File uri="file:///library.rb">{libraryLogicRuby}</File>
     </Editor>
-    Each paragraph runs as its own example with fresh state — arrange, act and assert in plain prose. See [Stimulus](/reference/stimulus/) for how state evolves.
+    Each paragraph runs as its own example with fresh state — arrange, act and assert in plain prose. See [stimuli](/reference/stimuli/) for how state evolves.
 
     Cycle the version button to **Reword (drift)**: the *Ben* paragraph is reworded so it no longer matches any step. Instead of silently dropping to prose (losing that test), Vár flags it as **drift** — an amber marker on the paragraph — and offers **Accept as prose** to acknowledge it. See [Examples › Drift detection](/reference/examples/#drift-detection).
   </TabItem>

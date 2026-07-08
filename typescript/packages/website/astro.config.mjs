@@ -59,7 +59,7 @@ export default defineConfig({
       sidebar: [
         {
           label: 'Start here',
-          items: ['tutorials/try-in-browser', 'tutorials/get-started', 'tutorials/first-spec'],
+          items: ['tutorials/try-var', 'tutorials/get-started', 'tutorials/first-spec'],
         },
         {
           label: 'How-to guides',
@@ -74,7 +74,7 @@ export default defineConfig({
           label: 'Reference',
           items: [
             'reference/examples',
-            'reference/stimulus',
+            'reference/stimuli',
             'reference/sensors',
             'reference/custom-parameters',
             'reference/example-projects',
@@ -83,6 +83,7 @@ export default defineConfig({
         {
           label: 'Understanding Vár',
           items: [
+            'explanation/oaths',
             'explanation/given-when-then',
             'explanation/thin-steps',
             'explanation/markup-is-yours',

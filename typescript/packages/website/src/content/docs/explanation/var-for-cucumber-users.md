@@ -66,4 +66,4 @@ The usual complaints, taken seriously:
 
 ## Next
 
-See it in two minutes: [Try Vár in your browser](/tutorials/try-in-browser/).
+See it in two minutes: [Try Vár in your browser](/tutorials/try-var/).

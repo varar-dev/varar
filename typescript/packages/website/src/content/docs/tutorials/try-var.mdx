@@ -1,0 +1,57 @@
+---
+title: Try Vár in your browser
+description: Break an executable spec, watch it fail, and mend it — nothing to install.
+---
+
+import { Steps } from '@astrojs/starlight/components';
+import Editor from '$components/Editor.astro';
+import File from '$components/File.astro';
+import Version from '$components/Version.astro';
+import deepThoughtSource from '$examples/typescript-vitest/deep-thought.md?raw';
+import deepThoughtSteps from '$examples/typescript-vitest/steps/deep-thought.steps.ts?raw';
+
+<Steps>
+
+1. Read the documentation
+
+   The **deep-thought.md** file is ordinary Markdown prose — no special
+   syntax, no keywords. One sentence in it makes a checkable claim, or an *oath*.
+
+   <Editor>
+      <File uri="file:///deep-thought.md">
+        <Version label="Mend the oath">{deepThoughtSource}</Version>
+        <Version label="Break the oath">{deepThoughtSource.replace('42', '41')}</Version>
+      </File>
+      <File uri="file:///deep-thought.steps.ts">{deepThoughtSteps}</File>
+    </Editor>
+
+2. Break the oath
+
+   Change `42` to `41` in the **deep-thought.md** file. Now the oath is broken.
+   You can see the red squiggly line under the word `41`. Hover over it to see the expected value.
+
+3. Mend the oath
+
+   Change `41` back to `42` in the **deep-thought.md** file. Now the oath is mended.
+
+4. Break it from the other side
+
+   Change `42` to `41` in the **deep-thought.steps.ts** file. Now the oath is broken from the other side.
+</Steps>
+
+This is the whole idea of Vár: the document and the code check each other. When
+they disagree, your tests fail, and the failure points at the words.
+
+## What you just learned
+
+- A Vár spec is plain Markdown. You read it like documentation, because it *is*
+  documentation.
+- A **sensor** returns what the software actually does; Vár compares that
+  against what the document claims.
+- When document and code disagree — no matter which side drifted — the failure
+  is anchored to the exact span in the document.
+
+## Next
+
+Ready to run Vár on your own machine?
+[Get started on your computer](/tutorials/get-started/) — install, scaffold your first oath, and watch it fail on purpose.

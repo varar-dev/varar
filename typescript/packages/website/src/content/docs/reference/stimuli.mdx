@@ -1,14 +1,15 @@
 ---
-title: Stimulus
-description: The stimulus step kind — how state is arranged, evolved, and threaded through an example.
+title: Stimuli
+description: Step functions that mutate state and drive the system under test.
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
 
-A stimulus drives the software: it arranges the state an example starts from
-and acts on it. It is one of Vár's two step kinds — the other is the
-[sensor](/reference/sensors/), the read-only observation. The names are a
-hardware analogy: you put a stimulus into the system, and you read its response
+A *stimulus* drives the software: it arranges the state an example starts from
+and acts on it. It is one of Vár's two kinds of step functions. The other is
+[sensors](/reference/sensors/), the read-only observations. 
+
+The names are a hardware analogy: you put a stimulus into the system, and you read its response
 with sensors.
 
 <Tabs syncKey="lang">
