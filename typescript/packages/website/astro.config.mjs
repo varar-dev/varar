@@ -45,6 +45,7 @@ export default defineConfig({
     restorePrefs(),
     starlight({
       title: 'Vár',
+      tableOfContents: true,
       customCss: [
         './src/styles/tailwind.css',
         './src/styles/custom.css',

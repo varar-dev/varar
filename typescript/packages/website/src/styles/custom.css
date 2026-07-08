@@ -223,6 +223,45 @@ h6 {
 }
 
 /*
+ * Layout — reclaim horizontal space for the main content on documentation
+ * pages (those with the left nav + right ToC; the splash home page, which has
+ * no `data-has-sidebar`, is untouched and keeps its own wide hero width).
+ *
+ * Starlight sizes the right-hand ToC column (TwoColumnContent.astro) to soak
+ * up half the page's leftover whitespace, so on a wide screen it grows far
+ * wider than the left nav while holding only a short list of links. Pin it to
+ * the left-nav width, hand the reclaimed width to the content pane, widen the
+ * content column, and trim its horizontal padding.
+ *
+ * These rules sit outside Starlight's @layer, so they win over its layout
+ * cascade without !important.
+ */
+[data-has-sidebar] {
+  --sl-content-width: 56rem; /* Starlight default: 45rem */
+}
+
+@media (min-width: 72rem) {
+  [data-has-sidebar] {
+    --sl-content-pad-x: 1rem; /* Starlight default at this width: 1.5rem */
+  }
+
+  /* Right ToC column: match the left nav width instead of ballooning. */
+  .right-sidebar-container {
+    width: var(--sl-sidebar-width);
+  }
+
+  /* The content pane takes everything the ToC no longer claims; the content
+     column sits near the left nav (leftover space falls between it and the
+     ToC) rather than Starlight's default of hugging the ToC. The 0.75rem
+     start margin keeps a little breathing room from the nav on top of the
+     --sl-content-pad-x padding. */
+  [data-has-sidebar][data-has-toc] .main-pane {
+    width: calc(100% - var(--sl-sidebar-width));
+    --sl-content-margin-inline: 0.75rem auto;
+  }
+}
+
+/*
  * Header font selectors (dev-only). The prose font (--sl-font) and code font
  * (--sl-font-mono) default to STIX Two Text / JetBrains Mono in :root above;
  * the dev-only header selects (src/components/ThemeSelect.astro) set
