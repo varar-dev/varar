@@ -3,5 +3,5 @@
 require 'oselvar/var'
 
 steps do
-  sensor('life, the universe and everything is {int}') { |_state, _answer| 42 }
+  sensor('life, the universe and everything is {int}') { 42 }
 end
