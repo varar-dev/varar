@@ -1,33 +1,52 @@
 # Releasing
 
-One command releases every port, lockstep-versioned:
+Releasing is **two steps**, both run on `main` from an interactive shell —
+lockstep-versioned across every port:
 
-    make release
+    make prepare   # bump every port + write CHANGELOG.md, commit & push to main
+    make release   # publish every registry, then tag + create the GitHub release
 
-The version is inferred from the conventional commits since the last release
-tag (`git-cliff --bumped-version`): while on 0.x, a breaking change bumps
-minor and everything else bumps patch. Pass `VERSION=x.y.z` only to override
-the inference — e.g. the deliberate jump to 1.0.0, which is never inferred.
+Everything happens on `main` — no release branch, no PR. CI never mutates the
+repo: CHANGELOG.md is written once, by `make prepare`.
 
-CHANGELOG.md needs no preparation: it is generated from commit messages
-(`make changelog`; CI refreshes `[Unreleased]` on every push to `main`), and
-the release folds `[Unreleased]` into the new version's section, which
-becomes the GitHub release notes. The script refuses to run if that section
-would be empty (no `feat`/`fix`/`perf`/breaking commits since the last tag).
+## Step 1 — `make prepare`
 
-Idempotent: if anything fails, fix the cause and re-run the **same** command.
-Already-published artifacts are detected (registry probes) and skipped.
-`DRY_RUN=1 release/release.sh` shows the plan without publishing;
-`SKIP_GATE=1` skips `make check` when resuming a run that already passed it.
+Infers the version from the conventional commits since the last release tag
+(`git-cliff --bumped-version`): while on 0.x, a breaking change bumps minor and
+everything else bumps patch. Pass `VERSION=x.y.z` only to override — e.g. the
+deliberate jump to 1.0.0, which is never inferred.
 
-What a release does: preflight checks → `make check` → stamp version into
-every manifest + commit → tag `vX.Y.Z` → publish npm, PyPI, Maven Central,
-VS Code Marketplace, Open VSX (each skipping what already exists) → push →
-GitHub release.
+It then stamps that version into every port's manifests (npm `package.json`,
+PyPI `pyproject.toml` + `uv.lock`, Java poms + JVM samples, **Ruby gemspecs +
+internal dep pins + `VERSION` constants + `Gemfile.lock`**), regenerates
+CHANGELOG.md folding the unreleased commits into the new version's `## [x.y.z]`
+section (that section becomes the GitHub release notes), runs `make check`, and
+commits `Release vX.Y.Z` to `main` and pushes. It refuses to run if the
+changelog section would be empty (no `feat`/`fix`/`perf`/breaking commits since
+the last tag). `SKIP_GATE=1` skips `make check`.
 
-Run releases from an interactive shell, not CI: npm keeps 2FA on publishes
+Review the diff before it publishes — it is a normal commit on `main`. Preview
+the changelog at any time with `make changelog` (stdout only, no file change).
+
+## Step 2 — `make release`
+
+Reads the prepared version from the manifests (no argument), publishes every
+registry target — npm, PyPI, Maven Central, Open VSX (VS Code Marketplace is
+parked; see below), each **skipping what already exists** — and only once every
+target is up does it create and push the tag `vX.Y.Z`, then the GitHub release.
+Finally it returns Java to a `-SNAPSHOT` placeholder (so a local `mvn install`
+doesn't shadow the immutable release in `~/.m2`; Ruby has no such constraint, so
+its gems stay stamped at the released version).
+
+Idempotent: if a publish fails, fix the cause and re-run `make release` — it
+skips what's already out and picks up where it left off. Because the **tag is
+created last**, a failed publish never leaves a dangling tag.
+`DRY_RUN=1 release/release.sh` shows the plan without publishing or tagging.
+
+Run `make release` from an interactive shell, not CI: npm keeps 2FA on publishes
 (deliberately — no bypass-2FA token), so each npm publish opens a browser
-`npmjs.com/auth/cli/...` challenge answered with 1Password/passkey.
+`npmjs.com/auth/cli/...` challenge answered with 1Password/passkey, and RubyGems
+prompts for an OTP.
 
 A target can be parked with the `DISABLED=1` variable at the top of its
 `release/targets/*.sh` (it warns and reports OK). Currently parked:

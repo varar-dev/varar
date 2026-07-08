@@ -14,7 +14,7 @@
 #
 # Each target runs the same gate as that port's CI workflow in .github/workflows/.
 
-.PHONY: check commits typescript python java ruby coverage changelog release
+.PHONY: check commits typescript python java ruby coverage changelog prepare release
 
 check: commits typescript python java ruby
 
@@ -61,13 +61,21 @@ coverage:
 	cd ruby && bundle install && COVERAGE=1 bundle exec rake spec
 	scripts/coverage-summary.sh
 
-# Regenerate CHANGELOG.md from conventional commits (releases + Unreleased).
+# Preview the changelog that the next release would add (stdout only — the
+# tracked CHANGELOG.md is written only at release time, by `make prepare`).
 changelog:
-	release/changelog.sh
+	release/changelog.sh --preview
 
-# Release every port (idempotent; re-run the same command on failure).
-# The version is inferred from conventional commits; pass VERSION=x.y.z only
-# to override (e.g. the deliberate 1.0.0).
-#   make release
+# Releasing is two steps, both on main (see doc/RELEASING.md):
+#
+#   make prepare   # bump every port + write CHANGELOG.md, commit & push to main
+#   make release   # publish every registry, then tag + create the GitHub release
+#
+# prepare infers the version from conventional commits; pass VERSION=x.y.z only
+# to override (e.g. the deliberate 1.0.0). release reads the prepared version
+# from the manifests — no argument. Both are idempotent; re-run on failure.
+prepare:
+	release/prepare.sh $(VERSION)
+
 release:
-	release/release.sh $(VERSION)
+	release/release.sh

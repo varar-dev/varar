@@ -1,99 +1,60 @@
 #!/usr/bin/env bash
-# Release every language port at the same version. Idempotent: re-run the
-# same command after a failure and it resumes where it left off.
+# Publish a prepared release, then tag it and announce it. Run AFTER
+# release/prepare.sh has bumped the version + changelog and pushed the
+# `Release vX.Y.Z` commit to main.
 #
-#   release/release.sh            version inferred from conventional commits
-#   release/release.sh <version>  explicit override (e.g. the deliberate 1.0.0)
+#   release/release.sh
 #   DRY_RUN=1   probe registries and print the plan; publish/mutate nothing
-#   SKIP_GATE=1 skip `make check` (resumes where HEAD already passed the gate)
 #
-# Inference (cliff.toml [bump]): while on 0.x a breaking change bumps MINOR and
-# anything else bumps PATCH, so 1.0.0 can never be released by accident — it
-# only happens when someone types it.
+# The version is whatever prepare stamped into the manifests — it is not
+# inferred or passed here. Idempotent: re-run after a failed publish and it
+# skips whatever is already out, then tags + creates the GitHub release once
+# every registry is up. The tag is created LAST, so a failed publish never
+# leaves a dangling tag.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 cd "$REPO_ROOT"
 
-VERSION="${1:-}"
 DRY_RUN="${DRY_RUN:-0}"
-SKIP_GATE="${SKIP_GATE:-0}"
 
 # The Vár vault lives in this account (several accounts are configured locally);
 # release.env references the vault by ID — see the comment there.
 export OP_ACCOUNT="${OP_ACCOUNT:-my.1password.com}"
 
-# ── 1. Preflight (fail fast, zero side effects) ─────────────────────────────
-for tool in git git-cliff node pnpm uv mvn gem gh vsce ovsx op gpg curl jq python3 make; do
+# ── 1. Preflight ─────────────────────────────────────────────────────────────
+for tool in git node pnpm uv mvn gem gh vsce ovsx op gpg curl jq python3 bundle; do
   require_tool "$tool"
 done
 
 [[ "$(git branch --show-current)" == "main" ]] || die "releases run from main"
 [[ -z "$(git status --porcelain)" ]] || die "working tree not clean"
 git fetch origin main --tags
-git merge-base --is-ancestor origin/main HEAD ||
-  die "local main is behind (or diverged from) origin/main — pull first"
+[[ "$(git rev-parse HEAD)" == "$(git rev-parse origin/main)" ]] ||
+  die "local main and origin/main differ — run release right after prepare (git pull if needed)"
 
-if [[ -z "$VERSION" ]]; then
-  latest="$(git describe --tags --abbrev=0 --match 'v[0-9]*')"
-  if [[ "$(git rev-parse "$latest^{commit}")" == "$(git rev-parse HEAD)" ]]; then
-    # HEAD is already tagged: a previous run got past the tag step — resume it.
-    VERSION="${latest#v}"
-    log "HEAD is already tagged $latest — resuming that release"
-  else
-    VERSION="$(git-cliff --bumped-version 2>/dev/null)" && VERSION="${VERSION#v}" ||
-      die "git-cliff --bumped-version failed"
-    [[ "v$VERSION" != "$latest" ]] ||
-      die "nothing to release: no feat/fix/perf/breaking commits since $latest"
-    log "inferred version $VERSION from conventional commits since $latest"
-  fi
-fi
-is_semver "$VERSION" || die "not a semver version: $VERSION"
+# The prepared version is whatever prepare stamped into the manifests.
+VERSION="$(jq -r .version typescript/packages/var/package.json)"
+is_semver "$VERSION" ||
+  die "typescript/packages/var/package.json version '$VERSION' is not semver — did prepare run?"
 TAG="v$VERSION"
 
-[[ -n "$(generate_changelog "$TAG" | changelog_section "$VERSION")" ]] ||
-  die "commits since $CHANGELOG_SINCE produce no changelog content for $VERSION — are they conventional? (see CLAUDE.md)"
-
-op run --env-file=release/release.env -- true >/dev/null 2>&1 ||
-  die "cannot resolve secrets in release/release.env (is 'op' signed in? vault 'Var'?)"
+git log -1 --pretty=%s | grep -qx "Release $TAG" ||
+  warn "HEAD is not a 'Release $TAG' commit — continuing, but confirm prepare ran for $VERSION"
 
 if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
   [[ "$(git rev-parse "$TAG^{commit}")" == "$(git rev-parse HEAD)" ]] ||
-    die "tag $TAG exists but points at a different commit — if it is wrong, delete it (git tag -d $TAG && git push origin :refs/tags/$TAG) and re-run"
+    die "tag $TAG exists but points elsewhere — delete it (git tag -d $TAG && git push origin :refs/tags/$TAG) and re-run"
   log "tag $TAG already exists at HEAD (resuming)"
 fi
+
+op run --env-file=release/release.env -- true >/dev/null 2>&1 ||
+  die "cannot resolve secrets in release/release.env (is 'op' signed in? vault 'Vár'?)"
+
+[[ -n "$(changelog_body "$VERSION")" ]] ||
+  die "CHANGELOG.md has no [$VERSION] section — did prepare run?"
 log "preflight OK ($TAG)"
 
-# ── 2. Gate ──────────────────────────────────────────────────────────────────
-if [[ "$SKIP_GATE" == "1" ]]; then
-  warn "skipping make check (SKIP_GATE=1)"
-else
-  make check
-fi
-
-# ── 3. Stamp ─────────────────────────────────────────────────────────────────
-if [[ "$DRY_RUN" == "1" ]]; then
-  log "dry-run: skipping stamp/commit"
-else
-  release/stamp.sh "$VERSION"
-  release/changelog.sh "$TAG"
-  if git diff --quiet; then
-    log "manifests and changelog already at $VERSION"
-  else
-    git add CHANGELOG.md typescript/packages/*/package.json python/packages/*/pyproject.toml python/uv.lock java/pom.xml java/*/pom.xml examples/*/build.gradle.kts examples/java-junit-maven/pom.xml
-    git commit -m "Release $TAG"
-    log "committed version stamp + changelog"
-  fi
-fi
-
-# ── 4. Tag ───────────────────────────────────────────────────────────────────
-if [[ "$DRY_RUN" == "1" ]]; then
-  log "dry-run: skipping tag"
-elif ! git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
-  git tag -a "$TAG" -m "Release $TAG"
-  log "created tag $TAG"
-fi
-
-# ── 5. Publish targets (all run; failures collected) ────────────────────────
+# ── 2. Publish targets (all run; failures collected) ─────────────────────────
 RESULTS=()
 FAILED=0
 for target in release/targets/*.sh; do
@@ -108,39 +69,43 @@ for target in release/targets/*.sh; do
   fi
 done
 
-# ── 6+7. Push and GitHub release (only when everything succeeded) ───────────
-if [[ "$FAILED" == "0" && "$DRY_RUN" != "1" ]]; then
-  git push origin main "$TAG"
-  if gh release view "$TAG" >/dev/null 2>&1; then
-    log "GitHub release $TAG already exists"
-  else
-    changelog_body "$VERSION" | gh release create "$TAG" --title "$TAG" --notes-file -
-    log "created GitHub release $TAG"
-  fi
-fi
-
-# ── 7.5 Back to a SNAPSHOT placeholder ───────────────────────────────────────
-# Trunk gates the java sample projects against the local build (mvn install →
-# mavenLocal), so between releases java must NOT carry the released version —
-# a local install would shadow the immutable release in ~/.m2.
-if [[ "$FAILED" == "0" && "$DRY_RUN" != "1" ]]; then
-  if grep -q -- '-SNAPSHOT' java/pom.xml; then
-    log "java already on a SNAPSHOT placeholder"
-  else
-    release/bump-java-snapshot.sh
-    git add java/pom.xml java/*/pom.xml examples/*/build.gradle.kts examples/java-junit-maven/pom.xml
-    git commit -m "chore(release): java back to a SNAPSHOT placeholder after $TAG"
-    git push origin main
-    log "java bumped to the post-$VERSION SNAPSHOT placeholder"
-  fi
-fi
-
-# ── 8. Summary ───────────────────────────────────────────────────────────────
 log "──────── summary ────────"
 for r in ${RESULTS[@]+"${RESULTS[@]}"}; do log "  $r"; done
-[[ "$FAILED" == "0" ]] || die "some targets failed — fix and re-run: release/release.sh $VERSION"
-if [[ "$DRY_RUN" == "0" ]]; then
-  log "release $TAG complete 🎉"
-else
+[[ "$FAILED" == "0" ]] || die "some targets failed — fix and re-run: make release"
+
+if [[ "$DRY_RUN" == "1" ]]; then
   log "dry run complete"
+  exit 0
 fi
+
+# ── 3. Tag (now that every registry is up) ───────────────────────────────────
+if ! git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+  git tag -a "$TAG" -m "Release $TAG"
+  log "tagged $TAG"
+fi
+git push origin "$TAG"
+
+# ── 4. GitHub release ────────────────────────────────────────────────────────
+if gh release view "$TAG" >/dev/null 2>&1; then
+  log "GitHub release $TAG already exists"
+else
+  changelog_body "$VERSION" | gh release create "$TAG" --title "$TAG" --notes-file -
+  log "created GitHub release $TAG"
+fi
+
+# ── 5. Java back to a SNAPSHOT placeholder ───────────────────────────────────
+# Trunk gates the java sample projects against the local build (mvn install →
+# mavenLocal), so between releases java must NOT carry the released version — a
+# local install would shadow the immutable release in ~/.m2. (Ruby has no such
+# constraint, so its gems stay stamped at the released version.)
+if grep -q -- '-SNAPSHOT' java/pom.xml; then
+  log "java already on a SNAPSHOT placeholder"
+else
+  release/bump-java-snapshot.sh
+  git add java/pom.xml java/*/pom.xml examples/*/build.gradle.kts examples/java-junit-maven/pom.xml
+  git commit -m "chore(release): java back to a SNAPSHOT placeholder after $TAG"
+  git push origin main
+  log "java bumped to the post-$VERSION SNAPSHOT placeholder"
+fi
+
+log "release $TAG complete 🎉"

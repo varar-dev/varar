@@ -77,9 +77,10 @@ pnpm workspace · biome · vitest (for the core's own tests) · knip · jscpd ·
 ## Commit messages & changelog
 
 CHANGELOG.md and the next release's version number are **generated from commit
-messages** (git-cliff, `cliff.toml`) — there is no manual changelog step, and
-`release/release.sh` takes no version argument. That works only if every
-commit follows this convention (`make check` runs `release/lint-commits.sh`
+messages** (git-cliff, `cliff.toml`) — there is no manual changelog step. The
+version is inferred at `make prepare` time (`release/release.sh` itself takes no
+argument — it reads the prepared version from the manifests). That works only if
+every commit follows this convention (`make check` runs `release/lint-commits.sh`
 on everything since the last release tag):
 
 - **Format:** [Conventional Commits](https://www.conventionalcommits.org) —
@@ -104,11 +105,13 @@ on everything since the last release tag):
 - **Versioning is automatic and 0.x-aware:** while on 0.x, a breaking change
   bumps *minor* and everything else bumps *patch* (matching npm's `^0.x`
   caret). 1.0.0 is never inferred — it happens only when a human passes it
-  explicitly to `release/release.sh`.
-- Never edit CHANGELOG.md by hand — regenerate with `make changelog`. CI
-  (`.github/workflows/changelog.yml`) refreshes the `[Unreleased]` section on
-  every push to `main`; `release/release.sh` folds it into the release's
-  section at release time.
+  explicitly (`make prepare VERSION=1.0.0`).
+- Never edit CHANGELOG.md by hand. It is written **only at release time**, by
+  `make prepare` (which folds the unreleased commits into the new version's
+  section — those become the GitHub release notes). CI never touches it;
+  preview the next release's entries with `make changelog` (stdout only).
+  Releasing is two steps on `main`, no PR — `make prepare` then `make release`
+  (see doc/RELEASING.md).
 
 ## Conventions
 

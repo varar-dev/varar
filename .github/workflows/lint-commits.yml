@@ -1,0 +1,29 @@
+name: Lint commits
+
+# Conventional-commit lint on every push to main. Commit messages drive the
+# changelog and the version bump (cliff.toml, and "Commit messages & changelog"
+# in CLAUDE.md), so a non-conventional commit fails here.
+#
+# CI never writes CHANGELOG.md: it is generated once, at release time, by
+# release/prepare.sh. (This replaces the old changelog.yml, which committed a
+# changelog refresh to main on every push — that mutation forced a rebase on
+# every pull and could strand a release tag behind HEAD.)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: lint-commits
+
+jobs:
+  lint-commits:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # the lint needs full history + tags
+
+      - name: Lint commit messages
+        run: release/lint-commits.sh

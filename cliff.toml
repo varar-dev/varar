@@ -1,9 +1,10 @@
 # git-cliff configuration — https://git-cliff.org/docs/configuration
 #
 # CHANGELOG.md is GENERATED from conventional commit messages; never edit it
-# by hand. Regenerate with `make changelog` (runs `git-cliff v0.1.0.. -o
-# CHANGELOG.md`; everything before v0.1.0 predates the commit convention, so
-# that release is kept verbatim in `footer` below).
+# by hand. It is written only at release time by `make prepare`; preview what
+# the next release would add with `make changelog` (stdout, no file write).
+# Everything before v0.1.0 predates the commit convention, so that release is
+# kept verbatim in `footer` below.
 #
 # The changelog is organised for CONSUMERS: one section per distribution
 # channel (npm, PyPI, Maven Central, RubyGems, VS Code Marketplace), derived
@@ -20,8 +21,8 @@ lockstep across every port: one `vX.Y.Z` git tag releases npm, PyPI,
 Maven Central, the VS Code Marketplace, and Open VSX together.
 
 This file is generated from conventional commit messages by
-[git-cliff](https://git-cliff.org) (`make changelog`) — do not edit it by
-hand. The `[Unreleased]` section is refreshed by CI on every push to `main`.
+[git-cliff](https://git-cliff.org) — do not edit it by hand. It is written at
+release time by `make prepare`; preview the next release with `make changelog`.
 """
 
 # Each release renders one subsection per distribution channel (only when
