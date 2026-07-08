@@ -42,4 +42,27 @@ class JsonTest {
     void rejectsDuplicateObjectKeys() {
         assertThrows(IllegalArgumentException.class, () -> Json.parse("{\"a\":1,\"a\":2}"));
     }
+
+    @Test
+    void rejectsLeadingDotNumbers() {
+        // JSON requires a digit before the decimal point; ".5" (and "-.5") are
+        // not valid. "0.5" still parses.
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> Json.parse(".5"));
+        assertTrue(e.getMessage().contains("offset"), e.getMessage());
+        assertThrows(IllegalArgumentException.class, () -> Json.parse("-.5"));
+        assertThrows(IllegalArgumentException.class, () -> Json.parse("[.5]"));
+        assertEquals(0.5, Json.parse("0.5"));
+    }
+
+    @Test
+    void rejectsNonHexUnicodeEscape() {
+        // A unicode escape with a non-hex digit is rejected with an "at offset N"
+        // message like every other parser error (not a bare NumberFormatException).
+        // The backslash and the 'u' are concatenated separately so this source
+        // file itself contains no unicode-escape sequence for the compiler to
+        // choke on.
+        String json = "\"\\" + "u00zz\""; // JSON text: backslash-u then 00zz
+        IllegalArgumentException e = assertThrows(IllegalArgumentException.class, () -> Json.parse(json));
+        assertTrue(e.getMessage().contains("offset"), e.getMessage());
+    }
 }

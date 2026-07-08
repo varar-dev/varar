@@ -159,7 +159,13 @@ public final class Json {
                         case 't' -> sb.append('\t');
                         case 'u' -> {
                             if (i + 4 > s.length()) throw error("truncated \\u escape");
-                            sb.append((char) Integer.parseInt(s.substring(i, i + 4), 16));
+                            int cp = 0;
+                            for (int k = 0; k < 4; k++) {
+                                int d = Character.digit(s.charAt(i + k), 16);
+                                if (d < 0) throw error("invalid \\u escape");
+                                cp = (cp << 4) | d;
+                            }
+                            sb.append((char) cp);
                             i += 4;
                         }
                         default -> throw error("invalid escape '\\" + e + "'");
@@ -175,7 +181,11 @@ public final class Json {
         Object parseNumber() {
             int start = i;
             if (!atEnd() && s.charAt(i) == '-') i++;
+            // JSON requires at least one digit for the integer part: a
+            // leading-dot number like ".5" (or a bare "-") is not valid JSON.
+            int intStart = i;
             while (!atEnd() && Character.isDigit(s.charAt(i))) i++;
+            if (i == intStart) throw error("invalid number");
             boolean integral = true;
             if (!atEnd() && s.charAt(i) == '.') {
                 integral = false;
@@ -189,7 +199,6 @@ public final class Json {
                 while (!atEnd() && Character.isDigit(s.charAt(i))) i++;
             }
             String token = s.substring(start, i);
-            if (token.isEmpty() || token.equals("-")) throw error("invalid value");
             try {
                 return integral ? (Object) Long.parseLong(token) : (Object) Double.parseDouble(token);
             } catch (NumberFormatException e) {
