@@ -258,6 +258,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "var-runner"
+version = "0.0.0"
+dependencies = [
+ "regex",
+ "var-config",
+ "var-core",
+]
+
+[[package]]
 name = "zmij"
 version = "1.0.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
