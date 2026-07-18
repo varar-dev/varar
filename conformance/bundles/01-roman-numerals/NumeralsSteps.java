@@ -8,7 +8,7 @@ import java.util.Map;
 
 /**
  * Java sibling of {@code numerals.steps.ts} / {@code numerals.steps.py} (bundle
- * {@code 01-roman-numerals}). See {@code java/var/src/test/java/dev/varar/
+ * {@code 01-roman-numerals}). See {@code java/varar/src/test/java/dev/varar/
  * AuthorApiTest.java}'s {@code RomanNumeralSteps} for the hand-authored prototype this
  * fixture is adapted from — this is the real, conformance-harness-loaded copy.
  *
@@ -16,7 +16,7 @@ import java.util.Map;
  * conformance corpus (a sibling of every {@code *.steps.ts}/{@code *.steps.py} in this
  * directory), not under {@code var}'s {@code src/}. It reaches the test compile
  * classpath via {@code build-helper-maven-plugin}'s {@code add-test-source} goal
- * configured in {@code java/var/pom.xml}, which adds {@code conformance/bundles}
+ * configured in {@code java/varar/pom.xml}, which adds {@code conformance/bundles}
  * as an additional test-source root — Maven's compiler plugin does not require a
  * source file's directory to match its package declaration, only that the directory be
  * a configured source root.

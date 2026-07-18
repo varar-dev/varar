@@ -80,8 +80,8 @@
 ## Code quality
 
 - [x] Hoist the `findFiles` helper (duplicated across
-      `packages/var-vitest/src/plugin.ts`, `packages/var-cli/src/lint.ts`,
-      `packages/var-cli/src/run.ts`, and `packages/var-lsp/src/store.ts`)
+      `packages/var-vitest/src/plugin.ts`, `packages/cli/src/lint.ts`,
+      `packages/cli/src/run.ts`, and `packages/lsp/src/store.ts`)
       into a shared utility — and standardise on `globSync`.
 - [ ] Move tests next to source
 - [ ] Move packages/var/tests/conformance.test.ts

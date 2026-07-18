@@ -1,0 +1,15 @@
+[package]
+name = "varar-cargotest"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+varar-core = { path = "../core" }
+varar-config = { path = "../config" }
+varar-runner = { path = "../runner" }
+libtest-mimic = "0.8"
+
+[lib]
+name = "varar_cargotest"
+path = "src/lib.rs"

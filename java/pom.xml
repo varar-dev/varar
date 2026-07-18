@@ -39,13 +39,13 @@
   </scm>
 
   <modules>
-    <module>var-core</module>
-    <module>var-config</module>
-    <module>var</module>
-    <module>var-runner</module>
-    <module>var-junit</module>
-    <module>var-kotlin</module>
-    <module>var-kotest</module>
+    <module>core</module>
+    <module>config</module>
+    <module>varar</module>
+    <module>runner</module>
+    <module>junit</module>
+    <module>kotlin</module>
+    <module>kotest</module>
   </modules>
 
   <properties>

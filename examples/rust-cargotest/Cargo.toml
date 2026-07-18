@@ -10,15 +10,15 @@ description = "Standalone sample: run Markdown specs as `cargo test` tests with 
 # crates instead.
 [dependencies]
 # The engine (steps are authored against it) and the cargo-test adapter.
-varar-core = { path = "../../rust/varar-core" }
-varar-cargotest = { path = "../../rust/varar-cargotest" }
+varar-core = { path = "../../rust/core" }
+varar-cargotest = { path = "../../rust/cargotest" }
 # The ergonomic author facade (`varar::Steps`), used by the step definitions.
 varar = { path = "../../rust/varar" }
 
 [dev-dependencies]
 # The `unit` test drives discovery and a single example directly.
-varar-config = { path = "../../rust/varar-config" }
-varar-runner = { path = "../../rust/varar-runner" }
+varar-config = { path = "../../rust/config" }
+varar-runner = { path = "../../rust/runner" }
 
 [lib]
 name = "example"

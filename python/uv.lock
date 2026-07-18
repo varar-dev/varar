@@ -195,7 +195,7 @@ wheels = [
 [[package]]
 name = "pytest-varar"
 version = "0.4.2"
-source = { editable = "packages/var-pytest" }
+source = { editable = "packages/pytest" }
 dependencies = [
     { name = "pytest" },
     { name = "varar" },
@@ -207,10 +207,10 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "pytest", specifier = ">=8" },
-    { name = "varar", editable = "packages/var" },
-    { name = "varar-config", editable = "packages/var-config" },
-    { name = "varar-core", editable = "packages/var-core" },
-    { name = "varar-runner", editable = "packages/var-runner" },
+    { name = "varar", editable = "packages/varar" },
+    { name = "varar-config", editable = "packages/config" },
+    { name = "varar-core", editable = "packages/core" },
+    { name = "varar-runner", editable = "packages/runner" },
 ]
 
 [[package]]
@@ -295,7 +295,7 @@ wheels = [
 [[package]]
 name = "varar"
 version = "0.4.2"
-source = { editable = "packages/var" }
+source = { editable = "packages/varar" }
 dependencies = [
     { name = "cucumber-expressions" },
     { name = "varar-core" },
@@ -304,18 +304,18 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "cucumber-expressions", specifier = "==20.0.0" },
-    { name = "varar-core", editable = "packages/var-core" },
+    { name = "varar-core", editable = "packages/core" },
 ]
 
 [[package]]
 name = "varar-config"
 version = "0.4.2"
-source = { editable = "packages/var-config" }
+source = { editable = "packages/config" }
 
 [[package]]
 name = "varar-core"
 version = "0.4.2"
-source = { editable = "packages/var-core" }
+source = { editable = "packages/core" }
 dependencies = [
     { name = "cucumber-expressions" },
 ]
@@ -326,7 +326,7 @@ requires-dist = [{ name = "cucumber-expressions", specifier = "==20.0.0" }]
 [[package]]
 name = "varar-runner"
 version = "0.4.2"
-source = { editable = "packages/var-runner" }
+source = { editable = "packages/runner" }
 dependencies = [
     { name = "varar" },
     { name = "varar-config" },
@@ -334,14 +334,14 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "varar", editable = "packages/var" },
-    { name = "varar-config", editable = "packages/var-config" },
+    { name = "varar", editable = "packages/varar" },
+    { name = "varar-config", editable = "packages/config" },
 ]
 
 [[package]]
 name = "varar-unittest"
 version = "0.4.2"
-source = { editable = "packages/var-unittest" }
+source = { editable = "packages/unittest" }
 dependencies = [
     { name = "varar" },
     { name = "varar-config" },
@@ -351,8 +351,8 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "varar", editable = "packages/var" },
-    { name = "varar-config", editable = "packages/var-config" },
-    { name = "varar-core", editable = "packages/var-core" },
-    { name = "varar-runner", editable = "packages/var-runner" },
+    { name = "varar", editable = "packages/varar" },
+    { name = "varar-config", editable = "packages/config" },
+    { name = "varar-core", editable = "packages/core" },
+    { name = "varar-runner", editable = "packages/runner" },
 ]

@@ -3,27 +3,27 @@
   "ignoreExportsUsedInFile": true,
   "ignoreWorkspaces": ["packages/cucumber"],
   "workspaces": {
-    "packages/var-config": {
+    "packages/config": {
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
-    "packages/var-core": {
+    "packages/core": {
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
-    "packages/var-cli": {
+    "packages/cli": {
       "project": ["src/**/*.ts", "tests/**/*.ts"],
       "ignoreDependencies": ["@varar/varar"]
     },
-    "packages/var-runner": {
+    "packages/runner": {
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
-    "packages/var-vitest": {
+    "packages/vitest": {
       "project": ["src/**/*.ts", "tests/**/*.ts"]
     },
-    "packages/var": {
+    "packages/varar": {
       "entry": ["tests/**/*.test.ts", "../../../conformance/bundles/**/*.steps.ts"],
       "project": ["src/**/*.ts", "tests/**/*.ts", "../../../conformance/bundles/**/*.ts"]
     },
-    "packages/var-language": {
+    "packages/language": {
       "project": ["src/**/*.ts", "tests/**/*.ts"],
       "ignoreDependencies": [
         "@tree-sitter-grammars/tree-sitter-kotlin",
@@ -34,7 +34,7 @@
         "tree-sitter-typescript"
       ]
     },
-    "packages/var-lsp": {
+    "packages/lsp": {
       "project": ["src/**/*.ts", "tests/**/*.ts"],
       "ignoreDependencies": [
         "@tree-sitter-grammars/tree-sitter-kotlin",
@@ -45,7 +45,7 @@
         "tree-sitter-typescript"
       ]
     },
-    "packages/var-vscode": {
+    "packages/vscode": {
       "project": ["src/**/*.ts"]
     },
     "../examples/typescript-vitest": {

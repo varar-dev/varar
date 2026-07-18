@@ -6,7 +6,7 @@
   "scripts": {
     "test": "cucumber-js && pnpm test:var && pnpm test:var-vitest",
     "test:cucumber": "cucumber-js",
-    "test:var": "node ../var-cli/src/bin.ts run",
+    "test:var": "node ../cli/src/bin.ts run",
     "test:var-vitest": "vitest run"
   },
   "devDependencies": {

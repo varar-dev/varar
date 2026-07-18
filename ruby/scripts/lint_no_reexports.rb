@@ -6,7 +6,7 @@
 require 'pathname'
 
 ROOT = Pathname.new(__dir__).join('..').expand_path
-CORE_LIB = ROOT.join('packages/var-core/lib')
+CORE_LIB = ROOT.join('packages/core/lib')
 
 FORBIDDEN = [
   /require\s+["']varar["']/, # the facade

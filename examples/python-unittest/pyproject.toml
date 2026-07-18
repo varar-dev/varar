@@ -16,11 +16,11 @@ dependencies = ["varar-unittest"]
 # transitive set is listed because varar-unittest pins its internal
 # dependencies exactly (==<version>).
 [tool.uv.sources]
-varar-unittest = { path = "../../python/packages/var-unittest", editable = true }
-varar = { path = "../../python/packages/var", editable = true }
-varar-core = { path = "../../python/packages/var-core", editable = true }
-varar-config = { path = "../../python/packages/var-config", editable = true }
-varar-runner = { path = "../../python/packages/var-runner", editable = true }
+varar-unittest = { path = "../../python/packages/unittest", editable = true }
+varar = { path = "../../python/packages/varar", editable = true }
+varar-core = { path = "../../python/packages/core", editable = true }
+varar-config = { path = "../../python/packages/config", editable = true }
+varar-runner = { path = "../../python/packages/runner", editable = true }
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/library_example", "src/roman_numerals_example", "src/yahtzee_example"]

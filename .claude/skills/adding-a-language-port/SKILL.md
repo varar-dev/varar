@@ -128,12 +128,12 @@ gated milestone:
    (`version, specs`; per spec `sourceHash, examples`; per example `name,
    line`) — NOT the recursive alphabetical key-sort of `canonical_json`. Drift
    is already ported to TS, Python, and the JVM; follow the closest precedent
-   (`python/packages/var-core/src/var_core/{hash,drift}.py`, Java
+   (`python/packages/core/src/varar_core/{hash,drift}.py`, Java
    `Drift.java`/`Hash.java`).
 
 The first three stages each have a named projection function
 (`toVarDocArtifact`, `toRegistryArtifact`, `toPlanArtifact`) in
-`typescript/packages/var-core/src/conformance.ts` — port each exactly; it
+`typescript/packages/core/src/conformance.ts` — port each exactly; it
 defines the wire shape the goldens were generated from. The trace stage has
 no separate `toTraceArtifact`; it's built inline inside `runConformance` in
 the same file (the executor's recorded events projected directly) — look
@@ -201,12 +201,12 @@ module-scope accumulator. (`hash` + `drift` are the drift feature — see stage
 Each module's TS source file **and** its `*.test.ts` are the authoritative
 spec — translate the test first (watch it fail), then the implementation.
 
-Not everything under `typescript/packages/var-core/src/` belongs on this
+Not everything under `typescript/packages/core/src/` belongs on this
 list: files like `config.ts` and `find-files.ts` are `var-config`/runner
 concerns, and `ports.ts` declares the port interfaces (`TestSink`, `Reporter`,
 `BaselineStore`) that adapters implement. If a `.ts` file in that directory
 isn't in the list above and doesn't have a
-`python/packages/var-core/src/var_core/*.py` counterpart, don't assume it needs
+`python/packages/core/src/varar_core/*.py` counterpart, don't assume it needs
 porting for v1 — confirm against the design docs first. (`hash.ts` *used* to be
 on the "skip for v1" list; drift promoted it to required.)
 
@@ -367,7 +367,7 @@ suite:
   itself isn't type-checked in CI, so that test — not tsc — is the enforcement).
 - **Tree-sitter dialect** (the LSP/editor authoring surface — a *required*
   deliverable now, not deferred): create
-  `typescript/packages/var-language/src/tree-sitter-dialects/<lang>.ts`
+  `typescript/packages/language/src/tree-sitter-dialects/<lang>.ts`
   (a `LanguageSpec`: step-def + parameter-type queries, `decodeString`,
   `extractHandlerParams`, `resolveRegexp`) with queries **verified empirically**
   against the real grammar's node shapes, then wire it into
@@ -434,11 +434,11 @@ how many languages exist; a new port does not touch them:
 | What does the task-by-task TDD execution look like? | `doc/superpowers/plans/2026-06-30-python-core-port.md` |
 | How is core/facade split, and why? | `doc/superpowers/plans/2026-06-30-python-core-split.md` |
 | How does the runner + test-framework adapter fit together? | `doc/superpowers/specs/2026-06-30-var-pytest-plugin-design.md` |
-| Reference implementation (engine) | `typescript/packages/var-core/src/*.ts`, completed mirror at `python/packages/var-core/src/var_core/*.py` |
-| Reference implementation (facade) | `typescript/packages/var/src/{index,internal,registry}.ts`, `python/packages/var/src/var/{__init__,internal,registry}.py` |
-| Reference implementation (runner) | `typescript/packages/var-runner/src/*.ts`, `python/packages/var-runner/src/var_runner/*.py` |
-| Reference implementation (test-framework adapter) | `typescript/packages/var-vitest/src/*.ts`, `python/packages/var-pytest/src/var_pytest/*.py` |
-| Reference implementation (drift, unit-gated) | `typescript/packages/var-core/src/{drift,hash}.ts` + `tests/{drift,hash}.test.ts`; mirror at `python/packages/var-core/src/var_core/{drift,hash}.py`; `java/var-core/.../{Drift,Hash}.java` |
+| Reference implementation (engine) | `typescript/packages/core/src/*.ts`, completed mirror at `python/packages/core/src/varar_core/*.py` |
+| Reference implementation (facade) | `typescript/packages/varar/src/{index,internal,registry}.ts`, `python/packages/varar/src/varar/{__init__,internal,registry}.py` |
+| Reference implementation (runner) | `typescript/packages/runner/src/*.ts`, `python/packages/runner/src/varar_runner/*.py` |
+| Reference implementation (test-framework adapter) | `typescript/packages/vitest/src/*.ts`, `python/packages/pytest/src/varar_pytest/*.py` |
+| Reference implementation (drift, unit-gated) | `typescript/packages/core/src/{drift,hash}.ts` + `tests/{drift,hash}.test.ts`; mirror at `python/packages/core/src/varar_core/{drift,hash}.py`; `java/core/.../{Drift,Hash}.java` |
 | The conformance corpus + goldens | `conformance/bundles/*/{example.md, *.steps.{ts,py,kt,rb}, *Steps.java, golden/*.json}` — 15 bundles, four artifacts each; **plus** the config corpus `conformance/config/cases/*/{varar.config.json, golden.json|expect-error.txt}` |
 
 ## Common mistakes

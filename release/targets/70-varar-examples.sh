@@ -100,7 +100,7 @@ perl -pi -e "s|, path: \"\\.\\./\\.\\./ruby/packages/[\\w-]+\"|, \"$VERSION\"|" 
 # live (CRATES_IO_ENABLED=1); while parked the rust-* samples aren't synced at
 # all (see the rsync exclude above), so this would have nothing to rewrite.
 if [[ "$CRATES_IO_ENABLED" == "1" ]]; then
-  perl -pi -e "s|varar-core = \{ path = \"\\.\\./\\.\\./rust/varar-core\" \}|varar-core = \"$VERSION\"|" \
+  perl -pi -e "s|varar-core = \{ path = \"\\.\\./\\.\\./rust/core\" \}|varar-core = \"$VERSION\"|" \
     "$DEST"/rust-*/Cargo.toml
 fi
 

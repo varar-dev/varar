@@ -83,11 +83,11 @@ build_vsix() {
   local vsix="$REPO_ROOT/release/dist/varar-$version-$(git -C "$REPO_ROOT" rev-parse --short HEAD).vsix"
   [[ -f "$vsix" ]] && { echo "$vsix"; return 0; }
   local manifest_version
-  manifest_version="$(jq -r .version "$REPO_ROOT/typescript/packages/var-vscode/package.json")"
+  manifest_version="$(jq -r .version "$REPO_ROOT/typescript/packages/vscode/package.json")"
   [[ "$manifest_version" == "$version" ]] ||
     die "var-vscode/package.json is at $manifest_version, not $version — stamp has not run"
   mkdir -p "$REPO_ROOT/release/dist"
   (cd "$REPO_ROOT/typescript" && pnpm install --frozen-lockfile >&2 && pnpm --filter varar build >&2)
-  (cd "$REPO_ROOT/typescript/packages/var-vscode" && vsce package --no-dependencies -o "$vsix" >&2)
+  (cd "$REPO_ROOT/typescript/packages/vscode" && vsce package --no-dependencies -o "$vsix" >&2)
   echo "$vsix"
 }

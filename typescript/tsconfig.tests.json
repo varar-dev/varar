@@ -15,13 +15,13 @@
     "sourceMap": false
   },
   "include": [
-    "packages/var-config/tests",
-    "packages/var-core/tests",
-    "packages/var-cli/tests",
-    "packages/var-language/tests",
-    "packages/var-lsp/tests",
-    "packages/var/tests",
-    "packages/var-vitest/tests",
+    "packages/config/tests",
+    "packages/core/tests",
+    "packages/cli/tests",
+    "packages/language/tests",
+    "packages/lsp/tests",
+    "packages/varar/tests",
+    "packages/vitest/tests",
     "vitest.config.ts",
     "vitest.plugins.ts",
     "packages/*/vitest.config.ts"

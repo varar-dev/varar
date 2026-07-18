@@ -9,7 +9,7 @@ This is a multi-language monorepo (ADR 0001). Top level:
 - `typescript/` — the pnpm workspace (pure core `@varar/varar`, runtime, vitest
   adapter, **and** the shared authoring/LSP/VS Code/website platform). **Run all
   pnpm / vitest / tsc commands from `typescript/`.** Package paths in this file
-  (e.g. `packages/var/src/...`) are relative to `typescript/`.
+  (e.g. `packages/varar/src/...`) are relative to `typescript/`.
 - `python/` — the uv workspace for the Python port (core, runner, pytest +
   unittest adapters).
 - `java/` — the Maven multi-module workspace for the Java port (JDK 21, pinned in
@@ -47,11 +47,11 @@ Concretely:
 
 | Layer       | Lives in                          | May do                                  | May NOT do                          |
 |-------------|-----------------------------------|-----------------------------------------|-------------------------------------|
-| Core domain | `packages/var/src/*`              | pure transformations over immutable AST | filesystem, network, globals, time  |
-| Ports       | `packages/var/src/ports.ts`       | declare interfaces                      | implement them                      |
+| Core domain | `packages/varar/src/*`              | pure transformations over immutable AST | filesystem, network, globals, time  |
+| Ports       | `packages/varar/src/ports.ts`       | declare interfaces                      | implement them                      |
 | Adapters    | `packages/var-*/src/*`            | implement ports; talk to runtime APIs   | leak runtime types into the core    |
 
-If a function in `packages/var/src/` needs to read a file, it doesn't — it takes the bytes as an argument. If the matcher needs the current time, it doesn't — the caller passes it in.
+If a function in `packages/varar/src/` needs to read a file, it doesn't — it takes the bytes as an argument. If the matcher needs the current time, it doesn't — the caller passes it in.
 
 ## Stack
 
@@ -90,7 +90,7 @@ on everything since the last release tag):
 - **Scope names the consumer.** `feat`/`fix`/`perf` (and anything breaking)
   must be scoped `ts`, `py`, `java`, `ruby`, `vscode`, or `spec`, optionally
   `/package`: `feat(ts/var-vitest): …`, `fix(py/var-core): …`,
-  `refactor(java/var-junit)!: …`. The scope decides which changelog section
+  `refactor(java/junit)!: …`. The scope decides which changelog section
   the entry lands in (npm / PyPI / Maven Central / RubyGems / VS Code / all ports).
   Work that ships nothing to a consumer — website, CI, tooling — is a
   `chore(website): …` or similar, never a `feat`: it would bump the version

@@ -20,8 +20,8 @@ for (const [p, text] of Object.entries(libModules)) {
 // unresolved in here; that only degrades types INSIDE internal.ts (whose
 // diagnostics are never requested) — steps's public type closure is
 // self-contained.
-import varIndexSource from '../../../var/src/index.ts?raw'
-import varInternalSource from '../../../var/src/internal.ts?raw'
+import varIndexSource from '../../../varar/src/index.ts?raw'
+import varInternalSource from '../../../varar/src/internal.ts?raw'
 
 const VAR_PACKAGE_DIR = '/varar'
 const VAR_ENTRY = `${VAR_PACKAGE_DIR}/index.ts`

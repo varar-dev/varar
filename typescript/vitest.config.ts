@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitest/config'
-import { VarResultsReporter } from './packages/var-vitest/src/reporter.js'
+import { VarResultsReporter } from './packages/vitest/src/reporter.js'
 
 // The reporter's cwd is the REPO root (not typescript/): varar.config.json lives
 // there, and spec paths in .var/ results must stay relative to it (no `..`

@@ -1,37 +1,37 @@
 PATH
-  remote: packages/var-config
+  remote: packages/config
   specs:
     varar-config (0.4.2)
 
 PATH
-  remote: packages/var-core
+  remote: packages/core
   specs:
     varar-core (0.4.2)
       cucumber-cucumber-expressions (= 20.0.0)
 
 PATH
-  remote: packages/var-minitest
+  remote: packages/minitest
   specs:
     varar-minitest (0.4.2)
       minitest (~> 5.20)
       varar-runner (= 0.4.2)
 
 PATH
-  remote: packages/var-rspec
+  remote: packages/rspec
   specs:
     varar-rspec (0.4.2)
       rspec-core (~> 3.13)
       varar-runner (= 0.4.2)
 
 PATH
-  remote: packages/var-runner
+  remote: packages/runner
   specs:
     varar-runner (0.4.2)
       varar (= 0.4.2)
       varar-config (= 0.4.2)
 
 PATH
-  remote: packages/var
+  remote: packages/varar
   specs:
     varar (0.4.2)
       cucumber-cucumber-expressions (= 20.0.0)
