@@ -193,26 +193,41 @@ These are **external** and block *publishing*, not the code rename:
 - [ ] 1Password (vault `Vár`): new `@varar` npm token, PyPI token; update the
       `op://` refs in `release/release.env` if item names change.
 
-## Progress (as of this branch)
+## Progress — COMPLETE (8 commits on `rename-to-varar`)
 
-**Done + green + committed** (6 commits): npm `@varar/*` (TS build/check/test green),
-PyPI `varar*` (pytest green), Maven `dev.varar:*` (mvn install + all JVM samples
-green), RubyGems `varar*` (rake + samples green), Rust `varar*` crates (cargo
-green); release scripts, `languages.json`, Makefile, CI, badges retargeted;
-front-page + README reframed around *varar = oaths* (goddess **Vár** kept); the
-`70-varar-examples.sh` sync script renamed. The dated `doc/superpowers` +
-`doc/adr` archive is intentionally left as a historical record.
+All phases done, every port's gate re-run green (807 files changed):
 
-**Remaining — the product-token pass (phase 6):** `var.config.json` →
-`varar.config.json`, `var.lock.json` → `varar.lock.json`,
-`var.config.schema.json` → `varar.config.schema.json` (+ `$id`/`$schema`); the
-CLI command `var` → `varar` (bins + help across TS/Python/Ruby); the
-`var-examples` scaffold folder → `varar-examples` (CLI init + tests + tutorials);
-VS Code activation event. ~101 files; the shared `conformance/config/cases/*`
-fixtures couple all five ports' config-conformance harnesses, so it lands with
-five gate re-runs. The tree is fully green and internally consistent *without*
-this pass (every port still uses `var.config.json` / the `var` command
-uniformly).
+- **Coordinates**: npm `@varar/*` · PyPI `varar*` · Maven `dev.varar:*` ·
+  RubyGems `varar*` · Rust `varar*` crates. TS build/check/test, Python
+  pytest, `mvn install` + all JVM samples, `rake` + Ruby samples, and `cargo`
+  all green.
+- **Product tokens**: `varar.config.json`, `varar.lock.json`,
+  `varar.config.schema.json` (`$id` → varar.dev); CLI command **`varar`**
+  (bin `varar`, LSP bin `varar-lsp`); scaffold folder `varar-examples/`.
+- **Tooling/branding**: release scripts, `languages.json`, Makefile, CI,
+  badges retargeted; `70-varar-examples.sh` sync; front page + README reframed
+  around *varar = oaths* (goddess **Vár** kept).
+- Commit-lint (`release/lint-commits.sh`) passes over the branch.
+
+### Intentionally NOT changed
+- **GitHub org** `oselvar/varar` (varar org is squatted); **email**
+  `aslak@oselvar.com`; **LICENSE** `Oselvar Ltd`; **1Password vault** `Vár`.
+- **Package directory names** (`typescript/packages/var-*`, `java/var-*`,
+  `ruby/packages/var-*`, `python/packages/var-*`) — never published; the
+  package *name* fields carry the new coordinates (Rust dirs *were* renamed to
+  `varar-*` since crate name = dir there). Optional future cleanup.
+- **Internal code identifiers** (`VarConfig`, `loadVarConfig`, `parseVarLock`,
+  the website `var-lang`/`var-palette` localStorage keys) — not user-facing
+  coordinates; left to avoid churn/risk.
+- **Test data** `Vár`/`vár` in specs, step files, and conformance goldens
+  (golden-compared — not branding).
+- The dated **`doc/superpowers` + `doc/adr` archive** and `CHANGELOG.md` —
+  historical records.
+
+### Still owner-only (external — blocks *publishing*, see prerequisites above)
+Registry namespace reservations, Maven `dev.varar` DNS verification, VS Code /
+Open VSX publishers, Cloudflare varar.dev, the two GitHub repo renames, and the
+new npm/PyPI tokens in 1Password.
 
 ## Execution phases (on `rename-to-varar`)
 
