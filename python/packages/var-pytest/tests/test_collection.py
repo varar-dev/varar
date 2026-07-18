@@ -1,5 +1,5 @@
 STEPS = '''
-from var import steps
+from varar import steps
 param, stimulus, sensor = steps(lambda: {"n": 0})
 @stimulus("I add {int}")
 def _(state, n):
@@ -17,7 +17,7 @@ VAR_CONFIG = """\
 SPEC = "# Calc\n\n## adds two\n\nI add 2\nthe total is 2\n\n## adds wrong\n\nI add 2\nthe total is 9\n"
 
 
-def _write_var_config(pytester):
+def _write_varar_config(pytester):
     (pytester.path / "var.config.json").write_text(VAR_CONFIG, encoding="utf-8")
 
 
@@ -27,7 +27,7 @@ def _write_steps(pytester):
 
 
 def test_one_item_per_example_pass_and_fail(pytester):
-    _write_var_config(pytester)
+    _write_varar_config(pytester)
     _write_steps(pytester)
     (pytester.path / "features").mkdir()
     (pytester.path / "features/calc.md").write_text(SPEC, encoding="utf-8")
@@ -37,7 +37,7 @@ def test_one_item_per_example_pass_and_fail(pytester):
 
 
 def test_k_selection(pytester):
-    _write_var_config(pytester)
+    _write_varar_config(pytester)
     _write_steps(pytester)
     (pytester.path / "features").mkdir()
     (pytester.path / "features/calc.md").write_text(SPEC, encoding="utf-8")
@@ -59,7 +59,7 @@ def test_duplicate_heading_items_get_unique_node_ids(pytester):
         "## same heading\n\n"
         "I add 2\nthe total is 9\n"
     )
-    _write_var_config(pytester)
+    _write_varar_config(pytester)
     _write_steps(pytester)
     (pytester.path / "features").mkdir()
     (pytester.path / "features/dup.md").write_text(spec, encoding="utf-8")
@@ -71,7 +71,7 @@ def test_duplicate_heading_items_get_unique_node_ids(pytester):
 
 
 def test_non_matching_md_is_ignored(pytester):
-    _write_var_config(pytester)
+    _write_varar_config(pytester)
     (pytester.path / "README.md").write_text("# not a spec\n", encoding="utf-8")
     result = pytester.runpytest()
     result.assert_outcomes()  # nothing collected, no error

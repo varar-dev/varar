@@ -1,8 +1,8 @@
-from var_runner.steps import load_steps
-from var_runner.run import plan_spec, examples_with_runs, RecordingReporter
+from varar_runner.steps import load_steps
+from varar_runner.run import plan_spec, examples_with_runs, RecordingReporter
 
 STEPS = '''
-from var import steps
+from varar import steps
 param, stimulus, sensor = steps(lambda: {"n": 0})
 @stimulus("I add {int}")
 def _(state, n):

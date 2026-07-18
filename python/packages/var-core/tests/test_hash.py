@@ -1,4 +1,4 @@
-from var_core.hash import hash_source
+from varar_core.hash import hash_source
 
 
 def test_deterministic() -> None:

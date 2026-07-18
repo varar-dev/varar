@@ -7,20 +7,20 @@ name = "var-example-python-unittest"
 version = "0.0.1"
 description = "Standalone sample: run Markdown specs as unittest tests with Vár"
 requires-python = ">=3.12"
-dependencies = ["oselvar-var-unittest"]
+dependencies = ["varar-unittest"]
 
 # In this monorepo the Vár packages resolve from source (editable path
 # sources), so the sample gates trunk against the local build. The release
-# sync to oselvar/var-examples deletes this whole table and pins the released
+# sync to oselvar/varar-examples deletes this whole table and pins the released
 # PyPI version — the plain dependency above is all a real project needs. The
-# transitive set is listed because oselvar-var-unittest pins its internal
+# transitive set is listed because varar-unittest pins its internal
 # dependencies exactly (==<version>).
 [tool.uv.sources]
-oselvar-var-unittest = { path = "../../python/packages/var-unittest", editable = true }
-oselvar-var = { path = "../../python/packages/var", editable = true }
-oselvar-var-core = { path = "../../python/packages/var-core", editable = true }
-oselvar-var-config = { path = "../../python/packages/var-config", editable = true }
-oselvar-var-runner = { path = "../../python/packages/var-runner", editable = true }
+varar-unittest = { path = "../../python/packages/var-unittest", editable = true }
+varar = { path = "../../python/packages/var", editable = true }
+varar-core = { path = "../../python/packages/var-core", editable = true }
+varar-config = { path = "../../python/packages/var-config", editable = true }
+varar-runner = { path = "../../python/packages/var-runner", editable = true }
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/library_example", "src/roman_numerals_example", "src/yahtzee_example"]

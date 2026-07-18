@@ -5,9 +5,9 @@ an expect-error.txt marker. See conformance/config/README.md."""
 from pathlib import Path
 
 import pytest
-from var_core.canonical_json import canonical_stringify
+from varar_core.canonical_json import canonical_stringify
 
-from var_config import read_var_config
+from varar_config import read_varar_config
 
 # python/packages/var-config/tests -> parents[4] = repo root
 CASES_DIR = Path(__file__).resolve().parents[4] / "conformance" / "config" / "cases"
@@ -27,8 +27,8 @@ def _artifact(cfg) -> dict:
 def test_config_case(case: Path) -> None:
     if (case / "expect-error.txt").exists():
         with pytest.raises(ValueError):
-            read_var_config(case)
+            read_varar_config(case)
     else:
-        actual = canonical_stringify(_artifact(read_var_config(case)))
+        actual = canonical_stringify(_artifact(read_varar_config(case)))
         expected = (case / "golden.json").read_text(encoding="utf-8")
         assert actual == expected

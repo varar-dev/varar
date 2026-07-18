@@ -1,8 +1,8 @@
 """test_structurer.py — port of typescript/packages/var-core/tests/structurer.test.ts."""
 from __future__ import annotations
 
-from var_core.scanner import scan
-from var_core.structurer import structure
+from varar_core.scanner import scan
+from varar_core.structurer import structure
 
 
 def test_every_paragraph_becomes_a_candidate_example_scoped_by_headings_above() -> None:

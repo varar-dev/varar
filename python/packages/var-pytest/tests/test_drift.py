@@ -2,7 +2,7 @@
 import json
 
 STEPS = '''
-from var import steps
+from varar import steps
 param, stimulus, sensor = steps(lambda: {"n": 0})
 @stimulus("I add {int}")
 def _(state, n):

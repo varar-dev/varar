@@ -1,7 +1,7 @@
 import pytest
 from dataclasses import FrozenInstanceError
-from var_core.span import span_from_offsets
-from var_core.ast import Paragraph, SegmentOffset, VarDoc
+from varar_core.span import span_from_offsets
+from varar_core.ast import Paragraph, SegmentOffset, VarDoc
 
 
 def test_nodes_construct_and_are_frozen():

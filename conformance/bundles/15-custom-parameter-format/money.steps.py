@@ -1,4 +1,4 @@
-from var import steps
+from varar import steps
 
 # Custom {money} parameter type with a `format` — the inverse of `parse`,
 # rendering a value back in the document's notation. The sensor returns the

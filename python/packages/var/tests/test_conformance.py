@@ -21,11 +21,11 @@ from pathlib import Path
 
 import pytest
 
-from var_core.canonical_json import canonical_stringify
-from var_core.conformance import run_conformance, to_plan_artifact, to_registry_artifact, to_var_doc_artifact
-from var.registry import _custom_parameter_types, _reset_builder, build_registry, context_factory
-from var_core.parse import parse
-from var_core.plan import plan as build_plan
+from varar_core.canonical_json import canonical_stringify
+from varar_core.conformance import run_conformance, to_plan_artifact, to_registry_artifact, to_var_doc_artifact
+from varar.registry import _custom_parameter_types, _reset_builder, build_registry, context_factory
+from varar_core.parse import parse
+from varar_core.plan import plan as build_plan
 
 # python/packages/var/tests/ -> parents[4] = repo root
 BUNDLES_DIR = Path(__file__).resolve().parents[4] / "conformance" / "bundles"

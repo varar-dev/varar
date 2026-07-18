@@ -1,5 +1,5 @@
 # test_span.py
-from var_core.span import utf16_len, to_utf16_offset, utf16_slice, line_col, span_from_offsets
+from varar_core.span import utf16_len, to_utf16_offset, utf16_slice, line_col, span_from_offsets
 
 def test_utf16_len_ascii_and_astral():
     assert utf16_len("abc") == 3

@@ -1,7 +1,7 @@
 """test_parse.py — port of typescript/packages/var-core/tests/parse.test.ts."""
 from __future__ import annotations
 
-from var_core.parse import parse
+from varar_core.parse import parse
 
 
 def test_parse_returns_var_doc_whose_examples_come_from_paragraphs_and_carry_heading_stack() -> None:

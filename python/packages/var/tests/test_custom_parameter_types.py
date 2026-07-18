@@ -2,8 +2,8 @@ import re
 
 import pytest
 
-from var import steps
-from var.registry import _custom_parameter_types, _reset_builder
+from varar import steps
+from varar.registry import _custom_parameter_types, _reset_builder
 
 
 def test_projects_name_and_pattern_source():

@@ -1,4 +1,4 @@
-"""test_conformance.py — unit tests for var_core.conformance projections.
+"""test_conformance.py — unit tests for varar_core.conformance projections.
 
 Port of typescript/packages/var-core/tests/conformance.test.ts.
 Exercises the projection functions and run_conformance directly using
@@ -6,21 +6,21 @@ create_registry()+add_step() — no facade dependency.
 """
 from __future__ import annotations
 
-from var_core.canonical_json import canonical_stringify
-from var_core.cell_diff import CellDiff, CellMismatchError, ReturnShapeError
-from var_core.conformance import (
+from varar_core.canonical_json import canonical_stringify
+from varar_core.cell_diff import CellDiff, CellMismatchError, ReturnShapeError
+from varar_core.conformance import (
     run_conformance,
     to_failure_artifact,
     to_plan_artifact,
     to_registry_artifact,
     to_var_doc_artifact,
 )
-from var_core.doc_string_diff import DocStringDiff, DocStringMismatchError
-from var_core.execute import UnexpectedPassError
-from var_core.parse import parse
-from var_core.plan import plan
-from var_core.registry import add_step, create_registry, define_parameter_type
-from var_core.span import Span
+from varar_core.doc_string_diff import DocStringDiff, DocStringMismatchError
+from varar_core.execute import UnexpectedPassError
+from varar_core.parse import parse
+from varar_core.plan import plan
+from varar_core.registry import add_step, create_registry, define_parameter_type
+from varar_core.span import Span
 
 
 # ---------------------------------------------------------------------------

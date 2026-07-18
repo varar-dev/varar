@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from var_runner.discovery import find_specs, match_spec
+from varar_runner.discovery import find_specs, match_spec
 
 
 def _touch(root: Path, rel: str) -> Path:

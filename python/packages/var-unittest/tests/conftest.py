@@ -14,7 +14,7 @@ from typing import Any
 
 import pytest
 
-from var_unittest import generate_tests
+from varar_unittest import generate_tests
 
 
 class Harness:

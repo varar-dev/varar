@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import pytest
 
-from var.registry import _reset_builder, build_registry, context_factory
-from var import steps
+from varar.registry import _reset_builder, build_registry, context_factory
+from varar import steps
 
 
 def test_two_decorators_register_with_correct_kinds() -> None:

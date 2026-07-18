@@ -12,7 +12,7 @@ VAR_CONFIG = """\
 
 ASYNC_STEPS = """\
 import asyncio
-from var import steps
+from varar import steps
 
 param, stimulus, sensor = steps(lambda: {"value": 0})
 

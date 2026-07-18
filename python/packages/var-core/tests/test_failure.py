@@ -1,11 +1,11 @@
 """test_failure.py — port of typescript/packages/var-core/tests/failure.test.ts"""
 from __future__ import annotations
 
-from var_core.cell_diff import CellDiff, CellMismatchError, ReturnShapeError
-from var_core.doc_string_diff import DocStringDiff, DocStringMismatchError
-from var_core.failure import to_failure
-from var_core.result import CellFailure
-from var_core.span import span_from_offsets
+from varar_core.cell_diff import CellDiff, CellMismatchError, ReturnShapeError
+from varar_core.doc_string_diff import DocStringDiff, DocStringMismatchError
+from varar_core.failure import to_failure
+from varar_core.result import CellFailure
+from varar_core.span import span_from_offsets
 
 
 def test_to_failure_extracts_cells_from_cell_mismatch_error() -> None:

@@ -14,16 +14,16 @@ uv run ruff check
 
 | Package (dist / import) | Layer |
 |---|---|
-| `oselvar-var-core` / `var_core` | pure functional core: parse → plan → execute, matcher, diffs, conformance |
-| `oselvar-var` / `var` | author facade: `steps` (+ `internal`, `registry` glue) |
-| `oselvar-var-config` / `var_config` | reads `var.config.json` — the shared config file for all var tools |
-| `oselvar-var-runner` / `var_runner` | shared imperative shell: discovery, step loading, run orchestration, failure rendering |
-| `pytest-var` / `var_pytest` | pytest plugin: `.md` specs as first-class tests |
-| `oselvar-var-unittest` / `var_unittest` | unittest adapter: `generate_tests(globals())` in one test module |
+| `varar-core` / `varar_core` | pure functional core: parse → plan → execute, matcher, diffs, conformance |
+| `varar` / `var` | author facade: `steps` (+ `internal`, `registry` glue) |
+| `varar-config` / `varar_config` | reads `var.config.json` — the shared config file for all var tools |
+| `varar-runner` / `varar_runner` | shared imperative shell: discovery, step loading, run orchestration, failure rendering |
+| `pytest-varar` / `varar_pytest` | pytest plugin: `.md` specs as first-class tests |
+| `varar-unittest` / `varar_unittest` | unittest adapter: `generate_tests(globals())` in one test module |
 
 ## Run Markdown specs as live var tests (dogfood)
 
-The `pytest-var` plugin turns a `.md` file into pytest tests (one item per
+The `pytest-varar` plugin turns a `.md` file into pytest tests (one item per
 example). `var.config.json` points it at a **collision-free
 subset** of the shared `conformance/bundles/` (the bundles reuse some
 expressions across bundles — e.g. `I echo…`, `I have {int} cukes`,

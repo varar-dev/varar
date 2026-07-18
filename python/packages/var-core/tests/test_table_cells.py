@@ -3,8 +3,8 @@ Tests for parse_row_cells — ported from var-core/tests/scanner.test.ts
 (the table-cell span cases) and from table-cells.ts behaviour directly.
 """
 
-from var_core.span import utf16_slice
-from var_core.table_cells import parse_row_cells
+from varar_core.span import utf16_slice
+from varar_core.table_cells import parse_row_cells
 
 
 def test_basic_row_returns_trimmed_cells() -> None:

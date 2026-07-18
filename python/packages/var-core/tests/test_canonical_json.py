@@ -1,4 +1,4 @@
-from var_core.canonical_json import canonical_stringify
+from varar_core.canonical_json import canonical_stringify
 
 
 def test_sorts_keys_indents_and_trailing_newline():

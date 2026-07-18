@@ -1,5 +1,5 @@
 [project]
-name = "oselvar-var-core"
+name = "varar-core"
 version = "0.4.2"
 description = "Markdown-native BDD — pure functional core engine"
 requires-python = ">=3.11"
@@ -11,4 +11,4 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/var_core"]
+packages = ["src/varar_core"]

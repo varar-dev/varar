@@ -1,8 +1,8 @@
 """Tests for var.matcher — port of var-core/tests/matcher.test.ts."""
 from __future__ import annotations
 
-from var_core.matcher import ParamSpan, find_hits, resolve_hits
-from var_core.registry import Registry, add_step, create_registry
+from varar_core.matcher import ParamSpan, find_hits, resolve_hits
+from varar_core.registry import Registry, add_step, create_registry
 
 
 def _noop(*_args: object, **_kwargs: object) -> None:

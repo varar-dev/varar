@@ -1,12 +1,12 @@
 [project]
-name = "oselvar-var"
+name = "varar"
 version = "0.4.2"
-description = "Markdown-native BDD — pure Python core (port of @oselvar/var)"
+description = "Markdown-native BDD — pure Python core (port of @varar/varar)"
 requires-python = ">=3.11"
 license = "MIT"
 dependencies = [
     "cucumber-expressions==20.0.0",
-    "oselvar-var-core==0.4.2",
+    "varar-core==0.4.2",
 ]
 
 [build-system]
@@ -14,4 +14,4 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/var"]
+packages = ["src/varar"]

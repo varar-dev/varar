@@ -1,7 +1,7 @@
 """Port of typescript/packages/var-core/tests/sentences.test.ts (plus the
 astral-offset case the Java/Rust ports added)."""
 
-from var_core.sentences import Sentence, split_sentences
+from varar_core.sentences import Sentence, split_sentences
 
 
 def _texts(sentences):

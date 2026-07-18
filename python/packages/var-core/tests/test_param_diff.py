@@ -1,8 +1,8 @@
 """test_param_diff.py — port of typescript/packages/var-core/tests/param-diff.test.ts"""
 from __future__ import annotations
 
-from var_core.param_diff import compare_params
-from var_core.span import span_from_offsets
+from varar_core.param_diff import compare_params
+from varar_core.span import span_from_offsets
 
 _SOURCE = "I should have 3 cukes in my big belly"
 

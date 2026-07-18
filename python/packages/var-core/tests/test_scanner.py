@@ -8,9 +8,9 @@ from __future__ import annotations
 
 import pytest
 
-from var_core.ast import Blockquote, Fence, Paragraph, SegmentOffset
-from var_core.scanner import scan
-from var_core.span import Span
+from varar_core.ast import Blockquote, Fence, Paragraph, SegmentOffset
+from varar_core.scanner import scan
+from varar_core.span import Span
 
 
 # ── Heading tests ────────────────────────────────────────────────────────────

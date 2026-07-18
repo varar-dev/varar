@@ -2,10 +2,10 @@
 members = ["packages/*"]
 
 [tool.uv.sources]
-oselvar-var = { workspace = true }
-oselvar-var-config = { workspace = true }
-oselvar-var-core = { workspace = true }
-oselvar-var-runner = { workspace = true }
+varar = { workspace = true }
+varar-config = { workspace = true }
+varar-core = { workspace = true }
+varar-runner = { workspace = true }
 
 [dependency-groups]
 dev = [
@@ -36,13 +36,13 @@ target-version = "py311"
 # Text summary on stdout; HTML in htmlcov/; lcov in coverage.lcov for
 # editor/CI integrations. Mirrors typescript's `pnpm test:coverage`.
 [tool.coverage.run]
-source_pkgs = ["var", "var_config", "var_core", "var_pytest", "var_runner", "var_unittest"]
+source_pkgs = ["varar", "varar_config", "varar_core", "varar_pytest", "varar_runner", "varar_unittest"]
 
 [tool.coverage.report]
 show_missing = true
 # Ratchet: ~2 points under the level measured when the threshold was
 # introduced (2026-07-03: 66%). Raise as coverage grows; never lower.
-# NOTE var_pytest's own plugin modules load before pytest-cov starts
+# NOTE varar_pytest's own plugin modules load before pytest-cov starts
 # measuring, so their coverage is understated — the real level is higher.
 fail_under = 64
 

@@ -1,5 +1,5 @@
-import var
+import varar
 
 
 def test_version():
-    assert var.__version__ == "0.0.0"
+    assert varar.__version__ == "0.0.0"

@@ -3,8 +3,8 @@ from __future__ import annotations
 
 import pytest
 
-from var_core.ast import Table
-from var_core.cell_diff import (
+from varar_core.ast import Table
+from varar_core.cell_diff import (
     CellDiff,
     CellMismatchError,
     ReturnShapeError,
@@ -13,8 +13,8 @@ from var_core.cell_diff import (
     compare_table,
     is_cell_mismatch_error,
 )
-from var_core.parse import parse
-from var_core.span import Span
+from varar_core.parse import parse
+from varar_core.span import Span
 
 _span = Span(start_offset=0, end_offset=1, start_line=1, start_col=1, end_line=1, end_col=2)
 _checks: tuple[RowCheck, ...] = (

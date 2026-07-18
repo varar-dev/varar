@@ -3,13 +3,13 @@ from __future__ import annotations
 
 import pytest
 
-from var_core.cell_diff import ReturnShapeError
-from var_core.doc_string_diff import (
+from varar_core.cell_diff import ReturnShapeError
+from varar_core.doc_string_diff import (
     DocStringMismatchError,
     compare_doc_string,
     is_doc_string_mismatch_error,
 )
-from var_core.span import Span
+from varar_core.span import Span
 
 _span = Span(start_offset=0, end_offset=6, start_line=1, start_col=1, end_line=1, end_col=6)
 
@@ -36,7 +36,7 @@ def test_non_string_return_raises_return_shape_error() -> None:
 
 
 def test_doc_string_mismatch_error_carries_diff_and_is_detectable() -> None:
-    from var_core.doc_string_diff import DocStringDiff
+    from varar_core.doc_string_diff import DocStringDiff
 
     diff = DocStringDiff(span=_span, expected="hello\n", actual="bye\n")
     err = DocStringMismatchError(diff)

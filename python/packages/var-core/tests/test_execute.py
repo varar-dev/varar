@@ -5,17 +5,17 @@ from typing import Any
 
 import pytest
 
-from var_core.cell_diff import ReturnShapeError, is_cell_mismatch_error
-from var_core.doc_string_diff import is_doc_string_mismatch_error
-from var_core.execute import (
+from varar_core.cell_diff import ReturnShapeError, is_cell_mismatch_error
+from varar_core.doc_string_diff import is_doc_string_mismatch_error
+from varar_core.execute import (
     ExecutePorts,
     StepObservation,
     UnexpectedPassError,
     execute_plan,
 )
-from var_core.parse import parse
-from var_core.plan import plan
-from var_core.registry import Registry, add_step, create_registry, define_parameter_type
+from varar_core.parse import parse
+from varar_core.plan import plan
+from varar_core.registry import Registry, add_step, create_registry, define_parameter_type
 
 
 # ---------------------------------------------------------------------------

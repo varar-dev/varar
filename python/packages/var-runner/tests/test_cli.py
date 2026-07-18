@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from var_runner.cli import run_init
+from varar_runner.cli import run_init
 
 
 def _capture() -> tuple[list[str], object]:
@@ -16,7 +16,7 @@ def test_init_scaffolds_the_three_files(tmp_path: Path) -> None:
     assert (tmp_path / "var.config.json").exists()
     assert (tmp_path / "var-examples/01-hello.md").exists()
     steps = (tmp_path / "var-examples/steps/01-hello.steps.py").read_text(encoding="utf-8")
-    assert "from var import steps" in steps
+    assert "from varar import steps" in steps
     assert "@stimulus" in steps and "@sensor" in steps
     assert all(line.startswith("created ") for line in lines)
 

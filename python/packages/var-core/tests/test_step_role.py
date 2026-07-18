@@ -4,7 +4,7 @@
 observation (sensor); anything followed by other steps is driving the software
 (stimulus)."""
 
-from var_core.step_role import infer_step_role
+from varar_core.step_role import infer_step_role
 
 
 def test_nothing_after_means_sensor_expectation_last():

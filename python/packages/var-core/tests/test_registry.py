@@ -7,7 +7,7 @@ import pytest
 
 from cucumber_expressions.parameter_type_registry import ParameterTypeRegistry
 
-from var_core.registry import add_step, create_registry, define_parameter_type
+from varar_core.registry import add_step, create_registry, define_parameter_type
 
 
 def test_create_registry_returns_empty_registry_with_default_parameter_types() -> None:

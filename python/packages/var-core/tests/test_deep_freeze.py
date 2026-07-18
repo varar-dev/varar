@@ -6,7 +6,7 @@ import types
 
 import pytest
 
-from var_core.deep_freeze import deep_freeze
+from varar_core.deep_freeze import deep_freeze
 
 
 def test_deep_freeze_freezes_nested_objects_and_arrays() -> None:

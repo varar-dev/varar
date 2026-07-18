@@ -1,5 +1,5 @@
 """Smoke-test: every public symbol is importable from the top-level package."""
-from var_runner import (
+from varar_runner import (
     find_specs,
     match_spec,
     load_steps,

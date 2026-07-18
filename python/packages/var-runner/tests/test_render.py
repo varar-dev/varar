@@ -1,9 +1,9 @@
 """Tests for render_failure — pure human-readable rendering of diff errors."""
-from var_core.cell_diff import CellDiff, CellMismatchError, ReturnShapeError
-from var_core.doc_string_diff import DocStringDiff, DocStringMismatchError
-from var_core.span import Span
+from varar_core.cell_diff import CellDiff, CellMismatchError, ReturnShapeError
+from varar_core.doc_string_diff import DocStringDiff, DocStringMismatchError
+from varar_core.span import Span
 
-from var_runner.render import render_failure
+from varar_runner.render import render_failure
 
 
 def _span(line: int) -> Span:

@@ -1,4 +1,4 @@
-from var import steps
+from varar import steps
 
 param, stimulus, sensor = steps(lambda: {"greeting": "", "result": 0})
 

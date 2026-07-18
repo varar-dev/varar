@@ -1,9 +1,9 @@
 """test_plan.py — port of typescript/packages/var-core/tests/plan.test.ts."""
 from __future__ import annotations
 
-from var_core.parse import parse
-from var_core.plan import plan
-from var_core.registry import add_step, create_registry
+from varar_core.parse import parse
+from varar_core.plan import plan
+from varar_core.registry import add_step, create_registry
 
 
 def _noop(*_args: object, **_kwargs: object) -> None:
