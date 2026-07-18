@@ -212,7 +212,7 @@ on the "skip for v1" list; drift promoted it to required.)
 
 ## Author-API fork points (decide explicitly, don't copy blindly)
 
-The facade shape is **not** identical across ports — two decisions legitimately
+The facade shape is **not** identical across ports — these decisions legitimately
 fork on the target language's idioms. Record your choice in the design doc:
 
 - **Registration mechanism.** TS/Python use a **module-scope mutable
@@ -229,6 +229,27 @@ fork on the target language's idioms. Record your choice in the design doc:
   returns the whole next state). This changes the executor's merge step and the
   sensor slot contract, so decide it in Task 1 — it's the single biggest
   author-API fork.
+- **Step source location (file/line).** The registry records each step's source
+  `file`/`line`; the file's *stem* becomes the trace's `stepFile` (shared
+  cross-language, so it must be the canonical `<name>.steps` stem, not the
+  physical path). TS/Python read it automatically from the imported module
+  (`Error().stack`). A port with an **injected Registrar** (no import) should use
+  the language's native **call-site capture** rather than making authors pass
+  `file`/`line` per step: Rust marks `stimulus`/`sensor` `#[track_caller]` and
+  reads `Location::caller()` — because its conformance fixtures are real
+  `<name>.steps.rs` files reached via `#[path]`, `file_stem` of that path yields
+  the canonical stem for free (`line` is diagnostic-only — in no golden). Reach
+  for hand-passed identifiers only if the language has no call-site-location
+  facility.
+- **Handler shape (arity).** A handler is `(state, …captures) → partial|value`.
+  Don't make authors name the arity or wrap the closure if the language can infer
+  it. Rust uses an `IntoHandler<Args>` trait (the axum/bevy pattern) with one impl
+  per capture-count, so `sensor("…", |state, a| …)` infers each `Value` parameter
+  from the bare closure — while an already-built handler (async, variadic, or a
+  no-op) passes through a `Handler`-typed impl. Keep explicit fixed-arity/variadic
+  constructors in the *core* for its own tests; the closure sugar belongs in the
+  *facade*. (The 3+-capture and async forms stay explicit — a bare 2-arg closure
+  can't disambiguate `(Value,Value)` from `(Value,Vec)`.)
 
 ## Test-framework adapter pattern
 
@@ -318,6 +339,25 @@ suite:
   `<Tabs syncKey="lang">` group across `reference/*` and `how-to/*` (and the
   get-started steps tabs), sourcing correct snippets from the new port's example
   and conformance step files. The label must match `languages.json` exactly.
+- **Front-page `<Editor>` examples**: the interactive editors in
+  `typescript/packages/website/src/components/examples/*.astro`
+  (DeepThought/Library/RomanNumerals) hard-code one `<File uri="…">` tab per
+  language, imported `?raw` from the `examples/<lang>-*` project. Add a `<File>`
+  (steps, plus the logic file where the other languages have one) for the new
+  language's `.<ext>` to each editor. This is a *distinct* surface from the docs
+  `<Tabs>` above and is the one most often forgotten — but `Editor.astro` now
+  asserts at build time that every port in `languages.json` has a code tab, so a
+  missing one is a hard build error (message names the language). It's caught in
+  the PR gate because `make typescript` / the CI `test` job build the website
+  (`pnpm --filter @oselvar/website... build`); run either to surface what you owe.
+- **CodeMirror editor highlighting**: add the language's syntax highlighter to
+  `CM_LANGUAGE` in `typescript/packages/website/src/lib/cm-languages.ts` — an
+  official `@codemirror/lang-<lang>` (Lezer, like ts/java/python) if one exists,
+  else a `StreamLanguage.define(<legacy-mode>)` from `@codemirror/legacy-modes`
+  (like kotlin/ruby). `CM_LANGUAGE` is a `Record<SiteLang, …>`, so a missing port
+  is a type error; `tests/cm-languages.test.ts` also asserts every `SiteLang` has
+  a working highlighter, so it's a red test in the `pnpm check` gate (the website
+  itself isn't type-checked in CI, so that test — not tsc — is the enforcement).
 - **Tree-sitter dialect** (the LSP/editor authoring surface — a *required*
   deliverable now, not deferred): create
   `typescript/packages/var-language/src/tree-sitter-dialects/<lang>.ts`
