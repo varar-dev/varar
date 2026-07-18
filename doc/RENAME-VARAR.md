@@ -212,10 +212,10 @@ All phases done, every port's gate re-run green (807 files changed):
 ### Intentionally NOT changed
 - **GitHub org** `oselvar/varar` (varar org is squatted); **email**
   `aslak@oselvar.com`; **LICENSE** `Oselvar Ltd`; **1Password vault** `Vár`.
-- **Package directory names** (`typescript/packages/var-*`, `java/var-*`,
-  `ruby/packages/var-*`, `python/packages/var-*`) — never published; the
-  package *name* fields carry the new coordinates (Rust dirs *were* renamed to
-  `varar-*` since crate name = dir there). Optional future cleanup.
+- ~~Package directory names~~ — **also renamed** (drop the `var-` prefix:
+  `packages/core`, `packages/config`, …, facade `packages/varar`); published
+  names/coordinates are unchanged, only the on-disk dirs moved. `make check`
+  green after the move.
 - **Internal code identifiers** (`VarConfig`, `loadVarConfig`, `parseVarLock`,
   the website `var-lang`/`var-palette` localStorage keys) — not user-facing
   coordinates; left to avoid churn/risk.
