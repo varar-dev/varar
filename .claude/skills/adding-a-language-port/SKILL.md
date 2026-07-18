@@ -212,7 +212,7 @@ on the "skip for v1" list; drift promoted it to required.)
 
 ## Author-API fork points (decide explicitly, don't copy blindly)
 
-The facade shape is **not** identical across ports — two decisions legitimately
+The facade shape is **not** identical across ports — these decisions legitimately
 fork on the target language's idioms. Record your choice in the design doc:
 
 - **Registration mechanism.** TS/Python use a **module-scope mutable
@@ -229,6 +229,27 @@ fork on the target language's idioms. Record your choice in the design doc:
   returns the whole next state). This changes the executor's merge step and the
   sensor slot contract, so decide it in Task 1 — it's the single biggest
   author-API fork.
+- **Step source location (file/line).** The registry records each step's source
+  `file`/`line`; the file's *stem* becomes the trace's `stepFile` (shared
+  cross-language, so it must be the canonical `<name>.steps` stem, not the
+  physical path). TS/Python read it automatically from the imported module
+  (`Error().stack`). A port with an **injected Registrar** (no import) should use
+  the language's native **call-site capture** rather than making authors pass
+  `file`/`line` per step: Rust marks `stimulus`/`sensor` `#[track_caller]` and
+  reads `Location::caller()` — because its conformance fixtures are real
+  `<name>.steps.rs` files reached via `#[path]`, `file_stem` of that path yields
+  the canonical stem for free (`line` is diagnostic-only — in no golden). Reach
+  for hand-passed identifiers only if the language has no call-site-location
+  facility.
+- **Handler shape (arity).** A handler is `(state, …captures) → partial|value`.
+  Don't make authors name the arity or wrap the closure if the language can infer
+  it. Rust uses an `IntoHandler<Args>` trait (the axum/bevy pattern) with one impl
+  per capture-count, so `sensor("…", |state, a| …)` infers each `Value` parameter
+  from the bare closure — while an already-built handler (async, variadic, or a
+  no-op) passes through a `Handler`-typed impl. Keep explicit fixed-arity/variadic
+  constructors in the *core* for its own tests; the closure sugar belongs in the
+  *facade*. (The 3+-capture and async forms stay explicit — a bare 2-arg closure
+  can't disambiguate `(Value,Value)` from `(Value,Vec)`.)
 
 ## Test-framework adapter pattern
 
