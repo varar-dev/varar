@@ -5,8 +5,6 @@
 use std::collections::BTreeMap;
 use var::{Handler, HandlerError, Registry, Steps, Value};
 
-pub const FILE: &str = "numerals.steps.rs";
-
 fn roman(n: i64) -> Option<&'static str> {
     match n {
         1 => Some("I"),
@@ -21,8 +19,6 @@ pub fn register(r: Registry) -> Registry {
     let mut s = Steps::from_registry(r);
     s.stimulus(
         "I convert {int} to roman numerals",
-        FILE,
-        1,
         Handler::sync1(|_state, n| {
             let n = if let Value::Int(i) = n { i } else { 0 };
             let mut m = BTreeMap::new();
@@ -34,8 +30,6 @@ pub fn register(r: Registry) -> Registry {
     );
     s.sensor(
         "The result is {word}",
-        FILE,
-        2,
         Handler::sync1(|state, expected| {
             // {word} greedily captures trailing punctuation ("I." not "I"); strip
             // it, then throw on mismatch rather than returning (which would make

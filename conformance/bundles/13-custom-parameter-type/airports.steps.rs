@@ -4,8 +4,6 @@ use std::collections::BTreeMap;
 use std::rc::Rc;
 use var::{Handler, HandlerError, ParseFn, Registry, Steps, Value};
 
-pub const FILE: &str = "airports.steps.rs";
-
 pub fn register(r: Registry) -> Registry {
     let mut s = Steps::from_registry(r);
     // Custom {airport} parameter type: IATA code, lowercased by parse. The
@@ -15,8 +13,6 @@ pub fn register(r: Registry) -> Registry {
 
     s.stimulus(
         "I fly to {airport}",
-        FILE,
-        1,
         Handler::sync1(|_state, dest| {
             Ok(Some(Value::Map(BTreeMap::from([(
                 "dest".to_string(),
@@ -26,8 +22,6 @@ pub fn register(r: Registry) -> Registry {
     );
     s.sensor(
         "The destination code is {word}",
-        FILE,
-        2,
         Handler::sync1(|state, expected| {
             let expected = if let Value::String(s) = expected {
                 s

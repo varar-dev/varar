@@ -6,8 +6,6 @@
 use std::rc::Rc;
 use var::{FormatFn, Handler, ParseFn, Registry, Steps, Value};
 
-pub const FILE: &str = "money.steps.rs";
-
 pub fn register(r: Registry) -> Registry {
     let mut s = Steps::from_registry(r);
     let parse: ParseFn = Rc::new(|g: &[&str]| {
@@ -29,8 +27,6 @@ pub fn register(r: Registry) -> Registry {
     // "£2.60", proving mismatches render through `format`.
     s.sensor(
         "The late fee is {money}",
-        FILE,
-        1,
         Handler::sync1(|_state, _expected| Ok(Some(Value::Float(2.6)))),
     );
     s.into_registry()

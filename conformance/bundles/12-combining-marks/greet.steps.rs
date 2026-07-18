@@ -2,16 +2,9 @@
 
 use var::{Handler, Registry, Steps, Value};
 
-pub const FILE: &str = "greet.steps.rs";
-
 pub fn register(r: Registry) -> Registry {
     let mut s = Steps::from_registry(r);
-    s.sensor(
-        "I greet {string}",
-        FILE,
-        1,
-        Handler::sync1(|_state, _name| Ok(None)),
-    );
+    s.sensor("I greet {string}", Handler::sync1(|_state, _name| Ok(None)));
     s.into_registry()
 }
 

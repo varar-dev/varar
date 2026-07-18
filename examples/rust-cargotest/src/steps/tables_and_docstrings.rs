@@ -3,8 +3,6 @@
 use super::{as_str, vmap};
 use var::{Handler, Registry, Steps, Value};
 
-pub const FILE: &str = "tables_and_docstrings.steps";
-
 pub fn register(r: Registry) -> Registry {
     let mut s = Steps::from_registry(r);
     // Whole-table mode: the table arrives as a list of rows (header row first).
@@ -12,8 +10,6 @@ pub fn register(r: Registry) -> Registry {
     // compares every cell.
     s.sensor(
         "Uppercase each one:",
-        FILE,
-        1,
         Handler::sync1(|_state, table| {
             let rows = match &table {
                 Value::List(rows) => rows,
@@ -42,8 +38,6 @@ pub fn register(r: Registry) -> Registry {
     // return one element per slot.
     s.sensor(
         "Greet {word}:",
-        FILE,
-        10,
         Handler::sync2(|_state, name, _doc| {
             let name = as_str(&name);
             Ok(Some(Value::List(vec![
