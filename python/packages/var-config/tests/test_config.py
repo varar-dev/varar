@@ -1,6 +1,6 @@
 import pytest
 
-from var_config import VarConfig, read_var_config
+from var_config import VarConfig, parse_var_config, read_var_config
 
 
 def _write(tmp_path, body: str):
@@ -60,3 +60,17 @@ def test_falsy_wrong_type_snippets_raises(tmp_path):
     root = _write(tmp_path, '{"snippets": []}')
     with pytest.raises(ValueError, match="snippets"):
         read_var_config(root)
+
+
+def test_parse_var_config_is_pure_no_file_needed():
+    cfg = parse_var_config(
+        '{"docs": {"include": ["a/**/*.md"]}, "steps": ["**/*_steps.py"]}',
+        "<inline>",
+    )
+    assert cfg.docs_include == ("a/**/*.md",)
+    assert cfg.steps == ("**/*_steps.py",)
+
+
+def test_parse_var_config_labels_errors_with_source():
+    with pytest.raises(ValueError, match=r"<inline>: invalid JSON"):
+        parse_var_config("{ nope", "<inline>")
