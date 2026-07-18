@@ -1,4 +1,4 @@
-package com.oselvar.var.core;
+package dev.varar.core;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;

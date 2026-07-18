@@ -1,8 +1,8 @@
-package com.oselvar.var.runner;
+package dev.varar.runner;
 
-import com.oselvar.var.State;
-import com.oselvar.var.StateBinder;
-import com.oselvar.var.StepDefinitions;
+import dev.varar.State;
+import dev.varar.StateBinder;
+import dev.varar.StepDefinitions;
 
 /**
  * Fixture for StepLoader's static-factory path: does NOT implement

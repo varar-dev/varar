@@ -1,7 +1,7 @@
-package com.oselvar.var.junit;
+package dev.varar.junit;
 
-import com.oselvar.var.config.VarConfig;
-import com.oselvar.var.runner.StepLoader;
+import dev.varar.config.VarConfig;
+import dev.varar.runner.StepLoader;
 import org.junit.platform.engine.EngineDiscoveryRequest;
 import org.junit.platform.engine.ExecutionRequest;
 import org.junit.platform.engine.TestDescriptor;
@@ -22,7 +22,7 @@ import org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine;
  * cached on the returned {@link VarEngineDescriptor} — then resolves the request's selectors
  * ({@link DiscoverySelectorResolver}) into one {@link VarFileDescriptor} container per {@code .md}
  * spec matching {@code docsInclude}/{@code docsExclude} ({@link ConfigBridge}), each with one
- * {@link VarExampleDescriptor} leaf per {@link com.oselvar.var.core.Plan.PlannedExample} planned
+ * {@link VarExampleDescriptor} leaf per {@link dev.varar.core.Plan.PlannedExample} planned
  * against that shared, merged registry. It does not yet execute anything (Task 11).
  */
 public final class VarTestEngine extends HierarchicalTestEngine<VarEngineExecutionContext> {

@@ -1,4 +1,4 @@
-package com.oselvar.var.config;
+package dev.varar.config;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

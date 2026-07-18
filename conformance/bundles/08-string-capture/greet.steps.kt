@@ -2,10 +2,10 @@
 
 // Kotlin sibling of greet.steps.ts / greet.steps.py / GreetSteps.java (bundle
 // 08-string-capture).
-package com.oselvar.varkt.conformance.bundle08
+package dev.varar.kotlin.conformance.bundle08
 
-import com.oselvar.varkt.stimulus
-import com.oselvar.varkt.steps
+import dev.varar.kotlin.stimulus
+import dev.varar.kotlin.steps
 
 class Ctx
 

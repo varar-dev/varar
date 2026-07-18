@@ -1,4 +1,4 @@
-package com.oselvar.var.core;
+package dev.varar.core;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -26,7 +26,7 @@ import java.util.function.Function;
  * otherwise silently possible and needs to be defended against at runtime.
  *
  * <p><b>Java needs no equivalent and none is ported here.</b> Task 11 committed to a
- * full-replacement {@code record}-based state model ({@code com.oselvar.var.State}):
+ * full-replacement {@code record}-based state model ({@code dev.varar.State}):
  * authors declare {@code record Ctx(...) implements State}, and every {@code
  * stimulus} handler returns a brand new, complete {@code Ctx} value —
  * there is no partial merge and no in-place mutation path to guard against. A Java
@@ -87,7 +87,7 @@ import java.util.function.Function;
  * Registry.StepRegistration#handler()} is plain {@link Object}. This executor invokes it
  * purely via reflection, matched by arity (state + captured args + at most one trailing
  * table/doc-string argument) against the handler's single non-{@code Object} method —
- * works for any functional interface shape, not just the ones {@code com.oselvar.var}
+ * works for any functional interface shape, not just the ones {@code dev.varar}
  * happens to define today.
  *
  * <h2>Stack injection for {@link Failure#toFailure}</h2>
@@ -418,7 +418,7 @@ public final class Execute {
      * Finds {@code handlerClass}'s single abstract method with {@code paramCount}
      * parameters — the functional interface's SAM, whatever it's called and whichever
      * interface it belongs to (see class javadoc: {@code var-core} never imports {@code
-     * com.oselvar.var}'s {@code Context0/1/2}/{@code Sensor0/1/2}).
+     * dev.varar}'s {@code Context0/1/2}/{@code Sensor0/1/2}).
      */
     private static Method samMethod(Class<?> handlerClass, int paramCount) {
         Method candidate = null;

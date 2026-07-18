@@ -1,4 +1,4 @@
-package com.oselvar.var.core;
+package dev.varar.core;
 
 /**
  * The role a step definition plays, mirroring {@code concepts/sensors-and-actuators.md}
@@ -14,7 +14,7 @@ package com.oselvar.var.core;
  * <p>The concepts arrange/act (given/when) remain useful narration in a document, but
  * they share one mechanism: a stimulus evolves state, a sensor observes it.
  *
- * <p>Hoisted here from {@code com.oselvar.var} (Task 11's provisional home) per the
+ * <p>Hoisted here from {@code dev.varar} (Task 11's provisional home) per the
  * design doc's module map: step-role/registry logic belongs in {@code var-core} (the
  * engine), alongside {@link StepRole} and {@link Registry}.
  */

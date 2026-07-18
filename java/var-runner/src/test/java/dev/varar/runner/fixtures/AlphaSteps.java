@@ -1,8 +1,8 @@
-package com.oselvar.var.runner.fixtures;
+package dev.varar.runner.fixtures;
 
-import com.oselvar.var.Registrar;
-import com.oselvar.var.State;
-import com.oselvar.var.StepDefinitions;
+import dev.varar.Registrar;
+import dev.varar.State;
+import dev.varar.StepDefinitions;
 
 /**
  * A standalone (top-level, own-file) {@link StepDefinitions} fixture for {@code
@@ -13,7 +13,7 @@ import com.oselvar.var.StepDefinitions;
  * — a nested test class would collapse both to the enclosing test file's name (see
  * {@code RegistryRegistrarTest}, whose nested {@code RomanNumeralSteps} fixture reports
  * {@code "RegistryRegistrarTest.java"}), which would defeat the point of this test:
- * proving {@link com.oselvar.var.runner.StepLoader}'s per-file context-key resolution
+ * proving {@link dev.varar.runner.StepLoader}'s per-file context-key resolution
  * doesn't cross-wire two different files' state.
  */
 public final class AlphaSteps implements StepDefinitions {

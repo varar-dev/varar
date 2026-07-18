@@ -1,9 +1,9 @@
-package com.oselvar.var.core;
+package dev.varar.core;
 
-import com.oselvar.var.core.Ast.Block;
-import com.oselvar.var.core.Ast.Row;
-import com.oselvar.var.core.Ast.SegmentOffset;
-import com.oselvar.var.core.TableCells.RowCells;
+import dev.varar.core.Ast.Block;
+import dev.varar.core.Ast.Row;
+import dev.varar.core.Ast.SegmentOffset;
+import dev.varar.core.TableCells.RowCells;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;

@@ -1,8 +1,8 @@
-package com.oselvar.var.junit.fixtures;
+package dev.varar.junit.fixtures;
 
-import com.oselvar.var.Registrar;
-import com.oselvar.var.State;
-import com.oselvar.var.StepDefinitions;
+import dev.varar.Registrar;
+import dev.varar.State;
+import dev.varar.StepDefinitions;
 
 /**
  * A {@code state} fixture whose {@code action} step is ADDITIVE (unlike {@link

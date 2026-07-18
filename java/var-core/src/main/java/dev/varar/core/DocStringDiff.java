@@ -1,4 +1,4 @@
-package com.oselvar.var.core;
+package dev.varar.core;
 
 /**
  * Doc-string comparison — port of {@code var-core/src/doc-string-diff.ts}.

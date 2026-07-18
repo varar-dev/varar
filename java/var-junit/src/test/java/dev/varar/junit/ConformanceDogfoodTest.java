@@ -1,4 +1,4 @@
-package com.oselvar.var.junit;
+package dev.varar.junit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -97,41 +97,36 @@ class ConformanceDogfoodTest {
     static Stream<Named<BundleCase>> bundleCases() {
         return Stream.of(
                         // 01-roman-numerals/golden/trace.json: one example, outcome "pass".
-                        new BundleCase("01-roman-numerals", "com.oselvar.var.conformance.bundle01.NumeralsSteps", 1, 0),
+                        new BundleCase("01-roman-numerals", "dev.varar.conformance.bundle01.NumeralsSteps", 1, 0),
                         // 02-context-isolation/golden/trace.json: two examples, both "pass".
-                        new BundleCase(
-                                "02-context-isolation", "com.oselvar.var.conformance.bundle02.CounterSteps", 2, 0),
+                        new BundleCase("02-context-isolation", "dev.varar.conformance.bundle02.CounterSteps", 2, 0),
                         // 03-expected-failure/golden/trace.json: one example, outcome "pass" --
                         // an error fence whose expected failure IS satisfied, so the core
                         // inverts the thrown exception into an overall pass (same semantics
                         // Python's Task 9 proved for var-pytest).
-                        new BundleCase(
-                                "03-expected-failure", "com.oselvar.var.conformance.bundle03.DivisionSteps", 1, 0),
+                        new BundleCase("03-expected-failure", "dev.varar.conformance.bundle03.DivisionSteps", 1, 0),
                         // 04-tables-and-docstrings/golden/trace.json: one example, "pass".
-                        new BundleCase(
-                                "04-tables-and-docstrings", "com.oselvar.var.conformance.bundle04.EchoSteps", 1, 0),
+                        new BundleCase("04-tables-and-docstrings", "dev.varar.conformance.bundle04.EchoSteps", 1, 0),
                         // 05-ambiguous-match/golden/trace.json: one example, outcome "pass" with
                         // zero steps -- the plan stage drops the ambiguous sentence's binding
                         // (an "ambiguous-match" diagnostic, golden/plan.json) but still produces
                         // one example with no steps to run, which vacuously passes.
-                        new BundleCase("05-ambiguous-match", "com.oselvar.var.conformance.bundle05.CukesSteps", 1, 0),
+                        new BundleCase("05-ambiguous-match", "dev.varar.conformance.bundle05.CukesSteps", 1, 0),
                         // 06-doc-string-mismatch/golden/trace.json: one example, outcome "fail"
                         // -- a genuine doc-string mismatch, no error fence involved.
-                        new BundleCase(
-                                "06-doc-string-mismatch", "com.oselvar.var.conformance.bundle06.EchoSteps", 0, 1),
+                        new BundleCase("06-doc-string-mismatch", "dev.varar.conformance.bundle06.EchoSteps", 0, 1),
                         // 07-row-check-mismatch/golden/trace.json: one example, outcome "fail"
                         // -- a genuine cell mismatch (score 99 != 10), no error fence involved.
-                        new BundleCase(
-                                "07-row-check-mismatch", "com.oselvar.var.conformance.bundle07.ReportSteps", 0, 1),
+                        new BundleCase("07-row-check-mismatch", "dev.varar.conformance.bundle07.ReportSteps", 0, 1),
                         // 08-string-capture/golden/trace.json: one example, "pass".
-                        new BundleCase("08-string-capture", "com.oselvar.var.conformance.bundle08.GreetSteps", 1, 0),
+                        new BundleCase("08-string-capture", "dev.varar.conformance.bundle08.GreetSteps", 1, 0),
                         // 09-expected-message-mismatch/golden/trace.json: one example, outcome
                         // "fail" -- an error fence IS present (expectedOutcome "fail" in
                         // golden/plan.json), but its declared message text doesn't match the
                         // thrown exception's actual message, so the mismatch is a genuine
                         // failure, not inverted to a pass.
                         new BundleCase(
-                                "09-expected-message-mismatch", "com.oselvar.var.conformance.bundle09.BoomSteps", 0, 1),
+                                "09-expected-message-mismatch", "dev.varar.conformance.bundle09.BoomSteps", 0, 1),
                         // 10-error-fence-without-step/golden/trace.json: zero examples -- the
                         // sole paragraph matches no step, so the "error" fence has nothing to
                         // run against ("error-fence-without-step" diagnostic, golden/plan.json)
@@ -140,23 +135,22 @@ class ConformanceDogfoodTest {
                         // DiscoverySelectorResolverTest's javadoc), so this bundle reports zero
                         // test events, not zero-of-something.
                         new BundleCase(
-                                "10-error-fence-without-step", "com.oselvar.var.conformance.bundle10.CukesSteps", 0, 0),
+                                "10-error-fence-without-step", "dev.varar.conformance.bundle10.CukesSteps", 0, 0),
                         // 11-emoji-offsets/golden/trace.json: one example, "pass".
-                        new BundleCase("11-emoji-offsets", "com.oselvar.var.conformance.bundle11.GreetSteps", 1, 0),
+                        new BundleCase("11-emoji-offsets", "dev.varar.conformance.bundle11.GreetSteps", 1, 0),
                         // 12-combining-marks/golden/trace.json: one example, "pass".
-                        new BundleCase("12-combining-marks", "com.oselvar.var.conformance.bundle12.GreetSteps", 1, 0),
+                        new BundleCase("12-combining-marks", "dev.varar.conformance.bundle12.GreetSteps", 1, 0),
                         // 13-custom-parameter-type/golden/trace.json: one example, "pass".
                         new BundleCase(
-                                "13-custom-parameter-type", "com.oselvar.var.conformance.bundle13.AirportsSteps", 1, 0),
+                                "13-custom-parameter-type", "dev.varar.conformance.bundle13.AirportsSteps", 1, 0),
                         // 14-stateless-steps/golden/trace.json: one example, "pass" -- the
                         // step file declares no state factory (factory-less steps()).
-                        new BundleCase("14-stateless-steps", "com.oselvar.var.conformance.bundle14.SquaresSteps", 1, 0),
+                        new BundleCase("14-stateless-steps", "dev.varar.conformance.bundle14.SquaresSteps", 1, 0),
                         // 15-custom-parameter-format/golden/trace.json: one example, outcome
                         // "fail" -- the sensor deliberately returns the wrong Money, so the
                         // cell mismatch (rendered "£2.60" via the type's format) is a genuine
                         // failure, no error fence involved.
-                        new BundleCase(
-                                "15-custom-parameter-format", "com.oselvar.var.conformance.bundle15.MoneySteps", 0, 1))
+                        new BundleCase("15-custom-parameter-format", "dev.varar.conformance.bundle15.MoneySteps", 0, 1))
                 .map(bundleCase -> Named.of(bundleCase.bundleName(), bundleCase));
     }
 

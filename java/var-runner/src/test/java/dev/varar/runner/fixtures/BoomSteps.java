@@ -1,8 +1,8 @@
-package com.oselvar.var.runner.fixtures;
+package dev.varar.runner.fixtures;
 
-import com.oselvar.var.Registrar;
-import com.oselvar.var.State;
-import com.oselvar.var.StepDefinitions;
+import dev.varar.Registrar;
+import dev.varar.State;
+import dev.varar.StepDefinitions;
 
 /**
  * A standalone (top-level, own-file) {@link StepDefinitions} fixture for {@code

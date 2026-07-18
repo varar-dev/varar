@@ -1,9 +1,9 @@
-package com.oselvar.var.conformance.bundle02;
+package dev.varar.conformance.bundle02;
 
-import com.oselvar.var.Registrar;
-import com.oselvar.var.State;
-import com.oselvar.var.StateBinder;
-import com.oselvar.var.StepDefinitions;
+import dev.varar.Registrar;
+import dev.varar.State;
+import dev.varar.StateBinder;
+import dev.varar.StepDefinitions;
 
 /** Java sibling of {@code counter.steps.ts} / {@code counter.steps.py} (bundle {@code 02-context-isolation}). */
 public final class CounterSteps implements StepDefinitions {

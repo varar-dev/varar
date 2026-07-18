@@ -1,4 +1,4 @@
-package com.oselvar.var;
+package dev.varar;
 
 import java.util.function.Function;
 import java.util.regex.Pattern;

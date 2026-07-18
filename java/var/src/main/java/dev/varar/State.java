@@ -1,4 +1,4 @@
-package com.oselvar.var;
+package dev.varar;
 
 /**
  * Marker for a step-definition class's evolving context state.

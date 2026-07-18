@@ -1,4 +1,4 @@
-package com.oselvar.var.runner;
+package dev.varar.runner;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

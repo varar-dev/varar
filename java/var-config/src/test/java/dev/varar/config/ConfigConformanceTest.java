@@ -1,10 +1,10 @@
-package com.oselvar.var.config;
+package dev.varar.config;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.oselvar.var.core.CanonicalJson;
+import dev.varar.core.CanonicalJson;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;

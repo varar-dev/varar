@@ -1,10 +1,10 @@
 @file:JvmName("SmokeSteps")
 
-package com.oselvar.varkt.kotest.fixtures
+package dev.varar.kotest.fixtures
 
-import com.oselvar.varkt.sensor
-import com.oselvar.varkt.steps
-import com.oselvar.varkt.stimulus
+import dev.varar.kotlin.sensor
+import dev.varar.kotlin.steps
+import dev.varar.kotlin.stimulus
 
 data class SmokeCtx(val cukes: Int = 0)
 

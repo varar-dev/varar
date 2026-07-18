@@ -1,4 +1,4 @@
-package com.oselvar.var.runner;
+package dev.varar.runner;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -15,7 +15,7 @@ import java.util.stream.Stream;
  * <p>{@link #matchSpec} and {@link #findSpecs} share a single glob-to-regex compiler
  * ({@link #globToRegex}) so the two never independently reimplement (and silently drift from
  * each other on) the same matching rules — same discipline as {@link
- * com.oselvar.var.core.CanonicalJson CanonicalJson}'s
+ * dev.varar.core.CanonicalJson CanonicalJson}'s
  * hand-rolled-not-library decision: Java has no {@code Path.full_match}
  * (Python 3.13's {@code pathlib.Path.full_match}/PEP 428) and {@code
  * FileSystem.getPathMatcher("glob:...")}'s {@code **} semantics differ from this project's

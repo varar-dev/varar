@@ -1,4 +1,4 @@
-package com.oselvar.var.core;
+package dev.varar.core;
 
 import io.cucumber.cucumberexpressions.Argument;
 import java.util.ArrayList;

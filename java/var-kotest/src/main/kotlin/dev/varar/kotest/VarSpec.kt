@@ -1,12 +1,12 @@
-package com.oselvar.varkt.kotest
+package dev.varar.kotest
 
-import com.oselvar.`var`.config.VarConfig
-import com.oselvar.`var`.core.Drift
-import com.oselvar.`var`.runner.BaselineStores
-import com.oselvar.`var`.runner.Discovery
-import com.oselvar.`var`.runner.Render
-import com.oselvar.`var`.runner.Run
-import com.oselvar.`var`.runner.StepLoader
+import dev.varar.config.VarConfig
+import dev.varar.core.Drift
+import dev.varar.runner.BaselineStores
+import dev.varar.runner.Discovery
+import dev.varar.runner.Render
+import dev.varar.runner.Run
+import dev.varar.runner.StepLoader
 import io.kotest.core.spec.style.FunSpec
 import java.nio.file.Files
 import java.nio.file.Path

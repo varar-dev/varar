@@ -1,16 +1,16 @@
-package com.oselvar.var.runner;
+package dev.varar.runner;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import com.oselvar.var.core.CellDiff;
-import com.oselvar.var.core.Diagnostics;
-import com.oselvar.var.core.Plan;
-import com.oselvar.var.core.Registry;
-import com.oselvar.var.core.StepKind;
-import com.oselvar.var.runner.StepLoader.LoadedSteps;
-import com.oselvar.var.runner.fixtures.WidgetSteps;
+import dev.varar.core.CellDiff;
+import dev.varar.core.Diagnostics;
+import dev.varar.core.Plan;
+import dev.varar.core.Registry;
+import dev.varar.core.StepKind;
+import dev.varar.runner.StepLoader.LoadedSteps;
+import dev.varar.runner.fixtures.WidgetSteps;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

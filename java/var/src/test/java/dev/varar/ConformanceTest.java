@@ -1,14 +1,14 @@
-package com.oselvar.var;
+package dev.varar;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.oselvar.var.core.Ast;
-import com.oselvar.var.core.CanonicalJson;
-import com.oselvar.var.core.Conformance;
-import com.oselvar.var.core.Parse;
-import com.oselvar.var.core.Plan;
-import com.oselvar.var.core.Registry;
+import dev.varar.core.Ast;
+import dev.varar.core.CanonicalJson;
+import dev.varar.core.Conformance;
+import dev.varar.core.Parse;
+import dev.varar.core.Plan;
+import dev.varar.core.Registry;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -46,7 +46,7 @@ import org.junit.jupiter.params.provider.MethodSource;
  * build-helper-maven-plugin} config): every bundle directory under {@code
  * conformance/bundles/} (e.g. {@code 01-roman-numerals}) is not a valid Java package
  * segment (leading digit, hyphen), so each bundle's fixture file declares its own
- * valid package instead — {@code com.oselvar.var.conformance.bundleNN} (zero-padded
+ * valid package instead — {@code dev.varar.conformance.bundleNN} (zero-padded
  * two-digit bundle number) — while physically living alongside the bundle's existing
  * {@code *.steps.ts}/{@code *.steps.py}. Maven's compiler plugin does not require a
  * source file's directory to match its {@code package} declaration, only that the
@@ -88,21 +88,21 @@ class ConformanceTest {
      */
     private static StepDefinitions loadFixture(String bundleName) {
         return switch (bundleName) {
-            case "01-roman-numerals" -> new com.oselvar.var.conformance.bundle01.NumeralsSteps();
-            case "02-context-isolation" -> new com.oselvar.var.conformance.bundle02.CounterSteps();
-            case "03-expected-failure" -> new com.oselvar.var.conformance.bundle03.DivisionSteps();
-            case "04-tables-and-docstrings" -> new com.oselvar.var.conformance.bundle04.EchoSteps();
-            case "05-ambiguous-match" -> new com.oselvar.var.conformance.bundle05.CukesSteps();
-            case "06-doc-string-mismatch" -> new com.oselvar.var.conformance.bundle06.EchoSteps();
-            case "07-row-check-mismatch" -> new com.oselvar.var.conformance.bundle07.ReportSteps();
-            case "08-string-capture" -> new com.oselvar.var.conformance.bundle08.GreetSteps();
-            case "09-expected-message-mismatch" -> new com.oselvar.var.conformance.bundle09.BoomSteps();
-            case "10-error-fence-without-step" -> new com.oselvar.var.conformance.bundle10.CukesSteps();
-            case "11-emoji-offsets" -> new com.oselvar.var.conformance.bundle11.GreetSteps();
-            case "12-combining-marks" -> new com.oselvar.var.conformance.bundle12.GreetSteps();
-            case "13-custom-parameter-type" -> new com.oselvar.var.conformance.bundle13.AirportsSteps();
-            case "14-stateless-steps" -> new com.oselvar.var.conformance.bundle14.SquaresSteps();
-            case "15-custom-parameter-format" -> new com.oselvar.var.conformance.bundle15.MoneySteps();
+            case "01-roman-numerals" -> new dev.varar.conformance.bundle01.NumeralsSteps();
+            case "02-context-isolation" -> new dev.varar.conformance.bundle02.CounterSteps();
+            case "03-expected-failure" -> new dev.varar.conformance.bundle03.DivisionSteps();
+            case "04-tables-and-docstrings" -> new dev.varar.conformance.bundle04.EchoSteps();
+            case "05-ambiguous-match" -> new dev.varar.conformance.bundle05.CukesSteps();
+            case "06-doc-string-mismatch" -> new dev.varar.conformance.bundle06.EchoSteps();
+            case "07-row-check-mismatch" -> new dev.varar.conformance.bundle07.ReportSteps();
+            case "08-string-capture" -> new dev.varar.conformance.bundle08.GreetSteps();
+            case "09-expected-message-mismatch" -> new dev.varar.conformance.bundle09.BoomSteps();
+            case "10-error-fence-without-step" -> new dev.varar.conformance.bundle10.CukesSteps();
+            case "11-emoji-offsets" -> new dev.varar.conformance.bundle11.GreetSteps();
+            case "12-combining-marks" -> new dev.varar.conformance.bundle12.GreetSteps();
+            case "13-custom-parameter-type" -> new dev.varar.conformance.bundle13.AirportsSteps();
+            case "14-stateless-steps" -> new dev.varar.conformance.bundle14.SquaresSteps();
+            case "15-custom-parameter-format" -> new dev.varar.conformance.bundle15.MoneySteps();
             default -> throw new IllegalStateException("No Java step fixture registered for bundle " + bundleName);
         };
     }

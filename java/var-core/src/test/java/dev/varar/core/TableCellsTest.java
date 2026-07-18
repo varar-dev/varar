@@ -1,9 +1,9 @@
-package com.oselvar.var.core;
+package dev.varar.core;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.oselvar.var.core.TableCells.RowCells;
+import dev.varar.core.TableCells.RowCells;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

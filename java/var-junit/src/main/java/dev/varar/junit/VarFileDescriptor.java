@@ -1,9 +1,9 @@
-package com.oselvar.var.junit;
+package dev.varar.junit;
 
-import com.oselvar.var.core.Diagnostics;
-import com.oselvar.var.core.Plan;
-import com.oselvar.var.runner.Run;
-import com.oselvar.var.runner.StepLoader;
+import dev.varar.core.Diagnostics;
+import dev.varar.core.Plan;
+import dev.varar.runner.Run;
+import dev.varar.runner.StepLoader;
 import java.util.List;
 import java.util.Map;
 import org.junit.platform.engine.TestSource;

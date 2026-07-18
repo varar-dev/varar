@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <!-- A standalone consumer sample: deliberately NOT a module of the var-parent
-       build. It depends only on released com.oselvar artifacts from Maven
+       build. It depends only on released dev.varar artifacts from Maven
        Central, exactly like a user's own project would. -->
   <groupId>com.example</groupId>
   <artifactId>var-examples-java-junit-maven</artifactId>
@@ -23,8 +23,8 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.oselvar</groupId>
-      <artifactId>var-junit</artifactId>
+      <groupId>dev.varar</groupId>
+      <artifactId>junit</artifactId>
       <version>${var.version}</version>
       <scope>test</scope>
     </dependency>

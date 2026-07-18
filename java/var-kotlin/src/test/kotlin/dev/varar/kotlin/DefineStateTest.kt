@@ -1,8 +1,8 @@
-package com.oselvar.varkt
+package dev.varar.kotlin
 
-import com.oselvar.`var`.RegistryRegistrar
-import com.oselvar.`var`.StepDefinitions
-import com.oselvar.`var`.core.StepKind
+import dev.varar.RegistryRegistrar
+import dev.varar.StepDefinitions
+import dev.varar.core.StepKind
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
 import org.junit.jupiter.api.Assertions.assertTrue

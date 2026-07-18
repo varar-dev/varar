@@ -1,7 +1,7 @@
 # Vár sample: Kotlin + Kotest + Gradle
 
 A small, standalone sample project that runs Markdown specs as tests with
-[Vár](https://var.oselvar.com), using the Kotlin DSL (`var-kotlin`) and the
+[Vár](https://varar.dev), using the Kotlin DSL (`var-kotlin`) and the
 Kotest adapter (`var-kotest`). Copy it as the starting point for your own
 project.
 

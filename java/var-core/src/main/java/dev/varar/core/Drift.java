@@ -1,4 +1,4 @@
-package com.oselvar.var.core;
+package dev.varar.core;
 
 import java.util.ArrayList;
 import java.util.Collections;

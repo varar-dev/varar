@@ -4,10 +4,10 @@
 // 10-error-fence-without-step): the example's prose matches no step, so the
 // error fence has nothing to run — a plan-stage diagnostic; this stage only
 // needs the one step registered.
-package com.oselvar.varkt.conformance.bundle10
+package dev.varar.kotlin.conformance.bundle10
 
-import com.oselvar.varkt.stimulus
-import com.oselvar.varkt.steps
+import dev.varar.kotlin.stimulus
+import dev.varar.kotlin.steps
 
 class Ctx
 

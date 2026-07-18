@@ -13,7 +13,7 @@ repositories {
 }
 
 dependencies {
-    testImplementation("com.oselvar:var-junit:$varVersion")
+    testImplementation("dev.varar:junit:$varVersion")
     testImplementation(platform("org.junit:junit-bom:6.1.1"))
     // Gradle only discovers class-based tests, so the sample uses a JUnit
     // @Suite (see RunVarSpecsTest) to hand the spec corpus to the "var" engine.

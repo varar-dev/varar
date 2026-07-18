@@ -1,4 +1,4 @@
-package com.oselvar.var.junit;
+package dev.varar.junit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClasspathResource;
@@ -6,8 +6,8 @@ import static org.junit.platform.testkit.engine.EventConditions.container;
 import static org.junit.platform.testkit.engine.EventConditions.event;
 import static org.junit.platform.testkit.engine.EventConditions.reportEntry;
 
-import com.oselvar.var.junit.fixtures.AmbiguousSteps;
-import com.oselvar.var.junit.fixtures.CounterSteps;
+import dev.varar.junit.fixtures.AmbiguousSteps;
+import dev.varar.junit.fixtures.CounterSteps;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;

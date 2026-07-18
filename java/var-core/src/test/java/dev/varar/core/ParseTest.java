@@ -1,8 +1,8 @@
-package com.oselvar.var.core;
+package dev.varar.core;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.oselvar.var.core.Ast.VarDoc;
+import dev.varar.core.Ast.VarDoc;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

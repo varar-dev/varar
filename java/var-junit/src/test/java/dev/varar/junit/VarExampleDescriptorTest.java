@@ -1,4 +1,4 @@
-package com.oselvar.var.junit;
+package dev.varar.junit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
@@ -8,7 +8,7 @@ import static org.junit.platform.engine.discovery.DiscoverySelectors.selectClass
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectFile;
 import static org.junit.platform.engine.discovery.DiscoverySelectors.selectUniqueId;
 
-import com.oselvar.var.junit.fixtures.WidgetSteps;
+import dev.varar.junit.fixtures.WidgetSteps;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;

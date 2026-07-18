@@ -1,7 +1,7 @@
 # Vár sample: Java + JUnit + Maven
 
 A small, standalone sample project that runs Markdown specs as tests with
-[Vár](https://var.oselvar.com), using the Java author API and the JUnit
+[Vár](https://varar.dev), using the Java author API and the JUnit
 Platform engine (`var-junit`). Copy it as the starting point for your own
 project.
 

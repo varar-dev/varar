@@ -1,14 +1,14 @@
-package com.oselvar.var.runner.fixtures;
+package dev.varar.runner.fixtures;
 
-import com.oselvar.var.Registrar;
-import com.oselvar.var.State;
-import com.oselvar.var.StepDefinitions;
+import dev.varar.Registrar;
+import dev.varar.State;
+import dev.varar.StepDefinitions;
 
 /**
  * See {@link AlphaSteps}' javadoc — this fixture's role is to be a genuinely separate
  * step-definition file (own top-level class, own {@code .java} file) with its own
  * {@link State} type and its own {@code steps} call, so {@code StepLoaderTest}
- * can prove {@link com.oselvar.var.runner.StepLoader} doesn't cross-wire this file's
+ * can prove {@link dev.varar.runner.StepLoader} doesn't cross-wire this file's
  * state factory with {@link AlphaSteps}'.
  */
 public final class BetaSteps implements StepDefinitions {

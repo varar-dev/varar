@@ -1,4 +1,4 @@
-package com.oselvar.var;
+package dev.varar;
 
 /**
  * Test double for a registration-forwarding layer (what var-kotlin's StepsScope

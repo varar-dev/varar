@@ -1,8 +1,8 @@
-package com.oselvar.var;
+package dev.varar;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.oselvar.var.core.Registry;
+import dev.varar.core.Registry;
 import org.junit.jupiter.api.Test;
 
 class RegistrarGlueTest {

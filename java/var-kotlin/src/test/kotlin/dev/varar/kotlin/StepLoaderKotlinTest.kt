@@ -1,6 +1,6 @@
-package com.oselvar.varkt
+package dev.varar.kotlin
 
-import com.oselvar.`var`.runner.StepLoader
+import dev.varar.runner.StepLoader
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -12,7 +12,7 @@ class StepLoaderKotlinTest {
     fun `loads a top-level val steps via the file facade class`() {
         val loaded =
             StepLoader.loadSteps(
-                listOf("com.oselvar.varkt.fixtures.CukeSteps"),
+                listOf("dev.varar.kotlin.fixtures.CukeSteps"),
                 javaClass.classLoader,
             )
 

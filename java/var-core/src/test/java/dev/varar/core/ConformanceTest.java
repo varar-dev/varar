@@ -1,4 +1,4 @@
-package com.oselvar.var.core;
+package dev.varar.core;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -29,7 +29,7 @@ import org.junit.jupiter.params.provider.MethodSource;
  * only exercises var-doc; it also carries unit-level (non-golden) coverage of {@link
  * Conformance#toRegistryArtifact}/{@link Conformance#parameterTypeNames}, ported from
  * {@code conformance.test.ts}'s equivalent unit tests — the registry stage's own
- * golden-driven gate lives in {@code com.oselvar.var.ConformanceTest} (the {@code var}
+ * golden-driven gate lives in {@code dev.varar.ConformanceTest} (the {@code var}
  * module), since it needs a real Java step-definition fixture per bundle, authored against
  * the {@code var} module's {@code Registrar}/{@code StepDefinitions} API.
  *

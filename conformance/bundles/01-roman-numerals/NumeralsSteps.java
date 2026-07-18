@@ -1,14 +1,14 @@
-package com.oselvar.var.conformance.bundle01;
+package dev.varar.conformance.bundle01;
 
-import com.oselvar.var.Registrar;
-import com.oselvar.var.State;
-import com.oselvar.var.StateBinder;
-import com.oselvar.var.StepDefinitions;
+import dev.varar.Registrar;
+import dev.varar.State;
+import dev.varar.StateBinder;
+import dev.varar.StepDefinitions;
 import java.util.Map;
 
 /**
  * Java sibling of {@code numerals.steps.ts} / {@code numerals.steps.py} (bundle
- * {@code 01-roman-numerals}). See {@code java/var/src/test/java/com/oselvar/var/
+ * {@code 01-roman-numerals}). See {@code java/var/src/test/java/dev/varar/
  * AuthorApiTest.java}'s {@code RomanNumeralSteps} for the hand-authored prototype this
  * fixture is adapted from — this is the real, conformance-harness-loaded copy.
  *

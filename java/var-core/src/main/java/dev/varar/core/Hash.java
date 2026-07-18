@@ -1,4 +1,4 @@
-package com.oselvar.var.core;
+package dev.varar.core;
 
 /**
  * FNV-1a (32-bit) change-detector over UTF-16 code units. Port of {@code

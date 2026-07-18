@@ -1,6 +1,6 @@
-package com.oselvar.var.junit;
+package dev.varar.junit;
 
-import com.oselvar.var.runner.StepLoader;
+import dev.varar.runner.StepLoader;
 import java.util.function.Consumer;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.EngineDescriptor;

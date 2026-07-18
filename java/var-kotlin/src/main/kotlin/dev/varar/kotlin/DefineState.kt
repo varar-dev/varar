@@ -5,12 +5,12 @@
 // call site, exactly as the @RegistrarGlue on StepsScope does for the members.
 @file:RegistrarGlue
 
-package com.oselvar.varkt
+package dev.varar.kotlin
 
-import com.oselvar.`var`.RegistrarGlue
-import com.oselvar.`var`.State
-import com.oselvar.`var`.StateBinder
-import com.oselvar.`var`.StepDefinitions
+import dev.varar.RegistrarGlue
+import dev.varar.State
+import dev.varar.StateBinder
+import dev.varar.StepDefinitions
 import java.util.function.Function
 import java.util.function.Supplier
 import kotlinx.coroutines.runBlocking

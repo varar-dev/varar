@@ -1,6 +1,6 @@
-package com.oselvar.var.runner;
+package dev.varar.runner;
 
-import com.oselvar.var.core.Drift;
+import dev.varar.core.Drift;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;

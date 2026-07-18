@@ -1,9 +1,9 @@
-package com.oselvar.var.runner;
+package dev.varar.runner;
 
-import com.oselvar.var.RegistryRegistrar;
-import com.oselvar.var.State;
-import com.oselvar.var.StepDefinitions;
-import com.oselvar.var.core.Registry;
+import dev.varar.RegistryRegistrar;
+import dev.varar.State;
+import dev.varar.StepDefinitions;
+import dev.varar.core.Registry;
 import io.cucumber.cucumberexpressions.ParameterTypeRegistry;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -20,7 +20,7 @@ import java.util.function.Supplier;
 /**
  * Reflectively loads a run's {@link StepDefinitions} classes, merges each one's own
  * {@link Registry} into a single shared one, and builds the per-file {@code
- * createContext} function {@link com.oselvar.var.core.Execute} expects.
+ * createContext} function {@link dev.varar.core.Execute} expects.
  *
  * <h2>One {@code RegistryRegistrar} per {@code StepDefinitions} class</h2>
  *
@@ -68,7 +68,7 @@ import java.util.function.Supplier;
  * custom parameter type if that type were re-registered on the accumulator first. But
  * {@code ParameterTypeRegistry.getParameterTypes()} — confirmed via {@code javap} — is
  * package-private in {@code io.cucumber.cucumberexpressions}, so there is no accessible
- * way from {@code com.oselvar.var.runner} to enumerate a source registry's custom
+ * way from {@code dev.varar.runner} to enumerate a source registry's custom
  * parameter types in order to re-register them. Recompiling is unnecessary anyway: each
  * {@link Registry.StepRegistration#compiled} is already a fully-compiled {@code
  * Expression}, self-contained and independent of any registry object once built (it was
@@ -80,7 +80,7 @@ import java.util.function.Supplier;
  * expression is a genuine authoring bug this merge should still catch. {@code
  * customParameterTypes()} is merged the same way — plain concatenation, no
  * recompilation — since it exists purely to be projected into the registry
- * conformance artifact ({@link com.oselvar.var.core.Conformance#toRegistryArtifact}),
+ * conformance artifact ({@link dev.varar.core.Conformance#toRegistryArtifact}),
  * never consulted to compile anything itself. Duplicate custom parameter-type names are
  * rejected (two classes accidentally registering the same name is a genuine authoring
  * bug this merge should catch).

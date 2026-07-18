@@ -1,4 +1,4 @@
-package com.oselvar.var.core;
+package dev.varar.core;
 
 /**
  * A source position/range, anchored to UTF-16 code-unit offsets into a source

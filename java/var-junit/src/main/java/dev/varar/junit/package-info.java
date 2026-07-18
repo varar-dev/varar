@@ -4,4 +4,4 @@
  * var-runner/var-core; contains only JUnit-Platform glue (discovery selectors,
  * descriptor tree, execution, config bridging).
  */
-package com.oselvar.var.junit;
+package dev.varar.junit;

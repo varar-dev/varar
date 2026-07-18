@@ -2,8 +2,8 @@
 
 package examples
 
-import com.oselvar.varkt.sensor
-import com.oselvar.varkt.steps
+import dev.varar.kotlin.sensor
+import dev.varar.kotlin.steps
 
 val romanNumeralsSteps = steps {
     sensor("a decimal and a roman number") { row: Map<String, String> ->

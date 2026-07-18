@@ -1,4 +1,4 @@
-package com.oselvar.var;
+package dev.varar;
 
 /**
  * Implemented by a step-definition class to register its steps. The runner discovers the

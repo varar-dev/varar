@@ -1,4 +1,4 @@
-package com.oselvar.var.core;
+package dev.varar.core;
 
 /**
  * Top-level entry point of the pure core: {@code scan} the source into blocks, then {@code

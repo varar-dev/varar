@@ -1,6 +1,6 @@
-package com.oselvar.var.junit;
+package dev.varar.junit;
 
-import com.oselvar.var.config.VarConfig;
+import dev.varar.config.VarConfig;
 import java.nio.file.Path;
 import org.junit.platform.engine.ConfigurationParameters;
 

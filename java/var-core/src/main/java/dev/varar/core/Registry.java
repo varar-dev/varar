@@ -1,4 +1,4 @@
-package com.oselvar.var.core;
+package dev.varar.core;
 
 import io.cucumber.cucumberexpressions.CaptureGroupTransformer;
 import io.cucumber.cucumberexpressions.Expression;
@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
  * constructor. The Java library's {@code CucumberExpression(String,
  * ParameterTypeRegistry)} constructor is package-private — {@code javap} prints it with
  * no access modifier, and the class is otherwise unreachable for direct construction
- * from {@code com.oselvar.var.core}. The library's public entry point is instead {@code
+ * from {@code dev.varar.core}. The library's public entry point is instead {@code
  * ExpressionFactory(ParameterTypeRegistry).createExpression(String)}, which returns the
  * public {@code Expression} interface (dispatching internally to a {@code
  * CucumberExpression} unless the source string is itself an anchored/regex-literal form

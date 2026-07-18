@@ -1,4 +1,4 @@
-package com.oselvar.var.core;
+package dev.varar.core;
 
 import io.cucumber.cucumberexpressions.CucumberExpressionParser;
 import io.cucumber.cucumberexpressions.Node;
@@ -207,7 +207,7 @@ public final class Conformance {
      * in a function that ignores its argument.
      *
      * <p>{@code contextFactory} is typed {@code Supplier<?>}, not {@code
-     * Supplier<com.oselvar.var.State>}: this package ({@code var-core}) has zero compile-time
+     * Supplier<dev.varar.State>}: this package ({@code var-core}) has zero compile-time
      * dependency on the {@code var} facade's {@code State} marker interface — the same
      * hexagonal boundary {@link Execute}'s own {@code createContext} port already respects by
      * returning plain {@code Object}.

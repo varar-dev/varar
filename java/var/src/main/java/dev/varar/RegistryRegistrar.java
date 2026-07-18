@@ -1,7 +1,7 @@
-package com.oselvar.var;
+package dev.varar;
 
-import com.oselvar.var.core.Registry;
-import com.oselvar.var.core.StepKind;
+import dev.varar.core.Registry;
+import dev.varar.core.StepKind;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;

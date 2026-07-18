@@ -8,10 +8,10 @@
 // parameter mismatches through `format` identically. Without a format this
 // actual would be each port's native object rendering, which is deliberately
 // outside conformance.
-package com.oselvar.varkt.conformance.bundle15
+package dev.varar.kotlin.conformance.bundle15
 
-import com.oselvar.varkt.steps
-import com.oselvar.varkt.sensor
+import dev.varar.kotlin.steps
+import dev.varar.kotlin.sensor
 import java.util.Locale
 
 val steps = steps {

@@ -1,4 +1,4 @@
-package com.oselvar.var.core;
+package dev.varar.core;
 
 /**
  * Where a failure POINTS in the {@code .md}: a mismatch anchors at its first failing span (the

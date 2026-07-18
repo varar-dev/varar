@@ -4,4 +4,4 @@
  * an adapter (e.g. var-junit) that touches the filesystem/classpath. Deliberately
  * free of any JUnit-Platform dependency so it can be reused by future adapters.
  */
-package com.oselvar.var.runner;
+package dev.varar.runner;

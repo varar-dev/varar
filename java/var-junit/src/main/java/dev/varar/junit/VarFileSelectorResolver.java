@@ -1,12 +1,12 @@
-package com.oselvar.var.junit;
+package dev.varar.junit;
 
-import com.oselvar.var.config.VarConfig;
-import com.oselvar.var.core.Drift;
-import com.oselvar.var.core.Plan;
-import com.oselvar.var.runner.BaselineStores;
-import com.oselvar.var.runner.Discovery;
-import com.oselvar.var.runner.Run;
-import com.oselvar.var.runner.StepLoader;
+import dev.varar.config.VarConfig;
+import dev.varar.core.Drift;
+import dev.varar.core.Plan;
+import dev.varar.runner.BaselineStores;
+import dev.varar.runner.Discovery;
+import dev.varar.runner.Run;
+import dev.varar.runner.StepLoader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;

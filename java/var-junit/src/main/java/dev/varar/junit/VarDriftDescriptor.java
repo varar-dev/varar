@@ -1,4 +1,4 @@
-package com.oselvar.var.junit;
+package dev.varar.junit;
 
 import org.junit.platform.engine.TestSource;
 import org.junit.platform.engine.UniqueId;

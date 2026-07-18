@@ -1,4 +1,4 @@
-package com.oselvar.var.junit;
+package dev.varar.junit;
 
 import java.util.Objects;
 import org.junit.platform.engine.EngineExecutionListener;

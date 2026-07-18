@@ -4,10 +4,10 @@
 // (bundle 07-row-check-mismatch): header-bound row step — receives the current
 // row (Map keyed by header cell) as the trailing argument and returns hardcoded
 // (wrong) columns, producing a cell mismatch at the trace stage.
-package com.oselvar.varkt.conformance.bundle07
+package dev.varar.kotlin.conformance.bundle07
 
-import com.oselvar.varkt.steps
-import com.oselvar.varkt.sensor
+import dev.varar.kotlin.steps
+import dev.varar.kotlin.sensor
 
 class Ctx
 

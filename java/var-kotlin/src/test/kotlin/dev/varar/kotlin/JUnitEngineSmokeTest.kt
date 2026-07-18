@@ -1,6 +1,6 @@
-package com.oselvar.varkt
+package dev.varar.kotlin
 
-import com.oselvar.`var`.junit.ConfigBridge
+import dev.varar.junit.ConfigBridge
 import java.nio.file.Files
 import java.nio.file.Path
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -29,7 +29,7 @@ class JUnitEngineSmokeTest {
                 """
                 {
                   "docs": { "include": ["cukes.md"], "exclude": [] },
-                  "steps": ["com.oselvar.varkt.fixtures.CukeSteps"]
+                  "steps": ["dev.varar.kotlin.fixtures.CukeSteps"]
                 }
                 """
                     .trimIndent(),

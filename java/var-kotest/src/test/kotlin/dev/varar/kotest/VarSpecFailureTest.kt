@@ -1,4 +1,4 @@
-package com.oselvar.varkt.kotest
+package dev.varar.kotest
 
 import java.nio.file.Path
 import org.junit.jupiter.api.Assertions.assertEquals

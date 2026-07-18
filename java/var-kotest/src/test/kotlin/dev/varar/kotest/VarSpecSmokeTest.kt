@@ -1,4 +1,4 @@
-package com.oselvar.varkt.kotest
+package dev.varar.kotest
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe

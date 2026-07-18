@@ -1,8 +1,8 @@
-package com.oselvar.var.junit.fixtures;
+package dev.varar.junit.fixtures;
 
-import com.oselvar.var.Registrar;
-import com.oselvar.var.State;
-import com.oselvar.var.StepDefinitions;
+import dev.varar.Registrar;
+import dev.varar.State;
+import dev.varar.StepDefinitions;
 
 /**
  * Two expressions that both match "I have 5 cukes" — an ambiguous-match plan diagnostic (Task

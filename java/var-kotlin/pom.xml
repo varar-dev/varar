@@ -5,18 +5,18 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>com.oselvar</groupId>
-    <artifactId>var-parent</artifactId>
+    <groupId>dev.varar</groupId>
+    <artifactId>parent</artifactId>
     <version>0.4.3-SNAPSHOT</version>
   </parent>
 
-  <artifactId>var-kotlin</artifactId>
+  <artifactId>kotlin</artifactId>
   <packaging>jar</packaging>
   <name>var (Kotlin) — author facade over the Java engine</name>
   <description>
     Idiomatic Kotlin authoring API layered on the Java engine — no second
     pipeline port (see doc/superpowers/specs/2026-07-01-kotlin-facade-design.md).
-    Author-facing package is com.oselvar.varkt because `var` is a Kotlin hard
+    Author-facing package is dev.varar.kotlin because `var` is a Kotlin hard
     keyword and would force back-ticked imports.
   </description>
 
@@ -29,8 +29,8 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.oselvar</groupId>
-      <artifactId>var</artifactId>
+      <groupId>dev.varar</groupId>
+      <artifactId>varar</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
@@ -44,14 +44,14 @@
       <version>${kotlinx-coroutines.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.oselvar</groupId>
-      <artifactId>var-runner</artifactId>
+      <groupId>dev.varar</groupId>
+      <artifactId>runner</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>
     <dependency>
-      <groupId>com.oselvar</groupId>
-      <artifactId>var-junit</artifactId>
+      <groupId>dev.varar</groupId>
+      <artifactId>junit</artifactId>
       <version>${project.version}</version>
       <scope>test</scope>
     </dependency>

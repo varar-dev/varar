@@ -1,14 +1,14 @@
-package com.oselvar.var.runner.fixtures;
+package dev.varar.runner.fixtures;
 
-import com.oselvar.var.Registrar;
-import com.oselvar.var.State;
-import com.oselvar.var.StepDefinitions;
+import dev.varar.Registrar;
+import dev.varar.State;
+import dev.varar.StepDefinitions;
 
 /**
  * A small standalone (top-level, own-file) {@link StepDefinitions} fixture for {@code
  * RunTest} — registers one {@code context} step that sets a widget count and one {@code
  * sensor} step that reports it, so a real spec can be planned and run end to end
- * through {@link com.oselvar.var.runner.Run#examplesWithRuns}. Deliberately its own
+ * through {@link dev.varar.runner.Run#examplesWithRuns}. Deliberately its own
  * top-level file (see {@code AlphaSteps}' javadoc for why: {@code RegistryRegistrar}'s
  * {@code StackWalker}-captured {@code expressionSourceFile} must be this file's own
  * name, not the enclosing test class's).

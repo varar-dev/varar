@@ -1,7 +1,7 @@
 # Vár sample: Kotlin + JUnit + Gradle
 
 A small, standalone sample project that runs Markdown specs as tests with
-[Vár](https://var.oselvar.com), using the Kotlin DSL (`var-kotlin`) and the
+[Vár](https://varar.dev), using the Kotlin DSL (`var-kotlin`) and the
 JUnit Platform engine (`var-junit`). Copy it as the starting point for your
 own project.
 

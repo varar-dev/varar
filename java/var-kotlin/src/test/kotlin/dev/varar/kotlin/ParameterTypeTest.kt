@@ -1,8 +1,8 @@
-package com.oselvar.varkt
+package dev.varar.kotlin
 
-import com.oselvar.`var`.RegistryRegistrar
-import com.oselvar.`var`.core.Parse
-import com.oselvar.`var`.core.Plan
+import dev.varar.RegistryRegistrar
+import dev.varar.core.Parse
+import dev.varar.core.Plan
 import io.cucumber.cucumberexpressions.UndefinedParameterTypeException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows

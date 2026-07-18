@@ -1,6 +1,6 @@
 package examples
 
-import com.oselvar.varkt.kotest.VarSpec
+import dev.varar.kotest.VarSpec
 
 // VarSpec is a Kotest FunSpec: it loads var.config.json from the given root
 // (default: the test working directory), plans every matching Markdown spec,

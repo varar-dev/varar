@@ -1,10 +1,10 @@
-package com.oselvar.var.runner;
+package dev.varar.runner;
 
-import com.oselvar.var.core.Diagnostics;
-import com.oselvar.var.core.Execute;
-import com.oselvar.var.core.Parse;
-import com.oselvar.var.core.Plan;
-import com.oselvar.var.core.Registry;
+import dev.varar.core.Diagnostics;
+import dev.varar.core.Execute;
+import dev.varar.core.Parse;
+import dev.varar.core.Plan;
+import dev.varar.core.Registry;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;

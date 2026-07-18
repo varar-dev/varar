@@ -1,11 +1,11 @@
-package com.oselvar.var.core;
+package dev.varar.core;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.oselvar.var.core.Ast.Example;
-import com.oselvar.var.core.Ast.VarDoc;
+import dev.varar.core.Ast.Example;
+import dev.varar.core.Ast.VarDoc;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 

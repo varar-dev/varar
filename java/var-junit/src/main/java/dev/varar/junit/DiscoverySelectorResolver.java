@@ -1,7 +1,7 @@
-package com.oselvar.var.junit;
+package dev.varar.junit;
 
-import com.oselvar.var.config.VarConfig;
-import com.oselvar.var.runner.StepLoader;
+import dev.varar.config.VarConfig;
+import dev.varar.runner.StepLoader;
 import java.nio.file.Path;
 import org.junit.platform.commons.io.ResourceFilter;
 import org.junit.platform.engine.EngineDiscoveryRequest;
@@ -35,7 +35,7 @@ import org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolve
  *       addResourceContainerSelectorResolver(ResourceFilter)}, which performs exactly this
  *       expansion generically (classpath/module/package scanning) for any engine; var supplies
  *       only the {@link ResourceFilter} predicate (delegating to {@code
- *       com.oselvar.var.runner.Discovery.matchSpec}).
+ *       dev.varar.runner.Discovery.matchSpec}).
  *   <li>{@code ClasspathResourceSelector}/{@code FileSelector}/{@code DirectorySelector} &rarr;
  *       one {@link VarFileDescriptor} (a directory first expands into candidate {@code
  *       FileSelector}s, which the same resolver then re-resolves) &mdash; {@link

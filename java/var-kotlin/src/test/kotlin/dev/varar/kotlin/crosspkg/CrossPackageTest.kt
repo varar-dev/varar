@@ -1,14 +1,14 @@
-package com.oselvar.varkt.crosspkg
+package dev.varar.kotlin.crosspkg
 
-import com.oselvar.`var`.RegistryRegistrar
-import com.oselvar.varkt.sensor
-import com.oselvar.varkt.steps
-import com.oselvar.varkt.stimulus
+import dev.varar.RegistryRegistrar
+import dev.varar.kotlin.sensor
+import dev.varar.kotlin.steps
+import dev.varar.kotlin.stimulus
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
 /**
- * Proves the approved author API resolves from OUTSIDE `com.oselvar.varkt` — the situation every
+ * Proves the approved author API resolves from OUTSIDE `dev.varar.kotlin` — the situation every
  * real `.steps.kt` file is in. The zero-parameter overloads are `StepsScope` members (no import
  * beyond `steps`), but the capturing arities are top-level extension functions, so an author's file
  * needs the four imports above (IDE auto-import adds them). `DefineStateTest` lives in the DSL's

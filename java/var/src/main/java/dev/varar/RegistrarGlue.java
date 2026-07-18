@@ -1,4 +1,4 @@
-package com.oselvar.var;
+package dev.varar;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

@@ -5,12 +5,12 @@
   <modelVersion>4.0.0</modelVersion>
 
   <parent>
-    <groupId>com.oselvar</groupId>
-    <artifactId>var-parent</artifactId>
+    <groupId>dev.varar</groupId>
+    <artifactId>parent</artifactId>
     <version>0.4.3-SNAPSHOT</version>
   </parent>
 
-  <artifactId>var-junit</artifactId>
+  <artifactId>junit</artifactId>
   <packaging>jar</packaging>
   <name>var-junit — JUnit Platform TestEngine</name>
   <description>
@@ -22,13 +22,13 @@
 
   <dependencies>
     <dependency>
-      <groupId>com.oselvar</groupId>
-      <artifactId>var-runner</artifactId>
+      <groupId>dev.varar</groupId>
+      <artifactId>runner</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>
-      <groupId>com.oselvar</groupId>
-      <artifactId>var-config</artifactId>
+      <groupId>dev.varar</groupId>
+      <artifactId>config</artifactId>
       <version>${project.version}</version>
     </dependency>
     <dependency>

@@ -1,10 +1,10 @@
 @file:JvmName("CukeSteps")
 
-package com.oselvar.varkt.fixtures
+package dev.varar.kotlin.fixtures
 
-import com.oselvar.varkt.sensor
-import com.oselvar.varkt.steps
-import com.oselvar.varkt.stimulus
+import dev.varar.kotlin.sensor
+import dev.varar.kotlin.steps
+import dev.varar.kotlin.stimulus
 
 data class CukeCtx(val cukes: Int = 0)
 

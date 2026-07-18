@@ -1,7 +1,7 @@
-package com.oselvar.var.junit;
+package dev.varar.junit;
 
-import com.oselvar.var.core.Plan;
-import com.oselvar.var.runner.Render;
+import dev.varar.core.Plan;
+import dev.varar.runner.Render;
 import org.junit.platform.engine.TestSource;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor;
@@ -33,7 +33,7 @@ import org.junit.platform.engine.support.hierarchical.Node;
  *
  * <h2>Execution (Task 11)</h2>
  *
- * <p>{@link #execute} looks up ITS OWN {@link com.oselvar.var.runner.Run.ExampleRun} from the
+ * <p>{@link #execute} looks up ITS OWN {@link dev.varar.runner.Run.ExampleRun} from the
  * parent {@link VarFileDescriptor}'s cache ({@link VarFileDescriptor#runFor}) rather than
  * re-planning or re-collecting anything — planning already happened once, at discovery. On
  * success it returns normally, so JUnit Platform reports {@code SUCCESSFUL} (its own default). On

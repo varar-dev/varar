@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.oselvar</groupId>
-  <artifactId>var-parent</artifactId>
+  <groupId>dev.varar</groupId>
+  <artifactId>parent</artifactId>
   <version>0.4.3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
@@ -16,7 +16,7 @@
     typescript/ (reference implementation) and python/ (second port).
   </description>
 
-  <url>https://github.com/oselvar/var</url>
+  <url>https://github.com/oselvar/varar</url>
   <licenses>
     <license>
       <name>MIT License</name>
@@ -32,9 +32,9 @@
     </developer>
   </developers>
   <scm>
-    <connection>scm:git:https://github.com/oselvar/var.git</connection>
-    <developerConnection>scm:git:git@github.com:oselvar/var.git</developerConnection>
-    <url>https://github.com/oselvar/var</url>
+    <connection>scm:git:https://github.com/oselvar/varar.git</connection>
+    <developerConnection>scm:git:git@github.com:oselvar/varar.git</developerConnection>
+    <url>https://github.com/oselvar/varar</url>
     <tag>HEAD</tag>
   </scm>
 

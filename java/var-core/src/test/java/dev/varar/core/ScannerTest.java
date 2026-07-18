@@ -1,19 +1,19 @@
-package com.oselvar.var.core;
+package dev.varar.core;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.oselvar.var.core.Ast.Block;
-import com.oselvar.var.core.Ast.Blockquote;
-import com.oselvar.var.core.Ast.Fence;
-import com.oselvar.var.core.Ast.Heading;
-import com.oselvar.var.core.Ast.ListItem;
-import com.oselvar.var.core.Ast.Paragraph;
-import com.oselvar.var.core.Ast.SegmentOffset;
-import com.oselvar.var.core.Ast.Table;
-import com.oselvar.var.core.Ast.ThematicBreak;
+import dev.varar.core.Ast.Block;
+import dev.varar.core.Ast.Blockquote;
+import dev.varar.core.Ast.Fence;
+import dev.varar.core.Ast.Heading;
+import dev.varar.core.Ast.ListItem;
+import dev.varar.core.Ast.Paragraph;
+import dev.varar.core.Ast.SegmentOffset;
+import dev.varar.core.Ast.Table;
+import dev.varar.core.Ast.ThematicBreak;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;

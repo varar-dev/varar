@@ -1,12 +1,12 @@
-package com.oselvar.var;
+package dev.varar;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.oselvar.var.core.Registry;
-import com.oselvar.var.core.StepKind;
+import dev.varar.core.Registry;
+import dev.varar.core.StepKind;
 import java.util.Map;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;

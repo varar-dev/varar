@@ -1,4 +1,4 @@
-package com.oselvar.var.runner;
+package dev.varar.runner;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -14,8 +14,7 @@ class StepLoaderStaticFactoryTest {
 
     @Test
     void loadsAClassExposingAStaticStepDefinitionsFactory() {
-        StepLoader.LoadedSteps loaded =
-                StepLoader.loadSteps(List.of("com.oselvar.var.runner.StaticFactorySteps"), LOADER);
+        StepLoader.LoadedSteps loaded = StepLoader.loadSteps(List.of("dev.varar.runner.StaticFactorySteps"), LOADER);
 
         assertEquals(1, loaded.registry().steps().size());
         assertEquals(
@@ -36,7 +35,7 @@ class StepLoaderStaticFactoryTest {
     void rejectsTwoDefineStateRegistrationsSharingOneSourceFile() {
         IllegalArgumentException e = assertThrows(
                 IllegalArgumentException.class,
-                () -> StepLoader.loadSteps(List.of("com.oselvar.var.runner.DuplicateStateSteps"), LOADER));
+                () -> StepLoader.loadSteps(List.of("dev.varar.runner.DuplicateStateSteps"), LOADER));
         assertTrue(e.getMessage().contains("DuplicateStateSteps.java"), e.getMessage());
         assertTrue(e.getMessage().contains("one steps"), e.getMessage());
     }

@@ -1,26 +1,26 @@
-package com.oselvar.var.runner;
+package dev.varar.runner;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.oselvar.var.core.Registry;
-import com.oselvar.var.runner.StepLoader.LoadedSteps;
-import com.oselvar.var.runner.fixtures.AlphaSteps;
-import com.oselvar.var.runner.fixtures.BetaSteps;
-import com.oselvar.var.runner.fixtures.ContextOnlySteps;
-import com.oselvar.var.runner.fixtures.DeltaSteps;
-import com.oselvar.var.runner.fixtures.EpsilonSteps;
-import com.oselvar.var.runner.fixtures.GammaSteps;
+import dev.varar.core.Registry;
+import dev.varar.runner.StepLoader.LoadedSteps;
+import dev.varar.runner.fixtures.AlphaSteps;
+import dev.varar.runner.fixtures.BetaSteps;
+import dev.varar.runner.fixtures.ContextOnlySteps;
+import dev.varar.runner.fixtures.DeltaSteps;
+import dev.varar.runner.fixtures.EpsilonSteps;
+import dev.varar.runner.fixtures.GammaSteps;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
  * Confirms {@link StepLoader#loadSteps} reflectively loads real {@link
- * com.oselvar.var.StepDefinitions} classes (not mocks), merges their registries into
+ * dev.varar.StepDefinitions} classes (not mocks), merges their registries into
  * one, and builds a {@code createContext} function keyed EXACTLY the way {@link
- * com.oselvar.var.core.Execute#collectExamples} looks it up — by {@code
+ * dev.varar.core.Execute#collectExamples} looks it up — by {@code
  * Registry.StepRegistration#expressionSourceFile()} (confirmed by reading {@code
  * Execute.runExample}, which does {@code createContext.apply(step.stepDef()
  * .expressionSourceFile())}) — with no cross-wiring between two different files' state.
@@ -108,7 +108,7 @@ class StepLoaderTest {
     void unknownClassNameThrowsClearly() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> StepLoader.loadSteps(List.of("com.oselvar.var.runner.NoSuchStepsClass"), LOADER));
+                () -> StepLoader.loadSteps(List.of("dev.varar.runner.NoSuchStepsClass"), LOADER));
     }
 
     @Test

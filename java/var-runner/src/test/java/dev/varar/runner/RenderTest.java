@@ -1,21 +1,21 @@
-package com.oselvar.var.runner;
+package dev.varar.runner;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.oselvar.var.core.CellDiff;
-import com.oselvar.var.core.DocStringDiff;
-import com.oselvar.var.core.Plan;
-import com.oselvar.var.runner.StepLoader.LoadedSteps;
-import com.oselvar.var.runner.fixtures.BoomSteps;
-import com.oselvar.var.runner.fixtures.GreetingSteps;
-import com.oselvar.var.runner.fixtures.WidgetSteps;
+import dev.varar.core.CellDiff;
+import dev.varar.core.DocStringDiff;
+import dev.varar.core.Plan;
+import dev.varar.runner.StepLoader.LoadedSteps;
+import dev.varar.runner.fixtures.BoomSteps;
+import dev.varar.runner.fixtures.GreetingSteps;
+import dev.varar.runner.fixtures.WidgetSteps;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
  * Confirms {@link Render#renderFailure} is a pure formatter over {@link
- * com.oselvar.var.core.Failure#toFailure}'s {@link com.oselvar.var.core.Result.ExampleFailure}
+ * dev.varar.core.Failure#toFailure}'s {@link dev.varar.core.Result.ExampleFailure}
  * payload — driven by REAL exceptions the core pipeline produces via {@link Run#planSpec}
  * + {@link Run#examplesWithRuns} (same standard as {@code RunTest}), not hand-built
  * {@code Result.ExampleFailure} values.

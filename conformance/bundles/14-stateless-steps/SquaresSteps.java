@@ -1,9 +1,9 @@
-package com.oselvar.var.conformance.bundle14;
+package dev.varar.conformance.bundle14;
 
-import com.oselvar.var.Registrar;
-import com.oselvar.var.State;
-import com.oselvar.var.StateBinder;
-import com.oselvar.var.StepDefinitions;
+import dev.varar.Registrar;
+import dev.varar.State;
+import dev.varar.StateBinder;
+import dev.varar.StepDefinitions;
 import java.util.List;
 
 /**

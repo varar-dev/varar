@@ -1,7 +1,7 @@
-package com.oselvar.var.runner;
+package dev.varar.runner;
 
-import com.oselvar.var.core.Failure;
-import com.oselvar.var.core.Result;
+import dev.varar.core.Failure;
+import dev.varar.core.Result;
 import java.util.stream.Collectors;
 
 /**

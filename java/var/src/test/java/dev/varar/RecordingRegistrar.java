@@ -1,6 +1,6 @@
-package com.oselvar.var;
+package dev.varar;
 
-import com.oselvar.var.core.StepKind;
+import dev.varar.core.StepKind;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;

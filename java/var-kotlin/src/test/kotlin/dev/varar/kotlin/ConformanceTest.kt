@@ -1,24 +1,24 @@
-package com.oselvar.varkt
+package dev.varar.kotlin
 
-import com.oselvar.`var`.RegistryRegistrar
-import com.oselvar.`var`.StepDefinitions
-import com.oselvar.`var`.core.CanonicalJson
-import com.oselvar.`var`.core.Conformance
-import com.oselvar.varkt.conformance.bundle01.steps as bundle01Steps
-import com.oselvar.varkt.conformance.bundle02.steps as bundle02Steps
-import com.oselvar.varkt.conformance.bundle03.steps as bundle03Steps
-import com.oselvar.varkt.conformance.bundle04.steps as bundle04Steps
-import com.oselvar.varkt.conformance.bundle05.steps as bundle05Steps
-import com.oselvar.varkt.conformance.bundle06.steps as bundle06Steps
-import com.oselvar.varkt.conformance.bundle07.steps as bundle07Steps
-import com.oselvar.varkt.conformance.bundle08.steps as bundle08Steps
-import com.oselvar.varkt.conformance.bundle09.steps as bundle09Steps
-import com.oselvar.varkt.conformance.bundle10.steps as bundle10Steps
-import com.oselvar.varkt.conformance.bundle11.steps as bundle11Steps
-import com.oselvar.varkt.conformance.bundle12.steps as bundle12Steps
-import com.oselvar.varkt.conformance.bundle13.steps as bundle13Steps
-import com.oselvar.varkt.conformance.bundle14.steps as bundle14Steps
-import com.oselvar.varkt.conformance.bundle15.steps as bundle15Steps
+import dev.varar.RegistryRegistrar
+import dev.varar.StepDefinitions
+import dev.varar.core.CanonicalJson
+import dev.varar.core.Conformance
+import dev.varar.kotlin.conformance.bundle01.steps as bundle01Steps
+import dev.varar.kotlin.conformance.bundle02.steps as bundle02Steps
+import dev.varar.kotlin.conformance.bundle03.steps as bundle03Steps
+import dev.varar.kotlin.conformance.bundle04.steps as bundle04Steps
+import dev.varar.kotlin.conformance.bundle05.steps as bundle05Steps
+import dev.varar.kotlin.conformance.bundle06.steps as bundle06Steps
+import dev.varar.kotlin.conformance.bundle07.steps as bundle07Steps
+import dev.varar.kotlin.conformance.bundle08.steps as bundle08Steps
+import dev.varar.kotlin.conformance.bundle09.steps as bundle09Steps
+import dev.varar.kotlin.conformance.bundle10.steps as bundle10Steps
+import dev.varar.kotlin.conformance.bundle11.steps as bundle11Steps
+import dev.varar.kotlin.conformance.bundle12.steps as bundle12Steps
+import dev.varar.kotlin.conformance.bundle13.steps as bundle13Steps
+import dev.varar.kotlin.conformance.bundle14.steps as bundle14Steps
+import dev.varar.kotlin.conformance.bundle15.steps as bundle15Steps
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path

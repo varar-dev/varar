@@ -1,4 +1,4 @@
-package com.oselvar.var.core;
+package dev.varar.core;
 
 /**
  * Diagnostics — port of the subset of {@code var-core/src/diagnostics.ts} that {@link Plan}
