@@ -53,7 +53,7 @@ not four:
 |---|---|---|---|
 | `<lang>-core` (e.g. `var-core` / `var_core`) | nothing runtime-ish | pure pipeline: parse → match → plan → execute, diffs, drift, conformance projections | filesystem, network, globals, time, test-framework types |
 | `<lang>` facade (e.g. `@varar/varar` / `var`) | `<lang>-core` | author API only: `defineState`/`define_state` (context/action/sensor), `registry` glue subpath | pipeline internals directly (goes through core) |
-| `<lang>-config` (e.g. `@varar/config` / `var_config`) | nothing (pure) | the `var.config.json` reader — strict, fail-loud; its own conformance corpus | filesystem beyond reading the one config file |
+| `<lang>-config` (e.g. `@varar/config` / `var_config`) | nothing (pure) | the `varar.config.json` reader — strict, fail-loud; its own conformance corpus | filesystem beyond reading the one config file |
 | `<lang>-runner` (e.g. `var-runner`) | facade + config + core | imperative shell: spec/step discovery (globs), `load_steps`, `run_spec`/`plan_spec`, failure rendering, the filesystem `BaselineStore` (drift) | any one test framework's types |
 | `<lang>-<framework>` (e.g. `var-vitest`, `var-pytest`) | `<lang>-runner` | one test-framework binding: collection (one test item per example), fixture/DI bridging, reporting, the drift gate | pipeline logic (delegates to runner/core) |
 
@@ -119,11 +119,11 @@ gated milestone:
    `BaselineStore` port. Drift re-identifies examples by Jaccard word-similarity
    (`DRIFT_SIMILARITY_THRESHOLD = 0.5`, ported byte-identically), flags a
    paragraph that *was* an example and now matches zero steps, reports on the
-   Diagnostic rail (code `drift`), and persists a `var.lock.json` baseline.
+   Diagnostic rail (code `drift`), and persists a `varar.lock.json` baseline.
    **This stage has no conformance golden** (bundles carry no baseline), so it
    is the one core feature proven by **translating the unit tests**
    (`hash.test.ts`, `drift.test.ts`) rather than reproducing goldens. Note
-   `var.lock.json` uses its *own* serializer — `JSON.stringify(_, null, 2) +
+   `varar.lock.json` uses its *own* serializer — `JSON.stringify(_, null, 2) +
    "\n"` with spec paths sorted but **insertion-order keys otherwise**
    (`version, specs`; per spec `sourceHash, examples`; per example `name,
    line`) — NOT the recursive alphabetical key-sort of `canonical_json`. Drift
@@ -266,12 +266,12 @@ TestEngine (JUnit), a `pytest_collect_file` hook (pytest), a generated
 - **Collection**: one test item per *example* (not per file), independently
   selectable/reportable, with the item's location pointing at the `.md`
   source line, not adapter internals.
-- **Discovery/config**: one `var.config.json` per workspace root, shared
+- **Discovery/config**: one `varar.config.json` per workspace root, shared
   verbatim across every port — canonical keys `docs: {include, exclude}`
   (globs; no special file extension, a file is a spec iff its path matches
   the `docs` globs), `steps` (a glob array), `snippets`, and `scannerPlugins`
   (plugin name strings, resolved to functions per-language via a name
-  registry). The schema lives at `conformance/config/var.config.schema.json`.
+  registry). The schema lives at `conformance/config/varar.config.schema.json`.
   Each port reads the same JSON with its own small config package
   (`@varar/config` in TypeScript, `var_config` in Python, `var-config`
   in Java) — do not invent an ecosystem-idiomatic surface (no `[tool.var]`
@@ -291,12 +291,12 @@ TestEngine (JUnit), a `pytest_collect_file` hook (pytest), a generated
   re-derive failure text from scratch in the adapter.
 - **Async**: if the language has an async/coroutine convention, the executor
   should drive it transparently; the adapter needs no special casing.
-- **Drift gate**: each adapter reconciles every spec against `var.lock.json`
+- **Drift gate**: each adapter reconciles every spec against `varar.lock.json`
   via the runner's filesystem `BaselineStore` + `reconcileDrift`, surfaces a
   `drift` diagnostic on the same Diagnostic rail as `ambiguous-match` (a drifted
   example fails the suite), writes the baseline on a clean run, and honours an
   `--update`/acknowledgment path (ADR 0002 — never silently accept drift). Add
-  a per-adapter drift test with a `var.lock.json` fixture (precedent:
+  a per-adapter drift test with a `varar.lock.json` fixture (precedent:
   `var-pytest`/`var-unittest` `tests/test_drift.py`, `var-kotest`'s
   `kotest-drift/` resources).
 
@@ -324,7 +324,7 @@ suite:
 - **Standalone `examples/<lang>-<framework>/` consumer projects** — one per
   adapter, **not** workspace members: they depend on the released (or
   locally-installed) artifacts exactly like a user's project, carry their own
-  `var.config.json`, and implement the feature-covering subset (`hello-var`,
+  `varar.config.json`, and implement the feature-covering subset (`hello-var`,
   `deep-thought`, `tables-and-docstrings`, `yahtzee`, `roman-numerals`). Their
   `.md` specs are symlinks to the `typescript-vitest` originals (the release
   sync dereferences them). Add rows to `examples/README.md`.
@@ -391,7 +391,7 @@ lists the language. Run it (or `make typescript`) to find what you still owe.
 ## Config conformance corpus (a distinct byte-for-byte gate)
 
 `var-config` has its own corpus at `conformance/config/cases/*/`, separate from
-`conformance/bundles/`. Each case holds a `var.config.json` plus either a
+`conformance/bundles/`. Each case holds a `varar.config.json` plus either a
 `golden.json` (parse succeeds → project to the canonical shape, serialize with
 your `canonical_json`, byte-compare) or an `expect-error.txt` marker (loading
 must **raise** — the txt is human-only, not asserted). Reproduce all cases
@@ -439,7 +439,7 @@ how many languages exist; a new port does not touch them:
 | Reference implementation (runner) | `typescript/packages/var-runner/src/*.ts`, `python/packages/var-runner/src/var_runner/*.py` |
 | Reference implementation (test-framework adapter) | `typescript/packages/var-vitest/src/*.ts`, `python/packages/var-pytest/src/var_pytest/*.py` |
 | Reference implementation (drift, unit-gated) | `typescript/packages/var-core/src/{drift,hash}.ts` + `tests/{drift,hash}.test.ts`; mirror at `python/packages/var-core/src/var_core/{drift,hash}.py`; `java/var-core/.../{Drift,Hash}.java` |
-| The conformance corpus + goldens | `conformance/bundles/*/{example.md, *.steps.{ts,py,kt,rb}, *Steps.java, golden/*.json}` — 15 bundles, four artifacts each; **plus** the config corpus `conformance/config/cases/*/{var.config.json, golden.json|expect-error.txt}` |
+| The conformance corpus + goldens | `conformance/bundles/*/{example.md, *.steps.{ts,py,kt,rb}, *Steps.java, golden/*.json}` — 15 bundles, four artifacts each; **plus** the config corpus `conformance/config/cases/*/{varar.config.json, golden.json|expect-error.txt}` |
 
 ## Common mistakes
 

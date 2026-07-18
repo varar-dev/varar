@@ -22,7 +22,7 @@ class VarDriftGateTest {
 
     private static void writeProject(Path workspace, String baselineExamples) throws Exception {
         Files.writeString(
-                workspace.resolve("var.config.json"),
+                workspace.resolve("varar.config.json"),
                 "{ \"docs\": { \"include\": [\"*.md\"], \"exclude\": [] }, \"steps\": [\""
                         + WidgetSteps.class.getName()
                         + "\"] }",
@@ -30,7 +30,7 @@ class VarDriftGateTest {
         // Prose now — matches no WidgetSteps expression.
         Files.writeString(workspace.resolve("vault.md"), "The vault is sealed.\n", StandardCharsets.UTF_8);
         Files.writeString(
-                workspace.resolve("var.lock.json"),
+                workspace.resolve("varar.lock.json"),
                 "{\"version\":1,\"specs\":{\"vault.md\":{\"sourceHash\":\"fnv1a:0\",\"examples\":["
                         + baselineExamples
                         + "]}}}",
@@ -47,7 +47,7 @@ class VarDriftGateTest {
     @Test
     void aParagraphThatStoppedMatchingFailsAsDrift(@TempDir Path workspace) throws Exception {
         writeProject(workspace, "{\"name\":\"The vault is sealed\",\"line\":1}");
-        String before = Files.readString(workspace.resolve("var.lock.json"));
+        String before = Files.readString(workspace.resolve("varar.lock.json"));
 
         EngineExecutionResults results = execute(workspace);
 
@@ -56,7 +56,7 @@ class VarDriftGateTest {
                 .assertThatEvents()
                 .haveExactly(1, event(test(), finishedWithFailure(message(m -> m.contains("The vault is sealed")))));
         // Unacknowledged drift leaves the baseline untouched.
-        assertEquals(before, Files.readString(workspace.resolve("var.lock.json")));
+        assertEquals(before, Files.readString(workspace.resolve("varar.lock.json")));
     }
 
     @Test
@@ -70,7 +70,7 @@ class VarDriftGateTest {
             System.clearProperty("var.update");
         }
         // The now-prose paragraph is gone from the re-recorded baseline.
-        String lock = Files.readString(workspace.resolve("var.lock.json"));
+        String lock = Files.readString(workspace.resolve("varar.lock.json"));
         assertTrue(lock.contains("\"examples\": []"), "baseline re-recorded with no examples:\n" + lock);
     }
 }

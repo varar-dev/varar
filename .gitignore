@@ -7,15 +7,15 @@ coverage
 .superpowers
 .var/
 
-# var.lock.json baselines written by var-cli integration tests (temp fixtures)
-typescript/packages/var-cli/tests/fixtures/run-basic/var.lock.json
+# varar.lock.json baselines written by var-cli integration tests (temp fixtures)
+typescript/packages/var-cli/tests/fixtures/run-basic/varar.lock.json
 typescript/packages/var-cli/tests/fixtures/drift-tmp-*/
-# var.lock.json written by the Python conformance dogfood command
-python/var.lock.json
-# var.lock.json written into the Kotest fixture roots on every test run
+# varar.lock.json written by the Python conformance dogfood command
+python/varar.lock.json
+# varar.lock.json written into the Kotest fixture roots on every test run
 # (the drift fixture's baseline IS committed and is not listed here)
-java/var-kotest/src/test/resources/kotest-smoke/var.lock.json
-java/var-kotest/src/test/resources/kotest-failing/var.lock.json
+java/var-kotest/src/test/resources/kotest-smoke/varar.lock.json
+java/var-kotest/src/test/resources/kotest-failing/varar.lock.json
 .claude/*
 !.claude/skills/
 

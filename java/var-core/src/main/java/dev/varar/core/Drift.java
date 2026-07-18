@@ -14,10 +14,10 @@ import java.util.regex.Pattern;
 /**
  * Spec drift detection — port of {@code var-core/src/drift.ts}.
  *
- * <p>A paragraph the committed {@code var.lock.json} baseline recorded as an example that now
+ * <p>A paragraph the committed {@code varar.lock.json} baseline recorded as an example that now
  * matches no step. Pure over the existing {@link Ast.VarDoc} + {@link Plan.ExecutionPlan}, and
  * byte-identical to the TypeScript and Python ports so a baseline written by one runs green under
- * the others: the same FNV-1a fingerprint ({@link Hash}), the same {@code var.lock.json} bytes
+ * the others: the same FNV-1a fingerprint ({@link Hash}), the same {@code varar.lock.json} bytes
  * (insertion-ordered keys, sorted spec paths, raw non-ASCII), and the same similarity semantics.
  */
 public final class Drift {
@@ -42,7 +42,7 @@ public final class Drift {
         }
     }
 
-    /** The whole {@code var.lock.json}: every spec keyed by its POSIX path. */
+    /** The whole {@code varar.lock.json}: every spec keyed by its POSIX path. */
     public record VarLock(int version, Map<String, SpecBaseline> specs) {
         public VarLock {
             specs = Collections.unmodifiableMap(new LinkedHashMap<>(specs));
@@ -53,7 +53,7 @@ public final class Drift {
     public record Drifted(String name, int line, Span span) {}
 
     /**
-     * Persistence port for {@code var.lock.json}. The core owns the format; adapters move only raw
+     * Persistence port for {@code varar.lock.json}. The core owns the format; adapters move only raw
      * text (a filesystem store on disk, an in-memory store).
      */
     public interface BaselineStore {
@@ -188,7 +188,7 @@ public final class Drift {
     // ---- serialize (byte-identical to JSON.stringify(...,null,2)+"\n") ------
 
     /**
-     * Serializes {@code var.lock.json} deterministically: {@code version} then {@code specs} (spec
+     * Serializes {@code varar.lock.json} deterministically: {@code version} then {@code specs} (spec
      * paths sorted), examples in document order, two-space indent, trailing newline, non-ASCII
      * raw. NOT {@link CanonicalJson} (which sorts every key) — the lockfile keeps insertion order.
      */
@@ -261,7 +261,7 @@ public final class Drift {
 
     // ---- parse (a minimal JSON reader; no library in the project) ----------
 
-    /** Parses {@code var.lock.json}; {@code null} on malformed input (treated as no baseline). */
+    /** Parses {@code varar.lock.json}; {@code null} on malformed input (treated as no baseline). */
     public static VarLock parseVarLock(String text) {
         Object parsed;
         try {
@@ -296,7 +296,7 @@ public final class Drift {
         return new SpecBaseline(sourceHash, examples);
     }
 
-    /** A tiny recursive-descent JSON reader — enough for var.lock.json, throws on malformed. */
+    /** A tiny recursive-descent JSON reader — enough for varar.lock.json, throws on malformed. */
     private static final class JsonReader {
         private final String s;
         private int i;

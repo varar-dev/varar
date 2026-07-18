@@ -49,7 +49,7 @@ import org.junit.platform.testkit.engine.EngineTestKit;
  * own {@code ConformanceTest} — two levels up from the module directory to the repo root's
  * {@code conformance/} — and each bundle's exact workspace-relative path (no wildcards needed;
  * only one file is ever selected) becomes the config's {@code docs.include} value, written into
- * that workspace's var.config.json, so no OTHER bundle's {@code example.md} can accidentally
+ * that workspace's varar.config.json, so no OTHER bundle's {@code example.md} can accidentally
  * satisfy this request. The config's {@code steps}
  * names the one fixture class {@link StepLoader} should load, exactly as {@link
  * VarEngineBehaviorTest} already proves end to end for classpath-resource specs — this task is
@@ -170,7 +170,7 @@ class ConformanceDogfoodTest {
                 .toString()
                 .replace('\\', '/');
         Files.writeString(
-                workspace.resolve("var.config.json"),
+                workspace.resolve("varar.config.json"),
                 """
                 {
                   "docs": { "include": ["%s"], "exclude": [] },

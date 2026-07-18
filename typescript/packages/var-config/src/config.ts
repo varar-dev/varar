@@ -8,7 +8,7 @@ export type { ParsedVarConfig, VarConfig, VarGlobs } from './config-types.ts'
 const EMPTY_PARSED: ParsedVarConfig = {
   // No default docs OR steps globs: a repo must declare both explicitly.
   // (The old TS-only `**/*.steps.ts` steps default died with the TS-only
-  // format — var.config.json is shared with the Python/Java/Kotlin ports.)
+  // format — varar.config.json is shared with the Python/Java/Kotlin ports.)
   docs: { include: [], exclude: [] },
   steps: [],
   snippets: {},
@@ -30,7 +30,7 @@ function stringArray(value: unknown, key: string, sourcePath: string): ReadonlyA
   return value
 }
 
-// Pure. Parses the var.config.json TEXT (no filesystem) so the conformance
+// Pure. Parses the varar.config.json TEXT (no filesystem) so the conformance
 // harness and loadVarConfig share one implementation. Fails loudly — a
 // typo'd config that silently discovers nothing is the failure mode this
 // refuses (see the design spec's error-handling section).
@@ -81,7 +81,7 @@ export function parseVarConfig(jsonText: string, sourcePath: string): ParsedVarC
 }
 
 export async function loadVarConfig(cwd: string): Promise<VarConfig> {
-  const path = resolve(cwd, 'var.config.json')
+  const path = resolve(cwd, 'varar.config.json')
   const parsed = existsSync(path) ? parseVarConfig(readFileSync(path, 'utf8'), path) : EMPTY_PARSED
   return {
     docs: parsed.docs,

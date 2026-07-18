@@ -22,7 +22,7 @@ describe('var CLI (source)', () => {
     try {
       const r = run(['init'], dir)
       expect(r.status).toBe(0)
-      expect(readFileSync(join(dir, 'var.config.json'), 'utf8')).toContain('docs')
+      expect(readFileSync(join(dir, 'varar.config.json'), 'utf8')).toContain('docs')
     } finally {
       rmSync(dir, { recursive: true, force: true })
     }

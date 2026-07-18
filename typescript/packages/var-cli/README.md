@@ -1,4 +1,4 @@
 # @varar/cli
 
-The `var` command-line runner for Varar specs: `var run`, `var lint`, and `var init`.
+The `var` command-line runner for Varar specs: `varar run`, `varar lint`, and `varar init`.
 The imperative shell around `@varar/core`.

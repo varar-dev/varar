@@ -61,7 +61,7 @@ class VarDiagnosticsReportingTest {
     @Test
     void aFileWithNoDiagnosticsPublishesNoReportingEntries(@TempDir Path workspace) throws Exception {
         Files.writeString(
-                workspace.resolve("var.config.json"),
+                workspace.resolve("varar.config.json"),
                 """
                 {
                   "docs": { "include": ["examplefixture/counter.md"], "exclude": [] },
@@ -81,7 +81,8 @@ class VarDiagnosticsReportingTest {
     }
 
     private static EngineExecutionResults executeAmbiguous(Path workspace) throws Exception {
-        Files.writeString(workspace.resolve("var.config.json"), """
+        Files.writeString(
+                workspace.resolve("varar.config.json"), """
                 {
                   "docs": { "include": ["examplefixture/ambiguous.md"], "exclude": [] },
                   "steps": ["%s"]

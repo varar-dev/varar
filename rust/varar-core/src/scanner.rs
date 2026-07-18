@@ -6,7 +6,7 @@
 //! The `plugins` parameter carried by `scanner.ts`'s (and the Python port's)
 //! `scan` signature is intentionally out of scope, following `Scanner.java` —
 //! no scanner plugin is needed by this port yet; [`scan`] takes no plugins
-//! parameter at all. A `var.config.json` naming `scannerPlugins` therefore has
+//! parameter at all. A `varar.config.json` naming `scannerPlugins` therefore has
 //! no core hook here until this is ported.
 
 use crate::ast::{

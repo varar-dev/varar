@@ -50,7 +50,7 @@ the async total is 99
 
 
 def _write(harness, spec: str) -> None:
-    harness.write("var.config.json", VAR_CONFIG)
+    harness.write("varar.config.json", VAR_CONFIG)
     harness.write("steps/async_calc.steps.py", ASYNC_STEPS)
     harness.write("features/async.md", spec)
 

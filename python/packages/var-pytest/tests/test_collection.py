@@ -18,7 +18,7 @@ SPEC = "# Calc\n\n## adds two\n\nI add 2\nthe total is 2\n\n## adds wrong\n\nI a
 
 
 def _write_varar_config(pytester):
-    (pytester.path / "var.config.json").write_text(VAR_CONFIG, encoding="utf-8")
+    (pytester.path / "varar.config.json").write_text(VAR_CONFIG, encoding="utf-8")
 
 
 def _write_steps(pytester):

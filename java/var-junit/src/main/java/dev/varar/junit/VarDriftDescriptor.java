@@ -6,7 +6,7 @@ import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor;
 import org.junit.platform.engine.support.hierarchical.Node;
 
 /**
- * A failing leaf for a drifted paragraph — one the committed {@code var.lock.json} baseline
+ * A failing leaf for a drifted paragraph — one the committed {@code varar.lock.json} baseline
  * recorded as an example that now matches no step. The JUnit surface of the drift gate: it always
  * fails, so the build goes red until the step is fixed or the drift is accepted (re-run with
  * {@code -Dvar.update} / {@code VAR_UPDATE=1}). Added by {@link VarFileSelectorResolver} alongside

@@ -1,6 +1,6 @@
 """unittest adapter for var.
 
-One call in a test module turns every spec matched by var.config.json into
+One call in a test module turns every spec matched by varar.config.json into
 generated ``unittest.TestCase`` classes — one class per spec file, one test
 method per example::
 
@@ -40,7 +40,7 @@ __version__ = "0.0.0"
 def generate_tests(namespace: dict[str, Any], root: str | Path | None = None) -> None:
     """Generate unittest test cases for every spec into *namespace*.
 
-    Reads ``var.config.json`` from *root* (default: the directory of the
+    Reads ``varar.config.json`` from *root* (default: the directory of the
     module *namespace* belongs to, via its ``__file__``), loads the step
     definition files it globs, and assigns one ``unittest.TestCase`` subclass
     per matched spec file into *namespace* — one ``test_*`` method per

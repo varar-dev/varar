@@ -12,9 +12,9 @@
 
   <artifactId>config</artifactId>
   <packaging>jar</packaging>
-  <name>var-config (Java) — var.config.json reader</name>
+  <name>var-config (Java) — varar.config.json reader</name>
   <description>
-    Reads var.config.json, the shared config file for all var tools (see
+    Reads varar.config.json, the shared config file for all var tools (see
     conformance/config/README.md and
     doc/superpowers/specs/2026-07-02-multi-language-authoring-design.md).
     Zero runtime dependencies: JSON parsing is hand-rolled, mirroring

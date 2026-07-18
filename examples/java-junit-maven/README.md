@@ -17,7 +17,7 @@ Each example in the Markdown specs becomes one JUnit test.
 
 ## How it fits together
 
-- **`var.config.json`** is the single source of truth: `docs.include` globs
+- **`varar.config.json`** is the single source of truth: `docs.include` globs
   the Markdown specs, and `steps` lists the fully-qualified step-definition
   classes.
 - **`src/test/java/examples/*Steps.java`** implement `StepDefinitions`: a
@@ -34,5 +34,5 @@ Each example in the Markdown specs becomes one JUnit test.
 
 In the `oselvar/var` monorepo `<var.version>` is the SNAPSHOT that
 `mvn install` (run from `java/`) puts into the local Maven repository, so the
-sample gates trunk; in `oselvar/var-examples` the release sync pins it to the
+sample gates trunk; in `oselvar/varar-examples` the release sync pins it to the
 released Maven Central artifacts.

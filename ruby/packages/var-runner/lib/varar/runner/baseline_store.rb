@@ -3,11 +3,11 @@
 module Varar
   module Runner
     # The filesystem BaselineStore: the committed drift baseline lives at the
-    # project root as var.lock.json. The core owns the format; this adapter
+    # project root as varar.lock.json. The core owns the format; this adapter
     # only moves raw text. Port of baseline_store.py.
     class FileBaselineStore
       def initialize(root)
-        @path = File.join(root.to_s, 'var.lock.json')
+        @path = File.join(root.to_s, 'varar.lock.json')
       end
 
       def read

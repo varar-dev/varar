@@ -3,7 +3,7 @@
 require 'json'
 
 module Varar
-  # Strict, fail-loud reader for the shared var.config.json format. Missing
+  # Strict, fail-loud reader for the shared varar.config.json format. Missing
   # file → empty config; malformed JSON, wrong types, or unknown keys → an
   # error starting with the file path. See conformance/config/README.md.
   module Config
@@ -22,7 +22,7 @@ module Varar
     module_function
 
     def read_var_config(root)
-      path = File.join(root.to_s, 'var.config.json')
+      path = File.join(root.to_s, 'varar.config.json')
       return VarConfig.new unless File.file?(path)
 
       data = begin

@@ -20,7 +20,7 @@ you when a paragraph has stopped being an example. It comes in two pieces:
   commands, and the editor surface.
 
 Everything on this page is powered by the language server, so an editor other
-than VS Code that points an LSP client at `var-lsp` gets the same feature set.
+than VS Code that points an LSP client at `varar-lsp` gets the same feature set.
 
 ## Install
 
@@ -33,7 +33,7 @@ Windsurf — that resolves extensions from Open VSX:
 - **From the CLI:** `code --install-extension varar.varar` (or the
   equivalent `codium` / `cursor` command).
 
-The extension activates when a workspace contains a `var.config.json`, or when
+The extension activates when a workspace contains a `varar.config.json`, or when
 you open a Markdown, TypeScript, Python, Java, or Kotlin file. It needs that
 config to know which files are specs and where your step definitions live — see
 the [Examples reference](/reference/examples/) for the `docs` globs that decide
@@ -123,7 +123,7 @@ through the rename.
 
 ## Using the language server in other editors
 
-`@varar/lsp` is a plain LSP server with a `var-lsp` executable. Any editor
+`@varar/lsp` is a plain LSP server with a `varar-lsp` executable. Any editor
 that can launch a language server for Markdown and your step-definition files can
 consume it directly and get the same highlighting, navigation, diagnostics, and
 rename features described above — the VS Code extension is just the reference

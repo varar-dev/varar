@@ -49,7 +49,7 @@ class DiscoverySelectorResolverTest {
 
     @Test
     void resolvesOneContainerPerMatchingSpecResource(@TempDir Path workspace) throws Exception {
-        Files.writeString(workspace.resolve("var.config.json"), """
+        Files.writeString(workspace.resolve("varar.config.json"), """
                 { "docs": { "include": ["discoveryfixture/**/*.md"], "exclude": ["**/excluded.md"] } }
                 """, StandardCharsets.UTF_8);
         LauncherDiscoveryRequest request = LauncherDiscoveryRequestBuilder.request()

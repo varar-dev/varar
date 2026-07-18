@@ -12,7 +12,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 /**
- * The Kotest adapter: subclass, point `root` at the directory holding var.config.json (whose
+ * The Kotest adapter: subclass, point `root` at the directory holding varar.config.json (whose
  * docs.include / docs.exclude / steps drive spec discovery and step loading — identical contract to
  * var-junit's ConfigBridge/var.config.root), and every planned example becomes one Kotest test
  * inside a per-spec-file container. All discovery/loading/ planning/failure-rendering is delegated
@@ -22,9 +22,9 @@ import java.nio.file.Path
  * (var-junit DOES surface diagnostics via ReportEntry — restoring that parity here is a known
  * follow-up).
  *
- * @param root the directory holding var.config.json; also what its docs.include/docs.exclude globs
- *   resolve against (defaults to the module working directory, a missing var.config.json there
- *   yielding the empty config).
+ * @param root the directory holding varar.config.json; also what its docs.include/docs.exclude
+ *   globs resolve against (defaults to the module working directory, a missing varar.config.json
+ *   there yielding the empty config).
  */
 abstract class VarSpec(root: Path = Path.of(".")) : FunSpec() {
 
@@ -47,7 +47,7 @@ abstract class VarSpec(root: Path = Path.of(".")) : FunSpec() {
             val source = Files.readString(specPath)
             val plan = Run.planSpec(rel, source, loaded.registry())
             val runs = Run.examplesWithRuns(plan, loaded.createContext(), Run.RecordingReporter())
-            // Reconcile drift: a clean run records/updates var.lock.json; a paragraph that was
+            // Reconcile drift: a clean run records/updates varar.lock.json; a paragraph that was
             // an example and no longer matches becomes a failing test (accept with -Dvar.update).
             val drifts =
                 Drift.reconcileDrift(baselineStore, rel, source, plan.varDoc(), plan, update)

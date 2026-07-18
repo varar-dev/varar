@@ -1,6 +1,6 @@
 //! `varar-cargotest` — the `cargo test` adapter (ADR 0007).
 //!
-//! Turns every Markdown example matched by `var.config.json` into one
+//! Turns every Markdown example matched by `varar.config.json` into one
 //! `libtest-mimic` test, reported/filtered/listed by `cargo test` like a native
 //! `#[test]`. varar-core is single-threaded (`Rc`, not `Send`), so each test body
 //! captures only owned `Send` data — the spec path/source plus `fn` pointers to
@@ -54,7 +54,7 @@ pub fn run_one(
 }
 
 /// Enumerate every example (and any drift) as `libtest-mimic` trials. Drift is
-/// reconciled here, on the main thread: a clean run rewrites `var.lock.json`;
+/// reconciled here, on the main thread: a clean run rewrites `varar.lock.json`;
 /// `VAR_UPDATE=1` accepts drift instead of failing.
 pub fn trials(root: &Path, build_registry: BuildRegistry, context: ContextFactory) -> Vec<Trial> {
     let config = read_config(root);

@@ -21,7 +21,7 @@
     "onLanguage:python",
     "onLanguage:java",
     "onLanguage:kotlin",
-    "workspaceContains:**/var.config.json"
+    "workspaceContains:**/varar.config.json"
   ],
   "contributes": {
     "commands": [

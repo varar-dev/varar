@@ -12,7 +12,7 @@ afterEach(() => {
   rmSync(dir, { recursive: true, force: true })
 })
 
-test('read returns null when var.lock.json is absent', () => {
+test('read returns null when varar.lock.json is absent', () => {
   expect(createFileBaselineStore(dir).read()).toBeNull()
 })
 
@@ -20,7 +20,7 @@ test('write then read round-trips the raw contents', () => {
   const store = createFileBaselineStore(dir)
   store.write('{"version":1,"specs":{}}\n')
   expect(store.read()).toBe('{"version":1,"specs":{}}\n')
-  // Written to var.lock.json at the project root.
+  // Written to varar.lock.json at the project root.
   expect(readFileSync(varLockPath(dir), 'utf8')).toBe('{"version":1,"specs":{}}\n')
 })
 

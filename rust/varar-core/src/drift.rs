@@ -1,5 +1,5 @@
 //! Spec drift detection — port of `drift.ts` / `Drift.java`. A paragraph the
-//! committed `var.lock.json` baseline recorded as an example that now matches no
+//! committed `varar.lock.json` baseline recorded as an example that now matches no
 //! step. Byte-identical to the other ports (FNV-1a fingerprint, insertion-ordered
 //! lockfile serializer, Jaccard word-similarity re-identification).
 
@@ -29,7 +29,7 @@ pub struct SpecBaseline {
     pub examples: Vec<BaselineExample>,
 }
 
-/// The whole `var.lock.json`: every spec keyed by its POSIX path.
+/// The whole `varar.lock.json`: every spec keyed by its POSIX path.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct VarLock {
     pub version: u32,
@@ -44,7 +44,7 @@ pub struct Drifted {
     pub span: Span,
 }
 
-/// Persistence port for `var.lock.json`. The core owns the format; adapters move
+/// Persistence port for `varar.lock.json`. The core owns the format; adapters move
 /// only raw text.
 pub trait BaselineStore {
     /// The whole lockfile's contents, or `None` when there is no baseline yet.
@@ -196,7 +196,7 @@ pub fn reconcile_drift(
     drifts
 }
 
-/// Serializes `var.lock.json` deterministically (fixed field order, sorted spec
+/// Serializes `varar.lock.json` deterministically (fixed field order, sorted spec
 /// paths, two-space indent, trailing newline) — NOT [`crate::canonical_json`].
 pub fn stringify_var_lock(lock: &VarLock) -> String {
     let mut sb = String::new();
@@ -264,7 +264,7 @@ fn write_json_string(sb: &mut String, s: &str) {
     sb.push('"');
 }
 
-/// Parses `var.lock.json`; `None` on malformed input (treated as no baseline).
+/// Parses `varar.lock.json`; `None` on malformed input (treated as no baseline).
 pub fn parse_var_lock(text: &str) -> Option<VarLock> {
     let parsed = JsonReader::new(text).parse_whole()?;
     let Value::Map(obj) = parsed else { return None };
@@ -309,7 +309,7 @@ fn parse_spec_baseline(value: &Value) -> Option<SpecBaseline> {
     })
 }
 
-/// A tiny recursive-descent JSON reader — enough for `var.lock.json`, returning
+/// A tiny recursive-descent JSON reader — enough for `varar.lock.json`, returning
 /// `None` on malformed input (Java's caught-exception → null).
 struct JsonReader {
     chars: Vec<char>,

@@ -12,14 +12,14 @@ module Varar
     BaselineExample = Data.define(:name, :line)
     # The committed baseline for one spec file.
     SpecBaseline = Data.define(:source_hash, :examples)
-    # The whole var.lock.json: every spec keyed by its POSIX path.
+    # The whole varar.lock.json: every spec keyed by its POSIX path.
     VarLock = Data.define(:version, :specs)
     # A paragraph the baseline says was an example and now matches no step.
     Drift = Data.define(:name, :line, :span)
 
-    # Spec drift detection: a paragraph the committed var.lock.json baseline
+    # Spec drift detection: a paragraph the committed varar.lock.json baseline
     # recorded as an example that now matches no step. Pure, byte-identical to
-    # the TS port so var.lock.json is shared across languages. Port of drift.ts.
+    # the TS port so varar.lock.json is shared across languages. Port of drift.ts.
     #
     # BaselineStore is a duck-typed port: #read -> String|nil, #write(contents).
     module Drifts
@@ -166,7 +166,7 @@ module Varar
         BaselineExample.new(name: name, line: line)
       end
 
-      # Serialize var.lock.json deterministically: spec paths sorted, examples
+      # Serialize varar.lock.json deterministically: spec paths sorted, examples
       # in document order, insertion-order keys otherwise (version, specs;
       # sourceHash, examples; name, line) — NOT canonical JSON's key sort.
       def stringify_var_lock(lock)

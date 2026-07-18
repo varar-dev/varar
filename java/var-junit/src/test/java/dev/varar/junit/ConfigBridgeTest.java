@@ -23,7 +23,7 @@ class ConfigBridgeTest {
 
     @Test
     void configRootKeyPointsAtTheWorkspaceHoldingVarConfigJson(@TempDir Path workspace) throws Exception {
-        Files.writeString(workspace.resolve("var.config.json"), """
+        Files.writeString(workspace.resolve("varar.config.json"), """
                 {
                   "docs": {
                     "include": ["features/**/*.md", "more/**/*.md"],
@@ -51,7 +51,7 @@ class ConfigBridgeTest {
     void missingConfigRootKeyDefaultsToTheEmptyConfigWhenTheWorkingDirectoryHasNoVarConfigJson() {
         // No var.config.root parameter is set, so ConfigBridge falls back to the JVM working
         // directory (java/var-junit under this module's own `mvn test`) -- which has no
-        // var.config.json -- so VarConfig.load resolves to the empty config.
+        // varar.config.json -- so VarConfig.load resolves to the empty config.
         ConfigurationParameters params = new FakeConfigurationParameters(Map.of());
 
         VarConfig config = ConfigBridge.fromConfigurationParameters(params);

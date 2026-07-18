@@ -92,6 +92,6 @@ fn baseline_store_round_trips_and_reconcile_writes_lock() {
     // Clean run: no drift, and the baseline is written.
     let drifts = reconcile_drift(&mut store, "hi.md", source, &doc, &execution, false);
     assert!(drifts.is_empty());
-    assert!(store.read().is_some(), "var.lock.json should be written");
-    assert!(root.join("var.lock.json").is_file());
+    assert!(store.read().is_some(), "varar.lock.json should be written");
+    assert!(root.join("varar.lock.json").is_file());
 }

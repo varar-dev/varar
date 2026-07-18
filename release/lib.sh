@@ -7,7 +7,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # Single source of truth for whether the Rust port ships to crates.io. While it
 # is 0 (parked), two targets stay in lock-step: 65-crates-io.sh reports OK
 # without publishing, AND 70-varar-examples.sh omits the rust-* samples (their
-# `var-core` path dependency can't resolve in var-examples until the crates are
+# `var-core` path dependency can't resolve in varar-examples until the crates are
 # on crates.io — pinning it to an unpublished version would ship a broken
 # sample). Flip to 1 only once the crates are publishable — see the go-live
 # checklist in release/targets/65-crates-io.sh.

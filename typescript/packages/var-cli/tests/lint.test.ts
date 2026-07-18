@@ -22,7 +22,7 @@ test('exit code 0 when no diagnostics found', async () => {
 })
 test('a standalone table or fenced code block is not a lint error', async () => {
   // Tables and fenced code blocks that do not attach to a step are valid
-  // Markdown content, not mistakes — `var lint` stays quiet about them.
+  // Markdown content, not mistakes — `varar lint` stays quiet about them.
   const dir = mkdtempSync(join(tmpdir(), 'var-lint-text-'))
   try {
     writeFileSync(join(dir, 'a.md'), '# A\n\n```js\nx=1\n```\n\n| a | b |\n|---|---|\n| 1 | 2 |\n')

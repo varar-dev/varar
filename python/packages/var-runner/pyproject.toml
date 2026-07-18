@@ -1,13 +1,13 @@
 [project]
 name = "varar-runner"
 version = "0.4.2"
-description = "Shared spec discovery + run orchestration for var runners"
+description = "Shared spec discovery + run orchestration for varar runners"
 requires-python = ">=3.11"
 license = "MIT"
 dependencies = ["varar==0.4.2", "varar-config==0.4.2"]
 
 [project.scripts]
-var = "varar_runner.cli:main"
+varar = "varar_runner.cli:main"
 
 [build-system]
 requires = ["hatchling"]

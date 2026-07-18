@@ -12,7 +12,7 @@ export interface Reporter {
   diagnostic(d: Diagnostic): void
 }
 
-// Persistence port for the drift baseline (`var.lock.json`). The core owns the
+// Persistence port for the drift baseline (`varar.lock.json`). The core owns the
 // format (parseVarLock / stringifyVarLock) and reads/writes raw text through
 // this port, so adapters stay dumb I/O: a filesystem store on Node (CLI,
 // vitest), an in-memory store in the browser. `read` returns the whole

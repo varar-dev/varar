@@ -82,7 +82,7 @@ describe('createStore over a FileSystem', () => {
     const fs = fakeFs({
       '/s.steps.ts': `stimulus('I open the vault', () => {})\n`,
       '/vault.md': 'The vault is sealed.\n',
-      '/var.lock.json': JSON.stringify(lock),
+      '/varar.lock.json': JSON.stringify(lock),
     })
     const store = createStore({ fs, config, grammarLoader })
     await store.reindex()
@@ -103,7 +103,7 @@ describe('createStore over a FileSystem', () => {
     const fs = fakeFs({
       '/s.steps.ts': `stimulus('I open the vault', () => {})\n`,
       '/vault.md': 'The vault is sealed.\n',
-      '/var.lock.json': JSON.stringify(lock),
+      '/varar.lock.json': JSON.stringify(lock),
     })
     const store = createStore({ fs, config, grammarLoader })
     await store.reindex()
@@ -112,7 +112,7 @@ describe('createStore over a FileSystem', () => {
     await store.reindex()
     expect(store.index().diagnostics.filter((d) => d.code === 'drift')).toHaveLength(0)
     // The now-prose paragraph is gone from the persisted baseline.
-    const written = JSON.parse(await fs.read('/var.lock.json'))
+    const written = JSON.parse(await fs.read('/varar.lock.json'))
     expect(written.specs['vault.md'].examples).toEqual([])
   })
 
@@ -126,7 +126,7 @@ describe('createStore over a FileSystem', () => {
     const fs = fakeFs({
       '/s.steps.ts': `stimulus('I open the vault', () => {})\n`,
       '/vault.md': 'I open the vault.\n',
-      '/var.lock.json': JSON.stringify(lock),
+      '/varar.lock.json': JSON.stringify(lock),
     })
     const store = createStore({ fs, config, grammarLoader })
     await store.reindex()

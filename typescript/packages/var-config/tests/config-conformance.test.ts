@@ -13,7 +13,7 @@ const EMPTY = { docs: { include: [], exclude: [] }, steps: [], snippets: {}, sca
 
 for (const name of readdirSync(CASES_DIR).sort()) {
   const dir = join(CASES_DIR, name)
-  const configPath = join(dir, 'var.config.json')
+  const configPath = join(dir, 'varar.config.json')
   if (existsSync(join(dir, 'expect-error.txt'))) {
     test(`config conformance: ${name} fails to parse`, () => {
       expect(() => parseVarConfig(readFileSync(configPath, 'utf8'), configPath)).toThrowError()

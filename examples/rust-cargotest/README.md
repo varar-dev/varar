@@ -22,7 +22,7 @@ item per example.)
 
 ## How it fits together
 
-- **`var.config.json`** is the single source of truth: `docs.include` globs the
+- **`varar.config.json`** is the single source of truth: `docs.include` globs the
   Markdown specs. (`steps` is carried for parity with the other ports; Rust
   compiles its step files in, so there is nothing to glob at runtime.)
 - **`src/steps/*.rs`** define the steps. Rust has no import-for-side-effect, so

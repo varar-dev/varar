@@ -14,7 +14,7 @@ type RunInput = {
   update?: boolean
 }
 
-// One baseline store for the whole page (all specs keyed inside var.lock.json),
+// One baseline store for the whole page (all specs keyed inside varar.lock.json),
 // living as long as the worker. Drift is measured against it across edits.
 const baselineStore = createMemoryBaselineStore()
 // Mirrors run-client.ts's WorkerRequest/WorkerResponse — the requestId lets

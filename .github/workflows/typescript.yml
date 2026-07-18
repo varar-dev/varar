@@ -7,14 +7,14 @@ on:
       - 'typescript/**'
       - 'conformance/**'
       - 'examples/**'
-      - 'var.config.json'
+      - 'varar.config.json'
       - '.github/workflows/typescript.yml'
   pull_request:
     paths:
       - 'typescript/**'
       - 'conformance/**'
       - 'examples/**'
-      - 'var.config.json'
+      - 'varar.config.json'
       - '.github/workflows/typescript.yml'
   workflow_dispatch:
 

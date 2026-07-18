@@ -1,12 +1,12 @@
 """The `var` command-line entry point.
 
-Today it offers a single sub-command, `var init`, which scaffolds a new
-project: a `var.config.json`, one Markdown spec, and its step definitions.
+Today it offers a single sub-command, `varar init`, which scaffolds a new
+project: a `varar.config.json`, one Markdown spec, and its step definitions.
 Specs then run through pytest (`pytest-varar`) or unittest — there is no
-`var run` in the Python port; the test framework is the runner.
+`varar run` in the Python port; the test framework is the runner.
 
 The scaffold mirrors the TypeScript CLI (`@varar/varar-cli`) byte-for-byte
-except for the steps file, so a project started with `var init` looks the same
+except for the steps file, so a project started with `varar init` looks the same
 in every language. The `01-hello.md` spec is language-neutral.
 """
 
@@ -17,8 +17,8 @@ from pathlib import Path
 from typing import Callable
 
 _CONFIG = """{
-  "docs": { "include": ["var-examples/**/*.md"], "exclude": [] },
-  "steps": ["var-examples/**/*.steps.py"]
+  "docs": { "include": ["varar-examples/**/*.md"], "exclude": [] },
+  "steps": ["varar-examples/**/*.steps.py"]
 }
 """
 
@@ -44,15 +44,15 @@ def _(state, expected):
 '''
 
 _FILES: tuple[tuple[str, str], ...] = (
-    ("var.config.json", _CONFIG),
-    ("var-examples/01-hello.md", _EXAMPLE_MD),
-    ("var-examples/steps/01-hello.steps.py", _EXAMPLE_STEPS),
+    ("varar.config.json", _CONFIG),
+    ("varar-examples/01-hello.md", _EXAMPLE_MD),
+    ("varar-examples/steps/01-hello.steps.py", _EXAMPLE_STEPS),
 )
 
-_USAGE = """var — scaffold and run Markdown specs
+_USAGE = """varar — scaffold and run Markdown specs
 
 Usage:
-  var init               scaffold a new project
+  varar init               scaffold a new project
 """
 
 

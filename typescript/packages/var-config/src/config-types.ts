@@ -7,7 +7,7 @@ export type VarGlobs = {
   readonly exclude: ReadonlyArray<string>
 }
 
-// The parsed, unresolved shape of var.config.json — pure data, shared
+// The parsed, unresolved shape of varar.config.json — pure data, shared
 // byte-for-byte with the Python/Java/Kotlin readers (see
 // conformance/config/README.md). Scanner plugins are NAMES here.
 export type ParsedVarConfig = {

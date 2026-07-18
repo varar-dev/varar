@@ -12,7 +12,7 @@ import java.util.Set;
 import java.util.TreeSet;
 
 /**
- * The parsed var.config.json — the single shared config file for all var
+ * The parsed varar.config.json — the single shared config file for all var
  * tools across every language port. Same field semantics everywhere:
  * {@code docs.include} has no default (empty discovers nothing),
  * {@code docs.exclude} removes matches, both are plain globs (no {@code !}
@@ -45,9 +45,9 @@ public record VarConfig(
         return new VarConfig(List.of(), List.of(), List.of(), Map.of(), List.of());
     }
 
-    /** Reads {@code <root>/var.config.json}; a missing file is the empty config. */
+    /** Reads {@code <root>/varar.config.json}; a missing file is the empty config. */
     public static VarConfig load(Path root) {
-        Path path = root.resolve("var.config.json");
+        Path path = root.resolve("varar.config.json");
         if (!Files.isRegularFile(path)) return empty();
         String text;
         try {

@@ -4,7 +4,7 @@ require 'minitest'
 require 'varar/runner'
 
 module Varar
-  # Minitest adapter. One call turns every spec matched by var.config.json into
+  # Minitest adapter. One call turns every spec matched by varar.config.json into
   # a generated Minitest::Test subclass — one class per spec file, one test
   # method per example. Mirrors var-unittest.
   #

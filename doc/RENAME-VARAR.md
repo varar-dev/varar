@@ -193,6 +193,27 @@ These are **external** and block *publishing*, not the code rename:
 - [ ] 1Password (vault `Vár`): new `@varar` npm token, PyPI token; update the
       `op://` refs in `release/release.env` if item names change.
 
+## Progress (as of this branch)
+
+**Done + green + committed** (6 commits): npm `@varar/*` (TS build/check/test green),
+PyPI `varar*` (pytest green), Maven `dev.varar:*` (mvn install + all JVM samples
+green), RubyGems `varar*` (rake + samples green), Rust `varar*` crates (cargo
+green); release scripts, `languages.json`, Makefile, CI, badges retargeted;
+front-page + README reframed around *varar = oaths* (goddess **Vár** kept); the
+`70-varar-examples.sh` sync script renamed. The dated `doc/superpowers` +
+`doc/adr` archive is intentionally left as a historical record.
+
+**Remaining — the product-token pass (phase 6):** `var.config.json` →
+`varar.config.json`, `var.lock.json` → `varar.lock.json`,
+`var.config.schema.json` → `varar.config.schema.json` (+ `$id`/`$schema`); the
+CLI command `var` → `varar` (bins + help across TS/Python/Ruby); the
+`var-examples` scaffold folder → `varar-examples` (CLI init + tests + tutorials);
+VS Code activation event. ~101 files; the shared `conformance/config/cases/*`
+fixtures couple all five ports' config-conformance harnesses, so it lands with
+five gate re-runs. The tree is fully green and internally consistent *without*
+this pass (every port still uses `var.config.json` / the `var` command
+uniformly).
+
 ## Execution phases (on `rename-to-varar`)
 
 Ordered so each port stays independently build-green. `make <port>` gates each.

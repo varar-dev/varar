@@ -18,18 +18,18 @@ VAR_CONFIG = """\
 
 
 def _project(harness, spec_rel: str, spec: str) -> None:
-    harness.write("var.config.json", VAR_CONFIG)
+    harness.write("varar.config.json", VAR_CONFIG)
     harness.write("steps/calc.steps.py", STEPS)
     harness.write(spec_rel, spec)
 
 
 def _baseline(harness, spec_key: str, examples) -> None:
     lock = {"version": 1, "specs": {spec_key: {"sourceHash": "fnv1a:0", "examples": examples}}}
-    harness.write("var.lock.json", json.dumps(lock))
+    harness.write("varar.lock.json", json.dumps(lock))
 
 
 def _lock(harness):
-    return json.loads((harness.root / "var.lock.json").read_text(encoding="utf-8"))
+    return json.loads((harness.root / "varar.lock.json").read_text(encoding="utf-8"))
 
 
 def test_first_run_records_the_baseline(harness):
@@ -44,12 +44,12 @@ def test_first_run_records_the_baseline(harness):
 def test_a_paragraph_that_stopped_matching_drifts_and_fails(harness):
     _project(harness, "features/vault.md", "The vault is sealed.\n")
     _baseline(harness, "features/vault.md", [{"name": "The vault is sealed", "line": 1}])
-    before = (harness.root / "var.lock.json").read_text(encoding="utf-8")
+    before = (harness.root / "varar.lock.json").read_text(encoding="utf-8")
     result, output = harness.generate_and_run()
     assert not result.wasSuccessful()
     assert "The vault is sealed" in output
     # Unacknowledged drift leaves the baseline untouched.
-    assert (harness.root / "var.lock.json").read_text(encoding="utf-8") == before
+    assert (harness.root / "varar.lock.json").read_text(encoding="utf-8") == before
 
 
 def test_var_update_accepts_drift(harness, monkeypatch):

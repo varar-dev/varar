@@ -117,16 +117,16 @@ on everything since the last release tag):
 
 - Test files in the project's own test suite: `*.test.ts` (vitest).
 - BDD example files (dogfood + docs): plain `*.md`. There is no special `.var.md`
-  extension — a file is a spec iff its path matches the `docs` globs in `var.config.json`.
+  extension — a file is a spec iff its path matches the `docs` globs in `varar.config.json`.
   `docs` is `{ include, exclude }` (canonical shape — no array shorthand); both
   are plain globs, no `!` prefix. `include` has no default (empty discovers nothing);
   `exclude` removes matches (e.g. a not-implemented tutorial exercise). That config is
   the single source of truth for "what is a spec", consulted by the runner, the LSP, and
   the vitest plugin alike — the plugin drives vitest's own `include`/`exclude` from it.
 - Step definition files: `*.steps.ts`.
-- Config: every example project in `examples/` carries its own `var.config.json`
+- Config: every example project in `examples/` carries its own `varar.config.json`
   (docs `*.md` at the project root, steps per language). The repo-root
-  `var.config.json` mirrors `examples/typescript-vitest` for the LSP when the
+  `varar.config.json` mirrors `examples/typescript-vitest` for the LSP when the
   repo root is the workspace folder.
 
 ## Return-based comparison

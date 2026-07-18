@@ -10,7 +10,7 @@ import java.nio.file.Path
  * quirk); the surefire-reports XML records the real per-example testcase, and a failing example
  * still fails the build (proven by VarSpecFailureTest).
  *
- * Config comes from `src/test/resources/kotest-smoke/var.config.json` (docs.include matches every
+ * Config comes from `src/test/resources/kotest-smoke/varar.config.json` (docs.include matches every
  * .md file under specs, steps = SmokeSteps).
  */
 class VarSpecSmokeTest : VarSpec(root = Path.of("src/test/resources/kotest-smoke"))

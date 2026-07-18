@@ -27,14 +27,14 @@ def _string_tuple(value: object, key: str, path: Path) -> tuple[str, ...]:
 
 
 def read_varar_config(root: str | Path) -> VarConfig:
-    """Read ``<root>/var.config.json``.
+    """Read ``<root>/varar.config.json``.
 
     Missing file -> empty config (tools no-op; matches every other port).
     Malformed JSON, wrong types, or unknown keys -> ``ValueError`` starting
     with the file path — a typo'd config must fail loudly, never silently
     discover nothing. See conformance/config/README.md for the shared rules.
     """
-    path = Path(root) / "var.config.json"
+    path = Path(root) / "varar.config.json"
     if not path.is_file():
         return VarConfig()
     try:

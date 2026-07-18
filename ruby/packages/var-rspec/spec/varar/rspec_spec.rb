@@ -23,7 +23,7 @@ module Varar
 
     it 'generate no-ops when the project has no specs' do
       Dir.mktmpdir do |tmp|
-        File.write(File.join(tmp, 'var.config.json'),
+        File.write(File.join(tmp, 'varar.config.json'),
                    '{"docs":{"include":["*.md"]},"steps":["steps/*.steps.rb"]}')
         expect { described_class.generate(root: tmp) }.not_to raise_error
       end

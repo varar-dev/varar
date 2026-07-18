@@ -1,5 +1,5 @@
 {
-  "$schema": "../../conformance/config/var.config.schema.json",
+  "$schema": "../../conformance/config/varar.config.schema.json",
   "docs": {
     "include": [
       "*.md"
@@ -9,6 +9,6 @@
     ]
   },
   "steps": [
-    "src/steps/*.rs"
+    "steps/*.steps.py"
   ]
 }

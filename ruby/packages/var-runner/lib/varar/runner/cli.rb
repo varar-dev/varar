@@ -5,20 +5,20 @@ require 'fileutils'
 module Varar
   module Runner
     # The `var` command-line entry point (exposed by the `exe/var`
-    # executable). Today it offers a single sub-command, `var init`, which
-    # scaffolds a new project: a `var.config.json`, one Markdown spec, its
+    # executable). Today it offers a single sub-command, `varar init`, which
+    # scaffolds a new project: a `varar.config.json`, one Markdown spec, its
     # step definitions, and a framework bridge that turns the specs into
     # RSpec examples or Minitest tests.
     #
     # The config, spec and steps mirror the TypeScript CLI (`@varar/cli`)
-    # so a project started with `var init` looks the same in every language;
+    # so a project started with `varar init` looks the same in every language;
     # only the bridge is Ruby-specific, because RSpec/Minitest — unlike
     # pytest — need an explicit generator call to discover the specs.
     module CLI
       CONFIG = <<~JSON
         {
-          "docs": { "include": ["var-examples/**/*.md"], "exclude": [] },
-          "steps": ["var-examples/**/*.steps.rb"]
+          "docs": { "include": ["varar-examples/**/*.md"], "exclude": [] },
+          "steps": ["varar-examples/**/*.steps.rb"]
         }
       JSON
 
@@ -43,11 +43,11 @@ module Varar
       RSPEC_BRIDGE = <<~RUBY
         # frozen_string_literal: true
 
-        # Turn every Markdown spec matched by var.config.json into RSpec examples —
+        # Turn every Markdown spec matched by varar.config.json into RSpec examples —
         # one `it` per Markdown example, discovered when this file loads.
         require 'varar/rspec'
 
-        # var.config.json lives at the project root (the parent of spec/).
+        # varar.config.json lives at the project root (the parent of spec/).
         Varar::RSpec.generate(root: File.expand_path('..', __dir__))
       RUBY
 
@@ -57,16 +57,16 @@ module Varar
         require 'minitest/autorun'
         require 'varar/minitest'
 
-        # Turn every Markdown spec matched by var.config.json into Minitest tests —
-        # var.config.json lives at the project root (the parent of test/).
+        # Turn every Markdown spec matched by varar.config.json into Minitest tests —
+        # varar.config.json lives at the project root (the parent of test/).
         Varar::Minitest.generate_tests(Object, root: File.expand_path('..', __dir__))
       RUBY
 
       USAGE = <<~TEXT
-        var — scaffold and run Markdown specs
+        varar — scaffold and run Markdown specs
 
         Usage:
-          var init               scaffold a new project
+          varar init               scaffold a new project
       TEXT
 
       def self.main(argv, cwd: Dir.pwd, out: $stdout)
@@ -84,9 +84,9 @@ module Varar
       # (RSpec by default).
       def self.run_init(cwd, out, framework: detect_framework)
         files = [
-          ['var.config.json', CONFIG],
-          ['var-examples/01-hello.md', EXAMPLE_MD],
-          ['var-examples/steps/01-hello.steps.rb', EXAMPLE_STEPS]
+          ['varar.config.json', CONFIG],
+          ['varar-examples/01-hello.md', EXAMPLE_MD],
+          ['varar-examples/steps/01-hello.steps.rb', EXAMPLE_STEPS]
         ]
         files << if framework == :minitest
                    ['test/var_test.rb', MINITEST_BRIDGE]

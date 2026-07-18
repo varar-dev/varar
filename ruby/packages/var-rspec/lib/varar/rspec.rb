@@ -5,7 +5,7 @@ require 'varar/runner'
 
 module Varar
   # RSpec adapter. One call defines an RSpec example group per spec matched by
-  # var.config.json, with one `it` per Markdown example (header-bound rows are
+  # varar.config.json, with one `it` per Markdown example (header-bound rows are
   # separate examples) and a drift gate. See ADR 0005.
   #
   #   # spec/var_spec.rb

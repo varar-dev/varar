@@ -15,12 +15,12 @@ module Varar
             code = described_class.run_init(dir, out, framework: :rspec)
 
             expect(code).to eq(0)
-            expect(File.exist?(File.join(dir, 'var.config.json'))).to be(true)
-            expect(File.exist?(File.join(dir, 'var-examples/01-hello.md'))).to be(true)
-            steps = File.read(File.join(dir, 'var-examples/steps/01-hello.steps.rb'))
+            expect(File.exist?(File.join(dir, 'varar.config.json'))).to be(true)
+            expect(File.exist?(File.join(dir, 'varar-examples/01-hello.md'))).to be(true)
+            steps = File.read(File.join(dir, 'varar-examples/steps/01-hello.steps.rb'))
             expect(steps).to include('steps(greeting: \'\') do', 'stimulus(', 'sensor(')
             expect(File.read(File.join(dir, 'spec/var_spec.rb'))).to include('Varar::RSpec.generate')
-            expect(out.string).to include('created var.config.json')
+            expect(out.string).to include('created varar.config.json')
           end
         end
 
@@ -34,12 +34,12 @@ module Varar
 
         it 'skips files that already exist' do
           Dir.mktmpdir do |dir|
-            File.write(File.join(dir, 'var.config.json'), "{}\n")
+            File.write(File.join(dir, 'varar.config.json'), "{}\n")
             out = StringIO.new
             described_class.run_init(dir, out, framework: :rspec)
 
-            expect(File.read(File.join(dir, 'var.config.json'))).to eq("{}\n")
-            expect(out.string).to include('skipped var.config.json (already exists)')
+            expect(File.read(File.join(dir, 'varar.config.json'))).to eq("{}\n")
+            expect(out.string).to include('skipped varar.config.json (already exists)')
           end
         end
       end

@@ -23,18 +23,18 @@ pnpm add -D @varar/varar
 ## Scaffold a project
 
 ```bash
-pnpm exec var init
+pnpm exec varar init
 ```
 
 This creates a config file and a first example, side by side:
 
 ```
-created var.config.json
+created varar.config.json
 created varar-examples/hello-var/hello-var.md
 created varar-examples/hello-var/hello-var.steps.ts
 ```
 
-`var.config.json` says which files are specs and which files bind their steps:
+`varar.config.json` says which files are specs and which files bind their steps:
 
 ```json
 {
@@ -54,7 +54,7 @@ I greet "world". The greeting should be "Hello, world!".
 ## Run it
 
 ```bash
-pnpm exec var run
+pnpm exec varar run
 ```
 
 The freshly scaffolded example passes:
@@ -80,7 +80,7 @@ stimulus('I greet {string}', (_state, name) => ({ greeting: `Hi, ${name}!` }))
 Run var again:
 
 ```bash
-pnpm exec var run
+pnpm exec varar run
 ```
 
 Now the oath is *broken* — the spec still says `"Hello, world!"`, but the step

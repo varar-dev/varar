@@ -102,7 +102,7 @@ describe('generateVirtualModule', () => {
     expect(out).toContain('baseline:')
   })
 
-  test('inlines a null baseline when the spec is not yet in var.lock.json', () => {
+  test('inlines a null baseline when the spec is not yet in varar.lock.json', () => {
     const out = generateVirtualModule({
       varPath: '/abs/foo.md',
       stepImports: [],

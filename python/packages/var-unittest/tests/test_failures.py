@@ -66,7 +66,7 @@ def _(state):
 
 
 def test_cell_mismatch_is_a_failure_with_rendered_diff(harness):
-    harness.write("var.config.json", VAR_CONFIG)
+    harness.write("varar.config.json", VAR_CONFIG)
     harness.write("steps/spec.steps.py", CELL_MISMATCH_STEPS)
     harness.write("features/spec.md", CELL_MISMATCH_SPEC)
     result, _output = harness.generate_and_run()
@@ -82,7 +82,7 @@ def test_cell_mismatch_is_a_failure_with_rendered_diff(harness):
 
 
 def test_step_exception_is_an_error_not_a_failure(harness):
-    harness.write("var.config.json", VAR_CONFIG)
+    harness.write("varar.config.json", VAR_CONFIG)
     harness.write("steps/spec.steps.py", RAISING_STEPS)
     harness.write("features/spec.md", RAISING_SPEC)
     result, _output = harness.generate_and_run()
@@ -96,7 +96,7 @@ def test_step_exception_is_an_error_not_a_failure(harness):
 
 
 def test_prose_paragraph_with_no_matching_steps_is_silently_ignored(harness):
-    harness.write("var.config.json", VAR_CONFIG)
+    harness.write("varar.config.json", VAR_CONFIG)
     harness.write("steps/spec.steps.py", EMPTY_STEPS)
     harness.write("features/spec.md", PROSE_ONLY_SPEC)
     result, _output = harness.generate_and_run()

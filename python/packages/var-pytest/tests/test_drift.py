@@ -16,7 +16,7 @@ VAR_CONFIG = """\
 
 
 def _project(pytester):
-    (pytester.path / "var.config.json").write_text(VAR_CONFIG, encoding="utf-8")
+    (pytester.path / "varar.config.json").write_text(VAR_CONFIG, encoding="utf-8")
     (pytester.path / "steps").mkdir(exist_ok=True)
     (pytester.path / "steps/calc.steps.py").write_text(STEPS.strip(), encoding="utf-8")
     (pytester.path / "features").mkdir(exist_ok=True)
@@ -27,11 +27,11 @@ def _write_baseline(pytester, examples):
         "version": 1,
         "specs": {"features/vault.md": {"sourceHash": "fnv1a:0", "examples": examples}},
     }
-    (pytester.path / "var.lock.json").write_text(json.dumps(lock), encoding="utf-8")
+    (pytester.path / "varar.lock.json").write_text(json.dumps(lock), encoding="utf-8")
 
 
 def _lock(pytester):
-    return json.loads((pytester.path / "var.lock.json").read_text(encoding="utf-8"))
+    return json.loads((pytester.path / "varar.lock.json").read_text(encoding="utf-8"))
 
 
 def test_first_run_records_the_baseline_and_passes(pytester):
@@ -48,12 +48,12 @@ def test_a_paragraph_that_stopped_matching_drifts_and_fails(pytester):
     # Prose now; the baseline says it was an example.
     (pytester.path / "features/vault.md").write_text("The vault is sealed.\n", encoding="utf-8")
     _write_baseline(pytester, [{"name": "The vault is sealed", "line": 1}])
-    before = (pytester.path / "var.lock.json").read_text(encoding="utf-8")
+    before = (pytester.path / "varar.lock.json").read_text(encoding="utf-8")
     result = pytester.runpytest("-v")
     result.assert_outcomes(failed=1)
     result.stdout.fnmatch_lines(["*var:drift*"])
     # Unacknowledged drift leaves the baseline untouched.
-    assert (pytester.path / "var.lock.json").read_text(encoding="utf-8") == before
+    assert (pytester.path / "varar.lock.json").read_text(encoding="utf-8") == before
 
 
 def test_var_update_accepts_drift(pytester):

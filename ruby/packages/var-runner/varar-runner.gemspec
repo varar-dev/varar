@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.required_ruby_version = '>= 3.2'
   s.files = Dir['lib/**/*.rb'] + Dir['exe/*']
   s.bindir = 'exe'
-  s.executables = ['var']
+  s.executables = ['varar']
   s.require_paths = ['lib']
 
   s.add_dependency 'varar', '0.4.2'

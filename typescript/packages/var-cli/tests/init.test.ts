@@ -5,18 +5,18 @@ import { expect, test } from 'vitest'
 import languages from '../../../../languages.json' with { type: 'json' }
 import { runInit } from '../src/init.ts'
 
-test('scaffolds var.config.json and an example .md + steps file', async () => {
+test('scaffolds varar.config.json and an example .md + steps file', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'var-init-'))
   try {
     const result = await runInit({ cwd: dir, writeStdout: () => {} })
     expect(result.exitCode).toBe(0)
-    expect(existsSync(join(dir, 'var.config.json'))).toBe(true)
-    expect(existsSync(join(dir, 'var-examples/deep-thought.md'))).toBe(true)
-    expect(existsSync(join(dir, 'var-examples/steps/deep-thought.steps.ts'))).toBe(true)
-    const exampleMd = readFileSync(join(dir, 'var-examples/deep-thought.md'), 'utf8')
+    expect(existsSync(join(dir, 'varar.config.json'))).toBe(true)
+    expect(existsSync(join(dir, 'varar-examples/deep-thought.md'))).toBe(true)
+    expect(existsSync(join(dir, 'varar-examples/steps/deep-thought.steps.ts'))).toBe(true)
+    const exampleMd = readFileSync(join(dir, 'varar-examples/deep-thought.md'), 'utf8')
     // The scaffolded spec is plain prose — no Given/When/Then keyword ceremony.
     expect(exampleMd).not.toMatch(/^\s*(Given|When|Then)\b/m)
-    const stepsTs = readFileSync(join(dir, 'var-examples/steps/deep-thought.steps.ts'), 'utf8')
+    const stepsTs = readFileSync(join(dir, 'varar-examples/steps/deep-thought.steps.ts'), 'utf8')
     expect(stepsTs).toContain('steps')
     expect(stepsTs).toContain('sensor(')
     expect(stepsTs).toContain('=> 42')
@@ -33,7 +33,7 @@ test('the scaffolded config uses the steps glob declared for TypeScript in langu
   const dir = mkdtempSync(join(tmpdir(), 'var-init-manifest-'))
   try {
     await runInit({ cwd: dir, writeStdout: () => {} })
-    const config = JSON.parse(readFileSync(join(dir, 'var.config.json'), 'utf8'))
+    const config = JSON.parse(readFileSync(join(dir, 'varar.config.json'), 'utf8'))
     expect(config.steps).toContain(ts?.stepsGlob)
     expect(ts?.stepsGlob.endsWith(ts.ext)).toBe(true)
   } finally {
@@ -41,16 +41,18 @@ test('the scaffolded config uses the steps glob declared for TypeScript in langu
   }
 })
 
-test('refuses to overwrite an existing var.config.json; reports which files were skipped', async () => {
+test('refuses to overwrite an existing varar.config.json; reports which files were skipped', async () => {
   const dir = mkdtempSync(join(tmpdir(), 'var-init-conflict-'))
   try {
-    writeFileSync(join(dir, 'var.config.json'), '{ "docs": { "include": [] } }')
+    writeFileSync(join(dir, 'varar.config.json'), '{ "docs": { "include": [] } }')
     const captured: string[] = []
     const result = await runInit({ cwd: dir, writeStdout: (s) => captured.push(s) })
     expect(result.exitCode).toBe(0)
-    expect(readFileSync(join(dir, 'var.config.json'), 'utf8')).toBe('{ "docs": { "include": [] } }')
+    expect(readFileSync(join(dir, 'varar.config.json'), 'utf8')).toBe(
+      '{ "docs": { "include": [] } }',
+    )
     expect(captured.join('')).toContain('skipped')
-    expect(captured.join('')).toContain('var.config.json')
+    expect(captured.join('')).toContain('varar.config.json')
   } finally {
     rmSync(dir, { recursive: true, force: true })
   }

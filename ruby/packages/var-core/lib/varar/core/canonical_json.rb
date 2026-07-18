@@ -7,7 +7,7 @@ module Varar
     # JSON serializers byte-for-byte compatible with JS `JSON.stringify(v, null, 2)`:
     # 2-space indent, LF, trailing newline, non-ASCII raw, empty containers as
     # {}/[]. `canonical_stringify` recursively sorts object keys (the goldens);
-    # `ordered_stringify` preserves insertion order (var.lock.json).
+    # `ordered_stringify` preserves insertion order (varar.lock.json).
     #
     # The container layout is hand-rolled because Ruby's JSON.pretty_generate
     # renders empty arrays/objects as "[\n\n]". Scalar encoding is delegated to

@@ -17,7 +17,7 @@ import org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine;
  * wiring is required (mirrors {@code var-pytest}'s {@code pytest11} entry-point
  * ergonomics). See {@code doc/adr/0003-java-junit-integration.md}.
  *
- * <p>{@link #discover} loads every {@code steps} class named by var.config.json exactly once per
+ * <p>{@link #discover} loads every {@code steps} class named by varar.config.json exactly once per
  * discovery pass ({@link StepLoader#loadSteps}, mirroring Python's {@code pytest_configure}) —
  * cached on the returned {@link VarEngineDescriptor} — then resolves the request's selectors
  * ({@link DiscoverySelectorResolver}) into one {@link VarFileDescriptor} container per {@code .md}

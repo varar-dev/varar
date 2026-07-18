@@ -1,7 +1,7 @@
 import type { ScannerPlugin } from '../scanner.ts'
 import { gherkinDocStrings, gherkinTables } from './gherkin/index.ts'
 
-// var.config.json carries scanner plugins as NAME STRINGS (the config is
+// varar.config.json carries scanner plugins as NAME STRINGS (the config is
 // shared with the Python/Java/Kotlin ports, which resolve the same names
 // against their own implementations). This is the TypeScript resolution
 // table. Fixed to the built-ins for now; third-party plugins are out of

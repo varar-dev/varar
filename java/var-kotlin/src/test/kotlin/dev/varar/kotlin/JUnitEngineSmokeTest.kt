@@ -25,7 +25,7 @@ class JUnitEngineSmokeTest {
     private fun runSpec(dir: Path, body: String) =
         Files.writeString(dir.resolve("cukes.md"), body).let { spec ->
             Files.writeString(
-                dir.resolve("var.config.json"),
+                dir.resolve("varar.config.json"),
                 """
                 {
                   "docs": { "include": ["cukes.md"], "exclude": [] },

@@ -35,7 +35,7 @@ intact through the loader, so var sees a `.md` file whose contents are
 Gherkin.
 
 To make the var scanner understand Gherkin tables and doc strings the package
-opts into two scanner plugins in `var.config.json`:
+opts into two scanner plugins in `varar.config.json`:
 
 ```json
 {
@@ -53,7 +53,7 @@ Plugins are off by default in `@varar/varar`; ordinary Markdown-native
 | Script | Runner | What it does |
 |---|---|---|
 | `pnpm test:cucumber` | cucumber-js | Loads `cucumber/steps/library.steps.ts`, runs `library.feature` |
-| `pnpm test:var` | `@varar/cli` (`var run`) | Loads `steps/library.steps.ts`, runs `library.feature.md` |
+| `pnpm test:var` | `@varar/cli` (`varar run`) | Loads `steps/library.steps.ts`, runs `library.feature.md` |
 | `pnpm test:var-vitest` | vitest + `@varar/vitest` plugin | Same .md, executed through vitest's runner |
 | `pnpm test` | all three in sequence | full sweep |
 
@@ -66,7 +66,7 @@ Locally, one scenario / three steps, Node 22:
 | Runner | Wall clock (mean of 3) |
 |---|---|
 | cucumber-js | ~0.85 s |
-| `var run` (CLI) | ~0.74 s |
+| `varar run` (CLI) | ~0.74 s |
 | `var` via vitest | ~1.5 s |
 
 The vitest path pays the cost of spinning up vite's transform + worker
@@ -77,7 +77,7 @@ directly, with no test runner in the way — which is most of the gap.
 
 1. Symlink (or rename) `.feature` to `.md`.
 2. Add `"gherkinTables"` and `"gherkinDocStrings"` to `scannerPlugins` in
-   `var.config.json` so the existing Gherkin syntax parses unchanged.
+   `varar.config.json` so the existing Gherkin syntax parses unchanged.
 3. Re-write the step file: replace `Given('expr', fn)` / `When(...)` /
    `Then(...)` with the role function that matches what each step does —
    `context('expr', fn)` to set up state, `action('expr', fn)` to perform an

@@ -20,13 +20,13 @@ async function main(): Promise<void> {
     case '-h':
       process.stdout.write(
         [
-          'var — markdown-native BDD',
+          'varar — markdown-native BDD',
           '',
           'Usage:',
-          '  var run [globs]        run markdown spec examples (no test runner)',
-          '  var run --update       accept drift and re-record var.lock.json',
-          '  var lint [globs]       check for missing/ambiguous/orphan steps',
-          '  var init               scaffold a new project',
+          '  varar run [globs]        run markdown spec examples (no test runner)',
+          '  varar run --update       accept drift and re-record varar.lock.json',
+          '  varar lint [globs]       check for missing/ambiguous/orphan steps',
+          '  varar init               scaffold a new project',
           '',
         ].join('\n'),
       )
@@ -47,12 +47,12 @@ async function main(): Promise<void> {
       break
     }
     default:
-      process.stderr.write(`var: unknown command "${parsed.command}". Try \`var help\`.\n`)
+      process.stderr.write(`varar: unknown command "${parsed.command}". Try \`varar help\`.\n`)
       process.exitCode = 1
   }
 }
 
 main().catch((err: unknown) => {
-  process.stderr.write(`var: ${err instanceof Error ? err.message : String(err)}\n`)
+  process.stderr.write(`varar: ${err instanceof Error ? err.message : String(err)}\n`)
   process.exitCode = 1
 })

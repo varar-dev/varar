@@ -47,7 +47,7 @@ class VarExampleDescriptorTest {
 
     private static void writeConfig(Path workspace, String docsInclude) throws Exception {
         Files.writeString(
-                workspace.resolve("var.config.json"), """
+                workspace.resolve("varar.config.json"), """
                 {
                   "docs": { "include": ["%s"], "exclude": [] },
                   "steps": ["%s"]
@@ -217,7 +217,7 @@ class VarExampleDescriptorTest {
         // Same guarantee as Task 9's discovery-level test, still true now that files get real
         // children: with no var.config.root parameter, ConfigBridge falls back to the JVM
         // working directory (java/var-junit under this module's own `mvn test`), which has no
-        // var.config.json -- so docsInclude defaults to empty and nothing is discovered at all,
+        // varar.config.json -- so docsInclude defaults to empty and nothing is discovered at all,
         // not merely "no examples inside an empty container".
         EngineDiscoveryResults results = EngineTestKit.engine("var")
                 .selectors(selectClasspathResource("examplefixture/widgets.md"))

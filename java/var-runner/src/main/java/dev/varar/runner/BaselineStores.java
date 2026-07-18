@@ -8,16 +8,16 @@ import java.nio.file.Path;
 
 /**
  * The Node/CLI-equivalent filesystem {@link Drift.BaselineStore}: the committed drift baseline
- * lives at the project root as {@code var.lock.json}. The core owns the format; this adapter only
+ * lives at the project root as {@code varar.lock.json}. The core owns the format; this adapter only
  * reads and writes the raw text.
  */
 public final class BaselineStores {
 
     private BaselineStores() {}
 
-    /** A store backed by {@code <root>/var.lock.json}. */
+    /** A store backed by {@code <root>/varar.lock.json}. */
     public static Drift.BaselineStore file(Path root) {
-        Path path = root.resolve("var.lock.json");
+        Path path = root.resolve("varar.lock.json");
         return new Drift.BaselineStore() {
             @Override
             public String read() {

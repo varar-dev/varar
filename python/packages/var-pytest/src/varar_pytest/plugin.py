@@ -23,7 +23,7 @@ def pytest_addoption(parser: pytest.Parser) -> None:
         "--var-update",
         action="store_true",
         default=False,
-        help="Accept drift and re-record var.lock.json (also via VAR_UPDATE=1).",
+        help="Accept drift and re-record varar.lock.json (also via VAR_UPDATE=1).",
     )
 
 
@@ -72,7 +72,7 @@ class VarFile(pytest.File):
             name = base if idx == 0 else f"{base}[{idx}]"
             yield VarItem.from_parent(self, name=name, example=example, run=run, source=source)
 
-        # Reconcile drift against var.lock.json: a clean run records/updates the
+        # Reconcile drift against varar.lock.json: a clean run records/updates the
         # baseline; a paragraph that was an example and no longer matches any
         # step yields a failing item (unless --var-update / VAR_UPDATE accepts).
         try:

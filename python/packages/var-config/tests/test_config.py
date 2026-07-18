@@ -4,7 +4,7 @@ from varar_config import VarConfig, read_varar_config
 
 
 def _write(tmp_path, body: str):
-    (tmp_path / "var.config.json").write_text(body, encoding="utf-8")
+    (tmp_path / "varar.config.json").write_text(body, encoding="utf-8")
     return tmp_path
 
 
@@ -34,7 +34,7 @@ def test_all_keys_optional_and_schema_key_ignored(tmp_path):
 
 def test_malformed_json_raises_with_path(tmp_path):
     root = _write(tmp_path, "{ nope")
-    with pytest.raises(ValueError, match=r"var\.config\.json.*invalid JSON"):
+    with pytest.raises(ValueError, match=r"varar\.config\.json.*invalid JSON"):
         read_varar_config(root)
 
 

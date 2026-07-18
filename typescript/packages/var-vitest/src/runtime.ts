@@ -20,7 +20,7 @@ export type CollectPorts = {
   // `test(...)` callsite — only the real per-example ones.
   readonly reporter?: Reporter
   // Opt-in scanner-plugin NAMES (e.g. 'gherkinTables') that the var-vitest
-  // plugin forwards from var.config.json. Resolved here against var-core's
+  // plugin forwards from varar.config.json. Resolved here against var-core's
   // registry: the generated virtual module resolves in the CONSUMER's
   // project, where pnpm's strict layout only sees direct dependencies — so
   // it may import @varar/vitest but never @varar/core.
@@ -30,10 +30,10 @@ export type CollectPorts = {
   // see appeared or vanished), a failing guard test is registered instead of
   // letting the suites silently diverge.
   readonly expectedCount?: number
-  // This spec's committed drift baseline (from var.lock.json), injected by the
+  // This spec's committed drift baseline (from varar.lock.json), injected by the
   // plugin. When present, drift is detected and reported as a diagnostic (a
   // failing `var:diagnostic:drift` test) — a read-only gate. The baseline is
-  // written only by `var run`; VAR_UPDATE=1 skips the gate so you can
+  // written only by `varar run`; VAR_UPDATE=1 skips the gate so you can
   // re-record it there without vitest going red first.
   readonly baseline?: SpecBaseline | null
 }
@@ -70,7 +70,7 @@ export function collectVarExamples(
   )
   // Read-only drift gate: a paragraph the baseline recorded as an example that
   // now matches no step surfaces as a drift diagnostic (a failing test) unless
-  // VAR_UPDATE is set (then re-record via `var run --update`).
+  // VAR_UPDATE is set (then re-record via `varar run --update`).
   if (ports.baseline) {
     const update = process.env.VAR_UPDATE === '1' || process.env.VAR_UPDATE === 'true'
     if (!update) {

@@ -15,7 +15,7 @@ let dir: string
 beforeEach(() => {
   dir = mkdtempSync(join(HERE, 'fixtures', 'drift-tmp-'))
   writeFileSync(
-    join(dir, 'var.config.json'),
+    join(dir, 'varar.config.json'),
     JSON.stringify({
       docs: { include: ['*.md'], exclude: [] },
       steps: ['*.steps.ts'],
@@ -39,11 +39,11 @@ function run(args: ReadonlyArray<string>) {
 
 function writeBaseline(examples: ReadonlyArray<{ name: string; line: number }>) {
   const lock = { version: 1, specs: { 'vault.md': { sourceHash: 'fnv1a:00000000', examples } } }
-  writeFileSync(join(dir, 'var.lock.json'), `${JSON.stringify(lock, null, 2)}\n`)
+  writeFileSync(join(dir, 'varar.lock.json'), `${JSON.stringify(lock, null, 2)}\n`)
 }
 
 function lock(): { specs: Record<string, { examples: { name: string; line: number }[] }> } {
-  return JSON.parse(readFileSync(join(dir, 'var.lock.json'), 'utf8'))
+  return JSON.parse(readFileSync(join(dir, 'varar.lock.json'), 'utf8'))
 }
 
 test('a first run records the baseline and exits 0', () => {
@@ -57,13 +57,13 @@ test('a paragraph that stopped matching drifts: exits 1, baseline preserved', ()
   // The baseline says this paragraph was an example; now it matches no step.
   writeFileSync(join(dir, 'vault.md'), 'The vault is sealed.\n')
   writeBaseline([{ name: 'The vault is sealed', line: 1 }])
-  const before = readFileSync(join(dir, 'var.lock.json'), 'utf8')
+  const before = readFileSync(join(dir, 'varar.lock.json'), 'utf8')
   const r = run(['run'])
   expect(r.status).toBe(1)
   expect(r.stderr).toContain('drift')
   expect(r.stderr).toContain('The vault is sealed')
   // Unacknowledged drift leaves the baseline untouched (stays red).
-  expect(readFileSync(join(dir, 'var.lock.json'), 'utf8')).toBe(before)
+  expect(readFileSync(join(dir, 'varar.lock.json'), 'utf8')).toBe(before)
 })
 
 test('--update accepts the drift and re-records the baseline', () => {

@@ -3,8 +3,8 @@
 Gem::Specification.new do |s|
   s.name = 'varar-config'
   s.version = '0.4.2'
-  s.summary = 'Markdown-native BDD — var.config.json reader'
-  s.description = 'Strict, fail-loud reader for the shared var.config.json format.'
+  s.summary = 'Markdown-native BDD — varar.config.json reader'
+  s.description = 'Strict, fail-loud reader for the shared varar.config.json format.'
   s.authors = ['Aslak Hellesøy']
   s.email = ['aslak@oselvar.com']
   s.homepage = 'https://varar.dev'

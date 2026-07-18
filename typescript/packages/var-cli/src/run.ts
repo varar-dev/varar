@@ -18,7 +18,7 @@ export type RunResult = { readonly exitCode: number }
 
 export async function runRun(opts: RunOptions): Promise<RunResult> {
   const cfg = await loadVarConfig(opts.cwd)
-  // A CLI `--globs` override is include-only; excludes live in var.config.json.
+  // A CLI `--globs` override is include-only; excludes live in varar.config.json.
   const varGlobs =
     opts.globs && opts.globs.length > 0 ? { include: opts.globs, exclude: [] } : cfg.docs
   const varFiles = findFiles(opts.cwd, varGlobs.include, varGlobs.exclude)
@@ -62,7 +62,7 @@ export async function runRun(opts: RunOptions): Promise<RunResult> {
     }
 
     // Reconcile drift against the committed baseline. On a clean run this
-    // records/updates var.lock.json; an unacknowledged drift is reported as an
+    // records/updates varar.lock.json; an unacknowledged drift is reported as an
     // error diagnostic (non-zero exit) and leaves the baseline untouched.
     const specPath = rel.split(sep).join('/')
     const drifts = await reconcileDrift({

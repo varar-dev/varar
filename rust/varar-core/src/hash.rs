@@ -1,5 +1,5 @@
 //! FNV-1a (32-bit) change-detector over UTF-16 code units — port of `hash.ts` /
-//! `Hash.java`. Byte-identical across every port so `var.lock.json` fingerprints
+//! `Hash.java`. Byte-identical across every port so `varar.lock.json` fingerprints
 //! match. The `fnv1a:` prefix namespaces the algorithm.
 
 const FNV_OFFSET: u32 = 0x811c_9dc5;

@@ -72,7 +72,7 @@ final class VarFileSelectorResolver implements SelectorResolver {
     private final StepLoader.LoadedSteps loadedSteps;
 
     /**
-     * The directory var.config.json was loaded from ({@code var.config.root}, default the JVM
+     * The directory varar.config.json was loaded from ({@code var.config.root}, default the JVM
      * working directory) — docs globs and spec paths are relative to it, so pointing the
      * parameter at another directory relocates config and file matching together.
      */
@@ -331,7 +331,7 @@ final class VarFileSelectorResolver implements SelectorResolver {
                 new VarFileDescriptor(uniqueId, specPath, source, content, loadedSteps, plan);
         mergeChildren(fileDescriptor, source, onlyLine);
         // Reconcile drift once per spec (only on a full-file discovery — never a single-example
-        // re-run, where onlyLine is set): a clean run records/updates var.lock.json; a paragraph
+        // re-run, where onlyLine is set): a clean run records/updates varar.lock.json; a paragraph
         // that was an example and no longer matches becomes a failing drift leaf.
         if (onlyLine == null) {
             addDriftChildren(fileDescriptor, source, content, plan);
@@ -366,9 +366,9 @@ final class VarFileSelectorResolver implements SelectorResolver {
     }
 
     /**
-     * Reconciles {@code fileDescriptor}'s spec against {@code var.lock.json} and adds one failing
+     * Reconciles {@code fileDescriptor}'s spec against {@code varar.lock.json} and adds one failing
      * {@link VarDriftDescriptor} per drift. The spec path used as the baseline key is {@link
-     * VarFileDescriptor#specPath()} — the same relative, POSIX-separated path {@code var run} and
+     * VarFileDescriptor#specPath()} — the same relative, POSIX-separated path {@code varar run} and
      * the other ports key by.
      */
     private void addDriftChildren(

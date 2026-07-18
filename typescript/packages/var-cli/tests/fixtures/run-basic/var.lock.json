@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "specs": {
+    "hello.md": {
+      "sourceHash": "fnv1a:c95384a6",
+      "examples": [
+        {
+          "name": "When I greet \"Aslak\". Then the greeting is \"Hello, Aslak!\"",
+          "line": 3
+        },
+        {
+          "name": "When I greet \"world\". Then the greeting is \"wrong\"",
+          "line": 5
+        }
+      ]
+    }
+  }
+}

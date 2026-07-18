@@ -1,7 +1,7 @@
 import { defineConfig } from 'vitest/config'
 import { VarResultsReporter } from './packages/var-vitest/src/reporter.js'
 
-// The reporter's cwd is the REPO root (not typescript/): var.config.json lives
+// The reporter's cwd is the REPO root (not typescript/): varar.config.json lives
 // there, and spec paths in .var/ results must stay relative to it (no `..`
 // segments) now that the spec corpus is doc/examples/ at the repo root.
 const repoRoot = new URL('..', import.meta.url).pathname

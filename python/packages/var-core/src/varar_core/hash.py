@@ -2,7 +2,7 @@
 
 FNV-1a (32-bit) change-detector over UTF-16 code units. Not a security hash:
 tiny, dependency-free, and byte-identical to the TypeScript (and future JVM)
-implementations so ``var.lock.json`` fingerprints match across every port. The
+implementations so ``varar.lock.json`` fingerprints match across every port. The
 ``fnv1a:`` prefix namespaces the algorithm.
 """
 from __future__ import annotations

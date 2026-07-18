@@ -8,7 +8,7 @@
        build. It depends only on released dev.varar artifacts from Maven
        Central, exactly like a user's own project would. -->
   <groupId>com.example</groupId>
-  <artifactId>var-examples-java-junit-maven</artifactId>
+  <artifactId>varar-examples-java-junit-maven</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <packaging>jar</packaging>
 

@@ -13,7 +13,7 @@ notices when something that used to be an example no longer is.
 ## What is a spec
 
 A file is a spec if — and only if — its path matches the `docs` globs in
-`var.config.json`. That config is the single source of truth, consulted by the
+`varar.config.json`. That config is the single source of truth, consulted by the
 runner, the LSP, and the vitest plugin alike:
 
 ```json
@@ -260,7 +260,7 @@ it looks exactly like success — a green suite testing less than it claims.
 
 A plain "missing step" warning in an editor doesn't close the gap: a developer
 who never opens the editor never sees it, and CI never gates on it. Drift
-detection lives in the runner, so the same `vitest` / `pytest` / `var run` that
+detection lives in the runner, so the same `vitest` / `pytest` / `varar run` that
 proves your examples pass also proves that your examples are *still examples*.
 Distinguishing intentional prose (never matched) from a regression (stopped
 matching) needs history, which is exactly what the fingerprinted baseline

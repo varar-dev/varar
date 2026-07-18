@@ -20,7 +20,7 @@ that generates one `TestCase` per spec, which plain `python -m unittest`
 
 ## How it fits together
 
-- **`var.config.json`** is the single source of truth: `docs.include` globs
+- **`varar.config.json`** is the single source of truth: `docs.include` globs
   the Markdown specs and `steps` globs the step-definition files.
 - **`steps/*.steps.py`** define the steps with `steps` +
   `@stimulus`/`@sensor`. A stimulus returns the next state, a sensor returns

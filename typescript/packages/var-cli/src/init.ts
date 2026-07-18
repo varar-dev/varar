@@ -2,8 +2,8 @@ import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
 const CONFIG = `{
-  "docs": { "include": ["var-examples/**/*.md"], "exclude": [] },
-  "steps": ["var-examples/**/*.steps.ts"]
+  "docs": { "include": ["varar-examples/**/*.md"], "exclude": [] },
+  "steps": ["varar-examples/**/*.steps.ts"]
 }
 `
 
@@ -32,9 +32,9 @@ export type InitResult = { readonly exitCode: number }
 
 export async function runInit(opts: InitOptions): Promise<InitResult> {
   const files: Array<{ readonly relPath: string; readonly content: string }> = [
-    { relPath: 'var.config.json', content: CONFIG },
-    { relPath: 'var-examples/deep-thought.md', content: EXAMPLE_MD },
-    { relPath: 'var-examples/steps/deep-thought.steps.ts', content: EXAMPLE_STEPS },
+    { relPath: 'varar.config.json', content: CONFIG },
+    { relPath: 'varar-examples/deep-thought.md', content: EXAMPLE_MD },
+    { relPath: 'varar-examples/steps/deep-thought.steps.ts', content: EXAMPLE_STEPS },
   ]
   for (const f of files) {
     const target = join(opts.cwd, f.relPath)

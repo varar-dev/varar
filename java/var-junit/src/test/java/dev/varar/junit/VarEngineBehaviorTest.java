@@ -35,7 +35,7 @@ import org.junit.platform.testkit.engine.EngineTestKit;
  *       include/exclude filtering at the container level, via {@code VarTestEngine#discover}
  *       directly (Task 9, containers had no children yet).
  *   <li>{@code ConfigBridgeTest} — {@code ConfigurationParameters} &rarr; {@code VarConfig}
- *       adaptation via var.config.json (unit-level, no engine involved).
+ *       adaptation via varar.config.json (unit-level, no engine involved).
  *   <li>{@code VarTestEngineTest} — engine id, {@code ServiceLoader} registration, and the
  *       zero-matching-<em>files</em> case (no resource matches {@code docsInclude} at all).
  *   <li>{@code VarExampleDescriptorTest} — leaf shape, line-based {@code UniqueId}s (not
@@ -205,7 +205,7 @@ class VarEngineBehaviorTest {
     }
 
     /**
-     * Writes a var.config.json into {@code workspace} whose {@code docs.include} is the single
+     * Writes a varar.config.json into {@code workspace} whose {@code docs.include} is the single
      * glob {@code docsInclude} (no excludes) and whose {@code steps} is {@code stepClassNames}
      * split on comma — the same comma-separated-classes shape {@code StepLoader} always accepted,
      * ported into a JSON array here.
@@ -216,7 +216,7 @@ class VarEngineBehaviorTest {
                 .reduce((a, b) -> a + ", " + b)
                 .orElse("");
         Files.writeString(
-                workspace.resolve("var.config.json"),
+                workspace.resolve("varar.config.json"),
                 "{ \"docs\": { \"include\": [\"" + docsInclude + "\"], \"exclude\": [] }, \"steps\": ["
                         + stepsJson
                         + "] }",

@@ -51,7 +51,7 @@ the async total is 99
 
 
 def _write_fixture(pytester, spec_content: str, steps_content: str) -> None:
-    (pytester.path / "var.config.json").write_text(VAR_CONFIG, encoding="utf-8")
+    (pytester.path / "varar.config.json").write_text(VAR_CONFIG, encoding="utf-8")
     (pytester.path / "steps").mkdir(exist_ok=True)
     (pytester.path / "steps" / "async_calc.steps.py").write_text(
         steps_content.strip(), encoding="utf-8"

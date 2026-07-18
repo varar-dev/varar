@@ -38,7 +38,7 @@ class VarExampleDescriptorExecutionTest {
     private static EngineExecutionResults execute(Path workspace, String classpathResource, Class<?> stepsClass)
             throws Exception {
         Files.writeString(
-                workspace.resolve("var.config.json"), """
+                workspace.resolve("varar.config.json"), """
                 {
                   "docs": { "include": ["examplefixture/**/*.md"], "exclude": [] },
                   "steps": ["%s"]

@@ -25,7 +25,7 @@ SPEC = "# Calc\n\n## adds two\n\nI add 2\nthe total is 2\n\n## adds wrong\n\nI a
 
 
 def _write_calc(harness, spec: str = SPEC) -> None:
-    harness.write("var.config.json", VAR_CONFIG)
+    harness.write("varar.config.json", VAR_CONFIG)
     harness.write("steps/calc.steps.py", STEPS)
     harness.write("features/calc.md", spec)
 
@@ -82,7 +82,7 @@ def test_duplicate_heading_methods_get_unique_names(harness):
 
 
 def test_non_matching_md_is_ignored(harness):
-    harness.write("var.config.json", VAR_CONFIG)
+    harness.write("varar.config.json", VAR_CONFIG)
     harness.write("README.md", "# not a spec\n")
     ns = harness.generate()
     assert not [

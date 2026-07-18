@@ -25,22 +25,22 @@ export function varVitestPlugin(options: VarVitestPluginOptions = {}): Plugin {
   // hook transforms only these into virtual test modules — there is no longer
   // a `.md` extension to key off of.
   let specFiles: ReadonlySet<string> = new Set()
-  // Scanner plugins from var.config.json, in both forms: the resolved
+  // Scanner plugins from varar.config.json, in both forms: the resolved
   // instances feed the static planner in this process, and the names are
   // inlined into the generated virtual module so it can re-resolve them via
   // var-core's registry (functions can't be serialized into generated
   // source, names can).
   let scannerPlugins: ReadonlyArray<ScannerPlugin> = []
   let pluginNames: ReadonlyArray<string> = []
-  // Absolute path to var.config.json when one exists — watched so a config
+  // Absolute path to varar.config.json when one exists — watched so a config
   // edit re-transforms specs in watch mode.
   let configJsonPath: string | undefined
-  // Absolute path to the committed drift baseline (var.lock.json).
-  const lockPath = resolve(cwd, 'var.lock.json')
+  // Absolute path to the committed drift baseline (varar.lock.json).
+  const lockPath = resolve(cwd, 'varar.lock.json')
   return {
     name: '@varar/vitest',
     async config() {
-      // var.config.json is the single source of truth for which files are specs.
+      // varar.config.json is the single source of truth for which files are specs.
       // Drive vitest's collection from it so an excluded `.md` is never handed
       // to vite as a raw-markdown "script" (which fails to parse). Globs are
       // made absolute against `cwd`; setting `test.exclude` *replaces* vitest's
@@ -68,7 +68,7 @@ export function varVitestPlugin(options: VarVitestPluginOptions = {}): Plugin {
       specFiles = new Set(findFiles(cwd, cfg.docs.include, cfg.docs.exclude))
       scannerPlugins = cfg.scannerPlugins
       pluginNames = cfg.scannerPluginNames
-      const abs = resolve(cwd, 'var.config.json')
+      const abs = resolve(cwd, 'varar.config.json')
       configJsonPath = existsSync(abs) ? abs : undefined
     },
     async load(id) {
@@ -88,7 +88,7 @@ export function varVitestPlugin(options: VarVitestPluginOptions = {}): Plugin {
         stepFiles: stepFiles.map((path) => ({ path, source: readFileSync(path, 'utf8') })),
         scannerPlugins,
       })
-      // This spec's baseline entry from var.lock.json (POSIX path, relative to
+      // This spec's baseline entry from varar.lock.json (POSIX path, relative to
       // cwd), injected so the runtime can run the read-only drift gate.
       const specPath = relative(cwd, varPath).split(sep).join('/')
       const lock = existsSync(lockPath) ? parseVarLock(readFileSync(lockPath, 'utf8')) : null
@@ -109,7 +109,7 @@ export type GenerateInput = {
   readonly varPath: string
   readonly stepImports: ReadonlyArray<string>
   readonly source?: string
-  // Scanner-plugin NAMES from var.config.json. The generated module passes
+  // Scanner-plugin NAMES from varar.config.json. The generated module passes
   // them to collectVarExamples, which resolves them against var-core's
   // registry — functions can't be serialized into generated source, names can.
   readonly scannerPluginNames: ReadonlyArray<string>
@@ -117,7 +117,7 @@ export type GenerateInput = {
   // becomes a `test("literal name", ...)` call placed at its own markdown
   // line/column.
   readonly examples?: ReadonlyArray<StaticExample>
-  // This spec's drift baseline from var.lock.json (or null when unbaselined),
+  // This spec's drift baseline from varar.lock.json (or null when unbaselined),
   // inlined so the runtime can run the read-only drift gate.
   readonly baseline?: SpecBaseline | null
 }

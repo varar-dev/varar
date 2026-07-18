@@ -1,4 +1,4 @@
-//! `varar-config` — the strict, fail-loud reader for `var.config.json`.
+//! `varar-config` — the strict, fail-loud reader for `varar.config.json`.
 //!
 //! Port of `@varar/config` / Python `var_config`. The canonical shape is
 //! `{ docs: { include, exclude }, steps, snippets, scannerPlugins }`; every key
@@ -22,10 +22,10 @@ pub struct VarConfig {
     pub scanner_plugins: Vec<String>,
 }
 
-/// Read `<root>/var.config.json`. Missing file → empty config. Any malformed
+/// Read `<root>/varar.config.json`. Missing file → empty config. Any malformed
 /// input → `Err(message)` beginning with the file path.
 pub fn read_var_config(root: &Path) -> Result<VarConfig, String> {
-    let path = root.join("var.config.json");
+    let path = root.join("varar.config.json");
     let loc = path.display();
     if !path.is_file() {
         return Ok(VarConfig::default());

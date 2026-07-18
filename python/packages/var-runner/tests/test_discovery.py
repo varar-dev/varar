@@ -74,7 +74,7 @@ def test_single_star_does_not_cross_slash(tmp_path: Path) -> None:
 def test_specs_outside_root_via_parent_glob(tmp_path: Path) -> None:
     """A spec in a SIBLING of the config root is reachable via a ``../`` glob.
 
-    This backs pointing ``var.config.json`` at a shared corpus that lives outside the
+    This backs pointing ``varar.config.json`` at a shared corpus that lives outside the
     package (e.g. ``../conformance/bundles``): ``relative_to(..., walk_up=True)``
     yields a ``../corpus/...`` path that matches a ``../corpus/**`` glob.
     """

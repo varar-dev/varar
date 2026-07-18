@@ -31,7 +31,7 @@ obtain the step-definition registry, and what they do with the result.
 | Step files are | **parsed** (tree-sitter), never executed | **executed** in their native runtime |
 | Handlers are | absent (matching only) | real callables |
 | Produces | a workspace index → matches + diagnostics | an `ExecutionPlan` → test-runner items |
-| Powers | LSP, VSCode, `lint` | the vitest/pytest adapters, `var run` |
+| Powers | LSP, VSCode, `lint` | the vitest/pytest adapters, `varar run` |
 | Side effects | none | importing user modules |
 
 ```mermaid

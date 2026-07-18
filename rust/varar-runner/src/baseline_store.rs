@@ -1,5 +1,5 @@
 //! The filesystem `BaselineStore`: the committed drift baseline lives at the
-//! project root as `var.lock.json`. The core owns the format; this only reads
+//! project root as `varar.lock.json`. The core owns the format; this only reads
 //! and writes the raw text.
 
 use std::path::{Path, PathBuf};
@@ -12,7 +12,7 @@ pub struct FileBaselineStore {
 impl FileBaselineStore {
     pub fn new(root: &Path) -> FileBaselineStore {
         FileBaselineStore {
-            path: root.join("var.lock.json"),
+            path: root.join("varar.lock.json"),
         }
     }
 }

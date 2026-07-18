@@ -30,7 +30,7 @@ export type SpecBaseline = {
   readonly examples: ReadonlyArray<BaselineExample>
 }
 
-// The whole `var.lock.json`: every spec keyed by its POSIX path relative to the
+// The whole `varar.lock.json`: every spec keyed by its POSIX path relative to the
 // project root.
 export type VarLock = {
   readonly version: 1
@@ -201,7 +201,7 @@ function isSpecBaseline(v: unknown): v is SpecBaseline {
   )
 }
 
-// Parse `var.lock.json`. Returns null on malformed input (treated as "no
+// Parse `varar.lock.json`. Returns null on malformed input (treated as "no
 // baseline yet"), mirroring the LSP's tolerant result ingestion.
 export function parseVarLock(text: string): VarLock | null {
   let parsed: unknown
@@ -221,7 +221,7 @@ export function parseVarLock(text: string): VarLock | null {
   return { version: 1, specs }
 }
 
-// Serialize a `var.lock.json` deterministically: spec paths sorted, examples in
+// Serialize a `varar.lock.json` deterministically: spec paths sorted, examples in
 // document order, two-space indent, trailing newline. Byte-stable across runs
 // so a clean re-run produces no git diff.
 export function stringifyVarLock(lock: VarLock): string {

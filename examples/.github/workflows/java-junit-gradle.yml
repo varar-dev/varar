@@ -1,4 +1,4 @@
-# Runs in the oselvar/var-examples repo, where examples/ is synced on every
+# Runs in the oselvar/varar-examples repo, where examples/ is synced on every
 # release of oselvar/var. In the monorepo this file is inert (GitHub only
 # reads workflows from the repo root); the monorepo runs the projects against
 # the local build via .github/workflows/*.yml instead.

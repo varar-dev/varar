@@ -48,24 +48,24 @@ export type Store = {
   // Whether a file is a var spec — i.e. it was discovered by the `docs` globs.
   // There is no `.md` extension to key off of; the config defines specs.
   isVarDoc(path: string): boolean
-  // Accept drift for one spec: re-record its var.lock.json baseline to the
+  // Accept drift for one spec: re-record its varar.lock.json baseline to the
   // current live examples, so a now-prose paragraph is no longer flagged. The
   // caller reindexes afterwards to clear the squiggle.
   acceptDrift(varPath: string): Promise<void>
   fs(): FileSystem
 }
 
-// Drift diagnostics for the workspace: for each spec with a var.lock.json
+// Drift diagnostics for the workspace: for each spec with a varar.lock.json
 // baseline entry, a paragraph that was an example and now matches no step.
 // Returns [] when there is no baseline (e.g. the browser, whose memory FS has
-// no var.lock.json — drift there is shown via the run pipeline, not the LSP).
+// no varar.lock.json — drift there is shown via the run pipeline, not the LSP).
 async function driftDiagnosticRefs(
   fs: FileSystem,
   config: VarConfig,
   varFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>,
   registry: Registry,
 ): Promise<DiagnosticRef[]> {
-  const [lockAbs] = await fs.list({ include: ['var.lock.json'], exclude: [] })
+  const [lockAbs] = await fs.list({ include: ['varar.lock.json'], exclude: [] })
   if (!lockAbs) return []
   let lockText: string
   try {
@@ -75,9 +75,9 @@ async function driftDiagnosticRefs(
   }
   const lock = parseVarLock(lockText)
   if (!lock) return []
-  // var.lock.json sits at the workspace root; trim it to get the root prefix
+  // varar.lock.json sits at the workspace root; trim it to get the root prefix
   // (string-only, so this stays free of node:path for the browser build).
-  const root = lockAbs.slice(0, lockAbs.length - 'var.lock.json'.length).replace(/[/\\]+$/, '')
+  const root = lockAbs.slice(0, lockAbs.length - 'varar.lock.json'.length).replace(/[/\\]+$/, '')
   const refs: DiagnosticRef[] = []
   for (const vf of varFiles) {
     const specPath = toSpecPath(root, vf.path)
@@ -160,7 +160,7 @@ export function createStore(deps: StoreDeps): Store {
         ...(scanner ? { scanner } : {}),
       })
       // Drift is a run-result concern, but the LSP surfaces it live: a
-      // paragraph the committed var.lock.json recorded as an example that now
+      // paragraph the committed varar.lock.json recorded as an example that now
       // matches no step gets a warning squiggle. Additive to the index's own
       // parse/plan diagnostics.
       const drift = await driftDiagnosticRefs(fs, config, varFiles, current.registry)
@@ -176,11 +176,13 @@ export function createStore(deps: StoreDeps): Store {
     // disk-backed index can't see) are still recognised as spec docs.
     isVarDoc: (path) => fs.matches(path, config.docs),
     async acceptDrift(varPath) {
-      const [lockAbs] = await fs.list({ include: ['var.lock.json'], exclude: [] })
+      const [lockAbs] = await fs.list({ include: ['varar.lock.json'], exclude: [] })
       // No baseline file yet → nothing has been recorded, so nothing to accept.
       if (!lockAbs) return
       const existing = parseVarLock(await fs.read(lockAbs).catch(() => ''))
-      const root = lockAbs.slice(0, lockAbs.length - 'var.lock.json'.length).replace(/[/\\]+$/, '')
+      const root = lockAbs
+        .slice(0, lockAbs.length - 'varar.lock.json'.length)
+        .replace(/[/\\]+$/, '')
       const specPath = toSpecPath(root, varPath)
       const source = await fs.read(varPath)
       const varDoc = parse(varPath, source, config.scannerPlugins)

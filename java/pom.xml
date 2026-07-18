@@ -123,7 +123,7 @@
            The JVM sample projects in ../examples are covered too, via the
            examples -> ../examples symlink next to this pom: spotless can't scan
            outside a module's basedir, and the samples' own builds must stay
-           formatter-free (they sync 1:1 to the public var-examples repo). The
+           formatter-free (they sync 1:1 to the public varar-examples repo). The
            examples/*/src includes only match here in the parent — the modules
            inherit them but have no examples/ dir, so they're a no-op there. -->
       <plugin>

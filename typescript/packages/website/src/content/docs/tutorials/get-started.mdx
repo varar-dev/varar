@@ -27,14 +27,14 @@ Every command and code sample below follows that choice.
    <LangCommand kind="scaffold" />
 
    ```
-   created var.config.json
+   created varar.config.json
    created varar-examples/deep-thought.md
    created varar-examples/steps/deep-thought.steps.<ext>
    ```
 
    (`<ext>` is your language's step-file extension — `ts`, `py`, `rb`, and so on.)
 
-   `var.config.json` is the single source of truth for which files are specs and
+   `varar.config.json` is the single source of truth for which files are specs and
    which files bind their steps:
 
    ```json
@@ -149,10 +149,10 @@ Every command and code sample below follows that choice.
    </Tabs>
 
    <Aside type="note" title="Java & Kotlin: two extra steps">
-   The JVM ports have no `var init` yet, so create `var.config.json`, the spec, and
+   The JVM ports have no `varar init` yet, so create `varar.config.json`, the spec, and
    the steps file by hand. Two JVM-specific details:
 
-   - `var.config.json` lists step classes by fully-qualified name instead of a glob:
+   - `varar.config.json` lists step classes by fully-qualified name instead of a glob:
      ```json
      { "docs": { "include": ["*.md"], "exclude": [] }, "steps": ["examples.DeepThoughtSteps"] }
      ```

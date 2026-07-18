@@ -14,13 +14,13 @@ module Varar
     end
 
     # Build a throwaway project from a conformance bundle (its example.md +
-    # *.steps.rb) with a matching var.config.json.
+    # *.steps.rb) with a matching varar.config.json.
     def project_from_bundle(tmp, bundle, spec_name)
       src = File.join(corpus_dir, bundle)
       FileUtils.mkdir_p(File.join(tmp, 'steps'))
       FileUtils.cp(File.join(src, 'example.md'), File.join(tmp, spec_name))
       FileUtils.cp(Dir.glob(File.join(src, '*.steps.rb')).first, File.join(tmp, 'steps'))
-      File.write(File.join(tmp, 'var.config.json'),
+      File.write(File.join(tmp, 'varar.config.json'),
                  '{"docs":{"include":["*.md"]},"steps":["steps/*.steps.rb"]}')
     end
 

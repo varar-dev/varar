@@ -15,7 +15,7 @@
   "main": "./src/server.ts",
   "types": "./src/server.ts",
   "bin": {
-    "var-lsp": "./dist/bin.js"
+    "varar-lsp": "./dist/bin.js"
   },
   "files": [
     "dist",

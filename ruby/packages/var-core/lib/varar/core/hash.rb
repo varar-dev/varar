@@ -3,7 +3,7 @@
 module Varar
   module Core
     # FNV-1a (32-bit) change-detector over UTF-16 code units. Not a security
-    # hash: tiny and byte-identical to the TS/Python/JVM ports so var.lock.json
+    # hash: tiny and byte-identical to the TS/Python/JVM ports so varar.lock.json
     # fingerprints match everywhere. The "fnv1a:" prefix namespaces the algorithm.
     # Port of hash.ts.
     module Hash32

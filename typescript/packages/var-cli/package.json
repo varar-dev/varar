@@ -11,7 +11,7 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "bin": {
-    "var": "./dist/bin.js"
+    "varar": "./dist/bin.js"
   },
   "files": [
     "dist",

@@ -34,9 +34,9 @@ export default defineConfig({
 })
 ```
 
-## 3. Let var.config.json decide what is a spec
+## 3. Let varar.config.json decide what is a spec
 
-The plugin reads `var.config.json` and drives vitest's own `include`/`exclude`
+The plugin reads `varar.config.json` and drives vitest's own `include`/`exclude`
 from it — you don't repeat the globs in the vitest config:
 
 ```json

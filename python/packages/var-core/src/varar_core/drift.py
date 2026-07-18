@@ -1,8 +1,8 @@
 """drift.py — port of typescript/packages/var-core/src/drift.ts.
 
-Spec drift detection: a paragraph the committed var.lock.json baseline recorded
+Spec drift detection: a paragraph the committed varar.lock.json baseline recorded
 as an example that now matches no step. Pure over the existing VarDoc +
-ExecutionPlan, byte-identical to the TypeScript port so var.lock.json is shared
+ExecutionPlan, byte-identical to the TypeScript port so varar.lock.json is shared
 across languages.
 """
 from __future__ import annotations
@@ -44,7 +44,7 @@ class SpecBaseline:
 
 @dataclass(frozen=True, slots=True)
 class VarLock:
-    """The whole var.lock.json: every spec keyed by its POSIX path."""
+    """The whole varar.lock.json: every spec keyed by its POSIX path."""
 
     version: int  # always 1
     specs: dict[str, SpecBaseline]
@@ -60,7 +60,7 @@ class Drift:
 
 
 class BaselineStore(Protocol):
-    """Persistence port for var.lock.json. The core owns the format; adapters
+    """Persistence port for varar.lock.json. The core owns the format; adapters
     move only raw text (a filesystem store on disk, an in-memory store)."""
 
     def read(self) -> str | None: ...
@@ -216,7 +216,7 @@ def _parse_spec_baseline(value: object) -> SpecBaseline | None:
 
 
 def parse_var_lock(text: str) -> VarLock | None:
-    """Parse var.lock.json; None on malformed input (treated as no baseline)."""
+    """Parse varar.lock.json; None on malformed input (treated as no baseline)."""
     try:
         parsed = json.loads(text)
     except (ValueError, TypeError):
@@ -236,7 +236,7 @@ def parse_var_lock(text: str) -> VarLock | None:
 
 
 def stringify_var_lock(lock: VarLock) -> str:
-    """Serialize var.lock.json deterministically: spec paths sorted, examples in
+    """Serialize varar.lock.json deterministically: spec paths sorted, examples in
     document order, two-space indent, trailing newline. Byte-identical to the
     TypeScript serializer (camelCase keys, non-ASCII kept raw)."""
     specs = {

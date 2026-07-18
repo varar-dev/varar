@@ -23,7 +23,7 @@ function filterWarnings(stderr: string): string {
     .trim()
 }
 
-describe('var run', () => {
+describe('varar run', () => {
   test('runs passing and failing examples, reports counts, exits 1 on failure', () => {
     const cwd = resolve(FIXTURES, 'run-basic')
     const r = run(['run'], cwd)

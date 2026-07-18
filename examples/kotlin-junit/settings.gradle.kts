@@ -1,1 +1,1 @@
-rootProject.name = "var-examples-kotlin-junit"
+rootProject.name = "varar-examples-kotlin-junit"
