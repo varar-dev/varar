@@ -35,18 +35,18 @@ importers:
 
   ../examples/typescript-vitest:
     devDependencies:
-      '@oselvar/var':
-        specifier: workspace:*
-        version: link:../../typescript/packages/var
-      '@oselvar/var-core':
-        specifier: workspace:*
-        version: link:../../typescript/packages/var-core
-      '@oselvar/var-vitest':
-        specifier: workspace:*
-        version: link:../../typescript/packages/var-vitest
       '@types/node':
         specifier: ^26.1.0
         version: 26.1.1
+      '@varar/core':
+        specifier: workspace:*
+        version: link:../../typescript/packages/var-core
+      '@varar/varar':
+        specifier: workspace:*
+        version: link:../../typescript/packages/var
+      '@varar/vitest':
+        specifier: workspace:*
+        version: link:../../typescript/packages/var-vitest
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
@@ -59,28 +59,28 @@ importers:
       '@cucumber/cucumber':
         specifier: ^13.0.0
         version: 13.1.1
-      '@oselvar/var':
-        specifier: workspace:*
-        version: link:../var
-      '@oselvar/var-cli':
-        specifier: workspace:*
-        version: link:../var-cli
-      '@oselvar/var-core':
-        specifier: workspace:*
-        version: link:../var-core
-      '@oselvar/var-vitest':
-        specifier: workspace:*
-        version: link:../var-vitest
       '@types/node':
         specifier: ^26.1.0
         version: 26.1.1
+      '@varar/cli':
+        specifier: workspace:*
+        version: link:../var-cli
+      '@varar/core':
+        specifier: workspace:*
+        version: link:../var-core
+      '@varar/varar':
+        specifier: workspace:*
+        version: link:../var
+      '@varar/vitest':
+        specifier: workspace:*
+        version: link:../var-vitest
       vitest:
         specifier: ^4.1.10
         version: 4.1.10(@types/node@26.1.1)(@vitest/coverage-v8@4.1.10)(vite@8.1.5(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0))
 
   packages/var:
     dependencies:
-      '@oselvar/var-core':
+      '@varar/core':
         specifier: workspace:*
         version: link:../var-core
     devDependencies:
@@ -90,23 +90,23 @@ importers:
 
   packages/var-cli:
     dependencies:
-      '@oselvar/var-config':
+      '@varar/config':
         specifier: workspace:*
         version: link:../var-config
-      '@oselvar/var-core':
+      '@varar/core':
         specifier: workspace:*
         version: link:../var-core
-      '@oselvar/var-runner':
+      '@varar/runner':
         specifier: workspace:*
         version: link:../var-runner
     devDependencies:
-      '@oselvar/var':
+      '@varar/varar':
         specifier: workspace:*
         version: link:../var
 
   packages/var-config:
     dependencies:
-      '@oselvar/var-core':
+      '@varar/core':
         specifier: workspace:*
         version: link:../var-core
 
@@ -121,7 +121,7 @@ importers:
       '@cucumber/cucumber-expressions':
         specifier: ^20.0.0
         version: 20.0.0
-      '@oselvar/var-core':
+      '@varar/core':
         specifier: workspace:*
         version: link:../var-core
       typescript:
@@ -152,18 +152,18 @@ importers:
 
   packages/var-lsp:
     dependencies:
-      '@oselvar/var-config':
-        specifier: workspace:*
-        version: link:../var-config
-      '@oselvar/var-core':
-        specifier: workspace:*
-        version: link:../var-core
-      '@oselvar/var-language':
-        specifier: workspace:*
-        version: link:../var-language
       '@tree-sitter-grammars/tree-sitter-kotlin':
         specifier: ^1.1.0
         version: 1.1.0
+      '@varar/config':
+        specifier: workspace:*
+        version: link:../var-config
+      '@varar/core':
+        specifier: workspace:*
+        version: link:../var-core
+      '@varar/language':
+        specifier: workspace:*
+        version: link:../var-language
       tree-sitter-java:
         specifier: ^0.23.5
         version: 0.23.5
@@ -188,33 +188,33 @@ importers:
 
   packages/var-runner:
     dependencies:
-      '@oselvar/var':
-        specifier: workspace:*
-        version: link:../var
-      '@oselvar/var-config':
+      '@varar/config':
         specifier: workspace:*
         version: link:../var-config
-      '@oselvar/var-core':
+      '@varar/core':
         specifier: workspace:*
         version: link:../var-core
+      '@varar/varar':
+        specifier: workspace:*
+        version: link:../var
 
   packages/var-vitest:
     dependencies:
-      '@oselvar/var':
-        specifier: workspace:*
-        version: link:../var
-      '@oselvar/var-config':
+      '@varar/config':
         specifier: workspace:*
         version: link:../var-config
-      '@oselvar/var-core':
+      '@varar/core':
         specifier: workspace:*
         version: link:../var-core
-      '@oselvar/var-language':
+      '@varar/language':
         specifier: workspace:*
         version: link:../var-language
-      '@oselvar/var-runner':
+      '@varar/runner':
         specifier: workspace:*
         version: link:../var-runner
+      '@varar/varar':
+        specifier: workspace:*
+        version: link:../var
       vite:
         specifier: ^8.0.0
         version: 8.1.5(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0)
@@ -224,7 +224,7 @@ importers:
 
   packages/var-vscode:
     dependencies:
-      '@oselvar/var-lsp':
+      '@varar/lsp':
         specifier: workspace:*
         version: link:../var-lsp
       vscode-languageclient:
@@ -294,21 +294,21 @@ importers:
       '@lezer/highlight':
         specifier: ^1.2.3
         version: 1.2.3
-      '@oselvar/var':
-        specifier: workspace:^
-        version: link:../var
-      '@oselvar/var-core':
-        specifier: workspace:^
-        version: link:../var-core
-      '@oselvar/var-language':
-        specifier: workspace:^
-        version: link:../var-language
-      '@oselvar/var-lsp':
-        specifier: workspace:^
-        version: link:../var-lsp
       '@tailwindcss/vite':
         specifier: ^4.3.2
         version: 4.3.3(vite@8.1.5(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0))
+      '@varar/core':
+        specifier: workspace:^
+        version: link:../var-core
+      '@varar/language':
+        specifier: workspace:^
+        version: link:../var-language
+      '@varar/lsp':
+        specifier: workspace:^
+        version: link:../var-lsp
+      '@varar/varar':
+        specifier: workspace:^
+        version: link:../var
       astro:
         specifier: ^7.0.6
         version: 7.1.1(@astrojs/markdown-remark@7.2.1)(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.1)(@types/node@26.1.1)(jiti@2.7.0)(yaml@2.9.0)

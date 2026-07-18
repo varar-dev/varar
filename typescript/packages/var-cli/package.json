@@ -1,5 +1,5 @@
 {
-  "name": "@oselvar/var-cli",
+  "name": "@varar/cli",
   "version": "0.4.2",
   "type": "module",
   "exports": {
@@ -22,12 +22,12 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@oselvar/var-config": "workspace:*",
-    "@oselvar/var-core": "workspace:*",
-    "@oselvar/var-runner": "workspace:*"
+    "@varar/config": "workspace:*",
+    "@varar/core": "workspace:*",
+    "@varar/runner": "workspace:*"
   },
   "devDependencies": {
-    "@oselvar/var": "workspace:*"
+    "@varar/varar": "workspace:*"
   },
   "publishConfig": {
     "exports": {
@@ -42,7 +42,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/oselvar/var.git",
+    "url": "git+https://github.com/oselvar/varar.git",
     "directory": "typescript/packages/var-cli"
   }
 }

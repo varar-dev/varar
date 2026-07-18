@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { relative, sep } from 'node:path'
-import { findFiles, loadVarConfig } from '@oselvar/var-config'
-import { type Diagnostic, driftDiagnostics, reconcileDrift } from '@oselvar/var-core'
-import { createFileBaselineStore, examplesWithRuns, loadSteps, planSpec } from '@oselvar/var-runner'
+import { findFiles, loadVarConfig } from '@varar/config'
+import { type Diagnostic, driftDiagnostics, reconcileDrift } from '@varar/core'
+import { createFileBaselineStore, examplesWithRuns, loadSteps, planSpec } from '@varar/runner'
 
 export type RunOptions = {
   readonly cwd: string

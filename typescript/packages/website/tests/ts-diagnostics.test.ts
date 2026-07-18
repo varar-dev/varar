@@ -1,6 +1,6 @@
 import { expect, test } from 'vitest'
 // The real dogfood sample the front-page editor shows — if the editor's
-// virtual module drifts from the actual @oselvar/var API, this file stops
+// virtual module drifts from the actual @varar/varar API, this file stops
 // type-checking cleanly and the first test fails, exactly like the front
 // page would.
 import librarySteps from '../../../../examples/typescript-vitest/steps/library.steps.ts?raw'
@@ -16,13 +16,13 @@ function realProblems(tsd: ReturnType<typeof createTsDiagnostics>, name: string,
   return tsd.diagnostics(name).filter((d) => !d.message.includes("'./library'"))
 }
 
-test('the front-page library sample type-checks against the real @oselvar/var types', () => {
+test('the front-page library sample type-checks against the real @varar/varar types', () => {
   const problems = realProblems(createTsDiagnostics(), 'library_steps.ts', librarySteps)
   expect(problems).toEqual([])
 })
 
 test('stimulus and sensor are the destructurable names steps returns', () => {
-  const source = `import { steps } from '@oselvar/var'
+  const source = `import { steps } from '@varar/varar'
 const { stimulus, sensor } = steps(() => ({ total: 0 }))
 stimulus('I add {int}', (state, n) => ({ total: state.total + n }))
 sensor('the total is {int}', (state) => state.total)
@@ -32,7 +32,7 @@ sensor('the total is {int}', (state) => state.total)
 })
 
 test('the stale pre-rename API names are rejected', () => {
-  const source = `import { steps } from '@oselvar/var'
+  const source = `import { steps } from '@varar/varar'
 const { context, action } = steps(() => ({}))
 `
   const tsd = createTsDiagnostics()
@@ -42,7 +42,7 @@ const { context, action } = steps(() => ({}))
 })
 
 test('a format whose parameter contradicts its parse return is a type error', () => {
-  const source = `import { steps } from '@oselvar/var'
+  const source = `import { steps } from '@varar/varar'
 const { sensor } = steps(() => ({})).param(
   'money',
   /£\\d+\\.\\d{2}/,

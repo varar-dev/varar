@@ -1,5 +1,5 @@
 import { ParameterType } from '@cucumber/cucumber-expressions'
-import { createRegistry } from '@oselvar/var-core'
+import { createRegistry } from '@varar/core'
 import { expect, test } from 'vitest'
 import { generateSnippet } from '../src/snippet.ts'
 

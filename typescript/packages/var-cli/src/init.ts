@@ -16,7 +16,7 @@ The answer to the great question of life, the universe and everything is 42.
 It was a tough assignment.
 `
 
-const EXAMPLE_STEPS = `import { steps } from '@oselvar/var'
+const EXAMPLE_STEPS = `import { steps } from '@varar/varar'
 
 const { sensor } = steps()
 

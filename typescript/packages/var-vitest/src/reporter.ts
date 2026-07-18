@@ -1,6 +1,6 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, isAbsolute, join, relative, sep } from 'node:path'
-import { type ExampleResult, hashSource, type SpecResults } from '@oselvar/var-core'
+import { type ExampleResult, hashSource, type SpecResults } from '@varar/core'
 import type { Reporter, TestModule } from 'vitest/node'
 
 // Structural shape of the slice of vitest's TestModule API the collector reads.

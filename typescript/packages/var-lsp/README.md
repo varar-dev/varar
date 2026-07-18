@@ -1,5 +1,5 @@
-# @oselvar/var-lsp
+# @varar/lsp
 
 The Language Server Protocol server for Vár — diagnostics, semantic tokens, and rename
 support for `.md` specs and their step definitions. Consumed by editor extensions
-such as `@oselvar/var-vscode`.
+such as `@varar/varar-vscode`.

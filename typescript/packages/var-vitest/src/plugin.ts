@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { relative, resolve, sep } from 'node:path'
-import { findFiles, loadVarConfig } from '@oselvar/var-config'
-import { parseVarLock, type ScannerPlugin, type SpecBaseline } from '@oselvar/var-core'
+import { findFiles, loadVarConfig } from '@varar/config'
+import { parseVarLock, type ScannerPlugin, type SpecBaseline } from '@varar/core'
 import type { Plugin } from 'vite'
 import { configDefaults } from 'vitest/config'
 import { discoverStaticExamples, type StaticExample } from './static-examples.ts'
@@ -38,7 +38,7 @@ export function varVitestPlugin(options: VarVitestPluginOptions = {}): Plugin {
   // Absolute path to the committed drift baseline (var.lock.json).
   const lockPath = resolve(cwd, 'var.lock.json')
   return {
-    name: '@oselvar/var-vitest',
+    name: '@varar/vitest',
     async config() {
       // var.config.json is the single source of truth for which files are specs.
       // Drive vitest's collection from it so an excluded `.md` is never handed
@@ -49,13 +49,13 @@ export function varVitestPlugin(options: VarVitestPluginOptions = {}): Plugin {
       const cfg = await loadVarConfig(cwd)
       const abs = (g: string) => resolve(cwd, g)
       return {
-        // Force a single @oselvar/var (and @oselvar/var-core) module instance.
+        // Force a single @varar/varar (and @varar/core) module instance.
         // The authoring API (steps) and the registry glue
-        // (@oselvar/var/registry, used by runtime.ts) MUST share one module so
+        // (@varar/varar/registry, used by runtime.ts) MUST share one module so
         // buildRegistry() sees the steps registered via steps(). Under
         // resolve.preserveSymlinks these can split into two instances, leaving
         // an empty registry and zero steps run with no error — so we dedupe.
-        resolve: { dedupe: ['@oselvar/var', '@oselvar/var-core'] },
+        resolve: { dedupe: ['@varar/varar', '@varar/core'] },
         test: {
           include: cfg.docs.include.map(abs),
           exclude: [...configDefaults.exclude, ...cfg.docs.exclude.map(abs)],
@@ -136,12 +136,12 @@ export function generateVirtualModule(input: GenerateInput): string {
   const examples = input.examples ?? []
   const header: string[] = [
     "import { test } from 'vitest'",
-    // Everything the generated module needs comes from @oselvar/var-vitest —
+    // Everything the generated module needs comes from @varar/vitest —
     // the one package the consumer directly depends on. Importing e.g.
-    // @oselvar/var-core here would fail under pnpm's strict node_modules
+    // @varar/core here would fail under pnpm's strict node_modules
     // layout, because the module id (the spec path) resolves in the
     // consumer's project, where transitive deps are not visible.
-    "import { collectVarExamples, varTestBody } from '@oselvar/var-vitest/runtime'",
+    "import { collectVarExamples, varTestBody } from '@varar/vitest/runtime'",
     ...input.stepImports.map((p) => `import ${JSON.stringify(p)}`),
     `const PATH = ${pathJson}`,
     // Diagnostics and the stale-transform guard register their tests inside

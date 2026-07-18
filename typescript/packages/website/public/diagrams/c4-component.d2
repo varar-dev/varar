@@ -4,7 +4,7 @@
 # are omitted. Every arrow is a real `workspace:` dependency taken from that
 # package's package.json — but dependencies already implied by a drawn path
 # are omitted for readability: most packages also declare a direct dep on
-# @oselvar/var-core (its types are imported directly, and pnpm's strict
+# @varar/core (its types are imported directly, and pnpm's strict
 # layout requires declaring everything you import), and var-vitest / var-cli
 # likewise declare var-config (and var-vitest var). See each package.json
 # for the full list.
@@ -85,15 +85,15 @@ vscode: "VS Code\n[External system]\n\nEditor" {
 core: "Functional core — pure functions over immutable data, no I/O" {
   class: boundary
 
-  var-core: "@oselvar/var-core\n[Component: npm package]\n\nPure core: parser, matcher, planner,\nexecutor, AST, diagnostics,\nreturn-based comparison" {
+  var-core: "@varar/core\n[Component: npm package]\n\nPure core: parser, matcher, planner,\nexecutor, AST, diagnostics,\nreturn-based comparison" {
     class: ported
   }
 
-  var: "@oselvar/var\n[Component: npm package]\n\nAuthoring API: defineState with\ncontext / action / sensor role functions" {
+  var: "@varar/varar\n[Component: npm package]\n\nAuthoring API: defineState with\ncontext / action / sensor role functions" {
     class: ported
   }
 
-  var-config: "@oselvar/var-config\n[Component: npm package]\n\nvar.config.ts schema and\nspec-glob resolution" {
+  var-config: "@varar/config\n[Component: npm package]\n\nvar.config.ts schema and\nspec-glob resolution" {
     class: ported
   }
 }
@@ -101,7 +101,7 @@ core: "Functional core — pure functions over immutable data, no I/O" {
 analysis: "Static analysis — pure given sources and an injected grammar loader" {
   class: boundary
 
-  var-language: "@oselvar/var-language\n[Component: npm package]\n\nStatic analysis: step-definition scanner,\nworkspace indexer, snippet emitter" {
+  var-language: "@varar/language\n[Component: npm package]\n\nStatic analysis: step-definition scanner,\nworkspace indexer, snippet emitter" {
     class: component
   }
 }
@@ -109,15 +109,15 @@ analysis: "Static analysis — pure given sources and an injected grammar loader
 shell: "Imperative shell — adapters, the only place side effects live" {
   class: boundary
 
-  var-runner: "@oselvar/var-runner\n[Component: npm package]\n\nRunner shell: loads spec and step files,\nexecutes plans" {
+  var-runner: "@varar/runner\n[Component: npm package]\n\nRunner shell: loads spec and step files,\nexecutes plans" {
     class: ported
   }
 
-  var-vitest: "@oselvar/var-vitest\n[Component: npm package]\n\nVitest adapter: drives vitest's\ninclude/exclude from var.config.ts" {
+  var-vitest: "@varar/vitest\n[Component: npm package]\n\nVitest adapter: drives vitest's\ninclude/exclude from var.config.ts" {
     class: ported
   }
 
-  var-cli: "@oselvar/var-cli\n[Component: npm package]\n\nCommand-line interface" {
+  var-cli: "@varar/cli\n[Component: npm package]\n\nCommand-line interface" {
     class: component
   }
 }
@@ -125,11 +125,11 @@ shell: "Imperative shell — adapters, the only place side effects live" {
 tooling: "Editor tooling" {
   class: boundary
 
-  var-lsp: "@oselvar/var-lsp\n[Component: npm package]\n\nLanguage server: diagnostics,\ngo-to-definition, completions" {
+  var-lsp: "@varar/lsp\n[Component: npm package]\n\nLanguage server: diagnostics,\ngo-to-definition, completions" {
     class: component
   }
 
-  var-vscode: "oselvar-var\n[Component: VS Code extension]\n\nHighlights matched steps,\nmissing-step diagnostics" {
+  var-vscode: "varar\n[Component: VS Code extension]\n\nHighlights matched steps,\nmissing-step diagnostics" {
     class: component
   }
 }

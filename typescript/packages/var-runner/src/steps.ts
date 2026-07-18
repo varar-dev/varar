@@ -1,7 +1,7 @@
 import { pathToFileURL } from 'node:url'
-import { _resetBuilder, buildRegistry, contextFactory } from '@oselvar/var/registry'
-import { findFiles } from '@oselvar/var-config'
-import type { Registry } from '@oselvar/var-core'
+import { findFiles } from '@varar/config'
+import type { Registry } from '@varar/core'
+import { _resetBuilder, buildRegistry, contextFactory } from '@varar/varar/registry'
 
 export type LoadedSteps = {
   readonly registry: Registry

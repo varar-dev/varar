@@ -1,5 +1,5 @@
-import { DEFAULT_SNIPPET_TEMPLATE } from '@oselvar/var-language'
-import { registerHandlers } from '@oselvar/var-lsp'
+import { DEFAULT_SNIPPET_TEMPLATE } from '@varar/language'
+import { registerHandlers } from '@varar/lsp'
 import {
   BrowserMessageReader,
   BrowserMessageWriter,

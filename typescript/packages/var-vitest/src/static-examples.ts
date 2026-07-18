@@ -1,6 +1,6 @@
-import type { ScannerPlugin } from '@oselvar/var-core'
-import { buildWorkspaceIndex } from '@oselvar/var-language'
-import { planSpec } from '@oselvar/var-runner'
+import type { ScannerPlugin } from '@varar/core'
+import { buildWorkspaceIndex } from '@varar/language'
+import { planSpec } from '@varar/runner'
 
 export type StaticExample = {
   readonly name: string

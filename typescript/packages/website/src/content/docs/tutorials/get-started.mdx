@@ -67,7 +67,7 @@ Every command and code sample below follows that choice.
    <Tabs syncKey="lang">
      <TabItem label="TypeScript">
        ```ts
-       import { steps } from '@oselvar/var'
+       import { steps } from '@varar/varar'
 
        const { sensor } = steps()
 
@@ -78,10 +78,10 @@ Every command and code sample below follows that choice.
        ```java
        package examples;
 
-       import com.oselvar.var.Registrar;
-       import com.oselvar.var.State;
-       import com.oselvar.var.StateBinder;
-       import com.oselvar.var.StepDefinitions;
+       import dev.varar.Registrar;
+       import dev.varar.State;
+       import dev.varar.StateBinder;
+       import dev.varar.StepDefinitions;
 
        public final class DeepThoughtSteps implements StepDefinitions {
            record Ctx() implements State {}
@@ -100,8 +100,8 @@ Every command and code sample below follows that choice.
 
        package examples
 
-       import com.oselvar.varkt.sensor
-       import com.oselvar.varkt.steps
+       import dev.varar.kotlin.sensor
+       import dev.varar.kotlin.steps
 
        val deepThoughtSteps =
            steps {
@@ -123,7 +123,7 @@ Every command and code sample below follows that choice.
      </TabItem>
      <TabItem label="Ruby">
        ```ruby
-       require 'oselvar/var'
+       require 'varar'
 
        steps do
          sensor('life, the universe and everything is {int}') { 42 }
@@ -161,8 +161,8 @@ Every command and code sample below follows that choice.
      @Suite @IncludeEngines("var") @SelectDirectories(".") class RunVarSpecsTest {}
      ```
 
-   The [Java](https://github.com/oselvar/var-examples/tree/main/java-junit-maven) and
-   [Kotlin](https://github.com/oselvar/var-examples/tree/main/kotlin-junit) sample
+   The [Java](https://github.com/oselvar/vararar-examples/tree/main/java-junit-maven) and
+   [Kotlin](https://github.com/oselvar/vararar-examples/tree/main/kotlin-junit) sample
    projects are complete, runnable copies you can start from.
    </Aside>
 

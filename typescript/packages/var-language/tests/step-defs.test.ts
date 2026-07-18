@@ -19,7 +19,7 @@ describe.each(scannerFactories)('$label scanner', ({ create }) => {
   })
 
   test('discovers a single step call with its source range', () => {
-    const source = `import { stimulus } from '@oselvar/var'
+    const source = `import { stimulus } from '@varar/varar'
 stimulus('I have {int} cukes', (ctx, n) => {})
 `
     const defs = scanner.discoverStepDefs('steps.ts', source)
@@ -32,7 +32,7 @@ stimulus('I have {int} cukes', (ctx, n) => {})
   })
 
   test('discovers multiple step calls across the file', () => {
-    const source = `import { stimulus, sensor } from '@oselvar/var'
+    const source = `import { stimulus, sensor } from '@varar/varar'
 stimulus('first', () => {})
 stimulus('second', () => {})
 sensor('third', () => {})
@@ -43,7 +43,7 @@ sensor('third', () => {})
   })
 
   test('handles the destructured-role pattern: const { stimulus } = steps(...)', () => {
-    const source = `import { steps } from '@oselvar/var'
+    const source = `import { steps } from '@varar/varar'
 const { stimulus } = steps(() => ({}))
 stimulus('I greet {string}', (ctx, name: string) => {})
 `
@@ -68,7 +68,7 @@ const obj = { stimulus: 1 }
   })
 
   test('discovers a paramType from a .param() call with a regexp literal', () => {
-    const source = `import { steps } from '@oselvar/var'
+    const source = `import { steps } from '@varar/varar'
 const { stimulus } = steps(() => ({})).param('airport', /[A-Z]{3}/, (r) => r)
 `
     const defs = scanner.discoverParameterTypes('p.ts', source)

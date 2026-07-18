@@ -1,5 +1,5 @@
 {
-  "name": "@oselvar/example-typescript-vitest",
+  "name": "@varar/example-typescript-vitest",
   "version": "0.3.0",
   "private": true,
   "type": "module",
@@ -8,9 +8,9 @@
     "test": "vitest run"
   },
   "devDependencies": {
-    "@oselvar/var": "workspace:*",
-    "@oselvar/var-core": "workspace:*",
-    "@oselvar/var-vitest": "workspace:*",
+    "@varar/varar": "workspace:*",
+    "@varar/core": "workspace:*",
+    "@varar/vitest": "workspace:*",
     "@types/node": "^26.1.0",
     "typescript": "^6.0.3",
     "vitest": "^4.1.10"
@@ -18,7 +18,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/oselvar/var.git",
+    "url": "git+https://github.com/oselvar/varar.git",
     "directory": "examples/typescript-vitest"
   }
 }

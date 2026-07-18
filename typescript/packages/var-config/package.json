@@ -1,5 +1,5 @@
 {
-  "name": "@oselvar/var-config",
+  "name": "@varar/config",
   "version": "0.4.2",
   "type": "module",
   "exports": {
@@ -19,7 +19,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@oselvar/var-core": "workspace:*"
+    "@varar/core": "workspace:*"
   },
   "publishConfig": {
     "exports": {
@@ -34,7 +34,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/oselvar/var.git",
+    "url": "git+https://github.com/oselvar/varar.git",
     "directory": "typescript/packages/var-config"
   }
 }

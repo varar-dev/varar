@@ -5,7 +5,7 @@ import {
   type Registry,
   type StepHandler,
   type StepKind,
-} from '@oselvar/var-core'
+} from '@varar/core'
 
 type Entry = {
   readonly expression: string
@@ -252,7 +252,7 @@ export function buildRegistry(): Registry {
 // wire shape toRegistryArtifact serializes. regexp is the bare pattern
 // source (RegExp.source — no flags/delimiters), the cross-port convention
 // every language's registry golden uses. Internal-only: exported via
-// @oselvar/var/registry beside _resetBuilder, never from the package root.
+// @varar/varar/registry beside _resetBuilder, never from the package root.
 export function _customParameterTypes(): ReadonlyArray<{
   readonly name: string
   readonly regexp: string

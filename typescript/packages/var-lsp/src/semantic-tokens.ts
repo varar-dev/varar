@@ -1,4 +1,4 @@
-import type { MatchRef } from '@oselvar/var-language'
+import type { MatchRef } from '@varar/language'
 
 export const SEMANTIC_LEGEND = {
   tokenTypes: ['function', 'parameter'] as const,

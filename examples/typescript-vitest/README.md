@@ -1,7 +1,7 @@
 # Vár sample: TypeScript + vitest
 
 A small, standalone sample project that runs Markdown specs as tests with
-[Vár](https://var.oselvar.com), using the vitest plugin (`@oselvar/var-vitest`).
+[Vár](https://varar.dev), using the vitest plugin (`@varar/vitest`).
 Copy it as the starting point for your own project.
 
 The `.md` files at the project root are the specs — they run as tests.
@@ -28,6 +28,6 @@ Each example in the Markdown specs becomes one vitest test.
 
 ## Versioning note
 
-In the `oselvar/var` monorepo this project uses `workspace:*` dependencies
-(it is the dogfood suite, gating trunk); in `oselvar/var-examples` the
+In the `oselvar/varar` monorepo this project uses `workspace:*` dependencies
+(it is the dogfood suite, gating trunk); in `varar-examples` the
 release sync pins them to the released npm packages.

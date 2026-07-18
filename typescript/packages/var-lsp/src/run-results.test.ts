@@ -1,4 +1,4 @@
-import { hashSource, type SpecResults } from '@oselvar/var-core'
+import { hashSource, type SpecResults } from '@varar/core'
 import { describe, expect, it } from 'vitest'
 import { createRunResultsStore, runLspDiagnostics } from './run-results.ts'
 

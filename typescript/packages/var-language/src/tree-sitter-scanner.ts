@@ -1,4 +1,4 @@
-import type { StepKind } from '@oselvar/var-core'
+import type { StepKind } from '@varar/core'
 import { Language, type Node, Parser, Query, type QueryMatch } from 'web-tree-sitter'
 import type { GrammarLoader } from './grammar-loader.ts'
 import type { StepDefScanner } from './scanner.ts'

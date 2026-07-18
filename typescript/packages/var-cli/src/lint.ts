@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
-import { findFiles, loadVarConfig } from '@oselvar/var-config'
-import { createRegistry, parse, plan } from '@oselvar/var-core'
+import { findFiles, loadVarConfig } from '@varar/config'
+import { createRegistry, parse, plan } from '@varar/core'
 
 export type LintOptions = {
   readonly cwd: string

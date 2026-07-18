@@ -1,4 +1,4 @@
-import type { VarConfig } from '@oselvar/var-config'
+import type { VarConfig } from '@varar/config'
 import {
   createRegistry,
   deriveSpecBaseline,
@@ -10,7 +10,7 @@ import {
   type Registry,
   stringifyVarLock,
   type VarLock,
-} from '@oselvar/var-core'
+} from '@varar/core'
 import {
   buildWorkspaceIndex,
   createTreeSitterScanner,
@@ -19,7 +19,7 @@ import {
   languageIdForPath,
   type StepDefScanner,
   type WorkspaceIndex,
-} from '@oselvar/var-language'
+} from '@varar/language'
 import type { FileSystem } from './file-system.ts'
 
 export type { FileSystem } from './file-system.ts'

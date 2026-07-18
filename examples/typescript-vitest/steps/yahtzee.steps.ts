@@ -1,4 +1,4 @@
-import { steps } from '@oselvar/var'
+import { steps } from '@varar/varar'
 import { score } from './yahtzee'
 
 const { sensor } = steps()

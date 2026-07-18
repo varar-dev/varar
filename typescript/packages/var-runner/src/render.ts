@@ -1,4 +1,4 @@
-import { isCellMismatchError, isDocStringMismatchError, ReturnShapeError } from '@oselvar/var-core'
+import { isCellMismatchError, isDocStringMismatchError, ReturnShapeError } from '@varar/core'
 
 /**
  * Render a step failure as a human-readable string, anchored to the source `.md`

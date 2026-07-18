@@ -1,4 +1,4 @@
-import type { Drift } from '@oselvar/var-core'
+import type { Drift } from '@varar/core'
 import { expect, test } from 'vitest'
 import { driftDiagnostics } from '../src/lib/cm-run.ts'
 

@@ -1,4 +1,4 @@
-import { DEFAULT_SNIPPET_TEMPLATE } from '@oselvar/var-language'
+import { DEFAULT_SNIPPET_TEMPLATE } from '@varar/language'
 import { describe, expect, it } from 'vitest'
 import { createNodeGrammarLoader } from './node-grammar-loader.ts'
 import { createStore, type FileSystem } from './store.ts'

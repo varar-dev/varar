@@ -1,12 +1,12 @@
-import { steps } from '@oselvar/var'
-import { _resetBuilder } from '@oselvar/var/registry'
 import {
   type CellDiff,
   CellMismatchError,
   type Diagnostic,
   DocStringMismatchError,
   type SpecBaseline,
-} from '@oselvar/var-core'
+} from '@varar/core'
+import { steps } from '@varar/varar'
+import { _resetBuilder } from '@varar/varar/registry'
 import { afterEach, beforeEach, expect, test } from 'vitest'
 import { collectVarExamples, varTestBody } from '../src/runtime.ts'
 

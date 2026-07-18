@@ -31,12 +31,12 @@ describe('generateVirtualModule', () => {
     // mapping holds for every following line.
     expect(lines[0]).toContain("import { test } from 'vitest'")
     // Generated code may only import from packages the CONSUMER directly
-    // depends on (@oselvar/var-vitest, vitest) — a bare '@oselvar/var-core'
+    // depends on (@varar/vitest, vitest) — a bare '@varar/core'
     // would not resolve from the spec's path under pnpm's strict layout.
     expect(lines[0]).toContain(
-      "import { collectVarExamples, varTestBody } from '@oselvar/var-vitest/runtime'",
+      "import { collectVarExamples, varTestBody } from '@varar/vitest/runtime'",
     )
-    expect(lines[0]).not.toContain("from '@oselvar/var-core'")
+    expect(lines[0]).not.toContain("from '@varar/core'")
     expect(lines[0]).toContain('import "/abs/account.steps.ts"')
     expect(lines[0]).toContain('const PATH = "/abs/foo.md"')
     expect(lines[0]).toContain('scannerPlugins: []')
@@ -126,7 +126,7 @@ describe('generateVirtualModule', () => {
 describe('varVitestPlugin', () => {
   test('returns a vite plugin object with name and load hook', () => {
     const plugin = varVitestPlugin()
-    expect(plugin.name).toBe('@oselvar/var-vitest')
+    expect(plugin.name).toBe('@varar/vitest')
     expect(typeof plugin.load).toBe('function')
   })
 })

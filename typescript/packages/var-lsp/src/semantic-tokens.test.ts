@@ -1,4 +1,4 @@
-import type { MatchRef } from '@oselvar/var-language'
+import type { MatchRef } from '@varar/language'
 import { describe, expect, it } from 'vitest'
 import { SEMANTIC_LEGEND, semanticTokenData } from './semantic-tokens.ts'
 

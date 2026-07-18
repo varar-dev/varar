@@ -1,5 +1,5 @@
-import type { CellDiff, DocStringDiff } from '@oselvar/var-core'
-import { CellMismatchError, DocStringMismatchError, ReturnShapeError } from '@oselvar/var-core'
+import type { CellDiff, DocStringDiff } from '@varar/core'
+import { CellMismatchError, DocStringMismatchError, ReturnShapeError } from '@varar/core'
 import { expect, test } from 'vitest'
 import { renderFailure } from '../src/render.ts'
 

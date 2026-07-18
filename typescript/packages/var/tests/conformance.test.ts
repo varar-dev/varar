@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { canonicalStringify, parse, runConformance } from '@oselvar/var-core'
+import { canonicalStringify, parse, runConformance } from '@varar/core'
 import { describe, expect, test } from 'vitest'
 import {
   _customParameterTypes,
@@ -21,7 +21,7 @@ const ARTIFACTS = [
   ['trace', 'trace'],
 ] as const
 
-// NOTE: these tests share @oselvar/var module-scope state, so they must
+// NOTE: these tests share @varar/varar module-scope state, so they must
 // run sequentially within this file. Do NOT mark them `test.concurrent`.
 // Run with `vitest run` (one-shot), NOT watch mode: bundles are loaded via
 // dynamic import(), which is cached, so a watch re-run would re-clear the

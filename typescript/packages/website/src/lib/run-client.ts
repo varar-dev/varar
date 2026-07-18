@@ -1,4 +1,4 @@
-import type { Drift, SpecResults } from '@oselvar/var-core'
+import type { Drift, SpecResults } from '@varar/core'
 
 export type RunInput = {
   varPath: string

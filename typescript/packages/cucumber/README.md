@@ -1,12 +1,12 @@
-# @oselvar/cucumber
+# @varar/cucumber
 
 A migration-verification sandbox: one Gherkin feature file, two step-definition
 implementations, three test runners — proving that the same business behavior
-runs under both `cucumber-js` and `@oselvar/var`.
+runs under both `cucumber-js` and `@varar/varar`.
 
 This package is **private** and never published. It exists to answer a single
 question while we shape the public API: *can a project move from
-cucumber-js to oselvar/var by porting only the step definitions?*
+cucumber-js to varar by porting only the step definitions?*
 
 ## Layout
 
@@ -45,7 +45,7 @@ opts into two scanner plugins in `var.config.json`:
 }
 ```
 
-Plugins are off by default in `@oselvar/var`; ordinary Markdown-native
+Plugins are off by default in `@varar/varar`; ordinary Markdown-native
 `.md` files do not need them.
 
 ## Three runners
@@ -53,8 +53,8 @@ Plugins are off by default in `@oselvar/var`; ordinary Markdown-native
 | Script | Runner | What it does |
 |---|---|---|
 | `pnpm test:cucumber` | cucumber-js | Loads `cucumber/steps/library.steps.ts`, runs `library.feature` |
-| `pnpm test:var` | `@oselvar/var-cli` (`var run`) | Loads `steps/library.steps.ts`, runs `library.feature.md` |
-| `pnpm test:var-vitest` | vitest + `@oselvar/var-vitest` plugin | Same .md, executed through vitest's runner |
+| `pnpm test:var` | `@varar/cli` (`var run`) | Loads `steps/library.steps.ts`, runs `library.feature.md` |
+| `pnpm test:var-vitest` | vitest + `@varar/vitest` plugin | Same .md, executed through vitest's runner |
 | `pnpm test` | all three in sequence | full sweep |
 
 All three run the same scenario green.

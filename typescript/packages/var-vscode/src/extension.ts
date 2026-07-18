@@ -9,7 +9,7 @@ import type {
   RenderTextResult,
   StepAtResult,
   StepGlob,
-} from '@oselvar/var-lsp/protocol'
+} from '@varar/lsp/protocol'
 import {
   CodeAction,
   type CodeActionContext,
@@ -46,7 +46,7 @@ export function activate(context: ExtensionContext): void {
   const devServer = resolve(extReal, '..', 'var-lsp', 'dist', 'bin.js')
   let serverOptions: ServerOptions
   if (existsSync(devServer)) {
-    // `@oselvar/var`'s `exports.import` points at `src/index.ts` so we can run
+    // `@varar/varar`'s `exports.import` points at `src/index.ts` so we can run
     // tests without a build step. The LSP server reaches the core through that
     // same entry, so we need tsx to load `.ts` files at runtime.
     const tsxLoader = resolve(extReal, '..', '..', 'node_modules', 'tsx', 'dist', 'loader.mjs')
@@ -79,7 +79,7 @@ export function activate(context: ExtensionContext): void {
       fileEvents: workspace.createFileSystemWatcher('**/.var/**/*.json'),
     },
   }
-  client = new LanguageClient('oselvar-var', 'Vár', serverOptions, clientOptions)
+  client = new LanguageClient('varar', 'Varar', serverOptions, clientOptions)
   const started = client.start()
   registerGenerateStepDefinition(context, client, started)
   registerGenerateCodeAction(context)
@@ -105,7 +105,7 @@ function registerGenerateCodeAction(context: ExtensionContext): void {
         CodeActionKind.RefactorExtract,
       )
       action.command = {
-        command: 'oselvar-var.generateStepDefinition',
+        command: 'varar.generateStepDefinition',
         title: 'Generate Step Definition',
       }
       return [action]
@@ -123,7 +123,7 @@ function registerGenerateStepDefinition(
   lspClient: LanguageClient,
   started: Promise<void>,
 ): void {
-  const cmd = commands.registerCommand('oselvar-var.generateStepDefinition', async () => {
+  const cmd = commands.registerCommand('varar.generateStepDefinition', async () => {
     const editor = window.activeTextEditor
     if (!editor) {
       void window.showInformationMessage('No active editor.')

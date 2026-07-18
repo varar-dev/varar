@@ -1,6 +1,6 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
-import type { BaselineStore } from '@oselvar/var-core'
+import type { BaselineStore } from '@varar/core'
 
 // The committed drift baseline lives at the project root as var.lock.json.
 export function varLockPath(cwd: string): string {

@@ -4,7 +4,7 @@ import {
   inferStepRole,
   renderExpression,
   type StepKind,
-} from '@oselvar/var-core'
+} from '@varar/core'
 import {
   createTypeScriptSnippetEmitter,
   emitterForLanguage,
@@ -12,7 +12,7 @@ import {
   languageIdForPath,
   type MatchRef,
   type SnippetEmitter,
-} from '@oselvar/var-language'
+} from '@varar/language'
 import type {
   GenerateSnippetResult,
   HandlerSync,

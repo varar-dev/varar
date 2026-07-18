@@ -9,7 +9,7 @@ import {
   type Registry,
   type Reporter,
   type ScannerPlugin,
-} from '@oselvar/var-core'
+} from '@varar/core'
 
 export function examplesWithRuns(
   executionPlan: ExecutionPlan,

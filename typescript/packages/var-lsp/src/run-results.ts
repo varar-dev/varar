@@ -1,4 +1,4 @@
-import { runResultDiagnostics, type SpecResults, spanFromOffsets } from '@oselvar/var-core'
+import { runResultDiagnostics, type SpecResults, spanFromOffsets } from '@varar/core'
 
 export type LspPosition = { readonly line: number; readonly character: number }
 export type LspDiagnostic = {

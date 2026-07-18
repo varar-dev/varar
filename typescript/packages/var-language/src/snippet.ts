@@ -1,5 +1,5 @@
 import { CucumberExpressionGenerator } from '@cucumber/cucumber-expressions'
-import type { Registry, StepKind } from '@oselvar/var-core'
+import type { Registry, StepKind } from '@varar/core'
 import { createTypeScriptSnippetEmitter, type SnippetEmitter } from './snippet-emitter.ts'
 import { renderTemplate } from './template.ts'
 

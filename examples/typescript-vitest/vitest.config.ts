@@ -1,4 +1,4 @@
-import varPlugin from '@oselvar/var-vitest'
+import varPlugin from '@varar/vitest'
 import { defineConfig } from 'vitest/config'
 
 // The var plugin reads this project's var.config.json and drives vitest's
@@ -10,6 +10,6 @@ export default defineConfig({
   plugins: [varPlugin({ cwd: projectDir })],
   test: {
     // Inline the var packages so the plugin and runtime are transformed by vite.
-    server: { deps: { inline: [/^@oselvar\//] } },
+    server: { deps: { inline: [/^@varar\//] } },
   },
 })

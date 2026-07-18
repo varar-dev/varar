@@ -11,7 +11,7 @@
     },
     "packages/var-cli": {
       "project": ["src/**/*.ts", "tests/**/*.ts"],
-      "ignoreDependencies": ["@oselvar/var"]
+      "ignoreDependencies": ["@varar/varar"]
     },
     "packages/var-runner": {
       "project": ["src/**/*.ts", "tests/**/*.ts"]
@@ -51,7 +51,7 @@
     "../examples/typescript-vitest": {
       "entry": ["steps/*.steps.ts"],
       "project": ["**/*.ts"],
-      "ignoreDependencies": ["@oselvar/var-core"]
+      "ignoreDependencies": ["@varar/core"]
     }
   },
   "ignore": ["**/tests/fixtures/**", "packages/website/drafts/**"]

@@ -1,4 +1,3 @@
-import { buildRegistry, contextFactory } from '@oselvar/var/registry'
 import {
   type CellDiff,
   detectDrift,
@@ -9,8 +8,9 @@ import {
   resolveScannerPlugins,
   type SpecBaseline,
   toFailure,
-} from '@oselvar/var-core'
-import { examplesWithRuns, planSpec } from '@oselvar/var-runner'
+} from '@varar/core'
+import { examplesWithRuns, planSpec } from '@varar/runner'
+import { buildRegistry, contextFactory } from '@varar/varar/registry'
 import { test } from 'vitest'
 
 export type CollectPorts = {
@@ -23,7 +23,7 @@ export type CollectPorts = {
   // plugin forwards from var.config.json. Resolved here against var-core's
   // registry: the generated virtual module resolves in the CONSUMER's
   // project, where pnpm's strict layout only sees direct dependencies — so
-  // it may import @oselvar/var-vitest but never @oselvar/var-core.
+  // it may import @varar/vitest but never @varar/core.
   readonly scannerPlugins?: ReadonlyArray<string>
   // The number of examples the build-time static plan produced. When the
   // runtime plan disagrees (a step definition the static scanner could not

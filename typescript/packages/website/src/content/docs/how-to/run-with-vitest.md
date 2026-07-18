@@ -12,18 +12,18 @@ It assumes Vár is already set up in your repo. If not, start with
 ## 1. Install the adapter
 
 ```bash
-pnpm add -D @oselvar/var-vitest vitest
+pnpm add -D @varar/vitest vitest
 ```
 
-Your step definitions keep importing `@oselvar/var` — never the adapter.
+Your step definitions keep importing `@varar/varar` — never the adapter.
 
 ## 2. Wire the plugin into vitest
 
 In `vitest.config.ts`:
 
 ```ts
-import varPlugin from '@oselvar/var-vitest'
-import { VarResultsReporter } from '@oselvar/var-vitest/reporter'
+import varPlugin from '@varar/vitest'
+import { VarResultsReporter } from '@varar/vitest/reporter'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({

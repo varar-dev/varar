@@ -1,7 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { canonicalStringify } from '@oselvar/var-core'
+import { canonicalStringify } from '@varar/core'
 import { expect, test } from 'vitest'
 import { parseVarConfig } from '../src/config.ts'
 

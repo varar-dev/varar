@@ -1,5 +1,5 @@
 {
-  "name": "@oselvar/var-vitest",
+  "name": "@varar/vitest",
   "version": "0.4.2",
   "type": "module",
   "exports": {
@@ -27,11 +27,11 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@oselvar/var": "workspace:*",
-    "@oselvar/var-config": "workspace:*",
-    "@oselvar/var-core": "workspace:*",
-    "@oselvar/var-language": "workspace:*",
-    "@oselvar/var-runner": "workspace:*"
+    "@varar/varar": "workspace:*",
+    "@varar/config": "workspace:*",
+    "@varar/core": "workspace:*",
+    "@varar/language": "workspace:*",
+    "@varar/runner": "workspace:*"
   },
   "peerDependencies": {
     "vite": "^8.0.0",
@@ -58,7 +58,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/oselvar/var.git",
+    "url": "git+https://github.com/oselvar/varar.git",
     "directory": "typescript/packages/var-vitest"
   }
 }

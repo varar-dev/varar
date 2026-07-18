@@ -1,8 +1,8 @@
 {
-  "name": "oselvar-var",
-  "displayName": "Vár",
+  "name": "varar",
+  "displayName": "Varar",
   "description": "Markdown-native BDD: highlight matched steps, go-to step definitions, missing-step diagnostics.",
-  "publisher": "oselvar",
+  "publisher": "varar",
   "version": "0.4.2",
   "type": "module",
   "engines": {
@@ -26,7 +26,7 @@
   "contributes": {
     "commands": [
       {
-        "command": "oselvar-var.generateStepDefinition",
+        "command": "varar.generateStepDefinition",
         "title": "BDD: Generate Step Definition from Selection",
         "category": "BDD"
       }
@@ -34,14 +34,14 @@
     "menus": {
       "editor/context": [
         {
-          "command": "oselvar-var.generateStepDefinition",
+          "command": "varar.generateStepDefinition",
           "when": "editorHasSelection && resourceExtname == .md",
           "group": "var@1"
         }
       ],
       "commandPalette": [
         {
-          "command": "oselvar-var.generateStepDefinition",
+          "command": "varar.generateStepDefinition",
           "when": "editorHasSelection"
         }
       ]
@@ -51,7 +51,7 @@
     "build": "tsc -p tsconfig.json && node esbuild.mjs"
   },
   "dependencies": {
-    "@oselvar/var-lsp": "workspace:*",
+    "@varar/lsp": "workspace:*",
     "vscode-languageclient": "^10.1.0"
   },
   "devDependencies": {
@@ -61,7 +61,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/oselvar/var.git",
+    "url": "git+https://github.com/oselvar/varar.git",
     "directory": "typescript/packages/var-vscode"
   },
   "private": true

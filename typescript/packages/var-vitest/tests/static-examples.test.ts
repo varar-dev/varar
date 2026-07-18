@@ -1,7 +1,7 @@
 import { expect, test } from 'vitest'
 import { discoverStaticExamples } from '../src/static-examples.ts'
 
-const STEPS = `import { steps } from '@oselvar/var'
+const STEPS = `import { steps } from '@varar/varar'
 const { sensor } = steps(() => ({}))
 sensor('the answer is {int}', () => 42)
 `
@@ -17,7 +17,7 @@ test('discovers only examples with matched steps, named by the whole paragraph',
 })
 
 test('matches expressions that use a custom parameter type', () => {
-  const stepSource = `import { steps } from '@oselvar/var'
+  const stepSource = `import { steps } from '@varar/varar'
 const { sensor } = steps(() => ({})).param('color', /red|green/)
 sensor('the light is {color}', () => 'green')
 `

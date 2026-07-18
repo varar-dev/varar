@@ -1,4 +1,4 @@
-import { addStep, createRegistry, type Diagnostic } from '@oselvar/var-core'
+import { addStep, createRegistry, type Diagnostic } from '@varar/core'
 import { expect, test } from 'vitest'
 import { examplesWithRuns, planSpec, RecordingReporter } from '../src/run.ts'
 

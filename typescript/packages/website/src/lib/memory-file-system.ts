@@ -1,4 +1,4 @@
-import type { FileSystem } from '@oselvar/var-lsp'
+import type { FileSystem } from '@varar/lsp'
 
 // Fresh on every worker start (i.e. every page load) — this is a demo site,
 // not a persistent coding environment, so there's no cross-reload storage to

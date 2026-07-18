@@ -1,4 +1,4 @@
-import type { BaselineStore } from '@oselvar/var-core'
+import type { BaselineStore } from '@varar/core'
 
 // The browser's BaselineStore: the drift baseline (var.lock.json) held in a
 // single string in memory. There is no filesystem to commit to in the browser,

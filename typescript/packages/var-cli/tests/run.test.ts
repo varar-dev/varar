@@ -10,7 +10,7 @@ const FIXTURES = resolve(HERE, 'fixtures')
 function run(args: ReadonlyArray<string>, cwd: string) {
   // Node runs the TS source directly via native type stripping. Filter stderr
   // of Node's one-time `ExperimentalWarning: globSync` notice (emitted by
-  // @oselvar/var-config's file finder) so the assertions below test the
+  // @varar/config's file finder) so the assertions below test the
   // CLI's own output, not engine warnings.
   return spawnSync(process.execPath, [BIN_TS, ...args], { cwd, encoding: 'utf8' })
 }

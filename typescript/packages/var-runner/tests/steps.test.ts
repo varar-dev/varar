@@ -4,7 +4,7 @@ import { expect, test } from 'vitest'
 import { loadSteps } from '../src/steps.ts'
 
 // Fixture step files live within the package directory so Node can resolve
-// @oselvar/var from this package's own node_modules.
+// @varar/varar from this package's own node_modules.
 const FIXTURES = join(dirname(fileURLToPath(import.meta.url)), 'fixtures')
 
 test('loadSteps builds registry with registered steps', async () => {

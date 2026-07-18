@@ -1,5 +1,5 @@
 {
-  "name": "@oselvar/website",
+  "name": "@varar/website",
   "version": "0.4.2",
   "private": true,
   "type": "module",
@@ -30,10 +30,10 @@
     "@fontsource/jetbrains-mono": "^5.2.8",
     "@fontsource/stix-two-text": "^5.2.8",
     "@lezer/highlight": "^1.2.3",
-    "@oselvar/var": "workspace:^",
-    "@oselvar/var-core": "workspace:^",
-    "@oselvar/var-language": "workspace:^",
-    "@oselvar/var-lsp": "workspace:^",
+    "@varar/varar": "workspace:^",
+    "@varar/core": "workspace:^",
+    "@varar/language": "workspace:^",
+    "@varar/lsp": "workspace:^",
     "@tailwindcss/vite": "^4.3.2",
     "astro": "^7.0.6",
     "codemirror": "^6.0.2",
@@ -49,7 +49,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/oselvar/var.git",
+    "url": "git+https://github.com/oselvar/varar.git",
     "directory": "typescript/packages/website"
   }
 }

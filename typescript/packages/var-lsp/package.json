@@ -1,5 +1,5 @@
 {
-  "name": "@oselvar/var-lsp",
+  "name": "@varar/lsp",
   "version": "0.4.2",
   "type": "module",
   "exports": {
@@ -26,9 +26,9 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@oselvar/var-config": "workspace:*",
-    "@oselvar/var-core": "workspace:*",
-    "@oselvar/var-language": "workspace:*",
+    "@varar/config": "workspace:*",
+    "@varar/core": "workspace:*",
+    "@varar/language": "workspace:*",
     "@tree-sitter-grammars/tree-sitter-kotlin": "^1.1.0",
     "tree-sitter-java": "^0.23.5",
     "tree-sitter-python": "^0.25.0",
@@ -55,7 +55,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/oselvar/var.git",
+    "url": "git+https://github.com/oselvar/varar.git",
     "directory": "typescript/packages/var-lsp"
   }
 }

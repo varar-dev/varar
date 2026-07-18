@@ -10,12 +10,12 @@ be executable — reads and edits like real code: matched steps are highlighted,
 you can jump from a sentence to the function that runs it, and the editor tells
 you when a paragraph has stopped being an example. It comes in two pieces:
 
-- **`@oselvar/var-lsp`** — a standalone [Language Server
+- **`@varar/lsp`** — a standalone [Language Server
   Protocol](https://microsoft.github.io/language-server-protocol/) server. It
   holds all the intelligence: parsing, step matching, diagnostics, snippet
   generation, and rename planning. Because it speaks LSP, any editor with an LSP
   client can drive it.
-- **The Vár VS Code extension** (`oselvar.oselvar-var`) — a thin client that
+- **The Vár VS Code extension** (`varar.varar`) — a thin client that
   bundles the language server and wires its features into VS Code menus,
   commands, and the editor surface.
 
@@ -29,8 +29,8 @@ it installs in VS Code and every VS Code–compatible editor — VSCodium, Curso
 Windsurf — that resolves extensions from Open VSX:
 
 - **In-editor:** open the Extensions view, search for **Vár**, and install
-  `oselvar.oselvar-var`.
-- **From the CLI:** `code --install-extension oselvar.oselvar-var` (or the
+  `varar.varar`.
+- **From the CLI:** `code --install-extension varar.varar` (or the
   equivalent `codium` / `cursor` command).
 
 The extension activates when a workspace contains a `var.config.json`, or when
@@ -123,7 +123,7 @@ through the rename.
 
 ## Using the language server in other editors
 
-`@oselvar/var-lsp` is a plain LSP server with a `var-lsp` executable. Any editor
+`@varar/lsp` is a plain LSP server with a `var-lsp` executable. Any editor
 that can launch a language server for Markdown and your step-definition files can
 consume it directly and get the same highlighting, navigation, diagnostics, and
 rename features described above — the VS Code extension is just the reference

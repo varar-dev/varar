@@ -7,7 +7,7 @@ order: 1
 
 # Install Vár
 
-This guide covers the TypeScript package, `@oselvar/var`. (A Python port,
+This guide covers the TypeScript package, `@varar/varar`. (A Python port,
 `pytest-var`, also exists — dual-language tabs for this guide are coming.)
 You need Node ≥ 22 LTS. It doesn't matter whether you're installing into an
 existing project or starting one from scratch.
@@ -17,7 +17,7 @@ existing project or starting one from scratch.
 Open a terminal and add Vár as a dev dependency:
 
 ```bash
-pnpm add -D @oselvar/var
+pnpm add -D @varar/varar
 ```
 
 ## Scaffold a project

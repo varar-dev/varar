@@ -1,5 +1,5 @@
 {
-  "name": "@oselvar/var-core",
+  "name": "@varar/core",
   "version": "0.4.2",
   "type": "module",
   "exports": {
@@ -34,7 +34,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/oselvar/var.git",
+    "url": "git+https://github.com/oselvar/varar.git",
     "directory": "typescript/packages/var-core"
   }
 }

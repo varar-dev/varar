@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { resolveScannerPlugins } from '@oselvar/var-core'
+import { resolveScannerPlugins } from '@varar/core'
 import type { ParsedVarConfig, VarConfig, VarGlobs } from './config-types.ts'
 
 export type { ParsedVarConfig, VarConfig, VarGlobs } from './config-types.ts'
