@@ -31,18 +31,20 @@ impl Steps {
     }
 
     /// Register a stimulus (drives the software; returns the whole next state).
-    pub fn stimulus(
-        &mut self,
-        expression: &str,
-        file: &str,
-        line: usize,
-        handler: Handler,
-    ) -> &mut Steps {
+    ///
+    /// The step's source file and line are captured automatically from the
+    /// call site via `#[track_caller]` — the Rust analogue of how the TS/Python
+    /// ports read them from the imported module. Authors never pass them; the
+    /// captured file's stem (e.g. `numerals.steps`) is what the registry and
+    /// conformance artifacts record.
+    #[track_caller]
+    pub fn stimulus(&mut self, expression: &str, handler: Handler) -> &mut Steps {
+        let loc = std::panic::Location::caller();
         self.registry = add_step(
             &self.registry,
             expression,
-            file,
-            line,
+            loc.file(),
+            loc.line() as usize,
             handler,
             Some(StepKind::Stimulus),
         )
@@ -51,18 +53,17 @@ impl Steps {
     }
 
     /// Register a sensor (the read-only assertion; its return is compared).
-    pub fn sensor(
-        &mut self,
-        expression: &str,
-        file: &str,
-        line: usize,
-        handler: Handler,
-    ) -> &mut Steps {
+    ///
+    /// Source file and line are captured from the call site, same as
+    /// [`Steps::stimulus`].
+    #[track_caller]
+    pub fn sensor(&mut self, expression: &str, handler: Handler) -> &mut Steps {
+        let loc = std::panic::Location::caller();
         self.registry = add_step(
             &self.registry,
             expression,
-            file,
-            line,
+            loc.file(),
+            loc.line() as usize,
             handler,
             Some(StepKind::Sensor),
         )

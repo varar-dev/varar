@@ -31,20 +31,25 @@ pub fn build_registry() -> Registry {
 }
 
 /// Fresh initial state per step file (var-core keys context by a step's source
-/// file). Files whose steps are pure return [`Value::Null`]. A plain `fn` (not
-/// a closure) so the adapter can move it across the libtest thread boundary.
+/// file — the path captured at each `stimulus`/`sensor` call site). Matched by
+/// filename suffix so it's independent of the path prefix `#[track_caller]`
+/// reports. Files whose steps are pure return [`Value::Null`]. A plain `fn`
+/// (not a closure) so the adapter can move it across the libtest thread
+/// boundary.
 pub fn context_value(file: &str) -> Value {
-    match file {
-        hello_var::FILE => vmap(vec![
+    if file.ends_with("hello_var.rs") {
+        vmap(vec![
             ("greeting", Value::from("")),
             ("result", Value::Int(0)),
-        ]),
-        library::FILE => vmap(vec![
+        ])
+    } else if file.ends_with("library.rs") {
+        vmap(vec![
             ("loans", Value::List(vec![])),
             ("fee", Value::Int(0)),
             ("granted", Value::Bool(false)),
-        ]),
-        _ => Value::Null,
+        ])
+    } else {
+        Value::Null
     }
 }
 

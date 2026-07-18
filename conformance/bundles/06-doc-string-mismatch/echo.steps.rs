@@ -2,16 +2,12 @@
 
 use var::{Handler, Registry, Steps, Value};
 
-pub const FILE: &str = "echo.steps.rs";
-
 pub fn register(r: Registry) -> Registry {
     let mut s = Steps::from_registry(r);
     // Returns the WRONG string (bare — the doc string is the only slot); the
     // core compares it to the doc string and throws DocStringMismatchError.
     s.sensor(
         "I echo the following:",
-        FILE,
-        1,
         Handler::sync1(|_state, _doc| Ok(Some(Value::from("goodbye")))),
     );
     s.into_registry()

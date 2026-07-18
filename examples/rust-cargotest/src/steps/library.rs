@@ -12,8 +12,6 @@ use crate::library_example::{
 use std::rc::Rc;
 use var::{FormatFn, Handler, ParseFn, Registry, Steps, Value};
 
-pub const FILE: &str = "library.steps";
-
 fn date_value(d: Date) -> Value {
     vmap(vec![
         ("year", Value::Int(d.year)),
@@ -86,8 +84,6 @@ pub fn register(r: Registry) -> Registry {
 
     s.stimulus(
         "borrowed {title}, due back on {date}",
-        FILE,
-        1,
         Handler::sync2(|state, title, due| {
             let mut m = smap(&state);
             let mut loans = loans_of(&state);
@@ -99,8 +95,6 @@ pub fn register(r: Registry) -> Registry {
 
     s.stimulus(
         "returns it on {date}",
-        FILE,
-        5,
         Handler::sync1(|state, returned_on| {
             let returned = value_date(&returned_on);
             let mut fee = 0;
@@ -115,22 +109,16 @@ pub fn register(r: Registry) -> Registry {
 
     s.sensor(
         "owes a {money} late fee",
-        FILE,
-        10,
         Handler::sync1(|state, _expected| Ok(smap(&state).get("fee").cloned())),
     );
 
     s.sensor(
         "{money} for each day overdue",
-        FILE,
-        14,
         Handler::sync1(|_state, _expected| Ok(Some(Value::Int(FEE_PER_DAY)))),
     );
 
     s.stimulus(
         "asks to borrow {title} on {date}",
-        FILE,
-        18,
         Handler::sync2(|state, _title, on| {
             let on = value_date(&on);
             let dues: Vec<Date> = loans_of(&state).iter().map(loan_due).collect();
@@ -142,8 +130,6 @@ pub fn register(r: Registry) -> Registry {
 
     s.sensor(
         "the library refuses",
-        FILE,
-        24,
         Handler::sync0(|state| {
             if matches!(smap(&state).get("granted"), Some(Value::Bool(true))) {
                 panic!("expected the library to refuse");
@@ -154,8 +140,6 @@ pub fn register(r: Registry) -> Registry {
 
     s.sensor(
         "the library agrees",
-        FILE,
-        30,
         Handler::sync0(|state| {
             if !matches!(smap(&state).get("granted"), Some(Value::Bool(true))) {
                 panic!("expected the library to agree");

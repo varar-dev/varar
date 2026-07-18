@@ -4,8 +4,6 @@ use super::{as_str, smap, vmap};
 use crate::yahtzee_example::score;
 use var::{Handler, Registry, Steps, Value};
 
-pub const FILE: &str = "yahtzee.steps";
-
 pub fn register(r: Registry) -> Registry {
     let mut s = Steps::from_registry(r);
     // Header-bound table: the paragraph names every header cell (dice,
@@ -14,8 +12,6 @@ pub fn register(r: Registry) -> Registry {
     // columns are inputs.
     s.sensor(
         "Examples of dice, category and score",
-        FILE,
-        1,
         Handler::sync1(|_state, row| {
             let m = smap(&row);
             let dice: Vec<i64> = as_str(&m["dice"])
