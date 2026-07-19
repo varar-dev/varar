@@ -22,6 +22,11 @@ export type LanguageSpec = {
   decodeString(node: Node): string
   extractHandlerParams(handlerNode: Node): HandlerParams | undefined
   resolveRegexp(node: Node): string
+  // Maps the captured step-defining function's name to a StepKind. Defaults to
+  // lower-casing it, which is enough where the call name IS the kind. A port
+  // whose ergonomic form encodes more than the kind in the name — Go's generic
+  // per-arity constructors, `Sensor2` — overrides this to strip the rest.
+  normalizeKind?(functionName: string): string
 }
 
 export function toPosition(point: { row: number; column: number }): Position {

@@ -10,12 +10,36 @@ import type { LanguageSpec } from './types.ts'
 // literals inside the handler closure are never mistaken for it; the
 // `NewSteps`/`FromRegistry`/`Registry` calls have other names, excluded by the
 // #match filter.
+// Two forms, both matched. The explicit builder method puts the expression
+// first:
+//
+//	s.Sensor("the total is {int}", func(state varar.Value, args []varar.Value) …)
+//
+// The generic typed constructor is a package-level function — Go allows no type
+// parameters on methods — so the builder is the first argument and the
+// expression the second, and the arity rides in the name:
+//
+//	varar.Sensor2(s, "The square of {int} is {int}.", func(state varar.Value, n, square int) …)
+//
+// `normalizeKind` below strips that trailing digit, so both yield sensor/stimulus.
 const STEP_DEFINITION_QUERY = `
 (call_expression
   function: (selector_expression
     field: (field_identifier) @function-name)
   arguments: (argument_list . (interpreted_string_literal) @expression)
   (#match? @function-name "^(Stimulus|Sensor)$")
+) @root
+
+(call_expression
+  function: (selector_expression
+    field: (field_identifier) @function-name)
+  arguments: (argument_list
+    .
+    (identifier)
+    .
+    (interpreted_string_literal) @expression
+  )
+  (#match? @function-name "^(Stimulus|Sensor)[0-9]+$")
 ) @root
 `
 
@@ -84,4 +108,7 @@ export const goSpec: LanguageSpec = {
   // is future work; extraction conformance only needs kind/expression/regexp.
   extractHandlerParams: (): HandlerParams | undefined => undefined,
   resolveRegexp: (node) => decodeString(node),
+  // `Sensor2` -> `sensor`: the generic constructors carry their arity in the
+  // name, which is not part of the kind.
+  normalizeKind: (name) => name.replace(/[0-9]+$/, '').toLowerCase(),
 }
