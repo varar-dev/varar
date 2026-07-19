@@ -173,6 +173,33 @@ func tableOrFenceValue(b Block) Value {
 	panic("orphan attachment must be table or fence")
 }
 
+// ToRegistryArtifact projects a Registry to the registry wire artifact.
+func ToRegistryArtifact(registry Registry) Value {
+	steps := make([]Value, len(registry.Steps))
+	for i, s := range registry.Steps {
+		names := ParameterTypeNames(s.Expression)
+		nameVals := make([]Value, len(names))
+		for j, n := range names {
+			nameVals[j] = StrValue(n)
+		}
+		steps[i] = obj(
+			kv("expression", StrValue(s.Expression)),
+			kv("parameterTypeNames", ListOf(nameVals)),
+		)
+	}
+	pts := make([]Value, len(registry.CustomParameterTypes))
+	for i, p := range registry.CustomParameterTypes {
+		pts[i] = obj(
+			kv("name", StrValue(p.Name)),
+			kv("regexp", StrValue(p.Regexp)),
+		)
+	}
+	return obj(
+		kv("steps", ListOf(steps)),
+		kv("parameterTypes", ListOf(pts)),
+	)
+}
+
 func exampleValue(e Example) Value {
 	scope := make([]Value, len(e.ScopeStack))
 	for i, s := range e.ScopeStack {

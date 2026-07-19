@@ -96,6 +96,54 @@ func (v Value) TypeName() string {
 // IsNull reports whether v is null (or the zero Value).
 func (v Value) IsNull() bool { return v.Kind == KindNull }
 
+// AsInt returns the integer value and true if v is an Int.
+func (v Value) AsInt() (int64, bool) {
+	if v.Kind == KindInt {
+		return v.Int, true
+	}
+	return 0, false
+}
+
+// AsFloat returns the float value and true if v is a Float.
+func (v Value) AsFloat() (float64, bool) {
+	if v.Kind == KindFloat {
+		return v.Float, true
+	}
+	return 0, false
+}
+
+// AsBool returns the boolean value and true if v is a Bool.
+func (v Value) AsBool() (bool, bool) {
+	if v.Kind == KindBool {
+		return v.Bool, true
+	}
+	return false, false
+}
+
+// AsString returns the string value and true if v is a String.
+func (v Value) AsString() (string, bool) {
+	if v.Kind == KindString {
+		return v.Str, true
+	}
+	return "", false
+}
+
+// AsList returns the list and true if v is a List.
+func (v Value) AsList() ([]Value, bool) {
+	if v.Kind == KindList {
+		return v.List, true
+	}
+	return nil, false
+}
+
+// AsMap returns the map and true if v is a Map.
+func (v Value) AsMap() (map[string]Value, bool) {
+	if v.Kind == KindMap {
+		return v.Map, true
+	}
+	return nil, false
+}
+
 // ValueEqual reports structural equality (Rust PartialEq / Objects.equals):
 // distinct kinds are never equal (so Int(2) != Float(2.0)), lists compare
 // order-sensitively, maps order-insensitively.
