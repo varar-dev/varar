@@ -60,5 +60,11 @@
     "label": "Rust",
     "lines": null,
     "branches": null
+  },
+  {
+    "port": "csharp",
+    "label": "C#",
+    "lines": null,
+    "branches": null
   }
 ]

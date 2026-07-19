@@ -49,6 +49,14 @@ rust_exclude=()
 if [[ "$CRATES_IO_ENABLED" != "1" ]]; then
   rust_exclude+=(--exclude 'rust-*/')
 fi
+# Same story for the C# sample while NuGet publishing is parked: it references
+# dotnet/ by project path, so a synced copy couldn't resolve Varar until the
+# packages are on NuGet. DOTNET_NUGET_ENABLED (lib.sh) flips this and the pin
+# block below together — see 68-nuget.sh's go-live checklist.
+csharp_exclude=()
+if [[ "$DOTNET_NUGET_ENABLED" != "1" ]]; then
+  csharp_exclude+=(--exclude 'csharp-*/')
+fi
 rsync -a --copy-links \
   --exclude 'node_modules/' \
   --exclude 'pnpm-workspace.yaml' \
@@ -63,6 +71,7 @@ rsync -a --copy-links \
   --exclude 'Gemfile.lock' \
   --exclude 'Cargo.lock' \
   "${rust_exclude[@]}" \
+  "${csharp_exclude[@]}" \
   examples/ "$DEST"/
 
 # Pin the JVM samples to the released Maven Central artifacts (idempotent even
@@ -102,6 +111,16 @@ perl -pi -e "s|, path: \"\\.\\./\\.\\./ruby/packages/[\\w-]+\"|, \"$VERSION\"|" 
 if [[ "$CRATES_IO_ENABLED" == "1" ]]; then
   perl -pi -e "s|varar-core = \{ path = \"\\.\\./\\.\\./rust/core\" \}|varar-core = \"$VERSION\"|" \
     "$DEST"/rust-*/Cargo.toml
+fi
+
+# Pin the C# sample to the released NuGet packages: swap each dotnet/ project
+# reference for a PackageReference at the release version. The project path
+# encodes the package id (…/Varar/Varar.csproj → Varar). Only runs once NuGet
+# publishing is live (DOTNET_NUGET_ENABLED=1); while parked the csharp-* samples
+# aren't synced at all (see the rsync exclude above), so this finds nothing.
+if [[ "$DOTNET_NUGET_ENABLED" == "1" ]]; then
+  perl -pi -e "s|<ProjectReference Include=\"\\.\\./\\.\\./dotnet/[\\w.]+/([\\w.]+)\\.csproj\" />|<PackageReference Include=\"\$1\" Version=\"$VERSION\" />|" \
+    "$DEST"/csharp-*/*.csproj
 fi
 
 git -C "$DEST" add -A

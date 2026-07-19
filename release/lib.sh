@@ -13,6 +13,14 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # checklist in release/targets/65-crates-io.sh.
 CRATES_IO_ENABLED="${CRATES_IO_ENABLED:-0}"
 
+# Single source of truth for whether the .NET port ships to NuGet. Same parked
+# pattern as CRATES_IO_ENABLED: while 0, 68-nuget.sh reports OK without
+# publishing AND 70-varar-examples.sh omits the csharp-* samples (their project
+# references to dotnet/ can't resolve in varar-examples until the packages are
+# on NuGet). Flip to 1 only once the packages are publishable — see the go-live
+# checklist in release/targets/68-nuget.sh.
+DOTNET_NUGET_ENABLED="${DOTNET_NUGET_ENABLED:-0}"
+
 log()  { printf '\033[1;34m[release]\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m[release]\033[0m %s\n' "$*" >&2; }
 die()  { printf '\033[1;31m[release]\033[0m ERROR: %s\n' "$*" >&2; exit 1; }

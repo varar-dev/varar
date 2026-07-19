@@ -12,8 +12,8 @@ programmer or coding agent that breaks the oath gets caught, every time.
 
 Varar is a multi-language project with the same behaviour across five ports —
 TypeScript, Java, Kotlin, Python, and Ruby — verified by a shared,
-language-neutral [conformance](conformance/) corpus. A sixth port, Rust, is in
-progress.
+language-neutral [conformance](conformance/) corpus. Two further ports, Rust and
+C#, are in progress.
 
 ## Build & coverage
 
@@ -29,6 +29,7 @@ workflow on `main`; coverage is distilled from each tool's native report into
 | Python | [![Build](https://github.com/oselvar/varar/actions/workflows/python.yml/badge.svg?branch=main)](https://github.com/oselvar/varar/actions/workflows/python.yml) | ![65.7%](https://img.shields.io/badge/coverage-65.7%25-yellow) | ![n/a](https://img.shields.io/badge/coverage-n%2Fa-lightgrey) |
 | Ruby | [![Build](https://github.com/oselvar/varar/actions/workflows/ruby.yml/badge.svg?branch=main)](https://github.com/oselvar/varar/actions/workflows/ruby.yml) | ![90.9%](https://img.shields.io/badge/coverage-90.9%25-brightgreen) | ![n/a](https://img.shields.io/badge/coverage-n%2Fa-lightgrey) |
 | Rust | [![Build](https://github.com/oselvar/varar/actions/workflows/rust.yml/badge.svg?branch=main)](https://github.com/oselvar/varar/actions/workflows/rust.yml) | ![n/a](https://img.shields.io/badge/coverage-n%2Fa-lightgrey) | ![n/a](https://img.shields.io/badge/coverage-n%2Fa-lightgrey) |
+| C# | [![Build](https://github.com/oselvar/varar/actions/workflows/dotnet.yml/badge.svg?branch=main)](https://github.com/oselvar/varar/actions/workflows/dotnet.yml) | ![n/a](https://img.shields.io/badge/coverage-n%2Fa-lightgrey) | ![n/a](https://img.shields.io/badge/coverage-n%2Fa-lightgrey) |
 <!-- coverage:end -->
 
 ## Development
