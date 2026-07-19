@@ -12,15 +12,24 @@
 #                   # pinned in ruby/.tool-versions)
 #   make rust       # cargo fmt/clippy/test (var-core) + examples/rust-cargotest
 #   make dotnet     # dotnet format --verify-no-changes + build + test (net10.0)
-#   make coverage   # test with coverage in all four ports (reports below)
+#   make coverage   # test with coverage in all six ports (reports below)
+#   make install-tools # add missing asdf plugins + install every toolchain the
+#                   # root .tool-versions pins (JDK, .NET, Ruby, adr-tools)
 #   make update-deps# bump every port's deps locally (Renovate does this as
 #                   # controlled per-language PRs — see renovate.json5)
 #
 # Each target runs the same gate as that port's CI workflow in .github/workflows/.
 
-.PHONY: check commits typescript python java ruby rust dotnet coverage changelog prepare release update-deps
+.PHONY: check commits typescript python java ruby rust dotnet coverage changelog prepare release update-deps install-tools
 
 check: commits typescript python java ruby rust dotnet
+
+# One-shot local toolchain bootstrap: add any missing asdf plugin, then install
+# every version pinned in the root .tool-versions (including the JDK 21 / Ruby
+# 3.2 the examples build against). Rust (rustup) and Node (corepack) are not
+# asdf-managed — see the script's footer.
+install-tools:
+	scripts/install-toolchains.sh
 
 # Commits since the last release tag must be conventional (they drive the
 # changelog and the version bump — see cliff.toml and CLAUDE.md).
@@ -34,7 +43,7 @@ python:
 	# Drop any .venv left pointing at an old checkout path (e.g. after a repo
 	# rename); uv won't repair a relocated venv on its own. See fresh-venv.sh.
 	scripts/fresh-venv.sh python examples/python-pytest examples/python-unittest
-	cd python && uv sync && uv run pytest --cov && uv run ruff check && uv run python scripts/lint_no_reexports.py
+	cd python && uv sync && uv run coverage run -m pytest && uv run coverage report && uv run ruff check && uv run python scripts/lint_no_reexports.py
 	cd examples/python-pytest && uv run pytest
 	cd examples/python-unittest && uv run python -m unittest
 
@@ -68,14 +77,23 @@ dotnet:
 # Coverage reports: typescript/coverage/index.html, python/htmlcov/index.html,
 # java/<module>/target/site/jacoco/index.html (jacoco runs on every verify),
 # ruby/coverage/index.html. lcov files (typescript/coverage/lcov.info,
-# python/coverage.lcov, ruby/coverage/lcov.info) feed editor gutters and CI
-# integrations. scripts/coverage-summary.sh then distils all five ports into the
-# tracked coverage.json and refreshes the coverage table in README.md.
+# python/coverage.lcov, ruby/coverage/lcov.info, rust/coverage/lcov.info,
+# dotnet/coverage/lcov.info) feed editor gutters and CI integrations.
+# scripts/coverage-summary.sh then distils all six ports into the tracked
+# coverage.json and refreshes the coverage table in README.md.
+#
+# Rust needs cargo-llvm-cov (`cargo install cargo-llvm-cov` + the
+# llvm-tools-preview component); .NET merges both test projects' Cobertura into
+# one lcov with ReportGenerator, restored as a local tool (dotnet/.config).
 coverage:
 	cd typescript && pnpm install && pnpm test:coverage
-	cd python && uv sync && uv run pytest --cov --cov-report=term --cov-report=html --cov-report=lcov
+	cd python && uv sync && uv run coverage run -m pytest && uv run coverage report && uv run coverage html && uv run coverage lcov
 	cd java && mvn --batch-mode verify
 	cd ruby && bundle install && COVERAGE=1 bundle exec rake spec
+	cd rust && mkdir -p coverage && cargo llvm-cov --lcov --output-path coverage/lcov.info
+	cd dotnet && rm -rf coverage && dotnet test --collect:"XPlat Code Coverage" --results-directory coverage/raw \
+	  && dotnet tool restore \
+	  && dotnet reportgenerator -reports:'coverage/raw/**/coverage.cobertura.xml' -targetdir:coverage -reporttypes:lcov "-filefilters:-*/obj/*"
 	scripts/coverage-summary.sh
 
 # Preview the changelog that the next release would add (stdout only — the

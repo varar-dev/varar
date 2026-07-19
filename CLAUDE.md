@@ -12,13 +12,14 @@ This is a multi-language monorepo (ADR 0001). Top level:
   (e.g. `packages/varar/src/...`) are relative to `typescript/`.
 - `python/` — the uv workspace for the Python port (core, runner, pytest +
   unittest adapters).
-- `java/` — the Maven multi-module workspace for the Java port (JDK 21, pinned in
-  `java/.tool-versions`).
+- `java/` — the Maven multi-module workspace for the Java port (JDK pinned in the
+  repo-root `.tool-versions`, alongside every other asdf toolchain; run
+  `make install-tools` to install them all).
 - `conformance/` — language-neutral corpus (`bundles/<n>/{example.md, *.steps.ts,
   golden/*.json}`) read by every language's conformance harness.
 - `doc/` — shared design docs (ADRs, specs, plans, ARCHITECTURE).
 - `examples/` — one standalone sample project per language/test-framework
-  combo, mirroring the `oselvar/varar-examples` repo 1:1 (synced there on every
+  combo, mirroring the `varar-dev/varar-examples` repo 1:1 (synced there on every
   release by `release/targets/70-varar-examples.sh`). The `.md` specs sit at
   each project's root; `typescript-vitest` holds the originals, the other
   projects symlink their subset (the sync dereferences symlinks).

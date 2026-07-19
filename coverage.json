@@ -31,9 +31,9 @@
     "port": "python",
     "label": "Python",
     "lines": {
-      "covered": 1301,
+      "covered": 1895,
       "total": 1979,
-      "pct": 65.7
+      "pct": 95.8
     },
     "branches": {
       "covered": 0,
@@ -58,13 +58,29 @@
   {
     "port": "rust",
     "label": "Rust",
-    "lines": null,
-    "branches": null
+    "lines": {
+      "covered": 2813,
+      "total": 3132,
+      "pct": 89.8
+    },
+    "branches": {
+      "covered": 0,
+      "total": 0,
+      "pct": null
+    }
   },
   {
     "port": "csharp",
     "label": "C#",
-    "lines": null,
-    "branches": null
+    "lines": {
+      "covered": 1807,
+      "total": 2174,
+      "pct": 83.1
+    },
+    "branches": {
+      "covered": 642,
+      "total": 882,
+      "pct": 72.8
+    }
   }
 ]

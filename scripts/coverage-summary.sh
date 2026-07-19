@@ -11,6 +11,9 @@
 #   Ruby        ruby/coverage/lcov.info            (SimpleCov → lcov)
 #   Java+Kotlin java/*/target/site/jacoco/jacoco.csv  (JaCoCo, all JVM modules
 #                                                       summed into one figure)
+#   Rust        rust/coverage/lcov.info            (cargo-llvm-cov → lcov)
+#   C#          dotnet/coverage/lcov.info          (coverlet Cobertura, both test
+#                                                   projects merged by ReportGenerator)
 #
 # lcov gives LF/LH (lines found/hit) and BRF/BRH (branches); JaCoCo's CSV gives
 # per-class LINE_/BRANCH_ MISSED+COVERED columns we sum. A missing report yields
@@ -85,14 +88,13 @@ TS_JSON=$(port_json ts     "TypeScript"        "$(lcov_totals typescript/coverag
 JVM_JSON=$(port_json jvm   "Java / Kotlin"     "$(jacoco_totals java/*/target/site/jacoco/jacoco.csv)")
 PY_JSON=$(port_json python "Python"            "$(lcov_totals python/coverage.lcov)")
 RB_JSON=$(port_json ruby   "Ruby"              "$(lcov_totals ruby/coverage/lcov.info)")
-# Rust has no coverage report yet (make coverage doesn't measure it), so this
-# reads a not-yet-existent lcov and renders n/a — the row is still emitted so
-# the port carries its build badge. Wire rust coverage here the day it lands.
+# Rust: cargo-llvm-cov writes this lcov (see the Makefile coverage target). Absent
+# it (e.g. cargo-llvm-cov not installed), lcov_totals yields empty → the row still
+# emits with n/a, so the port keeps its build badge.
 RUST_JSON=$(port_json rust "Rust"              "$(lcov_totals rust/coverage/lcov.info)")
-# The .NET port has no coverage report yet (make coverage doesn't measure it),
-# so this reads a not-yet-existent lcov and renders n/a — the row is still
-# emitted so the port carries its build badge. Wire dotnet coverage here the day
-# it lands (coverlet → lcov).
+# C#: coverlet emits Cobertura per test project, merged into this lcov by
+# ReportGenerator (see the Makefile coverage target). Absent it, the row renders
+# n/a but still carries its build badge.
 CS_JSON=$(port_json csharp "C#"                "$(lcov_totals dotnet/coverage/lcov.info)")
 
 jq -n --slurpfile a <(printf '%s\n%s\n%s\n%s\n%s\n%s\n' "$TS_JSON" "$JVM_JSON" "$PY_JSON" "$RB_JSON" "$RUST_JSON" "$CS_JSON") \
@@ -139,7 +141,7 @@ build_badge() {
     csharp) wf=dotnet ;;
     *)      wf="$1" ;;
   esac
-  printf '[![Build](https://github.com/oselvar/varar/actions/workflows/%s.yml/badge.svg?branch=main)](https://github.com/oselvar/varar/actions/workflows/%s.yml)' "$wf" "$wf"
+  printf '[![Build](https://github.com/varar-dev/varar/actions/workflows/%s.yml/badge.svg?branch=main)](https://github.com/varar-dev/varar/actions/workflows/%s.yml)' "$wf" "$wf"
 }
 
 TABLE=$(mktemp)

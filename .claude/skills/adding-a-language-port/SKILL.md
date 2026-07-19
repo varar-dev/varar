@@ -346,6 +346,17 @@ suite:
   `<PORT>_JSON=$(port_json <id> "<Label>" "$(lcov_totals <report>)")` line (add it
   to the `jq --slurpfile` list too) and a `build_badge` case mapping the id to the
   port's `.github/workflows/<lang>.yml`. Also bump the "N ports" prose sentence.
+- **`make coverage` step producing `<lang>/coverage/lcov.info`** — without it the
+  new port's row renders `n/a` forever (the summary script reads that lcov path).
+  Add a line to the `coverage:` target that runs the port's native coverage tool
+  and emits **lcov** at the path the `lcov_totals` call above expects. Worked
+  precedents: Rust uses `cargo llvm-cov --lcov --output-path coverage/lcov.info`
+  (one workspace run, needs `cargo-llvm-cov` + `llvm-tools-preview`); .NET runs
+  `dotnet test --collect:"XPlat Code Coverage"` then merges both test projects'
+  Cobertura into one lcov with ReportGenerator (a `dotnet/.config` local tool),
+  filtering `*/obj/*` generated code. Ensure `<lang>/coverage/` is git-ignored
+  (the repo-root `coverage` entry already matches it) and update the `coverage:`
+  comment's port count / lcov list.
 - **`.github/workflows/<lang>.yml`** — triggered on `<lang>/**`,
   `conformance/**`, `examples/**`, and the workflow file; runs the same gate as
   the Makefile target, then the example projects.
@@ -358,7 +369,7 @@ suite:
   sync dereferences them). Add rows to `examples/README.md`.
 - **`release/targets/NN-<registry>.sh`** publishing the port's packages to its
   registry (npm / PyPI / Maven Central / RubyGems), plus adding the port to the
-  release channels. The `oselvar/varar-examples` sync (`70-varar-examples.sh`) picks
+  release channels. The `varar-dev/varar-examples` sync (`70-varar-examples.sh`) picks
   up new `examples/<lang>-*` projects, but its **version-pinning rewrite is
   per-ecosystem** — add a pin block (and any lockfile exclusion) for a new
   registry, mirroring the npm/PyPI/Maven/RubyGems ones. Also extend the

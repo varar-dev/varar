@@ -31,7 +31,10 @@ jobs:
 
       - run: uv sync --locked
 
-      - run: uv run pytest --cov
+      # `coverage run -m pytest` (not `pytest --cov`) so coverage is armed before
+      # pytest autoloads the varar_pytest plugin; `coverage report` enforces
+      # fail_under. See python/pyproject.toml.
+      - run: uv run coverage run -m pytest && uv run coverage report
 
       - run: uv run ruff check
 

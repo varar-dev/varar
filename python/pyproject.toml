@@ -40,11 +40,12 @@ source_pkgs = ["varar", "varar_config", "varar_core", "varar_pytest", "varar_run
 
 [tool.coverage.report]
 show_missing = true
-# Ratchet: ~2 points under the level measured when the threshold was
-# introduced (2026-07-03: 66%). Raise as coverage grows; never lower.
-# NOTE varar_pytest's own plugin modules load before pytest-cov starts
-# measuring, so their coverage is understated — the real level is higher.
-fail_under = 64
+# Ratchet: ~2 points under the level last measured. Raise as coverage grows;
+# never lower. We measure with `coverage run -m pytest` (not `pytest --cov`) so
+# coverage's tracer is armed before pytest autoloads the varar_pytest plugin —
+# otherwise the plugin and everything it imports load unmeasured and the level is
+# badly understated (this is why it read ~66% before, vs ~96% now).
+fail_under = 93
 
 [tool.coverage.html]
 directory = "htmlcov"
