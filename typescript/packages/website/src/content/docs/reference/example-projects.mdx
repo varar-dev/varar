@@ -58,7 +58,41 @@ whole team, the language is an implementation detail.
 
     [Browse python-unittest →](https://github.com/varar-dev/varar-examples/tree/main/python-unittest)
   </Card>
+  <Card title="Ruby + RSpec" icon="seti:ruby">
+    Step definitions in the block DSL — `steps(...) do stimulus … sensor … end`
+    — collected as RSpec examples. Run with `bundle exec rspec`.
+
+    [Browse ruby-rspec →](https://github.com/varar-dev/varar-examples/tree/main/ruby-rspec)
+  </Card>
+  <Card title="Ruby + Minitest" icon="seti:ruby">
+    The same Ruby step definitions, run as Minitest tests instead.
+    Run with `bundle exec rake test`.
+
+    [Browse ruby-minitest →](https://github.com/varar-dev/varar-examples/tree/main/ruby-minitest)
+  </Card>
+  <Card title="Rust + cargo test" icon="seti:rust">
+    Step definitions added to an injected `Steps` builder, enumerated as
+    libtest items. Run with `cargo test`.
+
+    [Browse rust-cargotest →](https://github.com/varar-dev/varar/tree/main/examples/rust-cargotest)
+  </Card>
+  <Card title="C# + dotnet test" icon="seti:c-sharp">
+    Step definitions registered through a `Steps` builder, collected by the
+    Varar VSTest adapter. Run with `dotnet test`.
+
+    [Browse csharp-vstest →](https://github.com/varar-dev/varar/tree/main/examples/csharp-vstest)
+  </Card>
+  <Card title="Go + go test" icon="seti:go2">
+    Step definitions added to an injected `Steps` builder, with every example
+    reported as its own Go subtest. Run with `go test`.
+
+    [Browse go-gotest →](https://github.com/varar-dev/varar/tree/main/examples/go-gotest)
+  </Card>
 </CardGrid>
+
+The Rust, C# and Go samples live in the monorepo's `examples/` directory for
+now: they are synced to varar-examples once their registry publishing goes
+live (crates.io, NuGet and Go modules respectively).
 
 ## What each project contains
 
