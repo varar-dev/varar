@@ -1,15 +1,15 @@
-use super::{as_str, smap, vmap};
+use super::Ctx;
 use crate::roman_numerals_example::to_roman;
-use varar::{Steps, Value};
+use std::collections::BTreeMap;
+use varar::Steps;
 
-pub fn register(s: &mut Steps) {
-    s.sensor("a decimal and a roman number", |_state, row| {
-        let m = smap(&row);
-        let decimal = as_str(&m["decimal"]);
+pub fn register(s: &mut Steps<Ctx>) {
+    s.sensor("a decimal and a roman number", |_ctx: Ctx, row: BTreeMap<String, String>| {
+        let decimal = row["decimal"].clone();
         let roman = to_roman(decimal.parse().expect("decimal"));
-        Ok(Some(vmap(vec![
-            ("decimal", Value::from(decimal)),
-            ("roman", Value::from(roman)),
-        ])))
+        Ok(BTreeMap::from([
+            ("decimal".to_string(), decimal),
+            ("roman".to_string(), roman),
+        ]))
     });
 }

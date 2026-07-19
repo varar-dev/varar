@@ -20,13 +20,14 @@
 //! ```
 #![allow(clippy::result_large_err)]
 
+use std::any::Any;
 use std::path::Path;
+use std::rc::Rc;
 
 use libtest_mimic::{Arguments, Failed, Trial};
 use varar_core::drift::{self, reconcile_drift};
 use varar_core::parse::parse;
 use varar_core::registry::Registry;
-use varar_core::value::Value;
 use varar_runner::{
     FileBaselineStore, example_names, find_specs, plan_spec, render_failure, run_example,
 };
@@ -34,7 +35,7 @@ use varar_runner::{
 /// Build a registry (`fn`, not a closure — must be `Send + Copy`).
 pub type BuildRegistry = fn() -> Registry;
 /// Map a step file to its fresh initial state.
-pub type ContextFactory = fn(&str) -> Value;
+pub type ContextFactory = fn(&str) -> Rc<dyn Any>;
 
 /// Re-derive and run one example by index. This is what each example `Trial`
 /// closure calls; kept public so it is unit-testable.

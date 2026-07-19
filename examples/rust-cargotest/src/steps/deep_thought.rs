@@ -1,7 +1,6 @@
-use varar::{Steps, Value};
+use super::Ctx;
+use varar::Steps;
 
-pub fn register(s: &mut Steps) {
-    s.sensor("life, the universe and everything is {int}", |_state, _answer| {
-        Ok(Some(Value::Int(42)))
-    });
+pub fn register(s: &mut Steps<Ctx>) {
+    s.sensor("life, the universe and everything is {int}", |_ctx: Ctx, _answer: i64| Ok(42));
 }

@@ -1,15 +1,16 @@
-use super::{as_str, smap, vmap};
+use super::Ctx;
 use crate::yahtzee_example::score;
-use varar::{Steps, Value};
+use std::collections::BTreeMap;
+use varar::Steps;
 
-pub fn register(s: &mut Steps) {
-    s.sensor("Examples of dice, category and score", |_state, row| {
-        let m = smap(&row);
-        let dice: Vec<i64> = as_str(&m["dice"])
+pub fn register(s: &mut Steps<Ctx>) {
+    // Header-bound row: the row arrives keyed by column, and the computed
+    // columns go back the same way for the core to diff cell by cell.
+    s.sensor("Examples of dice, category and score", |_ctx: Ctx, row: BTreeMap<String, String>| {
+        let dice: Vec<i64> = row["dice"]
             .split(',')
             .map(|d| d.trim().parse().expect("die"))
             .collect();
-        let category = as_str(&m["category"]);
-        Ok(Some(vmap(vec![("score", Value::Int(score(&dice, &category)))])))
+        Ok(BTreeMap::from([("score".to_string(), score(&dice, &row["category"]).to_string())]))
     });
 }

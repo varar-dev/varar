@@ -1,6 +1,8 @@
 //! Unit tests for the adapter's per-example runner (the libtest binding itself
 //! is exercised end-to-end by the sample project in examples/rust-cargotest).
 
+use std::any::Any;
+use std::rc::Rc;
 use varar_cargotest::run_one;
 use varar_core::handler::Handler;
 use varar_core::registry::{Registry, add_step, create_registry};
@@ -19,8 +21,8 @@ fn build_registry() -> Registry {
     .unwrap()
 }
 
-fn context(_file: &str) -> Value {
-    Value::Null
+fn context(_file: &str) -> Rc<dyn Any> {
+    Rc::new(Value::Null) as Rc<dyn Any>
 }
 
 #[test]

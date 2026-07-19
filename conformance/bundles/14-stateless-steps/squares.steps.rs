@@ -1,20 +1,14 @@
 //! Rust sibling of `squares.steps.ts` (bundle `14-stateless-steps`).
 //!
-//! Pure steps — nothing to arrange or evolve — so `state()` is the bare
-//! [`Value::Null`] every handler ignores.
+//! Pure steps — nothing to arrange or evolve — so the context is the unit type.
 
-use varar::{Steps, Value};
+use varar::Steps;
 
-pub fn register(s: &mut Steps) {
-    s.stimulus("I warm up my mental math", |_state| Ok(None));
-    // Two slots ({int}, {int}); the handler uses only the first and returns
-    // both computed columns [n, n*n] for positional comparison.
-    s.sensor("The square of {int} is {int}.", |_state, n, _square| {
-        let n = if let Value::Int(i) = n { i } else { 0 };
-        Ok(Some(Value::List(vec![Value::Int(n), Value::Int(n * n)])))
-    });
+pub fn register(s: &mut Steps<()>) {
+    s.stimulus("I warm up my mental math", |ctx: ()| Ok(ctx));
+    // Two slots ({int}, {int}): two ints in, two ints out, compared
+    // positionally — the same contract as the .ts sibling's `[n, n * n]`.
+    s.sensor("The square of {int} is {int}.", |_ctx: (), n: i64, _square: i64| Ok((n, n * n)));
 }
 
-pub fn state() -> Value {
-    Value::Null
-}
+pub fn state() {}

@@ -13,12 +13,14 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use varar::{Steps, create_registry};
+use std::any::Any;
+use std::rc::Rc;
+
+use varar::{Registry, Steps};
 use varar_core::canonical_json::canonical_stringify;
 use varar_core::conformance::{run_conformance, to_plan_artifact, to_registry_artifact};
 use varar_core::parse::parse;
 use varar_core::plan::plan;
-use varar_core::value::Value;
 
 // Fixtures live in the shared corpus (siblings of every `*.steps.ts`), pulled
 // in by path. Declared at the test's top level so the path base is
@@ -54,26 +56,38 @@ mod b14;
 #[path = "../../../conformance/bundles/15-custom-parameter-format/money.steps.rs"]
 mod b15;
 
-type RegisterFn = fn(&mut Steps);
-type StateFn = fn() -> Value;
+// Each bundle now has its OWN context type, so the fixtures cannot share one
+// function-pointer type. This macro erases that difference: it builds the
+// bundle's registry with its own `Steps<Ctx>` and boxes its state factory, so
+// every arm yields the same `(Registry, ContextFactory)` pair.
+type ContextFactory = Box<dyn Fn() -> Rc<dyn Any>>;
 
-fn fixture(bundle: &str) -> (RegisterFn, StateFn) {
+macro_rules! bundle {
+    ($m:ident) => {{
+        let mut s = Steps::new();
+        $m::register(&mut s);
+        let factory: ContextFactory = Box::new(|| Rc::new($m::state()) as Rc<dyn Any>);
+        (s.into_registry(), factory)
+    }};
+}
+
+fn fixture(bundle: &str) -> (Registry, ContextFactory) {
     match bundle {
-        "01-roman-numerals" => (b01::register, b01::state),
-        "02-context-isolation" => (b02::register, b02::state),
-        "03-expected-failure" => (b03::register, b03::state),
-        "04-tables-and-docstrings" => (b04::register, b04::state),
-        "05-ambiguous-match" => (b05::register, b05::state),
-        "06-doc-string-mismatch" => (b06::register, b06::state),
-        "07-row-check-mismatch" => (b07::register, b07::state),
-        "08-string-capture" => (b08::register, b08::state),
-        "09-expected-message-mismatch" => (b09::register, b09::state),
-        "10-error-fence-without-step" => (b10::register, b10::state),
-        "11-emoji-offsets" => (b11::register, b11::state),
-        "12-combining-marks" => (b12::register, b12::state),
-        "13-custom-parameter-type" => (b13::register, b13::state),
-        "14-stateless-steps" => (b14::register, b14::state),
-        "15-custom-parameter-format" => (b15::register, b15::state),
+        "01-roman-numerals" => bundle!(b01),
+        "02-context-isolation" => bundle!(b02),
+        "03-expected-failure" => bundle!(b03),
+        "04-tables-and-docstrings" => bundle!(b04),
+        "05-ambiguous-match" => bundle!(b05),
+        "06-doc-string-mismatch" => bundle!(b06),
+        "07-row-check-mismatch" => bundle!(b07),
+        "08-string-capture" => bundle!(b08),
+        "09-expected-message-mismatch" => bundle!(b09),
+        "10-error-fence-without-step" => bundle!(b10),
+        "11-emoji-offsets" => bundle!(b11),
+        "12-combining-marks" => bundle!(b12),
+        "13-custom-parameter-type" => bundle!(b13),
+        "14-stateless-steps" => bundle!(b14),
+        "15-custom-parameter-format" => bundle!(b15),
         other => panic!("no Rust step fixture for bundle {other}"),
     }
 }
@@ -105,10 +119,7 @@ fn registry_matches_golden() {
     let mut fails = Vec::new();
     for dir in bundle_dirs() {
         let name = name_of(&dir);
-        let (register, _) = fixture(&name);
-        let mut s = Steps::from_registry(create_registry());
-        register(&mut s);
-        let registry = s.into_registry();
+        let (registry, _) = fixture(&name);
         let actual = canonical_stringify(&to_registry_artifact(&registry));
         if actual != golden(&dir, "registry.json") {
             fails.push(name);
@@ -122,10 +133,7 @@ fn plan_matches_golden() {
     let mut fails = Vec::new();
     for dir in bundle_dirs() {
         let name = name_of(&dir);
-        let (register, _) = fixture(&name);
-        let mut s = Steps::from_registry(create_registry());
-        register(&mut s);
-        let registry = s.into_registry();
+        let (registry, _) = fixture(&name);
         let source = fs::read_to_string(dir.join("example.md")).unwrap();
         let doc = parse("example.md", &source);
         let execution = plan(&doc, &registry);
@@ -142,10 +150,7 @@ fn trace_matches_golden() {
     let mut fails = Vec::new();
     for dir in bundle_dirs() {
         let name = name_of(&dir);
-        let (register, state) = fixture(&name);
-        let mut s = Steps::from_registry(create_registry());
-        register(&mut s);
-        let registry = s.into_registry();
+        let (registry, state) = fixture(&name);
         let source = fs::read_to_string(dir.join("example.md")).unwrap();
         let doc = parse("example.md", &source);
         let artifacts = run_conformance(&doc, &registry, &|| state());

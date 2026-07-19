@@ -1,33 +1,22 @@
 //! Rust sibling of `counter.steps.ts` (bundle `02-context-isolation`).
 
-use std::collections::BTreeMap;
-use varar::{HandlerError, Steps, Value};
+use varar::Steps;
 
-fn count_of(state: &Value) -> i64 {
-    match state {
-        Value::Map(m) => match m.get("count") {
-            Some(Value::Int(i)) => *i,
-            _ => 0,
-        },
-        _ => 0,
-    }
+#[derive(Clone, Default)]
+pub struct Ctx {
+    pub count: i64,
 }
 
-pub fn register(s: &mut Steps) {
-    s.stimulus("I increment", |state| {
-        let next = count_of(&state) + 1;
-        Ok(Some(Value::Map(BTreeMap::from([("count".to_string(), Value::Int(next))]))))
+pub fn register(s: &mut Steps<Ctx>) {
+    s.stimulus("I increment", |ctx: Ctx| {
+        Ok(Ctx {
+            count: ctx.count + 1,
+        })
     });
-    s.sensor("The count is {int}", |state, n| {
-        let count = count_of(&state);
-        let expected = if let Value::Int(i) = n { i } else { 0 };
-        if count != expected {
-            return Err(HandlerError::new(format!("expected {expected} but got {count}")));
-        }
-        Ok(None)
-    });
+    // One slot: return the observed count and let the core compare it.
+    s.sensor("The count is {int}", |ctx: Ctx, _expected: i64| Ok(ctx.count));
 }
 
-pub fn state() -> Value {
-    Value::Map(BTreeMap::from([("count".to_string(), Value::Int(0))]))
+pub fn state() -> Ctx {
+    Ctx::default()
 }

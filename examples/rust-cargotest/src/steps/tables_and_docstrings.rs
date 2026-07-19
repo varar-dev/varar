@@ -1,35 +1,21 @@
-use super::{as_str, vmap};
-use varar::{Steps, Value};
+use super::Ctx;
+use varar::Steps;
 
-pub fn register(s: &mut Steps) {
-    s.sensor("Uppercase each one:", |_state, table| {
-        let rows = match &table {
-            Value::List(rows) => rows,
-            other => panic!("expected a table, got {other:?}"),
-        };
-        let out: Vec<Value> = rows
+pub fn register(s: &mut Steps<Ctx>) {
+    // A whole-table slot arrives as rows of cells, and the computed table goes
+    // back the same way — compared positionally against the input's columns.
+    s.sensor("Uppercase each one:", |_ctx: Ctx, table: Vec<Vec<String>>| {
+        Ok(table
             .iter()
             .skip(1)
-            .map(|row| {
-                let before = match row {
-                    Value::List(cells) => as_str(&cells[0]),
-                    other => panic!("expected a row, got {other:?}"),
-                };
-                let after = before.to_uppercase();
-                vmap(vec![
-                    ("before", Value::from(before)),
-                    ("after", Value::from(after)),
-                ])
-            })
-            .collect();
-        Ok(Some(Value::List(out)))
+            .map(|row| vec![row[0].clone(), row[0].to_uppercase()])
+            .collect::<Vec<Vec<String>>>())
     });
 
-    s.sensor("Greet {word}:", |_state, name, _doc| {
-        let name = as_str(&name);
-        Ok(Some(Value::List(vec![
-            Value::from(name.clone()),
-            Value::from(format!("Hello, {name}!\n")),
-        ])))
+    // Two slots — the {word} capture and the trailing doc string — so two
+    // strings in, two strings out, compared positionally.
+    s.sensor("Greet {word}:", |_ctx: Ctx, name: String, _doc: String| {
+        let greeting = format!("Hello, {name}!\n");
+        Ok((name, greeting))
     });
 }

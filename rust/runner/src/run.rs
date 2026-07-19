@@ -1,12 +1,13 @@
 //! Planning and running examples, plus the adapter display-name rule.
 
+use std::any::Any;
 use std::collections::HashMap;
+use std::rc::Rc;
 use varar_core::error::StepFailure;
 use varar_core::execute::{ExecutePorts, collect_examples};
 use varar_core::parse::parse;
 use varar_core::plan::{ExecutionPlan, plan};
 use varar_core::registry::Registry;
-use varar_core::value::Value;
 
 /// Parse + plan one spec.
 pub fn plan_spec(name: &str, source: &str, registry: &Registry) -> ExecutionPlan {
@@ -42,7 +43,7 @@ pub fn example_names(plan: &ExecutionPlan) -> Vec<String> {
 /// fresh initial state.
 pub fn run_example(
     plan: &ExecutionPlan,
-    context_factory: &dyn Fn(&str) -> Value,
+    context_factory: &dyn Fn(&str) -> Rc<dyn Any>,
     index: usize,
 ) -> Result<(), StepFailure> {
     let ports = ExecutePorts {

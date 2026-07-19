@@ -1,22 +1,22 @@
-use super::{as_int, as_str, smap};
-use varar::{Steps, Value};
+use super::Ctx;
+use varar::Steps;
 
-pub fn register(s: &mut Steps) {
-    s.stimulus("I greet {string}", |state, name| {
-        let mut m = smap(&state);
-        m.insert("greeting".to_string(), Value::from(format!("Hello, {}!", as_str(&name))));
-        Ok(Some(Value::Map(m)))
+pub fn register(s: &mut Steps<Ctx>) {
+    s.stimulus("I greet {string}", |ctx: Ctx, name: String| {
+        Ok(Ctx {
+            greeting: format!("Hello, {name}!"),
+            ..ctx
+        })
     });
 
-    s.sensor("the greeting should be {string}", |state, _expected| {
-        Ok(smap(&state).get("greeting").cloned())
+    s.sensor("the greeting should be {string}", |ctx: Ctx, _expected: String| Ok(ctx.greeting));
+
+    s.stimulus("expression `{int}+{int}`", |ctx: Ctx, a: i64, b: i64| {
+        Ok(Ctx {
+            result: a + b,
+            ..ctx
+        })
     });
 
-    s.stimulus("expression `{int}+{int}`", |state, a, b| {
-        let mut m = smap(&state);
-        m.insert("result".to_string(), Value::Int(as_int(&a) + as_int(&b)));
-        Ok(Some(Value::Map(m)))
-    });
-
-    s.sensor("evaluate to `{int}`", |state, _expected| Ok(smap(&state).get("result").cloned()));
+    s.sensor("evaluate to `{int}`", |ctx: Ctx, _expected: i64| Ok(ctx.result));
 }

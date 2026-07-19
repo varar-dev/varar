@@ -1,13 +1,11 @@
 //! Rust sibling of `echo.steps.ts` (bundle `04-tables-and-docstrings`).
 
-use varar::{Steps, Value};
+use varar::Steps;
 
-pub fn register(s: &mut Steps) {
-    // The doc string is this sensor's only slot, so it is returned bare; the
-    // core compares it against the input (compareDocString); equal passes.
-    s.sensor("I echo the following:", |_state, doc| Ok(Some(doc)));
+pub fn register(s: &mut Steps<()>) {
+    // The doc string is this sensor's only slot: echo it back and the core
+    // compares it against the input.
+    s.sensor("I echo the following:", |_ctx: (), doc: String| Ok(doc));
 }
 
-pub fn state() -> Value {
-    Value::Null
-}
+pub fn state() {}

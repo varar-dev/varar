@@ -14,6 +14,7 @@ use crate::plan::{ExecutionPlan, PlannedExample, PlannedStep, plan};
 use crate::registry::Registry;
 use crate::span::Span;
 use crate::value::Value;
+use std::any::Any;
 use std::cell::RefCell;
 use std::collections::{BTreeMap, HashMap};
 use std::rc::Rc;
@@ -410,7 +411,7 @@ fn file_stem(path: &str) -> String {
 pub fn run_conformance(
     doc: &VarDoc,
     registry: &Registry,
-    context_factory: &dyn Fn() -> Value,
+    context_factory: &dyn Fn() -> Rc<dyn Any>,
 ) -> BundleArtifacts {
     let execution = plan(doc, registry);
 

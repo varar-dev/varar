@@ -1,9 +1,13 @@
 //! Rust sibling of `numerals.steps.ts` (bundle `01-roman-numerals`).
 //!
-//! Full-replacement state (ADR 0006): the `{result}` map is the whole state.
+//! Full-replacement state (ADR 0006), in the file's own context type.
 
-use std::collections::BTreeMap;
-use varar::{HandlerError, Steps, Value};
+use varar::{HandlerError, Steps};
+
+#[derive(Clone, Default)]
+pub struct Ctx {
+    pub result: String,
+}
 
 fn roman(n: i64) -> Option<&'static str> {
     match n {
@@ -15,40 +19,23 @@ fn roman(n: i64) -> Option<&'static str> {
     }
 }
 
-pub fn register(s: &mut Steps) {
-    s.stimulus("I convert {int} to roman numerals", |_state, n| {
-        let n = if let Value::Int(i) = n { i } else { 0 };
-        let mut m = BTreeMap::new();
-        if let Some(s) = roman(n) {
-            m.insert("result".to_string(), Value::from(s));
-        }
-        Ok(Some(Value::Map(m)))
+pub fn register(s: &mut Steps<Ctx>) {
+    s.stimulus("I convert {int} to roman numerals", |_ctx: Ctx, n: i64| {
+        Ok(Ctx {
+            result: roman(n).unwrap_or_default().to_string(),
+        })
     });
-    s.sensor("The result is {word}", |state, expected| {
-        // {word} greedily captures trailing punctuation ("I." not "I"); strip
-        // it, then throw on mismatch rather than returning (which would make
-        // the core compare the RAW captured "I." and wrongly fail). Returning
-        // None opts out, matching the .ts/.java sensors.
-        let expected = if let Value::String(s) = expected {
-            s
-        } else {
-            String::new()
-        };
+    // {word} greedily captures trailing punctuation ("I." not "I"), so this
+    // sensor asserts for itself rather than returning the slot for comparison.
+    s.sensor("The result is {word}", |ctx: Ctx, expected: String| -> Result<(), HandlerError> {
         let cleaned = expected.trim_end_matches(['.', '!', '?']);
-        let result = match &state {
-            Value::Map(m) => match m.get("result") {
-                Some(Value::String(s)) => s.clone(),
-                _ => String::new(),
-            },
-            _ => String::new(),
-        };
-        if cleaned != result {
-            return Err(HandlerError::new(format!("expected {cleaned} but got {result}")));
+        if cleaned != ctx.result {
+            return Err(HandlerError::new(format!("expected {cleaned} but got {}", ctx.result)));
         }
-        Ok(None)
+        Ok(())
     });
 }
 
-pub fn state() -> Value {
-    Value::Map(BTreeMap::new())
+pub fn state() -> Ctx {
+    Ctx::default()
 }
