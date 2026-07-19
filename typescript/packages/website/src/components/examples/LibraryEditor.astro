@@ -24,8 +24,8 @@ import libraryLogicTypeScript from '$examples/typescript-vitest/src/library.ts?r
     <Version label="Break it">{librarySource.replace('£2.50', '£3.00').replace('the library agrees', 'the library refuses')}</Version>
     <Version label="Reword (drift)">{librarySource.replace('due back on June 12', 'due on June 12').replace('asks to borrow *Hyperion*', 'wants to borrow *Hyperion*').replace('the library agrees', 'the library says yes')}</Version>
   </File>
-  <File uri="file:///library.steps.ts">{libraryStepsTypeScript}</File>
-  <File uri="file:///library.ts">{libraryLogicTypeScript}</File>
+  <File uri="file:///steps/library.steps.ts">{libraryStepsTypeScript}</File>
+  <File uri="file:///src/library.ts">{libraryLogicTypeScript}</File>
   <File uri="file:///library.steps.cs">{libraryStepsCsharp}</File>
   <File uri="file:///Library.cs">{libraryLogicCsharp}</File>
   <File uri="file:///LibrarySteps.java">{libraryStepsJava}</File>
