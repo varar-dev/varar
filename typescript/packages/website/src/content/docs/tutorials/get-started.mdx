@@ -132,17 +132,31 @@ Every command and code sample below follows that choice.
      </TabItem>
      <TabItem label="Rust">
        ```rust
-       use var::{Handler, Registry, Steps, Value};
+       use var::{Handler, Steps, Value};
 
-       pub fn register(r: Registry) -> Registry {
-           let mut s = Steps::from_registry(r);
+       pub fn register(s: &mut Steps) {
            s.sensor(
                "life, the universe and everything is {int}",
                file!(),
                line!() as usize,
                Handler::sync1(|_state, _answer| Ok(Some(Value::Int(42)))),
            );
-           s.into_registry()
+       }
+       ```
+     </TabItem>
+     <TabItem label="C#">
+       ```csharp
+       using Varar;
+       using Varar.Core;
+
+       namespace Examples;
+
+       public static class DeepThoughtSteps
+       {
+           public static void Register(Steps s)
+           {
+               s.Sensor("life, the universe and everything is {int}", (state, answer) => Value.Of(42));
+           }
        }
        ```
      </TabItem>
@@ -223,6 +237,11 @@ Every command and code sample below follows that choice.
            line!() as usize,
            Handler::sync1(|_state, _answer| Ok(Some(Value::Int(43)))),
        );
+       ```
+     </TabItem>
+     <TabItem label="C#">
+       ```csharp
+       s.Sensor("life, the universe and everything is {int}", (state, answer) => Value.Of(43));
        ```
      </TabItem>
    </Tabs>

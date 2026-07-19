@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Varar.Config</RootNamespace>
+    <AssemblyName>Varar.Config</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Varar.Core/Varar.Core.csproj" />
+  </ItemGroup>
+
+</Project>

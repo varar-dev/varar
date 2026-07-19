@@ -89,8 +89,13 @@ RB_JSON=$(port_json ruby   "Ruby"              "$(lcov_totals ruby/coverage/lcov
 # reads a not-yet-existent lcov and renders n/a — the row is still emitted so
 # the port carries its build badge. Wire rust coverage here the day it lands.
 RUST_JSON=$(port_json rust "Rust"              "$(lcov_totals rust/coverage/lcov.info)")
+# The .NET port has no coverage report yet (make coverage doesn't measure it),
+# so this reads a not-yet-existent lcov and renders n/a — the row is still
+# emitted so the port carries its build badge. Wire dotnet coverage here the day
+# it lands (coverlet → lcov).
+CS_JSON=$(port_json csharp "C#"                "$(lcov_totals dotnet/coverage/lcov.info)")
 
-jq -n --slurpfile a <(printf '%s\n%s\n%s\n%s\n%s\n' "$TS_JSON" "$JVM_JSON" "$PY_JSON" "$RB_JSON" "$RUST_JSON") \
+jq -n --slurpfile a <(printf '%s\n%s\n%s\n%s\n%s\n%s\n' "$TS_JSON" "$JVM_JSON" "$PY_JSON" "$RB_JSON" "$RUST_JSON" "$CS_JSON") \
   '$a' > "$JSON_OUT"
 
 echo "Wrote $JSON_OUT"
@@ -131,6 +136,7 @@ build_badge() {
     python) wf=python ;;
     ruby)   wf=ruby ;;
     rust)   wf=rust ;;
+    csharp) wf=dotnet ;;
     *)      wf="$1" ;;
   esac
   printf '[![Build](https://github.com/oselvar/varar/actions/workflows/%s.yml/badge.svg?branch=main)](https://github.com/oselvar/varar/actions/workflows/%s.yml)' "$wf" "$wf"

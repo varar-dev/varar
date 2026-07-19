@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Varar.Runner</RootNamespace>
+    <AssemblyName>Varar.Runner</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Varar.Core/Varar.Core.csproj" />
+    <ProjectReference Include="../Varar.Config/Varar.Config.csproj" />
+    <!-- The step-loader reflects for `static void Register(Steps)`, so it needs the author facade. -->
+    <ProjectReference Include="../Varar/Varar.csproj" />
+  </ItemGroup>
+
+</Project>

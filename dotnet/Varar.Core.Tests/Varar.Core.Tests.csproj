@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <IsPackable>false</IsPackable>
+    <RootNamespace>Varar.Core.Tests</RootNamespace>
+    <!-- xUnit v3 test projects are self-contained executables. -->
+    <OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- xUnit v3 on the VSTest runner: the mtp-off variant keeps `dotnet test` on VSTest. -->
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.8.1" />
+    <PackageReference Include="xunit.v3.mtp-off" Version="3.2.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../Varar.Core/Varar.Core.csproj" />
+    <ProjectReference Include="../Varar.Config/Varar.Config.csproj" />
+    <ProjectReference Include="../Varar.Runner/Varar.Runner.csproj" />
+  </ItemGroup>
+
+</Project>

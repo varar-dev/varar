@@ -8,16 +8,25 @@ description: Use when starting or reviewing a new var language port (Java, Kotli
 ## Overview
 
 var is hexagonal + multi-language (ADR 0001). **TypeScript, Python, Java,
-Kotlin, and Ruby are all complete ports at full parity** — there is no single
-reference implementation, so seek inspiration from whichever existing ports are
-closest to your target rather than treating any one language as canonical. The
+Kotlin, Ruby, Rust, and C# are all complete ports at full parity** — there is no
+single reference implementation, so seek inspiration from whichever existing
+ports are closest to your target rather than treating any one language as
+canonical. (Rust and C# are behaviourally complete and conformance-verified but
+their registry publishing is parked — see the release targets.) The
 shared `conformance/bundles/*/golden/*.json` corpus is what every port answers
 to. Python
 and Ruby are the closest precedents for a *full pipeline* port (no runtime
 sharing, like Go would be); Kotlin is the precedent for a *facade over an
-existing engine* (it shares the JVM with Java — see the last section). Ruby is
+existing engine* (it shares the JVM with Java — see the last section). Rust and
+C# are the precedents for a full-pipeline port in a **static language with an
+explicit `Value` model** (a closed value hierarchy replacing TS's raw JS values),
+an **injected registrar** (the framework hands each step file a builder —
+`register(&mut Steps)` in Rust, `void Register(Steps)` in C# — with no
+module-scope accumulator and no threaded-registry bookends), and
+**full-replacement state** (a stimulus returns the whole next
+state). Ruby is
 also the precedent for a **block-based author DSL** (`steps(...) do stimulus …
-sensor … end`) and, unlike the older ports, shipped with its tree-sitter
+sensor … end`); Ruby, Rust, and C# all shipped with their tree-sitter
 dialect wired from the start (see the repo-integration checklist). Every port follows the
 same package shape and is proven correct by reproducing the shared
 `conformance/bundles/*/golden/*.json` byte-for-byte — never by writing fresh
@@ -254,6 +263,21 @@ fork on the target language's idioms. Record your choice in the design doc:
   constructors in the *core* for its own tests; the closure sugar belongs in the
   *facade*. (The 3+-capture and async forms stay explicit — a bare 2-arg closure
   can't disambiguate `(Value,Value)` from `(Value,Vec)`.)
+- **Keep the public API surface minimal.** Expose only what an author actually
+  calls: the builder methods (`defineState`/`stimulus`/`sensor`/`param`), the
+  `Value` model, and the throw-to-fail exception. Everything that merely bridges
+  the builder to the registry — constructing a `Registry`, `addStep`,
+  `from`/`to`-registry — is plumbing the runner and tests use, **not** authors:
+  make it crate-private (`pub(crate)`), `internal` (+ `InternalsVisibleTo` for
+  the runner/tests), or package-private, and hand adapters the registry as an
+  **opaque token** they pass back to `planSpec`, never build by hand. When an
+  injected-builder registration replaces a threaded-registry one, the old
+  `from`/`to`-registry bookends become plumbing too — demote them, don't leave
+  them public. And prefer **one method with an optional argument** over
+  near-duplicate variants: a single `param(name, regexp, parse, format?)` (a
+  default/optional arg in C#, `Option<FormatFn>` in Rust), never a separate
+  `param` + `param_with_format` — so the surface stays small and the method
+  names stay uniform across every port.
 
 ## Test-framework adapter pattern
 

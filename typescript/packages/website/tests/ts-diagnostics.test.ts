@@ -6,14 +6,14 @@ import { expect, test } from 'vitest'
 import librarySteps from '../../../../examples/typescript-vitest/steps/library.steps.ts?raw'
 import { createTsDiagnostics } from '../src/lib/ts-diagnostics.ts'
 
-// The sample imports its domain module ('./library'); the in-browser service
-// has no filesystem, so mirror what the editor does for unresolvable local
-// imports: nothing. Those imports type as `any`, which must not produce
+// The sample imports its domain module ('../src/library'); the in-browser
+// service has no filesystem, so mirror what the editor does for unresolvable
+// local imports: nothing. Those imports type as `any`, which must not produce
 // diagnostics with the service's lenient options — assert only on messages
-// that are NOT unresolved-module noise for './library'.
+// that are NOT unresolved-module noise for the domain module.
 function realProblems(tsd: ReturnType<typeof createTsDiagnostics>, name: string, source: string) {
   tsd.updateDoc(name, source)
-  return tsd.diagnostics(name).filter((d) => !d.message.includes("'./library'"))
+  return tsd.diagnostics(name).filter((d) => !d.message.includes("/library'"))
 }
 
 test('the front-page library sample type-checks against the real @varar/varar types', () => {

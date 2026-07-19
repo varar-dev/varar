@@ -70,5 +70,16 @@
     "install": { "lang": "bash", "code": "cargo add varar-cargotest --dev" },
     "scaffold": null,
     "run": { "lang": "bash", "code": "cargo test" }
+  },
+  {
+    "id": "csharp",
+    "label": "C#",
+    "icon": "seti:c-sharp",
+    "ext": ".cs",
+    "stepsGlob": "varar-examples/**/*.steps.cs",
+    "hasCli": false,
+    "install": { "lang": "bash", "code": "dotnet add package Varar.TestAdapter" },
+    "scaffold": null,
+    "run": { "lang": "bash", "code": "dotnet test" }
   }
 ]
