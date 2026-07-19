@@ -11,7 +11,7 @@
 #                   # examples/ruby-rspec and examples/ruby-minitest (Ruby 3.2,
 #                   # pinned in ruby/.tool-versions)
 #   make rust       # cargo fmt/clippy/test (var-core) + examples/rust-cargotest
-#   make dotnet     # dotnet format --verify-no-changes + build + test (net8.0)
+#   make dotnet     # dotnet format --verify-no-changes + build + test (net10.0)
 #   make coverage   # test with coverage in all four ports (reports below)
 #   make update-deps# bump every port's deps locally (Renovate does this as
 #                   # controlled per-language PRs — see renovate.json5)
@@ -58,7 +58,7 @@ rust:
 	cd rust && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
 	cd examples/rust-cargotest && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
 
-# .NET port: the dotnet/ solution (net8.0), formatted with dotnet format,
+# .NET port: the dotnet/ solution (net10.0), formatted with dotnet format,
 # built and tested (four conformance artifacts x 15 bundles + config corpus +
 # drift + runner + the VSTest adapter smoke sample).
 dotnet:

@@ -24,7 +24,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: '10.0.x'
 
       # The solution: format check + build + test (four conformance artifacts x
       # 15 bundles + the config corpus + drift + runner). The C# step fixtures

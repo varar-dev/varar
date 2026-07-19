@@ -23,11 +23,10 @@ dotnet build Varar.sln
 dotnet test  Varar.sln
 ```
 
-## Environment notes (T0)
+## Environment notes
 
-- **Target framework: `net8.0`.** The plan names `net10.0` (the eventual LTS),
-  but this build environment ships only the .NET 8 SDK, so the port is pinned to
-  `net8.0` (also LTS) via `global.json` + `Directory.Build.props`.
+- **Target framework: `net10.0`** (the current LTS), pinned via `global.json` +
+  `Directory.Build.props`; `dotnet/.tool-versions` pins the SDK to `10.0.302`.
   `Cucumber.CucumberExpressions` targets `netstandard2.0`, so it runs unchanged.
 - **UTF-16 offsets confirmed (no conversion layer needed).** Empirically verified
   that `Cucumber.CucumberExpressions` `20.0.0` reports match offsets as UTF-16
