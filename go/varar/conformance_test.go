@@ -95,13 +95,36 @@ func registryFor(t *testing.T, name string) vc.Registry {
 	return s.Registry()
 }
 
+func sourceOf(t *testing.T, name string) string {
+	t.Helper()
+	b, err := os.ReadFile(filepath.Join(bundlesDir(), name, "example.md"))
+	if err != nil {
+		t.Fatalf("read example.md %s: %v", name, err)
+	}
+	return string(b)
+}
+
 func TestRegistryMatchesGolden(t *testing.T) {
 	for _, name := range bundleNames(t) {
 		t.Run(name, func(t *testing.T) {
 			reg := registryFor(t, name)
 			actual := vc.CanonicalStringify(vc.ToRegistryArtifact(reg))
-			if actual != golden(t, name, "registry.json") {
-				t.Errorf("registry.json mismatch for %s\n--- got ---\n%s\n--- want ---\n%s", name, actual, golden(t, name, "registry.json"))
+			if want := golden(t, name, "registry.json"); actual != want {
+				t.Errorf("registry.json mismatch for %s\n--- got ---\n%s\n--- want ---\n%s", name, actual, want)
+			}
+		})
+	}
+}
+
+func TestPlanMatchesGolden(t *testing.T) {
+	for _, name := range bundleNames(t) {
+		t.Run(name, func(t *testing.T) {
+			reg := registryFor(t, name)
+			doc := vc.Parse("example.md", sourceOf(t, name))
+			plan := vc.Plan(doc, reg)
+			actual := vc.CanonicalStringify(vc.ToPlanArtifact(plan))
+			if want := golden(t, name, "plan.json"); actual != want {
+				t.Errorf("plan.json mismatch for %s\n--- got ---\n%s\n--- want ---\n%s", name, actual, want)
 			}
 		})
 	}

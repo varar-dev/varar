@@ -200,6 +200,124 @@ func ToRegistryArtifact(registry Registry) Value {
 	)
 }
 
+// ToPlanArtifact projects an ExecutionPlan to the plan wire artifact.
+func ToPlanArtifact(plan ExecutionPlan) Value {
+	source := plan.VarDoc.Source
+	examples := make([]Value, len(plan.Examples))
+	for i := range plan.Examples {
+		examples[i] = plannedExampleValue(source, plan.Examples[i])
+	}
+	diags := make([]Value, len(plan.Diagnostics))
+	for i, d := range plan.Diagnostics {
+		diags[i] = diagnosticValue(d)
+	}
+	return obj(
+		kv("examples", ListOf(examples)),
+		kv("diagnostics", ListOf(diags)),
+	)
+}
+
+func plannedExampleValue(source string, ex PlannedExample) Value {
+	scope := make([]Value, len(ex.ScopeStack))
+	for i, s := range ex.ScopeStack {
+		scope[i] = StrValue(s)
+	}
+	outcome := "pass"
+	if ex.ExpectedOutcome != nil {
+		outcome = *ex.ExpectedOutcome
+	}
+	m := map[string]Value{
+		"name":            StrValue(ex.Name),
+		"scopeStack":      ListOf(scope),
+		"span":            spanValue(ex.Span),
+		"expectedOutcome": StrValue(outcome),
+	}
+	if ex.ExpectedErrorMessage != nil {
+		m["expectedErrorMessage"] = StrValue(*ex.ExpectedErrorMessage)
+	}
+	steps := make([]Value, len(ex.Steps))
+	for i := range ex.Steps {
+		steps[i] = plannedStepValue(source, ex.Steps[i])
+	}
+	m["steps"] = ListOf(steps)
+	return Value{Kind: KindMap, Map: m}
+}
+
+func plannedStepValue(source string, step PlannedStep) Value {
+	paramNames := ParameterTypeNames(step.StepDef.Expression)
+	args := make([]Value, len(step.ParamSpans))
+	for i, ps := range step.ParamSpans {
+		var paramType Value
+		if i < len(paramNames) {
+			paramType = StrValue(paramNames[i])
+		} else {
+			paramType = NullValue
+		}
+		args[i] = obj(
+			kv("value", StrValue(utf16Slice(source, ps.StartOffset, ps.EndOffset))),
+			kv("parameterType", paramType),
+		)
+	}
+	spans := make([]Value, len(step.ParamSpans))
+	for i, s := range step.ParamSpans {
+		spans[i] = spanValue(s)
+	}
+	m := map[string]Value{
+		"text":              StrValue(step.Text),
+		"matchSpan":         spanValue(step.MatchSpan),
+		"paramSpans":        ListOf(spans),
+		"matchedExpression": StrValue(step.StepDef.Expression),
+		"args":              ListOf(args),
+	}
+	if step.DataTable != nil {
+		m["dataTable"] = tableValue(*step.DataTable)
+	}
+	if step.DocString != nil {
+		m["docString"] = docStringValue(*step.DocString)
+	}
+	return Value{Kind: KindMap, Map: m}
+}
+
+func docStringValue(f Fence) Value {
+	return obj(
+		kv("content", StrValue(f.Body)),
+		kv("contentType", StrValue(f.Info)),
+		kv("span", spanValue(f.BodySpan)),
+	)
+}
+
+func diagnosticValue(d Diagnostic) Value {
+	return obj(
+		kv("code", StrValue(diagnosticCodeString(d.Code))),
+		kv("severity", StrValue(severityString(d.Severity))),
+		kv("span", spanValue(d.Span)),
+	)
+}
+
+func diagnosticCodeString(code DiagnosticCode) string {
+	switch code {
+	case CodeAmbiguousMatch:
+		return "ambiguous-match"
+	case CodeErrorFenceWithoutStep:
+		return "error-fence-without-step"
+	case CodeDrift:
+		return "drift"
+	}
+	return ""
+}
+
+func severityString(s Severity) string {
+	switch s {
+	case SeverityError:
+		return "error"
+	case SeverityWarning:
+		return "warning"
+	case SeverityInfo:
+		return "info"
+	}
+	return ""
+}
+
 func exampleValue(e Example) Value {
 	scope := make([]Value, len(e.ScopeStack))
 	for i, s := range e.ScopeStack {
