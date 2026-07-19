@@ -15,10 +15,10 @@ func Register(s *varar.Steps) {
 		return varar.StrValue(strings.ToLower(g[0]))
 	}, nil)
 
-	s.Stimulus("I fly to {airport}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-		return varar.Returns(varar.MapValue(map[string]varar.Value{"dest": args[0]}))
+	s.Stimulus("I fly to {airport}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+		return varar.Ptr(varar.MapValue(map[string]varar.Value{"dest": args[0]})), nil
 	})
-	s.Sensor("The destination code is {word}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+	s.Sensor("The destination code is {word}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
 		expected, _ := args[0].AsString()
 		cleaned := strings.TrimRight(expected, ".!?")
 		dest := ""
@@ -30,9 +30,9 @@ func Register(s *varar.Steps) {
 			}
 		}
 		if cleaned != dest {
-			return varar.Fails(fmt.Sprintf("expected %s but got %s", cleaned, dest))
+			return nil, fmt.Errorf("expected %s but got %s", cleaned, dest)
 		}
-		return varar.NoReturn()
+		return nil, nil
 	})
 }
 

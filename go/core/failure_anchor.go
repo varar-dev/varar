@@ -1,4 +1,4 @@
-package varcore
+package core
 
 // Where a failure points in the .md — port of failure-anchor.ts /
 // failure_anchor.rs. A mismatch anchors at its first failing span; anything else

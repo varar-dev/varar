@@ -1,10 +1,10 @@
-// Package varrunner is the imperative shell shared by var test-runner adapters:
+// Package runner is the imperative shell shared by var test-runner adapters:
 // spec discovery (the shared glob semantics), planning/running examples, failure
 // rendering, and the filesystem varar.lock.json baseline store for drift. It
-// contains no pipeline logic — it delegates to varcore. Steps are supplied by
+// contains no pipeline logic — it delegates to core. Steps are supplied by
 // the caller (Go compiles step files in; there is no dynamic load_steps) as a
 // Registry plus a context factory.
-package varrunner
+package runner
 
 import (
 	"os"
@@ -13,7 +13,7 @@ import (
 	"sort"
 	"strings"
 
-	varconfig "github.com/varar-dev/varar-go/config"
+	"github.com/varar-dev/varar-go/config"
 )
 
 // GlobToRegex translates a glob (`/**/`, `/**`, `**/`, `**`, `*`, `?`) to an
@@ -112,12 +112,12 @@ func walk(dir string, out *[]string) {
 
 // FindSpecs returns files under root matching any docs.include glob and no
 // docs.exclude glob, sorted.
-func FindSpecs(config varconfig.VarConfig, root string) []string {
+func FindSpecs(cfg config.VarConfig, root string) []string {
 	var files []string
 	walk(root, &files)
 	var kept []string
 	for _, p := range files {
-		if MatchSpec(p, config.DocsInclude, config.DocsExclude, root) {
+		if MatchSpec(p, cfg.DocsInclude, cfg.DocsExclude, root) {
 			kept = append(kept, p)
 		}
 	}

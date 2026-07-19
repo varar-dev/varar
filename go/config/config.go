@@ -1,11 +1,11 @@
-// Package varconfig is the strict, fail-loud reader for varar.config.json.
+// Package config is the strict, fail-loud reader for varar.config.json.
 //
 // Port of @varar/config / var_config / varar-config. The canonical shape is
 // { docs: { include, exclude }, steps, snippets, scannerPlugins }; every key is
 // optional and defaults to empty. A missing file yields the empty config;
 // malformed JSON, wrong types, or unknown keys fail loudly with the file path.
 // Proven by the shared corpus at conformance/config/cases/.
-package varconfig
+package config
 
 import (
 	"encoding/json"

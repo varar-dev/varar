@@ -1,6 +1,7 @@
 package example
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/varar-dev/varar-go/varar"
@@ -15,16 +16,16 @@ func dateValue(d Date) varar.Value {
 }
 
 func valueDate(v varar.Value) Date {
-	m := smap(v)
-	return Date{Year: asInt(m["year"]), Month: asInt(m["month"]), Day: asInt(m["day"])}
+	m := v.CloneMap()
+	return Date{Year: m["year"].MustInt(), Month: m["month"].MustInt(), Day: m["day"].MustInt()}
 }
 
 func loanDue(loan varar.Value) Date {
-	return valueDate(smap(loan)["due"])
+	return valueDate(loan.CloneMap()["due"])
 }
 
 func loansOf(state varar.Value) []varar.Value {
-	if l, ok := smap(state)["loans"]; ok {
+	if l, ok := state.CloneMap()["loans"]; ok {
 		if list, ok := l.AsList(); ok {
 			return list
 		}
@@ -58,64 +59,64 @@ func registerLibrary(s *varar.Steps) {
 			return "", false
 		})
 
-	s.Stimulus("borrowed {title}, due back on {date}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-		m := smap(state)
+	s.Stimulus("borrowed {title}, due back on {date}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+		m := state.CloneMap()
 		loans := append(loansOf(state), varar.MapValue(map[string]varar.Value{"title": args[0], "due": args[1]}))
 		m["loans"] = varar.ListOf(loans)
-		return varar.Returns(varar.MapValue(m))
+		return varar.Ptr(varar.MapValue(m)), nil
 	})
 
-	s.Stimulus("returns it on {date}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+	s.Stimulus("returns it on {date}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
 		returned := valueDate(args[0])
 		var fee int64
 		for _, loan := range loansOf(state) {
 			fee += LateFee(loanDue(loan), returned)
 		}
-		m := smap(state)
+		m := state.CloneMap()
 		m["fee"] = varar.IntValue(fee)
-		return varar.Returns(varar.MapValue(m))
+		return varar.Ptr(varar.MapValue(m)), nil
 	})
 
-	s.Sensor("owes a {money} late fee", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-		if f, ok := smap(state)["fee"]; ok {
-			return varar.Returns(f)
+	s.Sensor("owes a {money} late fee", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+		if f, ok := state.CloneMap()["fee"]; ok {
+			return varar.Ptr(f), nil
 		}
-		return varar.NoReturn()
+		return nil, nil
 	})
 
-	s.Sensor("{money} for each day overdue", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-		return varar.Returns(varar.IntValue(FeePerDay))
+	s.Sensor("{money} for each day overdue", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+		return varar.Ptr(varar.IntValue(FeePerDay)), nil
 	})
 
-	s.Stimulus("asks to borrow {title} on {date}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+	s.Stimulus("asks to borrow {title} on {date}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
 		on := valueDate(args[1])
 		var dues []Date
 		for _, loan := range loansOf(state) {
 			dues = append(dues, loanDue(loan))
 		}
-		m := smap(state)
+		m := state.CloneMap()
 		m["granted"] = varar.BoolValue(MayBorrow(dues, on))
-		return varar.Returns(varar.MapValue(m))
+		return varar.Ptr(varar.MapValue(m)), nil
 	})
 
-	s.Sensor("the library refuses", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-		if g, ok := smap(state)["granted"]; ok {
+	s.Sensor("the library refuses", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+		if g, ok := state.CloneMap()["granted"]; ok {
 			if b, _ := g.AsBool(); b {
-				panic("expected the library to refuse")
+				return nil, errors.New("expected the library to refuse")
 			}
 		}
-		return varar.NoReturn()
+		return nil, nil
 	})
 
-	s.Sensor("the library agrees", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-		g, ok := smap(state)["granted"]
+	s.Sensor("the library agrees", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+		g, ok := state.CloneMap()["granted"]
 		granted := false
 		if ok {
 			granted, _ = g.AsBool()
 		}
 		if !granted {
-			panic("expected the library to agree")
+			return nil, errors.New("expected the library to agree")
 		}
-		return varar.NoReturn()
+		return nil, nil
 	})
 }

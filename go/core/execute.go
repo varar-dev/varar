@@ -1,4 +1,4 @@
-package varcore
+package core
 
 import (
 	"fmt"
@@ -312,9 +312,10 @@ func checkSensorReturn(source string, step PlannedStep, returned *Value) *StepEr
 	return nil
 }
 
-// invokeResolve invokes the handler, recovering a panic (the assertion-style
-// failure channel) into a HandlerError. Returns (returned, nil) on success where
-// returned is nil for "no value", or (nil, err) on failure.
+// invokeResolve invokes the handler, normalising a returned error — and
+// recovering a panic (the assertion-style failure channel) — into a
+// HandlerError. Returns (returned, nil) on success where returned is nil for
+// "no value", or (nil, err) on failure.
 func invokeResolve(handler Handler, state Value, args []Value) (returned *Value, herr *HandlerError) {
 	defer func() {
 		if r := recover(); r != nil {
@@ -322,15 +323,11 @@ func invokeResolve(handler Handler, state Value, args []Value) (returned *Value,
 			herr = handlerErrorFromPanic(r)
 		}
 	}()
-	ret := handler.call(state, args)
-	if ret.Err != nil {
-		return nil, ret.Err
+	v, err := handler.call(state, args)
+	if err != nil {
+		return nil, NewHandlerError(err.Error())
 	}
-	if ret.Present {
-		v := ret.Value
-		return &v, nil
-	}
-	return nil, nil
+	return v, nil
 }
 
 func handlerErrorFromPanic(r any) *HandlerError {

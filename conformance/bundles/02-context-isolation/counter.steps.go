@@ -19,17 +19,17 @@ func countOf(state varar.Value) int64 {
 }
 
 func Register(s *varar.Steps) {
-	s.Stimulus("I increment", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+	s.Stimulus("I increment", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
 		next := countOf(state) + 1
-		return varar.Returns(varar.MapValue(map[string]varar.Value{"count": varar.IntValue(next)}))
+		return varar.Ptr(varar.MapValue(map[string]varar.Value{"count": varar.IntValue(next)})), nil
 	})
-	s.Sensor("The count is {int}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+	s.Sensor("The count is {int}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
 		count := countOf(state)
 		expected, _ := args[0].AsInt()
 		if count != expected {
-			return varar.Fails(fmt.Sprintf("expected %d but got %d", expected, count))
+			return nil, fmt.Errorf("expected %d but got %d", expected, count)
 		}
-		return varar.NoReturn()
+		return nil, nil
 	})
 }
 

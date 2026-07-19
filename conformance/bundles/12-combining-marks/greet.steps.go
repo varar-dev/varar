@@ -4,8 +4,8 @@ package fixture
 import "github.com/varar-dev/varar-go/varar"
 
 func Register(s *varar.Steps) {
-	s.Sensor("I greet {string}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-		return varar.NoReturn()
+	s.Sensor("I greet {string}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+		return nil, nil
 	})
 }
 

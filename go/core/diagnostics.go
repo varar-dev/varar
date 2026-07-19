@@ -1,4 +1,4 @@
-package varcore
+package core
 
 // Diagnostics produced by the planner — port of the subset of diagnostics.ts
 // that Plan needs / diagnostics.rs.

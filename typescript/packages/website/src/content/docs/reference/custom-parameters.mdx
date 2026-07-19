@@ -125,8 +125,8 @@ can use it as a `{name}` placeholder.
     		return "", false
     	})
 
-    s.Sensor("owes a {money} late fee", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-    	return varar.Returns(smap(state)["fee"])
+    s.Sensor("owes a {money} late fee", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+    	return varar.Ptr(state.CloneMap()["fee"]), nil
     })
     ```
   </TabItem>

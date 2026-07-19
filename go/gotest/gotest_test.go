@@ -1,4 +1,4 @@
-package vargotest_test
+package gotest_test
 
 import (
 	"os"
@@ -6,23 +6,23 @@ import (
 	"strings"
 	"testing"
 
-	vc "github.com/varar-dev/varar-go/core"
-	vargotest "github.com/varar-dev/varar-go/gotest"
+	"github.com/varar-dev/varar-go/core"
+	"github.com/varar-dev/varar-go/gotest"
 )
 
-func withStep() vc.Registry {
-	k := vc.Stimulus
-	r, err := vc.AddStep(vc.CreateRegistry(), "I greet {string}", "s.go", 1,
-		vc.NewHandler(func(state vc.Value, args []vc.Value) vc.HandlerReturn { return vc.NoReturn() }), &k)
+func withStep() core.Registry {
+	k := core.Stimulus
+	r, err := core.AddStep(core.CreateRegistry(), "I greet {string}", "s.go", 1,
+		core.NewHandler(func(state core.Value, args []core.Value) (*core.Value, error) { return nil, nil }), &k)
 	if err != nil {
 		panic(err)
 	}
 	return r
 }
 
-func emptyReg() vc.Registry { return vc.CreateRegistry() }
+func emptyReg() core.Registry { return core.CreateRegistry() }
 
-func nullContext(string) vc.Value { return vc.NullValue }
+func nullContext(string) core.Value { return core.NullValue }
 
 func setup(t *testing.T) string {
 	t.Helper()
@@ -34,7 +34,7 @@ func setup(t *testing.T) string {
 
 func TestCollectEnumeratesOnePassingExample(t *testing.T) {
 	root := setup(t)
-	cases, err := vargotest.Collect(root, withStep, nullContext, false)
+	cases, err := gotest.Collect(root, withStep, nullContext, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -53,15 +53,15 @@ func TestCollectEnumeratesOnePassingExample(t *testing.T) {
 func TestCollectReportsDriftWhenStepRemoved(t *testing.T) {
 	root := setup(t)
 	// First, a clean run with the step records the baseline.
-	if _, err := vargotest.Collect(root, withStep, nullContext, false); err != nil {
+	if _, err := gotest.Collect(root, withStep, nullContext, false); err != nil {
 		t.Fatal(err)
 	}
 	// Now the step is gone: the paragraph matches nothing → drift.
-	cases, err := vargotest.Collect(root, emptyReg, nullContext, false)
+	cases, err := gotest.Collect(root, emptyReg, nullContext, false)
 	if err != nil {
 		t.Fatal(err)
 	}
-	var drift *vargotest.Case
+	var drift *gotest.Case
 	for i := range cases {
 		if cases[i].DriftMessage != "" {
 			drift = &cases[i]
@@ -77,10 +77,10 @@ func TestCollectReportsDriftWhenStepRemoved(t *testing.T) {
 
 func TestUpdateModeAcceptsDrift(t *testing.T) {
 	root := setup(t)
-	if _, err := vargotest.Collect(root, withStep, nullContext, false); err != nil {
+	if _, err := gotest.Collect(root, withStep, nullContext, false); err != nil {
 		t.Fatal(err)
 	}
-	cases, err := vargotest.Collect(root, emptyReg, nullContext, true)
+	cases, err := gotest.Collect(root, emptyReg, nullContext, true)
 	if err != nil {
 		t.Fatal(err)
 	}

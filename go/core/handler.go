@@ -1,4 +1,4 @@
-package varcore
+package core
 
 // Step handlers — Go's replacement for the reference's reflective arity-matched
 // invocation. A handler is a closure over (state, args); args holds every
@@ -7,7 +7,8 @@ package varcore
 // handler that needs concurrency uses goroutines internally.
 
 // HandlerError is an author-signalled failure (the analog of a thrown
-// AssertionError / RuntimeException).
+// AssertionError / RuntimeException). Handlers return a plain `error`; the
+// executor normalises it (and any recovered panic) into this.
 type HandlerError struct {
 	Message string
 }
@@ -19,27 +20,17 @@ func NewHandlerError(message string) *HandlerError {
 
 func (e *HandlerError) Error() string { return e.Message }
 
-// HandlerReturn is a handler's resolved return. Present=false means "no
-// assertion / no state change" (the reference's null/None); Present=true carries
-// a value (for a stimulus, the whole next state; for a sensor, the value to
-// compare). Err != nil is an author-signalled failure.
-type HandlerReturn struct {
-	Value   Value
-	Present bool
-	Err     *HandlerError
-}
-
-// Returns builds a "value present" return.
-func Returns(v Value) HandlerReturn { return HandlerReturn{Value: v, Present: true} }
-
-// NoReturn is the "no assertion / no change" return.
-func NoReturn() HandlerReturn { return HandlerReturn{} }
-
-// Fails builds a failing return.
-func Fails(message string) HandlerReturn { return HandlerReturn{Err: NewHandlerError(message)} }
-
-// HandlerFunc is the closure a Handler wraps.
-type HandlerFunc func(state Value, args []Value) HandlerReturn
+// HandlerFunc is the closure a Handler wraps, in the idiomatic Go (value,
+// error) shape:
+//
+//	(nil, nil)  — no assertion / no state change
+//	(&v,  nil)  — a value: for a stimulus the whole next state, for a sensor the
+//	              value compared against the document
+//	(nil, err)  — an author-signalled failure
+//
+// Panicking is equivalent to returning an error: the executor recovers it into
+// the same failure channel, so assertion libraries that panic work unchanged.
+type HandlerFunc func(state Value, args []Value) (*Value, error)
 
 // Handler is a registered step handler.
 type Handler struct {
@@ -51,13 +42,16 @@ func NewHandler(f HandlerFunc) Handler { return Handler{f: f} }
 
 // NoopHandler is a no-op handler — used where a handler is never invoked.
 func NoopHandler() Handler {
-	return Handler{f: func(Value, []Value) HandlerReturn { return NoReturn() }}
+	return Handler{f: func(Value, []Value) (*Value, error) { return nil, nil }}
 }
 
+// Ptr returns a pointer to v — the handler's way to say "this is my value".
+func Ptr(v Value) *Value { return &v }
+
 // call invokes the handler with state + args (captures then trailing attachment).
-func (h Handler) call(state Value, args []Value) HandlerReturn {
+func (h Handler) call(state Value, args []Value) (*Value, error) {
 	if h.f == nil {
-		return NoReturn()
+		return nil, nil
 	}
 	return h.f(state, args)
 }

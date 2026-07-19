@@ -31,8 +31,8 @@ func Register(s *varar.Steps) {
 
 	// Returns the WRONG money on purpose; the golden pins the formatted actual
 	// "£2.60", proving mismatches render through format.
-	s.Sensor("The late fee is {money}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-		return varar.Returns(varar.FloatValue(2.6))
+	s.Sensor("The late fee is {money}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+		return varar.Ptr(varar.FloatValue(2.6)), nil
 	})
 }
 

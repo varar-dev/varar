@@ -4,16 +4,16 @@ import (
 	"testing"
 
 	example "github.com/varar-dev/varar-examples/go-gotest"
-	vargotest "github.com/varar-dev/varar-go/gotest"
+	"github.com/varar-dev/varar-go/gotest"
 )
 
 // TestSpecs runs every Markdown spec matched by varar.config.json as a Go
-// subtest — one per example — through the vargotest adapter.
+// subtest — one per example — through the gotest adapter.
 //
 //	go test                                  # one subtest per example, all green
 //	go test -v                               # lists every example
 //	go test -run 'TestSpecs/yahtzee'         # run a single spec
 //	VAR_UPDATE=1 go test                     # accept drift
 func TestSpecs(t *testing.T) {
-	vargotest.Run(t, ".", example.BuildRegistry, example.Context)
+	gotest.Run(t, ".", example.BuildRegistry, example.Context)
 }

@@ -25,15 +25,15 @@ func roman(n int64) (string, bool) {
 }
 
 func Register(s *varar.Steps) {
-	s.Stimulus("I convert {int} to roman numerals", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+	s.Stimulus("I convert {int} to roman numerals", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
 		n, _ := args[0].AsInt()
 		m := map[string]varar.Value{}
 		if r, ok := roman(n); ok {
 			m["result"] = varar.StrValue(r)
 		}
-		return varar.Returns(varar.MapValue(m))
+		return varar.Ptr(varar.MapValue(m)), nil
 	})
-	s.Sensor("The result is {word}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+	s.Sensor("The result is {word}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
 		// {word} greedily captures trailing punctuation ("I." not "I"); strip
 		// it, then fail on mismatch rather than returning (which would make the
 		// core compare the RAW captured "I." and wrongly fail). Returning
@@ -49,9 +49,9 @@ func Register(s *varar.Steps) {
 			}
 		}
 		if cleaned != result {
-			return varar.Fails(fmt.Sprintf("expected %s but got %s", cleaned, result))
+			return nil, fmt.Errorf("expected %s but got %s", cleaned, result)
 		}
-		return varar.NoReturn()
+		return nil, nil
 	})
 }
 

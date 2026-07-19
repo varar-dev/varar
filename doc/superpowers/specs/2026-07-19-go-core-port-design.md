@@ -54,7 +54,8 @@ path in v1, as in Rust).
 - **cucumber-expressions** via the official (stale v6.2.0) Go library for
   compile/match/offsets/group-tree, with var's own transforms applied (ADR 0010).
 - **Author API** (see ADR 0010 fork points): injected `Steps` builder,
-  full-replacement `Value` state, `runtime.Caller` source capture, one variadic
+  full-replacement `Value` state, `runtime.Caller` source capture, one
+  `(*Value, error)`-returning variadic
   handler shape, panic-recovered assertion channel (Go has no async variant —
   handlers are ordinary blocking funcs).
 

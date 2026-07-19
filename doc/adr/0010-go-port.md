@@ -52,12 +52,27 @@ reader; drift is unit-gated against the shared FNV-1a / lockfile vectors.
   (Go's `#[track_caller]` analogue); the file's stem (`numerals.steps`) is the
   cross-language trace `stepFile`.
 - **Handler shape:** a single variadic `func(state Value, args []Value)
-  HandlerReturn` — args are the expression captures plus any trailing
-  table/doc-string, in slot order. Go cannot infer closure arity the way Rust's
-  `IntoHandler` trait does, so one explicit shape is the least-surprising choice;
-  ergonomic `Value` accessors (`AsInt`, `AsString`, `AsMap`, …) keep fixtures
-  clean. Failure is signalled by returning `Fails(msg)` or panicking (recovered
-  as the assertion channel).
+  (*Value, error)` — args are the expression captures plus any trailing
+  table/doc-string, in slot order. The return is the idiomatic Go `(value,
+  error)` pair rather than a bespoke tri-state type: `(nil, nil)` is "no
+  assertion / no change", `(&v, nil)` carries a value, `(nil, err)` is a
+  failure; panicking is equivalent to returning an error (the executor recovers
+  it, so panicking assertion libraries work unchanged). `Ptr(v)` is the
+  one-liner for the value case. Ergonomic `Value` accessors — the `As*` pair
+  form and the panicking `Must*` form, plus `CloneMap` for building the next
+  state — keep step files free of hand-rolled coercion helpers.
+
+  **Not settled: reflection-based typed handlers.** A first draft of this ADR
+  justified the fixed shape by saying Go cannot infer closure arity the way
+  Rust's `IntoHandler` trait does. That is true of Rust's *compile-time trait
+  dispatch* but it is not the mechanism godog uses: godog's `ctx.Step(expr,
+  handler)` accepts `func(name string, age int) error` via **runtime
+  reflection**. So arity inference is available to Go — the fixed shape is
+  chosen for its explicitness, its single obvious way to write a handler, and
+  the absence of a reflect-based `Value` coercion layer (which would also have
+  to handle the trailing table/doc-string slot), not because the language
+  forbids the alternative. Revisit as an additive second form once there is a
+  second Go consumer to validate it against; see the port plan.
 
 ### String-offset units
 

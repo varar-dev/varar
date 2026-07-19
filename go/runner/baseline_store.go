@@ -1,4 +1,4 @@
-package varrunner
+package runner
 
 import (
 	"os"

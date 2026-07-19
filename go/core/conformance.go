@@ -1,4 +1,4 @@
-package varcore
+package core
 
 // Projects pipeline output into the plain Value wire artifacts the conformance
 // goldens pin — port of conformance.ts / conformance.rs. This file holds the

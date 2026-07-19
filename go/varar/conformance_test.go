@@ -1,5 +1,5 @@
 // Registry / plan / trace conformance gates — the three stages deferred from
-// varcore (which gates only var-doc). For every bundle in the shared corpus,
+// core (which gates only var-doc). For every bundle in the shared corpus,
 // load its Go step fixture, build the registry, and assert the
 // registry/plan/trace artifacts byte-for-byte against the committed goldens.
 //
@@ -14,7 +14,7 @@ import (
 	"sort"
 	"testing"
 
-	vc "github.com/varar-dev/varar-go/core"
+	"github.com/varar-dev/varar-go/core"
 	"github.com/varar-dev/varar-go/varar"
 
 	b01 "github.com/varar-dev/varar-go/conformance/b01"
@@ -84,7 +84,7 @@ func golden(t *testing.T, name, artifact string) string {
 	return string(b)
 }
 
-func registryFor(t *testing.T, name string) vc.Registry {
+func registryFor(t *testing.T, name string) core.Registry {
 	t.Helper()
 	f, ok := fixtures[name]
 	if !ok {
@@ -108,7 +108,7 @@ func TestRegistryMatchesGolden(t *testing.T) {
 	for _, name := range bundleNames(t) {
 		t.Run(name, func(t *testing.T) {
 			reg := registryFor(t, name)
-			actual := vc.CanonicalStringify(vc.ToRegistryArtifact(reg))
+			actual := core.CanonicalStringify(core.ToRegistryArtifact(reg))
 			if want := golden(t, name, "registry.json"); actual != want {
 				t.Errorf("registry.json mismatch for %s\n--- got ---\n%s\n--- want ---\n%s", name, actual, want)
 			}
@@ -120,9 +120,9 @@ func TestPlanMatchesGolden(t *testing.T) {
 	for _, name := range bundleNames(t) {
 		t.Run(name, func(t *testing.T) {
 			reg := registryFor(t, name)
-			doc := vc.Parse("example.md", sourceOf(t, name))
-			plan := vc.Plan(doc, reg)
-			actual := vc.CanonicalStringify(vc.ToPlanArtifact(plan))
+			doc := core.Parse("example.md", sourceOf(t, name))
+			plan := core.Plan(doc, reg)
+			actual := core.CanonicalStringify(core.ToPlanArtifact(plan))
 			if want := golden(t, name, "plan.json"); actual != want {
 				t.Errorf("plan.json mismatch for %s\n--- got ---\n%s\n--- want ---\n%s", name, actual, want)
 			}
@@ -136,9 +136,9 @@ func TestTraceMatchesGolden(t *testing.T) {
 			f := fixtures[name]
 			s := varar.NewSteps()
 			f.register(s)
-			doc := vc.Parse("example.md", sourceOf(t, name))
-			artifacts := vc.RunConformance(doc, s.Registry(), f.state)
-			actual := vc.CanonicalStringify(artifacts.Trace)
+			doc := core.Parse("example.md", sourceOf(t, name))
+			artifacts := core.RunConformance(doc, s.Registry(), f.state)
+			actual := core.CanonicalStringify(artifacts.Trace)
 			if want := golden(t, name, "trace.json"); actual != want {
 				t.Errorf("trace.json mismatch for %s\n--- got ---\n%s\n--- want ---\n%s", name, actual, want)
 			}

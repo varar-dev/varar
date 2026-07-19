@@ -1,4 +1,4 @@
-package varcore
+package core
 
 // Registration-time (author-wiring) errors — never step failures. The step
 // failure model (StepError / StepFailure) lives in failure.go (execute stage).

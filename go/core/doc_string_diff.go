@@ -1,4 +1,4 @@
-package varcore
+package core
 
 // Doc-string comparison — port of doc-string-diff.ts / doc_string_diff.rs.
 

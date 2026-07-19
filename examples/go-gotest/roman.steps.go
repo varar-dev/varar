@@ -1,22 +1,23 @@
 package example
 
 import (
+	"fmt"
 	"strconv"
 
 	"github.com/varar-dev/varar-go/varar"
 )
 
 func registerRomanNumerals(s *varar.Steps) {
-	s.Sensor("a decimal and a roman number", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-		row := smap(args[0])
-		decimal := asStr(row["decimal"])
+	s.Sensor("a decimal and a roman number", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+		row := args[0].CloneMap()
+		decimal := row["decimal"].MustString()
 		n, err := strconv.Atoi(decimal)
 		if err != nil {
-			panic("decimal: " + decimal)
+			return nil, fmt.Errorf("not a decimal: %s", decimal)
 		}
-		return varar.Returns(varar.MapValue(map[string]varar.Value{
+		return varar.Ptr(varar.MapValue(map[string]varar.Value{
 			"decimal": varar.StrValue(decimal),
 			"roman":   varar.StrValue(ToRoman(n)),
-		}))
+		})), nil
 	})
 }

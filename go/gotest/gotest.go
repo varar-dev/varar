@@ -1,4 +1,4 @@
-// Package vargotest is the `go test` adapter (ADR 0011).
+// Package gotest is the `go test` adapter (ADR 0011).
 //
 // Run turns every Markdown example matched by varar.config.json into one Go
 // subtest (t.Run), reported/filtered/listed by `go test` like a native subtest,
@@ -9,9 +9,9 @@
 // Usage from a consumer's specs_test.go:
 //
 //	func TestSpecs(t *testing.T) {
-//	    vargotest.Run(t, ".", mysteps.BuildRegistry, mysteps.Context)
+//	    gotest.Run(t, ".", mysteps.BuildRegistry, mysteps.Context)
 //	}
-package vargotest
+package gotest
 
 import (
 	"os"
@@ -19,16 +19,16 @@ import (
 	"strconv"
 	"testing"
 
-	varconfig "github.com/varar-dev/varar-go/config"
-	vc "github.com/varar-dev/varar-go/core"
-	varrunner "github.com/varar-dev/varar-go/runner"
+	"github.com/varar-dev/varar-go/config"
+	"github.com/varar-dev/varar-go/core"
+	"github.com/varar-dev/varar-go/runner"
 )
 
 // BuildRegistry builds the step registry for a run.
-type BuildRegistry func() vc.Registry
+type BuildRegistry func() core.Registry
 
 // ContextFactory maps a step file to its fresh initial state.
-type ContextFactory func(file string) vc.Value
+type ContextFactory func(file string) core.Value
 
 // Case is one enumerated test case: either an example (Run non-nil) or a drift
 // finding (DriftMessage non-empty).
@@ -36,7 +36,7 @@ type Case struct {
 	Name         string
 	Source       string
 	Rel          string
-	run          func() *vc.StepFailure
+	run          func() *core.StepFailure
 	index        int
 	DriftMessage string
 }
@@ -46,12 +46,12 @@ type Case struct {
 // Drift is reconciled here: a clean run rewrites the baseline; when update is
 // false each drifted paragraph becomes a failing Case.
 func Collect(root string, build BuildRegistry, ctx ContextFactory, update bool) ([]Case, error) {
-	config, err := varconfig.ReadVarConfig(root)
+	cfg, err := config.ReadVarConfig(root)
 	if err != nil {
 		return nil, err
 	}
 	var cases []Case
-	for _, specPath := range varrunner.FindSpecs(config, root) {
+	for _, specPath := range runner.FindSpecs(cfg, root) {
 		sourceBytes, _ := os.ReadFile(specPath)
 		source := string(sourceBytes)
 		specFile := filepath.Base(specPath)
@@ -61,8 +61,8 @@ func Collect(root string, build BuildRegistry, ctx ContextFactory, update bool) 
 		}
 		rel = filepath.ToSlash(rel)
 
-		plan := varrunner.PlanSpec(specFile, source, build())
-		for i, display := range varrunner.ExampleNames(plan) {
+		plan := runner.PlanSpec(specFile, source, build())
+		for i, display := range runner.ExampleNames(plan) {
 			index := i
 			src := source
 			r := rel
@@ -72,20 +72,20 @@ func Collect(root string, build BuildRegistry, ctx ContextFactory, update bool) 
 				Source: src,
 				Rel:    r,
 				index:  index,
-				run:    func() *vc.StepFailure { return varrunner.RunExample(p, ctx, index) },
+				run:    func() *core.StepFailure { return runner.RunExample(p, ctx, index) },
 			})
 		}
 
 		// Drift reconciliation: rewrites the baseline on a clean run; each
 		// drifted paragraph becomes a failing case (ADR 0002).
-		store := varrunner.NewFileBaselineStore(root)
-		doc := vc.Parse(specFile, source)
-		for _, drifted := range vc.ReconcileDrift(store, rel, source, doc, plan, update) {
+		store := runner.NewFileBaselineStore(root)
+		doc := core.Parse(specFile, source)
+		for _, drifted := range core.ReconcileDrift(store, rel, source, doc, plan, update) {
 			cases = append(cases, Case{
 				Name:         rel + "::var:drift:" + strconv.Itoa(drifted.Line),
 				Source:       source,
 				Rel:          rel,
-				DriftMessage: vc.DriftMessage(drifted),
+				DriftMessage: core.DriftMessage(drifted),
 			})
 		}
 	}
@@ -109,7 +109,7 @@ func Run(t *testing.T, root string, build BuildRegistry, ctx ContextFactory) {
 				return
 			}
 			if failure := c.run(); failure != nil {
-				t.Error(varrunner.RenderFailure(*failure, c.Source, c.Rel))
+				t.Error(runner.RenderFailure(*failure, c.Source, c.Rel))
 			}
 		})
 	}

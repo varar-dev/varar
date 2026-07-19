@@ -1,4 +1,4 @@
-package varcore
+package core
 
 // Parse is the top-level parse entry point: scan then structure — port of
 // parse.ts / parse.rs.

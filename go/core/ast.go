@@ -1,4 +1,4 @@
-package varcore
+package core
 
 // AST node types produced by the scanner/structurer — port of ast.ts / ast.rs.
 // Pure data; the sealed Block/TableOrFence unions become a Go interface with a

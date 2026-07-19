@@ -1,4 +1,4 @@
-package varcore
+package core
 
 // The dynamic value model — Go's replacement for the TS/JS raw values and the
 // Rust `Value` enum. One tagged struct carries handler arguments, handler
@@ -142,6 +142,74 @@ func (v Value) AsMap() (map[string]Value, bool) {
 		return v.Map, true
 	}
 	return nil, false
+}
+
+// The Must* accessors are the panicking counterparts of the As* pair-returning
+// ones, for step definitions that know a slot's type from its parameter type
+// (`{int}` is always an Int). A panic in a handler is recovered by the executor
+// into the same failure channel as a returned error, so a wrong assumption
+// fails that example rather than crashing the run.
+
+// MustInt returns the integer value, panicking if v is not an Int.
+func (v Value) MustInt() int64 {
+	if v.Kind != KindInt {
+		panic("var: expected an Integer, got " + v.TypeName())
+	}
+	return v.Int
+}
+
+// MustFloat returns the float value, panicking if v is not a Float.
+func (v Value) MustFloat() float64 {
+	if v.Kind != KindFloat {
+		panic("var: expected a Double, got " + v.TypeName())
+	}
+	return v.Float
+}
+
+// MustBool returns the boolean value, panicking if v is not a Bool.
+func (v Value) MustBool() bool {
+	if v.Kind != KindBool {
+		panic("var: expected a Boolean, got " + v.TypeName())
+	}
+	return v.Bool
+}
+
+// MustString returns the string value, panicking if v is not a String.
+func (v Value) MustString() string {
+	if v.Kind != KindString {
+		panic("var: expected a String, got " + v.TypeName())
+	}
+	return v.Str
+}
+
+// MustList returns the list, panicking if v is not a List.
+func (v Value) MustList() []Value {
+	if v.Kind != KindList {
+		panic("var: expected a List, got " + v.TypeName())
+	}
+	return v.List
+}
+
+// MustMap returns the map, panicking if v is not a Map. The returned map is the
+// underlying one — copy it (or use CloneMap) before mutating.
+func (v Value) MustMap() map[string]Value {
+	if v.Kind != KindMap {
+		panic("var: expected a Map, got " + v.TypeName())
+	}
+	return v.Map
+}
+
+// CloneMap returns a shallow copy of v's map, or an empty map if v is not a Map.
+// This is the usual starting point for a stimulus building the next state, since
+// state is replaced wholesale rather than mutated.
+func (v Value) CloneMap() map[string]Value {
+	out := map[string]Value{}
+	if v.Kind == KindMap {
+		for k, vv := range v.Map {
+			out[k] = vv
+		}
+	}
+	return out
 }
 
 // ValueEqual reports structural equality (Rust PartialEq / Objects.equals):

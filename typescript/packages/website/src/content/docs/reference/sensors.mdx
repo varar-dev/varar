@@ -104,14 +104,14 @@ sensors, rather than reaching inside it.
   </TabItem>
   <TabItem label="Go">
     ```go
-    s.Stimulus("I add {int}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+    s.Stimulus("I add {int}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
     	// FULL-REPLACEMENT state: return the whole next state.
-    	m := smap(state)
-    	m["total"] = varar.IntValue(asInt(m["total"]) + asInt(args[0]))
-    	return varar.Returns(varar.MapValue(m))
+    	m := state.CloneMap()
+    	m["total"] = varar.IntValue(m["total"].MustInt() + args[0].MustInt())
+    	return varar.Ptr(varar.MapValue(m)), nil
     })
-    s.Sensor("the total is {int}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-    	return varar.Returns(smap(state)["total"])
+    s.Sensor("the total is {int}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+    	return varar.Ptr(state.CloneMap()["total"]), nil
     })
     ```
   </TabItem>
@@ -210,11 +210,11 @@ a return value against. Throw to fail, return nothing to pass:
   </TabItem>
   <TabItem label="Go">
     ```go
-    s.Sensor("the alarm fired", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-    	if b, _ := smap(state)["alarm"].AsBool(); !b {
-    		return varar.Fails("no alarm")
+    s.Sensor("the alarm fired", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+    	if b, _ := state.CloneMap()["alarm"].AsBool(); !b {
+    		return nil, errors.New("no alarm")
     	}
-    	return varar.NoReturn()
+    	return nil, nil
     })
     ```
   </TabItem>
@@ -271,8 +271,8 @@ certainly believed it was being checked.
   </TabItem>
   <TabItem label="Go">
     ```go
-    s.Sensor("the total is {int}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-    	return varar.Returns(smap(state)["total"])
+    s.Sensor("the total is {int}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+    	return varar.Ptr(state.CloneMap()["total"]), nil
     })
     ```
   </TabItem>
@@ -384,8 +384,8 @@ types whose `parse` produces an array:
     }, nil)
 
     // "The dice show 5, 6" — {numbers} transforms to [5, 6]
-    s.Sensor("The dice show {numbers}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-    	return varar.Returns(smap(state)["dice"])
+    s.Sensor("The dice show {numbers}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+    	return varar.Ptr(state.CloneMap()["dice"]), nil
     })
     ```
   </TabItem>
@@ -457,9 +457,9 @@ never mistaken for a two-slot positional array.
   </TabItem>
   <TabItem label="Go">
     ```go
-    s.Sensor("I should have {int} cukes in my {word} belly", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-    	m := smap(state)
-    	return varar.Returns(varar.ListValue(m["count"], m["bellyName"]))
+    s.Sensor("I should have {int} cukes in my {word} belly", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+    	m := state.CloneMap()
+    	return varar.Ptr(varar.ListValue(m["count"], m["bellyName"])), nil
     })
     ```
   </TabItem>
@@ -527,12 +527,12 @@ last element:
   </TabItem>
   <TabItem label="Go">
     ```go
-    s.Sensor("Greet {word}:", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-    	name := asStr(args[0])
-    	return varar.Returns(varar.ListValue(
+    s.Sensor("Greet {word}:", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+    	name := args[0].MustString()
+    	return varar.Ptr(varar.ListValue(
     		varar.StrValue(name),
     		varar.StrValue("Hello, "+name+"!\n"),
-    	))
+    	)), nil
     })
     ```
   </TabItem>
@@ -621,14 +621,14 @@ returns a **row object** keyed by the header — not slots:
   </TabItem>
   <TabItem label="Go">
     ```go
-    s.Sensor("a decimal and a roman number", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-    	row := smap(args[0])
-    	decimal := asStr(row["decimal"])
+    s.Sensor("a decimal and a roman number", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+    	row := args[0].CloneMap()
+    	decimal := row["decimal"].MustString()
     	n, _ := strconv.Atoi(decimal)
-    	return varar.Returns(varar.MapValue(map[string]varar.Value{
+    	return varar.Ptr(varar.MapValue(map[string]varar.Value{
     		"decimal": varar.StrValue(decimal),
     		"roman":   varar.StrValue(toRoman(n)),
-    	}))
+    	})), nil
     })
     ```
   </TabItem>

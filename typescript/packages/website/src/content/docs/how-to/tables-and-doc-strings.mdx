@@ -99,14 +99,14 @@ keyed by the header, and returns the computed columns:
   </TabItem>
   <TabItem label="Go">
     ```go
-    s.Sensor("a decimal and a roman number", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-    	row := smap(args[0])
-    	decimal := asStr(row["decimal"])
+    s.Sensor("a decimal and a roman number", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+    	row := args[0].CloneMap()
+    	decimal := row["decimal"].MustString()
     	n, _ := strconv.Atoi(decimal)
-    	return varar.Returns(varar.MapValue(map[string]varar.Value{
+    	return varar.Ptr(varar.MapValue(map[string]varar.Value{
     		"decimal": varar.StrValue(decimal),
     		"roman":   varar.StrValue(toRoman(n)),
-    	}))
+    	})), nil
     })
     ```
   </TabItem>
@@ -210,18 +210,18 @@ Uppercase each one:
   </TabItem>
   <TabItem label="Go">
     ```go
-    s.Sensor("Uppercase each one:", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+    s.Sensor("Uppercase each one:", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
     	rows, _ := args[0].AsList()
     	out := []varar.Value{}
     	for _, row := range rows[1:] { // drop the header row
     		cells, _ := row.AsList()
-    		before := asStr(cells[0])
+    		before := cells[0].MustString()
     		out = append(out, varar.MapValue(map[string]varar.Value{
     			"before": varar.StrValue(before),
     			"after":  varar.StrValue(strings.ToUpper(before)),
     		}))
     	}
-    	return varar.Returns(varar.ListOf(out))
+    	return varar.Ptr(varar.ListOf(out)), nil
     })
     ```
   </TabItem>
@@ -305,12 +305,12 @@ the text the software actually produces:
   </TabItem>
   <TabItem label="Go">
     ```go
-    s.Sensor("Greet {word}:", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-    	name := asStr(args[0])
-    	return varar.Returns(varar.ListValue(
+    s.Sensor("Greet {word}:", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+    	name := args[0].MustString()
+    	return varar.Ptr(varar.ListValue(
     		varar.StrValue(name),
     		varar.StrValue("Hello, "+name+"!\n"),
-    	))
+    	)), nil
     })
     ```
   </TabItem>
@@ -368,8 +368,8 @@ whose doc string is its only comparable value returns the text bare:
   </TabItem>
   <TabItem label="Go">
     ```go
-    s.Sensor("Greet Bob:", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-    	return varar.Returns(varar.StrValue("Hello, Bob!\n"))
+    s.Sensor("Greet Bob:", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+    	return varar.Ptr(varar.StrValue("Hello, Bob!\n")), nil
     })
     ```
   </TabItem>

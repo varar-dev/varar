@@ -1,15 +1,19 @@
 // Go sibling of division.steps.ts (bundle 03-expected-failure).
 package fixture
 
-import "github.com/varar-dev/varar-go/varar"
+import (
+	"errors"
+
+	"github.com/varar-dev/varar-go/varar"
+)
 
 func Register(s *varar.Steps) {
-	s.Stimulus("I divide {int} by {int}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+	s.Stimulus("I divide {int} by {int}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
 		b, _ := args[1].AsInt()
 		if b == 0 {
-			return varar.Fails("division by zero")
+			return nil, errors.New("division by zero")
 		}
-		return varar.Returns(state)
+		return varar.Ptr(state), nil
 	})
 }
 

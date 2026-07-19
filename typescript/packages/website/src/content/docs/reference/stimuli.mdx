@@ -97,13 +97,13 @@ with sensors.
   </TabItem>
   <TabItem label="Go">
     ```go
-    s.Stimulus("I add {int}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-    	m := smap(state)
-    	m["total"] = varar.IntValue(asInt(m["total"]) + asInt(args[0]))
-    	return varar.Returns(varar.MapValue(m))
+    s.Stimulus("I add {int}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+    	m := state.CloneMap()
+    	m["total"] = varar.IntValue(m["total"].MustInt() + args[0].MustInt())
+    	return varar.Ptr(varar.MapValue(m)), nil
     })
-    s.Sensor("the total is {int}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-    	return varar.Returns(smap(state)["total"])
+    s.Sensor("the total is {int}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+    	return varar.Ptr(state.CloneMap()["total"]), nil
     })
     ```
   </TabItem>
@@ -215,15 +215,15 @@ full replacement, same principle: new value out, never mutation.
   <TabItem label="Go">
     ```go
     // Full replacement: read the current state map, set just the changed key.
-    s.Stimulus("I greet {string}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-    	m := smap(state)
-    	m["greeting"] = varar.StrValue("Hello, " + asStr(args[0]) + "!")
-    	return varar.Returns(varar.MapValue(m))
+    s.Stimulus("I greet {string}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+    	m := state.CloneMap()
+    	m["greeting"] = varar.StrValue("Hello, " + args[0].MustString() + "!")
+    	return varar.Ptr(varar.MapValue(m)), nil
     })
-    s.Stimulus("I add {int}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-    	m := smap(state)
-    	m["count"] = varar.IntValue(asInt(m["count"]) + asInt(args[0]))
-    	return varar.Returns(varar.MapValue(m))
+    s.Stimulus("I add {int}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+    	m := state.CloneMap()
+    	m["count"] = varar.IntValue(m["count"].MustInt() + args[0].MustInt())
+    	return varar.Ptr(varar.MapValue(m)), nil
     })
     ```
   </TabItem>
@@ -314,9 +314,9 @@ empty state they can ignore:
   </TabItem>
   <TabItem label="Go">
     ```go
-    s.Sensor("the square of {int} is {int}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
-    	n := asInt(args[0])
-    	return varar.Returns(varar.ListValue(varar.IntValue(n), varar.IntValue(n*n)))
+    s.Sensor("the square of {int} is {int}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
+    	n := args[0].MustInt()
+    	return varar.Ptr(varar.ListValue(varar.IntValue(n), varar.IntValue(n*n))), nil
     })
     ```
   </TabItem>
@@ -406,7 +406,7 @@ first), a doc string as its exact text:
   </TabItem>
   <TabItem label="Go">
     ```go
-    s.Stimulus("these books exist:", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+    s.Stimulus("these books exist:", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
     	rows, _ := args[0].AsList()
     	books := []varar.Value{}
     	for _, row := range rows[1:] { // skip the header row
@@ -416,9 +416,9 @@ first), a doc string as its exact text:
     			"author": cells[1],
     		}))
     	}
-    	m := smap(state)
+    	m := state.CloneMap()
     	m["books"] = varar.ListOf(books)
-    	return varar.Returns(varar.MapValue(m))
+    	return varar.Ptr(varar.MapValue(m)), nil
     })
     ```
   </TabItem>

@@ -1,4 +1,4 @@
-package varcore
+package core
 
 // Splits a block of text into sentence-level spans so the matcher can try each
 // sentence independently — port of sentences.ts / sentences.rs. Operates on

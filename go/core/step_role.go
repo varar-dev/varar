@@ -1,4 +1,4 @@
-package varcore
+package core
 
 // Guess a step's role from its neighbours in document order — port of
 // step-role.ts / step_role.rs. Purely structural (no keyword heuristics).

@@ -1,4 +1,4 @@
-package varcore
+package core
 
 // StepKind is a step's role: a stimulus drives the software (arranges + acts); a
 // sensor is the read-only assertion (the only role that returns for comparison).

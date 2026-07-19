@@ -1,4 +1,4 @@
-package varcore
+package core
 
 import "strings"
 

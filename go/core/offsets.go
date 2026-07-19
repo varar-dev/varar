@@ -1,9 +1,9 @@
-// Package varcore is the pure functional core of var, ported from the Rust
+// Package core is the pure functional core of var, ported from the Rust
 // crate `varar-core` (itself a port of the TypeScript reference): parse → match
 // → plan → execute, diffs, drift/hash, canonical JSON, and the conformance
 // projections. It has no filesystem, network, time, or test-framework
 // dependencies.
-package varcore
+package core
 
 import (
 	"strings"
