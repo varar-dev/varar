@@ -59,6 +59,9 @@ var (
 	encoderType  = reflect.TypeOf((*ValueEncoder)(nil)).Elem()
 	valueType    = reflect.TypeOf(Value{})
 	valueSlice   = reflect.TypeOf([]Value{})
+	tableType    = reflect.TypeOf([][]string{})
+	rowType      = reflect.TypeOf(map[string]string{})
+	rowsType     = reflect.TypeOf([]map[string]string{})
 	valuePointer = reflect.TypeOf(&Value{})
 	errorType    = reflect.TypeOf((*error)(nil)).Elem()
 )
@@ -66,7 +69,8 @@ var (
 // decodesFromValue reports whether t can be built from a Value — either it is a
 // Value, a Go primitive kind, or it implements ValueDecoder.
 func decodesFromValue(t reflect.Type) bool {
-	if t == valueType || reflect.PointerTo(t).Implements(decoderType) {
+	if t == valueType || t == tableType || t == rowType ||
+		reflect.PointerTo(t).Implements(decoderType) || t.Kind() == reflect.Struct {
 		return true
 	}
 	return primitiveKind(t)
@@ -75,10 +79,15 @@ func decodesFromValue(t reflect.Type) bool {
 // encodesToValue reports whether t can go back to a Value, which a sensor's
 // results must do so the core can compare them.
 func encodesToValue(t reflect.Type) bool {
-	if t == valueType || t.Implements(encoderType) {
+	if t == valueType || t == tableType || t == rowType || t == rowsType ||
+		t.Implements(encoderType) || t.Kind() == reflect.Struct {
 		return true
 	}
 	return primitiveKind(t)
+}
+
+func isTabular(t reflect.Type) bool {
+	return t == tableType || t == rowType || t == rowsType
 }
 
 func primitiveKind(t reflect.Type) bool {
@@ -202,6 +211,9 @@ func adapt[C any](handler any, kind core.StepKind, expression string) HandlerFun
 				"var: %q: result %d is %s, which cannot be compared — use a Go primitive, varar.Value, or implement varar.ValueEncoder (value receiver)",
 				expression, i+1, t.Out(i)))
 		}
+		if isTabular(t.In(i+1)) || isTabular(t.Out(i)) {
+			continue // a table/row result is reshaped, not the slot's own type
+		}
 		if t.Out(i) != t.In(i+1) {
 			panic(fmt.Sprintf(
 				"var: %q: sensor result %d is %s but slot %d is %s — a sensor returns each slot's own type",
@@ -267,6 +279,62 @@ func toGo(v Value, t reflect.Type, slot int) (reflect.Value, error) {
 		}
 		return ptr.Elem(), nil
 	}
+	// A whole-table slot is a list of rows of cells; a header-bound row is a
+	// map of column to cell. Both have a natural Go spelling.
+	if t == tableType {
+		rows, ok := v.AsList()
+		if !ok {
+			return fail("a table")
+		}
+		out := make([][]string, len(rows))
+		for i, row := range rows {
+			cells, ok := row.AsList()
+			if !ok {
+				return fail("a table")
+			}
+			out[i] = make([]string, len(cells))
+			for j, c := range cells {
+				out[i][j], _ = c.AsString()
+			}
+		}
+		return reflect.ValueOf(out), nil
+	}
+	if t == rowType {
+		m, ok := v.AsMap()
+		if !ok {
+			return fail("a row")
+		}
+		out := make(map[string]string, len(m))
+		for k, cell := range m {
+			out[k], _ = cell.AsString()
+		}
+		return reflect.ValueOf(out), nil
+	}
+	// A plain struct maps to a Value map by exported field name, the way
+	// encoding/json does — so a domain type needs no interface at all.
+	if t.Kind() == reflect.Struct {
+		m, ok := v.AsMap()
+		if !ok {
+			return fail(t.String())
+		}
+		out := reflect.New(t).Elem()
+		for i := 0; i < t.NumField(); i++ {
+			f := t.Field(i)
+			if !f.IsExported() {
+				continue
+			}
+			fv, ok := m[f.Name]
+			if !ok {
+				continue
+			}
+			converted, err := toGo(fv, f.Type, slot)
+			if err != nil {
+				return reflect.Value{}, err
+			}
+			out.Field(i).Set(converted)
+		}
+		return out, nil
+	}
 	// Primitive kinds, so a named type like `type Celsius int64` works too.
 	switch t.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
@@ -306,6 +374,48 @@ func fromGo(rv reflect.Value) Value {
 	if t == valueType {
 		return rv.Interface().(Value)
 	}
+	if t == rowType {
+		m := rv.Interface().(map[string]string)
+		out := make(map[string]Value, len(m))
+		for k, cell := range m {
+			out[k] = StrValue(cell)
+		}
+		return core.MapValue(out)
+	}
+	if t == rowsType {
+		rows := rv.Interface().([]map[string]string)
+		out := make([]Value, len(rows))
+		for i, r := range rows {
+			m := make(map[string]Value, len(r))
+			for k, cell := range r {
+				m[k] = StrValue(cell)
+			}
+			out[i] = core.MapValue(m)
+		}
+		return ListOf(out)
+	}
+	if t.Kind() == reflect.Struct {
+		m := map[string]Value{}
+		for i := 0; i < t.NumField(); i++ {
+			f := t.Field(i)
+			if f.IsExported() {
+				m[f.Name] = fromGo(rv.Field(i))
+			}
+		}
+		return core.MapValue(m)
+	}
+	if t == tableType {
+		rows := rv.Interface().([][]string)
+		out := make([]Value, len(rows))
+		for i, cells := range rows {
+			vs := make([]Value, len(cells))
+			for j, c := range cells {
+				vs[j] = StrValue(c)
+			}
+			out[i] = ListOf(vs)
+		}
+		return ListOf(out)
+	}
 	switch t.Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return IntValue(rv.Int())
@@ -331,4 +441,54 @@ func outValuePointer(rv reflect.Value) *Value {
 		return nil
 	}
 	return rv.Interface().(*Value)
+}
+
+// --- custom parameter types -------------------------------------------------
+
+// adaptParse validates a func([]string) T and wraps it as the core's ParseFn,
+// also returning T so the matching format can be given a T back.
+func adaptParse(name string, parse any) (core.ParseFn, reflect.Type) {
+	fn := reflect.ValueOf(parse)
+	t := fn.Type()
+	if t.Kind() != reflect.Func || t.NumIn() != 1 || t.In(0) != reflect.TypeOf([]string{}) || t.NumOut() != 1 {
+		panic(fmt.Sprintf("var: parameter type %q: parse must be a func([]string) T, got %s", name, t))
+	}
+	produced := t.Out(0)
+	if !encodesToValue(produced) {
+		panic(fmt.Sprintf(
+			"var: parameter type %q: parse returns %s, which cannot become a value — use a Go primitive or implement varar.ValueEncoder (value receiver)",
+			name, produced))
+	}
+	if !decodesFromValue(produced) {
+		panic(fmt.Sprintf(
+			"var: parameter type %q: parse returns %s, which cannot be read back into a slot — implement varar.ValueDecoder on *%s",
+			name, produced, produced))
+	}
+	return func(groups []string) Value {
+		out := fn.Call([]reflect.Value{reflect.ValueOf(groups)})
+		return fromGo(out[0])
+	}, produced
+}
+
+// adaptFormat validates a func(T) (string, bool) and wraps it as the core's
+// FormatFn, decoding the stored Value back into T first.
+func adaptFormat(name string, format any, produced reflect.Type) core.FormatFn {
+	fn := reflect.ValueOf(format)
+	t := fn.Type()
+	if t.Kind() != reflect.Func || t.NumIn() != 1 || t.NumOut() != 2 ||
+		t.Out(0).Kind() != reflect.String || t.Out(1).Kind() != reflect.Bool {
+		panic(fmt.Sprintf("var: parameter type %q: format must be a func(T) (string, bool), got %s", name, t))
+	}
+	if t.In(0) != produced {
+		panic(fmt.Sprintf("var: parameter type %q: format takes %s but parse produces %s",
+			name, t.In(0), produced))
+	}
+	return func(v Value) (string, bool) {
+		arg, err := toGo(v, produced, 0)
+		if err != nil {
+			return "", false
+		}
+		out := fn.Call([]reflect.Value{arg})
+		return out[0].String(), out[1].Bool()
+	}
 }

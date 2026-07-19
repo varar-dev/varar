@@ -7,18 +7,14 @@ import (
 )
 
 func registerTablesAndDocstrings(s *varar.Steps[Ctx]) {
-	// A whole-table slot has no primitive Go spelling, so it stays a Value on
-	// both sides — the typed form composes, but buys nothing here.
-	s.Sensor("Uppercase each one:", func(ctx Ctx, table varar.Value) (varar.Value, error) {
-		out := []varar.Value{}
-		for _, row := range table.MustList()[1:] { // skip the header row
-			before := row.MustList()[0].MustString()
-			out = append(out, varar.MapValue(map[string]varar.Value{
-				"before": varar.StrValue(before),
-				"after":  varar.StrValue(strings.ToUpper(before)),
-			}))
+	// A whole-table slot arrives as rows of cells and the computed table goes
+	// back as rows keyed by column.
+	s.Sensor("Uppercase each one:", func(ctx Ctx, table [][]string) ([]map[string]string, error) {
+		out := []map[string]string{}
+		for _, row := range table[1:] { // skip the header row
+			out = append(out, map[string]string{"before": row[0], "after": strings.ToUpper(row[0])})
 		}
-		return varar.ListOf(out), nil
+		return out, nil
 	})
 
 	// Two slots — the {word} capture and the trailing doc string — so two

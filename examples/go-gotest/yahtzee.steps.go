@@ -9,22 +9,20 @@ import (
 )
 
 func registerYahtzee(s *varar.Steps[Ctx]) {
-	// Header-bound row: the row arrives as a map and the return is compared by
-	// COLUMN, not positionally by slot — so the typed form composes but its
-	// (Value) -> (Value) signature says less than the explicit form does.
+	// Header-bound row: the row arrives keyed by column, and the computed
+	// columns go back the same way for the core to diff cell by cell.
 	s.Sensor("Examples of dice, category and score",
-		func(ctx Ctx, row varar.Value) (varar.Value, error) {
-			m := row.CloneMap()
+		func(ctx Ctx, row map[string]string) (map[string]string, error) {
 			var dice []int64
-			for _, d := range strings.Split(m["dice"].MustString(), ",") {
+			for _, d := range strings.Split(row["dice"], ",") {
 				n, err := strconv.ParseInt(strings.TrimSpace(d), 10, 64)
 				if err != nil {
-					return varar.NullValue, fmt.Errorf("not a die: %s", d)
+					return nil, fmt.Errorf("not a die: %s", d)
 				}
 				dice = append(dice, n)
 			}
-			return varar.MapValue(map[string]varar.Value{
-				"score": varar.IntValue(Score(dice, m["category"].MustString())),
-			}), nil
+			return map[string]string{
+				"score": strconv.FormatInt(Score(dice, row["category"]), 10),
+			}, nil
 		})
 }

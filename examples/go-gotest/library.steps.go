@@ -9,34 +9,16 @@ import (
 
 func registerLibrary(s *varar.Steps[Ctx]) {
 	s.Param("date", `[A-Z][a-z]+ \d{1,2}, \d{4}`,
-		func(g []string) varar.Value { return ParseDate(g[0]).EncodeVarValue() },
-		func(v varar.Value) (string, bool) {
-			var d Date
-			if err := d.DecodeVarValue(v); err != nil {
-				return "", false
-			}
-			return FormatDate(d), true
-		})
+		func(g []string) Date { return ParseDate(g[0]) },
+		func(d Date) (string, bool) { return FormatDate(d), true })
 
 	s.Param("money", `£\d+(?:\.\d+)?|\d+p`,
-		func(g []string) varar.Value { return varar.IntValue(ParseMoney(g[0])) },
-		func(v varar.Value) (string, bool) {
-			if p, ok := v.AsInt(); ok {
-				return FormatMoney(p), true
-			}
-			return "", false
-		})
+		func(g []string) int { return int(ParseMoney(g[0])) },
+		func(pennies int) (string, bool) { return FormatMoney(int64(pennies)), true })
 
 	s.Param("title", `\*[^*]+\*`,
-		func(g []string) varar.Value {
-			return varar.StrValue(strings.TrimSuffix(strings.TrimPrefix(g[0], "*"), "*"))
-		},
-		func(v varar.Value) (string, bool) {
-			if t, ok := v.AsString(); ok {
-				return "*" + t + "*", true
-			}
-			return "", false
-		})
+		func(g []string) string { return strings.TrimSuffix(strings.TrimPrefix(g[0], "*"), "*") },
+		func(t string) (string, bool) { return "*" + t + "*", true })
 
 	s.Stimulus("borrowed {title}, due back on {date}", func(ctx Ctx, title string, due Date) (Ctx, error) {
 		ctx.Loans = append(append([]Loan{}, ctx.Loans...), Loan{Title: title, Due: due})

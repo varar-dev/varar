@@ -125,14 +125,25 @@ func (s *Steps[C]) Sensor(expression string, handler any) *Steps[C] {
 	return s.addAt(expression, adapt[C](handler, core.Sensor, expression), core.Sensor, file, line)
 }
 
-// Param declares a custom parameter type. Pass a non-nil format to also render
-// values for diffs, or nil for none — the single param shape every port shares.
-func (s *Steps[C]) Param(name, regexp string, parse ParseFn, format FormatFn) *Steps[C] {
-	if format != nil {
-		s.registry = core.DefineParameterTypeWithFormat(s.registry, name, regexp, parse, format)
-	} else {
-		s.registry = core.DefineParameterType(s.registry, name, regexp, parse)
+// Param declares a custom parameter type, in terms of your own Go type.
+//
+//	s.Param("date", `[A-Z][a-z]+ \d{1,2}, \d{4}`,
+//	    func(g []string) Date { return ParseDate(g[0]) },
+//	    func(d Date) (string, bool) { return FormatDate(d), true })
+//
+// parse must be a func([]string) T — it receives the type's regexp capture
+// groups (or the whole match when it has none) and returns your T, which then
+// arrives directly as the step's slot. format is optional (pass nil): a
+// func(T) (string, bool) rendering a T back in the document's notation, used
+// when a mismatch is reported. Both are validated at registration.
+func (s *Steps[C]) Param(name, regexp string, parse any, format any) *Steps[C] {
+	coreParse, valueOf := adaptParse(name, parse)
+	if format == nil {
+		s.registry = core.DefineParameterType(s.registry, name, regexp, coreParse)
+		return s
 	}
+	s.registry = core.DefineParameterTypeWithFormat(
+		s.registry, name, regexp, coreParse, adaptFormat(name, format, valueOf))
 	return s
 }
 

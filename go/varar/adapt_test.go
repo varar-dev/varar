@@ -183,11 +183,20 @@ func TestDomainTypeIsAcceptedAtRegistration(t *testing.T) {
 	}
 }
 
-// A type that cannot become a Value again is rejected as a SENSOR slot, since
-// the core would have nothing to compare.
-func TestEncoderlessTypeRejectedAsSensorSlot(t *testing.T) {
-	type opaque struct{ n int }
+// A type with no mapping to a value at all — a channel — is rejected at
+// registration. Plain structs are fine: they map field-by-field.
+func TestUnmappableTypeRejectedAtRegistration(t *testing.T) {
 	mustPanic(t, "cannot be read from a slot", func() {
-		adapt[Value](func(state Value, o opaque) (opaque, error) { return o, nil }, core.Sensor, "expr")
+		adapt[Value](func(state Value, c chan int) (chan int, error) { return c, nil }, core.Sensor, "expr")
 	})
+}
+
+// A plain struct needs no interface: its exported fields map to a Value map.
+func TestPlainStructSlotRoundTrips(t *testing.T) {
+	type point struct{ X, Y int }
+	encoded := fromGo(reflect.ValueOf(point{X: 3, Y: 4}))
+	got, err := toGo(encoded, reflect.TypeOf(point{}), 0)
+	if err != nil || got.Interface().(point) != (point{X: 3, Y: 4}) {
+		t.Fatalf("got %v, %v", got, err)
+	}
 }
