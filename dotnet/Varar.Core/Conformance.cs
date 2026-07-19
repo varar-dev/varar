@@ -22,6 +22,66 @@ public static class Conformance
             ("name", Value.Of(custom.Name)),
             ("regexp", Value.Of(custom.Regexp)))))));
 
+    /// <summary>
+    /// Projects an <see cref="ExecutionPlan"/> to the <c>plan.json</c> shape: per example the name,
+    /// scope, span, expected outcome, and steps; each step's text/spans/expression, its args as the
+    /// raw source slice of each param span plus its type name, and any attached table/doc string.
+    /// Port of <c>toPlanArtifact</c>.
+    /// </summary>
+    public static Value ToPlanArtifact(ExecutionPlan plan) => Map(
+        ("examples", Value.List(plan.Examples.Select(ex => PlannedExampleValue(ex, plan.VarDoc.Source)))),
+        ("diagnostics", Value.List(plan.Diagnostics.Select(d => Map(
+            ("code", Value.Of(d.Code.ToWire())),
+            ("severity", Value.Of(d.Severity.ToWire())),
+            ("span", SpanValue(d.Span)))))));
+
+    private static Value PlannedExampleValue(PlannedExample ex, string source)
+    {
+        var entries = new List<KeyValuePair<string, Value>>
+        {
+            new("name", Value.Of(ex.Name)),
+            new("scopeStack", Value.List(ex.ScopeStack.Select(Value.Of))),
+            new("span", SpanValue(ex.Span)),
+            new("expectedOutcome", Value.Of(ex.ExpectedFail ? "fail" : "pass")),
+        };
+        if (ex.ExpectedErrorMessage is not null)
+        {
+            entries.Add(new("expectedErrorMessage", Value.Of(ex.ExpectedErrorMessage)));
+        }
+
+        entries.Add(new("steps", Value.List(ex.Steps.Select(step => PlannedStepValue(step, source)))));
+        return Value.Map(entries);
+    }
+
+    private static Value PlannedStepValue(PlannedStep step, string source)
+    {
+        var typeNames = step.StepDef.Compiled.ParameterTypes.Select(p => p.Name).ToArray();
+        var entries = new List<KeyValuePair<string, Value>>
+        {
+            new("text", Value.Of(step.Text)),
+            new("matchSpan", SpanValue(step.MatchSpan)),
+            new("paramSpans", List(step.ParamSpans, SpanValue)),
+            new("matchedExpression", Value.Of(step.StepDef.Expression)),
+            new("args", Value.List(step.ParamSpans.Select((span, i) => Map(
+                ("value", Value.Of(Scanner.Slice(source, span.StartOffset, span.EndOffset))),
+                ("parameterType", i < typeNames.Length ? Value.Of(typeNames[i]) : Value.Null))))),
+        };
+        if (step.DataTable is not null)
+        {
+            entries.Add(new("dataTable", BlockValue(step.DataTable)));
+        }
+
+        if (step.DocString is not null)
+        {
+            entries.Add(new("docString", Map(
+                ("content", Value.Of(step.DocString.Content)),
+                ("contentType", Value.Of(step.DocString.ContentType)),
+                ("span", SpanValue(step.DocString.Span)))));
+        }
+
+        return Value.Map(entries);
+    }
+
     /// <summary>Projects a <see cref="VarDoc"/> to the <c>var-doc.json</c> shape (<c>source</c> is dropped).</summary>
     public static Value ToVarDocArtifact(VarDoc doc) => Map(
         ("path", Value.Of(doc.Path)),
