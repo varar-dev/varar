@@ -1,106 +1,70 @@
-use super::{as_int, smap, vmap};
+use super::{Ctx, Loan};
 use crate::library_example::{
     Date, FEE_PER_DAY, format_date, format_money, late_fee, may_borrow, parse_date, parse_money,
 };
-use std::rc::Rc;
-use varar::{FormatFn, ParseFn, Steps, Value};
+use varar::{HandlerError, Steps};
 
-fn date_value(d: Date) -> Value {
-    vmap(vec![
-        ("year", Value::Int(d.year)),
-        ("month", Value::Int(d.month)),
-        ("day", Value::Int(d.day)),
-    ])
-}
+pub fn register(s: &mut Steps<Ctx>) {
+    // Custom parameter types, declared in terms of the Rust types they produce:
+    // a Date, pennies as an i64, and a plain title String.
+    s.param(
+        "date",
+        r"[A-Z][a-z]+ \d{1,2}, \d{4}",
+        |g: &[&str]| parse_date(g[0]),
+        Some(Box::new(|d: &Date| format_date(*d))),
+    );
+    s.param(
+        "money",
+        r"£\d+(?:\.\d+)?|\d+p",
+        |g: &[&str]| parse_money(g[0]),
+        Some(Box::new(|pennies: &i64| format_money(*pennies))),
+    );
+    s.param(
+        "title",
+        r"\*[^*]+\*",
+        |g: &[&str]| {
+            g[0].strip_prefix('*')
+                .and_then(|t| t.strip_suffix('*'))
+                .unwrap_or(g[0])
+                .to_string()
+        },
+        Some(Box::new(|t: &String| format!("*{t}*"))),
+    );
 
-fn value_date(v: &Value) -> Date {
-    let m = smap(v);
-    Date {
-        year: as_int(&m["year"]),
-        month: as_int(&m["month"]),
-        day: as_int(&m["day"]),
-    }
-}
-
-fn loan_due(loan: &Value) -> Date {
-    value_date(&smap(loan)["due"])
-}
-
-fn loans_of(state: &Value) -> Vec<Value> {
-    match smap(state).get("loans") {
-        Some(Value::List(l)) => l.clone(),
-        _ => Vec::new(),
-    }
-}
-
-pub fn register(s: &mut Steps) {
-    let date_parse: ParseFn = Rc::new(|g: &[&str]| date_value(parse_date(g[0])));
-    let date_format: FormatFn = Rc::new(|v: &Value| Some(format_date(value_date(v))));
-    s.param("date", r"[A-Z][a-z]+ \d{1,2}, \d{4}", date_parse, Some(date_format));
-
-    let money_parse: ParseFn = Rc::new(|g: &[&str]| Value::Int(parse_money(g[0])));
-    let money_format: FormatFn = Rc::new(|v: &Value| match v {
-        Value::Int(pennies) => Some(format_money(*pennies)),
-        _ => None,
-    });
-    s.param("money", r"£\d+(?:\.\d+)?|\d+p", money_parse, Some(money_format));
-
-    let title_parse: ParseFn = Rc::new(|g: &[&str]| {
-        let raw = g[0];
-        let inner = raw
-            .strip_prefix('*')
-            .and_then(|s| s.strip_suffix('*'))
-            .unwrap_or(raw);
-        Value::from(inner.to_string())
-    });
-    let title_format: FormatFn = Rc::new(|v: &Value| match v {
-        Value::String(t) => Some(format!("*{t}*")),
-        _ => None,
-    });
-    s.param("title", r"\*[^*]+\*", title_parse, Some(title_format));
-
-    s.stimulus("borrowed {title}, due back on {date}", |state, title, due| {
-        let mut m = smap(&state);
-        let mut loans = loans_of(&state);
-        loans.push(vmap(vec![("title", title), ("due", due)]));
-        m.insert("loans".to_string(), Value::List(loans));
-        Ok(Some(Value::Map(m)))
+    s.stimulus("borrowed {title}, due back on {date}", |ctx: Ctx, title: String, due: Date| {
+        let mut loans = ctx.loans.clone();
+        loans.push(Loan { title, due });
+        Ok(Ctx { loans, ..ctx })
     });
 
-    s.stimulus("returns it on {date}", |state, returned_on| {
-        let returned = value_date(&returned_on);
-        let mut fee = 0;
-        for loan in loans_of(&state) {
-            fee += late_fee(loan_due(&loan), returned);
+    s.stimulus("returns it on {date}", |ctx: Ctx, returned: Date| {
+        let fee = ctx.loans.iter().map(|l| late_fee(l.due, returned)).sum();
+        Ok(Ctx { fee, ..ctx })
+    });
+
+    s.sensor("owes a {money} late fee", |ctx: Ctx, _expected: i64| Ok(ctx.fee));
+
+    s.sensor("{money} for each day overdue", |_ctx: Ctx, _expected: i64| Ok(FEE_PER_DAY));
+
+    s.stimulus("asks to borrow {title} on {date}", |ctx: Ctx, _title: String, on: Date| {
+        let dues: Vec<Date> = ctx.loans.iter().map(|l| l.due).collect();
+        Ok(Ctx {
+            granted: may_borrow(&dues, on),
+            ..ctx
+        })
+    });
+
+    s.sensor("the library refuses", |ctx: Ctx| {
+        if ctx.granted {
+            return Err(HandlerError::new("expected the library to refuse"));
         }
-        let mut m = smap(&state);
-        m.insert("fee".to_string(), Value::Int(fee));
-        Ok(Some(Value::Map(m)))
+        Ok(())
     });
 
-    s.sensor("owes a {money} late fee", |state, _expected| Ok(smap(&state).get("fee").cloned()));
-
-    s.sensor("{money} for each day overdue", |_state, _expected| Ok(Some(Value::Int(FEE_PER_DAY))));
-
-    s.stimulus("asks to borrow {title} on {date}", |state, _title, on| {
-        let on = value_date(&on);
-        let dues: Vec<Date> = loans_of(&state).iter().map(loan_due).collect();
-        let mut m = smap(&state);
-        m.insert("granted".to_string(), Value::Bool(may_borrow(&dues, on)));
-        Ok(Some(Value::Map(m)))
-    });
-
-    s.sensor("the library refuses", |state| {
-        if matches!(smap(&state).get("granted"), Some(Value::Bool(true))) {
-            panic!("expected the library to refuse");
+    s.sensor("the library agrees", |ctx: Ctx| {
+        if !ctx.granted {
+            return Err(HandlerError::new("expected the library to agree"));
         }
-        Ok(None)
-    });
-
-    s.sensor("the library agrees", |state| {
-        if !matches!(smap(&state).get("granted"), Some(Value::Bool(true))) {
-            panic!("expected the library to agree");
-        }
-        Ok(None)
+        Ok(())
     });
 }

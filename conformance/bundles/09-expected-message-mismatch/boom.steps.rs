@@ -1,13 +1,13 @@
 //! Rust sibling of `boom.steps.ts` (bundle `09-expected-message-mismatch`).
 
-use varar::{HandlerError, Steps, Value};
+use varar::{HandlerError, Steps};
 
-pub fn register(s: &mut Steps) {
-    // Throws a message that does NOT contain the expected substring "expected
-    // message", so the expected-failure is NOT satisfied → the example fails.
-    s.stimulus("I always boom", |_state| Err(HandlerError::new("actual different error")));
+pub fn register(s: &mut Steps<()>) {
+    // Fails with a message that does NOT contain the expected substring, so
+    // the expected-failure is not satisfied → the example fails.
+    s.stimulus("I always boom", |_ctx: ()| {
+        Err::<(), _>(HandlerError::new("actual different error"))
+    });
 }
 
-pub fn state() -> Value {
-    Value::Null
-}
+pub fn state() {}

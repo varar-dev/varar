@@ -9,17 +9,19 @@ use crate::diagnostics::Diagnostic;
 use crate::doc_string_diff::compare_doc_string;
 use crate::error::{FailureLocation, HandlerError, StepError, StepFailure};
 use crate::failure_anchor;
-use crate::handler::{Handler, StepReturn};
+use crate::handler::{Handler, StepOutput, StepReturn};
 use crate::offsets::{utf16_len, utf16_slice};
 use crate::param_diff::compare_params_with_formats;
 use crate::plan::{ExecutionPlan, PlannedExample, PlannedStep};
 use crate::step_kind::StepKind;
 use crate::value::Value;
+use std::any::Any;
 use std::cell::Cell;
 use std::collections::HashMap;
 use std::future::Future;
 use std::panic::AssertUnwindSafe;
 use std::pin::Pin;
+use std::rc::Rc;
 use std::sync::Once;
 use std::task::{Context, Poll, Wake, Waker};
 
@@ -52,7 +54,7 @@ pub struct StepObservation {
 }
 
 /// The ports [`collect_examples`]/[`execute_plan`] need. `create_context` maps a
-/// step-file to its fresh initial state (`None` → [`Value::Null`] per file);
+/// step-file to its fresh initial state (`None` → a unit state per file);
 /// `observer` is optional per-step instrumentation. The lifetime lets the port
 /// closures borrow caller locals (e.g. a conformance observer's accumulator).
 pub struct ExecutePorts<'a> {
@@ -64,7 +66,7 @@ pub struct ExecutePorts<'a> {
 /// Receives every diagnostic collected during planning.
 pub type Reporter<'a> = Box<dyn Fn(&Diagnostic) + 'a>;
 /// Maps a step-file to its fresh initial state.
-pub type ContextFactory<'a> = Box<dyn Fn(&str) -> Value + 'a>;
+pub type ContextFactory<'a> = Box<dyn Fn(&str) -> Rc<dyn Any> + 'a>;
 /// Per-step instrumentation (conformance trace mode).
 pub type Observer<'a> = Box<dyn Fn(StepObservation) + 'a>;
 
@@ -144,7 +146,7 @@ fn run_example(
     let source = &plan.var_doc.source;
     let steps = &ex.steps;
 
-    let mut state_by_file: HashMap<String, Value> = HashMap::new();
+    let mut state_by_file: HashMap<String, Rc<dyn Any>> = HashMap::new();
     let mut last_return: Option<Value> = None;
     let mut thrown: Option<StepFailure> = None;
 
@@ -170,17 +172,25 @@ fn run_example(
         let step_error: Option<StepError> =
             match invoke_resolve(&step.step_def.handler, state, call_args) {
                 Err(he) => Some(StepError::Handler(he)),
-                Ok(returned) => {
-                    last_return = returned.clone();
+                Ok(output) => {
+                    last_return = output.compared().cloned();
                     match step.step_def.kind {
                         Some(StepKind::Stimulus) => {
-                            state_by_file.insert(file.clone(), returned.unwrap_or(Value::Null));
+                            // A stimulus's output IS the next state. The facade
+                            // yields `State`; the core's Value-state
+                            // conveniences yield `Compared`, which for a
+                            // stimulus means the same thing.
+                            let next: Rc<dyn Any> = match output {
+                                StepOutput::State(next) => next,
+                                StepOutput::Compared(v) => Rc::new(v.unwrap_or(Value::Null)),
+                            };
+                            state_by_file.insert(file.clone(), next);
                             None
                         }
                         Some(StepKind::Sensor) => {
                             // Header-bound rows are checked after the loop via row_checks.
                             if ex.row_checks.is_none() {
-                                check_sensor_return(source, step, returned).err()
+                                check_sensor_return(source, step, output.compared().cloned()).err()
                             } else {
                                 None
                             }
@@ -269,10 +279,10 @@ fn run_example(
     }
 }
 
-fn create_context(ports: &ExecutePorts, file: &str) -> Value {
+fn create_context(ports: &ExecutePorts, file: &str) -> Rc<dyn Any> {
     match &ports.create_context {
         Some(cc) => cc(file),
-        None => Value::Null,
+        None => Rc::new(()) as Rc<dyn Any>,
     }
 }
 
@@ -437,9 +447,9 @@ fn install_hook() {
 /// assertion-style failure channel) into a [`HandlerError`].
 fn invoke_resolve(
     handler: &Handler,
-    state: Value,
+    state: Rc<dyn Any>,
     args: Vec<Value>,
-) -> Result<Option<Value>, HandlerError> {
+) -> Result<StepOutput, HandlerError> {
     install_hook();
     let caught = SUPPRESS_PANIC.with(|s| {
         s.set(true);

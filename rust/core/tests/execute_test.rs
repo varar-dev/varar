@@ -9,6 +9,7 @@
 mod common;
 
 use common::vmap;
+use std::any::Any;
 use std::cell::RefCell;
 use std::future::Future;
 use std::pin::Pin;
@@ -20,13 +21,15 @@ use varar_core::execute::{
     ExecutePorts, StepObservation, StepOutcome, collect_examples, execute_plan,
 };
 use varar_core::failure::to_failure;
-use varar_core::handler::{Handler, HandlerReturn};
+use varar_core::handler::{Handler, HandlerReturn, StepOutput};
 use varar_core::offsets::utf16_slice;
 use varar_core::parse::parse;
 use varar_core::plan::{ExecutionPlan, plan};
 use varar_core::registry::{Registry, add_step, create_registry};
 use varar_core::step_kind::StepKind;
 use varar_core::value::Value;
+
+type ContextFactory<'a> = varar_core::execute::ContextFactory<'a>;
 
 fn int_of(v: &Value) -> i64 {
     match v {
@@ -146,7 +149,7 @@ fn threads_full_replacement_state_and_sensor_compares_return_against_last_captur
     let p = plan_of("# Adding\n\nI add 5. I add 3. the total is 8.", &r);
     let ports = ExecutePorts {
         reporter: Box::new(|_| {}),
-        create_context: Some(Box::new(|_| Value::Int(0))),
+        create_context: Some(Box::new(|_| Rc::new(Value::Int(0)) as Rc<dyn Any>)),
         observer: None,
     };
     let queued = collect_examples(&p, &ports);
@@ -289,9 +292,9 @@ fn create_context_is_called_fresh_once_per_example() {
     let p = plan_of("# A\n\nI record ctx\n\n# B\n\nI record ctx", &r);
     let calls = Rc::new(RefCell::new(0));
     let calls2 = calls.clone();
-    let create = Box::new(move |_file: &str| {
+    let create: ContextFactory = Box::new(move |_file: &str| {
         *calls2.borrow_mut() += 1;
-        Value::from(format!("init{}", calls2.borrow()))
+        Rc::new(Value::from(format!("init{}", calls2.borrow()))) as Rc<dyn Any>
     });
     let ports = ExecutePorts {
         reporter: Box::new(|_| {}),
@@ -334,9 +337,9 @@ fn state_is_threaded_across_steps_sharing_the_same_file_no_new_context_per_step(
     let p = plan_of("# A\n\nI seed\nI record ctx", &r);
     let calls = Rc::new(RefCell::new(0));
     let calls2 = calls.clone();
-    let create = Box::new(move |_file: &str| {
+    let create: ContextFactory = Box::new(move |_file: &str| {
         *calls2.borrow_mut() += 1;
-        Value::from("unseeded")
+        Rc::new(Value::from("unseeded")) as Rc<dyn Any>
     });
     let ports = ExecutePorts {
         reporter: Box::new(|_| {}),
@@ -828,7 +831,7 @@ fn an_action_handler_returning_a_future_is_awaited_and_its_result_becomes_the_ne
         1,
         Handler::async0(|_state| {
             Box::pin(YieldOnce {
-                value: Some(Ok(Some(Value::from("hi")))),
+                value: Some(Ok(StepOutput::Compared(Some(Value::from("hi"))))),
                 yielded: false,
             })
         }),
@@ -994,7 +997,7 @@ fn an_async_handler_with_parameters_runs_through_async_var() {
                     Value::String(s) => s.clone(),
                     _ => String::new(),
                 };
-                Ok(Some(Value::from(format!("hi {name}"))))
+                Ok(StepOutput::Compared(Some(Value::from(format!("hi {name}")))))
             })
         }),
         Some(StepKind::Stimulus),

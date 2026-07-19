@@ -83,3 +83,32 @@ pub fn late_fee(due: Date, returned_on: Date) -> i64 {
 pub fn may_borrow(dues: &[Date], on: Date) -> bool {
     dues.iter().all(|due| due.serial() >= on.serial())
 }
+
+// Slot conversions, so a `Date` can be a step parameter directly — Rust has no
+// reflection, so a domain type says once how it maps to and from a slot.
+impl varar::FromSlot for Date {
+    fn from_slot(value: &varar::Value) -> Result<Date, varar::HandlerError> {
+        let varar::Value::Map(m) = value else {
+            return Err(varar::HandlerError::new("expected a date"));
+        };
+        let field = |k: &str| match m.get(k) {
+            Some(varar::Value::Int(i)) => Ok(*i),
+            _ => Err(varar::HandlerError::new(format!("date is missing {k}"))),
+        };
+        Ok(Date {
+            year: field("year")?,
+            month: field("month")?,
+            day: field("day")?,
+        })
+    }
+}
+
+impl varar::ToSlot for Date {
+    fn to_slot(&self) -> varar::Value {
+        varar::Value::Map(std::collections::BTreeMap::from([
+            ("year".to_string(), varar::Value::Int(self.year)),
+            ("month".to_string(), varar::Value::Int(self.month)),
+            ("day".to_string(), varar::Value::Int(self.day)),
+        ]))
+    }
+}

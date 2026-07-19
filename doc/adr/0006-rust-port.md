@@ -68,3 +68,34 @@ already implements, matching the JVM ports rather than the dynamic ones:
   equivalent. Recorded here so it is not mistaken for a bug.
 - The cargo test-framework integration mechanism is its own decision:
   [ADR 0007](0007-rust-cargo-test-integration.md).
+
+
+## Amendment (2026-07-20) — a minimal author surface
+
+Following the same pass on the Go port, the Rust authoring API no longer
+exposes the core's dynamic `Value` as the way steps are written:
+
+- **`Steps<C>` is generic in the context type.** A step file declares its own
+  `Ctx` and handlers take and return it; a stimulus returns the whole next
+  `Ctx`. `varar-core` therefore treats the state as an opaque `Rc<dyn Any>` —
+  it threads it between a file's steps and replaces it wholesale, but never
+  compares, serializes, or inspects it, so no conformance artifact changes.
+- **Slots arrive as the handler's own Rust types**, via `FromSlot`/`ToSlot`.
+  A sensor returns one value per slot — TypeScript spells the two-slot case as
+  the tuple `[n, n * n]`, Rust as `(n, n * n)` — and a sensor that asserts for
+  itself returns `()` instead (the opt-out a greedy `{word}` capture needs).
+- **`param` is declared in terms of the type it produces**, so a `{date}`
+  yields a `Date` directly rather than a map the handler has to unpack.
+
+Unlike Go's reflective equivalent, all of this is checked by the compiler:
+a wrong arity, an unreadable slot type, or a sensor whose results do not match
+its slots is a build error rather than a run-time one.
+
+`Value` remains exported, but only as the escape hatch — a slot with no natural
+Rust spelling, and the type named when implementing `FromSlot`/`ToSlot` for a
+domain type. Rust has no reflection, so unlike Go (where a plain struct maps
+automatically) a domain type states the mapping once. No step function in the
+corpus or the sample project mentions `Value`.
+
+The core's fixed-arity `Handler::sync*` conveniences are retained for the core's
+own tests and non-facade consumers; they are not the author API.
