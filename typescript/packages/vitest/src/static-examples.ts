@@ -1,9 +1,5 @@
 import type { ScannerPlugin } from '@varar/core'
-import {
-  buildWorkspaceIndex,
-  createTreeSitterScanner,
-  type StepDefScanner,
-} from '@varar/language'
+import { buildWorkspaceIndex, createTreeSitterScanner, type StepDefScanner } from '@varar/language'
 import { planSpec } from '@varar/runner'
 import { createNodeGrammarLoader } from './node-grammar-loader.ts'
 
