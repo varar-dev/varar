@@ -1,0 +1,38 @@
+package varrunner
+
+import (
+	"fmt"
+	"strings"
+
+	vc "github.com/varar-dev/varar-go/core"
+)
+
+// RenderFailure is a pure human-readable rendering of a step failure, anchored
+// to the .md; it reuses the core diff payloads.
+func RenderFailure(failure vc.StepFailure, _source, path string) string {
+	switch failure.Error.Kind {
+	case vc.SECellMismatch:
+		lines := []string{fmt.Sprintf("Cell mismatch in %s:", path)}
+		var failing []vc.CellDiff
+		for _, c := range failure.Error.Cells {
+			if !c.Ok {
+				failing = append(failing, c)
+			}
+		}
+		if len(failing) == 0 {
+			lines = append(lines, "  (no failing cells)")
+		}
+		for _, cell := range failing {
+			lines = append(lines, fmt.Sprintf(
+				"  line %d | column '%s' — expected: %q, actual: %q",
+				cell.Span.StartLine, cell.Column, cell.Expected, cell.Actual,
+			))
+		}
+		return strings.Join(lines, "\n")
+	case vc.SEDocStringMismatch:
+		d := failure.Error.DocDiff
+		return fmt.Sprintf("Doc string mismatch at line %d:\n  expected: %q\n  actual:   %q", d.Span.StartLine, d.Expected, d.Actual)
+	default:
+		return failure.Error.Message()
+	}
+}
