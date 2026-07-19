@@ -79,18 +79,39 @@ func (s *Steps) addAt(expression string, handler HandlerFunc, kind core.StepKind
 	return s
 }
 
-// Stimulus registers a stimulus (drives the software; returns the whole next
-// state). The source file and line are captured from the call site.
-func (s *Steps) Stimulus(expression string, handler HandlerFunc) *Steps {
+// Stimulus registers a stimulus: it drives the software and returns the whole
+// next state.
+//
+// The handler's parameters may be plain Go values — the first is always the
+// state, the rest are the step's slots — returning (Value, error):
+//
+//	s.Stimulus("I greet {string}",
+//	    func(state varar.Value, name string) (varar.Value, error) { … })
+//
+// The raw form func(Value, []Value) (*Value, error) is also accepted. The
+// signature is validated at registration; the source file and line are captured
+// from the call site.
+func (s *Steps) Stimulus(expression string, handler any) *Steps {
 	_, file, line, _ := runtime.Caller(1)
-	return s.addAt(expression, handler, core.Stimulus, file, line)
+	return s.addAt(expression, adapt(handler, core.Stimulus, expression), core.Stimulus, file, line)
 }
 
-// Sensor registers a sensor (the read-only assertion; its return is compared).
-// The source file and line are captured from the call site.
-func (s *Steps) Sensor(expression string, handler HandlerFunc) *Steps {
+// Sensor registers a sensor: the read-only assertion, whose return is compared
+// against the document.
+//
+// The handler's parameters may be plain Go values — the first is always the
+// state, the rest are the step's slots — returning one value per slot (each the
+// same type as that slot) plus an error:
+//
+//	s.Sensor("The square of {int} is {int}.",
+//	    func(state varar.Value, n, square int) (int, int, error) { return n, n * n, nil })
+//
+// The raw form func(Value, []Value) (*Value, error) is also accepted. The
+// signature is validated at registration; the source file and line are captured
+// from the call site.
+func (s *Steps) Sensor(expression string, handler any) *Steps {
 	_, file, line, _ := runtime.Caller(1)
-	return s.addAt(expression, handler, core.Sensor, file, line)
+	return s.addAt(expression, adapt(handler, core.Sensor, expression), core.Sensor, file, line)
 }
 
 // Param declares a custom parameter type. Pass a non-nil format to also render

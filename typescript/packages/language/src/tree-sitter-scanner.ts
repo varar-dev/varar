@@ -136,8 +136,7 @@ function discoverStepDefs(dialect: Dialect, file: string, source: string): Reado
     out.push({
       file,
       expression: dialect.spec.decodeString(expressionNode),
-      kind: (dialect.spec.normalizeKind?.(functionNameNode.text) ??
-        functionNameNode.text.toLowerCase()) as StepKind,
+      kind: functionNameNode.text.toLowerCase() as StepKind,
       expressionRange: toRange(expressionNode),
       callRange: toRange(rootNode),
       handlerParams: handlerNode ? dialect.spec.extractHandlerParams(handlerNode) : undefined,

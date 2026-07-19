@@ -6,7 +6,7 @@ import "github.com/varar-dev/varar-go/varar"
 func Register(s *varar.Steps) {
 	// The doc string is this sensor's only slot, so it arrives as a string and
 	// the returned string is compared against it; echoing it back passes.
-	varar.Sensor1(s, "I echo the following:", func(state varar.Value, doc string) (string, error) {
+	s.Sensor("I echo the following:", func(state varar.Value, doc string) (string, error) {
 		return doc, nil
 	})
 }

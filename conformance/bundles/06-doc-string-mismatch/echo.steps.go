@@ -6,7 +6,7 @@ import "github.com/varar-dev/varar-go/varar"
 func Register(s *varar.Steps) {
 	// Returns the WRONG string for the doc-string slot; the core compares it to
 	// the doc string and fails with DocStringMismatch.
-	varar.Sensor1(s, "I echo the following:", func(state varar.Value, doc string) (string, error) {
+	s.Sensor("I echo the following:", func(state varar.Value, doc string) (string, error) {
 		return "goodbye", nil
 	})
 }

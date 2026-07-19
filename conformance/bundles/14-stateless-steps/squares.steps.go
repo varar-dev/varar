@@ -9,10 +9,10 @@ package fixture
 import "github.com/varar-dev/varar-go/varar"
 
 func Register(s *varar.Steps) {
-	varar.Stimulus0(s, "I warm up my mental math", func(state varar.Value) (varar.Value, error) {
+	s.Stimulus("I warm up my mental math", func(state varar.Value) (varar.Value, error) {
 		return state, nil
 	})
-	varar.Sensor2(s, "The square of {int} is {int}.",
+	s.Sensor("The square of {int} is {int}.",
 		func(state varar.Value, n, square int) (int, int, error) {
 			return n, n * n, nil
 		})

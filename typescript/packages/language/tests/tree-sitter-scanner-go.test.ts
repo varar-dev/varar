@@ -15,8 +15,8 @@ describe('go dialect', () => {
     const scanner = await goScanner()
     const src = `package fixture
 func Register(s *varar.Steps) {
-	s.Stimulus("I add {int}", func(state varar.Value, args []varar.Value) varar.HandlerReturn { return varar.Returns(state) })
-	s.Sensor("the total is {int}", func(state varar.Value, args []varar.Value) varar.HandlerReturn { return varar.NoReturn() })
+	s.Stimulus("I add {int}", func(state varar.Value, n int) (varar.Value, error) { return state, nil })
+	s.Sensor("the total is {int}", func(state varar.Value, n int) (int, error) { return n, nil })
 }`
     const defs = scanner.discoverStepDefs('x.steps.go', src)
     expect(defs.map((d) => [d.kind, d.expression])).toEqual([
@@ -25,30 +25,11 @@ func Register(s *varar.Steps) {
     ])
   })
 
-  test('extracts kind + expression from the generic typed constructors', async () => {
-    const scanner = await goScanner()
-    // Package-level functions (Go allows no type parameters on methods), so the
-    // builder is the first argument and the expression the second, and the
-    // arity rides in the name.
-    const src = `package fixture
-func Register(s *varar.Steps) {
-	varar.Stimulus1(s, "I add {int}", func(state varar.Value, n int) (varar.Value, error) { return state, nil })
-	varar.Sensor2(s, "The square of {int} is {int}.", func(state varar.Value, n, sq int) (int, int, error) { return n, n * n, nil })
-	varar.Sensor0(s, "the library agrees", func(state varar.Value) error { return nil })
-}`
-    const defs = scanner.discoverStepDefs('x.steps.go', src)
-    expect(defs.map((d) => [d.kind, d.expression])).toEqual([
-      ['stimulus', 'I add {int}'],
-      ['sensor', 'The square of {int} is {int}.'],
-      ['sensor', 'the library agrees'],
-    ])
-  })
-
   test('a string inside the handler closure is not mistaken for the expression', async () => {
     const scanner = await goScanner()
     const src = `package fixture
 func Register(s *varar.Steps) {
-	s.Stimulus("real expr", func(state varar.Value, args []varar.Value) varar.HandlerReturn { return varar.Fails("inner") })
+	s.Stimulus("real expr", func(state varar.Value, args []varar.Value) (*varar.Value, error) { return nil, errors.New("inner") })
 }`
     expect(scanner.discoverStepDefs('x.steps.go', src).map((d) => d.expression)).toEqual([
       'real expr',

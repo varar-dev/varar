@@ -59,7 +59,7 @@ func registerLibrary(s *varar.Steps) {
 			return "", false
 		})
 
-	varar.Stimulus2(s, "borrowed {title}, due back on {date}",
+	s.Stimulus("borrowed {title}, due back on {date}",
 		func(state varar.Value, title string, due varar.Value) (varar.Value, error) {
 			m := state.CloneMap()
 			loans := append(loansOf(state), varar.MapValue(map[string]varar.Value{"title": varar.StrValue(title), "due": due}))
@@ -67,7 +67,7 @@ func registerLibrary(s *varar.Steps) {
 			return varar.MapValue(m), nil
 		})
 
-	varar.Stimulus1(s, "returns it on {date}", func(state varar.Value, on varar.Value) (varar.Value, error) {
+	s.Stimulus("returns it on {date}", func(state varar.Value, on varar.Value) (varar.Value, error) {
 		returned := valueDate(on)
 		var fee int64
 		for _, loan := range loansOf(state) {
@@ -80,16 +80,16 @@ func registerLibrary(s *varar.Steps) {
 
 	// {money} parses to pennies, so the slot has a primitive spelling: the
 	// observed fee goes back out as an int and the core compares it.
-	varar.Sensor1(s, "owes a {money} late fee", func(state varar.Value, expected int) (int, error) {
+	s.Sensor("owes a {money} late fee", func(state varar.Value, expected int) (int, error) {
 		fee, _ := state.CloneMap()["fee"].AsInt()
 		return int(fee), nil
 	})
 
-	varar.Sensor1(s, "{money} for each day overdue", func(state varar.Value, expected int) (int, error) {
+	s.Sensor("{money} for each day overdue", func(state varar.Value, expected int) (int, error) {
 		return int(FeePerDay), nil
 	})
 
-	varar.Stimulus2(s, "asks to borrow {title} on {date}",
+	s.Stimulus("asks to borrow {title} on {date}",
 		func(state varar.Value, title string, on varar.Value) (varar.Value, error) {
 			var dues []Date
 			for _, loan := range loansOf(state) {
@@ -100,7 +100,7 @@ func registerLibrary(s *varar.Steps) {
 			return varar.MapValue(m), nil
 		})
 
-	varar.Sensor0(s, "the library refuses", func(state varar.Value) error {
+	s.Sensor("the library refuses", func(state varar.Value) error {
 		if g, ok := state.CloneMap()["granted"]; ok {
 			if b, _ := g.AsBool(); b {
 				return errors.New("expected the library to refuse")
@@ -109,7 +109,7 @@ func registerLibrary(s *varar.Steps) {
 		return nil
 	})
 
-	varar.Sensor0(s, "the library agrees", func(state varar.Value) error {
+	s.Sensor("the library agrees", func(state varar.Value) error {
 		g, ok := state.CloneMap()["granted"]
 		granted := false
 		if ok {

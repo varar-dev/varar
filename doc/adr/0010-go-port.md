@@ -62,12 +62,13 @@ reader; drift is unit-gated against the shared FNV-1a / lockfile vectors.
   form and the panicking `Must*` form, plus `CloneMap` for building the next
   state — keep step files free of hand-rolled coercion helpers.
 
-  **Typed constructors (the ergonomic form).** On top of that primitive, the
-  facade offers generic per-arity constructors where each slot arrives as a
-  plain Go value and a sensor returns one value per slot:
+  **Plain Go parameters (the ergonomic form).** `Sensor`/`Stimulus` also accept
+  a handler whose parameters are plain Go values — the first is always the
+  state, the rest are the step's slots — with a sensor returning one value per
+  slot:
 
   ```go
-  varar.Sensor2(s, "The square of {int} is {int}.",
+  s.Sensor("The square of {int} is {int}.",
       func(state varar.Value, n, square int) (int, int, error) { return n, n * n, nil })
   ```
 
@@ -76,21 +77,30 @@ reader; drift is unit-gated against the shared FNV-1a / lockfile vectors.
   A sensor's return type per slot equals that slot's parameter type, because the
   core compares the two — a different type could never be equal.
 
-  A first draft of this ADR justified the single explicit shape by saying Go
-  cannot infer closure arity the way Rust's `IntoHandler` trait does. That is
+  A first draft of this ADR justified a single fixed `[]Value` shape by saying
+  Go cannot infer closure arity the way Rust's `IntoHandler` trait does. That is
   true of Rust's *compile-time trait dispatch* but it is not the mechanism godog
   uses: godog's `ctx.Step(expr, handler)` accepts `func(name string, age int)
-  error` via **runtime reflection**. Go generics give the same ergonomics
-  *without* reflection, and check strictly more at compile time than godog can:
-  a return type that does not match its slot, a handler arity that does not
-  match the constructor, and an unsupported parameter type are all compile
-  errors here, where godog defers each to run time.
+  error` via **runtime reflection**, and so does this.
 
-  The typed form is **additive**, not a replacement. Slots with no primitive Go
-  spelling — a whole table, a custom parameter type that parses to a map — use
-  `Value` on both sides, and header-bound rows compare by column rather than
-  positionally by slot, so the explicit `[]Value` form remains the primitive and
-  the escape hatch. Both forms appear in the conformance corpus.
+  Generics were prototyped first, as `Sensor1`/`Sensor2`/… — they buy real
+  compile-time checking (a return type that does not match its slot, or an
+  unsupported parameter type, becomes a compile error), but Go has no variadic
+  generics, so the arity has to live in the name. Numbered functions are not a
+  Go idiom; reflection is how Go does variable arity, and the checking that is
+  lost is largely recovered by validating the handler signature **eagerly at
+  registration**, so a malformed handler fails when the suite wires up rather
+  than when that step happens to run. Only two checks are deferred to match
+  time, both because they depend on the document rather than the code: the slot
+  count an expression actually produced, and a slot whose runtime kind does not
+  match the declared type.
+
+  The reflection lives entirely in the facade; `varar-core` stays
+  reflection-free. The raw `func(state Value, args []Value) (*Value, error)`
+  form is still accepted under the same name — the escape hatch for slots with
+  no plain Go spelling (a whole table, a custom parameter type that parses to a
+  map) and for header-bound rows, which compare by column rather than
+  positionally by slot. Both forms appear in the conformance corpus.
 
 ### String-offset units
 

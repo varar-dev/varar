@@ -15,12 +15,12 @@ func countOf(state varar.Value) int {
 }
 
 func Register(s *varar.Steps) {
-	varar.Stimulus0(s, "I increment", func(state varar.Value) (varar.Value, error) {
+	s.Stimulus("I increment", func(state varar.Value) (varar.Value, error) {
 		return varar.MapValue(map[string]varar.Value{"count": varar.IntValue(int64(countOf(state) + 1))}), nil
 	})
 	// One slot ({int}): return the observed count and let the core compare it
 	// against the number in the document, rather than asserting by hand.
-	varar.Sensor1(s, "The count is {int}", func(state varar.Value, expected int) (int, error) {
+	s.Sensor("The count is {int}", func(state varar.Value, expected int) (int, error) {
 		return countOf(state), nil
 	})
 }

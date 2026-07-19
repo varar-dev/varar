@@ -12,7 +12,7 @@ func registerYahtzee(s *varar.Steps) {
 	// Header-bound row: the row arrives as a map and the return is compared by
 	// COLUMN, not positionally by slot — so the typed form composes but its
 	// (Value) -> (Value) signature says less than the explicit form does.
-	varar.Sensor1(s, "Examples of dice, category and score",
+	s.Sensor("Examples of dice, category and score",
 		func(state varar.Value, row varar.Value) (varar.Value, error) {
 			m := row.CloneMap()
 			var dice []int64
