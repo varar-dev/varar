@@ -29,6 +29,6 @@ Each example in the Markdown specs becomes one vitest test.
 
 ## Versioning note
 
-In the `oselvar/varar` monorepo this project uses `workspace:*` dependencies
+In the `varar-dev/varar` monorepo this project uses `workspace:*` dependencies
 (it is the dogfood suite, gating trunk); in `varar-examples` the
 release sync pins them to the released npm packages.

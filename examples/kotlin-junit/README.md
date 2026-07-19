@@ -36,7 +36,7 @@ Each example in the Markdown specs becomes one JUnit test.
 
 ## Versioning note
 
-In the `oselvar/var` monorepo `varVersion` is the SNAPSHOT that `mvn install`
+In the `varar-dev/varar` monorepo `varVersion` is the SNAPSHOT that `mvn install`
 (run from `java/`) puts into the local Maven repository, so the sample gates
-trunk; in `oselvar/varar-examples` the release sync pins it to the released
+trunk; in `varar-dev/varar-examples` the release sync pins it to the released
 Maven Central artifacts.

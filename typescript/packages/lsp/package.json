@@ -56,7 +56,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/oselvar/varar.git",
+    "url": "git+https://github.com/varar-dev/varar.git",
     "directory": "typescript/packages/lsp"
   }
 }

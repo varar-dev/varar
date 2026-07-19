@@ -11,7 +11,7 @@ dependencies = ["varar-unittest"]
 
 # In this monorepo the Vár packages resolve from source (editable path
 # sources), so the sample gates trunk against the local build. The release
-# sync to oselvar/varar-examples deletes this whole table and pins the released
+# sync to varar-dev/varar-examples deletes this whole table and pins the released
 # PyPI version — the plain dependency above is all a real project needs. The
 # transitive set is listed because varar-unittest pins its internal
 # dependencies exactly (==<version>).

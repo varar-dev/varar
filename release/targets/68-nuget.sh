@@ -11,9 +11,11 @@
 #   2. Version the port at release time: the stamper does not touch dotnet/ yet,
 #      so wire <Version> stamping (release/stamp.sh) — they carry no version
 #      today, defaulting to 1.0.0.
-#   3. Add `dotnet` to the consumer scopes in release/lint-commits.sh and a
-#      NuGet section to cliff.toml (keyed on the `dotnet` scope), so
-#      feat(dotnet): commits land in the changelog. Until then dotnet work is
+#   3. Changelog wiring is already in place and gated on this same flag:
+#      lint-commits.sh accepts the `dotnet` consumer scope only when
+#      DOTNET_NUGET_ENABLED=1, and cliff.toml has a dormant "C# / .NET (NuGet)"
+#      section keyed on `dotnet`. So flipping the flag (step 5) also makes
+#      feat(dotnet): commits changelog-visible. Until then dotnet work is
 #      chore(dotnet): — it ships nothing to a consumer yet.
 #   4. Add the NUGET_API_KEY reference to release/release.env.
 #   5. Set DOTNET_NUGET_ENABLED=1 in release/lib.sh (un-parks this target AND

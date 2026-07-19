@@ -16,7 +16,7 @@
     other language ports (typescript/, python/, kotlin/, ruby/, rust/).
   </description>
 
-  <url>https://github.com/oselvar/varar</url>
+  <url>https://github.com/varar-dev/varar</url>
   <licenses>
     <license>
       <name>MIT License</name>
@@ -32,9 +32,9 @@
     </developer>
   </developers>
   <scm>
-    <connection>scm:git:https://github.com/oselvar/varar.git</connection>
-    <developerConnection>scm:git:git@github.com:oselvar/varar.git</developerConnection>
-    <url>https://github.com/oselvar/varar</url>
+    <connection>scm:git:https://github.com/varar-dev/varar.git</connection>
+    <developerConnection>scm:git:git@github.com:varar-dev/varar.git</developerConnection>
+    <url>https://github.com/varar-dev/varar</url>
     <tag>HEAD</tag>
   </scm>
 

@@ -52,6 +52,6 @@ item per example.)
 
 ## Versioning note
 
-In the [oselvar/varar](https://github.com/oselvar/varar) monorepo this sample
+In the [varar-dev/varar](https://github.com/varar-dev/varar) monorepo this sample
 resolves `varar-core` from a `path` dependency, gating trunk against the local
 build. A released project would depend on the published crate instead.

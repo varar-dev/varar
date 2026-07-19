@@ -7,9 +7,13 @@
 # kept verbatim in `footer` below.
 #
 # The changelog is organised for CONSUMERS: one section per distribution
-# channel (npm, PyPI, Maven Central, RubyGems, VS Code Marketplace), derived
-# from the commit scope. See "Commit messages & changelog" in CLAUDE.md for the
-# scope convention (`ts/var-vitest`, `py/var-core`, `java`, `ruby`, `vscode`, `spec`, …).
+# channel (npm, PyPI, Maven Central, RubyGems, NuGet, VS Code Marketplace),
+# derived from the commit scope. See "Commit messages & changelog" in CLAUDE.md
+# for the scope convention (`ts/var-vitest`, `py/var-core`, `java`, `ruby`,
+# `dotnet`, `vscode`, `spec`, …). The `dotnet` (NuGet) section stays dormant
+# while .NET publishing is parked: lint-commits.sh only accepts the `dotnet`
+# scope once DOTNET_NUGET_ENABLED=1 (lib.sh), so no dotnet entry can appear
+# until go-live — see release/targets/68-nuget.sh.
 
 [changelog]
 header = """
@@ -68,6 +72,7 @@ body = """
 {{- self::section(title="Python (PyPI)", key="py", commits=commits) }}
 {{- self::section(title="Java & Kotlin (Maven Central)", key="java", commits=commits) }}
 {{- self::section(title="Ruby (RubyGems)", key="ruby", commits=commits) }}
+{{- self::section(title="C# / .NET (NuGet)", key="dotnet", commits=commits) }}
 {{- self::section(title="VS Code extension (Marketplace & Open VSX)", key="vscode", commits=commits) }}
 {{- self::section(title="Specification (all ports)", key="spec", commits=commits) }}
 """

@@ -1,6 +1,6 @@
 .venv/
 __pycache__/
 # Artifact of `uv run` here: the lock pins path/git sources that differ
-# between the oselvar/varar monorepo and the varar-examples repo. In your own
+# between the varar-dev/varar monorepo and the varar-examples repo. In your own
 # project, DO commit your lockfile.
 uv.lock

@@ -47,7 +47,7 @@ deploy comes **last**:
    parked; see below.)
 4. **Maven Central** — slow (GPG-signed, atomic multi-module deploy); runs
    unattended at the end.
-5. **varar-examples** — a quick git sync of `examples/` to the `oselvar/varar-examples`
+5. **varar-examples** — a quick git sync of `examples/` to the `varar-dev/varar-examples`
    repo, pinned to the just-published versions.
 
 Idempotent: if a publish fails, fix the cause and re-run `make release` — it
@@ -78,13 +78,13 @@ machine. Never put a real secret in the repo or your shell profile.
 Local tools (macOS): `brew install pnpm uv maven gh gnupg 1password-cli jq`
 and `npm install -g @vscode/vsce ovsx`. Sign in: `op signin`, `gh auth login`.
 
-- **npm** — granular automation token with publish rights for the `@oselvar`
-  scope (npmjs.com → Settings → Access Tokens). → `npm-oselvar`, field `token`.
+- **npm** — granular automation token with publish rights for the `@varar`
+  scope (npmjs.com → Settings → Access Tokens). → `npm-varar`, field `token`.
 - **PyPI** — **account-scoped** API token (account `aslakoselvar`). PyPI
   tokens are either account-scoped or single-project — there is no
   multi-project scope, and only an account-scoped token can *create* a
   project, which every release that adds a package needs (all six packages
-  live since v0.3.1, 2026-07-06). → `pypi-oselvar`,
+  live since v0.3.1, 2026-07-06). → `pypi-varar`,
   field `token`. Publishing *new* projects is rate-limited per account: a
   `429 Too many new projects created` mid-run is PyPI, not credentials —
   wait (hours) and re-run; published packages are skipped.
@@ -92,16 +92,16 @@ and `npm install -g @vscode/vsce ovsx`. Sign in: `op signin`, `gh auth login`.
   central.sonatype.com (Account → Generate User Token); namespace
   `dev.varar` is DNS-verified (2026-07-04) on that account. If it ever needs
   re-verifying, the portal issues a fresh code to publish as a TXT record on
-  oselvar.com — a deploy from an account without the verified namespace fails
+  varar.dev — a deploy from an account without the verified namespace fails
   with "Namespace 'dev.varar' is not allowed". → `sonatype-central`, fields
   `username` and `password` (both halves of the generated user token).
 - **GPG** — ed25519 signing key for Oselvar Ltd, public key on
   keyserver.ubuntu.com. → `maven-gpg`, field `passphrase`, with an armored
   secret-key export attached as backup.
 - **VS Code Marketplace** — Azure DevOps PAT with the **Marketplace →
-  Manage** scope, publisher `oselvar`. → `vscode-marketplace`, field `pat`.
+  Manage** scope, publisher `varar`. → `vscode-marketplace`, field `pat`.
 - **Open VSX** — access token for the Eclipse Foundation account, namespace
-  `oselvar`. → `open-vsx`, field `pat`.
+  `varar`. → `open-vsx`, field `pat`.
 
 ## Adding a new language port (Rust, Go, .NET, ...)
 

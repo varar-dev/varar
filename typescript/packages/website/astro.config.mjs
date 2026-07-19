@@ -56,7 +56,7 @@ export default defineConfig({
       components: {
         ThemeSelect: './src/components/ThemeSelect.astro',
       },
-      social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/oselvar/vararar' }],
+      social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/varar-dev/varar' }],
       sidebar: [
         {
           label: 'Start here',
@@ -94,7 +94,7 @@ export default defineConfig({
         },
       ],
       editLink: {
-        baseUrl: 'https://github.com/oselvar/vararar/edit/main/typescript/packages/website/',
+        baseUrl: 'https://github.com/varar-dev/varar/edit/main/typescript/packages/website/',
       },
     }),
   ],

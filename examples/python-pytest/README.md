@@ -28,9 +28,9 @@ integration.
 
 ## Versioning note
 
-In the [oselvar/varar](https://github.com/oselvar/varar) monorepo this sample
+In the [varar-dev/varar](https://github.com/varar-dev/varar) monorepo this sample
 resolves the Vár packages from `[tool.uv.sources]` path sources, gating
 trunk against the local build. The release sync to
-[oselvar/varar-examples](https://github.com/oselvar/varar-examples) deletes
+[varar-dev/varar-examples](https://github.com/varar-dev/varar-examples) deletes
 that table and pins the released PyPI version — there, the plain
 `pytest-varar` dependency is all a real project needs.

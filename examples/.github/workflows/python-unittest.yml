@@ -1,5 +1,5 @@
-# Runs in the oselvar/varar-examples repo, where examples/ is synced on every
-# release of oselvar/var. In the monorepo this file is inert (GitHub only
+# Runs in the varar-dev/varar-examples repo, where examples/ is synced on every
+# release of varar-dev/varar. In the monorepo this file is inert (GitHub only
 # reads workflows from the repo root); the monorepo runs the projects against
 # the local build via .github/workflows/*.yml instead.
 name: python-unittest

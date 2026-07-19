@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Sync examples/ to the oselvar/varar-examples repo, pinned to the release.
+# Sync examples/ to the varar-dev/varar-examples repo, pinned to the release.
 #
 # The monorepo's examples/ directory IS the varar-examples repo layout: this
 # target wipes the destination (everything but .git), copies examples/ over
@@ -24,8 +24,8 @@ if [[ "${DRY_RUN:-0}" == "1" ]]; then
 fi
 
 if [[ ! -d "$DEST/.git" ]]; then
-  log "varar-examples: cloning oselvar/varar-examples to $DEST"
-  gh repo clone oselvar/varar-examples "$DEST" -- --quiet || die "varar-examples: clone failed"
+  log "varar-examples: cloning varar-dev/varar-examples to $DEST"
+  gh repo clone varar-dev/varar-examples "$DEST" -- --quiet || die "varar-examples: clone failed"
 fi
 [[ -z "$(git -C "$DEST" status --porcelain)" ]] || die "varar-examples: working tree at $DEST not clean"
 default_branch="$(git -C "$DEST" symbolic-ref --short HEAD)"
@@ -127,7 +127,7 @@ git -C "$DEST" add -A
 if git -C "$DEST" diff --cached --quiet; then
   log "varar-examples: already in sync with $TAG"
 else
-  git -C "$DEST" commit --quiet -m "Sync examples from oselvar/varar $TAG"
+  git -C "$DEST" commit --quiet -m "Sync examples from varar-dev/varar $TAG"
   git -C "$DEST" push --quiet origin "$default_branch"
   log "varar-examples: pushed sync for $TAG"
 fi
