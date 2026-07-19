@@ -4,6 +4,7 @@ import type { GrammarLoader } from './grammar-loader.ts'
 import type { StepDefScanner } from './scanner.ts'
 import type { ParameterTypeDef, StepDef } from './step-defs.ts'
 import { csharpSpec } from './tree-sitter-dialects/csharp.ts'
+import { goSpec } from './tree-sitter-dialects/go.ts'
 import { javaSpec } from './tree-sitter-dialects/java.ts'
 import { kotlinSpec } from './tree-sitter-dialects/kotlin.ts'
 import { pythonSpec } from './tree-sitter-dialects/python.ts'
@@ -25,6 +26,7 @@ type Dialect = {
 // (loaded per languageId) differs, which is why TSX is a separate LanguageId.
 const SPECS: Readonly<Partial<Record<LanguageId, LanguageSpec>>> = {
   csharp: csharpSpec,
+  go: goSpec,
   java: javaSpec,
   kotlin: kotlinSpec,
   python: pythonSpec,
@@ -43,6 +45,7 @@ const EXTENSIONS: ReadonlyArray<readonly [string, LanguageId]> = [
   ['.rb', 'ruby'],
   ['.rs', 'rust'],
   ['.cs', 'csharp'],
+  ['.go', 'go'],
 ]
 
 export function languageIdForPath(path: string): LanguageId | undefined {

@@ -81,5 +81,16 @@
     "install": { "lang": "bash", "code": "dotnet add package Varar.TestAdapter" },
     "scaffold": null,
     "run": { "lang": "bash", "code": "dotnet test" }
+  },
+  {
+    "id": "go",
+    "label": "Go",
+    "icon": "seti:go2",
+    "ext": ".go",
+    "stepsGlob": "varar-examples/**/*.steps.go",
+    "hasCli": false,
+    "install": { "lang": "bash", "code": "go get github.com/varar-dev/varar-go" },
+    "scaffold": null,
+    "run": { "lang": "bash", "code": "go test" }
   }
 ]

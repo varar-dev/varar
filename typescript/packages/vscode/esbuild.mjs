@@ -64,6 +64,7 @@ for (const specifier of [
   'tree-sitter-ruby/tree-sitter-ruby.wasm',
   'tree-sitter-rust/tree-sitter-rust.wasm',
   'tree-sitter-c-sharp/tree-sitter-c_sharp.wasm',
+  'tree-sitter-go/tree-sitter-go.wasm',
 ]) {
   const src = requireFromLsp.resolve(specifier)
   await copyFile(src, `dist/${specifier.split('/').pop()}`)

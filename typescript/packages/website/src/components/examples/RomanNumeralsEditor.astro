@@ -4,6 +4,8 @@ import File from '$components/File.astro'
 import Version from '$components/Version.astro'
 import romanNumeralsLogicCsharp from '$examples/csharp-vstest/src/RomanNumerals.cs?raw'
 import romanNumeralsStepsCsharp from '$examples/csharp-vstest/steps/roman-numerals.steps.cs?raw'
+import romanNumeralsLogicGo from '$examples/go-gotest/roman.go?raw'
+import romanNumeralsStepsGo from '$examples/go-gotest/roman.steps.go?raw'
 import romanNumeralsLogicJava from '$examples/java-junit-maven/src/main/java/examples/RomanNumerals.java?raw'
 import romanNumeralsStepsJava from '$examples/java-junit-maven/src/test/java/examples/RomanNumeralsSteps.java?raw'
 import romanNumeralsLogicKotlin from '$examples/kotlin-junit/src/main/kotlin/examples/RomanNumerals.kt?raw'
@@ -15,8 +17,8 @@ import romanNumeralsStepsRuby from '$examples/ruby-rspec/steps/roman_numerals.st
 import romanNumeralsLogicRust from '$examples/rust-cargotest/src/roman_numerals_example.rs?raw'
 import romanNumeralsStepsRust from '$examples/rust-cargotest/src/steps/roman_numerals.rs?raw'
 import romanNumeralsSource from '$examples/typescript-vitest/roman-numerals.md?raw'
-import romanNumeralsStepsTypeScript from '$examples/typescript-vitest/steps/roman-numerals.steps.ts?raw'
 import romanNumeralsLogicTypeScript from '$examples/typescript-vitest/src/roman-numerals.ts?raw'
+import romanNumeralsStepsTypeScript from '$examples/typescript-vitest/steps/roman-numerals.steps.ts?raw'
 ---
 <Editor>
   <File uri="file:///roman-numerals.md">
@@ -30,6 +32,8 @@ import romanNumeralsLogicTypeScript from '$examples/typescript-vitest/src/roman-
   </File>
   <File uri="file:///roman-numerals.steps.cs">{romanNumeralsStepsCsharp}</File>
   <File uri="file:///RomanNumerals.cs">{romanNumeralsLogicCsharp}</File>
+  <File uri="file:///roman.steps.go">{romanNumeralsStepsGo}</File>
+  <File uri="file:///roman.go">{romanNumeralsLogicGo}</File>
   <File uri="file:///RomanNumeralsSteps.java">{romanNumeralsStepsJava}</File>
   <File uri="file:///RomanNumerals.java">{romanNumeralsLogicJava}</File>
   <File uri="file:///roman-numerals.steps.kt">{romanNumeralsStepsKotlin}</File>

@@ -10,6 +10,7 @@ export type LanguageId =
   | 'ruby'
   | 'rust'
   | 'csharp'
+  | 'go'
 
 // One entry per language: the queries plus the three language-specific
 // behaviors (string decoding, handler-param extraction, regexp resolution).

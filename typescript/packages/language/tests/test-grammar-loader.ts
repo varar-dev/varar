@@ -11,6 +11,7 @@ const GRAMMAR_FILES: Readonly<Record<string, string>> = {
   ruby: 'tree-sitter-ruby/tree-sitter-ruby.wasm',
   rust: 'tree-sitter-rust/tree-sitter-rust.wasm',
   csharp: 'tree-sitter-c-sharp/tree-sitter-c_sharp.wasm',
+  go: 'tree-sitter-go/tree-sitter-go.wasm',
 }
 
 export function createTestGrammarLoader(): GrammarLoader {

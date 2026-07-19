@@ -29,6 +29,7 @@
       "ignoreDependencies": [
         "@tree-sitter-grammars/tree-sitter-kotlin",
         "tree-sitter-c-sharp",
+        "tree-sitter-go",
         "tree-sitter-java",
         "tree-sitter-python",
         "tree-sitter-ruby",
@@ -41,6 +42,7 @@
       "ignoreDependencies": [
         "@tree-sitter-grammars/tree-sitter-kotlin",
         "tree-sitter-c-sharp",
+        "tree-sitter-go",
         "tree-sitter-java",
         "tree-sitter-python",
         "tree-sitter-ruby",

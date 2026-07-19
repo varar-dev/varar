@@ -111,6 +111,25 @@ can use it as a `{name}` placeholder.
     s.Sensor("owes a {money} late fee", (state, expected) => state["fee"]);
     ```
   </TabItem>
+  <TabItem label="Go">
+    ```go
+    s.Param("money", `£\d+\.\d{2}`,
+    	func(g []string) varar.Value {
+    		pounds, _ := strconv.ParseFloat(strings.TrimPrefix(g[0], "£"), 64)
+    		return varar.FloatValue(pounds)
+    	},
+    	func(v varar.Value) (string, bool) {
+    		if pounds, ok := v.AsFloat(); ok {
+    			return fmt.Sprintf("£%.2f", pounds), true
+    		}
+    		return "", false
+    	})
+
+    s.Sensor("owes a {money} late fee", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+    	return varar.Returns(smap(state)["fee"])
+    })
+    ```
+  </TabItem>
 </Tabs>
 
 This page is the reference for the three fields of a custom parameter type and

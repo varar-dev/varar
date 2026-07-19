@@ -28,7 +28,7 @@ export const RELEASE_VERSION: string = websitePkg.version
 const fillVersion = (block: CommandBlock | null): CommandBlock | null =>
   block && { ...block, code: block.code.replaceAll('{{version}}', RELEASE_VERSION) }
 
-export type SiteLang = 'ts' | 'java' | 'kotlin' | 'python' | 'ruby' | 'rust' | 'csharp'
+export type SiteLang = 'ts' | 'java' | 'kotlin' | 'python' | 'ruby' | 'rust' | 'csharp' | 'go'
 
 /** A block of shell / build-file text plus the fence language it renders as. */
 export type CommandBlock = {

@@ -97,6 +97,19 @@ keyed by the header, and returns the computed columns:
     });
     ```
   </TabItem>
+  <TabItem label="Go">
+    ```go
+    s.Sensor("a decimal and a roman number", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+    	row := smap(args[0])
+    	decimal := asStr(row["decimal"])
+    	n, _ := strconv.Atoi(decimal)
+    	return varar.Returns(varar.MapValue(map[string]varar.Value{
+    		"decimal": varar.StrValue(decimal),
+    		"roman":   varar.StrValue(toRoman(n)),
+    	}))
+    })
+    ```
+  </TabItem>
 </Tabs>
 
 Each row runs as its own check. If `toRoman(9)` returned `"VIIII"`, only the
@@ -195,6 +208,23 @@ Uppercase each one:
     });
     ```
   </TabItem>
+  <TabItem label="Go">
+    ```go
+    s.Sensor("Uppercase each one:", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+    	rows, _ := args[0].AsList()
+    	out := []varar.Value{}
+    	for _, row := range rows[1:] { // drop the header row
+    		cells, _ := row.AsList()
+    		before := asStr(cells[0])
+    		out = append(out, varar.MapValue(map[string]varar.Value{
+    			"before": varar.StrValue(before),
+    			"after":  varar.StrValue(strings.ToUpper(before)),
+    		}))
+    	}
+    	return varar.Returns(varar.ListOf(out))
+    })
+    ```
+  </TabItem>
 </Tabs>
 
 The table is this sensor's only comparable value, so it is returned bare. Varar
@@ -273,6 +303,17 @@ the text the software actually produces:
     });
     ```
   </TabItem>
+  <TabItem label="Go">
+    ```go
+    s.Sensor("Greet {word}:", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+    	name := asStr(args[0])
+    	return varar.Returns(varar.ListValue(
+    		varar.StrValue(name),
+    		varar.StrValue("Hello, "+name+"!\n"),
+    	))
+    })
+    ```
+  </TabItem>
 </Tabs>
 
 The comparison is exact equality, **including the trailing newline**. This step
@@ -323,6 +364,13 @@ whose doc string is its only comparable value returns the text bare:
   <TabItem label="C#">
     ```csharp
     s.Sensor("Greet Bob:", (state, doc) => Value.Of("Hello, Bob!\n"));
+    ```
+  </TabItem>
+  <TabItem label="Go">
+    ```go
+    s.Sensor("Greet Bob:", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+    	return varar.Returns(varar.StrValue("Hello, Bob!\n"))
+    })
     ```
   </TabItem>
 </Tabs>

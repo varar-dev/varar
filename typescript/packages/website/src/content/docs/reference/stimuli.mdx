@@ -95,6 +95,18 @@ with sensors.
     s.Sensor("the total is {int}", (state, expected) => state["total"]);
     ```
   </TabItem>
+  <TabItem label="Go">
+    ```go
+    s.Stimulus("I add {int}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+    	m := smap(state)
+    	m["total"] = varar.IntValue(asInt(m["total"]) + asInt(args[0]))
+    	return varar.Returns(varar.MapValue(m))
+    })
+    s.Sensor("the total is {int}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+    	return varar.Returns(smap(state)["total"])
+    })
+    ```
+  </TabItem>
 </Tabs>
 
 In your prose the stimulus covers both the *context* (arrange) and the *action*
@@ -200,6 +212,21 @@ full replacement, same principle: new value out, never mutation.
         new VMap(SMap(state).SetItem("count", Value.Of(state["count"].AsInt() + n.AsInt()))));
     ```
   </TabItem>
+  <TabItem label="Go">
+    ```go
+    // Full replacement: read the current state map, set just the changed key.
+    s.Stimulus("I greet {string}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+    	m := smap(state)
+    	m["greeting"] = varar.StrValue("Hello, " + asStr(args[0]) + "!")
+    	return varar.Returns(varar.MapValue(m))
+    })
+    s.Stimulus("I add {int}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+    	m := smap(state)
+    	m["count"] = varar.IntValue(asInt(m["count"]) + asInt(args[0]))
+    	return varar.Returns(varar.MapValue(m))
+    })
+    ```
+  </TabItem>
 </Tabs>
 
 - **Returning nothing** leaves state unchanged — right for a stimulus whose
@@ -285,6 +312,14 @@ empty state they can ignore:
         Value.List([Value.Of(n.AsInt()), Value.Of(n.AsInt() * n.AsInt())]));
     ```
   </TabItem>
+  <TabItem label="Go">
+    ```go
+    s.Sensor("the square of {int} is {int}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+    	n := asInt(args[0])
+    	return varar.Returns(varar.ListValue(varar.IntValue(n), varar.IntValue(n*n)))
+    })
+    ```
+  </TabItem>
 </Tabs>
 
 ## Tables and doc strings
@@ -367,6 +402,24 @@ first), a doc string as its exact text:
         });
         return new VMap(SMap(state).SetItem("books", Value.List(books)));
     });
+    ```
+  </TabItem>
+  <TabItem label="Go">
+    ```go
+    s.Stimulus("these books exist:", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+    	rows, _ := args[0].AsList()
+    	books := []varar.Value{}
+    	for _, row := range rows[1:] { // skip the header row
+    		cells, _ := row.AsList()
+    		books = append(books, varar.MapValue(map[string]varar.Value{
+    			"title":  cells[0],
+    			"author": cells[1],
+    		}))
+    	}
+    	m := smap(state)
+    	m["books"] = varar.ListOf(books)
+    	return varar.Returns(varar.MapValue(m))
+    })
     ```
   </TabItem>
 </Tabs>

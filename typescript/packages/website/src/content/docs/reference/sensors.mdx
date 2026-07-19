@@ -102,6 +102,19 @@ sensors, rather than reaching inside it.
     s.Sensor("the total is {int}", (state, expected) => state["total"]);
     ```
   </TabItem>
+  <TabItem label="Go">
+    ```go
+    s.Stimulus("I add {int}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+    	// FULL-REPLACEMENT state: return the whole next state.
+    	m := smap(state)
+    	m["total"] = varar.IntValue(asInt(m["total"]) + asInt(args[0]))
+    	return varar.Returns(varar.MapValue(m))
+    })
+    s.Sensor("the total is {int}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+    	return varar.Returns(smap(state)["total"])
+    })
+    ```
+  </TabItem>
 </Tabs>
 
 In your prose the sensor is the *outcome* you expect; see
@@ -195,6 +208,16 @@ a return value against. Throw to fail, return nothing to pass:
     });
     ```
   </TabItem>
+  <TabItem label="Go">
+    ```go
+    s.Sensor("the alarm fired", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+    	if b, _ := smap(state)["alarm"].AsBool(); !b {
+    		return varar.Fails("no alarm")
+    	}
+    	return varar.NoReturn()
+    })
+    ```
+  </TabItem>
 </Tabs>
 
 Returning any other value is a `ReturnShapeError`. This is deliberate: a
@@ -244,6 +267,13 @@ certainly believed it was being checked.
   <TabItem label="C#">
     ```csharp
     s.Sensor("the total is {int}", (state, expected) => state["total"]);
+    ```
+  </TabItem>
+  <TabItem label="Go">
+    ```go
+    s.Sensor("the total is {int}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+    	return varar.Returns(smap(state)["total"])
+    })
     ```
   </TabItem>
 </Tabs>
@@ -342,6 +372,23 @@ types whose `parse` produces an array:
     s.Sensor("The dice show {numbers}", (state, dice) => state["dice"]);
     ```
   </TabItem>
+  <TabItem label="Go">
+    ```go
+    s.Param("numbers", `\d+(?:, \d+)*`, func(g []string) varar.Value {
+    	nums := []varar.Value{}
+    	for _, n := range strings.Split(g[0], ", ") {
+    		i, _ := strconv.ParseInt(n, 10, 64)
+    		nums = append(nums, varar.IntValue(i))
+    	}
+    	return varar.ListOf(nums)
+    }, nil)
+
+    // "The dice show 5, 6" — {numbers} transforms to [5, 6]
+    s.Sensor("The dice show {numbers}", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+    	return varar.Returns(smap(state)["dice"])
+    })
+    ```
+  </TabItem>
 </Tabs>
 
 Because a single-slot return is always the bare value, `[5, 6]` here is
@@ -408,6 +455,14 @@ never mistaken for a two-slot positional array.
         Value.List([state["count"], state["bellyName"]]));
     ```
   </TabItem>
+  <TabItem label="Go">
+    ```go
+    s.Sensor("I should have {int} cukes in my {word} belly", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+    	m := smap(state)
+    	return varar.Returns(varar.ListValue(m["count"], m["bellyName"]))
+    })
+    ```
+  </TabItem>
 </Tabs>
 
 The array must have exactly one element per slot; a different length or a
@@ -468,6 +523,17 @@ last element:
         var n = name.AsString();
         return Value.List([Value.Of(n), Value.Of($"Hello, {n}!\n")]);
     });
+    ```
+  </TabItem>
+  <TabItem label="Go">
+    ```go
+    s.Sensor("Greet {word}:", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+    	name := asStr(args[0])
+    	return varar.Returns(varar.ListValue(
+    		varar.StrValue(name),
+    		varar.StrValue("Hello, "+name+"!\n"),
+    	))
+    })
     ```
   </TabItem>
 </Tabs>
@@ -551,6 +617,19 @@ returns a **row object** keyed by the header — not slots:
         var roman = ToRoman(int.Parse(decimal));
         return VMap(("decimal", Value.Of(decimal)), ("roman", Value.Of(roman)));
     });
+    ```
+  </TabItem>
+  <TabItem label="Go">
+    ```go
+    s.Sensor("a decimal and a roman number", func(state varar.Value, args []varar.Value) varar.HandlerReturn {
+    	row := smap(args[0])
+    	decimal := asStr(row["decimal"])
+    	n, _ := strconv.Atoi(decimal)
+    	return varar.Returns(varar.MapValue(map[string]varar.Value{
+    		"decimal": varar.StrValue(decimal),
+    		"roman":   varar.StrValue(toRoman(n)),
+    	}))
+    })
     ```
   </TabItem>
 </Tabs>
