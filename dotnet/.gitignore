@@ -1,0 +1,9 @@
+# .NET build output
+bin/
+obj/
+[Bb]uild/
+*.user
+
+# Test results
+[Tt]est[Rr]esults/
+*.trx

@@ -1,0 +1,13 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <RootNamespace>Varar.Core</RootNamespace>
+    <AssemblyName>Varar.Core</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Official Cucumber Expressions for .NET, pinned to the same 20.0.0 line every port uses. -->
+    <PackageReference Include="Cucumber.CucumberExpressions" Version="20.0.0" />
+  </ItemGroup>
+
+</Project>
