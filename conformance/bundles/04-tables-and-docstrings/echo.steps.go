@@ -4,10 +4,10 @@ package fixture
 import "github.com/varar-dev/varar-go/varar"
 
 func Register(s *varar.Steps) {
-	// The doc string is this sensor's only slot, so it is returned bare; the
-	// core compares it against the input (compareDocString); equal passes.
-	s.Sensor("I echo the following:", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
-		return varar.Ptr(args[0]), nil
+	// The doc string is this sensor's only slot, so it arrives as a string and
+	// the returned string is compared against it; echoing it back passes.
+	varar.Sensor1(s, "I echo the following:", func(state varar.Value, doc string) (string, error) {
+		return doc, nil
 	})
 }
 

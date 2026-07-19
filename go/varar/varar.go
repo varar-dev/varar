@@ -66,8 +66,10 @@ func FromRegistry(registry core.Registry) *Steps {
 	return &Steps{registry: registry}
 }
 
-func (s *Steps) add(expression string, handler HandlerFunc, kind core.StepKind) *Steps {
-	_, file, line, _ := runtime.Caller(2)
+// addAt registers a step with an explicitly supplied source location, so the
+// generic typed constructors in typed.go (which add a call frame) can pass
+// their own caller rather than reporting this file.
+func (s *Steps) addAt(expression string, handler HandlerFunc, kind core.StepKind, file string, line int) *Steps {
 	k := kind
 	next, err := core.AddStep(s.registry, expression, file, line, core.NewHandler(handler), &k)
 	if err != nil {
@@ -80,13 +82,15 @@ func (s *Steps) add(expression string, handler HandlerFunc, kind core.StepKind) 
 // Stimulus registers a stimulus (drives the software; returns the whole next
 // state). The source file and line are captured from the call site.
 func (s *Steps) Stimulus(expression string, handler HandlerFunc) *Steps {
-	return s.add(expression, handler, core.Stimulus)
+	_, file, line, _ := runtime.Caller(1)
+	return s.addAt(expression, handler, core.Stimulus, file, line)
 }
 
 // Sensor registers a sensor (the read-only assertion; its return is compared).
 // The source file and line are captured from the call site.
 func (s *Steps) Sensor(expression string, handler HandlerFunc) *Steps {
-	return s.add(expression, handler, core.Sensor)
+	_, file, line, _ := runtime.Caller(1)
+	return s.addAt(expression, handler, core.Sensor, file, line)
 }
 
 // Param declares a custom parameter type. Pass a non-nil format to also render

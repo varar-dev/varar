@@ -9,19 +9,22 @@ import (
 )
 
 func registerYahtzee(s *varar.Steps) {
-	s.Sensor("Examples of dice, category and score", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
-		row := args[0].CloneMap()
-		var dice []int64
-		for _, d := range strings.Split(row["dice"].MustString(), ",") {
-			n, err := strconv.ParseInt(strings.TrimSpace(d), 10, 64)
-			if err != nil {
-				return nil, fmt.Errorf("not a die: %s", d)
+	// Header-bound row: the row arrives as a map and the return is compared by
+	// COLUMN, not positionally by slot — so the typed form composes but its
+	// (Value) -> (Value) signature says less than the explicit form does.
+	varar.Sensor1(s, "Examples of dice, category and score",
+		func(state varar.Value, row varar.Value) (varar.Value, error) {
+			m := row.CloneMap()
+			var dice []int64
+			for _, d := range strings.Split(m["dice"].MustString(), ",") {
+				n, err := strconv.ParseInt(strings.TrimSpace(d), 10, 64)
+				if err != nil {
+					return varar.NullValue, fmt.Errorf("not a die: %s", d)
+				}
+				dice = append(dice, n)
 			}
-			dice = append(dice, n)
-		}
-		category := row["category"].MustString()
-		return varar.Ptr(varar.MapValue(map[string]varar.Value{
-			"score": varar.IntValue(Score(dice, category)),
-		})), nil
-	})
+			return varar.MapValue(map[string]varar.Value{
+				"score": varar.IntValue(Score(dice, m["category"].MustString())),
+			}), nil
+		})
 }

@@ -62,17 +62,35 @@ reader; drift is unit-gated against the shared FNV-1a / lockfile vectors.
   form and the panicking `Must*` form, plus `CloneMap` for building the next
   state — keep step files free of hand-rolled coercion helpers.
 
-  **Not settled: reflection-based typed handlers.** A first draft of this ADR
-  justified the fixed shape by saying Go cannot infer closure arity the way
-  Rust's `IntoHandler` trait does. That is true of Rust's *compile-time trait
-  dispatch* but it is not the mechanism godog uses: godog's `ctx.Step(expr,
-  handler)` accepts `func(name string, age int) error` via **runtime
-  reflection**. So arity inference is available to Go — the fixed shape is
-  chosen for its explicitness, its single obvious way to write a handler, and
-  the absence of a reflect-based `Value` coercion layer (which would also have
-  to handle the trailing table/doc-string slot), not because the language
-  forbids the alternative. Revisit as an additive second form once there is a
-  second Go consumer to validate it against; see the port plan.
+  **Typed constructors (the ergonomic form).** On top of that primitive, the
+  facade offers generic per-arity constructors where each slot arrives as a
+  plain Go value and a sensor returns one value per slot:
+
+  ```go
+  varar.Sensor2(s, "The square of {int} is {int}.",
+      func(state varar.Value, n, square int) (int, int, error) { return n, n * n, nil })
+  ```
+
+  This is the same slot contract every port shares — TypeScript spells the
+  two-slot return as the tuple `[n, n * n]`; Go spells it as two return values.
+  A sensor's return type per slot equals that slot's parameter type, because the
+  core compares the two — a different type could never be equal.
+
+  A first draft of this ADR justified the single explicit shape by saying Go
+  cannot infer closure arity the way Rust's `IntoHandler` trait does. That is
+  true of Rust's *compile-time trait dispatch* but it is not the mechanism godog
+  uses: godog's `ctx.Step(expr, handler)` accepts `func(name string, age int)
+  error` via **runtime reflection**. Go generics give the same ergonomics
+  *without* reflection, and check strictly more at compile time than godog can:
+  a return type that does not match its slot, a handler arity that does not
+  match the constructor, and an unsupported parameter type are all compile
+  errors here, where godog defers each to run time.
+
+  The typed form is **additive**, not a replacement. Slots with no primitive Go
+  spelling — a whole table, a custom parameter type that parses to a map — use
+  `Value` on both sides, and header-bound rows compare by column rather than
+  positionally by slot, so the explicit `[]Value` form remains the primitive and
+  the escape hatch. Both forms appear in the conformance corpus.
 
 ### String-offset units
 

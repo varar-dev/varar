@@ -7,24 +7,23 @@ import (
 )
 
 func registerTablesAndDocstrings(s *varar.Steps) {
-	s.Sensor("Uppercase each one:", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
-		rows := args[0].MustList()
+	// A whole-table slot has no primitive Go spelling, so it stays a Value on
+	// both sides — the typed form composes, but buys nothing here.
+	varar.Sensor1(s, "Uppercase each one:", func(state varar.Value, table varar.Value) (varar.Value, error) {
 		out := []varar.Value{}
-		for _, row := range rows[1:] { // skip the header row
+		for _, row := range table.MustList()[1:] { // skip the header row
 			before := row.MustList()[0].MustString()
 			out = append(out, varar.MapValue(map[string]varar.Value{
 				"before": varar.StrValue(before),
 				"after":  varar.StrValue(strings.ToUpper(before)),
 			}))
 		}
-		return varar.Ptr(varar.ListOf(out)), nil
+		return varar.ListOf(out), nil
 	})
 
-	s.Sensor("Greet {word}:", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
-		name := args[0].MustString()
-		return varar.Ptr(varar.ListValue(
-			varar.StrValue(name),
-			varar.StrValue("Hello, "+name+"!\n"),
-		)), nil
+	// Two slots — the {word} capture and the trailing doc string — so two
+	// strings in, two strings out, compared positionally.
+	varar.Sensor2(s, "Greet {word}:", func(state varar.Value, name, doc string) (string, string, error) {
+		return name, "Hello, " + name + "!\n", nil
 	})
 }

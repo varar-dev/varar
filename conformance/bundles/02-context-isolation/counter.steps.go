@@ -1,17 +1,13 @@
 // Go sibling of counter.steps.ts (bundle 02-context-isolation).
 package fixture
 
-import (
-	"fmt"
+import "github.com/varar-dev/varar-go/varar"
 
-	"github.com/varar-dev/varar-go/varar"
-)
-
-func countOf(state varar.Value) int64 {
+func countOf(state varar.Value) int {
 	if m, ok := state.AsMap(); ok {
 		if c, ok := m["count"]; ok {
 			if n, ok := c.AsInt(); ok {
-				return n
+				return int(n)
 			}
 		}
 	}
@@ -19,17 +15,13 @@ func countOf(state varar.Value) int64 {
 }
 
 func Register(s *varar.Steps) {
-	s.Stimulus("I increment", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
-		next := countOf(state) + 1
-		return varar.Ptr(varar.MapValue(map[string]varar.Value{"count": varar.IntValue(next)})), nil
+	varar.Stimulus0(s, "I increment", func(state varar.Value) (varar.Value, error) {
+		return varar.MapValue(map[string]varar.Value{"count": varar.IntValue(int64(countOf(state) + 1))}), nil
 	})
-	s.Sensor("The count is {int}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
-		count := countOf(state)
-		expected, _ := args[0].AsInt()
-		if count != expected {
-			return nil, fmt.Errorf("expected %d but got %d", expected, count)
-		}
-		return nil, nil
+	// One slot ({int}): return the observed count and let the core compare it
+	// against the number in the document, rather than asserting by hand.
+	varar.Sensor1(s, "The count is {int}", func(state varar.Value, expected int) (int, error) {
+		return countOf(state), nil
 	})
 }
 
