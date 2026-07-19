@@ -1,4 +1,4 @@
-import { steps } from '@oselvar/var'
+import { steps } from '@varar/varar'
 
 // Custom {airport} parameter type: IATA code, lowercased by the parse function.
 // The lowercasing is asserted by the sensor (the .md says "lhr"), so an

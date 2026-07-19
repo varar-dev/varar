@@ -31,7 +31,7 @@ export function defineSourceTestConfig() {
     plugins: [stripTypescriptSourcemap()],
     test: {
       include: ['{src,tests}/**/*.test.ts'],
-      server: { deps: { inline: [/^@oselvar\//] } },
+      server: { deps: { inline: [/^@varar\//] } },
     },
   })
 }

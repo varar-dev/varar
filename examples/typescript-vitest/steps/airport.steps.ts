@@ -1,4 +1,4 @@
-import { steps } from '@oselvar/var'
+import { steps } from '@varar/varar'
 
 // The custom `{airport}` parameter type is declared with a chained `.param()`
 // call, so Vár can infer the captured args: the parse function returns string,

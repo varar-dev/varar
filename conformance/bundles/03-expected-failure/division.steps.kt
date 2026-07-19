@@ -2,10 +2,10 @@
 
 // Kotlin sibling of division.steps.ts / division.steps.py / DivisionSteps.java
 // (bundle 03-expected-failure).
-package com.oselvar.varkt.conformance.bundle03
+package dev.varar.kotlin.conformance.bundle03
 
-import com.oselvar.varkt.stimulus
-import com.oselvar.varkt.steps
+import dev.varar.kotlin.stimulus
+import dev.varar.kotlin.steps
 
 class Ctx
 

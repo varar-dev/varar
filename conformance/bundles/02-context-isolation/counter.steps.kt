@@ -2,11 +2,11 @@
 
 // Kotlin sibling of counter.steps.ts / counter.steps.py / CounterSteps.java
 // (bundle 02-context-isolation).
-package com.oselvar.varkt.conformance.bundle02
+package dev.varar.kotlin.conformance.bundle02
 
-import com.oselvar.varkt.stimulus
-import com.oselvar.varkt.steps
-import com.oselvar.varkt.sensor
+import dev.varar.kotlin.stimulus
+import dev.varar.kotlin.steps
+import dev.varar.kotlin.sensor
 
 data class Ctx(val count: Int = 0)
 

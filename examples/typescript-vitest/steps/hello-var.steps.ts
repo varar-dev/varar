@@ -1,4 +1,4 @@
-import { steps } from '@oselvar/var'
+import { steps } from '@varar/varar'
 
 const { stimulus, sensor } = steps(() => ({ greeting: '', result: 0 }))
 

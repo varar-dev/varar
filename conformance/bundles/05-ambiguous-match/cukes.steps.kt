@@ -3,10 +3,10 @@
 // Kotlin sibling of cukes.steps.ts / cukes.steps.py / CukesSteps.java (bundle
 // 05-ambiguous-match): both expressions match "I have 5 cukes" -> ambiguous-
 // match diagnostic at the plan stage; this stage only needs both registered.
-package com.oselvar.varkt.conformance.bundle05
+package dev.varar.kotlin.conformance.bundle05
 
-import com.oselvar.varkt.stimulus
-import com.oselvar.varkt.steps
+import dev.varar.kotlin.stimulus
+import dev.varar.kotlin.steps
 
 class Ctx
 

@@ -2,10 +2,10 @@
 
 // Kotlin sibling of greet.steps.ts / greet.steps.py / GreetSteps.java (bundle
 // 12-combining-marks).
-package com.oselvar.varkt.conformance.bundle12
+package dev.varar.kotlin.conformance.bundle12
 
-import com.oselvar.varkt.steps
-import com.oselvar.varkt.sensor
+import dev.varar.kotlin.steps
+import dev.varar.kotlin.sensor
 
 class Ctx
 

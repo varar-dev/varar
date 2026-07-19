@@ -1,4 +1,4 @@
-import { steps } from '@oselvar/var'
+import { steps } from '@varar/varar'
 import { expect } from 'vitest'
 import { type Book, type BorrowError, Library, type Receipt } from '../src/library.ts'
 

@@ -1,9 +1,9 @@
-package com.oselvar.var.conformance.bundle10;
+package dev.varar.conformance.bundle10;
 
-import com.oselvar.var.Registrar;
-import com.oselvar.var.State;
-import com.oselvar.var.StateBinder;
-import com.oselvar.var.StepDefinitions;
+import dev.varar.Registrar;
+import dev.varar.State;
+import dev.varar.StateBinder;
+import dev.varar.StepDefinitions;
 
 /**
  * Java sibling of {@code cukes.steps.ts} / {@code cukes.steps.py} (bundle {@code

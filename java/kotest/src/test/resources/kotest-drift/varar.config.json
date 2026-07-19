@@ -1,0 +1,4 @@
+{
+  "docs": { "include": ["specs/**/*.md"], "exclude": [] },
+  "steps": ["dev.varar.kotest.fixtures.SmokeSteps"]
+}

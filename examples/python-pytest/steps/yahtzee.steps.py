@@ -1,4 +1,4 @@
-from var import steps
+from varar import steps
 from yahtzee_example import score
 
 param, stimulus, sensor = steps()

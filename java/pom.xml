@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
 
-  <groupId>com.oselvar</groupId>
-  <artifactId>var-parent</artifactId>
+  <groupId>dev.varar</groupId>
+  <artifactId>parent</artifactId>
   <version>0.4.3-SNAPSHOT</version>
   <packaging>pom</packaging>
 
@@ -16,7 +16,7 @@
     typescript/ (reference implementation) and python/ (second port).
   </description>
 
-  <url>https://github.com/oselvar/var</url>
+  <url>https://github.com/oselvar/varar</url>
   <licenses>
     <license>
       <name>MIT License</name>
@@ -32,20 +32,20 @@
     </developer>
   </developers>
   <scm>
-    <connection>scm:git:https://github.com/oselvar/var.git</connection>
-    <developerConnection>scm:git:git@github.com:oselvar/var.git</developerConnection>
-    <url>https://github.com/oselvar/var</url>
+    <connection>scm:git:https://github.com/oselvar/varar.git</connection>
+    <developerConnection>scm:git:git@github.com:oselvar/varar.git</developerConnection>
+    <url>https://github.com/oselvar/varar</url>
     <tag>HEAD</tag>
   </scm>
 
   <modules>
-    <module>var-core</module>
-    <module>var-config</module>
-    <module>var</module>
-    <module>var-runner</module>
-    <module>var-junit</module>
-    <module>var-kotlin</module>
-    <module>var-kotest</module>
+    <module>core</module>
+    <module>config</module>
+    <module>varar</module>
+    <module>runner</module>
+    <module>junit</module>
+    <module>kotlin</module>
+    <module>kotest</module>
   </modules>
 
   <properties>
@@ -123,7 +123,7 @@
            The JVM sample projects in ../examples are covered too, via the
            examples -> ../examples symlink next to this pom: spotless can't scan
            outside a module's basedir, and the samples' own builds must stay
-           formatter-free (they sync 1:1 to the public var-examples repo). The
+           formatter-free (they sync 1:1 to the public varar-examples repo). The
            examples/*/src includes only match here in the parent — the modules
            inherit them but have no examples/ dir, so they're a no-op there. -->
       <plugin>

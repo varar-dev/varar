@@ -1,4 +1,4 @@
-import { steps } from '@oselvar/var'
+import { steps } from '@varar/varar'
 import { addMoney, FEE_PER_DAY, GBP, type Loan, lateFee, type Money, mayBorrow } from './library'
 
 // Custom parameter types are declared with chained `.param()` calls so their

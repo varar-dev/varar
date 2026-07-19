@@ -4,10 +4,10 @@
 // 11-emoji-offsets): the example's non-header-bound trailing table arrives as
 // the trailing argument after the {string} capture; the null return skips
 // every comparison (mirrors TS's `() => undefined`).
-package com.oselvar.varkt.conformance.bundle11
+package dev.varar.kotlin.conformance.bundle11
 
-import com.oselvar.varkt.steps
-import com.oselvar.varkt.sensor
+import dev.varar.kotlin.steps
+import dev.varar.kotlin.sensor
 
 class Ctx
 

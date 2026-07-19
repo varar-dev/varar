@@ -1,9 +1,9 @@
-package com.oselvar.var.conformance.bundle03;
+package dev.varar.conformance.bundle03;
 
-import com.oselvar.var.Registrar;
-import com.oselvar.var.State;
-import com.oselvar.var.StateBinder;
-import com.oselvar.var.StepDefinitions;
+import dev.varar.Registrar;
+import dev.varar.State;
+import dev.varar.StateBinder;
+import dev.varar.StepDefinitions;
 
 /** Java sibling of {@code division.steps.ts} / {@code division.steps.py} (bundle {@code 03-expected-failure}). */
 public final class DivisionSteps implements StepDefinitions {

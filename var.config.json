@@ -1,8 +1,0 @@
-{
-  "$schema": "conformance/config/var.config.schema.json",
-  "docs": {
-    "include": ["examples/typescript-vitest/*.md"],
-    "exclude": ["examples/typescript-vitest/README.md"]
-  },
-  "steps": ["examples/typescript-vitest/steps/*.steps.ts"]
-}

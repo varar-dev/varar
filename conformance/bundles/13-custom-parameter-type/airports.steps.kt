@@ -6,11 +6,11 @@
 // lowercasing is asserted by the sensor (the .md says "lhr"), so an identity
 // parse fails this bundle. param MUST precede the steps —
 // expressions compile eagerly.
-package com.oselvar.varkt.conformance.bundle13
+package dev.varar.kotlin.conformance.bundle13
 
-import com.oselvar.varkt.stimulus
-import com.oselvar.varkt.steps
-import com.oselvar.varkt.sensor
+import dev.varar.kotlin.stimulus
+import dev.varar.kotlin.steps
+import dev.varar.kotlin.sensor
 
 data class Ctx(val dest: String? = null)
 

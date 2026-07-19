@@ -1,4 +1,4 @@
-import { steps } from '@oselvar/var'
+import { steps } from '@varar/varar'
 
 // No state factory: these steps are pure — nothing to arrange, nothing to
 // evolve — so steps() is called bare and handlers get an empty state.

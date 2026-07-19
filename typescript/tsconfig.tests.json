@@ -3,7 +3,7 @@
   // every package's tests/ (the builds only emit their own src/), plus the
   // root/project config files (vitest.config.ts, the vitest plugin helper) —
   // none of which belong to any package's src/. noEmit: this is a check, not
-  // a build. var.config.json needs no type-checking. The website's src is
+  // a build. varar.config.json needs no type-checking. The website's src is
   // excluded — it has its own Astro/browser toolchain (astro/tsconfigs/strict,
   // DOM libs) — but its plain vitest.config.ts is cheap to check and included
   // below.
@@ -15,13 +15,13 @@
     "sourceMap": false
   },
   "include": [
-    "packages/var-config/tests",
-    "packages/var-core/tests",
-    "packages/var-cli/tests",
-    "packages/var-language/tests",
-    "packages/var-lsp/tests",
-    "packages/var/tests",
-    "packages/var-vitest/tests",
+    "packages/config/tests",
+    "packages/core/tests",
+    "packages/cli/tests",
+    "packages/language/tests",
+    "packages/lsp/tests",
+    "packages/varar/tests",
+    "packages/vitest/tests",
     "vitest.config.ts",
     "vitest.plugins.ts",
     "packages/*/vitest.config.ts"

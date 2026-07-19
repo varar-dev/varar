@@ -1,6 +1,6 @@
-# Vár architecture (target state)
+# Varar architecture (target state)
 
-This describes how Vár **should** be structured to support many languages — not
+This describes how Varar **should** be structured to support many languages — not
 how it is laid out today. It is the destination for the prefactoring work that
 precedes the first non-TypeScript language (Python).
 
@@ -31,7 +31,7 @@ obtain the step-definition registry, and what they do with the result.
 | Step files are | **parsed** (tree-sitter), never executed | **executed** in their native runtime |
 | Handlers are | absent (matching only) | real callables |
 | Produces | a workspace index → matches + diagnostics | an `ExecutionPlan` → test-runner items |
-| Powers | LSP, VSCode, `lint` | the vitest/pytest adapters, `var run` |
+| Powers | LSP, VSCode, `lint` | the vitest/pytest adapters, `varar run` |
 | Side effects | none | importing user modules |
 
 ```mermaid

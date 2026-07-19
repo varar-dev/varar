@@ -11,7 +11,7 @@
 //
 // Relative re-exports (export { x } from './x.js') are the normal way a
 // package assembles its own entry point and are allowed. A package's own
-// subpaths (e.g. '@oselvar/var-vitest/runtime' from inside var-vitest) count
+// subpaths (e.g. '@varar/vitest/runtime' from inside var-vitest) count
 // as self, not cross-package.
 import { readdirSync, readFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'

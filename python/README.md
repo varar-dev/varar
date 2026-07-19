@@ -14,17 +14,17 @@ uv run ruff check
 
 | Package (dist / import) | Layer |
 |---|---|
-| `oselvar-var-core` / `var_core` | pure functional core: parse → plan → execute, matcher, diffs, conformance |
-| `oselvar-var` / `var` | author facade: `steps` (+ `internal`, `registry` glue) |
-| `oselvar-var-config` / `var_config` | reads `var.config.json` — the shared config file for all var tools |
-| `oselvar-var-runner` / `var_runner` | shared imperative shell: discovery, step loading, run orchestration, failure rendering |
-| `pytest-var` / `var_pytest` | pytest plugin: `.md` specs as first-class tests |
-| `oselvar-var-unittest` / `var_unittest` | unittest adapter: `generate_tests(globals())` in one test module |
+| `varar-core` / `varar_core` | pure functional core: parse → plan → execute, matcher, diffs, conformance |
+| `varar` / `var` | author facade: `steps` (+ `internal`, `registry` glue) |
+| `varar-config` / `varar_config` | reads `varar.config.json` — the shared config file for all var tools |
+| `varar-runner` / `varar_runner` | shared imperative shell: discovery, step loading, run orchestration, failure rendering |
+| `pytest-varar` / `varar_pytest` | pytest plugin: `.md` specs as first-class tests |
+| `varar-unittest` / `varar_unittest` | unittest adapter: `generate_tests(globals())` in one test module |
 
 ## Run Markdown specs as live var tests (dogfood)
 
-The `pytest-var` plugin turns a `.md` file into pytest tests (one item per
-example). `var.config.json` points it at a **collision-free
+The `pytest-varar` plugin turns a `.md` file into pytest tests (one item per
+example). `varar.config.json` points it at a **collision-free
 subset** of the shared `conformance/bundles/` (the bundles reuse some
 expressions across bundles — e.g. `I echo…`, `I have {int} cukes`,
 `I greet {string}` — and the plugin builds one global step registry, so it can't
@@ -44,11 +44,11 @@ uv run pytest --rootdir=. ../conformance/bundles
 **Want to edit a spec/step and watch it flip?** Do NOT edit files under
 `conformance/bundles/` — they are the shared golden corpus, and changing them
 breaks the conformance suite (Python *and* TypeScript). Instead, copy a bundle to
-a scratch location you own, point `var.config.json` at it, and edit freely:
+a scratch location you own, point `varar.config.json` at it, and edit freely:
 
 ```sh
 cp -r ../conformance/bundles/01-roman-numerals /tmp/myspec
-# add "/tmp/myspec/*.md" to var.config.json's docs.include and
+# add "/tmp/myspec/*.md" to varar.config.json's docs.include and
 # "/tmp/myspec/*.steps.py" to steps
 uv run pytest --rootdir=. /tmp/myspec        # green
 # now change a number in /tmp/myspec/example.md or break a handler → red

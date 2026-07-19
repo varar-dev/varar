@@ -55,18 +55,18 @@
 
 ## Runtime adapters & CI
 
-- [ ] `@oselvar/var-bun` adapter (parallel to `var-vitest`).
-- [ ] `@oselvar/var-deno` adapter.
+- [ ] `@varar/varar-bun` adapter (parallel to `var-vitest`).
+- [ ] `@varar/varar-deno` adapter.
 - [ ] CI matrix: node + bun + deno.
 
 ## CLI
 
-- [ ] `var lint` should load step files (via `buildWorkspaceIndex`) so it can
+- [ ] `varar lint` should load step files (via `buildWorkspaceIndex`) so it can
       detect `ambiguous-match` end-to-end, not just `orphan-attachment`.
-- [ ] `var lint` async `glob` crashes on symlinks (Node 22 bug). Run.ts already
+- [ ] `varar lint` async `glob` crashes on symlinks (Node 22 bug). Run.ts already
       switched to `globSync`; lint.ts and the LSP store still use the buggy
       `node:fs/promises.glob`. Hoist together with the findFiles cleanup.
-- [ ] `var run` Phase 2 polish: colors, file grouping summary, `--quiet`.
+- [ ] `varar run` Phase 2 polish: colors, file grouping summary, `--quiet`.
   - [ ] CellMismatchError: arg 1: expected "Hello, world!" but was Hello, worlsd!
     - [ ] Quotes
     - [ ] arg 1
@@ -80,8 +80,8 @@
 ## Code quality
 
 - [x] Hoist the `findFiles` helper (duplicated across
-      `packages/var-vitest/src/plugin.ts`, `packages/var-cli/src/lint.ts`,
-      `packages/var-cli/src/run.ts`, and `packages/var-lsp/src/store.ts`)
+      `packages/var-vitest/src/plugin.ts`, `packages/cli/src/lint.ts`,
+      `packages/cli/src/run.ts`, and `packages/lsp/src/store.ts`)
       into a shared utility — and standardise on `globSync`.
 - [ ] Move tests next to source
 - [ ] Move packages/var/tests/conformance.test.ts
@@ -97,7 +97,7 @@
 ## Runner
 
 - [x] Vitest runner
-- [x] CLI runner (`var run`): ~0.74 s wall on the cucumber sample, ~2× faster
+- [x] CLI runner (`varar run`): ~0.74 s wall on the cucumber sample, ~2× faster
       than the vitest path (~1.5 s) and slightly faster than cucumber-js
       (~0.85 s). See `packages/cucumber/README.md`.
 - [x] Cucumber.js comparison documented in `packages/cucumber/README.md`

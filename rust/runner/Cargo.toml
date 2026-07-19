@@ -1,0 +1,14 @@
+[package]
+name = "varar-runner"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+varar-core = { path = "../core" }
+varar-config = { path = "../config" }
+regex = "1"
+
+[lib]
+name = "varar_runner"
+path = "src/lib.rs"

@@ -1,7 +1,7 @@
 node_modules/
 .var/
-# Artifacts of a standalone `pnpm install` in the var-examples repo (in the
-# oselvar/var monorepo this project is a workspace member and the lockfile
+# Artifacts of a standalone `pnpm install` in the varar-examples repo (in the
+# varar monorepo this project is a workspace member and the lockfile
 # lives at typescript/pnpm-lock.yaml). In your own project, DO commit your
 # lockfile.
 pnpm-lock.yaml

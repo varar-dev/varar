@@ -2,9 +2,9 @@
 
 package examples
 
-import com.oselvar.varkt.sensor
-import com.oselvar.varkt.steps
-import com.oselvar.varkt.stimulus
+import dev.varar.kotlin.sensor
+import dev.varar.kotlin.steps
+import dev.varar.kotlin.stimulus
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale

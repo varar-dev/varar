@@ -1,0 +1,17 @@
+[project]
+name = "pytest-varar"
+version = "0.4.2"
+description = "pytest plugin for Markdown-native BDD"
+requires-python = ">=3.11"
+license = "MIT"
+dependencies = ["varar==0.4.2", "varar-config==0.4.2", "varar-core==0.4.2", "varar-runner==0.4.2", "pytest>=8"]
+
+[project.entry-points.pytest11]
+var = "varar_pytest.plugin"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/varar_pytest"]

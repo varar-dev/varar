@@ -13,17 +13,17 @@ for (const [p, text] of Object.entries(libModules)) {
   if (base) LIB.set(base, text)
 }
 
-// The REAL `@oselvar/var` typings: the package's exports point at its
+// The REAL `@varar/varar` typings: the package's exports point at its
 // TypeScript source (`./src/index.ts`), so the editor type-checks against the
 // same files authors install — no hand-maintained ambient copy to drift when
-// the API changes. `internal.ts`'s own imports from @oselvar/var-core stay
+// the API changes. `internal.ts`'s own imports from @varar/core stay
 // unresolved in here; that only degrades types INSIDE internal.ts (whose
 // diagnostics are never requested) — steps's public type closure is
 // self-contained.
-import varIndexSource from '../../../var/src/index.ts?raw'
-import varInternalSource from '../../../var/src/internal.ts?raw'
+import varIndexSource from '../../../varar/src/index.ts?raw'
+import varInternalSource from '../../../varar/src/internal.ts?raw'
 
-const VAR_PACKAGE_DIR = '/oselvar-var'
+const VAR_PACKAGE_DIR = '/varar'
 const VAR_ENTRY = `${VAR_PACKAGE_DIR}/index.ts`
 const VAR_SOURCES: ReadonlyArray<readonly [string, string]> = [
   [VAR_ENTRY, varIndexSource],
@@ -38,7 +38,7 @@ const OPTIONS: ts.CompilerOptions = {
   // workspace does (Node runs the sources natively).
   allowImportingTsExtensions: true,
   baseUrl: '/',
-  paths: { '@oselvar/var': [VAR_ENTRY] },
+  paths: { '@varar/varar': [VAR_ENTRY] },
   noEmit: true,
   strict: false,
   skipLibCheck: true,

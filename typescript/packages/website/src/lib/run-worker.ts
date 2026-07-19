@@ -1,7 +1,7 @@
-import * as varRuntime from '@oselvar/var'
-import { _resetBuilder } from '@oselvar/var/registry'
-import * as varCore from '@oselvar/var-core'
-import { type Drift, hashSource, type SpecResults } from '@oselvar/var-core'
+import * as varCore from '@varar/core'
+import { type Drift, hashSource, type SpecResults } from '@varar/core'
+import * as varRuntime from '@varar/varar'
+import { _resetBuilder } from '@varar/varar/registry'
 import * as ts from 'typescript'
 import { createMemoryBaselineStore } from './memory-baseline-store.ts'
 import { runRegisteredSpec } from './run-spec.ts'
@@ -14,7 +14,7 @@ type RunInput = {
   update?: boolean
 }
 
-// One baseline store for the whole page (all specs keyed inside var.lock.json),
+// One baseline store for the whole page (all specs keyed inside varar.lock.json),
 // living as long as the worker. Drift is measured against it across edits.
 const baselineStore = createMemoryBaselineStore()
 // Mirrors run-client.ts's WorkerRequest/WorkerResponse — the requestId lets
@@ -58,21 +58,21 @@ function createModuleLoader(files: ReadonlyArray<SourceFile>) {
       fileName: file.path,
     }).outputText
     const require = (spec: string): unknown => {
-      if (spec === '@oselvar/var' || spec === '@oselvar/var-vitest') return varRuntime
-      if (spec === '@oselvar/var-core') return varCore
+      if (spec === '@varar/varar' || spec === '@varar/vitest') return varRuntime
+      if (spec === '@varar/core') return varCore
       if (spec.startsWith('.')) {
         const target = resolveRelative(spec, file.path)
         if (target) return load(target)
       }
       throw new Error(
-        `Cannot import "${spec}" in the browser runner — import steps() from "@oselvar/var", or add the imported file to this editor.`,
+        `Cannot import "${spec}" in the browser runner — import steps() from "@varar/varar", or add the imported file to this editor.`,
       )
     }
     const mod = { exports: {} as Record<string, unknown> }
     // Registered before execution so import cycles see the partial exports
     // instead of recursing forever.
     cache.set(file.path, mod.exports)
-    // `//# sourceURL` makes @oselvar/var's stack-based callerLocation see the real path.
+    // `//# sourceURL` makes @varar/varar's stack-based callerLocation see the real path.
     new Function('require', 'exports', 'module', `${js}\n//# sourceURL=${file.path}`)(
       require,
       mod.exports,

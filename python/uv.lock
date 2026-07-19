@@ -4,12 +4,12 @@ requires-python = ">=3.11"
 
 [manifest]
 members = [
-    "oselvar-var",
-    "oselvar-var-config",
-    "oselvar-var-core",
-    "oselvar-var-runner",
-    "oselvar-var-unittest",
-    "pytest-var",
+    "pytest-varar",
+    "varar",
+    "varar-config",
+    "varar-core",
+    "varar-runner",
+    "varar-unittest",
 ]
 
 [manifest.dependency-groups]
@@ -136,71 +136,6 @@ wheels = [
 ]
 
 [[package]]
-name = "oselvar-var"
-version = "0.4.2"
-source = { editable = "packages/var" }
-dependencies = [
-    { name = "cucumber-expressions" },
-    { name = "oselvar-var-core" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "cucumber-expressions", specifier = "==20.0.0" },
-    { name = "oselvar-var-core", editable = "packages/var-core" },
-]
-
-[[package]]
-name = "oselvar-var-config"
-version = "0.4.2"
-source = { editable = "packages/var-config" }
-
-[[package]]
-name = "oselvar-var-core"
-version = "0.4.2"
-source = { editable = "packages/var-core" }
-dependencies = [
-    { name = "cucumber-expressions" },
-]
-
-[package.metadata]
-requires-dist = [{ name = "cucumber-expressions", specifier = "==20.0.0" }]
-
-[[package]]
-name = "oselvar-var-runner"
-version = "0.4.2"
-source = { editable = "packages/var-runner" }
-dependencies = [
-    { name = "oselvar-var" },
-    { name = "oselvar-var-config" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "oselvar-var", editable = "packages/var" },
-    { name = "oselvar-var-config", editable = "packages/var-config" },
-]
-
-[[package]]
-name = "oselvar-var-unittest"
-version = "0.4.2"
-source = { editable = "packages/var-unittest" }
-dependencies = [
-    { name = "oselvar-var" },
-    { name = "oselvar-var-config" },
-    { name = "oselvar-var-core" },
-    { name = "oselvar-var-runner" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "oselvar-var", editable = "packages/var" },
-    { name = "oselvar-var-config", editable = "packages/var-config" },
-    { name = "oselvar-var-core", editable = "packages/var-core" },
-    { name = "oselvar-var-runner", editable = "packages/var-runner" },
-]
-
-[[package]]
 name = "packaging"
 version = "26.2"
 source = { registry = "https://pypi.org/simple" }
@@ -258,24 +193,24 @@ wheels = [
 ]
 
 [[package]]
-name = "pytest-var"
+name = "pytest-varar"
 version = "0.4.2"
-source = { editable = "packages/var-pytest" }
+source = { editable = "packages/pytest" }
 dependencies = [
-    { name = "oselvar-var" },
-    { name = "oselvar-var-config" },
-    { name = "oselvar-var-core" },
-    { name = "oselvar-var-runner" },
     { name = "pytest" },
+    { name = "varar" },
+    { name = "varar-config" },
+    { name = "varar-core" },
+    { name = "varar-runner" },
 ]
 
 [package.metadata]
 requires-dist = [
-    { name = "oselvar-var", editable = "packages/var" },
-    { name = "oselvar-var-config", editable = "packages/var-config" },
-    { name = "oselvar-var-core", editable = "packages/var-core" },
-    { name = "oselvar-var-runner", editable = "packages/var-runner" },
     { name = "pytest", specifier = ">=8" },
+    { name = "varar", editable = "packages/varar" },
+    { name = "varar-config", editable = "packages/config" },
+    { name = "varar-core", editable = "packages/core" },
+    { name = "varar-runner", editable = "packages/runner" },
 ]
 
 [[package]]
@@ -355,4 +290,69 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/12/64/da524626d3b9cc40c168a13da8335fe1c51be12c0a63685cc6db7308daae/tomli-2.4.1-cp314-cp314t-win_amd64.whl", hash = "sha256:2c1c351919aca02858f740c6d33adea0c5deea37f9ecca1cc1ef9e884a619d26", size = 121196, upload-time = "2026-03-25T20:22:01.169Z" },
     { url = "https://files.pythonhosted.org/packages/5a/cd/e80b62269fc78fc36c9af5a6b89c835baa8af28ff5ad28c7028d60860320/tomli-2.4.1-cp314-cp314t-win_arm64.whl", hash = "sha256:eab21f45c7f66c13f2a9e0e1535309cee140182a9cdae1e041d02e47291e8396", size = 100393, upload-time = "2026-03-25T20:22:02.137Z" },
     { url = "https://files.pythonhosted.org/packages/7b/61/cceae43728b7de99d9b847560c262873a1f6c98202171fd5ed62640b494b/tomli-2.4.1-py3-none-any.whl", hash = "sha256:0d85819802132122da43cb86656f8d1f8c6587d54ae7dcaf30e90533028b49fe", size = 14583, upload-time = "2026-03-25T20:22:03.012Z" },
+]
+
+[[package]]
+name = "varar"
+version = "0.4.2"
+source = { editable = "packages/varar" }
+dependencies = [
+    { name = "cucumber-expressions" },
+    { name = "varar-core" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "cucumber-expressions", specifier = "==20.0.0" },
+    { name = "varar-core", editable = "packages/core" },
+]
+
+[[package]]
+name = "varar-config"
+version = "0.4.2"
+source = { editable = "packages/config" }
+
+[[package]]
+name = "varar-core"
+version = "0.4.2"
+source = { editable = "packages/core" }
+dependencies = [
+    { name = "cucumber-expressions" },
+]
+
+[package.metadata]
+requires-dist = [{ name = "cucumber-expressions", specifier = "==20.0.0" }]
+
+[[package]]
+name = "varar-runner"
+version = "0.4.2"
+source = { editable = "packages/runner" }
+dependencies = [
+    { name = "varar" },
+    { name = "varar-config" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "varar", editable = "packages/varar" },
+    { name = "varar-config", editable = "packages/config" },
+]
+
+[[package]]
+name = "varar-unittest"
+version = "0.4.2"
+source = { editable = "packages/unittest" }
+dependencies = [
+    { name = "varar" },
+    { name = "varar-config" },
+    { name = "varar-core" },
+    { name = "varar-runner" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "varar", editable = "packages/varar" },
+    { name = "varar-config", editable = "packages/config" },
+    { name = "varar-core", editable = "packages/core" },
+    { name = "varar-runner", editable = "packages/runner" },
 ]

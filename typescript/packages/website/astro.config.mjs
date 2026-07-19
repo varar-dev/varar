@@ -40,11 +40,11 @@ const restorePrefs = () => ({
 
 // https://astro.build/config
 export default defineConfig({
-  site: 'https://var.oselvar.com',
+  site: 'https://varar.dev',
   integrations: [
     restorePrefs(),
     starlight({
-      title: 'Vár',
+      title: 'Varar',
       tableOfContents: true,
       customCss: [
         './src/styles/tailwind.css',
@@ -56,7 +56,7 @@ export default defineConfig({
       components: {
         ThemeSelect: './src/components/ThemeSelect.astro',
       },
-      social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/oselvar/var' }],
+      social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/oselvar/vararar' }],
       sidebar: [
         {
           label: 'Start here',
@@ -83,7 +83,7 @@ export default defineConfig({
           ],
         },
         {
-          label: 'Understanding Vár',
+          label: 'Understanding Varar',
           items: [
             'explanation/oaths',
             'explanation/test-anatomy',
@@ -94,7 +94,7 @@ export default defineConfig({
         },
       ],
       editLink: {
-        baseUrl: 'https://github.com/oselvar/var/edit/main/typescript/packages/website/',
+        baseUrl: 'https://github.com/oselvar/vararar/edit/main/typescript/packages/website/',
       },
     }),
   ],

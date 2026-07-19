@@ -6,14 +6,14 @@
 require 'pathname'
 
 ROOT = Pathname.new(__dir__).join('..').expand_path
-CORE_LIB = ROOT.join('packages/var-core/lib')
+CORE_LIB = ROOT.join('packages/core/lib')
 
 FORBIDDEN = [
-  %r{require\s+["']oselvar/var["']}, # the facade
-  %r{require\s+["']oselvar/var/config["']},
-  %r{require\s+["']oselvar/var/runner["']},
-  %r{require\s+["']oselvar/var/rspec["']},
-  %r{require\s+["']oselvar/var/minitest["']}
+  /require\s+["']varar["']/, # the facade
+  %r{require\s+["']varar/config["']},
+  %r{require\s+["']varar/runner["']},
+  %r{require\s+["']varar/rspec["']},
+  %r{require\s+["']varar/minitest["']}
 ].freeze
 
 violations = []

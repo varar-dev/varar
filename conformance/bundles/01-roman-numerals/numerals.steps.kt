@@ -6,11 +6,11 @@
 // plain extension-stripping) — Kotlin has no file-name/class-name coupling, so
 // no PascalCase workaround is needed; @file:JvmName pins the facade class the
 // harness loads instead.
-package com.oselvar.varkt.conformance.bundle01
+package dev.varar.kotlin.conformance.bundle01
 
-import com.oselvar.varkt.stimulus
-import com.oselvar.varkt.steps
-import com.oselvar.varkt.sensor
+import dev.varar.kotlin.stimulus
+import dev.varar.kotlin.steps
+import dev.varar.kotlin.sensor
 
 data class Ctx(val result: String? = null)
 

@@ -1,0 +1,68 @@
+{
+  "name": "varar",
+  "displayName": "Varar",
+  "description": "Markdown-native BDD: highlight matched steps, go-to step definitions, missing-step diagnostics.",
+  "publisher": "varar",
+  "version": "0.4.2",
+  "type": "module",
+  "engines": {
+    "vscode": "^1.105.0",
+    "node": ">=22"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Testing"
+  ],
+  "main": "./dist/extension.cjs",
+  "activationEvents": [
+    "onLanguage:markdown",
+    "onLanguage:typescript",
+    "onLanguage:python",
+    "onLanguage:java",
+    "onLanguage:kotlin",
+    "workspaceContains:**/varar.config.json"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "varar.generateStepDefinition",
+        "title": "BDD: Generate Step Definition from Selection",
+        "category": "BDD"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "varar.generateStepDefinition",
+          "when": "editorHasSelection && resourceExtname == .md",
+          "group": "var@1"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "varar.generateStepDefinition",
+          "when": "editorHasSelection"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node esbuild.mjs"
+  },
+  "dependencies": {
+    "@varar/lsp": "workspace:*",
+    "vscode-languageclient": "^10.1.0"
+  },
+  "devDependencies": {
+    "@types/vscode": "~1.125.0",
+    "esbuild": "^0.28.1"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/oselvar/varar.git",
+    "directory": "typescript/packages/vscode"
+  },
+  "private": true
+}

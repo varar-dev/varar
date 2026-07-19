@@ -1,4 +1,4 @@
-import { steps } from '@oselvar/var'
+import { steps } from '@varar/varar'
 
 // Custom {money} parameter type with a `format` — the inverse of `parse`,
 // rendering a value back in the document's notation. The sensor

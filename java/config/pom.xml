@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <parent>
+    <groupId>dev.varar</groupId>
+    <artifactId>parent</artifactId>
+    <version>0.4.3-SNAPSHOT</version>
+  </parent>
+
+  <artifactId>config</artifactId>
+  <packaging>jar</packaging>
+  <name>var-config (Java) — varar.config.json reader</name>
+  <description>
+    Reads varar.config.json, the shared config file for all var tools (see
+    conformance/config/README.md and
+    doc/superpowers/specs/2026-07-02-multi-language-authoring-design.md).
+    Zero runtime dependencies: JSON parsing is hand-rolled, mirroring
+    var-core's hand-rolled CanonicalJson writer.
+  </description>
+
+  <dependencies>
+    <dependency>
+      <groupId>dev.varar</groupId>
+      <artifactId>core</artifactId>
+      <version>${project.version}</version>
+      <scope>test</scope>
+    </dependency>
+  </dependencies>
+</project>

@@ -1,4 +1,4 @@
-import type { GrammarLoader } from '@oselvar/var-language'
+import type { GrammarLoader } from '@varar/language'
 import tsxGrammarUrl from 'tree-sitter-typescript/tree-sitter-tsx.wasm?url'
 import tsGrammarUrl from 'tree-sitter-typescript/tree-sitter-typescript.wasm?url'
 // Vite rewrites each `?url` import to the hashed asset URL it emits for the

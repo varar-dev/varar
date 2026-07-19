@@ -2,6 +2,6 @@
 __pycache__/
 .pytest_cache/
 # Artifact of `uv run` here: the lock pins path/git sources that differ
-# between the oselvar/var monorepo and the var-examples repo. In your own
+# between the oselvar/varar monorepo and the varar-examples repo. In your own
 # project, DO commit your lockfile.
 uv.lock

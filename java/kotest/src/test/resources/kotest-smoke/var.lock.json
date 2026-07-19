@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "specs": {
+    "specs/cukes.md": {
+      "sourceHash": "fnv1a:cb4c6390",
+      "examples": [
+        {
+          "name": "I have 8 cukes. I eat 3 cukes. I should have 5 cukes left",
+          "line": 5
+        }
+      ]
+    }
+  }
+}

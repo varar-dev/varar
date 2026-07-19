@@ -4,10 +4,10 @@
 // 04-tables-and-docstrings): the doc string arrives as the trailing handler
 // argument after the expression's own captures (here: none) and is echoed back
 // for the core's doc-string comparison.
-package com.oselvar.varkt.conformance.bundle04
+package dev.varar.kotlin.conformance.bundle04
 
-import com.oselvar.varkt.steps
-import com.oselvar.varkt.sensor
+import dev.varar.kotlin.steps
+import dev.varar.kotlin.sensor
 
 class Ctx
 

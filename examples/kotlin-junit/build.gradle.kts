@@ -13,8 +13,8 @@ repositories {
 }
 
 dependencies {
-    testImplementation("com.oselvar:var-kotlin:$varVersion")
-    testImplementation("com.oselvar:var-junit:$varVersion")
+    testImplementation("dev.varar:kotlin:$varVersion")
+    testImplementation("dev.varar:junit:$varVersion")
     testImplementation(platform("org.junit:junit-bom:6.1.1"))
     testImplementation("org.junit.platform:junit-platform-suite")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

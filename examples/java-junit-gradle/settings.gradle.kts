@@ -1,1 +1,1 @@
-rootProject.name = "var-examples-java-junit-gradle"
+rootProject.name = "varar-examples-java-junit-gradle"

@@ -33,9 +33,9 @@ git fetch origin main --tags
   die "local main and origin/main differ — run release right after prepare (git pull if needed)"
 
 # The prepared version is whatever prepare stamped into the manifests.
-VERSION="$(jq -r .version typescript/packages/var/package.json)"
+VERSION="$(jq -r .version typescript/packages/varar/package.json)"
 is_semver "$VERSION" ||
-  die "typescript/packages/var/package.json version '$VERSION' is not semver — did prepare run?"
+  die "typescript/packages/varar/package.json version '$VERSION' is not semver — did prepare run?"
 TAG="v$VERSION"
 
 git log -1 --pretty=%s | grep -qx "Release $TAG" ||

@@ -1,4 +1,3 @@
-import { buildRegistry, contextFactory } from '@oselvar/var/registry'
 import {
   type BaselineStore,
   type Drift,
@@ -11,7 +10,8 @@ import {
   type SpecResults,
   type TestSink,
   toFailure,
-} from '@oselvar/var-core'
+} from '@varar/core'
+import { buildRegistry, contextFactory } from '@varar/varar/registry'
 
 export type RunOutcome = {
   readonly results: SpecResults

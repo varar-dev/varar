@@ -1,0 +1,16 @@
+[package]
+name = "varar"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+varar-core = { path = "../core" }
+
+[lib]
+name = "varar"
+path = "src/lib.rs"
+
+[[test]]
+name = "conformance"
+path = "tests/conformance.rs"

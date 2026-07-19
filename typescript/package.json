@@ -1,5 +1,5 @@
 {
-  "name": "oselvar-var",
+  "name": "varar-monorepo",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -8,7 +8,7 @@
   },
   "packageManager": "pnpm@9.15.9",
   "scripts": {
-    "build": "pnpm -r --filter '!@oselvar/website' --filter '!@oselvar/website' build",
+    "build": "pnpm -r --filter '!@varar/website' --filter '!@varar/website' build",
     "typecheck": "tsc -p tsconfig.tests.json",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
@@ -18,7 +18,7 @@
     "format": "biome format --write .",
     "knip": "knip",
     "jscpd": "jscpd packages",
-    "install:vscode": "pnpm -r --filter @oselvar/var-lsp --filter oselvar-var build && node scripts/install-vscode.mjs",
+    "install:vscode": "pnpm -r --filter @varar/lsp --filter varar build && node scripts/install-vscode.mjs",
     "check": "pnpm lint:fix && pnpm typecheck && pnpm test:coverage && pnpm knip && pnpm jscpd"
   },
   "devDependencies": {
