@@ -4,10 +4,6 @@ from yahtzee_example import score
 param, stimulus, sensor = steps()
 
 
-# Header-bound table: the paragraph names every header cell (dice, category,
-# score), so this sensor runs once per row with the row as a dict keyed by
-# header. Returning {"score": …} checks that column; the other columns are
-# inputs.
 @sensor("Examples of dice, category and score")
 def _(state, row):
     dice = [int(d.strip()) for d in row["dice"].split(",")]

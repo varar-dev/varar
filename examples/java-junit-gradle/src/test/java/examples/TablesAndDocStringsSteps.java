@@ -17,9 +17,6 @@ public final class TablesAndDocStringsSteps implements StepDefinitions {
     public void defineSteps(Registrar registrar) {
         StateBinder<Ctx> s = registrar.steps(Ctx::new);
 
-        // Whole-table mode: the table arrives as List<List<String>> (header row
-        // first). It is this sensor's only slot, so return the reproduced table
-        // bare — Vár compares every cell.
         s.sensor("Uppercase each one:", (Ctx ctx, List<List<String>> rows) -> {
             List<Map<String, String>> out = new ArrayList<>();
             for (List<String> row : rows.subList(1, rows.size())) {
@@ -28,8 +25,6 @@ public final class TablesAndDocStringsSteps implements StepDefinitions {
             return out;
         });
 
-        // Doc-string mode: two slots ({word} plus the trailing doc string), so
-        // return one element per slot.
         s.sensor("Greet {word}:", (Ctx ctx, String name, String doc) -> List.of(name, "Hello, " + name + "!\n"));
     }
 }

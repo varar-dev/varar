@@ -3,7 +3,6 @@ package examples
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
-/** An amount in a single currency; the value is in the currency's major unit (pounds). */
 data class Money(val currency: String, val value: Double)
 
 fun gbp(value: Double): Money = Money("GBP", value)
@@ -17,11 +16,9 @@ fun addMoney(a: Money, b: Money): Money {
     return Money(a.currency, a.value + b.value)
 }
 
-/** Fee for returning a loan: 50p per day past the due date. */
 fun lateFee(loan: Loan, returnedOn: LocalDate): Money {
     val daysLate = maxOf(0, ChronoUnit.DAYS.between(loan.due, returnedOn))
     return gbp(daysLate * FEE_PER_DAY.value)
 }
 
-/** A member may borrow as long as none of their loans is overdue. */
 fun mayBorrow(loans: List<Loan>, on: LocalDate): Boolean = loans.none { it.due.isBefore(on) }

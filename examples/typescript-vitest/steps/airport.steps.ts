@@ -1,8 +1,5 @@
 import { steps } from '@varar/varar'
 
-// The custom `{airport}` parameter type is declared with a chained `.param()`
-// call, so Vár can infer the captured args: the parse function returns string,
-// so `from`/`to` are typed string with no annotation.
 const { stimulus, sensor } = steps(() => ({ from: '', to: '' })).param(
   'airport',
   /[A-Z]{3}/,

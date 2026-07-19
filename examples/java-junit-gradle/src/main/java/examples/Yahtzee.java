@@ -50,7 +50,6 @@ final class Yahtzee {
         return counts.getOrDefault(face, 0) * face;
     }
 
-    // n-of-a-kind: the highest face appearing at least n times, scored n*face.
     private static int ofAKind(Map<Integer, Integer> counts, int n) {
         return counts.entrySet().stream().filter(e -> e.getValue() >= n).mapToInt(Map.Entry::getKey).max().stream()
                 .map(face -> n * face)

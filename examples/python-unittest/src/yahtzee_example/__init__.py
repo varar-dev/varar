@@ -8,7 +8,6 @@ def score(dice: list[int], category: str) -> int:
     def sum_of(face: int) -> int:
         return counts.get(face, 0) * face
 
-    # n-of-a-kind: the highest face appearing at least n times, scored n*face.
     def of_a_kind(n: int) -> int:
         faces = [face for face, c in counts.items() if c >= n]
         return n * max(faces) if faces else 0

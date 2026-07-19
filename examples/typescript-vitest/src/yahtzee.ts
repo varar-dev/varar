@@ -3,7 +3,6 @@ export function score(dice: ReadonlyArray<number>, category: string): number {
   for (const d of dice) counts.set(d, (counts.get(d) ?? 0) + 1)
   const sum = dice.reduce((a, b) => a + b, 0)
   const sumOf = (face: number) => (counts.get(face) ?? 0) * face
-  // n-of-a-kind: the highest face appearing at least n times, scored n*face.
   const ofAKind = (n: number) => {
     const faces = [...counts].filter(([, c]) => c >= n).map(([face]) => face)
     return faces.length > 0 ? n * Math.max(...faces) : 0
