@@ -94,6 +94,17 @@ sensors, rather than reaching inside it.
     );
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var s = Steps.From(r);
+    s.DefineState(() => VMap(("total", Value.Of(0))));
+
+    // FULL-REPLACEMENT state: return the whole next state.
+    s.Stimulus("I add {int}", (state, n) =>
+        new VMap(SMap(state).SetItem("total", Value.Of(state["total"].AsInt() + n.AsInt()))));
+    s.Sensor("the total is {int}", (state, expected) => state["total"]);
+    ```
+  </TabItem>
 </Tabs>
 
 In your prose the sensor is the *outcome* you expect; see
@@ -178,6 +189,15 @@ a return value against. Throw to fail, return nothing to pass:
     );
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    s.Sensor("the alarm fired", state =>
+    {
+        if (SMap(state)["alarm"] is not VBool { Bool: true }) throw new Exception("no alarm");
+        return null;
+    });
+    ```
+  </TabItem>
 </Tabs>
 
 Returning any other value is a `ReturnShapeError`. This is deliberate: a
@@ -222,6 +242,11 @@ certainly believed it was being checked.
         line!() as usize,
         Handler::sync1(|state, _expected| Ok(smap(&state).get("total").cloned())),
     );
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    s.Sensor("the total is {int}", (state, expected) => state["total"]);
     ```
   </TabItem>
 </Tabs>
@@ -310,6 +335,17 @@ types whose `parse` produces an array:
     );
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var s = Steps.From(r);
+    s.DefineState(() => VMap(("dice", Value.List([Value.Of(5), Value.Of(6)]))));
+    s.Param("numbers", @"\d+(?:, \d+)*",
+        groups => Value.List(groups[0]!.Split(", ").Select(n => Value.Of(long.Parse(n)))));
+
+    // "The dice show 5, 6" — {numbers} transforms to [5, 6]
+    s.Sensor("The dice show {numbers}", (state, dice) => state["dice"]);
+    ```
+  </TabItem>
 </Tabs>
 
 Because a single-slot return is always the bare value, `[5, 6]` here is
@@ -370,6 +406,12 @@ never mistaken for a two-slot positional array.
     );
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    s.Sensor("I should have {int} cukes in my {word} belly", (state, count, belly) =>
+        Value.List([state["count"], state["bellyName"]]));
+    ```
+  </TabItem>
 </Tabs>
 
 The array must have exactly one element per slot; a different length or a
@@ -421,6 +463,15 @@ last element:
             ])))
         }),
     );
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    s.Sensor("Greet {word}:", (state, name, doc) =>
+    {
+        var n = name.AsString();
+        return Value.List([Value.Of(n), Value.Of($"Hello, {n}!\n")]);
+    });
     ```
   </TabItem>
 </Tabs>
@@ -494,6 +545,16 @@ returns a **row object** keyed by the header — not slots:
             ])))
         }),
     );
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    s.Sensor("a decimal and a roman number", (state, row) =>
+    {
+        var decimal = SMap(row)["decimal"].AsString();
+        var roman = ToRoman(int.Parse(decimal));
+        return VMap(("decimal", Value.Of(decimal)), ("roman", Value.Of(roman)));
+    });
     ```
   </TabItem>
 </Tabs>

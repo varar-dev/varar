@@ -14,7 +14,7 @@ import { markdown } from '@codemirror/lang-markdown'
 import { python } from '@codemirror/lang-python'
 import { rust } from '@codemirror/lang-rust'
 import { StreamLanguage } from '@codemirror/language'
-import { kotlin } from '@codemirror/legacy-modes/mode/clike'
+import { csharp, kotlin } from '@codemirror/legacy-modes/mode/clike'
 import { ruby } from '@codemirror/legacy-modes/mode/ruby'
 import type { Extension } from '@codemirror/state'
 import type { SiteLang } from './site-lang.ts'
@@ -26,6 +26,7 @@ export const CM_LANGUAGE: Readonly<Record<SiteLang, () => Extension>> = {
   python: () => python(),
   ruby: () => StreamLanguage.define(ruby),
   rust: () => rust(),
+  csharp: () => StreamLanguage.define(csharp),
 }
 
 // The language-neutral `.md` spec (`langOfPath` → `undefined`) highlights as

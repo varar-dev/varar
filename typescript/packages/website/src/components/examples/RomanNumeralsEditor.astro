@@ -2,6 +2,8 @@
 import Editor from '$components/Editor.astro'
 import File from '$components/File.astro'
 import Version from '$components/Version.astro'
+import romanNumeralsLogicCsharp from '$examples/csharp-vstest/src/RomanNumerals.cs?raw'
+import romanNumeralsStepsCsharp from '$examples/csharp-vstest/steps/roman-numerals.steps.cs?raw'
 import romanNumeralsLogicJava from '$examples/java-junit-maven/src/main/java/examples/RomanNumerals.java?raw'
 import romanNumeralsStepsJava from '$examples/java-junit-maven/src/test/java/examples/RomanNumeralsSteps.java?raw'
 import romanNumeralsLogicKotlin from '$examples/kotlin-junit/src/main/kotlin/examples/RomanNumerals.kt?raw'
@@ -26,6 +28,8 @@ import romanNumeralsLogicTypeScript from '$examples/typescript-vitest/src/roman-
     <Version label="Subtractive notation">{romanNumeralsLogicTypeScript}</Version>
     <Version label="Additive notation">{romanNumeralsLogicTypeScript.replace('IX', 'VIIII')}</Version>
   </File>
+  <File uri="file:///roman-numerals.steps.cs">{romanNumeralsStepsCsharp}</File>
+  <File uri="file:///RomanNumerals.cs">{romanNumeralsLogicCsharp}</File>
   <File uri="file:///RomanNumeralsSteps.java">{romanNumeralsStepsJava}</File>
   <File uri="file:///RomanNumerals.java">{romanNumeralsLogicJava}</File>
   <File uri="file:///roman-numerals.steps.kt">{romanNumeralsStepsKotlin}</File>

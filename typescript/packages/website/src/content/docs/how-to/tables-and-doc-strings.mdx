@@ -87,6 +87,16 @@ keyed by the header, and returns the computed columns:
     );
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    s.Sensor("a decimal and a roman number", (state, row) =>
+    {
+        var decimal = SMap(row)["decimal"].AsString();
+        var roman = RomanNumerals.ToRoman(int.Parse(decimal));
+        return VMap(("decimal", Value.Of(decimal)), ("roman", Value.Of(roman)));
+    });
+    ```
+  </TabItem>
 </Tabs>
 
 Each row runs as its own check. If `toRoman(9)` returned `"VIIII"`, only the
@@ -172,6 +182,19 @@ Uppercase each one:
     );
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    s.Sensor("Uppercase each one:", (state, table) =>
+    {
+        var computed = ((VList)table).Items.Skip(1).Select(row =>
+        {
+            var before = ((VList)row).Items[0].AsString();
+            return VMap(("before", Value.Of(before)), ("after", Value.Of(before.ToUpperInvariant())));
+        });
+        return Value.List(computed);
+    });
+    ```
+  </TabItem>
 </Tabs>
 
 The table is this sensor's only comparable value, so it is returned bare. Varar
@@ -241,6 +264,15 @@ the text the software actually produces:
     );
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    s.Sensor("Greet {word}:", (state, name, doc) =>
+    {
+        var n = name.AsString();
+        return Value.List([Value.Of(n), Value.Of($"Hello, {n}!\n")]);
+    });
+    ```
+  </TabItem>
 </Tabs>
 
 The comparison is exact equality, **including the trailing newline**. This step
@@ -286,6 +318,11 @@ whose doc string is its only comparable value returns the text bare:
         line!() as usize,
         Handler::sync1(|_state, _doc| Ok(Some(Value::from("Hello, Bob!\n")))),
     );
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    s.Sensor("Greet Bob:", (state, doc) => Value.Of("Hello, Bob!\n"));
     ```
   </TabItem>
 </Tabs>

@@ -146,6 +146,24 @@ Every command and code sample below follows that choice.
        }
        ```
      </TabItem>
+     <TabItem label="C#">
+       ```csharp
+       using Varar;
+       using Varar.Core;
+
+       namespace Examples;
+
+       public static class DeepThoughtSteps
+       {
+           public static Registry Register(Registry r)
+           {
+               var s = Steps.From(r);
+               s.Sensor("life, the universe and everything is {int}", (state, answer) => Value.Of(42));
+               return s.ToRegistry();
+           }
+       }
+       ```
+     </TabItem>
    </Tabs>
 
    <Aside type="note" title="Java & Kotlin: two extra steps">
@@ -223,6 +241,11 @@ Every command and code sample below follows that choice.
            line!() as usize,
            Handler::sync1(|_state, _answer| Ok(Some(Value::Int(43)))),
        );
+       ```
+     </TabItem>
+     <TabItem label="C#">
+       ```csharp
+       s.Sensor("life, the universe and everything is {int}", (state, answer) => Value.Of(43));
        ```
      </TabItem>
    </Tabs>

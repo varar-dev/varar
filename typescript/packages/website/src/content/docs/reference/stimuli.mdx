@@ -88,6 +88,16 @@ with sensors.
     );
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var s = Steps.From(r);
+    s.DefineState(() => VMap(("total", Value.Of(0))));
+
+    s.Stimulus("I add {int}", (state, n) =>
+        new VMap(SMap(state).SetItem("total", Value.Of(state["total"].AsInt() + n.AsInt()))));
+    s.Sensor("the total is {int}", (state, expected) => state["total"]);
+    ```
+  </TabItem>
 </Tabs>
 
 In your prose the stimulus covers both the *context* (arrange) and the *action*
@@ -182,6 +192,18 @@ full replacement, same principle: new value out, never mutation.
     );
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var s = Steps.From(r);
+    s.DefineState(() => VMap(("greeting", Value.Of("")), ("count", Value.Of(0))));
+
+    // Full replacement: read the current state map, set just the changed key.
+    s.Stimulus("I greet {string}", (state, name) =>
+        new VMap(SMap(state).SetItem("greeting", Value.Of($"Hello, {name.AsString()}!"))));
+    s.Stimulus("I add {int}", (state, n) =>
+        new VMap(SMap(state).SetItem("count", Value.Of(state["count"].AsInt() + n.AsInt()))));
+    ```
+  </TabItem>
 </Tabs>
 
 - **Returning nothing** leaves state unchanged — right for a stimulus whose
@@ -263,6 +285,14 @@ empty state they can ignore:
     );
     ```
   </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    var s = Steps.From(r);
+
+    s.Sensor("the square of {int} is {int}", (state, n, square) =>
+        Value.List([Value.Of(n.AsInt()), Value.Of(n.AsInt() * n.AsInt())]));
+    ```
+  </TabItem>
 </Tabs>
 
 ## Tables and doc strings
@@ -332,6 +362,19 @@ first), a doc string as its exact text:
             Ok(Some(Value::Map(m)))
         }),
     );
+    ```
+  </TabItem>
+  <TabItem label="C#">
+    ```csharp
+    s.Stimulus("these books exist:", (state, table) =>
+    {
+        var books = ((VList)table).Items.Skip(1).Select(row =>
+        {
+            var cells = ((VList)row).Items;
+            return VMap(("title", cells[0]), ("author", cells[1]));
+        });
+        return new VMap(SMap(state).SetItem("books", Value.List(books)));
+    });
     ```
   </TabItem>
 </Tabs>
