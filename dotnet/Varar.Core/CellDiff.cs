@@ -19,25 +19,14 @@ public sealed record CellDiff(
     bool Formatted = false);
 
 /// <summary>Thrown when a header-bound row's / whole-table's returned columns don't all match.</summary>
-public sealed class CellMismatchError : Exception
+public sealed class CellMismatchError(ImmutableArray<CellDiff> cells)
+    : Exception(string.Join("; ", cells.Select(c => $"{c.Column}: expected {c.Expected} but was {c.Actual}")))
 {
-    public CellMismatchError(ImmutableArray<CellDiff> cells)
-        : base(string.Join("; ", cells.Select(c => $"{c.Column}: expected {c.Expected} but was {c.Actual}")))
-    {
-        Cells = cells;
-    }
-
-    public ImmutableArray<CellDiff> Cells { get; }
+    public ImmutableArray<CellDiff> Cells { get; } = cells;
 }
 
 /// <summary>The step returned the wrong type or shape (an author mistake, not a value diff).</summary>
-public sealed class ReturnShapeError : Exception
-{
-    public ReturnShapeError(string message)
-        : base(message)
-    {
-    }
-}
+public sealed class ReturnShapeError(string message) : Exception(message);
 
 public static class CellDiffs
 {
@@ -57,7 +46,7 @@ public static class CellDiffs
     {
         if (returned is not VMap map)
         {
-            return ImmutableArray<CellDiff>.Empty;
+            return [];
         }
 
         var diffs = ImmutableArray.CreateBuilder<CellDiff>();
@@ -80,7 +69,7 @@ public static class CellDiffs
     {
         if (returned is null)
         {
-            return ImmutableArray<CellDiff>.Empty;
+            return [];
         }
 
         if (returned is not VList list)

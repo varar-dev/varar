@@ -10,4 +10,13 @@
     <PackageReference Include="Cucumber.CucumberExpressions" Version="20.0.0" />
   </ItemGroup>
 
+  <!-- Registry construction (Create/AddStep/DefineParameterType/…) is plumbing: authors build steps
+       through the Varar facade, never a Registry by hand. Adapters receive a Registry as an opaque token. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Varar" />
+    <InternalsVisibleTo Include="Varar.Runner" />
+    <InternalsVisibleTo Include="Varar.Core.Tests" />
+    <InternalsVisibleTo Include="Varar.Tests" />
+  </ItemGroup>
+
 </Project>

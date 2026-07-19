@@ -6,9 +6,8 @@ namespace Varar.Example;
 
 public static class HelloVarSteps
 {
-    public static Registry Register(Registry r)
+    public static void Register(Steps s)
     {
-        var s = Steps.From(r);
         s.DefineState(() => VMap(("greeting", Value.Of("")), ("result", Value.Of(0))));
 
         s.Stimulus("I greet {string}", (state, name) =>
@@ -20,7 +19,5 @@ public static class HelloVarSteps
             new VMap(SMap(state).SetItem("result", Value.Of(a.AsInt() + b.AsInt()))));
 
         s.Sensor("evaluate to `{int}`", (state, expected) => state["result"]);
-
-        return s.ToRegistry();
     }
 }

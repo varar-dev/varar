@@ -20,7 +20,7 @@ public sealed record StepRegistration(
     StepKind? Kind);
 
 /// <summary>A step registration without the compiled expression (<c>addStep</c> compiles it).</summary>
-public sealed record StepInput(
+internal sealed record StepInput(
     string Expression,
     string ExpressionSourceFile,
     int ExpressionSourceLine,
@@ -31,7 +31,7 @@ public sealed record StepInput(
 public sealed record CustomParameterType(string Name, string Regexp);
 
 /// <summary>Input to <see cref="Registry.DefineParameterType"/> (mirrors <c>ParameterTypeInput</c>).</summary>
-public sealed record ParameterTypeInput(
+internal sealed record ParameterTypeInput(
     string Name,
     string Regexp,
     ParameterTransform? Parse = null,
@@ -59,7 +59,7 @@ public sealed record Registry(
     ImmutableDictionary<string, ParameterFormat> Formats,
     ImmutableDictionary<string, ContextFactory> ContextFactories)
 {
-    public static Registry Create() => new(
+    internal static Registry Create() => new(
         ImmutableArray<StepRegistration>.Empty,
         ParameterTypeRegistry.CreateDefault(),
         ImmutableArray<CustomParameterType>.Empty,
@@ -67,10 +67,10 @@ public sealed record Registry(
         ImmutableDictionary<string, ContextFactory>.Empty);
 
     /// <summary>Records the initial-state factory for one step file (keyed by its caller path).</summary>
-    public Registry WithContextFactory(string stepFile, ContextFactory factory) =>
+    internal Registry WithContextFactory(string stepFile, ContextFactory factory) =>
         this with { ContextFactories = ContextFactories.SetItem(stepFile, factory) };
 
-    public static Registry AddStep(Registry registry, StepInput input)
+    internal static Registry AddStep(Registry registry, StepInput input)
     {
         var duplicate = registry.Steps.FirstOrDefault(s => s.Expression == input.Expression);
         if (duplicate is not null)
@@ -92,12 +92,12 @@ public sealed record Registry(
         return registry with { Steps = registry.Steps.Add(registration) };
     }
 
-    public static Registry DefineParameterType(Registry registry, ParameterTypeInput input)
+    internal static Registry DefineParameterType(Registry registry, ParameterTypeInput input)
     {
         var transform = input.Parse ?? (groups => Value.Of(groups[0] ?? string.Empty));
         var parameterType = new VararParameterType(
             input.Name,
-            new[] { input.Regexp },
+            [input.Regexp],
             typeof(object),
             transform,
             useForSnippets: input.UseForSnippets);

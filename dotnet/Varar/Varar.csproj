@@ -9,4 +9,10 @@
     <ProjectReference Include="../Varar.Core/Varar.Core.csproj" />
   </ItemGroup>
 
+  <!-- Steps.From/ToRegistry/ctor are plumbing, not author API: only the runner and tests build/read a Steps. -->
+  <ItemGroup>
+    <InternalsVisibleTo Include="Varar.Runner" />
+    <InternalsVisibleTo Include="Varar.Tests" />
+  </ItemGroup>
+
 </Project>

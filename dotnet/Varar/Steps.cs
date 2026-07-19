@@ -6,18 +6,16 @@ namespace Varar;
 /// <summary>
 /// The author facade over <see cref="Registry"/> — the C# analogue of the Rust <c>Steps</c>
 /// builder and the JVM <c>StateBinder</c>. A step file exposes a
-/// <c>static Registry Register(Registry r)</c> that folds its definitions in explicitly (the
+/// <c>static void Register(Steps s)</c> and folds its definitions into the injected builder (the
 /// injected-Registrar model, ADR 0008 — no module-scope accumulator):
 /// <code>
 /// public static class CounterSteps
 /// {
-///     public static Registry Register(Registry r)
+///     public static void Register(Steps s)
 ///     {
-///         var s = Steps.From(r);
 ///         s.DefineState(() => Value.Map([new("count", Value.Of(0))]));
 ///         s.Stimulus("I increment", state => Value.Map([new("count", Value.Of(state["count"].AsInt() + 1))]));
 ///         s.Sensor("The count is {int}", (state, n) => state["count"]);
-///         return s.ToRegistry();
 ///     }
 /// }
 /// </code>
@@ -33,13 +31,13 @@ public sealed class Steps
 {
     private Registry _registry;
 
-    public Steps(Registry registry) => _registry = registry;
+    internal Steps(Registry registry) => _registry = registry;
 
-    /// <summary>A builder that continues folding into an existing registry.</summary>
-    public static Steps From(Registry registry) => new(registry);
+    /// <summary>A builder that continues folding into an existing registry. Runner/test plumbing.</summary>
+    internal static Steps From(Registry registry) => new(registry);
 
-    /// <summary>The accumulated registry.</summary>
-    public Registry ToRegistry() => _registry;
+    /// <summary>The accumulated registry. Runner/test plumbing — authors never call this.</summary>
+    internal Registry ToRegistry() => _registry;
 
     /// <summary>Declares this step file's initial-state factory (a fresh state per example).</summary>
     public Steps DefineState(ContextFactory factory, [CallerFilePath] string file = "")

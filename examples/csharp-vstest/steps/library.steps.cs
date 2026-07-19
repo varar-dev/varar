@@ -21,9 +21,8 @@ public static class LibrarySteps
     private static IReadOnlyList<Value> LoansOf(Value state) =>
         SMap(state).TryGetValue("loans", out var l) && l is VList vl ? vl.Items : (IReadOnlyList<Value>)[];
 
-    public static Registry Register(Registry r)
+    public static void Register(Steps s)
     {
-        var s = Steps.From(r);
         s.DefineState(() => VMap(("loans", Value.List([])), ("fee", Value.Of(0)), ("granted", Value.Of(false))));
 
         s.Param(
@@ -93,7 +92,5 @@ public static class LibrarySteps
 
             return null;
         });
-
-        return s.ToRegistry();
     }
 }

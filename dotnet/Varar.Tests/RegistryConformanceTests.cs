@@ -26,7 +26,7 @@ public class RegistryConformanceTests
     [MemberData(nameof(Bundles))]
     public void RegistryMatchesGolden(string bundle)
     {
-        var registry = ConformanceFixtures.Register[bundle](Registry.Create());
+        var registry = ConformanceFixtures.Build(bundle);
         var actual = CanonicalJson.Stringify(Conformance.ToRegistryArtifact(registry));
 
         var expected = File.ReadAllText(Path.Combine(BundlesDir(), bundle, "golden", "registry.json"));

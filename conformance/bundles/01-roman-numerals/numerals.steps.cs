@@ -7,10 +7,8 @@ namespace Varar.Corpus.B01;
 
 public static class NumeralsSteps
 {
-    public static Registry Register(Registry r)
+    public static void Register(Steps s)
     {
-        var s = Steps.From(r);
-
         s.Stimulus("I convert {int} to roman numerals", (state, n) =>
         {
             var roman = Roman(n.AsInt());
@@ -30,8 +28,6 @@ public static class NumeralsSteps
 
             return null;
         });
-
-        return s.ToRegistry();
     }
 
     public static Value State() => Value.Map([]);

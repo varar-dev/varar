@@ -6,15 +6,11 @@ namespace Varar.Corpus.B06;
 
 public static class EchoSteps
 {
-    public static Registry Register(Registry r)
+    public static void Register(Steps s)
     {
-        var s = Steps.From(r);
-
         // Returns the WRONG string (bare — the doc string is the only slot); the core compares it to
         // the doc string and throws DocStringMismatchError.
         s.Sensor("I echo the following:", (state, doc) => Value.Of("goodbye"));
-
-        return s.ToRegistry();
     }
 
     public static Value State() => Value.Null;

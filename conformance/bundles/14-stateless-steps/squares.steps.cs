@@ -7,10 +7,8 @@ namespace Varar.Corpus.B14;
 
 public static class SquaresSteps
 {
-    public static Registry Register(Registry r)
+    public static void Register(Steps s)
     {
-        var s = Steps.From(r);
-
         s.Stimulus("I warm up my mental math", state => null);
 
         // Two slots ({int}, {int}); the handler uses only the first and returns both computed
@@ -20,8 +18,6 @@ public static class SquaresSteps
             var value = n.AsInt();
             return Value.List([Value.Of(value), Value.Of(value * value)]);
         });
-
-        return s.ToRegistry();
     }
 
     public static Value State() => Value.Null;

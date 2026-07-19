@@ -9,8 +9,8 @@ namespace Varar.Tests;
 /// </summary>
 public static class ConformanceFixtures
 {
-    public static readonly IReadOnlyDictionary<string, Func<Registry, Registry>> Register =
-        new Dictionary<string, Func<Registry, Registry>>(StringComparer.Ordinal)
+    public static readonly IReadOnlyDictionary<string, Action<Steps>> Register =
+        new Dictionary<string, Action<Steps>>(StringComparer.Ordinal)
         {
             ["01-roman-numerals"] = Corpus.B01.NumeralsSteps.Register,
             ["02-context-isolation"] = Corpus.B02.CounterSteps.Register,
@@ -28,6 +28,14 @@ public static class ConformanceFixtures
             ["14-stateless-steps"] = Corpus.B14.SquaresSteps.Register,
             ["15-custom-parameter-format"] = Corpus.B15.MoneySteps.Register,
         };
+
+    /// <summary>Fold a bundle's fixture into a registry the way the runner's loader does.</summary>
+    public static Registry Build(string bundle)
+    {
+        var s = Steps.From(Registry.Create());
+        Register[bundle](s);
+        return s.ToRegistry();
+    }
 
     public static readonly IReadOnlyDictionary<string, Func<Value>> State =
         new Dictionary<string, Func<Value>>(StringComparer.Ordinal)

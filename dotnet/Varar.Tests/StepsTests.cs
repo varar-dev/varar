@@ -1,5 +1,3 @@
-using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using Varar;
 using Varar.Core;
@@ -7,26 +5,32 @@ using Xunit;
 
 namespace Varar.Tests;
 
-// A fixture written the way a conformance *.steps.cs file will be: a static
-// Register(Registry) -> Registry (the injected-Registrar entry point).
+// A fixture written the way a conformance *.steps.cs file is: a static
+// void Register(Steps) that folds its definitions into the injected builder.
 internal static class CounterSteps
 {
-    public static Registry Register(Registry r)
+    public static void Register(Steps s)
     {
-        var s = Steps.From(r);
         s.DefineState(() => Value.Map([new("count", Value.Of(0))]));
         s.Stimulus("I increment", state => Value.Map([new("count", Value.Of(state["count"].AsInt() + 1))]));
         s.Sensor("The count is {int}", (state, n) => state["count"]);
-        return s.ToRegistry();
     }
 }
 
 public class StepsTests
 {
+    // Mirror the runner's loader: hand the fixture a builder, read back the registry.
+    private static Registry BuildCounter()
+    {
+        var s = Steps.From(Registry.Create());
+        CounterSteps.Register(s);
+        return s.ToRegistry();
+    }
+
     [Fact]
     public void RegisterFoldsStimuliAndSensorsIntoTheRegistryInOrder()
     {
-        var r = CounterSteps.Register(Registry.Create());
+        var r = BuildCounter();
 
         Assert.Equal(2, r.Steps.Length);
         Assert.Equal("I increment", r.Steps[0].Expression);
@@ -38,7 +42,7 @@ public class StepsTests
     [Fact]
     public void DefineStateRecordsAFactoryKeyedByTheCallerFileThatProducesTheInitialState()
     {
-        var r = CounterSteps.Register(Registry.Create());
+        var r = BuildCounter();
 
         var factory = Assert.Single(r.ContextFactories).Value;
         Assert.Equal(Value.Map([new("count", Value.Of(0))]), factory());
@@ -47,7 +51,7 @@ public class StepsTests
     [Fact]
     public void FullReplacementStimulusReturnsTheWholeNextState()
     {
-        var r = CounterSteps.Register(Registry.Create());
+        var r = BuildCounter();
         var start = Assert.Single(r.ContextFactories).Value();
 
         // Invoke the stored stimulus handler directly (execution wiring is T6).
@@ -59,7 +63,7 @@ public class StepsTests
     [Fact]
     public void SensorHandlerReadsStateAndReturnsAComparisonValue()
     {
-        var r = CounterSteps.Register(Registry.Create());
+        var r = BuildCounter();
         var state = Value.Map([new("count", Value.Of(5))]);
 
         var observed = (Value?)r.Steps[1].Handler(state, [Value.Of(5)]);

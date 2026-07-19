@@ -6,15 +6,11 @@ namespace Varar.Corpus.B09;
 
 public static class BoomSteps
 {
-    public static Registry Register(Registry r)
+    public static void Register(Steps s)
     {
-        var s = Steps.From(r);
-
         // Throws a message that does NOT contain the expected substring "expected message", so the
         // expected-failure is NOT satisfied → the example fails.
         s.Stimulus("I always boom", state => throw new HandlerException("actual different error"));
-
-        return s.ToRegistry();
     }
 
     public static Value State() => Value.Null;

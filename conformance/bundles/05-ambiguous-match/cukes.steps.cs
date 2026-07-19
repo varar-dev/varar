@@ -6,15 +6,11 @@ namespace Varar.Corpus.B05;
 
 public static class CukesSteps
 {
-    public static Registry Register(Registry r)
+    public static void Register(Steps s)
     {
-        var s = Steps.From(r);
-
         // Both expressions match "I have 5 cukes" → ambiguous-match diagnostic.
         s.Stimulus("I have {int} cukes", (state, n) => null);
         s.Stimulus("I have 5 cukes", state => null);
-
-        return s.ToRegistry();
     }
 
     public static Value State() => Value.Null;

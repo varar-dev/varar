@@ -7,10 +7,8 @@ namespace Varar.Example;
 
 public static class YahtzeeSteps
 {
-    public static Registry Register(Registry r)
+    public static void Register(Steps s)
     {
-        var s = Steps.From(r);
-
         // Header-bound: dice and category are inputs, score is the computed column Vár checks.
         s.Sensor("Examples of dice, category and score", (state, row) =>
         {
@@ -19,7 +17,5 @@ public static class YahtzeeSteps
             var category = AsStr(m["category"]);
             return VMap(("score", Value.Of(Yahtzee.Score(dice, category))));
         });
-
-        return s.ToRegistry();
     }
 }

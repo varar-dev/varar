@@ -103,7 +103,7 @@ public static class Sentences
             return;
         }
 
-        var seg = text.Substring(start, end - start);
+        var seg = text[start..end];
         var slice = seg.Trim();
         if (slice.Length == 0)
         {
@@ -119,7 +119,7 @@ public static class Sentences
     {
         char prev = dotPos - 1 >= 0 ? text[dotPos - 1] : '\0';
         char next = dotPos + 1 < text.Length ? text[dotPos + 1] : '\0';
-        if (prev >= '0' && prev <= '9' && next >= '0' && next <= '9')
+        if (char.IsAsciiDigit(prev) && char.IsAsciiDigit(next))
         {
             return true;
         }
@@ -127,12 +127,12 @@ public static class Sentences
         foreach (var abbrev in Abbreviations)
         {
             int sliceStart = Math.Max(0, dotPos + 1 - abbrev.Length);
-            if (text.Substring(sliceStart, dotPos + 1 - sliceStart) == abbrev)
+            if (text[sliceStart..(dotPos + 1)] == abbrev)
             {
                 return true;
             }
         }
 
-        return next >= 'a' && next <= 'z';
+        return char.IsAsciiLetterLower(next);
     }
 }

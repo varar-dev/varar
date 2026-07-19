@@ -8,6 +8,8 @@
   <ItemGroup>
     <ProjectReference Include="../Varar.Core/Varar.Core.csproj" />
     <ProjectReference Include="../Varar.Config/Varar.Config.csproj" />
+    <!-- The step-loader reflects for `static void Register(Steps)`, so it needs the author facade. -->
+    <ProjectReference Include="../Varar/Varar.csproj" />
   </ItemGroup>
 
 </Project>

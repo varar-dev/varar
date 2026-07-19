@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using System.IO;
 using System.Text.Json;
 using Varar.Core;
 
@@ -40,10 +39,10 @@ public static class VarConfig
         new(StringComparer.Ordinal) { "include", "exclude" };
 
     public static readonly ParsedVarConfig Empty = new(
-        new VarGlobs(ImmutableArray<string>.Empty, ImmutableArray<string>.Empty),
-        ImmutableArray<string>.Empty,
+        new VarGlobs([], []),
+        [],
         ImmutableDictionary<string, string>.Empty,
-        ImmutableArray<string>.Empty);
+        []);
 
     /// <summary>Parses config text (no filesystem). Fails loudly with the path prefixed.</summary>
     public static ParsedVarConfig Parse(string jsonText, string sourcePath)
@@ -144,7 +143,7 @@ public static class VarConfig
     {
         if (!parent.TryGetProperty(key, out var value) || value.ValueKind == JsonValueKind.Null)
         {
-            return ImmutableArray<string>.Empty;
+            return [];
         }
 
         if (value.ValueKind != JsonValueKind.Array ||
@@ -153,6 +152,6 @@ public static class VarConfig
             throw new VarConfigException($"{sourcePath}: \"{label}\" must be an array of strings");
         }
 
-        return value.EnumerateArray().Select(v => v.GetString()!).ToImmutableArray();
+        return [.. value.EnumerateArray().Select(v => v.GetString()!)];
     }
 }

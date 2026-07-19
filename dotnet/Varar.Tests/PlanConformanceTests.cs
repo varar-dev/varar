@@ -28,7 +28,7 @@ public class PlanConformanceTests
     {
         var bundleDir = Path.Combine(BundlesDir(), bundle);
         var source = File.ReadAllText(Path.Combine(bundleDir, "example.md"));
-        var registry = ConformanceFixtures.Register[bundle](Registry.Create());
+        var registry = ConformanceFixtures.Build(bundle);
 
         var doc = Parse.Run("example.md", source);
         var plan = Plan.Run(doc, registry);

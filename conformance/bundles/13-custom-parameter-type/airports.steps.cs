@@ -6,10 +6,8 @@ namespace Varar.Corpus.B13;
 
 public static class AirportsSteps
 {
-    public static Registry Register(Registry r)
+    public static void Register(Steps s)
     {
-        var s = Steps.From(r);
-
         // Custom {airport} parameter type: IATA code, lowercased by parse. The sensor asserts the
         // lowercasing, so an identity parse would fail.
         s.Param("airport", "[A-Z]{3}", g => Value.Of(g[0]!.ToLowerInvariant()));
@@ -27,8 +25,6 @@ public static class AirportsSteps
 
             return null;
         });
-
-        return s.ToRegistry();
     }
 
     public static Value State() => Value.Null;

@@ -41,7 +41,7 @@ public static class Matcher
             foreach (Match m in scan.Matches(sentence))
             {
                 CuGroup? group = tree.Match(m.Value);
-                var children = group?.Children ?? new List<CuGroup>();
+                var children = group?.Children ?? [];
 
                 var args = ImmutableArray.CreateBuilder<Value>();
                 var paramSpans = ImmutableArray.CreateBuilder<ParamSpan>();
@@ -73,7 +73,7 @@ public static class Matcher
     {
         if (hits.Length == 0)
         {
-            return new ResolvedSteps.Ok(ImmutableArray<Hit>.Empty);
+            return new ResolvedSteps.Ok([]);
         }
 
         // Sort by start, then longest first (stable).
@@ -89,7 +89,7 @@ public static class Matcher
         for (int i = 0; i < sorted.Count; i++)
         {
             var here = sorted[i];
-            var tied = new List<Hit> { here };
+            List<Hit> tied = [here];
             int j = i + 1;
             while (j < sorted.Count)
             {
@@ -108,7 +108,7 @@ public static class Matcher
 
             if (tied.Count > 1)
             {
-                collisions.Add(new AmbiguityCollision(here.MatchStart, here.MatchEnd, tied.ToImmutableArray()));
+                collisions.Add(new AmbiguityCollision(here.MatchStart, here.MatchEnd, [.. tied]));
             }
 
             i = j - 1;
@@ -142,12 +142,12 @@ public static class Matcher
         var source = anchored.ToString();
         if (source.StartsWith('^'))
         {
-            source = source.Substring(1);
+            source = source[1..];
         }
 
         if (source.EndsWith('$'))
         {
-            source = source.Substring(0, source.Length - 1);
+            source = source[..^1];
         }
 
         return new Regex(source, RegexOptions.None);

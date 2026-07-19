@@ -7,21 +7,38 @@ namespace Varar.Core;
 /// The line-based Markdown block scanner. Port of <c>scanner.ts</c>. Plugins are tried at each
 /// non-blank line before the built-in rules; the built-ins fall through to a paragraph.
 /// </summary>
-public static class Scanner
+public static partial class Scanner
 {
-    private static readonly Regex ThematicRe = new(@"^\s*([-*_])(\s*\1){2,}\s*$", RegexOptions.None);
-    private static readonly Regex UlRe = new(@"^(\s*)([-*+])\s+(.*)$", RegexOptions.None);
-    private static readonly Regex OlRe = new(@"^(\s*)(\d+)([.)])\s+(.*)$", RegexOptions.None);
-    private static readonly Regex BqRe = new(@"^>\s?(.*)$", RegexOptions.None);
-    private static readonly Regex HeadingRe = new(@"^(#{1,6})\s+(.*?)(?:\s+#+)?\s*$", RegexOptions.None);
-    private static readonly Regex FenceRe = new(@"^(`{3,})\s*(\S*)\s*$", RegexOptions.None);
-    private static readonly Regex RowRe = new(@"^\|(.+)\|\s*$", RegexOptions.None);
-    private static readonly Regex DelimRe = new(@"^\|\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|\s*$", RegexOptions.None);
-    private static readonly Regex HeadingStartRe = new(@"^#{1,6}\s+", RegexOptions.None);
+    [GeneratedRegex(@"^\s*([-*_])(\s*\1){2,}\s*$")]
+    private static partial Regex ThematicRe();
+
+    [GeneratedRegex(@"^(\s*)([-*+])\s+(.*)$")]
+    private static partial Regex UlRe();
+
+    [GeneratedRegex(@"^(\s*)(\d+)([.)])\s+(.*)$")]
+    private static partial Regex OlRe();
+
+    [GeneratedRegex(@"^>\s?(.*)$")]
+    private static partial Regex BqRe();
+
+    [GeneratedRegex(@"^(#{1,6})\s+(.*?)(?:\s+#+)?\s*$")]
+    private static partial Regex HeadingRe();
+
+    [GeneratedRegex(@"^(`{3,})\s*(\S*)\s*$")]
+    private static partial Regex FenceRe();
+
+    [GeneratedRegex(@"^\|(.+)\|\s*$")]
+    private static partial Regex RowRe();
+
+    [GeneratedRegex(@"^\|\s*:?-+:?\s*(\|\s*:?-+:?\s*)*\|\s*$")]
+    private static partial Regex DelimRe();
+
+    [GeneratedRegex(@"^#{1,6}\s+")]
+    private static partial Regex HeadingStartRe();
 
     public static ImmutableArray<Block> Scan(string source, IReadOnlyList<IScannerPlugin>? plugins = null)
     {
-        plugins ??= Array.Empty<IScannerPlugin>();
+        plugins ??= [];
         var blocks = ImmutableArray.CreateBuilder<Block>();
         var lines = SplitLines(source);
 
@@ -29,7 +46,7 @@ public static class Scanner
         while (i < lines.Count)
         {
             var line = lines[i];
-            if (line.Text.Trim().Length == 0)
+            if (string.IsNullOrWhiteSpace(line.Text))
             {
                 i++;
                 continue;
@@ -125,7 +142,7 @@ public static class Scanner
         {
             if (source[i] == '\n')
             {
-                outp.Add(new RawLine(source.Substring(start, i - start), start, i));
+                outp.Add(new RawLine(source[start..i], start, i));
                 start = i + 1;
             }
         }
@@ -140,7 +157,7 @@ public static class Scanner
 
     private static Block? TryThematic(string source, RawLine line)
     {
-        if (!ThematicRe.IsMatch(line.Text))
+        if (!ThematicRe().IsMatch(line.Text))
         {
             return null;
         }
@@ -150,7 +167,7 @@ public static class Scanner
 
     private static Block? TryHeading(string source, RawLine line)
     {
-        var m = HeadingRe.Match(line.Text);
+        var m = HeadingRe().Match(line.Text);
         if (!m.Success)
         {
             return null;
@@ -164,7 +181,7 @@ public static class Scanner
 
     private static Block? TryListItem(string source, RawLine line)
     {
-        var ul = UlRe.Match(line.Text);
+        var ul = UlRe().Match(line.Text);
         if (ul.Success)
         {
             string text = ul.Groups[3].Value;
@@ -174,12 +191,12 @@ public static class Scanner
             return new ListItem(
                 text,
                 Span.FromOffsets(source, line.StartOffset, line.EndOffset),
-                ImmutableArray.Create(new SegmentOffset(0, textStart)),
+                [new SegmentOffset(0, textStart)],
                 Ordered: false,
                 Span.FromOffsets(source, markerStart, markerEnd));
         }
 
-        var ol = OlRe.Match(line.Text);
+        var ol = OlRe().Match(line.Text);
         if (ol.Success)
         {
             string text = ol.Groups[4].Value;
@@ -189,7 +206,7 @@ public static class Scanner
             return new ListItem(
                 text,
                 Span.FromOffsets(source, line.StartOffset, line.EndOffset),
-                ImmutableArray.Create(new SegmentOffset(0, textStart)),
+                [new SegmentOffset(0, textStart)],
                 Ordered: true,
                 Span.FromOffsets(source, markerStart, markerEnd));
         }
@@ -200,7 +217,7 @@ public static class Scanner
     private static BlockMatch? TryBlockquote(string source, IReadOnlyList<RawLine> lines, int startIdx)
     {
         var first = lines[startIdx];
-        var m = BqRe.Match(first.Text);
+        var m = BqRe().Match(first.Text);
         if (!m.Success)
         {
             return null;
@@ -217,7 +234,7 @@ public static class Scanner
         while (i < lines.Count)
         {
             var ln = lines[i];
-            var next = BqRe.Match(ln.Text);
+            var next = BqRe().Match(ln.Text);
             if (!next.Success)
             {
                 break;
@@ -251,42 +268,42 @@ public static class Scanner
         {
             int candidateIdx = endIdx + 1;
             var candidate = lines[candidateIdx];
-            if (candidate.Text.Trim().Length == 0)
+            if (string.IsNullOrWhiteSpace(candidate.Text))
             {
                 break;
             }
 
-            if (HeadingStartRe.IsMatch(candidate.Text))
+            if (HeadingStartRe().IsMatch(candidate.Text))
             {
                 break;
             }
 
-            if (UlRe.IsMatch(candidate.Text))
+            if (UlRe().IsMatch(candidate.Text))
             {
                 break;
             }
 
-            if (OlRe.IsMatch(candidate.Text))
+            if (OlRe().IsMatch(candidate.Text))
             {
                 break;
             }
 
-            if (BqRe.IsMatch(candidate.Text))
+            if (BqRe().IsMatch(candidate.Text))
             {
                 break;
             }
 
-            if (FenceRe.IsMatch(candidate.Text))
+            if (FenceRe().IsMatch(candidate.Text))
             {
                 break;
             }
 
-            if (RowRe.IsMatch(candidate.Text))
+            if (RowRe().IsMatch(candidate.Text))
             {
                 break;
             }
 
-            if (ThematicRe.IsMatch(candidate.Text))
+            if (ThematicRe().IsMatch(candidate.Text))
             {
                 break;
             }
@@ -305,14 +322,14 @@ public static class Scanner
         var paragraph = new Paragraph(
             Slice(source, startOffset, endOffset),
             Span.FromOffsets(source, startOffset, endOffset),
-            ImmutableArray.Create(new SegmentOffset(0, startOffset)));
+            [new SegmentOffset(0, startOffset)]);
         return (paragraph, endIdx + 1);
     }
 
     private static BlockMatch? TryFence(string source, IReadOnlyList<RawLine> lines, int startIdx)
     {
         var start = lines[startIdx];
-        var open = FenceRe.Match(start.Text);
+        var open = FenceRe().Match(start.Text);
         if (!open.Success)
         {
             return null;
@@ -327,7 +344,7 @@ public static class Scanner
         while (i < lines.Count)
         {
             var ln = lines[i];
-            var close = FenceRe.Match(ln.Text);
+            var close = FenceRe().Match(ln.Text);
             if (close.Success && close.Groups[1].Value.Length >= fenceMarker.Length)
             {
                 endOffset = ln.EndOffset;
@@ -358,7 +375,7 @@ public static class Scanner
 
         var headerLine = lines[startIdx];
         var delimLine = lines[startIdx + 1];
-        if (!RowRe.IsMatch(headerLine.Text) || !DelimRe.IsMatch(delimLine.Text))
+        if (!RowRe().IsMatch(headerLine.Text) || !DelimRe().IsMatch(delimLine.Text))
         {
             return null;
         }
@@ -371,7 +388,7 @@ public static class Scanner
         while (i < lines.Count)
         {
             var ln = lines[i];
-            if (!RowRe.IsMatch(ln.Text))
+            if (!RowRe().IsMatch(ln.Text))
             {
                 break;
             }
@@ -381,7 +398,7 @@ public static class Scanner
             i++;
         }
 
-        int endOffset = rows.Count > 0 ? rows[rows.Count - 1].Span.EndOffset : delimLine.EndOffset;
+        int endOffset = rows.Count > 0 ? rows[^1].Span.EndOffset : delimLine.EndOffset;
         var table = new Table(Span.FromOffsets(source, headerLine.StartOffset, endOffset), header, rows.ToImmutable());
         return new BlockMatch(table, i);
     }

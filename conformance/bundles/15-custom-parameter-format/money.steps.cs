@@ -9,10 +9,8 @@ namespace Varar.Corpus.B15;
 
 public static class MoneySteps
 {
-    public static Registry Register(Registry r)
+    public static void Register(Steps s)
     {
-        var s = Steps.From(r);
-
         s.Param(
             "money",
             @"£\d+\.\d{2}",
@@ -27,8 +25,6 @@ public static class MoneySteps
         // Returns the WRONG money on purpose; the golden pins the formatted actual "£2.60", proving
         // mismatches render through format.
         s.Sensor("The late fee is {money}", (state, expected) => Value.Of(2.6));
-
-        return s.ToRegistry();
     }
 
     public static Value State() => Value.Null;

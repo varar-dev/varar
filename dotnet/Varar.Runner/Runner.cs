@@ -22,7 +22,7 @@ public static class Runner
         var names = ImmutableArray.CreateBuilder<string>();
         foreach (var ex in plan.Examples)
         {
-            var baseName = ex.ScopeStack.Length > 0 ? ex.ScopeStack[ex.ScopeStack.Length - 1] : ex.Name;
+            var baseName = ex.ScopeStack.Length > 0 ? ex.ScopeStack[^1] : ex.Name;
             int idx = seen.GetValueOrDefault(baseName);
             seen[baseName] = idx + 1;
             names.Add(idx == 0 ? baseName : $"{baseName}[{idx}]");
@@ -33,24 +33,23 @@ public static class Runner
 
     /// <summary>Run a single example by index; returns the example failure (null = pass).</summary>
     public static Exception? RunExample(ExecutionPlan plan, Func<string, Value> createContext, int index) =>
-        Execute.RunExample(plan, plan.Examples[index], createContext, new List<StepObservation>());
+        Execute.RunExample(plan, plan.Examples[index], createContext, []);
 
-    /// <summary>Build a registry by chaining every <c>static Registry Register(Registry)</c> in the assembly.</summary>
+    /// <summary>Build a registry by folding every <c>static void Register(Steps)</c> in the assembly.</summary>
     public static Registry LoadSteps(Assembly assembly)
     {
         var registrars = assembly.GetTypes()
-            .Select(t => t.GetMethod("Register", BindingFlags.Public | BindingFlags.Static, null, new[] { typeof(Registry) }, null))
-            .Where(m => m is not null && m.ReturnType == typeof(Registry))
-            .OrderBy(m => m!.DeclaringType!.FullName, StringComparer.Ordinal)
-            .ToList();
+            .Select(t => t.GetMethod("Register", BindingFlags.Public | BindingFlags.Static, null, [typeof(Steps)], null))
+            .Where(m => m is not null && m.ReturnType == typeof(void))
+            .OrderBy(m => m!.DeclaringType!.FullName, StringComparer.Ordinal);
 
-        var registry = Registry.Create();
+        var steps = Steps.From(Registry.Create());
         foreach (var m in registrars)
         {
-            registry = (Registry)m!.Invoke(null, new object[] { registry })!;
+            m!.Invoke(null, [steps]);
         }
 
-        return registry;
+        return steps.ToRegistry();
     }
 
     /// <summary>Human-readable failure rendering anchored to the <c>.md</c>. Reuses the core diff payloads.</summary>

@@ -67,9 +67,8 @@ public static class Plan
                     diagnostics.Add(Varar.Core.Diagnostics.AmbiguousMatch(
                         Scanner.Slice(blockText, collision.MatchStart, collision.MatchEnd),
                         span,
-                        collision.Candidates
-                            .Select(c => new Candidate(c.Expression, c.StepDef.ExpressionSourceFile, c.StepDef.ExpressionSourceLine))
-                            .ToImmutableArray()));
+                        [.. collision.Candidates
+                            .Select(c => new Candidate(c.Expression, c.StepDef.ExpressionSourceFile, c.StepDef.ExpressionSourceLine))]));
                     hadAmbiguous = true;
                 }
 
@@ -78,7 +77,7 @@ public static class Plan
                     stepsByBlock[idx] = result.Steps.Select(hit => new PlannedStep(
                         Scanner.Slice(blockText, hit.MatchStart, hit.MatchEnd),
                         LiftSpan(varDoc.Source, block, hit.MatchStart, hit.MatchEnd),
-                        hit.ParamSpans.Select(p => LiftSpan(varDoc.Source, block, p.Start, p.End)).ToImmutableArray(),
+                        [.. hit.ParamSpans.Select(p => LiftSpan(varDoc.Source, block, p.Start, p.End))],
                         hit.StepDef,
                         hit.Args,
                         hit.Formats)).ToList();
@@ -107,16 +106,16 @@ public static class Plan
                         Args = bound.Step.Args.Add(rowObject),
                     };
 
-                    var rowChecks = bound.Table.Header.Cells.Select((column, i) => new RowCheck(
+                    ImmutableArray<RowCheck> rowChecks = [.. bound.Table.Header.Cells.Select((column, i) => new RowCheck(
                         column,
                         i < row.Cells.Length ? row.Cells[i] : string.Empty,
-                        i < row.CellSpans.Length ? row.CellSpans[i] : row.Span)).ToImmutableArray();
+                        i < row.CellSpans.Length ? row.CellSpans[i] : row.Span))];
 
                     examples.Add(new PlannedExample(
                         string.Join(" / ", row.Cells),
                         ex.ScopeStack.Add(bound.Step.Text),
                         row.Span,
-                        ImmutableArray.Create(rowStep),
+                        [rowStep],
                         headerBinding,
                         rowChecks));
                 }
@@ -167,7 +166,7 @@ public static class Plan
                 }
             }
 
-            var runnableSteps = hadAmbiguous ? ImmutableArray<PlannedStep>.Empty : finalSteps.ToImmutable();
+            var runnableSteps = hadAmbiguous ? [] : finalSteps.ToImmutable();
 
             if (errorFence is not null && runnableSteps.Length == 0)
             {
@@ -211,7 +210,7 @@ public static class Plan
             {
                 MatchStart = h.MatchStart + sentence.StartOffset,
                 MatchEnd = h.MatchEnd + sentence.StartOffset,
-                ParamSpans = h.ParamSpans.Select(p => new ParamSpan(p.Start + sentence.StartOffset, p.End + sentence.StartOffset)).ToImmutableArray(),
+                ParamSpans = [.. h.ParamSpans.Select(p => new ParamSpan(p.Start + sentence.StartOffset, p.End + sentence.StartOffset))],
             }).ToImmutableArray();
 
             switch (Matcher.ResolveHits(adjusted))
@@ -249,16 +248,15 @@ public static class Plan
                 continue;
             }
 
-            var offsets = table.Header.Cells.Select(cell => WordOffset(aboveText, cell)).ToArray();
+            int[] offsets = [.. table.Header.Cells.Select(cell => WordOffset(aboveText, cell))];
             if (offsets.Any(o => o < 0))
             {
                 continue;
             }
 
-            var headerSpans = table.Header.Cells
-                .Select((cell, i) => LiftSpan(source, above, offsets[i], offsets[i] + cell.Length))
-                .ToImmutableArray();
-            return new HeaderBound(table, steps[steps.Count - 1], headerSpans);
+            ImmutableArray<Span> headerSpans =
+                [.. table.Header.Cells.Select((cell, i) => LiftSpan(source, above, offsets[i], offsets[i] + cell.Length))];
+            return new HeaderBound(table, steps[^1], headerSpans);
         }
 
         return null;

@@ -9,9 +9,10 @@ namespace Varar.Core;
 /// fences immediately following a candidate (no blank line, heading, or thematic break between)
 /// attach to it, otherwise they are orphans.
 /// </summary>
-public static class Structurer
+public static partial class Structurer
 {
-    private static readonly Regex BlankLineRe = new(@"\n\s*\n", RegexOptions.None);
+    [GeneratedRegex(@"\n\s*\n")]
+    private static partial Regex BlankLineRe();
 
     public static VarDoc Structure(string path, string source, ImmutableArray<Block> blocks)
     {
@@ -26,7 +27,7 @@ public static class Structurer
             switch (block)
             {
                 case Heading heading:
-                    while (scopeStack.Count > 0 && scopeStack[scopeStack.Count - 1].Level >= heading.Level)
+                    while (scopeStack.Count > 0 && scopeStack[^1].Level >= heading.Level)
                     {
                         scopeStack.RemoveAt(scopeStack.Count - 1);
                     }
@@ -41,10 +42,10 @@ public static class Structurer
                     if (attachmentOpen && lastExampleIdx >= 0)
                     {
                         var prev = examples[lastExampleIdx];
-                        var prevLast = prev.Body[prev.Body.Length - 1];
+                        var prevLast = prev.Body[^1];
                         bool lastIsAttachment = prevLast is Table or Fence;
                         if (lastIsAttachment &&
-                            !BlankLineRe.IsMatch(Scanner.Slice(source, prev.Span.EndOffset, block.Span.StartOffset)))
+                            !BlankLineRe().IsMatch(Scanner.Slice(source, prev.Span.EndOffset, block.Span.StartOffset)))
                         {
                             var mergedSpan = Span.FromOffsets(source, prev.Span.StartOffset, block.Span.EndOffset);
                             examples[lastExampleIdx] = prev with { Span = mergedSpan, Body = prev.Body.Add(block) };
@@ -53,9 +54,9 @@ public static class Structurer
                     }
 
                     examples.Add(new Example(
-                        scopeStack.Select(s => s.Text).ToImmutableArray(),
+                        [.. scopeStack.Select(s => s.Text)],
                         block.Span,
-                        ImmutableArray.Create(block)));
+                        [block]));
                     lastExampleIdx = examples.Count - 1;
                     attachmentOpen = true;
                     break;
@@ -79,6 +80,6 @@ public static class Structurer
             }
         }
 
-        return new VarDoc(path, source, examples.ToImmutableArray(), orphanAttachments.ToImmutable());
+        return new VarDoc(path, source, [.. examples], orphanAttachments.ToImmutable());
     }
 }

@@ -1,5 +1,5 @@
 using System.Collections.Immutable;
-using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using Varar.Config;
 
@@ -30,7 +30,7 @@ public static class Discovery
             return true;
         }
 
-        var outp = new System.Text.StringBuilder("^");
+        var outp = new StringBuilder("^");
         int idx = 0;
         while (idx < n)
         {
@@ -84,13 +84,15 @@ public static class Discovery
     {
         if (!Directory.Exists(root))
         {
-            return ImmutableArray<string>.Empty;
+            return [];
         }
 
-        return Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
-            .Where(path => MatchSpec(RelPosix(path, root), config.Docs.Include, config.Docs.Exclude))
-            .OrderBy(p => p, StringComparer.Ordinal)
-            .ToImmutableArray();
+        return
+        [
+            .. Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
+                .Where(path => MatchSpec(RelPosix(path, root), config.Docs.Include, config.Docs.Exclude))
+                .OrderBy(p => p, StringComparer.Ordinal),
+        ];
     }
 
     /// <summary>The path relative to <paramref name="root"/>, forward-slashed.</summary>

@@ -6,10 +6,8 @@ namespace Varar.Corpus.B02;
 
 public static class CounterSteps
 {
-    public static Registry Register(Registry r)
+    public static void Register(Steps s)
     {
-        var s = Steps.From(r);
-
         s.Stimulus("I increment", state => Value.Map([new("count", Value.Of(CountOf(state) + 1))]));
 
         s.Sensor("The count is {int}", (state, n) =>
@@ -23,8 +21,6 @@ public static class CounterSteps
 
             return null;
         });
-
-        return s.ToRegistry();
     }
 
     public static Value State() => Value.Map([new("count", Value.Of(0))]);

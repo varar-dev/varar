@@ -4,15 +4,10 @@ namespace Varar.Core;
 public sealed record DocStringDiff(Span Span, string Expected, string Actual);
 
 /// <summary>Thrown when a doc-string step's returned string differs. Port of <c>doc-string-diff.ts</c>.</summary>
-public sealed class DocStringMismatchError : Exception
+public sealed class DocStringMismatchError(DocStringDiff diff)
+    : Exception($"doc string: expected \"{diff.Expected}\" but was \"{diff.Actual}\"")
 {
-    public DocStringMismatchError(DocStringDiff diff)
-        : base($"doc string: expected \"{diff.Expected}\" but was \"{diff.Actual}\"")
-    {
-        Diff = diff;
-    }
-
-    public DocStringDiff Diff { get; }
+    public DocStringDiff Diff { get; } = diff;
 }
 
 public static class DocStringDiffs

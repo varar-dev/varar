@@ -54,7 +54,7 @@ public static class DriftDetection
     {
         if (baseline is null)
         {
-            return ImmutableArray<Drift>.Empty;
+            return [];
         }
 
         var candidates = varDoc.Examples;
@@ -100,7 +100,7 @@ public static class DriftDetection
 
     /// <summary>Project drifts onto the shared Diagnostic rail.</summary>
     public static ImmutableArray<Diagnostic> DriftDiagnostics(ImmutableArray<Drift> drifts) =>
-        drifts.Select(d => Diagnostics.DriftDetected(d.Name, d.Span)).ToImmutableArray();
+        [.. drifts.Select(d => Diagnostics.DriftDetected(d.Name, d.Span))];
 
     /// <summary>One spec's read → detect → write reconciliation against a <see cref="IBaselineStore"/>.</summary>
     public static ImmutableArray<Drift> ReconcileDrift(
@@ -115,7 +115,7 @@ public static class DriftDetection
         var lockFile = text is not null ? ParseVarLock(text) : null;
         var baseline = lockFile is not null && lockFile.Specs.TryGetValue(specPath, out var b) ? b : null;
 
-        var drifts = update ? ImmutableArray<Drift>.Empty : DetectDrift(baseline, varDoc, plan);
+        var drifts = update ? [] : DetectDrift(baseline, varDoc, plan);
         if (update || drifts.Length == 0)
         {
             var nextSpec = DeriveSpecBaseline(source, varDoc, plan);

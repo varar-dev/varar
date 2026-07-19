@@ -20,7 +20,7 @@ public static class TableCells
             return (ImmutableArray<string>.Empty, ImmutableArray<Span>.Empty);
         }
 
-        string inner = text.Substring(first + 1, last - (first + 1));
+        string inner = text[(first + 1)..last];
         int innerStart = first + 1;
         var cells = ImmutableArray.CreateBuilder<string>();
         var cellSpans = ImmutableArray.CreateBuilder<Span>();

@@ -110,7 +110,7 @@ public sealed class ParameterTypeRegistry : IParameterTypeRegistry
         // The anonymous {} parameter.
         registry.Define(new VararParameterType(
             string.Empty,
-            new[] { ParameterTypeConstants.AnonymousParameterRegex },
+            [ParameterTypeConstants.AnonymousParameterRegex],
             typeof(string),
             groups => Value.Of(groups[0] ?? string.Empty),
             useForSnippets: false));

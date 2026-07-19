@@ -6,10 +6,8 @@ namespace Varar.Example;
 
 public static class TablesAndDocstringsSteps
 {
-    public static Registry Register(Registry r)
+    public static void Register(Steps s)
     {
-        var s = Steps.From(r);
-
         // A whole table is handed to the step; it returns the computed rows and Vár checks each cell.
         s.Sensor("Uppercase each one:", (state, table) =>
         {
@@ -28,7 +26,5 @@ public static class TablesAndDocstringsSteps
             var n = name.AsString();
             return Value.List([Value.Of(n), Value.Of($"Hello, {n}!\n")]);
         });
-
-        return s.ToRegistry();
     }
 }

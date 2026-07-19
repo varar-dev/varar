@@ -1,5 +1,4 @@
 using System.Collections.Immutable;
-using System.IO;
 
 namespace Varar.Core;
 
@@ -53,7 +52,7 @@ public static class Conformance
             {
                 var matches = observations.Where(o => o.Ordinal == i + 1).ToList();
                 var observed = matches.FirstOrDefault(m => m.Outcome == "fail")
-                    ?? (matches.Count > 0 ? matches[matches.Count - 1] : null);
+                    ?? (matches.Count > 0 ? matches[^1] : null);
                 var stepOutcome = observed?.Outcome ?? "skipped";
 
                 var entries = new List<KeyValuePair<string, Value>>
