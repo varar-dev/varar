@@ -68,21 +68,21 @@ dynamic ones:
 
   public static class CounterSteps
   {
-      public static Registry Register(Registry r)
+      public static void Register(Steps s)
       {
-          var s = r.DefineState(() => Value.Of(new { count = 0 }));
-          r = s.Stimulus("I increment", (state) =>
-              Value.Of(new { count = state["count"].AsInt() + 1 }));   // full next state
-          r = s.Sensor("the count is {int}", (state, n) => state["count"]);
-          return r;
+          s.DefineState(() => Value.Map([new("count", Value.Of(0))]));
+          s.Stimulus("I increment", state =>
+              Value.Map([new("count", Value.Of(state["count"].AsInt() + 1))]));   // full next state
+          s.Sensor("the count is {int}", (state, n) => state["count"]);
       }
   }
   ```
 
-  `DefineState(factory)` returns a binder carrying the file's context factory
-  (a fresh state per example; states never bleed across step files). `Stimulus`
-  and `Sensor` take a Cucumber expression + a handler and return the updated
-  `Registry`. The handler's function name is never matched.
+  The framework injects a `Steps` builder; the step file folds its definitions
+  into it (`return`-free — no `Steps.From`/`ToRegistry` bookends). `DefineState`
+  records the file's context factory (a fresh state per example; states never
+  bleed across step files). `Stimulus` and `Sensor` take a Cucumber expression +
+  a handler; the handler's function name is never matched.
 
 - **State evolution = full replacement.** A `stimulus` returns the **whole next
   state** as a `Value` (not a partial merge). This changes the executor's merge

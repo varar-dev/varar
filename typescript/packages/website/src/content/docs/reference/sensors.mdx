@@ -72,8 +72,6 @@ sensors, rather than reaching inside it.
   </TabItem>
   <TabItem label="Rust">
     ```rust
-    let mut s = Steps::from_registry(r);
-
     s.stimulus(
         "I add {int}",
         file!(),
@@ -96,7 +94,6 @@ sensors, rather than reaching inside it.
   </TabItem>
   <TabItem label="C#">
     ```csharp
-    var s = Steps.From(r);
     s.DefineState(() => VMap(("total", Value.Of(0))));
 
     // FULL-REPLACEMENT state: return the whole next state.
@@ -337,7 +334,6 @@ types whose `parse` produces an array:
   </TabItem>
   <TabItem label="C#">
     ```csharp
-    var s = Steps.From(r);
     s.DefineState(() => VMap(("dice", Value.List([Value.Of(5), Value.Of(6)]))));
     s.Param("numbers", @"\d+(?:, \d+)*",
         groups => Value.List(groups[0]!.Split(", ").Select(n => Value.Of(long.Parse(n)))));

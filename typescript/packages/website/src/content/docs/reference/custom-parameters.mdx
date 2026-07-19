@@ -81,8 +81,6 @@ can use it as a `{name}` placeholder.
   </TabItem>
   <TabItem label="Rust">
     ```rust
-    let mut s = Steps::from_registry(r);
-
     let parse: ParseFn = Rc::new(|g: &[&str]| {
         Value::Float(g[0].strip_prefix('£').unwrap_or(g[0]).parse().unwrap_or(0.0))
     });
@@ -90,7 +88,7 @@ can use it as a `{name}` placeholder.
         Value::Float(pounds) => Some(format!("£{pounds:.2}")),
         _ => None,
     });
-    s.param_with_format("money", r"£\d+\.\d{2}", parse, format);
+    s.param("money", r"£\d+\.\d{2}", parse, Some(format));
 
     s.sensor(
         "owes a {money} late fee",
@@ -102,7 +100,6 @@ can use it as a `{name}` placeholder.
   </TabItem>
   <TabItem label="C#">
     ```csharp
-    var s = Steps.From(r);
     s.DefineState(() => VMap(("fee", Value.Of(0.0))));
 
     s.Param(

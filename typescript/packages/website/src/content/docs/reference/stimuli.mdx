@@ -67,8 +67,6 @@ with sensors.
   </TabItem>
   <TabItem label="Rust">
     ```rust
-    let mut s = Steps::from_registry(r);
-
     s.stimulus(
         "I add {int}",
         file!(),
@@ -90,7 +88,6 @@ with sensors.
   </TabItem>
   <TabItem label="C#">
     ```csharp
-    var s = Steps.From(r);
     s.DefineState(() => VMap(("total", Value.Of(0))));
 
     s.Stimulus("I add {int}", (state, n) =>
@@ -194,7 +191,6 @@ full replacement, same principle: new value out, never mutation.
   </TabItem>
   <TabItem label="C#">
     ```csharp
-    var s = Steps.From(r);
     s.DefineState(() => VMap(("greeting", Value.Of("")), ("count", Value.Of(0))));
 
     // Full replacement: read the current state map, set just the changed key.
@@ -272,8 +268,6 @@ empty state they can ignore:
   </TabItem>
   <TabItem label="Rust">
     ```rust
-    let mut s = Steps::from_registry(r);
-
     s.sensor(
         "the square of {int} is {int}",
         file!(),
@@ -287,8 +281,6 @@ empty state they can ignore:
   </TabItem>
   <TabItem label="C#">
     ```csharp
-    var s = Steps.From(r);
-
     s.Sensor("the square of {int} is {int}", (state, n, square) =>
         Value.List([Value.Of(n.AsInt()), Value.Of(n.AsInt() * n.AsInt())]));
     ```

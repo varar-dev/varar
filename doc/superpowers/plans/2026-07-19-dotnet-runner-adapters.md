@@ -50,7 +50,7 @@ anytime. `P2` → `P3` → `P5` → `P6`.
 ### P2 — `Varar.Runner` (M)
 1. `glob_to_regex` (`**`, `*`, `?`, `../`) + `FindSpecs`/`MatchSpec` — port the
    shared semantics, not .NET's platform glob (translate the runner glob tests).
-2. `LoadSteps` (reflect over the assembly's `Register(Registry)` entry-points),
+2. `LoadSteps` (reflect over the assembly's `void Register(Steps)` entry-points),
    `PlanSpec`, `RunSpec` (per-example thunks; `async` handlers awaited),
    `RenderFailure` (reuse core diff payloads, `.md`-anchored).
 3. Filesystem `IBaselineStore` (`varar.lock.json` read/write) + `ReconcileDrift`;

@@ -62,7 +62,7 @@ neither. Enforce via project-reference assertions in `make dotnet`.
 - `FindSpecs`/`MatchSpec` using the hand-rolled `glob_to_regex` (`**`, `*`, `?`,
   `../`) that every other runner ports — **not** .NET's `Matcher`/platform glob,
   so semantics stay identical cross-language.
-- `LoadSteps` (chains the facade `Register(Registry)` functions discovered for
+- `LoadSteps` (chains the facade `void Register(Steps)` functions discovered for
   the workspace — via reflection over the test assembly's registration
   entry-points), `PlanSpec`, `RunSpec` (returns per-example run thunks),
   `RenderFailure` (reuses core diff payloads — `CellMismatchError`,

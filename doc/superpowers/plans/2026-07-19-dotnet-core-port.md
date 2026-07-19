@@ -31,7 +31,7 @@ The config reader, runner, and VSTest adapter are
 
 ## Author-API forks (settled in ADR 0008 — implement in Task 2, don't re-litigate)
 
-- Registration: **injected Registrar** (`Register(Registry) -> Registry`).
+- Registration: **injected Registrar** (`void Register(Steps s)`).
 - State: **full replacement** (`stimulus` returns the whole next `Value`).
 - Source location: **`[CallerFilePath]`/`[CallerLineNumber]`** call-site capture.
 - Handler arity: facade delegate overloads (0/1/2) + explicit core constructors.

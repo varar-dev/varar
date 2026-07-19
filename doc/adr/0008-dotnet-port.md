@@ -71,10 +71,10 @@ drop only the redundant infix (facade = the bare base name, others =
 Two author-API forks are settled by matching the **static-language** ports
 (Java/Kotlin/Rust), not the dynamic ones (Python/Ruby):
 
-- **Registration:** an **injected Registrar** (`DefineSteps(IRegistrar)` /
-  `Register(Registry) -> Registry`), not a module-scope accumulator — .NET has
-  no clean, per-run import-for-side-effect story (`[ModuleInitializer]` runs
-  once per assembly load, not once per test run).
+- **Registration:** an **injected Registrar** — the framework hands each step
+  file a `Steps` builder via `static void Register(Steps s)`, not a module-scope
+  accumulator — .NET has no clean, per-run import-for-side-effect story
+  (`[ModuleInitializer]` runs once per assembly load, not once per test run).
 - **State evolution:** **full replacement** (a `stimulus` returns the whole next
   state as an immutable `Value`), not TS/Python shallow partial-merge — so no
   runtime `deep_freeze` is needed; immutability is enforced by the type system
