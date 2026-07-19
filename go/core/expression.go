@@ -14,7 +14,7 @@ import (
 // tree (values + byte offsets); we own the small, corpus-pinned rest: applying
 // our own value transforms, argument extraction, and parameterTypeNames.
 //
-// Rationale (recorded in ADR 0008): the official Go library is stale at
+// Rationale (recorded in ADR 0010): the official Go library is stale at
 // v6.2.0 rather than the 20.0.0 line every other port pins, but its built-in
 // {int}/{word}/{string} regexps are byte-identical to the reference's, so it
 // reproduces the goldens once we apply the reference's own transforms (a bare
