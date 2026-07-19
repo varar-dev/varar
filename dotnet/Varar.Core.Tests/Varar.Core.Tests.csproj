@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../Varar.Core/Varar.Core.csproj" />
+    <ProjectReference Include="../Varar.Config/Varar.Config.csproj" />
   </ItemGroup>
 
 </Project>
