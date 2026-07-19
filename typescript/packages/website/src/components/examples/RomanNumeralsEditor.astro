@@ -13,18 +13,18 @@ import romanNumeralsStepsRuby from '$examples/ruby-rspec/steps/roman_numerals.st
 import romanNumeralsLogicRust from '$examples/rust-cargotest/src/roman_numerals_example.rs?raw'
 import romanNumeralsStepsRust from '$examples/rust-cargotest/src/steps/roman_numerals.rs?raw'
 import romanNumeralsSource from '$examples/typescript-vitest/roman-numerals.md?raw'
-import romanNumeralsSteps from '$examples/typescript-vitest/steps/roman-numerals.steps.ts?raw'
-import romanNumeralsLogic from '$examples/typescript-vitest/src/roman-numerals.ts?raw'
+import romanNumeralsStepsTypeScript from '$examples/typescript-vitest/steps/roman-numerals.steps.ts?raw'
+import romanNumeralsLogicTypeScript from '$examples/typescript-vitest/src/roman-numerals.ts?raw'
 ---
 <Editor>
   <File uri="file:///roman-numerals.md">
     <Version label="Subtractive notation">{romanNumeralsSource}</Version>
     <Version label="Additive notation">{romanNumeralsSource.replace('IX   ', 'VIIII')}</Version>
   </File>
-  <File uri="file:///roman-numerals.steps.ts">{romanNumeralsSteps}</File>
+  <File uri="file:///roman-numerals.steps.ts">{romanNumeralsStepsTypeScript}</File>
   <File uri="file:///roman-numerals.ts">
-    <Version label="Subtractive notation">{romanNumeralsLogic}</Version>
-    <Version label="Additive notation">{romanNumeralsLogic.replace('IX', 'VIIII')}</Version>
+    <Version label="Subtractive notation">{romanNumeralsLogicTypeScript}</Version>
+    <Version label="Additive notation">{romanNumeralsLogicTypeScript.replace('IX', 'VIIII')}</Version>
   </File>
   <File uri="file:///RomanNumeralsSteps.java">{romanNumeralsStepsJava}</File>
   <File uri="file:///RomanNumerals.java">{romanNumeralsLogicJava}</File>

@@ -61,8 +61,8 @@ class HeaderBinding:
     step_def: StepRegistration
 
 
-# RowCheck is imported from cell_diff (single canonical definition, mirroring
-# the TypeScript reference where RowCheck lives only in cell-diff.ts).
+# RowCheck is imported from cell_diff (single canonical definition, matching
+# the shared module layout where RowCheck lives only in cell_diff).
 
 
 @dataclass(frozen=True, slots=True)

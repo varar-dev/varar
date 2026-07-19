@@ -9,8 +9,9 @@ import { createTestGrammarLoader } from './test-grammar-loader.ts'
 // ADR 0001's "per-language fixtures, shared expectations" applied to the
 // extraction seam: for every conformance bundle, each language's steps
 // fixture must yield the IDENTICAL (kind, expression) set — and, where
-// present, the identical parameter-type (name, regexp) set. TypeScript is
-// the reference; the others are compared against it.
+// present, the identical parameter-type (name, regexp) set. Every port must
+// agree, so we pick one arbitrarily as the comparison baseline; the choice
+// of language carries no significance.
 //
 // The language set is derived from the single source of truth (languages.json),
 // not hand-listed here, so a new port is covered automatically. A file in a
@@ -19,7 +20,7 @@ import { createTestGrammarLoader } from './test-grammar-loader.ts'
 // assertion below runs per language per bundle, this doubles as the drift gate:
 // a bundle that lacks a fixture for any supported language fails.
 const BUNDLES_DIR = fileURLToPath(new URL('../../../../conformance/bundles', import.meta.url))
-const REFERENCE = 'ts' // languages.json id for the reference port
+const BASELINE = 'ts' // arbitrary languages.json id used as the comparison anchor
 
 const LANGUAGES = languages.map((lang) => {
   const languageId = languageIdForPath(`fixture${lang.ext}`)
@@ -62,20 +63,20 @@ describe('extraction conformance across languages', () => {
         }
         byLanguage.set(lang.id, { steps: steps.sort(), types: types.sort() })
       }
-      const reference = byLanguage.get(REFERENCE)
+      const baseline = byLanguage.get(BASELINE)
       for (const [id, actual] of byLanguage) {
-        expect(actual.steps, `${bundle}: ${id} step set differs from ${REFERENCE}`).toEqual(
-          reference?.steps,
+        expect(actual.steps, `${bundle}: ${id} step set differs from ${BASELINE}`).toEqual(
+          baseline?.steps,
         )
-        expect(actual.types, `${bundle}: ${id} param-type set differs from ${REFERENCE}`).toEqual(
-          reference?.types,
+        expect(actual.types, `${bundle}: ${id} param-type set differs from ${BASELINE}`).toEqual(
+          baseline?.types,
         )
       }
       // The corpus itself must be non-trivial: every bundle defines steps,
       // and bundle 13 defines the {airport} parameter type.
-      expect(reference?.steps.length).toBeGreaterThan(0)
+      expect(baseline?.steps.length).toBeGreaterThan(0)
       if (bundle === '13-custom-parameter-type') {
-        expect(reference?.types).toEqual(['airport|[A-Z]{3}'])
+        expect(baseline?.types).toEqual(['airport|[A-Z]{3}'])
       }
     })
   }

@@ -8,7 +8,7 @@ import deepThoughtStepsPython from '$examples/python-pytest/steps/deep_thought.s
 import deepThoughtStepsRuby from '$examples/ruby-rspec/steps/deep_thought.steps.rb?raw'
 import deepThoughtStepsRust from '$examples/rust-cargotest/src/steps/deep_thought.rs?raw'
 import deepThoughtSource from '$examples/typescript-vitest/deep-thought.md?raw'
-import deepThoughtSteps from '$examples/typescript-vitest/steps/deep-thought.steps.ts?raw'
+import deepThoughtStepsTypeScript from '$examples/typescript-vitest/steps/deep-thought.steps.ts?raw'
 ---
 <Editor>
   <File uri="file:///deep-thought.md">
@@ -16,8 +16,8 @@ import deepThoughtSteps from '$examples/typescript-vitest/steps/deep-thought.ste
     <Version label="Break it">{deepThoughtSource.replace('42', '41')}</Version>
   </File>
   <File uri="file:///deep-thought.steps.ts">
-    <Version label="Fix it">{deepThoughtSteps}</Version>
-    <Version label="Break it">{deepThoughtSteps.replace('42', '43')}</Version>
+    <Version label="Fix it">{deepThoughtStepsTypeScript}</Version>
+    <Version label="Break it">{deepThoughtStepsTypeScript.replace('42', '43')}</Version>
   </File>
   <File uri="file:///DeepThoughtSteps.java">{deepThoughtStepsJava}</File>
   <File uri="file:///deep-thought.steps.kt">{deepThoughtStepsKotlin}</File>
