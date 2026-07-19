@@ -124,9 +124,6 @@ importers:
       '@oselvar/var-core':
         specifier: workspace:*
         version: link:../var-core
-      typescript:
-        specifier: ^6.0.3
-        version: 6.0.3
       web-tree-sitter:
         specifier: ^0.26.10
         version: 0.26.11
@@ -215,6 +212,9 @@ importers:
       '@oselvar/var-runner':
         specifier: workspace:*
         version: link:../var-runner
+      tree-sitter-typescript:
+        specifier: ^0.23.2
+        version: 0.23.2
       vite:
         specifier: ^8.0.0
         version: 8.1.5(@types/node@26.1.1)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0)
@@ -324,12 +324,18 @@ importers:
       tailwindcss:
         specifier: ^4.3.2
         version: 4.3.3
+      tree-sitter-typescript:
+        specifier: ^0.23.2
+        version: 0.23.2
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
       vscode-languageserver:
         specifier: ^10.1.0
         version: 10.1.0
+      web-tree-sitter:
+        specifier: ^0.26.10
+        version: 0.26.11
     devDependencies:
       '@astrojs/check':
         specifier: ^0.9.9
