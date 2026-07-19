@@ -25,6 +25,10 @@ Each example in the Markdown specs becomes one Kotest test.
   `steps` + `stimulus`/`sensor`. State is the lambda receiver; a
   stimulus returns the next state (`copy(...)`), a sensor returns a value for
   Vár to compare against what the Markdown says.
+- **`src/main/kotlin/examples/{Library,RomanNumerals,Yahtzee}.kt`** are the
+  sample's domain code (the system under test) — ordinary classes the steps
+  call, kept in the production source set (`src/main`) separate from the test
+  steps, just like your production code.
 - **`ExamplesSpec.kt`** extends `VarSpec`, a Kotest `FunSpec` that loads
   `varar.config.json` (from the test working directory by default) and registers
   one test per planned example. Because it's an ordinary Kotest spec class, no

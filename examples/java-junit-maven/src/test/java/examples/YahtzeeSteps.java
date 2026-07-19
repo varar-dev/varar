@@ -16,10 +16,6 @@ public final class YahtzeeSteps implements StepDefinitions {
     public void defineSteps(Registrar registrar) {
         StateBinder<Ctx> s = registrar.steps(Ctx::new);
 
-        // Header-bound table: the paragraph names every header cell (dice,
-        // category, score), so this sensor runs once per row with the row as a
-        // Map keyed by header. Returning Map.of("score", …) checks that column;
-        // the other columns are inputs.
         s.sensor("Examples of dice, category and score", (Ctx ctx, Map<String, String> row) -> {
             List<Integer> dice = Arrays.stream(row.get("dice").split(","))
                     .map(d -> Integer.parseInt(d.trim()))

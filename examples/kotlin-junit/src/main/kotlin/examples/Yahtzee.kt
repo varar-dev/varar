@@ -4,7 +4,6 @@ fun score(dice: List<Int>, category: String): Int {
     val counts = dice.groupingBy { it }.eachCount()
     val sum = dice.sum()
     fun sumOf(face: Int) = (counts[face] ?: 0) * face
-    // n-of-a-kind: the highest face appearing at least n times, scored n*face.
     fun ofAKind(n: Int): Int {
         val faces = counts.filterValues { it >= n }.keys
         return if (faces.isNotEmpty()) n * faces.max() else 0

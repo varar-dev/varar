@@ -7,7 +7,7 @@ AllCops:
   NewCops: enable
   SuggestExtensions: false
 
-# A language port faithfully mirrors the reference implementations' structure;
+# A language port faithfully mirrors the other ports' structure;
 # the size/complexity metrics fight that faithfulness, so relax them rather than
 # fragment the ported algorithms.
 Metrics:

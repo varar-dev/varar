@@ -1,8 +1,8 @@
 # Python implementation
 
 uv workspace for the Python port of `var` (ADR 0001, issue #2). A native,
-pure-Python port of the reference TypeScript implementation that passes the same
-cross-language conformance suite.
+pure-Python port of `var` that passes the same shared cross-language conformance
+suite as every other port — no port is the reference; the golden corpus is.
 
 ```sh
 uv sync          # create .venv, install workspace members + dev deps

@@ -1,7 +1,3 @@
-//! Decimal → Roman numeral conversion (the `roman-numerals.md` domain).
-//!
-//! A straight port of `examples/python-pytest/src/roman_numerals_example`.
-
 const NUMERALS: &[(&str, u32)] = &[
     ("M", 1000),
     ("CM", 900),

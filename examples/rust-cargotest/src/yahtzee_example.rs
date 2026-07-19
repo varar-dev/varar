@@ -1,8 +1,3 @@
-//! Yahtzee scoring (the `yahtzee.md` domain).
-//!
-//! A straight port of `examples/python-pytest/src/yahtzee_example` — `score`
-//! takes the five dice and a category and returns the box's score.
-
 use std::collections::HashMap;
 
 pub fn score(dice: &[i64], category: &str) -> i64 {
@@ -14,7 +9,6 @@ pub fn score(dice: &[i64], category: &str) -> i64 {
 
     let sum_of = |face: i64| counts.get(&face).copied().unwrap_or(0) * face;
 
-    // n-of-a-kind: the highest face appearing at least n times, scored n*face.
     let of_a_kind = |n: i64| {
         counts
             .iter()

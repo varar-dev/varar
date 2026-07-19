@@ -23,8 +23,9 @@ Each example in the Markdown specs becomes one vitest test.
 - **`steps/*.steps.ts`** define the steps with `steps` +
   `stimulus`/`sensor`. A stimulus returns the next state, a sensor returns a
   value for Vár to compare against what the Markdown says.
-- **`steps/yahtzee.ts`** and **`steps/roman-numerals.ts`** are the sample's
-  domain code, imported by the steps like any other module.
+- **`src/yahtzee.ts`** and **`src/roman-numerals.ts`** are the sample's
+  domain code (the system under test), imported by the steps like any other
+  module.
 
 ## Versioning note
 

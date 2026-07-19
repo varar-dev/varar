@@ -1,10 +1,3 @@
-//! Steps for `library.md`.
-//!
-//! Custom parameter types pair `parse` with `format`, so a mismatch renders in
-//! the document's own notation (money, dates, an emphasised title). Money is
-//! encoded as pennies (`Value::Int`), a date as a `{year, month, day}` map, and
-//! a title as its bare text (`Value::String`) — see [`crate::library_example`].
-
 use super::{as_int, smap, vmap};
 use crate::library_example::{
     Date, FEE_PER_DAY, format_date, format_money, late_fee, may_borrow, parse_date, parse_money,
@@ -42,7 +35,6 @@ fn loans_of(state: &Value) -> Vec<Value> {
 
 pub fn register(r: Registry) -> Registry {
     let mut s = Steps::from_registry(r);
-    // --- custom parameter types (parse + display format) --------------------
 
     let date_parse: ParseFn = Rc::new(|g: &[&str]| date_value(parse_date(g[0])));
     let date_format: FormatFn = Rc::new(|v: &Value| Some(format_date(value_date(v))));
@@ -53,10 +45,6 @@ pub fn register(r: Registry) -> Registry {
         date_format,
     );
 
-    // £2.50 and 50p, both as pennies. varar-core's matcher compiles with the
-    // `regex` crate, which has no lookahead — so this is the corpus-covering
-    // subset of cucumber-expressions' float regexp (no scientific notation, no
-    // empty-match guards), not the exact Python pattern.
     let money_parse: ParseFn = Rc::new(|g: &[&str]| Value::Int(parse_money(g[0])));
     let money_format: FormatFn = Rc::new(|v: &Value| match v {
         Value::Int(pennies) => Some(format_money(*pennies)),
@@ -64,8 +52,6 @@ pub fn register(r: Registry) -> Registry {
     });
     s.param_with_format("money", r"£\d+(?:\.\d+)?|\d+p", money_parse, money_format);
 
-    // The emphasised run IS the parameter: the markers live in the pattern,
-    // parse strips them, format restores them. Markup is notation, like £2.50.
     let title_parse: ParseFn = Rc::new(|g: &[&str]| {
         let raw = g[0];
         let inner = raw
@@ -79,8 +65,6 @@ pub fn register(r: Registry) -> Registry {
         _ => None,
     });
     s.param_with_format("title", r"\*[^*]+\*", title_parse, title_format);
-
-    // --- steps --------------------------------------------------------------
 
     s.stimulus(
         "borrowed {title}, due back on {date}",

@@ -7,8 +7,12 @@ description: Use when starting or reviewing a new var language port (Java, Kotli
 
 ## Overview
 
-var is hexagonal + multi-language (ADR 0001). TypeScript is the reference
-implementation; **Python, Java, Kotlin, and Ruby are complete ports**. Python
+var is hexagonal + multi-language (ADR 0001). **TypeScript, Python, Java,
+Kotlin, and Ruby are all complete ports at full parity** — there is no single
+reference implementation, so seek inspiration from whichever existing ports are
+closest to your target rather than treating any one language as canonical. The
+shared `conformance/bundles/*/golden/*.json` corpus is what every port answers
+to. Python
 and Ruby are the closest precedents for a *full pipeline* port (no runtime
 sharing, like Go would be); Kotlin is the precedent for a *facade over an
 existing engine* (it shares the JVM with Java — see the last section). Ruby is
@@ -434,11 +438,11 @@ how many languages exist; a new port does not touch them:
 | What does the task-by-task TDD execution look like? | `doc/superpowers/plans/2026-06-30-python-core-port.md` |
 | How is core/facade split, and why? | `doc/superpowers/plans/2026-06-30-python-core-split.md` |
 | How does the runner + test-framework adapter fit together? | `doc/superpowers/specs/2026-06-30-var-pytest-plugin-design.md` |
-| Reference implementation (engine) | `typescript/packages/core/src/*.ts`, completed mirror at `python/packages/core/src/varar_core/*.py` |
-| Reference implementation (facade) | `typescript/packages/varar/src/{index,internal,registry}.ts`, `python/packages/varar/src/varar/{__init__,internal,registry}.py` |
-| Reference implementation (runner) | `typescript/packages/runner/src/*.ts`, `python/packages/runner/src/varar_runner/*.py` |
-| Reference implementation (test-framework adapter) | `typescript/packages/vitest/src/*.ts`, `python/packages/pytest/src/varar_pytest/*.py` |
-| Reference implementation (drift, unit-gated) | `typescript/packages/core/src/{drift,hash}.ts` + `tests/{drift,hash}.test.ts`; mirror at `python/packages/core/src/varar_core/{drift,hash}.py`; `java/core/.../{Drift,Hash}.java` |
+| Existing ports to read (engine) | `typescript/packages/core/src/*.ts`, completed mirror at `python/packages/core/src/varar_core/*.py` |
+| Existing ports to read (facade) | `typescript/packages/varar/src/{index,internal,registry}.ts`, `python/packages/varar/src/varar/{__init__,internal,registry}.py` |
+| Existing ports to read (runner) | `typescript/packages/runner/src/*.ts`, `python/packages/runner/src/varar_runner/*.py` |
+| Existing ports to read (test-framework adapter) | `typescript/packages/vitest/src/*.ts`, `python/packages/pytest/src/varar_pytest/*.py` |
+| Existing ports to read (drift, unit-gated) | `typescript/packages/core/src/{drift,hash}.ts` + `tests/{drift,hash}.test.ts`; mirror at `python/packages/core/src/varar_core/{drift,hash}.py`; `java/core/.../{Drift,Hash}.java` |
 | The conformance corpus + goldens | `conformance/bundles/*/{example.md, *.steps.{ts,py,kt,rb}, *Steps.java, golden/*.json}` — 15 bundles, four artifacts each; **plus** the config corpus `conformance/config/cases/*/{varar.config.json, golden.json|expect-error.txt}` |
 
 ## Common mistakes

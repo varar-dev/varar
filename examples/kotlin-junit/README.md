@@ -25,6 +25,10 @@ Each example in the Markdown specs becomes one JUnit test.
   `steps` + `stimulus`/`sensor`. State is the lambda receiver; a
   stimulus returns the next state (`copy(...)`), a sensor returns a value for
   Vár to compare against what the Markdown says.
+- **`src/main/kotlin/examples/{Library,RomanNumerals,Yahtzee}.kt`** are the
+  sample's domain code (the system under test) — ordinary classes the steps
+  call, kept in the production source set (`src/main`) separate from the test
+  steps, just like your production code.
 - **`RunVarSpecsTest.kt`** is a JUnit `@Suite` that includes the `"var"`
   engine. It exists only because Gradle and Maven Surefire discover tests by
   class — the engine itself needs no wiring beyond having `var-junit` on the

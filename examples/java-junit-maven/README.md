@@ -24,6 +24,10 @@ Each example in the Markdown specs becomes one JUnit test.
   `defineSteps(Registrar)` method binds a state record and registers
   `stimulus`/`sensor` handlers. A stimulus returns the next state, a sensor
   returns a value for Vár to compare against what the Markdown says.
+- **`src/main/java/examples/{Library,RomanNumerals,Yahtzee}.java`** are the
+  sample's domain code (the system under test) — ordinary classes the steps
+  call, kept in the production source set (`src/main`) separate from the test
+  steps, just like your production code.
 - **`RunVarSpecsTest.java`** is a JUnit `@Suite` that includes the `"var"`
   engine. It exists only because Maven Surefire discovers tests by class name
   — the engine itself needs no wiring beyond having `var-junit` on the test

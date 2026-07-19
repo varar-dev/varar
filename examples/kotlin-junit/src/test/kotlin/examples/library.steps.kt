@@ -16,14 +16,11 @@ data class LibraryCtx(
     val granted: Boolean = false,
 )
 
-/** June 6, 2026 ⇄ LocalDate 2026-06-06 — one formatter drives both parse and format. */
 private val DATE_FORMAT = DateTimeFormatter.ofPattern("MMMM d, yyyy", Locale.ENGLISH)
 
-/** £2.50 and 50p, both as GBP Money. */
 private fun toMoney(raw: String): Money =
     if (raw.endsWith("p")) gbp(raw.dropLast(1).toDouble() / 100) else gbp(raw.drop(1).toDouble())
 
-/** The inverse: mismatches render as £2.60 / 50p, not as a Money dump. */
 private fun formatMoney(m: Money): String =
     if (m.value < 1) "${(m.value * 100).roundToInt()}p" else "£%.2f".format(Locale.ROOT, m.value)
 
@@ -36,8 +33,6 @@ val librarySteps =
         ) { groups ->
             LocalDate.parse(groups[0], DATE_FORMAT)
         }
-        // £2.50 and 50p, both as GBP Money. The amount is cucumber-expressions'
-        // float regexp, minus the scientific notation.
         param(
             "money",
             Regex("""£(?=.*\d.*)[-+]?\d*(?:\.(?=\d.*))?\d*|\d+p"""),
@@ -45,8 +40,6 @@ val librarySteps =
         ) { groups ->
             toMoney(groups[0])
         }
-        // The emphasised run IS the parameter: the markers live in the pattern,
-        // parse strips them, format restores them. Markup is notation, like £2.50.
         param(
             "title",
             Regex("""\*[^*]+\*"""),
