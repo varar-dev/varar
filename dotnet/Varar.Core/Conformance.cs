@@ -1,4 +1,5 @@
 using System.Collections.Immutable;
+using System.IO;
 
 namespace Varar.Core;
 
@@ -34,6 +35,92 @@ public static class Conformance
             ("code", Value.Of(d.Code.ToWire())),
             ("severity", Value.Of(d.Severity.ToWire())),
             ("span", SpanValue(d.Span)))))));
+
+    /// <summary>
+    /// Runs the plan and projects the recorded events to the <c>trace.json</c> shape: per example the
+    /// name/outcome and per-step ordinal/text/expression/context-key/outcome, with a structured
+    /// failure artifact on failure. Built inline (as TS's <c>runConformance</c> does).
+    /// </summary>
+    public static Value ToTraceArtifact(ExecutionPlan plan, Func<string, Value> createContext)
+    {
+        var traceExamples = plan.Examples.Select(ex =>
+        {
+            var observations = new List<StepObservation>();
+            var failure = Execute.RunExample(plan, ex, createContext, observations);
+            var outcome = failure is null ? "pass" : "fail";
+
+            var steps = ex.Steps.Select((step, i) =>
+            {
+                var matches = observations.Where(o => o.Ordinal == i + 1).ToList();
+                var observed = matches.FirstOrDefault(m => m.Outcome == "fail")
+                    ?? (matches.Count > 0 ? matches[matches.Count - 1] : null);
+                var stepOutcome = observed?.Outcome ?? "skipped";
+
+                var entries = new List<KeyValuePair<string, Value>>
+                {
+                    new("exampleName", Value.Of(ex.Name)),
+                    new("ordinal", Value.Of(i + 1)),
+                    new("stepText", Value.Of(step.Text)),
+                    new("matchedExpression", Value.Of(step.StepDef.Expression)),
+                    new("contextKey", Map(
+                        ("exampleName", Value.Of(ex.Name)),
+                        ("stepFile", Value.Of(FileStem(step.StepDef.ExpressionSourceFile))))),
+                    new("outcome", Value.Of(stepOutcome)),
+                };
+                if (stepOutcome == "fail")
+                {
+                    entries.Add(new("failure", ToFailureArtifact(observed?.Error, step.MatchSpan)));
+                }
+
+                return Value.Map(entries);
+            });
+
+            return Map(("name", Value.Of(ex.Name)), ("outcome", Value.Of(outcome)), ("steps", Value.List(steps)));
+        });
+
+        return Map(("examples", Value.List(traceExamples)));
+    }
+
+    private static Value ToFailureArtifact(Exception? error, Span matchSpan)
+    {
+        var entries = new List<KeyValuePair<string, Value>>
+        {
+            new("line", Value.Of(matchSpan.StartLine)),
+            new("anchor", SpanValue(FailureAnchor.Anchor(error, matchSpan))),
+        };
+        switch (error)
+        {
+            case CellMismatchError cm:
+                entries.Add(new("kind", Value.Of("cell-mismatch")));
+                entries.Add(new("cells", Value.List(cm.Cells.Where(c => !c.Ok).Select(c => Map(
+                    ("column", Value.Of(c.Column)),
+                    ("expected", Value.Of(c.Expected)),
+                    ("actual", Value.Of(c.Actual)),
+                    ("span", SpanValue(c.Span)))))));
+                break;
+            case DocStringMismatchError dm:
+                entries.Add(new("kind", Value.Of("doc-string-mismatch")));
+                entries.Add(new("diff", Map(
+                    ("expected", Value.Of(dm.Diff.Expected)),
+                    ("actual", Value.Of(dm.Diff.Actual)),
+                    ("span", SpanValue(dm.Diff.Span)))));
+                break;
+            case ReturnShapeError:
+                entries.Add(new("kind", Value.Of("return-shape")));
+                break;
+            case UnexpectedPassError:
+                entries.Add(new("kind", Value.Of("unexpected-pass")));
+                break;
+            default:
+                entries.Add(new("kind", Value.Of("thrown")));
+                break;
+        }
+
+        return Value.Map(entries);
+    }
+
+    // A step-def file's stem — the cross-port stepFile (numerals.steps.cs → numerals.steps).
+    private static string FileStem(string path) => Path.GetFileNameWithoutExtension(path);
 
     private static Value PlannedExampleValue(PlannedExample ex, string source)
     {
