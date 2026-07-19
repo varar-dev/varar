@@ -95,11 +95,28 @@ reader; drift is unit-gated against the shared FNV-1a / lockfile vectors.
   count an expression actually produced, and a slot whose runtime kind does not
   match the declared type.
 
+  **Domain types as slots.** Java can hand a handler a `LocalDate` because its
+  core is `Object`-based, so a custom parameter type's transform result flows
+  through untouched. Go's core uses a closed `Value` union, so the facade
+  bridges instead: a type that implements `ValueDecoder` (and, for a sensor
+  slot, `ValueEncoder`) can be a step parameter directly —
+
+  ```go
+  func (d *Date) DecodeVarValue(v varar.Value) error { … }
+  func (d Date) EncodeVarValue() varar.Value         { … }
+
+  s.Stimulus("borrowed {title}, due back on {date}",
+      func(state varar.Value, title string, due Date) (varar.Value, error) { … })
+  ```
+
+  — the `json.Unmarshaler`/`Marshaler` pattern, keeping the core free of any
+  knowledge of author types. Named primitives (`type Celsius int64`) need no
+  interface; the reflect Kind is enough.
+
   The reflection lives entirely in the facade; `varar-core` stays
   reflection-free. The raw `func(state Value, args []Value) (*Value, error)`
-  form is still accepted under the same name — the escape hatch for slots with
-  no plain Go spelling (a whole table, a custom parameter type that parses to a
-  map) and for header-bound rows, which compare by column rather than
+  form is still accepted under the same name — the escape hatch for whole-table
+  slots and for header-bound rows, which compare by column rather than
   positionally by slot. Both forms appear in the conformance corpus.
 
 ### String-offset units

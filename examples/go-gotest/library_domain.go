@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/varar-dev/varar-go/varar"
 )
 
 // FeePerDay is the overdue fee in pennies per day.
@@ -121,4 +123,25 @@ func mustInt(s string) int64 {
 		panic("not an integer: " + s)
 	}
 	return n
+}
+
+// DecodeVarValue lets a Date be used directly as a step parameter — the
+// {date} parameter type's parse produces the map this reads back, so handlers
+// can take a Date instead of a varar.Value.
+func (d *Date) DecodeVarValue(v varar.Value) error {
+	m, ok := v.AsMap()
+	if !ok {
+		return fmt.Errorf("expected a date, got %s", v.TypeName())
+	}
+	*d = Date{Year: m["year"].MustInt(), Month: m["month"].MustInt(), Day: m["day"].MustInt()}
+	return nil
+}
+
+// EncodeVarValue is the inverse, so a Date can also be a sensor slot.
+func (d Date) EncodeVarValue() varar.Value {
+	return varar.MapValue(map[string]varar.Value{
+		"year":  varar.IntValue(d.Year),
+		"month": varar.IntValue(d.Month),
+		"day":   varar.IntValue(d.Day),
+	})
 }

@@ -34,39 +34,60 @@ import (
 //
 //	s.Sensor("…", func(state varar.Value, args []varar.Value) (*varar.Value, error) { … })
 
+// ValueDecoder lets a domain type appear directly as a step parameter, the way
+// Java's Object-based core passes a LocalDate straight to the handler. A custom
+// parameter type's parse produces a Value; implementing this says how to read
+// that Value back into your own type — the json.Unmarshaler of this API.
+//
+//	func (d *Date) DecodeVarValue(v varar.Value) error { … }
+//
+//	s.Stimulus("borrowed {title}, due back on {date}",
+//	    func(state varar.Value, title string, due Date) (varar.Value, error) { … })
+type ValueDecoder interface {
+	DecodeVarValue(v Value) error
+}
+
+// ValueEncoder is the inverse, needed when a domain type is a SENSOR slot: the
+// core compares the returned value against the captured one, so it must be able
+// to go back to a Value. Use a value receiver.
+type ValueEncoder interface {
+	EncodeVarValue() Value
+}
+
 var (
+	decoderType  = reflect.TypeOf((*ValueDecoder)(nil)).Elem()
+	encoderType  = reflect.TypeOf((*ValueEncoder)(nil)).Elem()
 	valueType    = reflect.TypeOf(Value{})
 	valueSlice   = reflect.TypeOf([]Value{})
 	valuePointer = reflect.TypeOf(&Value{})
 	errorType    = reflect.TypeOf((*error)(nil)).Elem()
 )
 
-// supportedSlotTypes are the Go types a step parameter (and a sensor's matching
-// return) may take. Value is the escape hatch for anything else.
-var supportedSlotTypes = []reflect.Type{
-	reflect.TypeOf(int(0)),
-	reflect.TypeOf(int64(0)),
-	reflect.TypeOf(float64(0)),
-	reflect.TypeOf(""),
-	reflect.TypeOf(false),
-	valueType,
+// decodesFromValue reports whether t can be built from a Value — either it is a
+// Value, a Go primitive kind, or it implements ValueDecoder.
+func decodesFromValue(t reflect.Type) bool {
+	if t == valueType || reflect.PointerTo(t).Implements(decoderType) {
+		return true
+	}
+	return primitiveKind(t)
 }
 
-func isSupportedSlotType(t reflect.Type) bool {
-	for _, s := range supportedSlotTypes {
-		if t == s {
-			return true
-		}
+// encodesToValue reports whether t can go back to a Value, which a sensor's
+// results must do so the core can compare them.
+func encodesToValue(t reflect.Type) bool {
+	if t == valueType || t.Implements(encoderType) {
+		return true
+	}
+	return primitiveKind(t)
+}
+
+func primitiveKind(t reflect.Type) bool {
+	switch t.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Float32, reflect.Float64, reflect.String, reflect.Bool:
+		return true
 	}
 	return false
-}
-
-func supportedNames() string {
-	names := make([]string, len(supportedSlotTypes))
-	for i, t := range supportedSlotTypes {
-		names[i] = t.String()
-	}
-	return fmt.Sprintf("%v", names)
 }
 
 // isRawHandler reports whether fn is the pass-through form
@@ -108,9 +129,10 @@ func adapt(handler any, kind core.StepKind, expression string) HandlerFunc {
 
 	slots := t.NumIn() - 1
 	for i := 1; i < t.NumIn(); i++ {
-		if !isSupportedSlotType(t.In(i)) {
-			panic(fmt.Sprintf("var: %q: parameter %d is %s, which is not a supported slot type %s",
-				expression, i, t.In(i), supportedNames()))
+		if !decodesFromValue(t.In(i)) {
+			panic(fmt.Sprintf(
+				"var: %q: parameter %d is %s, which cannot be read from a slot — use a Go primitive, varar.Value, or implement varar.ValueDecoder",
+				expression, i, t.In(i)))
 		}
 	}
 	if t.NumOut() == 0 || t.Out(t.NumOut()-1) != errorType {
@@ -147,6 +169,11 @@ func adapt(handler any, kind core.StepKind, expression string) HandlerFunc {
 			expression, slots, slots, t))
 	}
 	for i := 0; i < slots; i++ {
+		if !encodesToValue(t.Out(i)) {
+			panic(fmt.Sprintf(
+				"var: %q: result %d is %s, which cannot be compared — use a Go primitive, varar.Value, or implement varar.ValueEncoder (value receiver)",
+				expression, i+1, t.Out(i)))
+		}
 		if t.Out(i) != t.In(i+1) {
 			panic(fmt.Sprintf(
 				"var: %q: sensor result %d is %s but slot %d is %s — a sensor returns each slot's own type",
@@ -201,58 +228,65 @@ func toGo(v Value, t reflect.Type, slot int) (reflect.Value, error) {
 		return reflect.Value{}, fmt.Errorf("var: slot %d is a %s, cannot be read as %s",
 			slot+1, v.TypeName(), want)
 	}
-	switch t {
-	case valueType:
+	if t == valueType {
 		return reflect.ValueOf(v), nil
-	case reflect.TypeOf(int(0)):
+	}
+	// A domain type says how to read itself (the json.Unmarshaler analogue).
+	if reflect.PointerTo(t).Implements(decoderType) {
+		ptr := reflect.New(t)
+		if err := ptr.Interface().(ValueDecoder).DecodeVarValue(v); err != nil {
+			return reflect.Value{}, fmt.Errorf("var: slot %d: %w", slot+1, err)
+		}
+		return ptr.Elem(), nil
+	}
+	// Primitive kinds, so a named type like `type Celsius int64` works too.
+	switch t.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		n, ok := v.AsInt()
 		if !ok {
-			return fail("int")
+			return fail(t.String())
 		}
-		return reflect.ValueOf(int(n)), nil
-	case reflect.TypeOf(int64(0)):
-		n, ok := v.AsInt()
-		if !ok {
-			return fail("int64")
-		}
-		return reflect.ValueOf(n), nil
-	case reflect.TypeOf(float64(0)):
+		return reflect.ValueOf(n).Convert(t), nil
+	case reflect.Float32, reflect.Float64:
 		f, ok := v.AsFloat()
 		if !ok {
-			return fail("float64")
+			return fail(t.String())
 		}
-		return reflect.ValueOf(f), nil
-	case reflect.TypeOf(""):
-		s, ok := v.AsString()
+		return reflect.ValueOf(f).Convert(t), nil
+	case reflect.String:
+		str, ok := v.AsString()
 		if !ok {
-			return fail("string")
+			return fail(t.String())
 		}
-		return reflect.ValueOf(s), nil
-	case reflect.TypeOf(false):
+		return reflect.ValueOf(str).Convert(t), nil
+	case reflect.Bool:
 		b, ok := v.AsBool()
 		if !ok {
-			return fail("bool")
+			return fail(t.String())
 		}
-		return reflect.ValueOf(b), nil
+		return reflect.ValueOf(b).Convert(t), nil
 	}
 	return reflect.Value{}, fmt.Errorf("var: unsupported slot type %s", t)
 }
 
 // fromGo converts a handler's returned value back to a Value for comparison.
 func fromGo(rv reflect.Value) Value {
-	switch v := rv.Interface().(type) {
-	case Value:
-		return v
-	case int:
-		return IntValue(int64(v))
-	case int64:
-		return IntValue(v)
-	case float64:
-		return FloatValue(v)
-	case string:
-		return StrValue(v)
-	case bool:
-		return BoolValue(v)
+	if enc, ok := rv.Interface().(ValueEncoder); ok {
+		return enc.EncodeVarValue()
+	}
+	t := rv.Type()
+	if t == valueType {
+		return rv.Interface().(Value)
+	}
+	switch t.Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return IntValue(rv.Int())
+	case reflect.Float32, reflect.Float64:
+		return FloatValue(rv.Float())
+	case reflect.String:
+		return StrValue(rv.String())
+	case reflect.Bool:
+		return BoolValue(rv.Bool())
 	}
 	return NullValue
 }

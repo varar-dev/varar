@@ -37,7 +37,7 @@ func TestRegistrationRejectsMalformedHandlers(t *testing.T) {
 		{"not a func", "must be a func", 42},
 		{"no state parameter", "first parameter must be the state", func() error { return nil }},
 		{"state is not a Value", "first parameter must be the state", func(n int) error { return nil }},
-		{"unsupported slot type", "not a supported slot type", func(state Value, b []byte) ([]byte, error) { return b, nil }},
+		{"unsupported slot type", "cannot be read from a slot", func(state Value, b []byte) ([]byte, error) { return b, nil }},
 		{"last result not error", "last result must be error", func(state Value, n int) int { return n }},
 		{"sensor result count", "must return 1 value(s) plus error", func(state Value, n int) error { return nil }},
 		{"sensor result type", "sensor returns each slot's own type", func(state Value, n int) (string, error) { return "", nil }},
@@ -114,4 +114,80 @@ func TestSlotCountMismatchFailsTheStep(t *testing.T) {
 	if msg := failure.Error.Message(); !strings.Contains(msg, "handler takes 2") {
 		t.Errorf("message %q should name the handler arity", msg)
 	}
+}
+
+// --- domain types as slots (the ValueDecoder/ValueEncoder pair) --------------
+
+// celsius exercises a named primitive: no decoder needed, the kind is enough.
+type celsius int64
+
+// stamp exercises a struct domain type, the LocalDate-style case.
+type stamp struct{ Year, Day int64 }
+
+func (s *stamp) DecodeVarValue(v Value) error {
+	m, ok := v.AsMap()
+	if !ok {
+		return errNotAStamp
+	}
+	*s = stamp{Year: m["year"].MustInt(), Day: m["day"].MustInt()}
+	return nil
+}
+
+func (s stamp) EncodeVarValue() Value {
+	return core.MapValue(map[string]Value{
+		"year": core.IntValue(s.Year), "day": core.IntValue(s.Day),
+	})
+}
+
+var errNotAStamp = errStr("not a stamp")
+
+type errStr string
+
+func (e errStr) Error() string { return string(e) }
+
+func TestDomainTypeSlotRoundTrips(t *testing.T) {
+	encoded := stamp{Year: 2026, Day: 12}.EncodeVarValue()
+	got, err := toGo(encoded, reflect.TypeOf(stamp{}), 0)
+	if err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if got.Interface().(stamp) != (stamp{Year: 2026, Day: 12}) {
+		t.Errorf("decoded %v", got.Interface())
+	}
+	if back := fromGo(got); !core.ValueEqual(back, encoded) {
+		t.Errorf("re-encoded %v, want %v", back, encoded)
+	}
+}
+
+func TestNamedPrimitiveSlotConverts(t *testing.T) {
+	got, err := toGo(core.IntValue(21), reflect.TypeOf(celsius(0)), 0)
+	if err != nil || got.Interface().(celsius) != 21 {
+		t.Fatalf("got %v, %v", got, err)
+	}
+	if back := fromGo(got); !core.ValueEqual(back, core.IntValue(21)) {
+		t.Errorf("re-encoded %v", back)
+	}
+}
+
+func TestDomainTypeIsAcceptedAtRegistration(t *testing.T) {
+	s := NewSteps()
+	s.Param("date", `[A-Z][a-z]+ \d{1,2}, \d{4}`, func(g []string) Value {
+		return stamp{Year: 2026, Day: 12}.EncodeVarValue()
+	}, nil)
+	// A decoder-only type is fine as a stimulus slot...
+	s.Stimulus("due on {date}", func(state Value, d stamp) (Value, error) { return state, nil })
+	// ...and, because stamp also encodes, as a sensor slot.
+	s.Sensor("the date is {date}", func(state Value, d stamp) (stamp, error) { return d, nil })
+	if n := len(s.Registry().Steps); n != 2 {
+		t.Errorf("registered %d steps", n)
+	}
+}
+
+// A type that cannot become a Value again is rejected as a SENSOR slot, since
+// the core would have nothing to compare.
+func TestEncoderlessTypeRejectedAsSensorSlot(t *testing.T) {
+	type opaque struct{ n int }
+	mustPanic(t, "cannot be read from a slot", func() {
+		adapt(func(state Value, o opaque) (opaque, error) { return o, nil }, core.Sensor, "expr")
+	})
 }

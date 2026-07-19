@@ -7,17 +7,15 @@ import (
 	"github.com/varar-dev/varar-go/varar"
 )
 
-func dateValue(d Date) varar.Value {
-	return varar.MapValue(map[string]varar.Value{
-		"year":  varar.IntValue(d.Year),
-		"month": varar.IntValue(d.Month),
-		"day":   varar.IntValue(d.Day),
-	})
-}
-
+// Date's own DecodeVarValue/EncodeVarValue (see library_domain.go) are the only
+// place that knows how a {date} maps to a Value, so steps can take a Date
+// directly and these helpers just delegate.
 func valueDate(v varar.Value) Date {
-	m := v.CloneMap()
-	return Date{Year: m["year"].MustInt(), Month: m["month"].MustInt(), Day: m["day"].MustInt()}
+	var d Date
+	if err := d.DecodeVarValue(v); err != nil {
+		panic(err)
+	}
+	return d
 }
 
 func loanDue(loan varar.Value) Date {
@@ -35,7 +33,7 @@ func loansOf(state varar.Value) []varar.Value {
 
 func registerLibrary(s *varar.Steps) {
 	s.Param("date", `[A-Z][a-z]+ \d{1,2}, \d{4}`,
-		func(g []string) varar.Value { return dateValue(ParseDate(g[0])) },
+		func(g []string) varar.Value { return ParseDate(g[0]).EncodeVarValue() },
 		func(v varar.Value) (string, bool) { return FormatDate(valueDate(v)), true })
 
 	s.Param("money", `£\d+(?:\.\d+)?|\d+p`,
@@ -60,15 +58,17 @@ func registerLibrary(s *varar.Steps) {
 		})
 
 	s.Stimulus("borrowed {title}, due back on {date}",
-		func(state varar.Value, title string, due varar.Value) (varar.Value, error) {
+		func(state varar.Value, title string, due Date) (varar.Value, error) {
 			m := state.CloneMap()
-			loans := append(loansOf(state), varar.MapValue(map[string]varar.Value{"title": varar.StrValue(title), "due": due}))
+			loans := append(loansOf(state), varar.MapValue(map[string]varar.Value{
+				"title": varar.StrValue(title),
+				"due":   due.EncodeVarValue(),
+			}))
 			m["loans"] = varar.ListOf(loans)
 			return varar.MapValue(m), nil
 		})
 
-	s.Stimulus("returns it on {date}", func(state varar.Value, on varar.Value) (varar.Value, error) {
-		returned := valueDate(on)
+	s.Stimulus("returns it on {date}", func(state varar.Value, returned Date) (varar.Value, error) {
 		var fee int64
 		for _, loan := range loansOf(state) {
 			fee += LateFee(loanDue(loan), returned)
@@ -90,13 +90,13 @@ func registerLibrary(s *varar.Steps) {
 	})
 
 	s.Stimulus("asks to borrow {title} on {date}",
-		func(state varar.Value, title string, on varar.Value) (varar.Value, error) {
+		func(state varar.Value, title string, on Date) (varar.Value, error) {
 			var dues []Date
 			for _, loan := range loansOf(state) {
 				dues = append(dues, loanDue(loan))
 			}
 			m := state.CloneMap()
-			m["granted"] = varar.BoolValue(MayBorrow(dues, valueDate(on)))
+			m["granted"] = varar.BoolValue(MayBorrow(dues, on))
 			return varar.MapValue(m), nil
 		})
 
