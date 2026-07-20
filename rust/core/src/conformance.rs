@@ -350,13 +350,15 @@ pub fn to_failure_artifact(failure: Option<&StepFailure>, match_span: Span) -> V
     };
     let anchor = span(anchor_span);
 
-    match failure.map(|f| &f.error) {
+    let err = failure.map(|f| &f.error);
+    match err {
         Some(StepError::CellMismatch(cells)) => {
             let failing: Vec<Value> = cells.iter().filter(|c| !c.ok).map(failure_cell).collect();
             obj(vec![
                 ("kind", Value::from("cell-mismatch")),
                 ("line", vint(line)),
                 ("anchor", anchor),
+                ("message", Value::from(err.unwrap().message().as_str())),
                 ("cells", Value::List(failing)),
             ])
         }
@@ -370,12 +372,17 @@ pub fn to_failure_artifact(failure: Option<&StepFailure>, match_span: Span) -> V
                 ("kind", Value::from("doc-string-mismatch")),
                 ("line", vint(line)),
                 ("anchor", anchor),
+                ("message", Value::from(err.unwrap().message().as_str())),
                 ("diff", d),
             ])
         }
-        Some(StepError::ReturnShape(_)) => kind_line_anchor("return-shape", line, anchor),
-        Some(StepError::UnexpectedPass) => kind_line_anchor("unexpected-pass", line, anchor),
-        _ => kind_line_anchor("thrown", line, anchor),
+        Some(e @ StepError::ReturnShape(_)) => {
+            kind_line_anchor("return-shape", line, anchor, Some(e.message()))
+        }
+        Some(e @ StepError::UnexpectedPass) => {
+            kind_line_anchor("unexpected-pass", line, anchor, Some(e.message()))
+        }
+        _ => kind_line_anchor("thrown", line, anchor, None),
     }
 }
 
@@ -388,12 +395,16 @@ fn failure_cell(c: &crate::cell_diff::CellDiff) -> Value {
     ])
 }
 
-fn kind_line_anchor(kind: &str, line: usize, anchor: Value) -> Value {
-    obj(vec![
+fn kind_line_anchor(kind: &str, line: usize, anchor: Value, message: Option<String>) -> Value {
+    let mut fields = vec![
         ("kind", Value::from(kind)),
         ("line", vint(line)),
         ("anchor", anchor),
-    ])
+    ];
+    if let Some(m) = message {
+        fields.push(("message", Value::from(m.as_str())));
+    }
+    obj(fields)
 }
 
 /// Recovers the cross-language-shared step-file stem (strip the last extension),

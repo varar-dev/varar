@@ -286,6 +286,7 @@ def to_failure_artifact(error: object, match_span: Span) -> dict[str, Any]:
             "kind": "cell-mismatch",
             "line": line,
             "anchor": anchor,
+            "message": str(error),
             "cells": [
                 {
                     "column": c.column,
@@ -302,6 +303,7 @@ def to_failure_artifact(error: object, match_span: Span) -> dict[str, Any]:
             "kind": "doc-string-mismatch",
             "line": line,
             "anchor": anchor,
+            "message": str(error),
             "diff": {
                 "expected": error.diff.expected,
                 "actual": error.diff.actual,
@@ -309,9 +311,9 @@ def to_failure_artifact(error: object, match_span: Span) -> dict[str, Any]:
             },
         }
     if isinstance(error, ReturnShapeError):
-        return {"kind": "return-shape", "line": line, "anchor": anchor}
+        return {"kind": "return-shape", "line": line, "anchor": anchor, "message": str(error)}
     if is_unexpected_pass_error(error):
-        return {"kind": "unexpected-pass", "line": line, "anchor": anchor}
+        return {"kind": "unexpected-pass", "line": line, "anchor": anchor, "message": str(error)}
     return {"kind": "thrown", "line": line, "anchor": anchor}
 
 

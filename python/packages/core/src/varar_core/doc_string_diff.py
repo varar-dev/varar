@@ -4,11 +4,23 @@ Pure comparison of a doc-string step's return value against the fence body.
 """
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from typing import Any
 
 from varar_core.cell_diff import ReturnShapeError
 from varar_core.span import Span
+
+
+def _quote(s: str) -> str:
+    """Render *s* the way JSON.stringify does in the TypeScript port.
+
+    Every port quotes doc-string mismatch messages identically (Java/Rust/Go use a
+    hand-rolled quote(), Ruby uses String#inspect) because the message text is
+    matched by substring in an ``error`` fence — a port that quotes differently
+    fails a spec its siblings pass. Python's repr would emit single quotes.
+    """
+    return json.dumps(s)
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,7 +63,7 @@ class DocStringMismatchError(Exception):
     def __init__(self, diff: DocStringDiff) -> None:
         self.diff = diff
         super().__init__(
-            f"doc string: expected {diff.expected!r} but was {diff.actual!r}"
+            f"doc string: expected {_quote(diff.expected)} but was {_quote(diff.actual)}"
         )
 
 

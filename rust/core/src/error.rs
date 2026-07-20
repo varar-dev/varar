@@ -118,13 +118,30 @@ impl StepFailure {
 
 /// Mirrors `JSON.stringify`'s quoting of the TS doc-string error message closely
 /// enough for a human-readable message (never parsed back).
+/// Renders `s` the way `JSON.stringify` does in the TypeScript port.
+///
+/// Every port quotes doc-string mismatch messages identically because the text is
+/// matched by substring in an `error` fence — a port that quotes differently fails
+/// a spec its siblings pass. Escaping only `\\`, `"` and `\n` is not enough: doc
+/// strings routinely carry tab-indented code.
 fn quote(s: &str) -> String {
-    format!(
-        "\"{}\"",
-        s.replace('\\', "\\\\")
-            .replace('"', "\\\"")
-            .replace('\n', "\\n")
-    )
+    let mut out = String::with_capacity(s.len() + 2);
+    out.push('"');
+    for c in s.chars() {
+        match c {
+            '\\' => out.push_str("\\\\"),
+            '"' => out.push_str("\\\""),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            '\u{08}' => out.push_str("\\b"),
+            '\u{0c}' => out.push_str("\\f"),
+            c if (c as u32) < 0x20 => out.push_str(&format!("\\u{:04x}", c as u32)),
+            c => out.push(c),
+        }
+    }
+    out.push('"');
+    out
 }
 
 /// A registration-time (author-wiring) error — never a step failure.

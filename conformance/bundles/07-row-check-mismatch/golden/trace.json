@@ -35,7 +35,8 @@
               }
             ],
             "kind": "cell-mismatch",
-            "line": 9
+            "line": 9,
+            "message": "score: expected 10 but was 99"
           },
           "matchedExpression": "I report the score and grade",
           "ordinal": 1,

@@ -93,9 +93,41 @@ func bareFailure(error StepError) StepFailure {
 
 // quote mirrors JSON.stringify's quoting of the doc-string error message closely
 // enough for a human-readable message (never parsed back).
+// quote renders s the way JSON.stringify does in the TypeScript port.
+//
+// Every port quotes doc-string mismatch messages identically because the text is
+// matched by substring in an `error` fence — a port that quotes differently fails a
+// spec its siblings pass. Escaping only \\, " and \n is not enough: doc strings
+// routinely carry tab-indented code. encoding/json is not usable here because it
+// also escapes <, > and & by default.
 func quote(s string) string {
-	s = strings.ReplaceAll(s, "\\", "\\\\")
-	s = strings.ReplaceAll(s, "\"", "\\\"")
-	s = strings.ReplaceAll(s, "\n", "\\n")
-	return "\"" + s + "\""
+	var b strings.Builder
+	b.Grow(len(s) + 2)
+	b.WriteByte('"')
+	for _, r := range s {
+		switch r {
+		case '\\':
+			b.WriteString("\\\\")
+		case '"':
+			b.WriteString("\\\"")
+		case '\n':
+			b.WriteString("\\n")
+		case '\r':
+			b.WriteString("\\r")
+		case '\t':
+			b.WriteString("\\t")
+		case '\b':
+			b.WriteString("\\b")
+		case '\f':
+			b.WriteString("\\f")
+		default:
+			if r < 0x20 {
+				fmt.Fprintf(&b, "\\u%04x", r)
+			} else {
+				b.WriteRune(r)
+			}
+		}
+	}
+	b.WriteByte('"')
+	return b.String()
 }

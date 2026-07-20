@@ -58,11 +58,14 @@ export type PlanArtifact = {
   }>
 }
 
+// `message` is present on every core-generated kind and absent on `thrown`; see
+// toFailureArtifact for why.
 export type FailureArtifact =
   | {
       readonly kind: 'cell-mismatch'
       readonly line: number
       readonly anchor: Span
+      readonly message: string
       readonly cells: ReadonlyArray<{
         readonly column: string
         readonly expected: string
@@ -74,11 +77,22 @@ export type FailureArtifact =
       readonly kind: 'doc-string-mismatch'
       readonly line: number
       readonly anchor: Span
+      readonly message: string
       readonly diff: { readonly expected: string; readonly actual: string; readonly span: Span }
     }
-  | { readonly kind: 'return-shape'; readonly line: number; readonly anchor: Span }
+  | {
+      readonly kind: 'return-shape'
+      readonly line: number
+      readonly anchor: Span
+      readonly message: string
+    }
   | { readonly kind: 'thrown'; readonly line: number; readonly anchor: Span }
-  | { readonly kind: 'unexpected-pass'; readonly line: number; readonly anchor: Span }
+  | {
+      readonly kind: 'unexpected-pass'
+      readonly line: number
+      readonly anchor: Span
+      readonly message: string
+    }
 
 export type StepTrace = {
   readonly exampleName: string
@@ -210,11 +224,19 @@ export function toPlanArtifact(plan: ExecutionPlan): PlanArtifact {
 export function toFailureArtifact(error: unknown, matchSpan: Span): FailureArtifact {
   const line = matchSpan.startLine
   const anchor = failureAnchor(error, matchSpan)
+  // `message` is projected for the kinds the CORE generates, so the corpus pins
+  // their wording across ports — an `error` fence matches by substring, so a port
+  // that words or quotes a message differently fails a spec its siblings pass.
+  // `thrown` is deliberately excluded: those messages come from user handlers and
+  // from language runtimes, which differ legitimately (dividing by zero reads
+  // "division by zero" in Python, "/ by zero" in Java, "runtime error: integer
+  // divide by zero" in Go).
   if (isCellMismatchError(error)) {
     return {
       kind: 'cell-mismatch',
       line,
       anchor,
+      message: error.message,
       cells: error.cells
         .filter((c) => !c.ok)
         .map((c) => ({ column: c.column, expected: c.expected, actual: c.actual, span: c.span })),
@@ -225,11 +247,14 @@ export function toFailureArtifact(error: unknown, matchSpan: Span): FailureArtif
       kind: 'doc-string-mismatch',
       line,
       anchor,
+      message: error.message,
       diff: { expected: error.diff.expected, actual: error.diff.actual, span: error.diff.span },
     }
   }
-  if (error instanceof ReturnShapeError) return { kind: 'return-shape', line, anchor }
-  if (isUnexpectedPassError(error)) return { kind: 'unexpected-pass', line, anchor }
+  if (error instanceof ReturnShapeError)
+    return { kind: 'return-shape', line, anchor, message: error.message }
+  if (isUnexpectedPassError(error))
+    return { kind: 'unexpected-pass', line, anchor, message: error.message }
   return { kind: 'thrown', line, anchor }
 }
 

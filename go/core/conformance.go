@@ -206,6 +206,7 @@ func ToFailureArtifact(failure *StepFailure, matchSpan Span) Value {
 			kv("kind", StrValue("cell-mismatch")),
 			kv("line", vint(line)),
 			kv("anchor", anchorVal),
+			kv("message", StrValue(failure.Error.Message())),
 			kv("cells", ListOf(failing)),
 		)
 	case SEDocStringMismatch:
@@ -218,12 +219,13 @@ func ToFailureArtifact(failure *StepFailure, matchSpan Span) Value {
 			kv("kind", StrValue("doc-string-mismatch")),
 			kv("line", vint(line)),
 			kv("anchor", anchorVal),
+			kv("message", StrValue(failure.Error.Message())),
 			kv("diff", d),
 		)
 	case SEReturnShape:
-		return kindLineAnchor("return-shape", line, anchorVal)
+		return kindLineAnchorMsg("return-shape", line, anchorVal, failure.Error.Message())
 	case SEUnexpectedPass:
-		return kindLineAnchor("unexpected-pass", line, anchorVal)
+		return kindLineAnchorMsg("unexpected-pass", line, anchorVal, failure.Error.Message())
 	default:
 		return kindLineAnchor("thrown", line, anchorVal)
 	}
@@ -243,6 +245,18 @@ func kindLineAnchor(kind string, line int, anchorVal Value) Value {
 		kv("kind", StrValue(kind)),
 		kv("line", vint(line)),
 		kv("anchor", anchorVal),
+	)
+}
+
+// kindLineAnchorMsg is kindLineAnchor plus the core-generated message. `thrown`
+// uses the message-less form: those messages come from handlers and language
+// runtimes, which differ legitimately between ports.
+func kindLineAnchorMsg(kind string, line int, anchorVal Value, message string) Value {
+	return obj(
+		kv("kind", StrValue(kind)),
+		kv("line", vint(line)),
+		kv("anchor", anchorVal),
+		kv("message", StrValue(message)),
 	)
 }
 

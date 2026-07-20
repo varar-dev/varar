@@ -40,10 +40,37 @@ public record DocStringDiff(Span span, String expected, String actual) {
             return "doc string: expected " + quote(diff.expected()) + " but was " + quote(diff.actual());
         }
 
-        // Mirrors JSON.stringify's quoting of the TS error message text closely enough for a
-        // human-readable exception message (this string is never parsed back).
+        /**
+         * Renders {@code s} the way {@code JSON.stringify} does in the TypeScript port.
+         *
+         * <p>Every port quotes this message identically because the text is matched by substring
+         * in an {@code error} fence — a port that quotes differently fails a spec its siblings
+         * pass. Escaping only {@code \\}, {@code "} and {@code \n} is not enough: doc strings
+         * routinely carry tab-indented code.
+         */
         private static String quote(String s) {
-            return "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n") + "\"";
+            StringBuilder b = new StringBuilder(s.length() + 2);
+            b.append('"');
+            for (int i = 0; i < s.length(); i++) {
+                char c = s.charAt(i);
+                switch (c) {
+                    case '\\' -> b.append("\\\\");
+                    case '"' -> b.append("\\\"");
+                    case '\n' -> b.append("\\n");
+                    case '\r' -> b.append("\\r");
+                    case '\t' -> b.append("\\t");
+                    case '\b' -> b.append("\\b");
+                    case '\f' -> b.append("\\f");
+                    default -> {
+                        if (c < 0x20) {
+                            b.append(String.format("\\u%04x", (int) c));
+                        } else {
+                            b.append(c);
+                        }
+                    }
+                }
+            }
+            return b.append('"').toString();
         }
     }
 

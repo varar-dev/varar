@@ -69,6 +69,7 @@ def test_to_failure_artifact_projects_cell_mismatch_error_anchored_at_first_fail
         "kind": "cell-mismatch",
         "line": 7,
         "anchor": _CELL_SPAN_DICT,
+        "message": "score: expected 9 but was 6",
         "cells": [{"column": "score", "expected": "9", "actual": "6", "span": _CELL_SPAN_DICT}],
     }
 
@@ -79,6 +80,7 @@ def test_to_failure_artifact_projects_doc_string_mismatch_error_anchored_at_fenc
         "kind": "doc-string-mismatch",
         "line": 7,
         "anchor": _CELL_SPAN_DICT,
+        "message": 'doc string: expected "a" but was "b"',
         "diff": {"expected": "a", "actual": "b", "span": _CELL_SPAN_DICT},
     }
 
@@ -109,6 +111,7 @@ def test_to_failure_artifact_maps_return_shape_error():
         "kind": "return-shape",
         "line": 7,
         "anchor": _SPAN_DICT,
+        "message": "wrong shape",
     }
 
 

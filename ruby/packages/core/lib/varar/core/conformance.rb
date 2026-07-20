@@ -190,6 +190,7 @@ module Varar
         when CellMismatchError
           {
             'kind' => 'cell-mismatch', 'line' => line, 'anchor' => anchor,
+            'message' => error.message,
             'cells' => error.cells.reject(&:ok).map do |c|
               { 'column' => c.column, 'expected' => c.expected, 'actual' => c.actual, 'span' => span_hash(c.span) }
             end
@@ -197,6 +198,7 @@ module Varar
         when DocStringMismatchError
           {
             'kind' => 'doc-string-mismatch', 'line' => line, 'anchor' => anchor,
+            'message' => error.message,
             'diff' => {
               'expected' => error.diff.expected,
               'actual' => error.diff.actual,
@@ -204,9 +206,9 @@ module Varar
             }
           }
         when ReturnShapeError
-          { 'kind' => 'return-shape', 'line' => line, 'anchor' => anchor }
+          { 'kind' => 'return-shape', 'line' => line, 'anchor' => anchor, 'message' => error.message }
         when UnexpectedPassError
-          { 'kind' => 'unexpected-pass', 'line' => line, 'anchor' => anchor }
+          { 'kind' => 'unexpected-pass', 'line' => line, 'anchor' => anchor, 'message' => error.message }
         else
           { 'kind' => 'thrown', 'line' => line, 'anchor' => anchor }
         end

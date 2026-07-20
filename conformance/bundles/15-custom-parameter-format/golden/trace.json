@@ -35,7 +35,8 @@
               }
             ],
             "kind": "cell-mismatch",
-            "line": 5
+            "line": 5,
+            "message": "arg 1: expected £2.55 but was £2.60"
           },
           "matchedExpression": "The late fee is {money}",
           "ordinal": 1,

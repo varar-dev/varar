@@ -91,6 +91,7 @@ public static class Conformance
         {
             case CellMismatchError cm:
                 entries.Add(new("kind", Value.Of("cell-mismatch")));
+                entries.Add(new("message", Value.Of(cm.Message)));
                 entries.Add(new("cells", Value.List(cm.Cells.Where(c => !c.Ok).Select(c => Map(
                     ("column", Value.Of(c.Column)),
                     ("expected", Value.Of(c.Expected)),
@@ -99,16 +100,19 @@ public static class Conformance
                 break;
             case DocStringMismatchError dm:
                 entries.Add(new("kind", Value.Of("doc-string-mismatch")));
+                entries.Add(new("message", Value.Of(dm.Message)));
                 entries.Add(new("diff", Map(
                     ("expected", Value.Of(dm.Diff.Expected)),
                     ("actual", Value.Of(dm.Diff.Actual)),
                     ("span", SpanValue(dm.Diff.Span)))));
                 break;
-            case ReturnShapeError:
+            case ReturnShapeError rs:
                 entries.Add(new("kind", Value.Of("return-shape")));
+                entries.Add(new("message", Value.Of(rs.Message)));
                 break;
-            case UnexpectedPassError:
+            case UnexpectedPassError up:
                 entries.Add(new("kind", Value.Of("unexpected-pass")));
+                entries.Add(new("message", Value.Of(up.Message)));
                 break;
             default:
                 entries.Add(new("kind", Value.Of("thrown")));

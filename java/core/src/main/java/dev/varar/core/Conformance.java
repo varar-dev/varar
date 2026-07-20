@@ -148,6 +148,7 @@ public final class Conformance {
             out.put("kind", "cell-mismatch");
             out.put("line", line);
             out.put("anchor", anchor);
+            out.put("message", error.getMessage());
             List<Object> cells = new ArrayList<>();
             for (CellDiff c : ((CellDiff.CellMismatchException) error).cells()) {
                 if (!c.ok()) cells.add(failureCell(c));
@@ -161,6 +162,7 @@ public final class Conformance {
             out.put("kind", "doc-string-mismatch");
             out.put("line", line);
             out.put("anchor", anchor);
+            out.put("message", error.getMessage());
             Map<String, Object> d = new LinkedHashMap<>();
             d.put("expected", diff.expected());
             d.put("actual", diff.actual());
@@ -168,9 +170,11 @@ public final class Conformance {
             out.put("diff", d);
             return out;
         }
-        if (error instanceof CellDiff.ReturnShapeException) return kindLineAnchor("return-shape", line, anchor);
-        if (error instanceof Execute.UnexpectedPassException) return kindLineAnchor("unexpected-pass", line, anchor);
-        return kindLineAnchor("thrown", line, anchor);
+        if (error instanceof CellDiff.ReturnShapeException)
+            return kindLineAnchor("return-shape", line, anchor, error.getMessage());
+        if (error instanceof Execute.UnexpectedPassException)
+            return kindLineAnchor("unexpected-pass", line, anchor, error.getMessage());
+        return kindLineAnchor("thrown", line, anchor, null);
     }
 
     private static Map<String, Object> failureCell(CellDiff c) {
@@ -182,11 +186,13 @@ public final class Conformance {
         return cell;
     }
 
-    private static Map<String, Object> kindLineAnchor(String kind, int line, Map<String, Object> anchor) {
+    private static Map<String, Object> kindLineAnchor(
+            String kind, int line, Map<String, Object> anchor, String message) {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("kind", kind);
         out.put("line", line);
         out.put("anchor", anchor);
+        if (message != null) out.put("message", message);
         return out;
     }
 

@@ -41,6 +41,7 @@ test('toFailureArtifact projects a CellMismatchError, anchored at the first fail
     kind: 'cell-mismatch',
     line: 7,
     anchor: cellSpan,
+    message: 'score: expected 9 but was 6',
     cells: [{ column: 'score', expected: '9', actual: '6', span: cellSpan }],
   })
 })
@@ -51,6 +52,7 @@ test('toFailureArtifact projects a DocStringMismatchError, anchored at the fence
     kind: 'doc-string-mismatch',
     line: 7,
     anchor: cellSpan,
+    message: 'doc string: expected "a" but was "b"',
     diff: { expected: 'a', actual: 'b', span: cellSpan },
   })
 })
