@@ -1,0 +1,29 @@
+# Runs in the varar-dev/varar-examples repo, where examples/ is synced on every
+# release of varar-dev/varar. In the monorepo this file is inert (GitHub only
+# reads workflows from the repo root); the monorepo runs the projects against
+# the local build via .github/workflows/*.yml instead.
+name: go-gotest
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Weekly, to catch bit-rot against the released pins.
+    - cron: '0 6 * * 1'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: go-gotest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version: '1.26'
+
+      - run: go test ./...

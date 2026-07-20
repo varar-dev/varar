@@ -1,0 +1,29 @@
+# Runs in the varar-dev/varar-examples repo, where examples/ is synced on every
+# release of varar-dev/varar. In the monorepo this file is inert (GitHub only
+# reads workflows from the repo root); the monorepo runs the projects against
+# the local build via .github/workflows/*.yml instead.
+name: csharp-vstest
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Weekly, to catch bit-rot against the released pins.
+    - cron: '0 6 * * 1'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: csharp-vstest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - run: dotnet test

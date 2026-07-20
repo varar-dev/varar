@@ -1,0 +1,32 @@
+# Runs in the varar-dev/varar-examples repo, where examples/ is synced on every
+# release of varar-dev/varar. In the monorepo this file is inert (GitHub only
+# reads workflows from the repo root); the monorepo runs the projects against
+# the local build via .github/workflows/*.yml instead.
+name: ruby-rspec
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    # Weekly, to catch bit-rot against the released pins.
+    - cron: '0 6 * * 1'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ruby-rspec
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.2'
+
+      # No lockfile is synced — bundler resolves fresh from the released pins.
+      - run: bundle install
+
+      - run: bundle exec rspec
