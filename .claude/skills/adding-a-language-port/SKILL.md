@@ -431,6 +431,13 @@ suite:
   `*.steps.<ext>`) plus a `tree-sitter-scanner-<lang>.test.ts`. **Precedent:
   Ruby** (`tree-sitter-dialects/ruby.ts`) — the cleanest full example, including
   a block-DSL query and single/double-quote string decoding.
+- **Allow the grammar's install script** in `typescript/pnpm-workspace.yaml`:
+  add `tree-sitter-<lang>: true` to the `allowBuilds` map. Every tree-sitter
+  grammar compiles a native parser in a postinstall script, and pnpm 10+ blocks
+  dependency install scripts unless they are allowlisted. Easy to miss because
+  the failure is asymmetric: `pnpm install` **refuses** interactively but only
+  *warns* in CI, so a forgotten entry leaves CI green while every developer's
+  `make typescript` fails at the install step.
 
 The **`language-coverage.test.ts` drift gate** (var-language) enforces the last
 three bullets: it fails until the new language's extension maps to a wired
