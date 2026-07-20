@@ -1,41 +1,57 @@
+using System.Globalization;
 using Varar;
 using Varar.Core;
+using static Varar.Example.Library;
 using static Varar.Example.StepHelpers;
-using LibDate = Varar.Example.Library.Date;
 
 namespace Varar.Example;
 
 public static class LibrarySteps
 {
-    private static Value DateValue(LibDate d) =>
-        VMap(("year", Value.Of(d.Year)), ("month", Value.Of(d.Month)), ("day", Value.Of(d.Day)));
+    // The prose format the spec is written in, e.g. "January 5, 2024".
+    private const string DateFormat = "MMMM d, yyyy";
 
-    private static LibDate ValueDate(Value v)
+    // How a DateOnly is carried inside the dynamic state Value.
+    private const string IsoFormat = "yyyy-MM-dd";
+
+    private static Value DateValue(DateOnly d) => Value.Of(d.ToString(IsoFormat, CultureInfo.InvariantCulture));
+
+    private static DateOnly ValueDate(Value v) =>
+        DateOnly.ParseExact(AsStr(v), IsoFormat, CultureInfo.InvariantCulture);
+
+    private static Value MoneyValue(Money m) =>
+        VMap(("currency", Value.Of(m.Currency)), ("value", Value.Of((double)m.Value)));
+
+    private static Money ValueMoney(Value v)
     {
         var m = SMap(v);
-        return new LibDate(AsInt(m["year"]), AsInt(m["month"]), AsInt(m["day"]));
+        return new Money(AsStr(m["currency"]), (decimal)((VFloat)m["value"]).Float);
     }
 
-    private static LibDate LoanDue(Value loan) => ValueDate(SMap(loan)["due"]);
+    private static Loan ValueLoan(Value v)
+    {
+        var m = SMap(v);
+        return new Loan(AsStr(m["title"]), ValueDate(m["due"]));
+    }
 
     private static IReadOnlyList<Value> LoansOf(Value state) =>
         SMap(state).TryGetValue("loans", out var l) && l is VList vl ? vl.Items : (IReadOnlyList<Value>)[];
 
     public static void Register(Steps s)
     {
-        s.State(() => VMap(("loans", Value.List([])), ("fee", Value.Of(0)), ("granted", Value.Of(false))));
+        s.State(() => VMap(("loans", Value.List([])), ("fee", MoneyValue(Gbp(0m))), ("granted", Value.Of(false))));
 
         s.Param(
             "date",
             @"[A-Z][a-z]+ \d{1,2}, \d{4}",
-            g => DateValue(Library.ParseDate(g[0]!)),
-            v => Library.FormatDate(ValueDate(v)));
+            g => DateValue(DateOnly.ParseExact(g[0]!, DateFormat, CultureInfo.InvariantCulture)),
+            v => ValueDate(v).ToString(DateFormat, CultureInfo.InvariantCulture));
 
         s.Param(
             "money",
             @"£\d+(?:\.\d+)?|\d+p",
-            g => Value.Of(Library.ParseMoney(g[0]!)),
-            v => v is VInt pennies ? Library.FormatMoney(pennies.Int) : v.ToString()!);
+            g => MoneyValue(ParseMoney(g[0]!)),
+            v => FormatMoney(ValueMoney(v)));
 
         s.Param(
             "title",
@@ -46,7 +62,7 @@ public static class LibrarySteps
                 var inner = raw.Length >= 2 && raw[0] == '*' && raw[^1] == '*' ? raw[1..^1] : raw;
                 return Value.Of(inner);
             },
-            v => v is VString t ? $"*{t.Str}*" : v.ToString()!);
+            v => $"*{AsStr(v)}*");
 
         s.Stimulus("borrowed {title}, due back on {date}", (state, title, due) =>
         {
@@ -58,19 +74,20 @@ public static class LibrarySteps
         s.Stimulus("returns it on {date}", (state, returnedOn) =>
         {
             var returned = ValueDate(returnedOn);
-            long fee = LoansOf(state).Sum(loan => Library.LateFee(LoanDue(loan), returned));
-            return new VMap(SMap(state).SetItem("fee", Value.Of(fee)));
+            var fee = LoansOf(state)
+                .Aggregate(Gbp(0m), (total, loan) => AddMoney(total, LateFee(ValueLoan(loan), returned)));
+            return new VMap(SMap(state).SetItem("fee", MoneyValue(fee)));
         });
 
-        s.Sensor("owes a {money} late fee", (state, expected) => state["fee"]);
+        s.Sensor("owes a {money} late fee", (state, _) => state["fee"]);
 
-        s.Sensor("{money} for each day overdue", (state, expected) => Value.Of(Library.FeePerDay));
+        s.Sensor("{money} for each day overdue", (state, _) => MoneyValue(FeePerDay));
 
         s.Stimulus("asks to borrow {title} on {date}", (state, title, on) =>
         {
             var onDate = ValueDate(on);
-            var dues = LoansOf(state).Select(LoanDue);
-            return new VMap(SMap(state).SetItem("granted", Value.Of(Library.MayBorrow(dues, onDate))));
+            var loans = LoansOf(state).Select(ValueLoan);
+            return new VMap(SMap(state).SetItem("granted", Value.Of(MayBorrow(loans, onDate))));
         });
 
         s.Sensor("the library refuses", state =>
@@ -93,4 +110,16 @@ public static class LibrarySteps
             return null;
         });
     }
+
+    // Money notation is spec prose, so it is parsed and rendered here — the SUT only
+    // ever sees Money values. Under £1 renders as "50p", otherwise as "£2.55".
+    private static Money ParseMoney(string raw) =>
+        raw.EndsWith('p')
+            ? Gbp(decimal.Parse(raw[..^1], CultureInfo.InvariantCulture) / 100m)
+            : Gbp(decimal.Parse(raw[1..], CultureInfo.InvariantCulture));
+
+    private static string FormatMoney(Money m) =>
+        m.Value < 1m
+            ? $"{(long)Math.Round(m.Value * 100m)}p"
+            : $"£{m.Value.ToString("F2", CultureInfo.InvariantCulture)}";
 }
