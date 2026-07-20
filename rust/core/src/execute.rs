@@ -184,9 +184,7 @@ fn run_example(
                             // the same as returning `Value::Null`.
                             let next: Option<Rc<dyn Any>> = match output {
                                 StepOutput::State(next) => Some(next),
-                                StepOutput::Compared(v) => {
-                                    v.map(|v| Rc::new(v) as Rc<dyn Any>)
-                                }
+                                StepOutput::Compared(v) => v.map(|v| Rc::new(v) as Rc<dyn Any>),
                             };
                             if let Some(next) = next {
                                 state_by_file.insert(file.clone(), next);

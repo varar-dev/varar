@@ -20,10 +20,7 @@ pub fn register(s: &mut Steps<Ctx>) {
             ..Default::default()
         })
     });
-    s.sensor(
-        "Then a is {int} and b is {int}",
-        |ctx: Ctx, _a: i64, _b: i64| Ok((ctx.a, ctx.b)),
-    );
+    s.sensor("Then a is {int} and b is {int}", |ctx: Ctx, _a: i64, _b: i64| Ok((ctx.a, ctx.b)));
 }
 
 pub fn state() -> Ctx {
