@@ -1,0 +1,91 @@
+{
+  "diagnostics": [],
+  "examples": [
+    {
+      "expectedOutcome": "pass",
+      "name": "I set a to 1 and b to 2. I set only b to 3. Then a is 0 and b is 3",
+      "scopeStack": [
+        "Stimulus state replacement",
+        "A stimulus return replaces the state rather than merging into it"
+      ],
+      "span": {
+        "endCol": 68,
+        "endLine": 8,
+        "endOffset": 301,
+        "startCol": 1,
+        "startLine": 8,
+        "startOffset": 234
+      },
+      "steps": [
+        {
+          "args": [],
+          "matchSpan": {
+            "endCol": 24,
+            "endLine": 8,
+            "endOffset": 257,
+            "startCol": 1,
+            "startLine": 8,
+            "startOffset": 234
+          },
+          "matchedExpression": "I set a to 1 and b to 2",
+          "paramSpans": [],
+          "text": "I set a to 1 and b to 2"
+        },
+        {
+          "args": [],
+          "matchSpan": {
+            "endCol": 43,
+            "endLine": 8,
+            "endOffset": 276,
+            "startCol": 26,
+            "startLine": 8,
+            "startOffset": 259
+          },
+          "matchedExpression": "I set only b to 3",
+          "paramSpans": [],
+          "text": "I set only b to 3"
+        },
+        {
+          "args": [
+            {
+              "parameterType": "int",
+              "value": "0"
+            },
+            {
+              "parameterType": "int",
+              "value": "3"
+            }
+          ],
+          "matchSpan": {
+            "endCol": 67,
+            "endLine": 8,
+            "endOffset": 300,
+            "startCol": 45,
+            "startLine": 8,
+            "startOffset": 278
+          },
+          "matchedExpression": "Then a is {int} and b is {int}",
+          "paramSpans": [
+            {
+              "endCol": 56,
+              "endLine": 8,
+              "endOffset": 289,
+              "startCol": 55,
+              "startLine": 8,
+              "startOffset": 288
+            },
+            {
+              "endCol": 67,
+              "endLine": 8,
+              "endOffset": 300,
+              "startCol": 66,
+              "startLine": 8,
+              "startOffset": 299
+            }
+          ],
+          "text": "Then a is 0 and b is 3"
+        }
+      ]
+    }
+  ]
+}

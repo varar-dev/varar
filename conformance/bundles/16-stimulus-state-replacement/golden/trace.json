@@ -1,0 +1,43 @@
+{
+  "examples": [
+    {
+      "name": "I set a to 1 and b to 2. I set only b to 3. Then a is 0 and b is 3",
+      "outcome": "pass",
+      "steps": [
+        {
+          "contextKey": {
+            "exampleName": "I set a to 1 and b to 2. I set only b to 3. Then a is 0 and b is 3",
+            "stepFile": "replace.steps"
+          },
+          "exampleName": "I set a to 1 and b to 2. I set only b to 3. Then a is 0 and b is 3",
+          "matchedExpression": "I set a to 1 and b to 2",
+          "ordinal": 1,
+          "outcome": "pass",
+          "stepText": "I set a to 1 and b to 2"
+        },
+        {
+          "contextKey": {
+            "exampleName": "I set a to 1 and b to 2. I set only b to 3. Then a is 0 and b is 3",
+            "stepFile": "replace.steps"
+          },
+          "exampleName": "I set a to 1 and b to 2. I set only b to 3. Then a is 0 and b is 3",
+          "matchedExpression": "I set only b to 3",
+          "ordinal": 2,
+          "outcome": "pass",
+          "stepText": "I set only b to 3"
+        },
+        {
+          "contextKey": {
+            "exampleName": "I set a to 1 and b to 2. I set only b to 3. Then a is 0 and b is 3",
+            "stepFile": "replace.steps"
+          },
+          "exampleName": "I set a to 1 and b to 2. I set only b to 3. Then a is 0 and b is 3",
+          "matchedExpression": "Then a is {int} and b is {int}",
+          "ordinal": 3,
+          "outcome": "pass",
+          "stepText": "Then a is 0 and b is 3"
+        }
+      ]
+    }
+  ]
+}

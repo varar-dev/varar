@@ -150,7 +150,12 @@ class ConformanceDogfoodTest {
                         // "fail" -- the sensor deliberately returns the wrong Money, so the
                         // cell mismatch (rendered "£2.60" via the type's format) is a genuine
                         // failure, no error fence involved.
-                        new BundleCase("15-custom-parameter-format", "dev.varar.conformance.bundle15.MoneySteps", 0, 1))
+                        new BundleCase("15-custom-parameter-format", "dev.varar.conformance.bundle15.MoneySteps", 0, 1),
+                        // 16-stimulus-state-replacement/golden/trace.json: one example, "pass" --
+                        // the second stimulus returns a state carrying only `b`, so `a` reads
+                        // back 0. A merging executor would read back 1 and fail.
+                        new BundleCase(
+                                "16-stimulus-state-replacement", "dev.varar.conformance.bundle16.ReplaceSteps", 1, 0))
                 .map(bundleCase -> Named.of(bundleCase.bundleName(), bundleCase));
     }
 

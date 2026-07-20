@@ -1,0 +1,20 @@
+{
+  "parameterTypes": [],
+  "steps": [
+    {
+      "expression": "I set a to 1 and b to 2",
+      "parameterTypeNames": []
+    },
+    {
+      "expression": "I set only b to 3",
+      "parameterTypeNames": []
+    },
+    {
+      "expression": "Then a is {int} and b is {int}",
+      "parameterTypeNames": [
+        "int",
+        "int"
+      ]
+    }
+  ]
+}

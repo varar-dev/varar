@@ -32,6 +32,7 @@ import (
 	b13 "github.com/varar-dev/varar-go/conformance/b13"
 	b14 "github.com/varar-dev/varar-go/conformance/b14"
 	b15 "github.com/varar-dev/varar-go/conformance/b15"
+	b16 "github.com/varar-dev/varar-go/conformance/b16"
 )
 
 type fixture struct {
@@ -40,21 +41,22 @@ type fixture struct {
 }
 
 var fixtures = map[string]fixture{
-	"01-roman-numerals":            {b01.Register, b01.State},
-	"02-context-isolation":         {b02.Register, b02.State},
-	"03-expected-failure":          {b03.Register, b03.State},
-	"04-tables-and-docstrings":     {b04.Register, b04.State},
-	"05-ambiguous-match":           {b05.Register, b05.State},
-	"06-doc-string-mismatch":       {b06.Register, b06.State},
-	"07-row-check-mismatch":        {b07.Register, b07.State},
-	"08-string-capture":            {b08.Register, b08.State},
-	"09-expected-message-mismatch": {b09.Register, b09.State},
-	"10-error-fence-without-step":  {b10.Register, b10.State},
-	"11-emoji-offsets":             {b11.Register, b11.State},
-	"12-combining-marks":           {b12.Register, b12.State},
-	"13-custom-parameter-type":     {b13.Register, b13.State},
-	"14-stateless-steps":           {b14.Register, b14.State},
-	"15-custom-parameter-format":   {b15.Register, b15.State},
+	"01-roman-numerals":             {b01.Register, b01.State},
+	"02-context-isolation":          {b02.Register, b02.State},
+	"03-expected-failure":           {b03.Register, b03.State},
+	"04-tables-and-docstrings":      {b04.Register, b04.State},
+	"05-ambiguous-match":            {b05.Register, b05.State},
+	"06-doc-string-mismatch":        {b06.Register, b06.State},
+	"07-row-check-mismatch":         {b07.Register, b07.State},
+	"08-string-capture":             {b08.Register, b08.State},
+	"09-expected-message-mismatch":  {b09.Register, b09.State},
+	"10-error-fence-without-step":   {b10.Register, b10.State},
+	"11-emoji-offsets":              {b11.Register, b11.State},
+	"12-combining-marks":            {b12.Register, b12.State},
+	"13-custom-parameter-type":      {b13.Register, b13.State},
+	"14-stateless-steps":            {b14.Register, b14.State},
+	"15-custom-parameter-format":    {b15.Register, b15.State},
+	"16-stimulus-state-replacement": {b16.Register, b16.State},
 }
 
 func bundlesDir() string { return filepath.Join("..", "..", "conformance", "bundles") }

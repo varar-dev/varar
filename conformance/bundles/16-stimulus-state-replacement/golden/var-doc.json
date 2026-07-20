@@ -1,0 +1,73 @@
+{
+  "examples": [
+    {
+      "body": [
+        {
+          "kind": "paragraph",
+          "segmentMap": [
+            {
+              "sourceOffset": 30,
+              "textOffset": 0
+            }
+          ],
+          "span": {
+            "endCol": 54,
+            "endLine": 4,
+            "endOffset": 163,
+            "startCol": 1,
+            "startLine": 3,
+            "startOffset": 30
+          },
+          "text": "A stimulus returns the complete next state. The return IS the state — fields it\nleaves out are dropped, not carried over from before."
+        }
+      ],
+      "scopeStack": [
+        "Stimulus state replacement"
+      ],
+      "span": {
+        "endCol": 54,
+        "endLine": 4,
+        "endOffset": 163,
+        "startCol": 1,
+        "startLine": 3,
+        "startOffset": 30
+      }
+    },
+    {
+      "body": [
+        {
+          "kind": "paragraph",
+          "segmentMap": [
+            {
+              "sourceOffset": 234,
+              "textOffset": 0
+            }
+          ],
+          "span": {
+            "endCol": 68,
+            "endLine": 8,
+            "endOffset": 301,
+            "startCol": 1,
+            "startLine": 8,
+            "startOffset": 234
+          },
+          "text": "I set a to 1 and b to 2. I set only b to 3. Then a is 0 and b is 3."
+        }
+      ],
+      "scopeStack": [
+        "Stimulus state replacement",
+        "A stimulus return replaces the state rather than merging into it"
+      ],
+      "span": {
+        "endCol": 68,
+        "endLine": 8,
+        "endOffset": 301,
+        "startCol": 1,
+        "startLine": 8,
+        "startOffset": 234
+      }
+    }
+  ],
+  "orphanAttachments": [],
+  "path": "example.md"
+}

@@ -24,8 +24,22 @@ public class RegistryConformanceTests
         Assert.Equal(expected, actual);
     }
 
+    /// <summary>
+    /// The fixture tables must cover the corpus exactly — no bundle without a fixture, and no
+    /// fixture for a bundle that no longer exists. Compares against the directory rather than a
+    /// hardcoded count, which would pass for the wrong 15 bundles.
+    /// </summary>
     [Fact]
-    public void EveryBundleHasAFixture() => Assert.Equal(15, ConformanceFixtures.Register.Count);
+    public void EveryBundleHasAFixture()
+    {
+        var bundles = Directory.GetDirectories(BundlesDir())
+            .Select(Path.GetFileName)
+            .OrderBy(n => n, StringComparer.Ordinal)
+            .ToArray();
+
+        Assert.Equal(bundles, ConformanceFixtures.Register.Keys.OrderBy(n => n, StringComparer.Ordinal));
+        Assert.Equal(bundles, ConformanceFixtures.State.Keys.OrderBy(n => n, StringComparer.Ordinal));
+    }
 
     private static string BundlesDir() => ConformanceFixtures.BundlesDir();
 }

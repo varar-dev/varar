@@ -37,10 +37,26 @@ public class VarDocConformanceTests
         Assert.Equal(expected, actual);
     }
 
+    /// <summary>
+    /// Every bundle is well-formed: an <c>example.md</c> plus the four goldens. Asserting the
+    /// shape rather than a hardcoded bundle count keeps this from becoming a tripwire that has to
+    /// be bumped whenever the corpus grows, while still catching a half-added bundle.
+    /// </summary>
     [Fact]
-    public void AllFifteenBundlesAreExercised()
+    public void EveryBundleIsWellFormed()
     {
-        Assert.Equal(15, Directory.EnumerateDirectories(BundlesDir()).Count());
+        var bundles = Directory.GetDirectories(BundlesDir());
+        Assert.NotEmpty(bundles);
+        foreach (var dir in bundles)
+        {
+            Assert.True(File.Exists(Path.Combine(dir, "example.md")), $"{dir}: missing example.md");
+            foreach (var artifact in new[] { "var-doc", "registry", "plan", "trace" })
+            {
+                Assert.True(
+                    File.Exists(Path.Combine(dir, "golden", $"{artifact}.json")),
+                    $"{dir}: missing golden/{artifact}.json");
+            }
+        }
     }
 
     private static string BundlesDir()

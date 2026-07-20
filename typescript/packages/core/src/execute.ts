@@ -95,10 +95,9 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
           try {
             const returned = await step.stepDef.handler(state, ...step.args, ...extra)
             lastReturn = returned
-            // Dispatch on the step's role. `stimulus` merges a returned
-            // partial state (or no-op when it returns nothing); `sensor`
-            // compares its return against the Markdown; an unknown kind is a
-            // wiring bug.
+            // Dispatch on the step's role. `stimulus` replaces state with what it
+            // returns (or no-op when it returns nothing); `sensor` compares its
+            // return against the Markdown; an unknown kind is a wiring bug.
             const kind = step.stepDef.kind
             if (kind === 'stimulus') {
               // A stimulus REPLACES state: the returned object IS the next state
