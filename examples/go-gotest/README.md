@@ -24,13 +24,16 @@ Each Markdown example becomes one Go subtest, named `spec.md::name`, reported by
 - **`varar.config.json`** is the single source of truth: `docs.include` globs the
   Markdown specs. (`steps` is carried for parity with the other ports; Go compiles
   its step files in, so there is nothing to glob at runtime.)
-- **`*.steps.go`** define the steps. Go has no import-for-side-effect, so — like
+- **`*.steps.go`** define the steps, one file per spec and named after it
+  (`library.md` → `library.steps.go`). Go has no import-for-side-effect, so — like
   the Rust/Java/Kotlin/C# ports and unlike TypeScript/Python — each file exposes a
   `register(*varar.Steps)` that adds its steps to an injected builder, and
   `BuildRegistry` threads one builder through them all. State is a
   **full-replacement** `Value` (a stimulus returns the whole next state).
-- **`yahtzee.go` / `roman.go` / `library_domain.go`** are the domain code under
-  test.
+- **`yahtzee.go` / `roman.go` / `library.go`** are the domain code under test.
+  They speak plain Go types (`time.Time`, a `Money` struct) — every bit of the
+  document's own notation (`June 1, 2026`, `50p`, `£2.50`) is parsed and rendered
+  in the step file's `s.Param(…)` declarations, never in the domain.
 - **`specs_test.go`** wires it into `go test` via `gotest.Run` — one subtest
   per Markdown example. Discovery, planning, running, rendering, and drift all
   live in the shared `varar-go` packages, so the sample carries no runner of its

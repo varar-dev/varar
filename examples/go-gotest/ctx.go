@@ -4,8 +4,8 @@ package example
 // handler takes and returns it, so no dynamic value type appears in a step file.
 //
 // State is full-replacement: a stimulus returns the whole next Ctx rather than
-// mutating, and varcore keys it per step file, so each spec starts from a fresh
-// zero value.
+// mutating, and varcore keys it per step file, so each spec starts from the
+// same fresh initial value (see Context in steps.go).
 type Ctx struct {
 	// hello-var
 	Greeting string
@@ -13,12 +13,6 @@ type Ctx struct {
 
 	// library
 	Loans   []Loan
-	Fee     int
+	Fee     Money
 	Granted bool
-}
-
-// Loan is one borrowed title and its due date.
-type Loan struct {
-	Title string
-	Due   Date
 }

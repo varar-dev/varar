@@ -1,7 +1,7 @@
 // Package example is a standalone Vár sample: it runs the Markdown specs at the
 // project root as `go test` tests via the gotest adapter. The domain files
-// (yahtzee.go, roman.go, library_domain.go) are the code under test; the
-// *.steps.go files hold the step definitions, one per spec.
+// (yahtzee.go, roman.go, library.go) are the code under test; the *.steps.go
+// files hold the step definitions, one per spec, each named after it.
 package example
 
 import (
@@ -23,8 +23,9 @@ func BuildRegistry() core.Registry {
 	return s.Registry()
 }
 
-// Context is the fresh initial state per step file. Every spec starts from a
-// zero Ctx; varcore keys state per step file, so specs never see each other's.
+// Context is the fresh initial state per step file — the Go analogue of the
+// factory TypeScript passes to steps(). varcore keys state per step file, so
+// specs never see each other's.
 func Context(file string) any {
-	return Ctx{}
+	return Ctx{Fee: GBP(0)}
 }

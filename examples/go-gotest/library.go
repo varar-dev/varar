@@ -2,123 +2,57 @@ package example
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
+	"time"
 )
 
-// FeePerDay is the overdue fee in pennies per day.
-const FeePerDay int64 = 50
-
-var months = []string{
-	"January", "February", "March", "April", "May", "June",
-	"July", "August", "September", "October", "November", "December",
+// Money is an amount in a currency. Domain code never parses or renders it —
+// the document's notation ("50p", "£2.50") lives in library.steps.go.
+type Money struct {
+	Currency string
+	Value    float64
 }
 
-// Date is a calendar date.
-type Date struct {
-	Year  int64
-	Month int64
-	Day   int64
+// GBP is an amount in pounds sterling.
+func GBP(value float64) Money {
+	return Money{Currency: "GBP", Value: value}
 }
 
-// Serial is the days-since-epoch serial (Howard Hinnant's algorithm).
-func (d Date) Serial() int64 {
-	y, m, day := d.Year, d.Month, d.Day
-	if m <= 2 {
-		y--
+// FeePerDay is the overdue fee per day: 50p.
+var FeePerDay = GBP(0.5)
+
+// AddMoney adds two amounts, rejecting a currency mismatch.
+func AddMoney(a, b Money) (Money, error) {
+	if a.Currency != b.Currency {
+		return Money{}, fmt.Errorf("cannot add %s to %s", b.Currency, a.Currency)
 	}
-	var era int64
-	if y >= 0 {
-		era = y / 400
-	} else {
-		era = (y - 399) / 400
-	}
-	yoe := y - era*400
-	var mp int64
-	if m > 2 {
-		mp = m - 3
-	} else {
-		mp = m + 9
-	}
-	doy := (153*mp+2)/5 + day - 1
-	doe := yoe*365 + yoe/4 - yoe/100 + doy
-	return era*146097 + doe - 719468
+	return Money{Currency: a.Currency, Value: a.Value + b.Value}, nil
 }
 
-// ParseDate parses "Month D, YYYY".
-func ParseDate(raw string) Date {
-	monthDay, year, ok := strings.Cut(raw, ", ")
-	if !ok {
-		panic("not a date: " + raw)
-	}
-	month, day, ok := strings.Cut(monthDay, " ")
-	if !ok {
-		panic("not a date: " + raw)
-	}
-	mi := -1
-	for i, m := range months {
-		if m == month {
-			mi = i
-			break
-		}
-	}
-	if mi < 0 {
-		panic("not a month: " + month)
-	}
-	return Date{Year: mustInt(year), Month: int64(mi) + 1, Day: mustInt(day)}
+// Loan is one borrowed title and the day it is due back.
+type Loan struct {
+	Title string
+	Due   time.Time
 }
 
-// FormatDate renders a Date as "Month D, YYYY".
-func FormatDate(d Date) string {
-	return fmt.Sprintf("%s %d, %d", months[d.Month-1], d.Day, d.Year)
-}
+const hoursPerDay = 24
 
-// ParseMoney parses "£X.YZ" or "Np" into pennies.
-func ParseMoney(raw string) int64 {
-	if pence, ok := strings.CutSuffix(raw, "p"); ok {
-		return mustInt(pence)
-	}
-	if pounds, ok := strings.CutPrefix(raw, "£"); ok {
-		f, err := strconv.ParseFloat(pounds, 64)
-		if err != nil {
-			panic("not money: " + raw)
-		}
-		return int64(f*100 + 0.5)
-	}
-	panic("not money: " + raw)
-}
-
-// FormatMoney renders pennies as "£X.YZ" or "Np".
-func FormatMoney(pennies int64) string {
-	if pennies < 100 {
-		return fmt.Sprintf("%dp", pennies)
-	}
-	return fmt.Sprintf("£%.2f", float64(pennies)/100.0)
-}
-
-// LateFee is the fee for returning on returnedOn against a due date.
-func LateFee(due, returnedOn Date) int64 {
-	daysLate := returnedOn.Serial() - due.Serial()
+// LateFee is the fee owed for returning a loan on returnedOn — nothing if it is
+// back on or before its due date.
+func LateFee(loan Loan, returnedOn time.Time) Money {
+	daysLate := returnedOn.Sub(loan.Due).Hours() / hoursPerDay
 	if daysLate < 0 {
 		daysLate = 0
 	}
-	return daysLate * FeePerDay
+	return GBP(daysLate * FeePerDay.Value)
 }
 
-// MayBorrow reports whether a borrow on `on` is allowed given existing dues.
-func MayBorrow(dues []Date, on Date) bool {
-	for _, due := range dues {
-		if due.Serial() < on.Serial() {
+// MayBorrow reports whether a new loan may be taken out on `on` — an overdue
+// book blocks it.
+func MayBorrow(loans []Loan, on time.Time) bool {
+	for _, loan := range loans {
+		if loan.Due.Before(on) {
 			return false
 		}
 	}
 	return true
-}
-
-func mustInt(s string) int64 {
-	n, err := strconv.ParseInt(s, 10, 64)
-	if err != nil {
-		panic("not an integer: " + s)
-	}
-	return n
 }
