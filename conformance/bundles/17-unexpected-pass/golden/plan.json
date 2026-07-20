@@ -1,0 +1,38 @@
+{
+  "diagnostics": [],
+  "examples": [
+    {
+      "expectedErrorMessage": "boom",
+      "expectedOutcome": "fail",
+      "name": "I do nothing at all",
+      "scopeStack": [
+        "Unexpected pass",
+        "An example expected to fail, that passes, is a failure"
+      ],
+      "span": {
+        "endCol": 4,
+        "endLine": 13,
+        "endOffset": 292,
+        "startCol": 1,
+        "startLine": 9,
+        "startOffset": 253
+      },
+      "steps": [
+        {
+          "args": [],
+          "matchSpan": {
+            "endCol": 20,
+            "endLine": 9,
+            "endOffset": 272,
+            "startCol": 1,
+            "startLine": 9,
+            "startOffset": 253
+          },
+          "matchedExpression": "I do nothing at all",
+          "paramSpans": [],
+          "text": "I do nothing at all"
+        }
+      ]
+    }
+  ]
+}

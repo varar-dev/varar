@@ -104,6 +104,7 @@ class ConformanceTest {
             case "14-stateless-steps" -> new dev.varar.conformance.bundle14.SquaresSteps();
             case "15-custom-parameter-format" -> new dev.varar.conformance.bundle15.MoneySteps();
             case "16-stimulus-state-replacement" -> new dev.varar.conformance.bundle16.ReplaceSteps();
+            case "17-unexpected-pass" -> new dev.varar.conformance.bundle17.QuietSteps();
             default -> throw new IllegalStateException("No Java step fixture registered for bundle " + bundleName);
         };
     }
