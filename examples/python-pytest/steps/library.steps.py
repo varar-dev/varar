@@ -33,7 +33,7 @@ param("title", r"\*[^*]+\*", parse=lambda raw: raw[1:-1], format=lambda t: f"*{t
 
 @stimulus("borrowed {title}, due back on {date}")
 def _(state, title, due):
-    return {"loans": (*state["loans"], {"title": title, "due": due})}
+    return {**state, "loans": (*state["loans"], {"title": title, "due": due})}
 
 
 @stimulus("returns it on {date}")
@@ -41,7 +41,7 @@ def _(state, returned_on):
     fee = gbp(0)
     for loan in state["loans"]:
         fee = add_money(fee, late_fee(loan, returned_on))
-    return {"fee": fee}
+    return {**state, "fee": fee}
 
 
 @sensor("owes a {money} late fee")
@@ -56,7 +56,7 @@ def _(state, expected):
 
 @stimulus("asks to borrow {title} on {date}")
 def _(state, title, on):
-    return {"granted": may_borrow(state["loans"], on)}
+    return {**state, "granted": may_borrow(state["loans"], on)}
 
 
 @sensor("the library refuses")

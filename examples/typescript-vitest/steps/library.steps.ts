@@ -35,10 +35,12 @@ const { stimulus, sensor } = steps(() => ({
   )
 
 stimulus('borrowed {title}, due back on {date}', (state, title, due) => ({
+  ...state,
   loans: [...state.loans, { title, due }],
 }))
 
 stimulus('returns it on {date}', (state, returnedOn) => ({
+  ...state,
   fee: state.loans.reduce((fee, loan) => addMoney(fee, lateFee(loan, returnedOn)), GBP(0)),
 }))
 
@@ -47,6 +49,7 @@ sensor('owes a {money} late fee', (state) => state.fee)
 sensor('{money} for each day overdue', () => FEE_PER_DAY)
 
 stimulus('asks to borrow {title} on {date}', (state, _title, on) => ({
+  ...state,
   granted: mayBorrow(state.loans, on),
 }))
 

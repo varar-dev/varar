@@ -16,14 +16,14 @@ steps(-> { { loans: [], fee: Library.gbp(0), granted: false } }) do
   param('title', '\*[^*]+\*', parse: ->(raw) { raw[1...-1] }, format: ->(t) { "*#{t}*" })
 
   stimulus('borrowed {title}, due back on {date}') do |state, title, due|
-    { loans: state[:loans] + [{ title: title, due: due }] }
+    state.merge(loans: state[:loans] + [{ title: title, due: due }])
   end
 
   stimulus('returns it on {date}') do |state, returned_on|
     fee = state[:loans].reduce(Library.gbp(0)) do |acc, loan|
       Library.add_money(acc, Library.late_fee(loan, returned_on))
     end
-    { fee: fee }
+    state.merge(fee: fee)
   end
 
   sensor('owes a {money} late fee') { |state, _expected| state[:fee] }
@@ -31,7 +31,7 @@ steps(-> { { loans: [], fee: Library.gbp(0), granted: false } }) do
   sensor('{money} for each day overdue') { |_state, _expected| Library::FEE_PER_DAY }
 
   stimulus('asks to borrow {title} on {date}') do |state, _title, on|
-    { granted: Library.may_borrow(state[:loans], on) }
+    state.merge(granted: Library.may_borrow(state[:loans], on))
   end
 
   sensor('the library refuses') { |state| raise 'expected the library to refuse' if state[:granted] }

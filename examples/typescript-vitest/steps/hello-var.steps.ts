@@ -2,10 +2,10 @@ import { steps } from '@varar/varar'
 
 const { stimulus, sensor } = steps(() => ({ greeting: '', result: 0 }))
 
-stimulus('I greet {string}', (_state, name) => ({ greeting: `Hello, ${name}!` }))
+stimulus('I greet {string}', (state, name) => ({ ...state, greeting: `Hello, ${name}!` }))
 
 sensor('the greeting should be {string}', (state, _expected) => state.greeting)
 
-stimulus('expression `{int}+{int}`', (_state, op1, op2) => ({ result: op1 + op2 }))
+stimulus('expression `{int}+{int}`', (state, op1, op2) => ({ ...state, result: op1 + op2 }))
 
 sensor('evaluate to `{int}`', (state, _count) => state.result)
