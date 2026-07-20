@@ -1,9 +1,8 @@
 package dev.varar.conformance.bundle09;
 
-import dev.varar.Registrar;
 import dev.varar.State;
-import dev.varar.StateBinder;
 import dev.varar.StepDefinitions;
+import dev.varar.Steps;
 
 /**
  * Java sibling of {@code boom.steps.ts} / {@code boom.steps.py} (bundle {@code
@@ -11,13 +10,13 @@ import dev.varar.StepDefinitions;
  * substring "expected message", so the expected-failure is NOT satisfied and the
  * example fails at the trace stage.
  */
-public final class BoomSteps implements StepDefinitions {
+public final class BoomSteps implements StepDefinitions<BoomSteps.Ctx> {
 
     record Ctx() implements State {}
 
     @Override
-    public void defineSteps(Registrar registrar) {
-        StateBinder<Ctx> s = registrar.steps(Ctx::new);
+    public void register(Steps<Ctx> s) {
+        s.defineState(Ctx::new);
 
         s.stimulus(
                 "I always boom",

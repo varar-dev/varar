@@ -31,7 +31,7 @@ import org.junit.jupiter.params.provider.MethodSource;
  * {@code conformance.test.ts}'s equivalent unit tests — the registry stage's own
  * golden-driven gate lives in {@code dev.varar.ConformanceTest} (the {@code var}
  * module), since it needs a real Java step-definition fixture per bundle, authored against
- * the {@code var} module's {@code Registrar}/{@code StepDefinitions} API.
+ * the {@code var} module's {@code Steps}/{@code StepDefinitions} API.
  *
  * <p>Each bundle is a separately reported {@code @ParameterizedTest} case (not one loop
  * hiding failures behind the first mismatch), keyed by directory name.

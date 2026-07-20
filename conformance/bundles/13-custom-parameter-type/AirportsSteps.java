@@ -1,27 +1,26 @@
 package dev.varar.conformance.bundle13;
 
-import dev.varar.Registrar;
 import dev.varar.State;
-import dev.varar.StateBinder;
 import dev.varar.StepDefinitions;
+import dev.varar.Steps;
 import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
  * Java sibling of {@code airports.steps.ts}/{@code airports.steps.py}/{@code
  * airports.steps.kt} (bundle {@code 13-custom-parameter-type}) — the first fixture
- * exercising {@link StateBinder#param}: a custom {@code {airport}} type
+ * exercising {@link Steps#param}: a custom {@code {airport}} type
  * (IATA code, lowercased by the parse function). The lowercasing is asserted by the
  * sensor (the .md says "lhr"), so an identity parse fails this bundle. The
  * parameter type MUST be registered before the steps — expressions compile eagerly.
  */
-public final class AirportsSteps implements StepDefinitions {
+public final class AirportsSteps implements StepDefinitions<AirportsSteps.Ctx> {
 
     record Ctx(String dest) implements State {}
 
     @Override
-    public void defineSteps(Registrar registrar) {
-        StateBinder<Ctx> s = registrar.steps(() -> new Ctx(null));
+    public void register(Steps<Ctx> s) {
+        s.defineState(() -> new Ctx(null));
 
         s.param("airport", Pattern.compile("[A-Z]{3}"), groups -> groups[0].toLowerCase(Locale.ROOT));
 

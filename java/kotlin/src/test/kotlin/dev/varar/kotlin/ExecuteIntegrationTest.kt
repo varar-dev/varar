@@ -1,6 +1,6 @@
 package dev.varar.kotlin
 
-import dev.varar.RegistryRegistrar
+import dev.varar.Steps
 import dev.varar.core.CellDiff
 import dev.varar.core.Execute
 import dev.varar.core.Parse
@@ -25,13 +25,12 @@ class ExecuteIntegrationTest {
         }
 
     private fun execute(source: String) {
-        val registrar = RegistryRegistrar()
-        steps().defineSteps(registrar)
-        val plan = Plan.plan(Parse.parse("cukes.md", source), registrar.registry())
+        val bound = Steps.bind(steps())
+        val plan = Plan.plan(Parse.parse("cukes.md", source), bound.registry())
         val ports =
             Execute.ExecutePorts(
                 Execute.Reporter {},
-                Function { registrar.stateFactory()!!.get() },
+                Function { bound.stateFactory()!!.get() },
                 null,
             )
         Execute.executePlan(plan, ports)

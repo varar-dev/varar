@@ -1,7 +1,6 @@
 package dev.varar.runner;
 
 import dev.varar.State;
-import dev.varar.StateBinder;
 import dev.varar.StepDefinitions;
 
 /**
@@ -16,16 +15,16 @@ public final class DuplicateStateSteps {
 
     record Ctx() implements State {}
 
-    public static StepDefinitions first() {
-        return registrar -> {
-            StateBinder<Ctx> s = registrar.steps(Ctx::new);
+    public static StepDefinitions<Ctx> first() {
+        return s -> {
+            s.defineState(Ctx::new);
             s.stimulus("the first duplicate-file step", (Ctx ctx) -> ctx);
         };
     }
 
-    public static StepDefinitions second() {
-        return registrar -> {
-            StateBinder<Ctx> s = registrar.steps(Ctx::new);
+    public static StepDefinitions<Ctx> second() {
+        return s -> {
+            s.defineState(Ctx::new);
             s.stimulus("the second duplicate-file step", (Ctx ctx) -> ctx);
         };
     }

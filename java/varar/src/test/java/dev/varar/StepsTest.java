@@ -12,23 +12,23 @@ import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
 /**
- * Proves the REAL {@link Registrar} — {@link RegistryRegistrar}, not the {@code
+ * Proves the REAL {@link Steps} — {@link Steps}, not the {@code
  * RecordingRegistrar} test double {@link AuthorApiTest} uses to pin the author-API shape
  * — actually builds a var-core {@link Registry} via {@link Registry#addStep}: correct
  * {@link StepKind}, source location captured via {@code StackWalker}, and a genuinely
  * compiled, working cucumber expression (not just a recorded string).
  */
-class RegistryRegistrarTest {
+class StepsTest {
 
     /** Same authoring as {@link AuthorApiTest}'s roman-numerals fixture. */
-    static final class RomanNumeralSteps implements StepDefinitions {
+    static final class RomanNumeralSteps implements StepDefinitions<RomanNumeralSteps.Ctx> {
         record Ctx(String result) implements State {}
 
         static final Map<Integer, String> ROMAN = Map.of(1, "I", 4, "IV", 9, "IX", 40, "XL");
 
         @Override
-        public void defineSteps(Registrar registrar) {
-            StateBinder<Ctx> s = registrar.steps(() -> new Ctx(null));
+        public void register(Steps<Ctx> s) {
+            s.defineState(() -> new Ctx(null));
             s.stimulus("I convert {int} to roman numerals", (Ctx ctx, Integer n) -> new Ctx(ROMAN.get(n)));
             s.sensor("The result is {word}", (Ctx ctx, String expected) -> ctx.result());
         }
@@ -36,17 +36,16 @@ class RegistryRegistrarTest {
 
     @Test
     void buildsARealRegistryFromContextActionSensorRegistrations() {
-        RegistryRegistrar registrar = new RegistryRegistrar();
-        new RomanNumeralSteps().defineSteps(registrar);
+        Steps.Bound bound = Steps.bind(new RomanNumeralSteps());
 
-        Registry registry = registrar.registry();
+        Registry registry = bound.registry();
         assertEquals(2, registry.steps().size(), "one action + one sensor");
-        assertNotNull(registrar.stateFactory(), "one state factory per step class");
+        assertNotNull(bound.stateFactory(), "one state factory per step class");
 
         var action = registry.steps().get(0);
         assertEquals("I convert {int} to roman numerals", action.expression());
         assertEquals(StepKind.STIMULUS, action.kind());
-        assertEquals("RegistryRegistrarTest.java", action.expressionSourceFile());
+        assertEquals("StepsTest.java", action.expressionSourceFile());
         assertTrue(action.expressionSourceLine() > 0);
 
         var sensor = registry.steps().get(1);
@@ -64,8 +63,8 @@ class RegistryRegistrarTest {
     @Test
     void duplicateExpressionRegisteredTwiceInOneRunThrows() {
         record Empty() implements State {}
-        RegistryRegistrar registrar = new RegistryRegistrar();
-        StateBinder<Empty> s = registrar.steps(Empty::new);
+        Steps<Empty> s = new Steps<>();
+        s.defineState(Empty::new);
         s.stimulus("I do a thing", (Empty state) -> state);
 
         IllegalArgumentException ex =
@@ -76,12 +75,12 @@ class RegistryRegistrarTest {
     @Test
     void paramWiresARealCustomTypeThroughToTheRegistry() {
         record Empty() implements State {}
-        RegistryRegistrar registrar = new RegistryRegistrar();
-        StateBinder<Empty> s = registrar.steps(Empty::new);
+        Steps<Empty> s = new Steps<>();
+        s.defineState(Empty::new);
         s.param("airport", Pattern.compile("[A-Z]{3}"), groups -> groups[0].toLowerCase());
         s.sensor("I fly to {airport}", (Empty state, String code) -> code);
 
-        var step = registrar.registry().steps().get(0);
+        var step = s.registry().steps().get(0);
         var match = step.compiled().match("I fly to LHR");
         assertTrue(match.isPresent());
         assertEquals("lhr", match.get().get(0).getValue());

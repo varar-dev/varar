@@ -278,3 +278,43 @@ outside a configured source root without explicit configuration).
 - Reference implementation: `typescript/packages/var-core/src/*`,
   `typescript/packages/var/src/internal.ts`; completed second port:
   `python/packages/var-core/src/var_core/*.py`, `python/packages/var/src/var/*.py`
+
+## Amendment (2026-07-20) — one injected `Steps`, no bookends
+
+The author API originally passed a `Registrar` to `StepDefinitions.defineSteps`, and the
+author called `registrar.steps(factory)` to obtain a `StateBinder<C>` — two objects and a
+two-step handshake before the first registration. Every other statically typed port has
+since converged on a single injected builder, so Java follows:
+
+```java
+public final class CounterSteps implements StepDefinitions<CounterSteps.Ctx> {
+    record Ctx(int count) implements State {}
+
+    @Override
+    public void register(Steps<Ctx> s) {
+        s.defineState(Ctx::new);
+        s.stimulus("I increment", (Ctx ctx) -> new Ctx(ctx.count() + 1));
+        s.sensor("The count is {int}", (Ctx ctx, Integer n) -> ctx.count());
+    }
+}
+```
+
+- `Registrar` and `RegistryRegistrar` are **gone**; `StateBinder<C>` is renamed `Steps<C>`
+  and is now the concrete builder rather than an interface with a separate production
+  implementation. `RegistrarGlue` is renamed `StepsGlue`.
+- `StepDefinitions` is generic in the state type and its method is `register`, matching
+  C# (`void Register(Steps)`), Rust (`register(&mut Steps<C>)`) and Go
+  (`Register(*varar.Steps[C])`).
+- The state factory is declared **on the builder** (`defineState`), as in C#, rather than
+  being the argument that produces the builder. Omitting it binds handlers to
+  `State.Empty` — the old factory-less `steps()` overload is no longer needed.
+- The registry/state-factory bookends are demoted: `Steps.registry()` and
+  `Steps.stateFactory()` are package-private, and the runner uses the single public
+  `Steps.bind(StepDefinitions<?>)`, which also performs the wildcard capture so callers
+  need not name the state type. This is the skill's "hand adapters the registry as an
+  opaque token" applied to Java, which has no `internal`/`pub(crate)`.
+- `RecordingRegistrar` (a test-only double for the old interface) is deleted: `Steps` is
+  concrete and builds a real `Registry`, so the author-API tests assert against that.
+
+Everything the typed arity ladder gave authors is unchanged — handlers still type-check
+against their captures, and the conformance corpus still reproduces byte-for-byte.

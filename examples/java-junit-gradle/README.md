@@ -21,7 +21,7 @@ Each example in the Markdown specs becomes one JUnit test.
   the Markdown specs, and `steps` lists the fully-qualified step-definition
   classes.
 - **`src/test/java/examples/*Steps.java`** implement `StepDefinitions`: a
-  `defineSteps(Registrar)` method binds a state record and registers
+  `register(Steps)` method binds a state record and registers
   `stimulus`/`sensor` handlers. A stimulus returns the next state, a sensor
   returns a value for Vár to compare against what the Markdown says.
 - **`src/main/java/examples/{Library,RomanNumerals,Yahtzee}.java`** are the

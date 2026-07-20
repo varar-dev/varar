@@ -28,10 +28,10 @@ sensors, rather than reaching inside it.
   </TabItem>
   <TabItem label="Java">
     ```java
-    // inside defineSteps(Registrar registrar)
+    // inside register(Steps<Ctx> s)
     record Ctx(int total) implements State {}
 
-    StateBinder<Ctx> s = registrar.steps(() -> new Ctx(0));
+    s.defineState(() -> new Ctx(0));
 
     s.stimulus("I add {int}", (Ctx ctx, Integer n) -> new Ctx(ctx.total() + n));
     s.sensor("the total is {int}", (Ctx ctx, Integer expected) -> ctx.total());
@@ -300,7 +300,7 @@ types whose `parse` produces an array:
   </TabItem>
   <TabItem label="Java">
     ```java
-    StateBinder<Ctx> s = registrar.steps(() -> new Ctx(List.of(5, 6)));
+    s.defineState(() -> new Ctx(List.of(5, 6)));
     s.param(
             "numbers",
             Pattern.compile("\\d+(?:, \\d+)*"),

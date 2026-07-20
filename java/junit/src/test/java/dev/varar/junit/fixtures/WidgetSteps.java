@@ -1,8 +1,8 @@
 package dev.varar.junit.fixtures;
 
-import dev.varar.Registrar;
 import dev.varar.State;
 import dev.varar.StepDefinitions;
+import dev.varar.Steps;
 
 /**
  * A small standalone (top-level, own-file) {@link StepDefinitions} fixture used by {@code
@@ -12,13 +12,13 @@ import dev.varar.StepDefinitions;
  * WidgetSteps} fixture (a separate copy, not shared, since test sources aren't visible across
  * Maven modules).
  */
-public final class WidgetSteps implements StepDefinitions {
+public final class WidgetSteps implements StepDefinitions<WidgetSteps.Ctx> {
 
     public record Ctx(int count) implements State {}
 
     @Override
-    public void defineSteps(Registrar registrar) {
-        var s = registrar.steps(() -> new Ctx(0));
+    public void register(Steps<Ctx> s) {
+        s.defineState(() -> new Ctx(0));
         s.stimulus("I have {int} widgets", (Ctx ctx, Integer n) -> new Ctx(n));
         s.sensor("I should have {int} widgets", (Ctx ctx, Integer expected) -> ctx.count());
     }

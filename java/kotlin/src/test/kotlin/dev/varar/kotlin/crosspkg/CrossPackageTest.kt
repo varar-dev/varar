@@ -1,6 +1,6 @@
 package dev.varar.kotlin.crosspkg
 
-import dev.varar.RegistryRegistrar
+import dev.varar.Steps
 import dev.varar.kotlin.sensor
 import dev.varar.kotlin.steps
 import dev.varar.kotlin.stimulus
@@ -33,15 +33,14 @@ class CrossPackageTest {
                 }
             }
 
-        val registrar = RegistryRegistrar()
-        steps.defineSteps(registrar)
+        val bound = Steps.bind(steps)
         assertEquals(
             listOf("I have {int} cukes", "I eat {int} cukes", "I should have {int} cukes left"),
-            registrar.registry().steps().map { it.expression() },
+            bound.registry().steps().map { it.expression() },
         )
         assertEquals(
             listOf("CrossPackageTest.kt", "CrossPackageTest.kt", "CrossPackageTest.kt"),
-            registrar.registry().steps().map { it.expressionSourceFile() },
+            bound.registry().steps().map { it.expressionSourceFile() },
         )
     }
 }

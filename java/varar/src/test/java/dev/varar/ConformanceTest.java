@@ -23,7 +23,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 /**
  * The Milestone 2 conformance gate: for every bundle under the shared, language-neutral
  * {@code conformance/bundles/} corpus, loads that bundle's Java step-definition fixture
- * (see {@link #loadFixture}), registers it against a fresh {@link RegistryRegistrar},
+ * (see {@link #loadFixture}), registers it against a fresh {@link Steps},
  * projects the resulting {@link Registry} via {@link Conformance#toRegistryArtifact},
  * serializes with {@link CanonicalJson#canonicalStringify(Object)}, and asserts
  * byte-for-byte equality with the committed {@code golden/registry.json}.
@@ -33,7 +33,7 @@ import org.junit.jupiter.params.provider.MethodSource;
  * test_conformance.py::test_registry_matches_golden}. This lives in the {@code var}
  * module (not {@code var-core}'s {@code ConformanceTest}, which only covers the
  * var-doc stage from Task 10): the registry stage needs both {@code var-core}'s
- * {@link Registry}/{@link Conformance} AND {@code var}'s own {@link Registrar}/
+ * {@link Registry}/{@link Conformance} AND {@code var}'s own {@link Steps}/
  * {@link StepDefinitions} author API that every bundle's fixture is written against.
  * Wiring this into {@code var-core} instead (a test-scoped dependency from
  * {@code var-core} back onto {@code var}) was tried first and rejected — it creates a
@@ -113,9 +113,8 @@ class ConformanceTest {
         String bundleName = bundle.getFileName().toString();
         StepDefinitions fixture = loadFixture(bundleName);
 
-        RegistryRegistrar registrar = new RegistryRegistrar();
-        fixture.defineSteps(registrar);
-        Registry registry = registrar.registry();
+        Steps.Bound bound = Steps.bind(fixture);
+        Registry registry = bound.registry();
 
         var artifact = Conformance.toRegistryArtifact(registry);
         String actual = CanonicalJson.canonicalStringify(artifact);
@@ -138,9 +137,8 @@ class ConformanceTest {
         String bundleName = bundle.getFileName().toString();
         StepDefinitions fixture = loadFixture(bundleName);
 
-        RegistryRegistrar registrar = new RegistryRegistrar();
-        fixture.defineSteps(registrar);
-        Registry registry = registrar.registry();
+        Steps.Bound bound = Steps.bind(fixture);
+        Registry registry = bound.registry();
 
         String source = Files.readString(bundle.resolve("example.md"), StandardCharsets.UTF_8);
         Ast.VarDoc doc = Parse.parse("example.md", source);
@@ -156,7 +154,7 @@ class ConformanceTest {
      * The Milestone 4 conformance gate — the final one: parses each bundle's {@code
      * example.md}, builds its {@link Registry} and initial-state {@link Supplier} from its Java
      * step-definition fixture (as {@link #planMatchesGolden} does, plus {@link
-     * RegistryRegistrar#stateFactory()}), runs the whole plan via {@link
+     * Steps.Bound#stateFactory()}), runs the whole plan via {@link
      * Conformance#runConformance}, and asserts byte-for-byte equality of the {@code trace}
      * artifact with the committed {@code golden/trace.json}. Port of the trace stage of {@code
      * typescript/packages/varar/tests/conformance.test.ts} and {@code python/packages/varar/tests/
@@ -174,10 +172,9 @@ class ConformanceTest {
         String bundleName = bundle.getFileName().toString();
         StepDefinitions fixture = loadFixture(bundleName);
 
-        RegistryRegistrar registrar = new RegistryRegistrar();
-        fixture.defineSteps(registrar);
-        Registry registry = registrar.registry();
-        Supplier<? extends State> contextFactory = registrar.stateFactory();
+        Steps.Bound bound = Steps.bind(fixture);
+        Registry registry = bound.registry();
+        Supplier<? extends State> contextFactory = bound.stateFactory();
 
         String source = Files.readString(bundle.resolve("example.md"), StandardCharsets.UTF_8);
         Ast.VarDoc doc = Parse.parse("example.md", source);

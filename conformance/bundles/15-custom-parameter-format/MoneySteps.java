@@ -1,9 +1,8 @@
 package dev.varar.conformance.bundle15;
 
-import dev.varar.Registrar;
 import dev.varar.State;
-import dev.varar.StateBinder;
 import dev.varar.StepDefinitions;
+import dev.varar.Steps;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Function;
@@ -18,13 +17,12 @@ import java.util.regex.Pattern;
  * mismatches through {@code format} identically. Without a format this actual would be
  * each port's native object rendering, which is deliberately outside conformance.
  */
-public final class MoneySteps implements StepDefinitions {
+public final class MoneySteps implements StepDefinitions<State.Empty> {
 
     @Override
-    public void defineSteps(Registrar registrar) {
-        StateBinder<State.Empty> s = registrar.steps();
+    public void register(Steps<State.Empty> s) {
 
-        StateBinder.Parse<Map<String, Object>> parse =
+        Steps.Parse<Map<String, Object>> parse =
                 groups -> Map.of("currency", "GBP", "value", Double.parseDouble(groups[0].substring(1)));
         Function<Map<String, Object>, String> format = m -> String.format(Locale.ROOT, "£%.2f", m.get("value"));
         s.param("money", Pattern.compile("£\\d+\\.\\d{2}"), parse, format);

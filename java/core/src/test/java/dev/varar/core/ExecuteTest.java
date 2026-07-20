@@ -34,7 +34,7 @@ import org.junit.jupiter.api.Test;
 class ExecuteTest {
 
     /**
-     * Minimal test-local functional interfaces shaped like {@code dev.varar.StateBinder}'s
+     * Minimal test-local functional interfaces shaped like {@code dev.varar.Steps}'s
      * {@code Context0/1/2}/{@code Sensor0/1/2} — WITHOUT importing them. {@code var-core} has no
      * dependency on the {@code var} module (hexagonal architecture: the core never imports the
      * facade), and {@link Execute} invokes a handler purely via reflection matched by arity,

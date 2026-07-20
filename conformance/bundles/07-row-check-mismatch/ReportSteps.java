@@ -1,9 +1,8 @@
 package dev.varar.conformance.bundle07;
 
-import dev.varar.Registrar;
 import dev.varar.State;
-import dev.varar.StateBinder;
 import dev.varar.StepDefinitions;
+import dev.varar.Steps;
 import java.util.Map;
 
 /**
@@ -19,13 +18,13 @@ import java.util.Map;
  * even though this fixture ignores its value and always returns the same hardcoded
  * (wrong) columns.
  */
-public final class ReportSteps implements StepDefinitions {
+public final class ReportSteps implements StepDefinitions<ReportSteps.Ctx> {
 
     record Ctx() implements State {}
 
     @Override
-    public void defineSteps(Registrar registrar) {
-        StateBinder<Ctx> s = registrar.steps(Ctx::new);
+    public void register(Steps<Ctx> s) {
+        s.defineState(Ctx::new);
 
         s.sensor(
                 "I report the score and grade",

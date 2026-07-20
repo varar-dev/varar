@@ -1,21 +1,21 @@
 package dev.varar.runner.fixtures;
 
-import dev.varar.Registrar;
 import dev.varar.State;
 import dev.varar.StepDefinitions;
+import dev.varar.Steps;
 import java.util.regex.Pattern;
 
 /**
  * A step-definition fixture that defines a custom parameter type "color". Used by {@code
  * StepLoaderTest} to verify merging of custom parameter types across multiple classes.
  */
-public final class GammaSteps implements StepDefinitions {
+public final class GammaSteps implements StepDefinitions<GammaSteps.Ctx> {
 
     public record Ctx(String color) implements State {}
 
     @Override
-    public void defineSteps(Registrar registrar) {
-        var s = registrar.steps(() -> new Ctx(""));
+    public void register(Steps<Ctx> s) {
+        s.defineState(() -> new Ctx(""));
         s.param("color", Pattern.compile("red|green|blue"));
         s.stimulus("gamma sets color to {color}", (Ctx ctx, String color) -> new Ctx(color));
     }

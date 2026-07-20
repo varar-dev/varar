@@ -1,9 +1,8 @@
 package dev.varar.conformance.bundle14;
 
-import dev.varar.Registrar;
 import dev.varar.State;
-import dev.varar.StateBinder;
 import dev.varar.StepDefinitions;
+import dev.varar.Steps;
 import java.util.List;
 
 /**
@@ -12,11 +11,10 @@ import java.util.List;
  * these steps are pure, so the factory-less {@code steps()} binds handlers to
  * {@link State.Empty}.
  */
-public final class SquaresSteps implements StepDefinitions {
+public final class SquaresSteps implements StepDefinitions<State.Empty> {
 
     @Override
-    public void defineSteps(Registrar registrar) {
-        StateBinder<State.Empty> s = registrar.steps();
+    public void register(Steps<State.Empty> s) {
 
         s.stimulus("I warm up my mental math", (State.Empty state) -> state);
 

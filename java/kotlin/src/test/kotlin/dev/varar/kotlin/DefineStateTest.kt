@@ -1,7 +1,7 @@
 package dev.varar.kotlin
 
-import dev.varar.RegistryRegistrar
 import dev.varar.StepDefinitions
+import dev.varar.Steps
 import dev.varar.core.StepKind
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -18,7 +18,7 @@ class DefineStateTest {
     // fails to compile — that is the spec's flagged spike. Do NOT "fix" it by
     // changing this test to `{ -> cukes }`; stop and report instead (the
     // approved API shape would need revisiting with the user).
-    private fun canonicalSteps(): StepDefinitions =
+    private fun canonicalSteps(): StepDefinitions<*> =
         steps(::Ctx) {
             stimulus("I have {int} cukes") { n: Int ->
                 copy(cukes = n)
@@ -46,17 +46,15 @@ class DefineStateTest {
     @Test
     fun `top-level steps registers nothing until replayed`() {
         val definitions = canonicalSteps() // constructing the value is inert
-        val registrar = RegistryRegistrar()
-        assertTrue(registrar.registry().steps().isEmpty())
-        definitions.defineSteps(registrar) // replay is what registers
-        assertEquals(3, registrar.registry().steps().size)
+        assertTrue(Steps.bind { /* nothing registered */ }.registry().steps().isEmpty())
+        val bound = Steps.bind(definitions) // replay is what registers
+        assertEquals(3, bound.registry().steps().size)
     }
 
     @Test
     fun `registers expressions kinds and author-side source locations`() {
-        val registrar = RegistryRegistrar()
-        canonicalSteps().defineSteps(registrar)
-        val steps = registrar.registry().steps()
+        val bound = Steps.bind(canonicalSteps())
+        val steps = bound.registry().steps()
 
         assertEquals(
             listOf("I have {int} cukes", "I eat {int} cukes", "I should have {int} cukes left"),
@@ -79,11 +77,10 @@ class DefineStateTest {
 
     @Test
     fun `context handler gets state as receiver and returns the full replacement`() {
-        val registrar = RegistryRegistrar()
-        canonicalSteps().defineSteps(registrar)
-        val initial = registrar.stateFactory()!!.get()
+        val bound = Steps.bind(canonicalSteps())
+        val initial = bound.stateFactory()!!.get()
 
-        val evolved = invoke(registrar.registry().steps()[0].handler(), initial, 8) as StateBox<*>
+        val evolved = invoke(bound.registry().steps()[0].handler(), initial, 8) as StateBox<*>
         assertEquals(Ctx(cukes = 8), evolved.value)
     }
 
@@ -92,22 +89,22 @@ class DefineStateTest {
         // The approved canonical sensor: `{ cukes }` on "… {int} …". The
         // executor supplies (state, capture); the arity-0 handler must accept
         // the call and ignore the capture — TS-facade semantics.
-        val registrar = RegistryRegistrar()
-        canonicalSteps().defineSteps(registrar)
+        val bound = Steps.bind(canonicalSteps())
 
-        val left = registrar.registry().steps()[2].handler()
+        val left = bound.registry().steps()[2].handler()
         assertEquals(5, invoke(left, StateBox(Ctx(cukes = 5)), 5))
     }
 
     @Test
     fun `handler declaring more parameters than the step supplies fails with an authoring error`() {
-        val registrar = RegistryRegistrar()
-        steps(::Ctx) {
-                sensor("over-declared") { a: Int, b: Int -> a + b }
-            }
-            .defineSteps(registrar)
+        val bound =
+            Steps.bind(
+                steps(::Ctx) {
+                    sensor("over-declared") { a: Int, b: Int -> a + b }
+                }
+            )
 
-        val handler = registrar.registry().steps()[0].handler()
+        val handler = bound.registry().steps()[0].handler()
         val e =
             assertThrows(Exception::class.java) {
                 invoke(handler, StateBox(Ctx()), 1)
@@ -120,21 +117,22 @@ class DefineStateTest {
 
     @Test
     fun `factory-less steps registers pure steps against Unit state`() {
-        val registrar = RegistryRegistrar()
-        steps {
-                stimulus("I warm up my mental math") {}
-                sensor("the square of {int} is {int}") { n: Int -> listOf(n, n * n) }
-            }
-            .defineSteps(registrar)
+        val bound =
+            Steps.bind(
+                steps {
+                    stimulus("I warm up my mental math") {}
+                    sensor("the square of {int} is {int}") { n: Int -> listOf(n, n * n) }
+                }
+            )
 
-        val steps = registrar.registry().steps()
+        val steps = bound.registry().steps()
         assertEquals(
             listOf("I warm up my mental math", "the square of {int} is {int}"),
             steps.map { it.expression() },
         )
         assertEquals(listOf(StepKind.STIMULUS, StepKind.SENSOR), steps.map { it.kind() })
 
-        val initial = registrar.stateFactory()!!.get()
+        val initial = bound.stateFactory()!!.get()
         // The stimulus's implicit Unit return is the unchanged (empty) state.
         val evolved = invoke(steps[0].handler(), initial) as StateBox<*>
         assertEquals(Unit, evolved.value)
@@ -144,9 +142,8 @@ class DefineStateTest {
 
     @Test
     fun `each replay gets a fresh state factory producing fresh boxes`() {
-        val registrar = RegistryRegistrar()
-        canonicalSteps().defineSteps(registrar)
-        val factory = registrar.stateFactory()!!
+        val bound = Steps.bind(canonicalSteps())
+        val factory = bound.stateFactory()!!
         val a = factory.get() as StateBox<*>
         val b = factory.get() as StateBox<*>
         assertTrue(a !== b)

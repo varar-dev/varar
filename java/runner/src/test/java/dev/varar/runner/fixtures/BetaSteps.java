@@ -1,8 +1,8 @@
 package dev.varar.runner.fixtures;
 
-import dev.varar.Registrar;
 import dev.varar.State;
 import dev.varar.StepDefinitions;
+import dev.varar.Steps;
 
 /**
  * See {@link AlphaSteps}' javadoc — this fixture's role is to be a genuinely separate
@@ -11,13 +11,13 @@ import dev.varar.StepDefinitions;
  * can prove {@link dev.varar.runner.StepLoader} doesn't cross-wire this file's
  * state factory with {@link AlphaSteps}'.
  */
-public final class BetaSteps implements StepDefinitions {
+public final class BetaSteps implements StepDefinitions<BetaSteps.Ctx> {
 
     public record Ctx(String label) implements State {}
 
     @Override
-    public void defineSteps(Registrar registrar) {
-        var s = registrar.steps(() -> new Ctx(""));
+    public void register(Steps<Ctx> s) {
+        s.defineState(() -> new Ctx(""));
         s.stimulus("beta sets label to {word}", (Ctx ctx, String label) -> new Ctx(label));
         s.sensor("beta label is {word}", (Ctx ctx, String expected) -> ctx.label());
     }

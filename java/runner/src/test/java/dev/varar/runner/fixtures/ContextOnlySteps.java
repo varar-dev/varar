@@ -1,8 +1,8 @@
 package dev.varar.runner.fixtures;
 
-import dev.varar.Registrar;
 import dev.varar.State;
 import dev.varar.StepDefinitions;
+import dev.varar.Steps;
 
 /**
  * A {@link StepDefinitions} fixture that calls {@code steps} but registers zero
@@ -13,12 +13,12 @@ import dev.varar.StepDefinitions;
  * like this at runtime (there being no step to invoke {@code createContext.apply} for
  * its file in the first place), but {@code StepLoader} must not choke on it.
  */
-public final class ContextOnlySteps implements StepDefinitions {
+public final class ContextOnlySteps implements StepDefinitions<ContextOnlySteps.Ctx> {
 
     public record Ctx() implements State {}
 
     @Override
-    public void defineSteps(Registrar registrar) {
-        registrar.steps(Ctx::new);
+    public void register(Steps<Ctx> s) {
+        s.defineState(Ctx::new);
     }
 }

@@ -1,9 +1,8 @@
 package dev.varar.conformance.bundle06;
 
-import dev.varar.Registrar;
 import dev.varar.State;
-import dev.varar.StateBinder;
 import dev.varar.StepDefinitions;
+import dev.varar.Steps;
 
 /**
  * Java sibling of {@code echo.steps.ts} / {@code echo.steps.py} (bundle {@code
@@ -14,13 +13,13 @@ import dev.varar.StepDefinitions;
  * always returning {@code "goodbye"}, producing a {@code DocStringMismatchException} →
  * trace {@code failure.kind} {@code "doc-string-mismatch"}.
  */
-public final class EchoSteps implements StepDefinitions {
+public final class EchoSteps implements StepDefinitions<EchoSteps.Ctx> {
 
     record Ctx() implements State {}
 
     @Override
-    public void defineSteps(Registrar registrar) {
-        StateBinder<Ctx> s = registrar.steps(Ctx::new);
+    public void register(Steps<Ctx> s) {
+        s.defineState(Ctx::new);
 
         s.sensor("I echo the following:", (Ctx ctx, String doc) -> "goodbye");
     }

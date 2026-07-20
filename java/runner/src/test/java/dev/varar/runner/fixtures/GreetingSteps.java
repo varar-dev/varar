@@ -1,8 +1,8 @@
 package dev.varar.runner.fixtures;
 
-import dev.varar.Registrar;
 import dev.varar.State;
 import dev.varar.StepDefinitions;
+import dev.varar.Steps;
 
 /**
  * A standalone (top-level, own-file) {@link StepDefinitions} fixture for {@code
@@ -13,13 +13,13 @@ import dev.varar.StepDefinitions;
  * DocStringDiff.DocStringMismatchException} for {@code Render} to format — not a
  * hand-built payload.
  */
-public final class GreetingSteps implements StepDefinitions {
+public final class GreetingSteps implements StepDefinitions<GreetingSteps.Ctx> {
 
     public record Ctx() implements State {}
 
     @Override
-    public void defineSteps(Registrar registrar) {
-        var s = registrar.steps(Ctx::new);
+    public void register(Steps<Ctx> s) {
+        s.defineState(Ctx::new);
         s.sensor("the greeting is", (Ctx ctx, String body) -> "Goodbye!\n");
     }
 }

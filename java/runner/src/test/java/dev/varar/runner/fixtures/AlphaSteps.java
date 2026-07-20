@@ -1,8 +1,8 @@
 package dev.varar.runner.fixtures;
 
-import dev.varar.Registrar;
 import dev.varar.State;
 import dev.varar.StepDefinitions;
+import dev.varar.Steps;
 
 /**
  * A standalone (top-level, own-file) {@link StepDefinitions} fixture for {@code
@@ -16,13 +16,13 @@ import dev.varar.StepDefinitions;
  * proving {@link dev.varar.runner.StepLoader}'s per-file context-key resolution
  * doesn't cross-wire two different files' state.
  */
-public final class AlphaSteps implements StepDefinitions {
+public final class AlphaSteps implements StepDefinitions<AlphaSteps.Ctx> {
 
     public record Ctx(int count) implements State {}
 
     @Override
-    public void defineSteps(Registrar registrar) {
-        var s = registrar.steps(() -> new Ctx(0));
+    public void register(Steps<Ctx> s) {
+        s.defineState(() -> new Ctx(0));
         s.stimulus("alpha increments to {int}", (Ctx ctx, Integer n) -> new Ctx(n));
         s.sensor("alpha count is {int}", (Ctx ctx, Integer expected) -> ctx.count());
     }

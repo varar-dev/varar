@@ -1,9 +1,8 @@
 package dev.varar.conformance.bundle11;
 
-import dev.varar.Registrar;
 import dev.varar.State;
-import dev.varar.StateBinder;
 import dev.varar.StepDefinitions;
+import dev.varar.Steps;
 import java.util.List;
 
 /**
@@ -19,13 +18,13 @@ import java.util.List;
  * null}/{@code undefined} return skips every comparison, table included, so the
  * attachment is present but never actually checked).
  */
-public final class GreetSteps implements StepDefinitions {
+public final class GreetSteps implements StepDefinitions<GreetSteps.Ctx> {
 
     record Ctx() implements State {}
 
     @Override
-    public void defineSteps(Registrar registrar) {
-        StateBinder<Ctx> s = registrar.steps(Ctx::new);
+    public void register(Steps<Ctx> s) {
+        s.defineState(Ctx::new);
 
         s.sensor(
                 "I greet {string}",

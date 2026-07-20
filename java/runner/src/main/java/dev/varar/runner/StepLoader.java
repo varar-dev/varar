@@ -1,8 +1,8 @@
 package dev.varar.runner;
 
-import dev.varar.RegistryRegistrar;
 import dev.varar.State;
 import dev.varar.StepDefinitions;
+import dev.varar.Steps;
 import dev.varar.core.Registry;
 import io.cucumber.cucumberexpressions.ParameterTypeRegistry;
 import java.lang.reflect.InvocationTargetException;
@@ -22,13 +22,13 @@ import java.util.function.Supplier;
  * {@link Registry} into a single shared one, and builds the per-file {@code
  * createContext} function {@link dev.varar.core.Execute} expects.
  *
- * <h2>One {@code RegistryRegistrar} per {@code StepDefinitions} class</h2>
+ * <h2>One {@code Steps} per {@code StepDefinitions} class</h2>
  *
- * <p>Mirrors {@code Registrar}'s own contract (see its javadoc): "one state factory per
- * step-definition class." Sharing a single {@code RegistryRegistrar} across multiple
+ * <p>Mirrors {@code Steps}'s own contract (see its javadoc): "one state factory per
+ * step-definition class." Sharing a single {@code Steps} across multiple
  * {@code StepDefinitions} instances would let a second class's {@code steps} call
  * silently overwrite the first's {@code stateFactory} — this class avoids that by
- * constructing a fresh {@code RegistryRegistrar} per instantiated class (see the loop in
+ * constructing a fresh {@code Steps} per instantiated class (see the loop in
  * {@link #loadSteps}), exactly as {@code Execute.runExample}'s per-example, per-file
  * state cache assumes.
  *
@@ -37,7 +37,7 @@ import java.util.function.Supplier;
  * <p>Confirmed by reading {@code Execute.runExample} directly: it does {@code
  * state = resolve(createContext.apply(file))} where {@code file =
  * step.stepDef().expressionSourceFile()} — a plain {@code String}, the exact source
- * file name {@code RegistryRegistrar}'s {@code StackWalker} captured for every step a
+ * file name {@code Steps}'s {@code StackWalker} captured for every step a
  * given class registers (all steps from one class share the same caller file, since
  * {@code StackWalker} always finds the same calling file for a given class's
  * registrations). So the key {@link #loadSteps} must produce for {@code createContext}
@@ -46,7 +46,7 @@ import java.util.function.Supplier;
  * <p>Because every step a class registers reports the SAME {@code
  * expressionSourceFile}, this class only needs to read ONE of them (the first) to learn
  * the key for that whole class's {@code stateFactory}. A class whose {@code
- * defineSteps} calls {@code steps} but registers zero {@code
+ * register} calls {@code defineState} but registers zero {@code
  * context}/{@code action}/{@code sensor} steps has a {@code stateFactory} but no
  * {@code expressionSourceFile} to key it by — {@link #loadSteps} skips contributing a
  * context-map entry for it. This is safe, not a loss: {@code Execute} only ever calls
@@ -73,7 +73,7 @@ import java.util.function.Supplier;
  * {@link Registry.StepRegistration#compiled} is already a fully-compiled {@code
  * Expression}, self-contained and independent of any registry object once built (it was
  * built once, correctly, against its OWN registry's parameter types back in {@code
- * RegistryRegistrar}). So merging is simply concatenating each source registry's {@code
+ * Steps}). So merging is simply concatenating each source registry's {@code
  * steps()} list into the accumulator's — reusing the already-compiled expressions as-is
  * — with the same duplicate-expression check {@code addStep} performs (and the same
  * error message shape), since two classes accidentally registering the identical
@@ -116,11 +116,10 @@ public final class StepLoader {
         Map<String, Supplier<? extends State>> factoriesByFile = new HashMap<>();
 
         for (String className : stepClassNames) {
-            for (StepDefinitions instance : resolveUnits(className, loader)) {
-                RegistryRegistrar registrar = new RegistryRegistrar();
-                instance.defineSteps(registrar);
+            for (StepDefinitions<?> instance : resolveUnits(className, loader)) {
+                Steps.Bound bound = Steps.bind(instance);
 
-                Registry own = registrar.registry();
+                Registry own = bound.registry();
                 if (parameterTypes == null) {
                     // Arbitrary pick: the FIRST class's ParameterTypeRegistry becomes the
                     // merged registry's own — it's never consulted again once every step's
@@ -150,7 +149,7 @@ public final class StepLoader {
                                         + stepClassNames
                                         + ")");
                     }
-                    factoriesByFile.put(file, registrar.stateFactory());
+                    factoriesByFile.put(file, bound.stateFactory());
                 }
                 // else: steps was called but zero steps were registered (a
                 // context-only class) — there's no expressionSourceFile to key it by, and
@@ -218,7 +217,7 @@ public final class StepLoader {
      * compiles to (a file-facade class with a static getter), but the check is
      * plain reflection — nothing Kotlin-specific.
      */
-    private static List<StepDefinitions> resolveUnits(String className, ClassLoader loader) {
+    private static List<StepDefinitions<?>> resolveUnits(String className, ClassLoader loader) {
         Class<?> rawClass;
         try {
             rawClass = Class.forName(className, true, loader);
@@ -228,7 +227,7 @@ public final class StepLoader {
         if (StepDefinitions.class.isAssignableFrom(rawClass)) {
             return List.of(instantiate(rawClass));
         }
-        List<StepDefinitions> units = new ArrayList<>();
+        List<StepDefinitions<?>> units = new ArrayList<>();
         List<Method> factories = new ArrayList<>();
         for (Method m : rawClass.getMethods()) {
             if (Modifier.isStatic(m.getModifiers())

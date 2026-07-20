@@ -1,9 +1,8 @@
 package dev.varar.conformance.bundle04;
 
-import dev.varar.Registrar;
 import dev.varar.State;
-import dev.varar.StateBinder;
 import dev.varar.StepDefinitions;
+import dev.varar.Steps;
 
 /**
  * Java sibling of {@code echo.steps.ts} / {@code echo.steps.py} (bundle {@code
@@ -17,13 +16,13 @@ import dev.varar.StepDefinitions;
  * handler argument, after any inline captures — so this sensor takes it explicitly and
  * echoes it back verbatim; equal content passes.
  */
-public final class EchoSteps implements StepDefinitions {
+public final class EchoSteps implements StepDefinitions<EchoSteps.Ctx> {
 
     record Ctx() implements State {}
 
     @Override
-    public void defineSteps(Registrar registrar) {
-        StateBinder<Ctx> s = registrar.steps(Ctx::new);
+    public void register(Steps<Ctx> s) {
+        s.defineState(Ctx::new);
 
         s.sensor("I echo the following:", (Ctx ctx, String doc) -> doc);
     }

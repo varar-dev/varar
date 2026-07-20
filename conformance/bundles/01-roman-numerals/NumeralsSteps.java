@@ -1,9 +1,8 @@
 package dev.varar.conformance.bundle01;
 
-import dev.varar.Registrar;
 import dev.varar.State;
-import dev.varar.StateBinder;
 import dev.varar.StepDefinitions;
+import dev.varar.Steps;
 import java.util.Map;
 
 /**
@@ -21,15 +20,15 @@ import java.util.Map;
  * source file's directory to match its package declaration, only that the directory be
  * a configured source root.
  */
-public final class NumeralsSteps implements StepDefinitions {
+public final class NumeralsSteps implements StepDefinitions<NumeralsSteps.Ctx> {
 
     record Ctx(String result) implements State {}
 
     private static final Map<Integer, String> ROMAN = Map.of(1, "I", 4, "IV", 9, "IX", 40, "XL");
 
     @Override
-    public void defineSteps(Registrar registrar) {
-        StateBinder<Ctx> s = registrar.steps(() -> new Ctx(null));
+    public void register(Steps<Ctx> s) {
+        s.defineState(() -> new Ctx(null));
 
         s.stimulus(
                 "I convert {int} to roman numerals",

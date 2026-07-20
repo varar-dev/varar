@@ -82,7 +82,7 @@ import java.util.function.Function;
  * <h2>Invoking an opaque handler</h2>
  *
  * <p>{@code var-core} has zero compile-time dependency on the {@code var} module's
- * author-facing {@code StateBinder.Stimulus0/1/2}/{@code Sensor0/1/2} interfaces
+ * author-facing {@code Steps.Stimulus0/1/2}/{@code Sensor0/1/2} interfaces
  * (hexagonal architecture: the core never imports the facade) — {@link
  * Registry.StepRegistration#handler()} is plain {@link Object}. This executor invokes it
  * purely via reflection, matched by arity (state + captured args + at most one trailing
@@ -242,7 +242,7 @@ public final class Execute {
                 lastReturn = returned;
                 // Dispatch on the step's role. A stimulus REPLACES state with the new,
                 // complete value the handler returned (Task 11's full-replacement model —
-                // no merge, no no-op case: the typed StateBinder.StimulusN always returns a
+                // no merge, no no-op case: the typed Steps.StimulusN always returns a
                 // full C). sensor compares its return against the Markdown; an unknown
                 // (null) kind is a wiring bug.
                 StepKind kind = step.stepDef().kind();

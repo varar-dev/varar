@@ -1,17 +1,16 @@
 package examples;
 
-import dev.varar.Registrar;
 import dev.varar.State;
-import dev.varar.StateBinder;
 import dev.varar.StepDefinitions;
+import dev.varar.Steps;
 
-public final class DeepThoughtSteps implements StepDefinitions {
+public final class DeepThoughtSteps implements StepDefinitions<DeepThoughtSteps.Ctx> {
 
     record Ctx() implements State {}
 
     @Override
-    public void defineSteps(Registrar registrar) {
-        StateBinder<Ctx> s = registrar.steps(Ctx::new);
+    public void register(Steps<Ctx> s) {
+        s.defineState(Ctx::new);
 
         s.sensor("life, the universe and everything is {int}", (Ctx ctx, Integer answer) -> 42);
     }

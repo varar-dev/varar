@@ -1,9 +1,8 @@
 package examples;
 
-import dev.varar.Registrar;
 import dev.varar.State;
-import dev.varar.StateBinder;
 import dev.varar.StepDefinitions;
+import dev.varar.Steps;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -11,7 +10,7 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-public final class LibrarySteps implements StepDefinitions {
+public final class LibrarySteps implements StepDefinitions<LibrarySteps.Ctx> {
 
     record Ctx(List<Library.Loan> loans, Library.Money fee, boolean granted) implements State {}
 
@@ -28,8 +27,8 @@ public final class LibrarySteps implements StepDefinitions {
     }
 
     @Override
-    public void defineSteps(Registrar registrar) {
-        StateBinder<Ctx> s = registrar.steps(() -> new Ctx(List.of(), Library.gbp(0), false));
+    public void register(Steps<Ctx> s) {
+        s.defineState(() -> new Ctx(List.of(), Library.gbp(0), false));
 
         s.param(
                 "date",

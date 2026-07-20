@@ -1,16 +1,16 @@
 @file:JvmName("DefineState")
 // File annotation: the capturing-arity overloads below are top-level extension
 // functions, so their frames belong to THIS file's facade class — annotate it
-// so RegistryRegistrar's StackWalker attributes registrations to the author's
-// call site, exactly as the @RegistrarGlue on StepsScope does for the members.
-@file:RegistrarGlue
+// so Steps' StackWalker attributes registrations to the author's
+// call site, exactly as the @StepsGlue on StepsScope does for the members.
+@file:StepsGlue
 
 package dev.varar.kotlin
 
-import dev.varar.RegistrarGlue
 import dev.varar.State
-import dev.varar.StateBinder
 import dev.varar.StepDefinitions
+import dev.varar.Steps
+import dev.varar.StepsGlue
 import java.util.function.Function
 import java.util.function.Supplier
 import kotlinx.coroutines.runBlocking
@@ -25,25 +25,25 @@ internal class StateBox<C : Any>(val value: C) : State
 /**
  * The var-kotlin author entry point. Returns an INERT, replayable [StepDefinitions]: nothing
  * registers when a top-level `val stepDefs = steps(::Ctx) { … }` initializes — the block is stored
- * and replayed against whatever fresh `Registrar` the runner injects via
- * [StepDefinitions.defineSteps]. This keeps the Java port's rule that mutable accumulation lives in
- * the shell, never in a facade-global (see Registrar's javadoc), while giving Kotlin authors a
- * file-scoped API.
+ * and replayed against whatever fresh [Steps] the runner injects via [StepDefinitions.register].
+ * This keeps the Java port's rule that mutable accumulation lives in the shell, never in a
+ * facade-global (see Steps' javadoc), while giving Kotlin authors a file-scoped API.
  */
 fun <C : Any> steps(
     factory: () -> C,
     block: StepsScope<C>.() -> Unit,
-): StepDefinitions = StepDefinitions { registrar ->
-    val binder = registrar.steps(Supplier { StateBox(factory()) })
-    StepsScope(binder).block()
-}
+): StepDefinitions<*> =
+    StepDefinitions<StateBox<C>> { steps ->
+        steps.defineState(Supplier { StateBox(factory()) })
+        StepsScope(steps).block()
+    }
 
 /**
  * Factory-less variant for a step file whose steps are pure — nothing to arrange, nothing to
  * evolve. Handlers run against [Unit]: a stimulus body simply performs its effect (its implicit
  * `Unit` return IS the unchanged state), a sensor returns the value the core compares.
  */
-fun steps(block: StepsScope<Unit>.() -> Unit): StepDefinitions = steps({}, block)
+fun steps(block: StepsScope<Unit>.() -> Unit): StepDefinitions<*> = steps({}, block)
 
 /**
  * The receiver of a [steps] block: bare `stimulus`/`sensor` calls, one overload per handler arity.
@@ -64,11 +64,11 @@ fun steps(block: StepsScope<Unit>.() -> Unit): StepDefinitions = steps({}, block
  * where `sensor('… {int} …', () => cukes)` simply ignores the capture. Declaring MORE parameters
  * than the step supplies is an authoring error, reported at execution time by [HandlerAdapter].
  *
- * Annotated [RegistrarGlue] so registration-time StackWalker frames of this class are skipped and
- * each step's source location is the author's own `.steps.kt` call site.
+ * Annotated [StepsGlue] so registration-time StackWalker frames of this class are skipped and each
+ * step's source location is the author's own `.steps.kt` call site.
  */
-@RegistrarGlue
-class StepsScope<C : Any> internal constructor(internal val binder: StateBinder<StateBox<C>>) {
+@StepsGlue
+class StepsScope<C : Any> internal constructor(internal val binder: Steps<StateBox<C>>) {
 
     fun stimulus(expression: String, handler: suspend C.() -> C) {
         binder.stimulus(expression, StimulusAdapter<C>(0) { c, _ -> handler(c) })
@@ -103,13 +103,13 @@ class StepsScope<C : Any> internal constructor(internal val binder: StateBinder<
             binder.param(
                 name,
                 regexp.toPattern(),
-                StateBinder.Parse<T> { captures -> parse(captures) },
+                Steps.Parse<T> { captures -> parse(captures) },
             )
         } else {
             binder.param(
                 name,
                 regexp.toPattern(),
-                StateBinder.Parse<T> { captures -> parse(captures) },
+                Steps.Parse<T> { captures -> parse(captures) },
                 Function<T, String> { value -> format(value) },
             )
         }
@@ -172,7 +172,7 @@ internal abstract class HandlerAdapter(private val arity: Int) {
 internal class StimulusAdapter<C : Any>(
     arity: Int,
     private val f: suspend (C, List<Any?>) -> C,
-) : HandlerAdapter(arity), StateBinder.Stimulus0<StateBox<C>> {
+) : HandlerAdapter(arity), Steps.Stimulus0<StateBox<C>> {
 
     override fun apply(box: StateBox<C>): StateBox<C> = call(box, listOf())
 
@@ -191,7 +191,7 @@ internal class StimulusAdapter<C : Any>(
 internal class SensorAdapter<C : Any>(
     arity: Int,
     private val f: suspend (C, List<Any?>) -> Any?,
-) : HandlerAdapter(arity), StateBinder.Sensor0<StateBox<C>, Any?> {
+) : HandlerAdapter(arity), Steps.Sensor0<StateBox<C>, Any?> {
 
     override fun apply(box: StateBox<C>): Any? = call(box, listOf())
 

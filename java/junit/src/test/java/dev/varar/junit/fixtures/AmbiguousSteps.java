@@ -1,8 +1,8 @@
 package dev.varar.junit.fixtures;
 
-import dev.varar.Registrar;
 import dev.varar.State;
 import dev.varar.StepDefinitions;
+import dev.varar.Steps;
 
 /**
  * Two expressions that both match "I have 5 cukes" — an ambiguous-match plan diagnostic (Task
@@ -10,13 +10,13 @@ import dev.varar.StepDefinitions;
  * separate copy, not shared, since test sources aren't visible across Maven modules). Paired
  * with {@code examplefixture/ambiguous.md}.
  */
-public final class AmbiguousSteps implements StepDefinitions {
+public final class AmbiguousSteps implements StepDefinitions<AmbiguousSteps.Ctx> {
 
     public record Ctx() implements State {}
 
     @Override
-    public void defineSteps(Registrar registrar) {
-        var s = registrar.steps(Ctx::new);
+    public void register(Steps<Ctx> s) {
+        s.defineState(Ctx::new);
         s.stimulus("I have {int} cukes", (Ctx ctx, Integer n) -> ctx);
         s.stimulus("I have 5 cukes", (Ctx ctx) -> ctx);
     }

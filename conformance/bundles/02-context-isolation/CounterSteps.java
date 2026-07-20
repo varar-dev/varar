@@ -1,18 +1,17 @@
 package dev.varar.conformance.bundle02;
 
-import dev.varar.Registrar;
 import dev.varar.State;
-import dev.varar.StateBinder;
 import dev.varar.StepDefinitions;
+import dev.varar.Steps;
 
 /** Java sibling of {@code counter.steps.ts} / {@code counter.steps.py} (bundle {@code 02-context-isolation}). */
-public final class CounterSteps implements StepDefinitions {
+public final class CounterSteps implements StepDefinitions<CounterSteps.Ctx> {
 
     record Ctx(int count) implements State {}
 
     @Override
-    public void defineSteps(Registrar registrar) {
-        StateBinder<Ctx> s = registrar.steps(() -> new Ctx(0));
+    public void register(Steps<Ctx> s) {
+        s.defineState(() -> new Ctx(0));
 
         s.stimulus("I increment", (Ctx ctx) -> new Ctx(ctx.count() + 1));
 

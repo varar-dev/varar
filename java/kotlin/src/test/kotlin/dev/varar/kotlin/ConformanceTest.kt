@@ -1,7 +1,7 @@
 package dev.varar.kotlin
 
-import dev.varar.RegistryRegistrar
 import dev.varar.StepDefinitions
+import dev.varar.Steps
 import dev.varar.core.CanonicalJson
 import dev.varar.core.Conformance
 import dev.varar.kotlin.conformance.bundle01.steps as bundle01Steps
@@ -41,11 +41,10 @@ class ConformanceTest {
     @MethodSource("bundleDirs")
     fun `registry matches golden`(bundle: Path) {
         val fixture = loadFixture(bundle.fileName.toString())
-        val registrar = RegistryRegistrar()
-        fixture.defineSteps(registrar)
+        val bound = Steps.bind(fixture)
 
         val actual =
-            CanonicalJson.canonicalStringify(Conformance.toRegistryArtifact(registrar.registry()))
+            CanonicalJson.canonicalStringify(Conformance.toRegistryArtifact(bound.registry()))
         val expected =
             Files.readString(
                 bundle.resolve("golden").resolve("registry.json"),
@@ -74,7 +73,7 @@ class ConformanceTest {
             }
         }
 
-        private fun loadFixture(bundleName: String): StepDefinitions =
+        private fun loadFixture(bundleName: String): StepDefinitions<*> =
             when (bundleName) {
                 "01-roman-numerals" -> bundle01Steps
                 "02-context-isolation" -> bundle02Steps

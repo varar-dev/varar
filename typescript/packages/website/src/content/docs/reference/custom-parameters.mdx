@@ -25,8 +25,8 @@ can use it as a `{name}` placeholder.
   </TabItem>
   <TabItem label="Java">
     ```java
-    // inside defineSteps(Registrar registrar)
-    var s = registrar.steps(Ctx::new);
+    // inside register(Steps<Ctx> s)
+    s.defineState(Ctx::new);
     s.param(
             "money",
             Pattern.compile("£\\d+\\.\\d{2}"),

@@ -1,8 +1,8 @@
 package dev.varar.runner.fixtures;
 
-import dev.varar.Registrar;
 import dev.varar.State;
 import dev.varar.StepDefinitions;
+import dev.varar.Steps;
 import java.util.regex.Pattern;
 
 /**
@@ -10,13 +10,13 @@ import java.util.regex.Pattern;
  * name as {@link GammaSteps}. Used by {@code StepLoaderTest} to verify that duplicate
  * custom parameter-type names are rejected during merge.
  */
-public final class EpsilonSteps implements StepDefinitions {
+public final class EpsilonSteps implements StepDefinitions<EpsilonSteps.Ctx> {
 
     public record Ctx(String color) implements State {}
 
     @Override
-    public void defineSteps(Registrar registrar) {
-        var s = registrar.steps(() -> new Ctx(""));
+    public void register(Steps<Ctx> s) {
+        s.defineState(() -> new Ctx(""));
         s.param("color", Pattern.compile("[a-z]+"));
         s.stimulus("epsilon sets color to {color}", (Ctx ctx, String color) -> new Ctx(color));
     }

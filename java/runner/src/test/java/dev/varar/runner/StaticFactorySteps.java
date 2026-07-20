@@ -1,7 +1,6 @@
 package dev.varar.runner;
 
 import dev.varar.State;
-import dev.varar.StateBinder;
 import dev.varar.StepDefinitions;
 
 /**
@@ -16,9 +15,9 @@ public final class StaticFactorySteps {
 
     record Ctx() implements State {}
 
-    public static StepDefinitions steps() {
-        return registrar -> {
-            StateBinder<Ctx> s = registrar.steps(Ctx::new);
+    public static StepDefinitions<Ctx> steps() {
+        return s -> {
+            s.defineState(Ctx::new);
             s.stimulus("I do a static-factory thing", (Ctx ctx) -> ctx);
         };
     }
