@@ -6,7 +6,7 @@
 // Fixtures live alongside every other language's *.steps.* in
 // conformance/bundles/<n>/<stem>.steps.go, symlinked into ../conformance/bNN
 // (each its own `package fixture`), and dispatched by bundle name below.
-package varar_test
+package conformance_test
 
 import (
 	"os"

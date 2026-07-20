@@ -46,6 +46,13 @@ jobs:
         working-directory: go
         run: go test ./...
 
+      # The conformance harness is a SEPARATE nested module (go/conformance) so
+      # its symlinked bNN fixtures never enter the published module zip — see
+      # go/conformance/go.mod. It must be built from its own directory.
+      - name: conformance
+        working-directory: go/conformance
+        run: test -z "$(gofmt -l .)" && go vet ./... && go test ./...
+
       # Standalone sample project (see examples/go-gotest): runs the Markdown
       # specs through the module via `go test`.
       - name: examples

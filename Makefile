@@ -80,12 +80,15 @@ dotnet:
 	cd dotnet && dotnet format --verify-no-changes && dotnet test
 	cd examples/csharp-vstest && dotnet format --verify-no-changes && dotnet test
 
-# Go port: the go/ module (gofmt + vet + the four conformance artifacts x 15
-# bundles + config corpus + drift + runner + the go test adapter), then the
-# standalone sample project (which depends on the module by path and runs the
+# Go port: the go/ module (gofmt + vet + config corpus + drift + runner + the
+# go test adapter), then the conformance harness — a SEPARATE nested module
+# (go/conformance) so its symlinked bNN fixtures never enter the published
+# github.com/varar-dev/varar/go zip (Go drops symlinks; see go/conformance/go.mod)
+# — then the standalone sample project (depends on the module by path, runs the
 # Markdown specs via `go test`).
 go:
 	cd go && test -z "$$(gofmt -l .)" && go vet ./... && go test ./...
+	cd go/conformance && test -z "$$(gofmt -l .)" && go vet ./... && go test ./...
 	cd examples/go-gotest && test -z "$$(gofmt -l .)" && go vet ./... && go test ./...
 
 # Coverage reports: typescript/coverage/index.html, python/htmlcov/index.html,
