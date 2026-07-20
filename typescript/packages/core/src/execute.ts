@@ -101,17 +101,18 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
             // wiring bug.
             const kind = step.stepDef.kind
             if (kind === 'stimulus') {
-              // A stimulus EVOLVES state: returning a partial state object
-              // shallow-merges onto the current state (re-frozen, then
-              // threaded to later steps in this stepfile). Returning nothing is
-              // a no-op. Any non-object return is a contract violation.
-              if (returned !== undefined) {
-                if (typeof returned !== 'object' || returned === null) {
+              // A stimulus REPLACES state: the returned object IS the next state
+              // (re-frozen, then threaded to later steps in this stepfile). There
+              // is no merge — a return with fewer keys shrinks the state. Returning
+              // nothing leaves state unchanged. Any non-object return is a
+              // contract violation.
+              if (returned !== undefined && returned !== null) {
+                if (typeof returned !== 'object') {
                   throw new ReturnShapeError(
-                    'a stimulus must return a partial state object or nothing',
+                    'a stimulus must return the complete next state, or nothing to leave it unchanged',
                   )
                 }
-                state = deepFreeze({ ...(state as object), ...(returned as object) })
+                state = deepFreeze(returned)
                 stateByFile.set(file, state)
               }
             } else if (kind === 'sensor') {

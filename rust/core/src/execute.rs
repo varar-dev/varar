@@ -176,15 +176,21 @@ fn run_example(
                     last_return = output.compared().cloned();
                     match step.step_def.kind {
                         Some(StepKind::Stimulus) => {
-                            // A stimulus's output IS the next state. The facade
-                            // yields `State`; the core's Value-state
-                            // conveniences yield `Compared`, which for a
-                            // stimulus means the same thing.
-                            let next: Rc<dyn Any> = match output {
-                                StepOutput::State(next) => next,
-                                StepOutput::Compared(v) => Rc::new(v.unwrap_or(Value::Null)),
+                            // A stimulus's output IS the next state (full
+                            // replacement). The facade yields `State`; the core's
+                            // Value-state conveniences yield `Compared`, which for
+                            // a stimulus means the same thing. Returning nothing
+                            // (`Compared(None)`) leaves state unchanged — it is not
+                            // the same as returning `Value::Null`.
+                            let next: Option<Rc<dyn Any>> = match output {
+                                StepOutput::State(next) => Some(next),
+                                StepOutput::Compared(v) => {
+                                    v.map(|v| Rc::new(v) as Rc<dyn Any>)
+                                }
                             };
-                            state_by_file.insert(file.clone(), next);
+                            if let Some(next) = next {
+                                state_by_file.insert(file.clone(), next);
+                            }
                             None
                         }
                         Some(StepKind::Sensor) => {

@@ -753,8 +753,8 @@ def test_context_action_return_merges_into_state_and_threads_forward() -> None:
     assert seen[0] == {"greeting": "hi", "count": 1}
 
 
-def test_shallow_merge_replaces_top_level_key_and_preserves_rest() -> None:
-    """shallow merge replaces a top-level key and preserves the rest."""
+def test_stimulus_return_fully_replaces_state() -> None:
+    """a stimulus return IS the next state — keys it omits are dropped, not merged."""
     seen: list[Any] = []
 
     def register(r: Registry) -> Registry:
@@ -787,7 +787,26 @@ def test_shallow_merge_replaces_top_level_key_and_preserves_rest() -> None:
         "# X\n\nstep one\nstep two\nobserve\n", register, lambda _: {}
     )
     assert caught[0] is None
-    assert seen[0] == {"a": 1, "b": 3}
+    # Under the full-replacement model {"b": 3} IS the next state: "a" is gone.
+    assert seen[0] == {"b": 3}
+
+
+def test_stimulus_returning_a_non_dict_is_a_return_shape_error() -> None:
+    """a stimulus must return the complete next state, not a scalar."""
+
+    def register(r: Registry) -> Registry:
+        return add_step(
+            r,
+            expression="step one",
+            expression_source_file=FILE,
+            expression_source_line=1,
+            kind="stimulus",
+            handler=lambda *_: 42,
+        )
+
+    caught = _run_capturing_error("# X\n\nstep one\n", register, lambda _: {})
+    assert isinstance(caught[0], ReturnShapeError)
+    assert "complete next state" in str(caught[0])
 
 
 def test_undefined_return_from_context_action_is_no_op() -> None:

@@ -64,7 +64,13 @@ public static class Execute
                 switch (step.StepDef.Kind)
                 {
                     case StepKind.Stimulus:
-                        stateByFile[file] = returned ?? Value.Null; // full replacement
+                        // Full replacement: the return IS the next state. Returning
+                        // nothing (null) leaves state unchanged — it does not wipe it.
+                        if (returned is not null)
+                        {
+                            stateByFile[file] = returned;
+                        }
+
                         break;
                     case StepKind.Sensor:
                         if (ex.RowChecks.IsDefaultOrEmpty)

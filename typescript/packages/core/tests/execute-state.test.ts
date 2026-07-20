@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest'
+import { ReturnShapeError } from '../src/cell-diff.ts'
 import { type ExecutePorts, executePlan } from '../src/execute.ts'
 import { parse } from '../src/parse.ts'
 import { plan } from '../src/plan.ts'
@@ -61,7 +62,7 @@ test('a context/action object return merges into state and threads forward', asy
   expect(seen).toEqual({ greeting: 'hi', count: 1 })
 })
 
-test('shallow merge replaces a top-level key and preserves the rest', async () => {
+test('a stimulus return fully replaces state — keys it omits are dropped, not merged', async () => {
   let seen: unknown
   const getErr = run(
     '# X\n\nstep one\nstep two\nobserve\n',
@@ -94,7 +95,62 @@ test('shallow merge replaces a top-level key and preserves the rest', async () =
   )
   await new Promise((res) => setTimeout(res, 0))
   expect(getErr()).toBeUndefined()
-  expect(seen).toEqual({ a: 1, b: 3 })
+  // Under the full-replacement model `{ b: 3 }` IS the next state: `a` is gone.
+  expect(seen).toEqual({ b: 3 })
+})
+
+test('a stimulus returning nothing leaves state unchanged', async () => {
+  let seen: unknown
+  const getErr = run(
+    '# X\n\nstep one\nstep two\nobserve\n',
+    (r) => {
+      r = addStep(r, {
+        expression: 'step one',
+        expressionSourceFile: FILE,
+        expressionSourceLine: 1,
+        kind: 'stimulus',
+        handler: () => ({ a: 1, b: 2 }),
+      })
+      r = addStep(r, {
+        expression: 'step two',
+        expressionSourceFile: FILE,
+        expressionSourceLine: 2,
+        kind: 'stimulus',
+        handler: () => undefined,
+      })
+      return addStep(r, {
+        expression: 'observe',
+        expressionSourceFile: FILE,
+        expressionSourceLine: 3,
+        kind: 'sensor',
+        handler: (state) => {
+          seen = state
+        },
+      })
+    },
+    () => ({}),
+  )
+  await new Promise((res) => setTimeout(res, 0))
+  expect(getErr()).toBeUndefined()
+  expect(seen).toEqual({ a: 1, b: 2 })
+})
+
+test('a stimulus returning a non-object is a ReturnShapeError', async () => {
+  const getErr = run(
+    '# X\n\nstep one\n',
+    (r) =>
+      addStep(r, {
+        expression: 'step one',
+        expressionSourceFile: FILE,
+        expressionSourceLine: 1,
+        kind: 'stimulus',
+        handler: () => 42 as unknown as Record<string, unknown>,
+      }),
+    () => ({}),
+  )
+  await new Promise((res) => setTimeout(res, 0))
+  expect(getErr()).toBeInstanceOf(ReturnShapeError)
+  expect((getErr() as Error).message).toContain('complete next state')
 })
 
 test('an undefined (void) return from a context/action is a no-op', async () => {

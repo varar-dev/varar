@@ -26,7 +26,7 @@ module Varar
     # A named, runnable example returned by collect_examples.
     QueuedExample = Data.define(:name, :run)
 
-    # Execute an ExecutionPlan: route stimulus/sensor returns, merge immutable
+    # Execute an ExecutionPlan: route stimulus/sensor returns, replace immutable
     # state, compare sensor returns via the diff helpers, invert expected
     # failures. Handlers are user callbacks (sync). Port of execute.ts.
     module Execute
@@ -76,13 +76,17 @@ module Varar
               last_return = returned
               case step.step_def.kind
               when 'stimulus'
+                # Full replacement: the returned Hash IS the next state (deep-frozen).
+                # There is no merge — a return with fewer keys shrinks the state.
+                # nil is a no-op; any other type is a contract violation.
                 unless returned.nil?
                   unless returned.is_a?(Hash)
                     raise ReturnShapeError,
-                          'a stimulus must return a partial state object or nothing'
+                          'a stimulus must return the complete next state, ' \
+                          'or nothing to leave it unchanged'
                   end
 
-                  state = DeepFreeze.deep_freeze(state.merge(returned))
+                  state = DeepFreeze.deep_freeze(returned)
                   state_by_file[file] = state
                 end
               when 'sensor'

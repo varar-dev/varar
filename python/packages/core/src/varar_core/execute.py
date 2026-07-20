@@ -186,16 +186,17 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
                         kind = step.step_def.kind
 
                         if kind == "stimulus":
-                            # Return-merge: a partial dict is shallow-merged into
-                            # a new deep-frozen state; None/undefined is a no-op;
-                            # any other type is a contract violation.
+                            # Full replacement: the returned dict IS the next state
+                            # (deep-frozen). There is no merge — a return with fewer
+                            # keys shrinks the state. None is a no-op; any other type
+                            # is a contract violation.
                             if returned is not None:
                                 if not isinstance(returned, dict):
                                     raise ReturnShapeError(
-                                        "a stimulus must return a partial"
-                                        " state object or nothing"
+                                        "a stimulus must return the complete next"
+                                        " state, or nothing to leave it unchanged"
                                     )
-                                state = deep_freeze({**state, **returned})
+                                state = deep_freeze(returned)
                                 state_by_file[file] = state
 
                         elif kind == "sensor":

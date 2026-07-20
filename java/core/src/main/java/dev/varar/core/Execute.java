@@ -241,13 +241,16 @@ public final class Execute {
                 Object returned = resolve(invokeHandler(step.stepDef().handler(), state, callArgs));
                 lastReturn = returned;
                 // Dispatch on the step's role. A stimulus REPLACES state with the new,
-                // complete value the handler returned (Task 11's full-replacement model —
-                // no merge, no no-op case: the typed Steps.StimulusN always returns a
-                // full C). sensor compares its return against the Markdown; an unknown
+                // complete value the handler returned — no merge: a return carrying
+                // fewer fields shrinks the state. Returning nothing (null) leaves state
+                // unchanged. sensor compares its return against the Markdown; an unknown
                 // (null) kind is a wiring bug.
                 StepKind kind = step.stepDef().kind();
                 if (kind == StepKind.STIMULUS) {
-                    stateByFile.put(file, returned);
+                    // Returning nothing (null) leaves state unchanged; it does not wipe it.
+                    if (returned != null) {
+                        stateByFile.put(file, returned);
+                    }
                 } else if (kind == StepKind.SENSOR) {
                     // Header-bound rows are compared after the loop via ex.rowChecks; skip
                     // the per-step contract for them (they return a row value instead).
