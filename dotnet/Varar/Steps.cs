@@ -69,6 +69,43 @@ public sealed class Steps
         [CallerLineNumber] int line = 0) =>
         Add(StepKind.Stimulus, expression, (state, args) => handler(state, ArgAt(args, 0), ArgAt(args, 1)), file, line);
 
+    public Steps Stimulus(
+        string expression,
+        Func<Value, Value, Value, Value, Value?> handler,
+        [CallerFilePath] string file = "",
+        [CallerLineNumber] int line = 0) =>
+        Add(
+            StepKind.Stimulus,
+            expression,
+            (state, args) => handler(state, ArgAt(args, 0), ArgAt(args, 1), ArgAt(args, 2)),
+            file,
+            line);
+
+    public Steps Stimulus(
+        string expression,
+        Func<Value, Value, Value, Value, Value, Value?> handler,
+        [CallerFilePath] string file = "",
+        [CallerLineNumber] int line = 0) =>
+        Add(
+            StepKind.Stimulus,
+            expression,
+            (state, args) => handler(state, ArgAt(args, 0), ArgAt(args, 1), ArgAt(args, 2), ArgAt(args, 3)),
+            file,
+            line);
+
+    public Steps Stimulus(
+        string expression,
+        Func<Value, Value, Value, Value, Value, Value, Value?> handler,
+        [CallerFilePath] string file = "",
+        [CallerLineNumber] int line = 0) =>
+        Add(
+            StepKind.Stimulus,
+            expression,
+            (state, args) =>
+                handler(state, ArgAt(args, 0), ArgAt(args, 1), ArgAt(args, 2), ArgAt(args, 3), ArgAt(args, 4)),
+            file,
+            line);
+
     // ─── Sensor: read-only assertion; returns a value to compare (null = no assertion). ───
 
     public Steps Sensor(
@@ -91,6 +128,43 @@ public sealed class Steps
         [CallerFilePath] string file = "",
         [CallerLineNumber] int line = 0) =>
         Add(StepKind.Sensor, expression, (state, args) => handler(state, ArgAt(args, 0), ArgAt(args, 1)), file, line);
+
+    public Steps Sensor(
+        string expression,
+        Func<Value, Value, Value, Value, Value?> handler,
+        [CallerFilePath] string file = "",
+        [CallerLineNumber] int line = 0) =>
+        Add(
+            StepKind.Sensor,
+            expression,
+            (state, args) => handler(state, ArgAt(args, 0), ArgAt(args, 1), ArgAt(args, 2)),
+            file,
+            line);
+
+    public Steps Sensor(
+        string expression,
+        Func<Value, Value, Value, Value, Value, Value?> handler,
+        [CallerFilePath] string file = "",
+        [CallerLineNumber] int line = 0) =>
+        Add(
+            StepKind.Sensor,
+            expression,
+            (state, args) => handler(state, ArgAt(args, 0), ArgAt(args, 1), ArgAt(args, 2), ArgAt(args, 3)),
+            file,
+            line);
+
+    public Steps Sensor(
+        string expression,
+        Func<Value, Value, Value, Value, Value, Value, Value?> handler,
+        [CallerFilePath] string file = "",
+        [CallerLineNumber] int line = 0) =>
+        Add(
+            StepKind.Sensor,
+            expression,
+            (state, args) =>
+                handler(state, ArgAt(args, 0), ArgAt(args, 1), ArgAt(args, 2), ArgAt(args, 3), ArgAt(args, 4)),
+            file,
+            line);
 
     /// <summary>Declares a custom parameter type (optionally with a value renderer for diffs).</summary>
     public Steps Param(string name, string regexp, ParameterTransform? parse = null, ParameterFormat? format = null)

@@ -39,6 +39,28 @@ public class StepsTests
         Assert.Equal(StepKind.Sensor, r.Steps[1].Kind);
     }
 
+    /// <summary>
+    /// The overload ladder must reach far enough for the shared "two or more slots" rule. Capped
+    /// at two captures, a spec with three inline parameters plus a trailing table ran in the
+    /// dynamic ports but would not compile here.
+    /// </summary>
+    [Fact]
+    public void RegistersHandlersWithThreeFourAndFiveCaptures()
+    {
+        var s = Steps.From(Registry.Create());
+        s.Stimulus("s3 {int} {int} {int}", (state, a, b, c) => state);
+        s.Stimulus("s4 {int} {int} {int} {int}", (state, a, b, c, d) => state);
+        s.Stimulus("s5 {int} {int} {int} {int} {int}", (state, a, b, c, d, e) => state);
+        s.Sensor("n3 {int} {int} {int}", (state, a, b, c) => Value.List([a, b, c]));
+        s.Sensor("n4 {int} {int} {int} {int}", (state, a, b, c, d) => Value.List([a, b, c, d]));
+        s.Sensor("n5 {int} {int} {int} {int} {int}", (state, a, b, c, d, e) => Value.List([a, b, c, d, e]));
+
+        var r = s.ToRegistry();
+        Assert.Equal(6, r.Steps.Length);
+        Assert.Equal(StepKind.Stimulus, r.Steps[0].Kind);
+        Assert.Equal(StepKind.Sensor, r.Steps[5].Kind);
+    }
+
     [Fact]
     public void StateRecordsAFactoryKeyedByTheCallerFileThatProducesTheInitialState()
     {

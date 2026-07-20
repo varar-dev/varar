@@ -148,12 +148,88 @@ fun <C : Any, A, B, R> StepsScope<C>.sensor(expression: String, handler: suspend
     )
 }
 
+fun <C : Any, A, B, D> StepsScope<C>.stimulus(
+    expression: String,
+    handler: suspend C.(A, B, D) -> C,
+) {
+    binder.stimulus(
+        expression,
+        StimulusAdapter<C>(3) { c, args ->
+            @Suppress("UNCHECKED_CAST") handler(c, args[0] as A, args[1] as B, args[2] as D)
+        },
+    )
+}
+
+fun <C : Any, A, B, D, E> StepsScope<C>.stimulus(
+    expression: String,
+    handler: suspend C.(A, B, D, E) -> C,
+) {
+    binder.stimulus(
+        expression,
+        StimulusAdapter<C>(4) { c, args ->
+            @Suppress("UNCHECKED_CAST")
+            handler(c, args[0] as A, args[1] as B, args[2] as D, args[3] as E)
+        },
+    )
+}
+
+fun <C : Any, A, B, D, E, F> StepsScope<C>.stimulus(
+    expression: String,
+    handler: suspend C.(A, B, D, E, F) -> C,
+) {
+    binder.stimulus(
+        expression,
+        StimulusAdapter<C>(5) { c, args ->
+            @Suppress("UNCHECKED_CAST")
+            handler(c, args[0] as A, args[1] as B, args[2] as D, args[3] as E, args[4] as F)
+        },
+    )
+}
+
+fun <C : Any, A, B, D, R> StepsScope<C>.sensor(
+    expression: String,
+    handler: suspend C.(A, B, D) -> R,
+) {
+    binder.sensor(
+        expression,
+        SensorAdapter<C>(3) { c, args ->
+            @Suppress("UNCHECKED_CAST") handler(c, args[0] as A, args[1] as B, args[2] as D)
+        },
+    )
+}
+
+fun <C : Any, A, B, D, E, R> StepsScope<C>.sensor(
+    expression: String,
+    handler: suspend C.(A, B, D, E) -> R,
+) {
+    binder.sensor(
+        expression,
+        SensorAdapter<C>(4) { c, args ->
+            @Suppress("UNCHECKED_CAST")
+            handler(c, args[0] as A, args[1] as B, args[2] as D, args[3] as E)
+        },
+    )
+}
+
+fun <C : Any, A, B, D, E, F, R> StepsScope<C>.sensor(
+    expression: String,
+    handler: suspend C.(A, B, D, E, F) -> R,
+) {
+    binder.sensor(
+        expression,
+        SensorAdapter<C>(5) { c, args ->
+            @Suppress("UNCHECKED_CAST")
+            handler(c, args[0] as A, args[1] as B, args[2] as D, args[3] as E, args[4] as F)
+        },
+    )
+}
+
 /**
  * Arity-tolerant execution shim shared by both adapters. The Java executor ({@code
  * Execute.invokeHandler}) reflects over the registered handler object for a public method whose
  * parameter count equals state + captures + the optional trailing table/doc-string arg — it never
  * dispatches through the SAM interface. Exposing one `apply` overload per supported call shape
- * (state + 0..3 args) lets a handler that declares fewer parameters than the step supplies simply
+ * (state + 0..6 args) lets a handler that declares fewer parameters than the step supplies simply
  * drop the surplus, which is what makes the approved `sensor("… {int} …") { cukes }` run, not just
  * compile. [arity] is what the author's lambda declared; supplying fewer arguments than that is an
  * authoring error surfaced with a step-authoring message rather than an index-out-of-bounds.
@@ -182,6 +258,15 @@ internal class StimulusAdapter<C : Any>(
 
     fun apply(box: StateBox<C>, a: Any?, b: Any?, c: Any?): StateBox<C> = call(box, listOf(a, b, c))
 
+    fun apply(box: StateBox<C>, a: Any?, b: Any?, c: Any?, d: Any?): StateBox<C> =
+        call(box, listOf(a, b, c, d))
+
+    fun apply(box: StateBox<C>, a: Any?, b: Any?, c: Any?, d: Any?, e: Any?): StateBox<C> =
+        call(box, listOf(a, b, c, d, e))
+
+    fun apply(box: StateBox<C>, a: Any?, b: Any?, c: Any?, d: Any?, e: Any?, f: Any?): StateBox<C> =
+        call(box, listOf(a, b, c, d, e, f))
+
     private fun call(box: StateBox<C>, supplied: List<Any?>): StateBox<C> {
         val args = arguments(supplied)
         return StateBox(runBlocking { f(box.value, args) })
@@ -200,6 +285,15 @@ internal class SensorAdapter<C : Any>(
     fun apply(box: StateBox<C>, a: Any?, b: Any?): Any? = call(box, listOf(a, b))
 
     fun apply(box: StateBox<C>, a: Any?, b: Any?, c: Any?): Any? = call(box, listOf(a, b, c))
+
+    fun apply(box: StateBox<C>, a: Any?, b: Any?, c: Any?, d: Any?): Any? =
+        call(box, listOf(a, b, c, d))
+
+    fun apply(box: StateBox<C>, a: Any?, b: Any?, c: Any?, d: Any?, e: Any?): Any? =
+        call(box, listOf(a, b, c, d, e))
+
+    fun apply(box: StateBox<C>, a: Any?, b: Any?, c: Any?, d: Any?, e: Any?, f: Any?): Any? =
+        call(box, listOf(a, b, c, d, e, f))
 
     private fun call(box: StateBox<C>, supplied: List<Any?>): Any? {
         val args = arguments(supplied)

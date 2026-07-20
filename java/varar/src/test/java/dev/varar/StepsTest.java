@@ -60,6 +60,35 @@ class StepsTest {
         assertEquals(9, match.get().get(0).getValue());
     }
 
+    /**
+     * The typed arity ladder must reach far enough for the shared "two or more slots"
+     * rule. Capped at two captures, a spec with three inline parameters plus a trailing
+     * table ran in the dynamic ports but would not compile here.
+     */
+    @Test
+    void registersHandlersWithThreeFourAndFiveCaptures() {
+        record Ctx(String seen) implements State {}
+        Steps<Ctx> s = new Steps<>();
+        s.state(() -> new Ctx(""));
+
+        s.stimulus("s3 {int} {int} {int}", (Ctx c, Integer a, Integer b, Integer d) -> new Ctx(a + "" + b + d));
+        s.stimulus(
+                "s4 {int} {int} {int} {int}",
+                (Ctx c, Integer a, Integer b, Integer d, Integer e) -> new Ctx(a + "" + b + d + e));
+        s.stimulus(
+                "s5 {int} {int} {int} {int} {int}",
+                (Ctx c, Integer a, Integer b, Integer d, Integer e, Integer f) -> new Ctx(a + "" + b + d + e + f));
+        s.sensor("n3 {int} {int} {int}", (Ctx c, Integer a, Integer b, Integer d) -> c.seen());
+        s.sensor("n4 {int} {int} {int} {int}", (Ctx c, Integer a, Integer b, Integer d, Integer e) -> c.seen());
+        s.sensor(
+                "n5 {int} {int} {int} {int} {int}",
+                (Ctx c, Integer a, Integer b, Integer d, Integer e, Integer f) -> c.seen());
+
+        assertEquals(6, s.registry().steps().size());
+        assertEquals(StepKind.STIMULUS, s.registry().steps().get(0).kind());
+        assertEquals(StepKind.SENSOR, s.registry().steps().get(5).kind());
+    }
+
     @Test
     void duplicateExpressionRegisteredTwiceInOneRunThrows() {
         record Empty() implements State {}

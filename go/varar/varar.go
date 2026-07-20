@@ -9,6 +9,7 @@
 package varar
 
 import (
+	"fmt"
 	"runtime"
 
 	"github.com/varar-dev/varar-go/core"
@@ -133,17 +134,28 @@ func (s *Steps[C]) Sensor(expression string, handler any) *Steps[C] {
 //
 // parse must be a func([]string) T — it receives the type's regexp capture
 // groups (or the whole match when it has none) and returns your T, which then
-// arrives directly as the step's slot. format is optional (pass nil): a
+// arrives directly as the step's slot. format is optional — omit it, or pass a
 // func(T) (string, bool) rendering a T back in the document's notation, used
 // when a mismatch is reported. Both are validated at registration.
-func (s *Steps[C]) Param(name, regexp string, parse any, format any) *Steps[C] {
+//
+// format is variadic so it can be omitted, matching every other port (Java has
+// 2/3/4-arg overloads, .NET and Kotlin use defaults). Passing an explicit nil
+// still works.
+func (s *Steps[C]) Param(name, regexp string, parse any, format ...any) *Steps[C] {
+	if len(format) > 1 {
+		panic(fmt.Sprintf("Param(%q): expected at most one format function, got %d", name, len(format)))
+	}
 	coreParse, valueOf := adaptParse(name, parse)
-	if format == nil {
+	var f any
+	if len(format) == 1 {
+		f = format[0]
+	}
+	if f == nil {
 		s.registry = core.DefineParameterType(s.registry, name, regexp, coreParse)
 		return s
 	}
 	s.registry = core.DefineParameterTypeWithFormat(
-		s.registry, name, regexp, coreParse, adaptFormat(name, format, valueOf))
+		s.registry, name, regexp, coreParse, adaptFormat(name, f, valueOf))
 	return s
 }
 

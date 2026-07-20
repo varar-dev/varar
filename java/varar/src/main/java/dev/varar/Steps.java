@@ -8,7 +8,7 @@ import java.util.regex.Pattern;
 
 /**
  * The one object an author uses to declare a step file's state factory ({@link
- * #defineState}), its custom parameter types ({@link #param}), and its {@code
+ * #state}), its custom parameter types ({@link #param}), and its {@code
  * stimulus}/{@code sensor} steps. The runner constructs one per run per {@link
  * StepDefinitions} class and hands it to {@link StepDefinitions#register}:
  *
@@ -70,6 +70,24 @@ public final class Steps<C extends State> {
         C apply(C state, A a, B b);
     }
 
+    /** stimulus handler with three captures: return new state. */
+    @FunctionalInterface
+    public interface Stimulus3<C extends State, A, B, D> {
+        C apply(C state, A a, B b, D d);
+    }
+
+    /** stimulus handler with four captures: return new state. */
+    @FunctionalInterface
+    public interface Stimulus4<C extends State, A, B, D, E> {
+        C apply(C state, A a, B b, D d, E e);
+    }
+
+    /** stimulus handler with five captures: return new state. */
+    @FunctionalInterface
+    public interface Stimulus5<C extends State, A, B, D, E, F> {
+        C apply(C state, A a, B b, D d, E e, F f);
+    }
+
     /** sensor with no captures: observe {@code state}, return a value the core compares. */
     @FunctionalInterface
     public interface Sensor0<C extends State, R> {
@@ -86,6 +104,24 @@ public final class Steps<C extends State> {
     @FunctionalInterface
     public interface Sensor2<C extends State, A, B, R> {
         R apply(C state, A a, B b);
+    }
+
+    /** sensor with three captures: return a value the core compares. */
+    @FunctionalInterface
+    public interface Sensor3<C extends State, A, B, D, R> {
+        R apply(C state, A a, B b, D d);
+    }
+
+    /** sensor with four captures: return a value the core compares. */
+    @FunctionalInterface
+    public interface Sensor4<C extends State, A, B, D, E, R> {
+        R apply(C state, A a, B b, D d, E e);
+    }
+
+    /** sensor with five captures: return a value the core compares. */
+    @FunctionalInterface
+    public interface Sensor5<C extends State, A, B, D, E, F, R> {
+        R apply(C state, A a, B b, D d, E e, F f);
     }
 
     /**
@@ -151,6 +187,18 @@ public final class Steps<C extends State> {
         return add(expression, StepKind.STIMULUS, handler);
     }
 
+    public <A, B, D> Steps<C> stimulus(String expression, Stimulus3<C, A, B, D> handler) {
+        return add(expression, StepKind.STIMULUS, handler);
+    }
+
+    public <A, B, D, E> Steps<C> stimulus(String expression, Stimulus4<C, A, B, D, E> handler) {
+        return add(expression, StepKind.STIMULUS, handler);
+    }
+
+    public <A, B, D, E, F> Steps<C> stimulus(String expression, Stimulus5<C, A, B, D, E, F> handler) {
+        return add(expression, StepKind.STIMULUS, handler);
+    }
+
     public <R> Steps<C> sensor(String expression, Sensor0<C, R> handler) {
         return add(expression, StepKind.SENSOR, handler);
     }
@@ -160,6 +208,18 @@ public final class Steps<C extends State> {
     }
 
     public <A, B, R> Steps<C> sensor(String expression, Sensor2<C, A, B, R> handler) {
+        return add(expression, StepKind.SENSOR, handler);
+    }
+
+    public <A, B, D, R> Steps<C> sensor(String expression, Sensor3<C, A, B, D, R> handler) {
+        return add(expression, StepKind.SENSOR, handler);
+    }
+
+    public <A, B, D, E, R> Steps<C> sensor(String expression, Sensor4<C, A, B, D, E, R> handler) {
+        return add(expression, StepKind.SENSOR, handler);
+    }
+
+    public <A, B, D, E, F, R> Steps<C> sensor(String expression, Sensor5<C, A, B, D, E, F, R> handler) {
         return add(expression, StepKind.SENSOR, handler);
     }
 

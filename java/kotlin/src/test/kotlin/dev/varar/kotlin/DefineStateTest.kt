@@ -43,6 +43,77 @@ class DefineStateTest {
         return method.invoke(handler, *args)
     }
 
+    /**
+     * The arity ladder must reach far enough for the shared "two or more slots" rule. Capped at two
+     * captures, a spec with three inline parameters plus a trailing table ran in the dynamic ports
+     * but would not compile here. The adapters must also accept the wider call shapes, so each
+     * handler is invoked the way Execute.invokeHandler does rather than merely registered.
+     */
+    @Test
+    fun `registers and invokes handlers with three four and five captures`() {
+        data class Wide(val seen: String = "")
+
+        val bound =
+            Steps.bind(
+                steps(::Wide) {
+                    stimulus("s3 {int} {int} {int}") { a: Int, b: Int, c: Int ->
+                        copy(seen = "$a$b$c")
+                    }
+                    stimulus("s4 {int} {int} {int} {int}") { a: Int, b: Int, c: Int, d: Int ->
+                        copy(seen = "$a$b$c$d")
+                    }
+                    stimulus("s5 {int} {int} {int} {int} {int}") {
+                        a: Int,
+                        b: Int,
+                        c: Int,
+                        d: Int,
+                        e: Int ->
+                        copy(seen = "$a$b$c$d$e")
+                    }
+                    sensor("n3 {int} {int} {int}") { a: Int, b: Int, c: Int -> "$a$b$c" }
+                    sensor("n4 {int} {int} {int} {int}") { a: Int, b: Int, c: Int, d: Int ->
+                        "$a$b$c$d"
+                    }
+                    sensor("n5 {int} {int} {int} {int} {int}") {
+                        a: Int,
+                        b: Int,
+                        c: Int,
+                        d: Int,
+                        e: Int ->
+                        "$a$b$c$d$e"
+                    }
+                }
+            )
+
+        val steps = bound.registry().steps()
+        assertEquals(6, steps.size)
+        assertEquals(StepKind.STIMULUS, steps[0].kind())
+        assertEquals(StepKind.SENSOR, steps[5].kind())
+
+        val box = StateBox(Wide())
+        assertEquals(
+            "123",
+            (invoke(steps[0].handler(), box, 1, 2, 3) as StateBox<*>).value.let {
+                (it as Wide).seen
+            },
+        )
+        assertEquals(
+            "1234",
+            (invoke(steps[1].handler(), box, 1, 2, 3, 4) as StateBox<*>).value.let {
+                (it as Wide).seen
+            },
+        )
+        assertEquals(
+            "12345",
+            (invoke(steps[2].handler(), box, 1, 2, 3, 4, 5) as StateBox<*>).value.let {
+                (it as Wide).seen
+            },
+        )
+        assertEquals("123", invoke(steps[3].handler(), box, 1, 2, 3))
+        assertEquals("1234", invoke(steps[4].handler(), box, 1, 2, 3, 4))
+        assertEquals("12345", invoke(steps[5].handler(), box, 1, 2, 3, 4, 5))
+    }
+
     @Test
     fun `top-level steps registers nothing until replayed`() {
         val definitions = canonicalSteps() // constructing the value is inert
