@@ -17,7 +17,7 @@ with sensors.
     ```ts
     const { stimulus, sensor } = steps(() => ({ total: 0 }))
 
-    stimulus('I add {int}', (state, n) => ({ total: state.total + n }))
+    stimulus('I add {int}', (state, n) => ({ ...state, total: state.total + n }))
     sensor('the total is {int}', (state) => state.total)
     ```
   </TabItem>
@@ -49,7 +49,7 @@ with sensors.
 
     @stimulus("I add {int}")
     def _(state, n):
-        return {"total": state["total"] + n}
+        return {**state, "total": state["total"] + n}
 
 
     @sensor("the total is {int}")
@@ -59,8 +59,8 @@ with sensors.
   </TabItem>
   <TabItem label="Ruby">
     ```ruby
-    steps(total: 0) do
-      stimulus('I add {int}') { |state, n| { total: state[:total] + n } }
+    steps(-> { { total: 0 } }) do
+      stimulus('I add {int}') { |state, n| state.merge(total: state[:total] + n) }
       sensor('the total is {int}') { |state, _expected| state[:total] }
     end
     ```
@@ -117,19 +117,21 @@ mechanism are decoupled.
 ## Evolving state
 
 A stimulus receives the current state as its first argument (deeply readonly)
-followed by the values the expression captured. In TypeScript and Python it
-evolves state by **returning a partial state object**, which Varar shallow-merges
-onto the current state and re-freezes. In Java and Kotlin, where state is an
-immutable record/data class, it returns the **complete new state value** —
-full replacement, same principle: new value out, never mutation.
+followed by the values the expression captured. It evolves state by returning
+the **complete next state** — full replacement, in every port. The value you
+return *is* the new state, so a return that leaves a field out drops it rather
+than preserving it. Spread the current state to keep the rest:
+`(state) => ({ ...state, count: 1 })`.
+
+Returning nothing leaves state unchanged. Never mutate: new value out, always.
 
 <Tabs syncKey="lang">
   <TabItem label="TypeScript">
     ```ts
     const { stimulus } = steps(() => ({ greeting: '', count: 0 }))
 
-    stimulus('I greet {string}', (state, name) => ({ greeting: `Hello, ${name}!` }))
-    stimulus('I add {int}', (state, n) => ({ count: state.count + n }))
+    stimulus('I greet {string}', (state, name) => ({ ...state, greeting: `Hello, ${name}!` }))
+    stimulus('I add {int}', (state, n) => ({ ...state, count: state.count + n }))
     ```
   </TabItem>
   <TabItem label="Java">
@@ -159,19 +161,19 @@ full replacement, same principle: new value out, never mutation.
 
     @stimulus("I greet {string}")
     def _(state, name):
-        return {"greeting": f"Hello, {name}!"}
+        return {**state, "greeting": f"Hello, {name}!"}
 
 
     @stimulus("I add {int}")
     def _(state, n):
-        return {"count": state["count"] + n}
+        return {**state, "count": state["count"] + n}
     ```
   </TabItem>
   <TabItem label="Ruby">
     ```ruby
-    steps(greeting: '', count: 0) do
-      stimulus('I greet {string}') { |_state, name| { greeting: "Hello, #{name}!" } }
-      stimulus('I add {int}') { |state, n| { count: state[:count] + n } }
+    steps(-> { { greeting: '', count: 0 } }) do
+      stimulus('I greet {string}') { |state, name| state.merge(greeting: "Hello, #{name}!") }
+      stimulus('I add {int}') { |state, n| state.merge(count: state[:count] + n) }
     end
     ```
   </TabItem>
@@ -232,14 +234,16 @@ full replacement, same principle: new value out, never mutation.
 - **Returning nothing** leaves state unchanged — right for a stimulus whose
   side effects live entirely in the system under test. (In Java and Kotlin,
   return the received state unchanged instead.)
-- **In TypeScript and Python, returning anything that isn't an object** (or
+- **In TypeScript, Python and Ruby, returning anything that isn't an object** (or
   nothing) is a `ReturnShapeError`. A stimulus never returns values for
   comparison — that's the sensor's job.
 - **Mutating `state` is impossible**: it is deep-frozen at runtime (TypeScript,
   Python) or an immutable record/data class (Java, Kotlin). Evolution happens
   only by returning.
-- The TypeScript/Python merge is **shallow**: a returned key replaces the
-  previous top-level value wholesale; nested objects are not deep-merged.
+- There is **no merge**. The returned object replaces state wholesale, so a
+  field the return omits is gone. This is the same model the typed ports get
+  from their record/data-class state, where a partial return cannot even be
+  expressed.
 
 ## State is per step file, per example
 
@@ -331,6 +335,7 @@ first), a doc string as its exact text:
   <TabItem label="TypeScript">
     ```ts
     stimulus('these books exist:', (state, rows: ReadonlyArray<ReadonlyArray<string>>) => ({
+      ...state,
       books: rows.slice(1).map(([title, author]) => ({ title, author })),
     }))
     ```
@@ -354,7 +359,7 @@ first), a doc string as its exact text:
     ```python
     @stimulus("these books exist:")
     def _(state, rows):
-        return {"books": [{"title": title, "author": author} for title, author in rows[1:]]}
+        return {**state, "books": [{"title": title, "author": author} for title, author in rows[1:]]}
     ```
   </TabItem>
   <TabItem label="Ruby">
@@ -437,7 +442,7 @@ runs.
 
 | Error              | Raised when                                                        |
 | ------------------ | ------------------------------------------------------------------ |
-| `ReturnShapeError` | the handler returns something that isn't a partial state object or nothing |
+| `ReturnShapeError` | the handler returns something that isn't a complete state object or nothing |
 
 Any exception the handler itself throws fails the example, anchored to the
 step's line in the Markdown.

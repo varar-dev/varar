@@ -67,7 +67,7 @@ can use it as a `{name}` placeholder.
   </TabItem>
   <TabItem label="Ruby">
     ```ruby
-    steps(fee: gbp(0)) do
+    steps(-> { { fee: gbp(0) } }) do
       param(
         'money',
         '£\d+\.\d{2}',

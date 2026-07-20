@@ -22,7 +22,7 @@ sensors, rather than reaching inside it.
     ```ts
     const { stimulus, sensor } = steps(() => ({ total: 0 }))
 
-    stimulus('I add {int}', (state, n) => ({ total: state.total + n }))
+    stimulus('I add {int}', (state, n) => ({ ...state, total: state.total + n }))
     sensor('the total is {int}', (state) => state.total)
     ```
   </TabItem>
@@ -54,7 +54,7 @@ sensors, rather than reaching inside it.
 
     @stimulus("I add {int}")
     def _(state, n):
-        return {"total": state["total"] + n}
+        return {**state, "total": state["total"] + n}
 
 
     @sensor("the total is {int}")
@@ -64,8 +64,8 @@ sensors, rather than reaching inside it.
   </TabItem>
   <TabItem label="Ruby">
     ```ruby
-    steps(total: 0) do
-      stimulus('I add {int}') { |state, n| { total: state[:total] + n } }
+    steps(-> { { total: 0 } }) do
+      stimulus('I add {int}') { |state, n| state.merge(total: state[:total] + n) }
       sensor('the total is {int}') { |state, _expected| state[:total] }
     end
     ```
@@ -338,7 +338,7 @@ types whose `parse` produces an array:
   </TabItem>
   <TabItem label="Ruby">
     ```ruby
-    steps(dice: [5, 6]) do
+    steps(-> { { dice: [5, 6] } }) do
       param('numbers', '\d+(?:, \d+)*', parse: ->(raw) { raw.split(', ').map(&:to_i) })
 
       # "The dice show 5, 6" — {numbers} transforms to [5, 6]
