@@ -73,11 +73,12 @@ def _import_steps(bundle: Path) -> None:
     spec.loader.exec_module(mod)  # type: ignore[union-attr]
 
 
-# Only parametrize over bundles that have a step file.
-BUNDLES_WITH_STEPS = [b for b in BUNDLES if _find_steps_file(b) is not None]
+# Every bundle in the corpus is gated. A bundle without a Python step fixture is a
+# hole in the gate, not a bundle to skip: parametrize over all of them and let
+# _import_steps fail loudly, the way the Java/Kotlin/Rust/Go/TS harnesses do.
 
 
-@pytest.mark.parametrize("bundle", BUNDLES_WITH_STEPS, ids=lambda b: b.name)
+@pytest.mark.parametrize("bundle", BUNDLES, ids=lambda b: b.name)
 def test_registry_matches_golden(bundle: Path) -> None:
     _reset_builder()
     _import_steps(bundle)
@@ -88,7 +89,7 @@ def test_registry_matches_golden(bundle: Path) -> None:
     assert actual == expected, f"registry.json mismatch for {bundle.name}"
 
 
-@pytest.mark.parametrize("bundle", BUNDLES_WITH_STEPS, ids=lambda b: b.name)
+@pytest.mark.parametrize("bundle", BUNDLES, ids=lambda b: b.name)
 def test_plan_matches_golden(bundle: Path) -> None:
     _reset_builder()
     _import_steps(bundle)
@@ -102,7 +103,7 @@ def test_plan_matches_golden(bundle: Path) -> None:
     assert actual == expected, f"plan.json mismatch for {bundle.name}"
 
 
-@pytest.mark.parametrize("bundle", BUNDLES_WITH_STEPS, ids=lambda b: b.name)
+@pytest.mark.parametrize("bundle", BUNDLES, ids=lambda b: b.name)
 def test_trace_matches_golden(bundle: Path) -> None:
     _reset_builder()
     _import_steps(bundle)

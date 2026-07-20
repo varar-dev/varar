@@ -11,16 +11,7 @@ namespace Varar.Tests;
 /// </summary>
 public class PlanConformanceTests
 {
-    public static TheoryData<string> Bundles()
-    {
-        var data = new TheoryData<string>();
-        foreach (var bundle in ConformanceFixtures.Register.Keys)
-        {
-            data.Add(bundle);
-        }
-
-        return data;
-    }
+    public static TheoryData<string> Bundles() => ConformanceFixtures.Bundles();
 
     [Theory]
     [MemberData(nameof(Bundles))]
@@ -38,16 +29,5 @@ public class PlanConformanceTests
         Assert.Equal(expected, actual);
     }
 
-    private static string BundlesDir()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null && !Directory.Exists(Path.Combine(dir.FullName, "conformance", "bundles")))
-        {
-            dir = dir.Parent;
-        }
-
-        return dir is not null
-            ? Path.Combine(dir.FullName, "conformance", "bundles")
-            : throw new DirectoryNotFoundException("could not locate conformance/bundles");
-    }
+    private static string BundlesDir() => ConformanceFixtures.BundlesDir();
 }

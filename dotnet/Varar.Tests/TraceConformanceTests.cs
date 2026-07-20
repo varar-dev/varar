@@ -10,16 +10,7 @@ namespace Varar.Tests;
 /// </summary>
 public class TraceConformanceTests
 {
-    public static TheoryData<string> Bundles()
-    {
-        var data = new TheoryData<string>();
-        foreach (var bundle in ConformanceFixtures.Register.Keys)
-        {
-            data.Add(bundle);
-        }
-
-        return data;
-    }
+    public static TheoryData<string> Bundles() => ConformanceFixtures.Bundles();
 
     [Theory]
     [MemberData(nameof(Bundles))]
@@ -28,7 +19,7 @@ public class TraceConformanceTests
         var bundleDir = Path.Combine(BundlesDir(), bundle);
         var source = File.ReadAllText(Path.Combine(bundleDir, "example.md"));
         var registry = ConformanceFixtures.Build(bundle);
-        var state = ConformanceFixtures.State[bundle];
+        var state = ConformanceFixtures.StateFor(bundle);
 
         var doc = Parse.Run("example.md", source);
         var plan = Plan.Run(doc, registry);
@@ -38,16 +29,5 @@ public class TraceConformanceTests
         Assert.Equal(expected, actual);
     }
 
-    private static string BundlesDir()
-    {
-        var dir = new DirectoryInfo(AppContext.BaseDirectory);
-        while (dir is not null && !Directory.Exists(Path.Combine(dir.FullName, "conformance", "bundles")))
-        {
-            dir = dir.Parent;
-        }
-
-        return dir is not null
-            ? Path.Combine(dir.FullName, "conformance", "bundles")
-            : throw new DirectoryNotFoundException("could not locate conformance/bundles");
-    }
+    private static string BundlesDir() => ConformanceFixtures.BundlesDir();
 }

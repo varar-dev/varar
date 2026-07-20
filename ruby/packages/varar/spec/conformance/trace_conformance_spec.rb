@@ -19,9 +19,11 @@ module Varar
     Dir.children(corpus).sort.each do |bundle|
       golden = File.join(corpus, bundle, 'golden', 'trace.json')
       steps_rb = Dir.glob(File.join(corpus, bundle, '*.steps.rb')).first
-      next unless File.exist?(golden) && steps_rb
 
       it "#{bundle} — trace.json matches golden" do
+        raise "no golden for bundle #{bundle}: #{golden}" unless File.exist?(golden)
+        raise "no Ruby step fixture (*.steps.rb) for bundle #{bundle}" unless steps_rb
+
         RegistryGlue.reset_builder
         load steps_rb
         registry = RegistryGlue.build_registry

@@ -1,4 +1,5 @@
 using Varar.Core;
+using Xunit;
 
 namespace Varar.Tests;
 
@@ -29,11 +30,48 @@ public static class ConformanceFixtures
             ["15-custom-parameter-format"] = Corpus.B15.MoneySteps.Register,
         };
 
+    /// <summary>Locate the shared corpus directory by walking up from the test binary.</summary>
+    public static string BundlesDir()
+    {
+        var dir = new DirectoryInfo(AppContext.BaseDirectory);
+        while (dir is not null && !Directory.Exists(Path.Combine(dir.FullName, "conformance", "bundles")))
+        {
+            dir = dir.Parent;
+        }
+
+        return dir is not null
+            ? Path.Combine(dir.FullName, "conformance", "bundles")
+            : throw new DirectoryNotFoundException("could not locate conformance/bundles");
+    }
+
+    /// <summary>
+    /// Theory data for the registry/plan/trace gates: every directory under
+    /// <c>conformance/bundles/</c>, enumerated from disk rather than from <see cref="Register"/>.
+    /// Driving this off the corpus (not off our own dictionary) is what makes a newly added
+    /// bundle fail loudly here instead of being silently ignored, matching the
+    /// Java/Kotlin/Rust/Go/TS harnesses.
+    /// </summary>
+    public static TheoryData<string> Bundles()
+    {
+        var data = new TheoryData<string>();
+        foreach (var dir in Directory.GetDirectories(BundlesDir()).OrderBy(d => d, StringComparer.Ordinal))
+        {
+            data.Add(Path.GetFileName(dir));
+        }
+
+        return data;
+    }
+
     /// <summary>Fold a bundle's fixture into a registry the way the runner's loader does.</summary>
     public static Registry Build(string bundle)
     {
+        if (!Register.TryGetValue(bundle, out var register))
+        {
+            throw new InvalidOperationException($"no C# step fixture registered for bundle {bundle}");
+        }
+
         var s = Steps.From(Registry.Create());
-        Register[bundle](s);
+        register(s);
         return s.ToRegistry();
     }
 
@@ -56,4 +94,10 @@ public static class ConformanceFixtures
             ["14-stateless-steps"] = Corpus.B14.SquaresSteps.State,
             ["15-custom-parameter-format"] = Corpus.B15.MoneySteps.State,
         };
+
+    /// <summary>The bundle's initial-state factory, or a loud failure if none is wired.</summary>
+    public static Func<Value> StateFor(string bundle) =>
+        State.TryGetValue(bundle, out var factory)
+            ? factory
+            : throw new InvalidOperationException($"no C# state fixture registered for bundle {bundle}");
 }
