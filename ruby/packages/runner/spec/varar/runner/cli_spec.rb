@@ -18,7 +18,7 @@ module Varar
             expect(File.exist?(File.join(dir, 'varar.config.json'))).to be(true)
             expect(File.exist?(File.join(dir, 'varar-examples/01-hello.md'))).to be(true)
             steps = File.read(File.join(dir, 'varar-examples/steps/01-hello.steps.rb'))
-            expect(steps).to include('steps(greeting: \'\') do', 'stimulus(', 'sensor(')
+            expect(steps).to include("steps(-> { { greeting: '' } }) do", 'stimulus(', 'sensor(')
             expect(File.read(File.join(dir, 'spec/var_spec.rb'))).to include('Varar::RSpec.generate')
             expect(out.string).to include('created varar.config.json')
           end

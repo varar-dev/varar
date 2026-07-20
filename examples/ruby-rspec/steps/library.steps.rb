@@ -10,7 +10,7 @@ format_date = ->(d) { "#{d.strftime('%B')} #{d.day}, #{d.year}" }
 to_money = ->(raw) { raw.end_with?('p') ? Library.gbp(raw[0...-1].to_f / 100) : Library.gbp(raw[1..].to_f) }
 format_money = ->(m) { m.value < 1 ? "#{(m.value * 100).round}p" : format('£%.2f', m.value) }
 
-steps(loans: [], fee: Library.gbp(0), granted: false) do
+steps(-> { { loans: [], fee: Library.gbp(0), granted: false } }) do
   param('date', '[A-Z][a-z]+ \d{1,2}, \d{4}', parse: to_date, format: format_date)
   param('money', '£(?=.*\d.*)[-+]?\d*(?:\.(?=\d.*))?\d*|\d+p', parse: to_money, format: format_money)
   param('title', '\*[^*]+\*', parse: ->(raw) { raw[1...-1] }, format: ->(t) { "*#{t}*" })

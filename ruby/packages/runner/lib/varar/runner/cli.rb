@@ -34,7 +34,7 @@ module Varar
 
         require 'varar'
 
-        steps(greeting: '') do
+        steps(-> { { greeting: '' } }) do
           stimulus('I greet {string}') { |_state, name| { greeting: "Hello, \#{name}!" } }
           sensor('the greeting is {string}') { |state, _expected| state[:greeting] }
         end
