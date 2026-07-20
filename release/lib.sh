@@ -28,7 +28,7 @@ DOTNET_NUGET_ENABLED="${DOTNET_NUGET_ENABLED:-0}"
 # varar-examples until the module is published under a version tag). Flip to 1
 # only once the module is publishable — see the go-live checklist in
 # release/targets/69-go-modules.sh.
-GO_MODULES_ENABLED="${GO_MODULES_ENABLED:-0}"
+GO_MODULES_ENABLED="${GO_MODULES_ENABLED:-1}"
 
 log()  { printf '\033[1;34m[release]\033[0m %s\n' "$*"; }
 warn() { printf '\033[1;33m[release]\033[0m %s\n' "$*" >&2; }
