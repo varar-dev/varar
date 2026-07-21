@@ -3,6 +3,7 @@
   <PropertyGroup>
     <RootNamespace>Varar.Runner</RootNamespace>
     <AssemblyName>Varar.Runner</AssemblyName>
+    <Description>Markdown-native BDD — imperative shell (discovery, loading, drift)</Description>
   </PropertyGroup>
 
   <ItemGroup>

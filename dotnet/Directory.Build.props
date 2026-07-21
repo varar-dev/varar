@@ -12,4 +12,35 @@
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
+
+  <!--
+    NuGet packaging metadata, shared by every shipping package. Without it the
+    generated nuspec falls back to SDK defaults — authors = the assembly name,
+    description = the literal string "Package Description" — which is what a
+    public listing would then show. nuget.org never deletes a published version
+    (only unlists it), so this has to be right before the first upload.
+
+    PackageId is deliberately not set: it defaults to AssemblyName, which each
+    project already sets to the published id (Varar, Varar.Core, ...). Each
+    project supplies its own <Description>. The two test projects set
+    IsPackable=false, so none of this reaches them.
+  -->
+  <PropertyGroup>
+    <Authors>Aslak Hellesøy</Authors>
+    <Company>Oselvar Ltd</Company>
+    <Copyright>Copyright (c) 2026 Oselvar Ltd</Copyright>
+    <Product>Varar</Product>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://varar.dev</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/varar-dev/varar</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>bdd;markdown;testing;specification;cucumber-expressions</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <!-- dotnet/README.md ships in every package: nuget.org renders it as the
+       listing body, and `dotnet pack` warns when it is missing. -->
+  <ItemGroup Condition="'$(IsPackable)' != 'false'">
+    <None Include="$(MSBuildThisFileDirectory)README.md" Pack="true" PackagePath="\" Visible="false" />
+  </ItemGroup>
 </Project>

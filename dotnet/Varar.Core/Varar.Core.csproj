@@ -3,6 +3,7 @@
   <PropertyGroup>
     <RootNamespace>Varar.Core</RootNamespace>
     <AssemblyName>Varar.Core</AssemblyName>
+    <Description>Markdown-native BDD — pure functional core engine</Description>
   </PropertyGroup>
 
   <ItemGroup>

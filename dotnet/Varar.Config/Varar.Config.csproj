@@ -3,6 +3,7 @@
   <PropertyGroup>
     <RootNamespace>Varar.Config</RootNamespace>
     <AssemblyName>Varar.Config</AssemblyName>
+    <Description>Markdown-native BDD — varar.config.json reader</Description>
   </PropertyGroup>
 
   <ItemGroup>

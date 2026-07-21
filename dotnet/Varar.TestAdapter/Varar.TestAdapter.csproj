@@ -4,6 +4,7 @@
     <RootNamespace>Varar.TestAdapter</RootNamespace>
     <!-- The *.TestAdapter.dll name is what dotnet test / vstest auto-loads. -->
     <AssemblyName>Varar.TestAdapter</AssemblyName>
+    <Description>Markdown-native BDD — run Markdown specs as dotnet test / VSTest tests</Description>
   </PropertyGroup>
 
   <ItemGroup>

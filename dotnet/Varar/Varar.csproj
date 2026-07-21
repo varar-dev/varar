@@ -3,6 +3,7 @@
   <PropertyGroup>
     <RootNamespace>Varar</RootNamespace>
     <AssemblyName>Varar</AssemblyName>
+    <Description>Markdown-native BDD — author API (Steps: stimulus/sensor)</Description>
   </PropertyGroup>
 
   <ItemGroup>
