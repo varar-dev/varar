@@ -79,12 +79,12 @@ Local tools (macOS): `brew install pnpm uv maven gh gnupg 1password-cli jq`
 and `npm install -g @vscode/vsce ovsx`. Sign in: `op signin`, `gh auth login`.
 
 - **npm** — granular automation token with publish rights for the `@varar`
-  scope (npmjs.com → Settings → Access Tokens). → `npm-varar`, field `token`.
+  scope (npmjs.com → Settings → Access Tokens). → `npm`, field `token`.
 - **PyPI** — **account-scoped** API token (account `aslakoselvar`). PyPI
   tokens are either account-scoped or single-project — there is no
   multi-project scope, and only an account-scoped token can *create* a
   project, which every release that adds a package needs (all six packages
-  live since v0.3.1, 2026-07-06). → `pypi-varar`,
+  live since v0.3.1, 2026-07-06). → `pypi`,
   field `token`. Publishing *new* projects is rate-limited per account: a
   `429 Too many new projects created` mid-run is PyPI, not credentials —
   wait (hours) and re-run; published packages are skipped.
