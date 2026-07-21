@@ -47,6 +47,7 @@ EXEMPT=(
   03a584045b20df3e6a7c1cd151911784d9fcb64b # Words (merged via PR #21)
   e0d3b835e76199fdcacfb422def8a1ee3d8ad524 # Words (merged via PR #21)
   7c950391b247e135db06ec9d6a723175dff7b9fe # Words (merged via PR #22)
+  f587abf0471f4819d4db44d4b32da456bdb369fc # Rename secrets (non-CC, already on main)
 )
 
 fail=0
