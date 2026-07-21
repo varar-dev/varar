@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = 'varar-config'
-  s.version = '0.5.1'
+  s.version = '0.5.2'
   s.summary = 'Markdown-native BDD — varar.config.json reader'
   s.description = 'Strict, fail-loud reader for the shared varar.config.json format.'
   s.authors = ['Aslak Hellesøy']
