@@ -18,6 +18,13 @@ trap 'rm -rf "$REPO_ROOT/python/dist-release"' EXIT
 
 rm -rf dist-release
 published=0 skipped=0
+# Failures are collected rather than fatal, so one package cannot mask the
+# others. PyPI rate-limits NEW project creation per account ("429 Too many new
+# projects created"), which the varar rename hit: aborting on the first 429
+# meant the packages after it were never even attempted, so each re-run
+# uncovered one more failure instead of the whole set. Every publish here is
+# independently idempotent, so continuing is safe.
+failed=()
 for pyproject in packages/*/pyproject.toml; do
   name="$(python3 -c "import tomllib, sys; print(tomllib.load(open(sys.argv[1], 'rb'))['project']['name'])" "$pyproject")"
   if http_ok "https://pypi.org/pypi/$name/$VERSION/json"; then
@@ -29,10 +36,16 @@ for pyproject in packages/*/pyproject.toml; do
     log "pypi: would publish $name==$VERSION"
     continue
   fi
-  uv build --package "$name" -o "dist-release/$name"
-  uv publish "dist-release/$name"/*
-  log "pypi: published $name==$VERSION"
-  published=$((published + 1))
+  if uv build --package "$name" -o "dist-release/$name" && uv publish "dist-release/$name"/*; then
+    log "pypi: published $name==$VERSION"
+    published=$((published + 1))
+  else
+    warn "pypi: FAILED to publish $name==$VERSION — continuing with the rest"
+    failed+=("$name")
+  fi
 done
 rm -rf dist-release
-log "pypi: done ($published published, $skipped already present)"
+log "pypi: done ($published published, $skipped already present, ${#failed[@]} failed)"
+if [[ ${#failed[@]} -gt 0 ]]; then
+  die "pypi: could not publish: ${failed[*]} — a 429 here is PyPI's new-project rate limit, not credentials; wait and re-run (published packages are skipped)"
+fi

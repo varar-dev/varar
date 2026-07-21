@@ -268,6 +268,14 @@
               <publishingServerId>central</publishingServerId>
               <autoPublish>true</autoPublish>
               <waitUntil>published</waitUntil>
+              <!-- The v0.5.1 deploy uploaded fine but the client gave up
+                   polling at ~30 min while the portal was still PUBLISHING,
+                   failing the release over a deployment that then succeeded.
+                   Re-running in that state is the dangerous move: the target
+                   probes every artifact as unpublished and starts a SECOND
+                   deployment of the same version. Two hours of patience is
+                   cheaper than that. -->
+              <waitMaxTime>7200</waitMaxTime>
             </configuration>
           </plugin>
         </plugins>
