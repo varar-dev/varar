@@ -227,7 +227,7 @@ Uppercase each one:
   </TabItem>
 </Tabs>
 
-The table is this sensor's only comparable value, so it is returned bare. Varar
+The table fills this sensor's only slot, so it is returned bare. Varar
 compares every cell of the returned table against the source, as exact strings.
 
 ## Check a doc string
@@ -317,9 +317,9 @@ the text the software actually produces:
 </Tabs>
 
 The comparison is exact equality, **including the trailing newline**. This step
-has two comparable values — the captured `{word}` and the doc string — so it
+has two slots — the captured `{word}` and the doc string — so it
 returns an array with one element per value, in order: `[name, text]`. A step
-whose doc string is its only comparable value returns the text bare:
+whose doc string fills its only slot returns the text bare:
 
 <Tabs syncKey="lang">
   <TabItem label="TypeScript">
