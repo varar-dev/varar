@@ -9,6 +9,20 @@ This file is generated from conventional commit messages by
 [git-cliff](https://git-cliff.org) — do not edit it by hand. It is written at
 release time by `make prepare`; preview the next release with `make changelog`.
 
+## [0.6.0] - 2026-07-22
+
+### Java & Kotlin (Maven Central)
+
+- ⚠️ **Breaking:** Rename the JUnit TestEngine id from "var" to "varar"
+  the JUnit Platform engine id is now `varar`. Update
+@IncludeEngines("var") to @IncludeEngines("varar"); anything else selecting the
+engine by id (EngineTestKit, --include-engine, IDE run configurations) needs
+the same change.
+
+### Rust (crates.io)
+
+- Added: Publish the Rust port to crates.io
+
 ## [0.5.2] - 2026-07-21
 
 ### TypeScript (npm)
