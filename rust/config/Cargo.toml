@@ -1,8 +1,14 @@
 [package]
 name = "varar-config"
-version = "0.0.0"
-edition = "2024"
-publish = false
+version.workspace = true
+edition.workspace = true
+description = "Markdown-native BDD — varar.config.json reader"
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
 
 [dependencies]
 serde_json = "1"
@@ -10,7 +16,7 @@ serde_json = "1"
 # Test-only: the conformance corpus is compared through varar-core's canonical
 # JSON. The reader itself stays pure (serde_json only).
 [dev-dependencies]
-varar-core = { path = "../core" }
+varar-core.workspace = true
 
 [lib]
 name = "varar_config"

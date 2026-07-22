@@ -11,7 +11,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # on crates.io — pinning it to an unpublished version would ship a broken
 # sample). Flip to 1 only once the crates are publishable — see the go-live
 # checklist in release/targets/65-crates-io.sh.
-CRATES_IO_ENABLED="${CRATES_IO_ENABLED:-0}"
+CRATES_IO_ENABLED="${CRATES_IO_ENABLED:-1}"
 
 # Single source of truth for whether the .NET port ships to NuGet. Same parked
 # pattern as CRATES_IO_ENABLED: while 0, 68-nuget.sh reports OK without
@@ -73,6 +73,20 @@ stamp_ruby() {
   done < <(grep -rlE "VERSION\s*=\s*'" ruby/packages/*/lib)
   # Regenerate the lockfile so the committed tree stays consistent (cf. uv lock).
   (cd ruby && bundle lock >/dev/null)
+}
+
+# Stamp <version> into the Rust workspace. Both edits are in rust/Cargo.toml:
+# [workspace.package] version (every crate inherits it with version.workspace =
+# true) and the [workspace.dependencies] version pins for the internal crates
+# (a published crate resolves those from crates.io, so they must move together
+# with the release). External dep versions are left alone — the substitution is
+# anchored to the `varar-*` names.
+stamp_rust() {
+  local version="$1"
+  perl -0pi -e "s/(\[workspace\.package\]\nversion = )\"[^\"]*\"/\${1}\"$version\"/" rust/Cargo.toml
+  perl -pi -e "s/^(varar(?:-[a-z]+)? = \{ path = \"[a-z]+\", version = )\"[^\"]*\"/\${1}\"$version\"/" rust/Cargo.toml
+  # Refresh Cargo.lock so the committed tree stays consistent (cf. uv lock).
+  (cd rust && cargo update --workspace --quiet)
 }
 
 # Everything before v0.1.0 predates the conventional-commit convention; that

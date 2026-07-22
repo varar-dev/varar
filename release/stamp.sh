@@ -35,4 +35,7 @@ stamp_java_samples "$VERSION"
 log "stamping Ruby gems (+ pinning internal deps, relocking)"
 stamp_ruby "$VERSION"
 
+log "stamping Rust crates (+ pinning internal deps, relocking)"
+stamp_rust "$VERSION"
+
 log "stamped $VERSION"

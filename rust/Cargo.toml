@@ -1,3 +1,27 @@
 [workspace]
 resolver = "3"
 members = ["core", "varar", "config", "runner", "cargotest"]
+
+# Packaging metadata shared by every published crate — the Cargo analogue of
+# dotnet/Directory.Build.props. crates.io REQUIRES `description` and `license`
+# to accept a publish, so each crate supplies its own `description` and
+# inherits the rest from here with `<field>.workspace = true`.
+[workspace.package]
+version = "0.5.2"
+edition = "2024"
+license = "MIT"
+authors = ["Aslak Hellesøy"]
+homepage = "https://varar.dev"
+repository = "https://github.com/varar-dev/varar"
+keywords = ["bdd", "markdown", "testing", "specification", "cucumber"]
+categories = ["development-tools::testing"]
+
+# Internal crates, declared once. A path dependency also needs a `version` or
+# `cargo publish` refuses it ("all dependencies must have a version specified");
+# the published crate then resolves from crates.io while local builds keep using
+# the path. Declaring them here means release/stamp.sh rewrites one version per
+# crate instead of hunting through every dependent's manifest.
+[workspace.dependencies]
+varar-core = { path = "core", version = "0.5.2" }
+varar-config = { path = "config", version = "0.5.2" }
+varar-runner = { path = "runner", version = "0.5.2" }

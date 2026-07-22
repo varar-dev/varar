@@ -1,13 +1,19 @@
 [package]
 name = "varar-cargotest"
-version = "0.0.0"
-edition = "2024"
-publish = false
+version.workspace = true
+edition.workspace = true
+description = "Markdown-native BDD — run Markdown specs as cargo test tests"
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
 
 [dependencies]
-varar-core = { path = "../core" }
-varar-config = { path = "../config" }
-varar-runner = { path = "../runner" }
+varar-core.workspace = true
+varar-config.workspace = true
+varar-runner.workspace = true
 libtest-mimic = "0.8"
 
 [lib]

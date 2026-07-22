@@ -1,12 +1,18 @@
 [package]
 name = "varar-runner"
-version = "0.0.0"
-edition = "2024"
-publish = false
+version.workspace = true
+edition.workspace = true
+description = "Markdown-native BDD — imperative shell (discovery, loading, drift)"
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
 
 [dependencies]
-varar-core = { path = "../core" }
-varar-config = { path = "../config" }
+varar-core.workspace = true
+varar-config.workspace = true
 regex = "1"
 
 [lib]

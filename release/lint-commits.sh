@@ -28,6 +28,10 @@ SCOPES=(ts py java ruby vscode spec)
 # lock-step with the 68-nuget.sh target and the varar-examples csharp pin.
 # Until then dotnet work must be chore(dotnet): — it ships nothing to a consumer.
 [[ "${DOTNET_NUGET_ENABLED:-0}" == "1" ]] && SCOPES+=(dotnet)
+# Rust is gated the same way (CRATES_IO_ENABLED in lib.sh): `rust` is a
+# changelog-visible consumer scope only once crates.io publishing is live, in
+# lock-step with the 65-crates-io.sh target and the varar-examples rust pin.
+[[ "${CRATES_IO_ENABLED:-0}" == "1" ]] && SCOPES+=(rust)
 # Go is parked (GO_MODULES_ENABLED in lib.sh): `go` becomes a changelog-visible
 # consumer scope only once module tag publishing goes live, in lock-step with
 # the 71-go-modules.sh target and the varar-examples go pin. Until then Go work

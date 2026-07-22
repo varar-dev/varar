@@ -1,20 +1,17 @@
 #!/usr/bin/env bash
-# Publish every Rust workspace crate to crates.io. Idempotent per crate.
+# Publish every Rust workspace crate to crates.io. Idempotent.
 #
-# PARKED until the Rust port is ready to ship (gated by CRATES_IO_ENABLED in
-# release/lib.sh, which keeps this target and the 72-varar-examples.sh rust pin in
-# lock-step). While parked this simply reports OK. Go-live checklist:
-#   1. Rename the facade crate — `var` was already TAKEN on crates.io, so the facade ships as `varar`
-#      (verify `varar`/`varar-*` are free before first publish); the crate
-#      names below and rust/varar/Cargo.toml already reflect this.
-#   2. Flip each crate's `publish = false` to publishable and give them real
-#      versions — the release stamper does not version the Rust port yet, so
-#      wire that (they sit at 0.0.0 today).
-#   3. Add `rust` to the consumer scopes in release/lint-commits.sh + cliff.toml.
-#   4. Add the CARGO_REGISTRY_TOKEN reference to release/release.env (already
-#      done — points at the 1Password `crates` item's `token`).
-#   5. Set CRATES_IO_ENABLED=1 in release/lib.sh (un-parks this target AND the
-#      varar-examples rust pin together).
+# Gated by CRATES_IO_ENABLED in release/lib.sh, which keeps this target and the
+# 72-varar-examples.sh rust pin in lock-step: while it is 0 nothing publishes
+# AND the rust-* samples stay out of the examples sync (their path dependency
+# cannot resolve there until the crates are on crates.io).
+#
+# Publishing is one `cargo publish --workspace`, not a per-crate loop. Cargo
+# works out the dependency order itself and resolves the not-yet-published
+# members through a temporary local registry, so the crates do not have to
+# appear on crates.io one index-propagation at a time. (The per-crate loop this
+# replaced also had the directory names wrong — it cd'd to `varar-core` rather
+# than `core`.)
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
 VERSION="$1"
@@ -24,29 +21,50 @@ if [[ "$CRATES_IO_ENABLED" != "1" ]]; then
   exit 0
 fi
 
+require_tool cargo
 cd "$REPO_ROOT/rust"
 
-# Publish in dependency order so a crate's deps exist on crates.io when it is
-# pushed. crates.io indexes each publish before the next `cargo publish` can
-# resolve it, so a brief wait between crates may be needed.
-crates=(
-  varar-core
-  varar-config
-  varar
-  varar-runner
-  varar-cargotest
-)
+# Every published crate, in dependency order (only used for the partial-resume
+# path below; a full run lets cargo order them).
+crates=(varar-core varar-config varar varar-runner varar-cargotest)
 
+# crates.io is the source of truth for "already published" — the registry API,
+# not `cargo search`, which prefix-matches and reports only the max version.
+published=() missing=()
 for name in "${crates[@]}"; do
-  if cargo search "$name" 2>/dev/null | grep -q "^$name = \"$VERSION\""; then
-    log "crates-io: $name $VERSION already published"
-    continue
+  if http_ok "https://crates.io/api/v1/crates/$name/$VERSION"; then
+    published+=("$name")
+  else
+    missing+=("$name")
   fi
-  if [[ "${DRY_RUN:-0}" == "1" ]]; then
-    log "crates-io: would publish $name $VERSION"
-    continue
-  fi
-  (cd "$name" && cargo publish)
-  log "crates-io: published $name $VERSION"
 done
+
+if [[ ${#missing[@]} -eq 0 ]]; then
+  log "crates-io: all crates already published at $VERSION"
+  exit 0
+fi
+
+if [[ "${DRY_RUN:-0}" == "1" ]]; then
+  log "crates-io: would publish ${missing[*]} at $VERSION (verifying with a dry-run publish)"
+  cargo publish --dry-run --workspace >/dev/null
+  log "crates-io: dry-run publish OK"
+  exit 0
+fi
+
+# A crate version on crates.io is immutable (it can be yanked, never replaced),
+# so a re-run must never try to re-upload one. `cargo publish --workspace` has
+# no skip-existing, hence the split: publish the whole workspace only when
+# nothing is up yet, and otherwise push just the missing crates in dependency
+# order — by then their dependencies are already on the registry, so each
+# resolves normally.
+if [[ ${#published[@]} -eq 0 ]]; then
+  cargo publish --workspace
+  log "crates-io: published ${crates[*]} at $VERSION"
+else
+  warn "crates-io: resuming — already published: ${published[*]}"
+  for name in "${missing[@]}"; do
+    cargo publish -p "$name"
+    log "crates-io: published $name $VERSION"
+  done
+fi
 log "crates-io: done"

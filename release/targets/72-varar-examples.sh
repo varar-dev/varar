@@ -145,13 +145,38 @@ perl -pi -e "s/\"(pytest-varar|varar[\\w-]*)\"/\"\$1==$VERSION\"/" \
 perl -pi -e "s|, path: ['\"]\\.\\./\\.\\./ruby/packages/[\\w-]+['\"]|, '$VERSION'|" \
   "$DEST"/ruby-*/Gemfile
 
-# Pin the Rust sample to the released crates.io version: swap the varar-core path
-# dependency for a version constraint. Only runs once crates.io publishing is
-# live (CRATES_IO_ENABLED=1); while parked the rust-* samples aren't synced at
-# all (see the rsync exclude above), so this would have nothing to rewrite.
+# Pin the Rust sample to the released crates.io version: swap EVERY varar* path
+# dependency for a version constraint, then prove the result builds. Only runs
+# once crates.io publishing is live (CRATES_IO_ENABLED=1); while parked the
+# rust-* samples aren't synced at all (see the rsync exclude above), so this
+# would have nothing to rewrite.
+#
+# The substitution is deliberately general. It used to name varar-core alone,
+# which would have shipped a broken sample: rust-cargotest also path-depends on
+# varar, varar-cargotest, varar-config and varar-runner, and those paths do not
+# exist in varar-examples. Cargo.lock is excluded from the sync, so it is
+# regenerated here against the published crates.
 if [[ "$CRATES_IO_ENABLED" == "1" ]]; then
-  perl -pi -e "s|varar-core = \{ path = \"\\.\\./\\.\\./rust/core\" \}|varar-core = \"$VERSION\"|" \
+  require_tool cargo
+  perl -pi -e "s|^(varar[a-z-]*) = \{ path = \"\\.\\./\\.\\./rust/[a-z]+\" \}|\$1 = \"$VERSION\"|" \
     "$DEST"/rust-*/Cargo.toml
+
+  # 65-crates-io.sh runs first (glob order) and has already published, but the
+  # crates.io index takes a moment to serve a brand-new version — hence retries.
+  for sample in "$DEST"/rust-*/; do
+    built=0
+    for attempt in 1 2 3 4 5; do
+      if (cd "$sample" && cargo test) ; then
+        built=1
+        break
+      fi
+      warn "varar-examples: cargo test failed in $(basename "$sample") (attempt $attempt/5) — the crates.io index may not have $VERSION yet; retrying in 15s"
+      sleep 15
+    done
+    [[ "$built" == "1" ]] ||
+      die "varar-examples: $(basename "$sample") fails against the released crates $VERSION"
+    log "varar-examples: $(basename "$sample") green against crates.io $VERSION"
+  done
 fi
 
 # Pin the C# sample to the released NuGet packages: swap each dotnet/ project

@@ -1,11 +1,17 @@
 [package]
 name = "varar"
-version = "0.0.0"
-edition = "2024"
-publish = false
+version.workspace = true
+edition.workspace = true
+description = "Markdown-native BDD — author API (Steps: stimulus/sensor)"
+license.workspace = true
+authors.workspace = true
+homepage.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
 
 [dependencies]
-varar-core = { path = "../core" }
+varar-core.workspace = true
 
 [lib]
 name = "varar"
