@@ -57,7 +57,7 @@
          kotest 6.2.1. -->
     <kotlin.version>2.4.10</kotlin.version>
     <kotlinx-coroutines.version>1.11.0</kotlinx-coroutines.version>
-    <kotest.version>6.2.2</kotest.version>
+    <kotest.version>6.2.3</kotest.version>
     <!-- io.cucumber:cucumber-expressions 20.0.0 — confirmed on Maven Central
          (repo1.maven.org maven-metadata.xml <latest>/<release> both 20.0.0,
          lastUpdated 2026-06-11) via direct repo query, not the search.maven.org
