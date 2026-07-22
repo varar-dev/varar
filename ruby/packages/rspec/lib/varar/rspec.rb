@@ -12,7 +12,7 @@ module Varar
   #   require "varar/rspec"
   #   Varar::RSpec.generate
   module RSpec
-    VERSION = '0.6.0'
+    VERSION = '0.6.1'
 
     module_function
 

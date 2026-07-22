@@ -9,7 +9,7 @@ This file is generated from conventional commit messages by
 [git-cliff](https://git-cliff.org) — do not edit it by hand. It is written at
 release time by `make prepare`; preview the next release with `make changelog`.
 
-## [0.6.0] - 2026-07-22
+## [0.6.1] - 2026-07-22
 
 ### Java & Kotlin (Maven Central)
 
