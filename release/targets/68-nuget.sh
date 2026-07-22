@@ -1,36 +1,20 @@
 #!/usr/bin/env bash
-# Pack every Varar .NET package, and publish it to NuGet once that is enabled.
+# Pack every Varar .NET package, and push it to nuget.org when
+# DOTNET_NUGET_AUTOPUBLISH=1. While that is 0 the packages are packed into
+# release/dist/nuget/<version>/ and their paths printed, for upload by hand.
 #
-# PUBLISHING is PARKED (gated by DOTNET_NUGET_ENABLED in release/lib.sh, which
-# keeps pushing here and the 72-varar-examples.sh csharp pin in lock-step).
-# While parked this still PACKS every package into release/dist/nuget/<version>
-# and prints the paths, so they can be uploaded to nuget.org by hand — packing
-# is side-effect-free, and having the artifacts is what a manual upload needs.
-# The csharp samples stay out of the examples sync either way: nothing resolves
-# from nuget.org until the packages are actually there.
+# The release does NOT wait for that upload. 72-varar-examples.sh runs later,
+# pins the C# sample to this version and pushes it to varar-examples, so between
+# the release and the manual upload that sample's check is red; re-run the
+# workflow once the packages are up. That is a deliberate trade — see
+# DOTNET_ENABLED in release/lib.sh.
 #
-# Go-live checklist for automatic publishing:
-#   1. Verify the package ids below are free on nuget.org (`Varar`, `Varar.*`),
-#      then give each dotnet/*.csproj its packaging metadata — PackageId,
-#      Authors, Description, PackageLicenseExpression, RepositoryUrl — and mark
-#      the shipping projects packable (the test projects stay IsPackable=false).
-#      NOTE: they carry NONE of this today. `dotnet pack` still succeeds, but the
-#      nuspec falls back to defaults (assembly name, placeholder description),
-#      which is not what you want on a public listing — fix this before the
-#      first upload, by hand or otherwise.
-#   2. Version the port at release time: the stamper does not touch dotnet/ yet,
-#      so wire <Version> stamping (release/stamp.sh) — they carry no version
-#      today, defaulting to 1.0.0. (This target passes -p:Version explicitly, so
-#      the packed artifacts are correct even before that is wired.)
-#   3. Changelog wiring is already in place and gated on this same flag:
-#      lint-commits.sh accepts the `dotnet` consumer scope only when
-#      DOTNET_NUGET_ENABLED=1, and cliff.toml has a dormant "C# / .NET (NuGet)"
-#      section keyed on `dotnet`. So flipping the flag (step 5) also makes
-#      feat(dotnet): commits changelog-visible. Until then dotnet work is
-#      chore(dotnet): — it ships nothing to a consumer yet.
-#   4. Add the NUGET_API_KEY reference to release/release.env.
-#   5. Set DOTNET_NUGET_ENABLED=1 in release/lib.sh (un-parks pushing here AND
-#      the varar-examples csharp pin together).
+# Go-live checklist for pushing automatically (DOTNET_NUGET_AUTOPUBLISH=1):
+#   1. Create a nuget.org API key scoped to the Varar* package ids.
+#   2. Store it in 1Password and add NUGET_API_KEY to release/release.env.
+#   3. Set DOTNET_NUGET_AUTOPUBLISH=1 in release/lib.sh.
+# Packaging metadata (description, license, readme, …) is already set — see
+# dotnet/Directory.Build.props.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/../lib.sh"
 VERSION="$1"
@@ -48,18 +32,37 @@ packages=(
   Varar.TestAdapter
 )
 
+# 0 iff <id> at $VERSION is on nuget.org. The flat container is the index the
+# restore path actually reads, so this answers the question the C# sample asks,
+# not merely whether the upload form has seen the file.
+nuget_published() {
+  local id_lower
+  id_lower="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
+  curl -fsSL "https://api.nuget.org/v3-flatcontainer/$id_lower/index.json" 2>/dev/null |
+    jq -e --arg v "$VERSION" '.versions | index($v) != null' >/dev/null 2>&1
+}
+
 # Persistent (release/dist is gitignored, same place the .vsix is built) so the
 # packages survive the run and can be uploaded by hand.
 pack_dir="$REPO_ROOT/release/dist/nuget/$VERSION"
 
 if [[ "${DRY_RUN:-0}" == "1" ]]; then
   for name in "${packages[@]}"; do
-    if [[ "$DOTNET_NUGET_ENABLED" == "1" ]]; then
+    if [[ "$DOTNET_NUGET_AUTOPUBLISH" == "1" ]]; then
       log "nuget: would pack + push $name $VERSION"
     else
-      log "nuget: would pack $name $VERSION to $pack_dir (publishing parked)"
+      log "nuget: would pack $name $VERSION to $pack_dir for manual upload"
     fi
   done
+  exit 0
+fi
+
+missing=()
+for name in "${packages[@]}"; do
+  nuget_published "$name" || missing+=("$name")
+done
+if [[ ${#missing[@]} -eq 0 ]]; then
+  log "nuget: all packages already on nuget.org at $VERSION"
   exit 0
 fi
 
@@ -68,21 +71,23 @@ for name in "${packages[@]}"; do
   dotnet pack "$name/$name.csproj" -c Release -p:Version="$VERSION" -o "$pack_dir" >/dev/null
 done
 
-if [[ "$DOTNET_NUGET_ENABLED" != "1" ]]; then
-  warn "nuget: publishing parked (DOTNET_NUGET_ENABLED=0) — packed for manual upload to https://www.nuget.org/packages/manage/upload"
-  for name in "${packages[@]}"; do
-    log "nuget:   $pack_dir/$name.$VERSION.nupkg"
+if [[ "$DOTNET_NUGET_AUTOPUBLISH" == "1" ]]; then
+  for name in "${missing[@]}"; do
+    # nuget.org de-dupes by (id, version): a re-push of an existing version is a
+    # 409, so --skip-duplicate makes the whole target idempotent on rerun.
+    dotnet nuget push "$pack_dir/$name.$VERSION.nupkg" \
+      --source https://api.nuget.org/v3/index.json \
+      --api-key "$NUGET_API_KEY" \
+      --skip-duplicate
+    log "nuget: published $name $VERSION"
   done
+  log "nuget: done"
   exit 0
 fi
 
-for name in "${packages[@]}"; do
-  # nuget.org de-dupes by (id, version): a re-push of an existing version is a
-  # 409, so --skip-duplicate makes the whole target idempotent on rerun.
-  dotnet nuget push "$pack_dir/$name.$VERSION.nupkg" \
-    --source https://api.nuget.org/v3/index.json \
-    --api-key "$NUGET_API_KEY" \
-    --skip-duplicate
-  log "nuget: published $name $VERSION"
+warn "nuget: automatic publishing is off — upload these to https://www.nuget.org/packages/manage/upload"
+for name in "${missing[@]}"; do
+  log "nuget:   $pack_dir/$name.$VERSION.nupkg"
 done
-log "nuget: done"
+warn "nuget: varar-examples' csharp-vstest check stays red until they are up — re-run that workflow after uploading"
+log "nuget: done (packed, not published)"

@@ -13,13 +13,21 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # checklist in release/targets/65-crates-io.sh.
 CRATES_IO_ENABLED="${CRATES_IO_ENABLED:-1}"
 
-# Single source of truth for whether the .NET port ships to NuGet. Same parked
-# pattern as CRATES_IO_ENABLED: while 0, 68-nuget.sh reports OK without
-# publishing AND 72-varar-examples.sh omits the csharp-* samples (their project
-# references to dotnet/ can't resolve in varar-examples until the packages are
-# on NuGet). Flip to 1 only once the packages are publishable — see the go-live
-# checklist in release/targets/68-nuget.sh.
-DOTNET_NUGET_ENABLED="${DOTNET_NUGET_ENABLED:-0}"
+# .NET is the one port whose "does it ship?" and "does the release publish it?"
+# answers differ, so it takes two flags where the others take one.
+#
+# DOTNET_ENABLED — the packages are on nuget.org, however they got there. This
+# is what consumer-visible means: 72-varar-examples.sh syncs the csharp-*
+# samples and pins them to the release, and `dotnet` becomes an accepted
+# changelog scope. It says nothing about who does the uploading.
+DOTNET_ENABLED="${DOTNET_ENABLED:-1}"
+
+# DOTNET_NUGET_AUTOPUBLISH — whether the release pushes to nuget.org itself.
+# While 0, 68-nuget.sh packs every package into release/dist/nuget/<version>/
+# and waits for you to upload them by hand. Flipping this to 1 needs
+# NUGET_API_KEY in release/release.env, which does not exist yet — see the
+# go-live checklist in release/targets/68-nuget.sh.
+DOTNET_NUGET_AUTOPUBLISH="${DOTNET_NUGET_AUTOPUBLISH:-0}"
 
 # Single source of truth for whether the Go port ships as a tagged Go module.
 # Same parked pattern as CRATES_IO_ENABLED: while 0, 71-go-modules.sh reports OK

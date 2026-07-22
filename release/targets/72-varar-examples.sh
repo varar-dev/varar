@@ -78,12 +78,14 @@ rust_exclude=()
 if [[ "$CRATES_IO_ENABLED" != "1" ]]; then
   rust_exclude+=(--exclude 'rust-*/' --exclude 'rust-*.yml')
 fi
-# Same story for the C# sample while NuGet publishing is parked: it references
-# dotnet/ by project path, so a synced copy couldn't resolve Varar until the
-# packages are on NuGet. DOTNET_NUGET_ENABLED (lib.sh) flips this and the pin
-# block below together — see 68-nuget.sh's go-live checklist.
+# The C# sample ships whenever the .NET packages are on nuget.org, however they
+# got there — DOTNET_ENABLED (lib.sh), not the autopublish flag. Uploads are
+# manual today, so unlike every other port the packages may not be up at the
+# moment this runs; the sample is pinned and pushed anyway and its check goes
+# green once they are (re-run the workflow). That is why there is no build
+# verification below, where go and rust each have one.
 csharp_exclude=()
-if [[ "$DOTNET_NUGET_ENABLED" != "1" ]]; then
+if [[ "$DOTNET_ENABLED" != "1" ]]; then
   csharp_exclude+=(--exclude 'csharp-*/' --exclude 'csharp-*.yml')
 fi
 # Same story for the Go sample while module publishing is parked: its go.mod
@@ -214,11 +216,19 @@ fi
 
 # Pin the C# sample to the released NuGet packages: swap each dotnet/ project
 # reference for a PackageReference at the release version. The project path
-# encodes the package id (…/Varar/Varar.csproj → Varar). Only runs once NuGet
-# publishing is live (DOTNET_NUGET_ENABLED=1); while parked the csharp-* samples
-# aren't synced at all (see the rsync exclude above), so this finds nothing.
-if [[ "$DOTNET_NUGET_ENABLED" == "1" ]]; then
+# encodes the package id (…/Varar/Varar.csproj → Varar). Deliberately NOT
+# followed by a `dotnet test` the way the go and rust samples are: those ports
+# publish earlier in this same run, whereas the .NET packages are uploaded by
+# hand afterwards, so a build here would fail on timing rather than on anything
+# being wrong.
+if [[ "$DOTNET_ENABLED" == "1" ]]; then
   perl -pi -e "s|<ProjectReference Include=\"\\.\\./\\.\\./dotnet/[\\w.]+/([\\w.]+)\\.csproj\" />|<PackageReference Include=\"\$1\" Version=\"$VERSION\" />|" \
+    "$DEST"/csharp-*/*.csproj
+  # Drop the trunk-facing comment that shows what a real project would write:
+  # the synced sample IS that project now, so leaving it would explain the file
+  # to itself — and with a placeholder x.y.z next to the real pins (same idea as
+  # the JVM and Go comment swaps above).
+  perl -0pi -e 's|  <!--\n    In this monorepo the Varar packages resolve from source \(project references\),\n    so the sample gates trunk against the local build\. A real project depends on\n    the published NuGet packages instead:\n\n      <PackageReference Include="Varar" Version="x\.y\.z" />\n      <PackageReference Include="Varar\.TestAdapter" Version="x\.y\.z" />\n  -->\n||' \
     "$DEST"/csharp-*/*.csproj
 fi
 

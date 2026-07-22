@@ -23,11 +23,11 @@ CC_RE="^($TYPES)(\\(([^)]+)\\))?(!)?: .+$"
 # to a consumer (website, CI, tooling) is a chore/docs/build commit instead.
 # The always-shipping consumer scopes; parked ports (below) join once live.
 SCOPES=(ts py java ruby vscode spec)
-# .NET is parked (DOTNET_NUGET_ENABLED in lib.sh): `dotnet` becomes a
-# changelog-visible consumer scope only once NuGet publishing goes live, in
-# lock-step with the 68-nuget.sh target and the varar-examples csharp pin.
-# Until then dotnet work must be chore(dotnet): — it ships nothing to a consumer.
-[[ "${DOTNET_NUGET_ENABLED:-0}" == "1" ]] && SCOPES+=(dotnet)
+# .NET is gated on DOTNET_ENABLED (lib.sh) — whether the packages are on
+# nuget.org, not whether the release uploads them. They are (by hand), so
+# `dotnet` is a changelog-visible consumer scope: the entries describe what
+# reaches users, and users cannot tell who ran the upload.
+[[ "${DOTNET_ENABLED:-0}" == "1" ]] && SCOPES+=(dotnet)
 # Rust is gated the same way (CRATES_IO_ENABLED in lib.sh): `rust` is a
 # changelog-visible consumer scope only once crates.io publishing is live, in
 # lock-step with the 65-crates-io.sh target and the varar-examples rust pin.

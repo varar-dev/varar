@@ -13,7 +13,7 @@
 # `py/var-core`, `java`, `ruby`, `rust`, `dotnet`, `go`, `vscode`, `spec`, …).
 # A section stays dormant while its port's publishing is parked, because
 # lint-commits.sh only accepts that scope once the matching flag is 1 in lib.sh
-# (CRATES_IO_ENABLED / DOTNET_NUGET_ENABLED / GO_MODULES_ENABLED), so no such
+# (CRATES_IO_ENABLED / DOTNET_ENABLED / GO_MODULES_ENABLED), so no such
 # entry can appear until go-live — see the targets under release/targets/.
 
 [changelog]
