@@ -12,7 +12,7 @@ The `.md` files at the project root are the specs — they run as tests.
 go test                          # one subtest per example, all green
 go test -v                       # lists every example (30 total)
 go test -run 'TestSpecs/yahtzee' # run a single spec
-VAR_UPDATE=1 go test             # accept drift (rewrites varar.lock.json)
+VARAR_UPDATE=1 go test             # accept drift (rewrites varar.lock.json)
 ```
 
 Each Markdown example becomes one Go subtest, named `spec.md::name`, reported by
@@ -40,4 +40,4 @@ Each Markdown example becomes one Go subtest, named `spec.md::name`, reported by
   own.
 - **`varar.lock.json`** is the committed drift baseline: if a paragraph that was
   an example stops matching any step, the run fails until you fix the step or
-  accept the drift with `VAR_UPDATE=1`.
+  accept the drift with `VARAR_UPDATE=1`.

@@ -3,7 +3,7 @@
 // Run turns every Markdown example matched by varar.config.json into one Go
 // subtest (t.Run), reported/filtered/listed by `go test` like a native subtest,
 // with failures rendered anchored to the .md source. Drift is reconciled on the
-// main goroutine: a clean run rewrites varar.lock.json; VAR_UPDATE=1 accepts
+// main goroutine: a clean run rewrites varar.lock.json; VARAR_UPDATE=1 accepts
 // drift instead of failing.
 //
 // Usage from a consumer's specs_test.go:
@@ -93,7 +93,7 @@ func Collect(root string, build BuildRegistry, ctx ContextFactory, update bool) 
 }
 
 // Run enumerates the specs under root and reports one Go subtest per example
-// (and per drift finding). VAR_UPDATE=1/true accepts drift instead of failing.
+// (and per drift finding). VARAR_UPDATE=1/true accepts drift instead of failing.
 func Run(t *testing.T, root string, build BuildRegistry, ctx ContextFactory) {
 	t.Helper()
 	update := isUpdate()
@@ -116,7 +116,7 @@ func Run(t *testing.T, root string, build BuildRegistry, ctx ContextFactory) {
 }
 
 func isUpdate() bool {
-	switch os.Getenv("VAR_UPDATE") {
+	switch os.Getenv("VARAR_UPDATE") {
 	case "1", "true":
 		return true
 	}

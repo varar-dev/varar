@@ -53,7 +53,7 @@ def test_a_paragraph_that_stopped_matching_drifts_and_fails(harness):
 
 
 def test_var_update_accepts_drift(harness, monkeypatch):
-    monkeypatch.setenv("VAR_UPDATE", "1")
+    monkeypatch.setenv("VARAR_UPDATE", "1")
     _project(harness, "features/vault.md", "The vault is sealed.\n")
     _baseline(harness, "features/vault.md", [{"name": "The vault is sealed", "line": 1}])
     result, _ = harness.generate_and_run()

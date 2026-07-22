@@ -13,7 +13,7 @@ import { collectVarExamples, varTestBody } from '../src/runtime.ts'
 beforeEach(() => _resetBuilder())
 afterEach(() => {
   _resetBuilder()
-  delete process.env.VAR_UPDATE
+  delete process.env.VARAR_UPDATE
 })
 
 // Capture diagnostics instead of the default reporter (which would register
@@ -78,8 +78,8 @@ test('the drift gate stays quiet when the baseline example still matches', () =>
   expect(diags.map((d) => d.code)).not.toContain('drift')
 })
 
-test('VAR_UPDATE skips the drift gate', () => {
-  process.env.VAR_UPDATE = '1'
+test('VARAR_UPDATE skips the drift gate', () => {
+  process.env.VARAR_UPDATE = '1'
   const baseline: SpecBaseline = {
     sourceHash: 'fnv1a:00000000',
     examples: [{ name: 'The vault is sealed', line: 1 }],

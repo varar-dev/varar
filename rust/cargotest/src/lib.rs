@@ -56,10 +56,10 @@ pub fn run_one(
 
 /// Enumerate every example (and any drift) as `libtest-mimic` trials. Drift is
 /// reconciled here, on the main thread: a clean run rewrites `varar.lock.json`;
-/// `VAR_UPDATE=1` accepts drift instead of failing.
+/// `VARAR_UPDATE=1` accepts drift instead of failing.
 pub fn trials(root: &Path, build_registry: BuildRegistry, context: ContextFactory) -> Vec<Trial> {
     let config = read_config(root);
-    let update = matches!(std::env::var("VAR_UPDATE").as_deref(), Ok("1") | Ok("true"));
+    let update = matches!(std::env::var("VARAR_UPDATE").as_deref(), Ok("1") | Ok("true"));
     let mut trials = Vec::new();
 
     for spec_path in find_specs(&config, root) {

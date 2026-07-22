@@ -20,17 +20,17 @@ _STASH: dict = {}  # keyed by config id → (VarConfig, LoadedSteps, root, store
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     parser.addoption(
-        "--var-update",
+        "--varar-update",
         action="store_true",
         default=False,
-        help="Accept drift and re-record varar.lock.json (also via VAR_UPDATE=1).",
+        help="Accept drift and re-record varar.lock.json (also via VARAR_UPDATE=1).",
     )
 
 
 def _update_mode(config: pytest.Config) -> bool:
-    if config.getoption("--var-update", default=False):
+    if config.getoption("--varar-update", default=False):
         return True
-    return os.environ.get("VAR_UPDATE") in ("1", "true")
+    return os.environ.get("VARAR_UPDATE") in ("1", "true")
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -74,7 +74,7 @@ class VarFile(pytest.File):
 
         # Reconcile drift against varar.lock.json: a clean run records/updates the
         # baseline; a paragraph that was an example and no longer matches any
-        # step yields a failing item (unless --var-update / VAR_UPDATE accepts).
+        # step yields a failing item (unless --varar-update / VARAR_UPDATE accepts).
         try:
             spec_path = self.path.relative_to(root).as_posix()
         except ValueError:
@@ -98,7 +98,7 @@ class VarFile(pytest.File):
 
 class VarDriftItem(pytest.Item):
     """A failing item for a drifted paragraph — the pytest surface of the
-    drift gate. Accept it with --var-update / VAR_UPDATE=1."""
+    drift gate. Accept it with --varar-update / VARAR_UPDATE=1."""
 
     def __init__(self, *, message, line, **kw):
         super().__init__(**kw)

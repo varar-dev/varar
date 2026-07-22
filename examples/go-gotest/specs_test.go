@@ -13,7 +13,7 @@ import (
 //	go test                                  # one subtest per example, all green
 //	go test -v                               # lists every example
 //	go test -run 'TestSpecs/yahtzee'         # run a single spec
-//	VAR_UPDATE=1 go test                     # accept drift
+//	VARAR_UPDATE=1 go test                     # accept drift
 func TestSpecs(t *testing.T) {
 	gotest.Run(t, ".", example.BuildRegistry, example.Context)
 }

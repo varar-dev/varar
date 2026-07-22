@@ -88,8 +88,8 @@ def _spec_test_case(
 
     # Reconcile drift: a clean run records/updates the baseline; a paragraph
     # that was an example and no longer matches becomes a failing test method
-    # (VAR_UPDATE=1 accepts and re-records instead).
-    update = os.environ.get("VAR_UPDATE") in ("1", "true")
+    # (VARAR_UPDATE=1 accepts and re-records instead).
+    update = os.environ.get("VARAR_UPDATE") in ("1", "true")
     drifts = reconcile_drift(
         store, rel, source, execution_plan.var_doc, execution_plan, update=update
     )
@@ -133,7 +133,7 @@ def _make_drift_method(message: str) -> Callable[[Any], None]:
     def test(self: unittest.TestCase) -> None:
         raise self.failureException(message)
 
-    test.__doc__ = "var drift — accept with VAR_UPDATE=1"
+    test.__doc__ = "var drift — accept with VARAR_UPDATE=1"
     return test
 
 

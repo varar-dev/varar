@@ -60,6 +60,6 @@ def test_var_update_accepts_drift(pytester):
     _project(pytester)
     (pytester.path / "features/vault.md").write_text("The vault is sealed.\n", encoding="utf-8")
     _write_baseline(pytester, [{"name": "The vault is sealed", "line": 1}])
-    result = pytester.runpytest("--var-update")
+    result = pytester.runpytest("--varar-update")
     result.assert_outcomes()
     assert _lock(pytester)["specs"]["features/vault.md"]["examples"] == []

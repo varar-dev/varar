@@ -19,5 +19,5 @@ bundle exec rake test
 `test/var_test.rb` calls `Varar::Minitest.generate_tests`, which injects
 one `Minitest::Test` subclass per spec with one test method per Markdown example
 (header-bound table rows are separate methods). A paragraph that used to match a
-step and no longer does fails as **drift**; re-run with `VAR_UPDATE=1` to accept
+step and no longer does fails as **drift**; re-run with `VARAR_UPDATE=1` to accept
 it. The committed `varar.lock.json` is that drift baseline.

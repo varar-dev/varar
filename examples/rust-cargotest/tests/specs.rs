@@ -2,7 +2,7 @@
 //! — one libtest item per example — through the `varar-cargotest` adapter.
 //!
 //! `cargo test` reports each as `spec.md::name`; `cargo test <substring>`
-//! selects, `--list` enumerates. Set `VAR_UPDATE=1` to accept drift.
+//! selects, `--list` enumerates. Set `VARAR_UPDATE=1` to accept drift.
 
 use std::path::Path;
 

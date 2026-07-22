@@ -62,12 +62,12 @@ class VarDriftGateTest {
     @Test
     void varUpdateAcceptsDrift(@TempDir Path workspace) throws Exception {
         writeProject(workspace, "{\"name\":\"The vault is sealed\",\"line\":1}");
-        System.setProperty("var.update", "true");
+        System.setProperty("varar.update", "true");
         try {
             EngineExecutionResults results = execute(workspace);
             assertEquals(0, results.testEvents().failed().count(), "update mode accepts the drift");
         } finally {
-            System.clearProperty("var.update");
+            System.clearProperty("varar.update");
         }
         // The now-prose paragraph is gone from the re-recorded baseline.
         String lock = Files.readString(workspace.resolve("varar.lock.json"));

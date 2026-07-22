@@ -75,13 +75,13 @@ test('--update accepts the drift and re-records the baseline', () => {
   expect(lock().specs['vault.md']?.examples).toEqual([])
 })
 
-test('VAR_UPDATE=1 also accepts drift', () => {
+test('VARAR_UPDATE=1 also accepts drift', () => {
   writeFileSync(join(dir, 'vault.md'), 'The vault is sealed.\n')
   writeBaseline([{ name: 'The vault is sealed', line: 1 }])
   const r = spawnSync(process.execPath, [BIN_TS, 'run'], {
     cwd: dir,
     encoding: 'utf8',
-    env: { ...process.env, VAR_UPDATE: '1' },
+    env: { ...process.env, VARAR_UPDATE: '1' },
   })
   expect(r.status).toBe(0)
   expect(lock().specs['vault.md']?.examples).toEqual([])

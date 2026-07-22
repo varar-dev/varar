@@ -22,7 +22,7 @@ module Varar
       cfg = Config.read_var_config(root)
       loaded = Runner.load_steps(cfg.steps, root)
       store = Runner.create_file_baseline_store(root)
-      update = %w[1 true].include?(ENV.fetch('VAR_UPDATE', nil))
+      update = %w[1 true].include?(ENV.fetch('VARAR_UPDATE', nil))
 
       Runner.find_specs(cfg.docs_include, cfg.docs_exclude, root).each do |spec_path|
         define_group(spec_path, root, loaded, store, update)

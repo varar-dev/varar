@@ -33,9 +33,9 @@ abstract class VarSpec(root: Path = Path.of(".")) : FunSpec() {
         val loaded = StepLoader.loadSteps(config.steps(), javaClass.classLoader)
         val baselineStore = BaselineStores.file(root)
         val update =
-            System.getProperty("var.update") == "true" ||
-                System.getenv("VAR_UPDATE") == "1" ||
-                System.getenv("VAR_UPDATE") == "true"
+            System.getProperty("varar.update") == "true" ||
+                System.getenv("VARAR_UPDATE") == "1" ||
+                System.getenv("VARAR_UPDATE") == "true"
         for (specPath in Discovery.findSpecs(config.docsInclude(), config.docsExclude(), root)) {
             val rel =
                 root

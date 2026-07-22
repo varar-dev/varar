@@ -92,9 +92,9 @@ final class VarFileSelectorResolver implements SelectorResolver {
         this.root = root.toAbsolutePath().normalize();
         this.loadedSteps = loadedSteps;
         this.baselineStore = BaselineStores.file(this.root);
-        this.update = "true".equals(System.getProperty("var.update"))
-                || "1".equals(System.getenv("VAR_UPDATE"))
-                || "true".equals(System.getenv("VAR_UPDATE"));
+        this.update = "true".equals(System.getProperty("varar.update"))
+                || "1".equals(System.getenv("VARAR_UPDATE"))
+                || "true".equals(System.getenv("VARAR_UPDATE"));
     }
 
     /** Whether a classpath resource name (already relative, POSIX-separated) is a spec. */

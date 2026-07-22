@@ -10,7 +10,7 @@ export type RunOptions = {
   readonly writeStderr: (s: string) => void
   readonly globs?: ReadonlyArray<string> | undefined
   // Accept all current drift and re-record the baseline (snapshot-update
-  // semantics). Also enabled by the VAR_UPDATE environment variable.
+  // semantics). Also enabled by the VARAR_UPDATE environment variable.
   readonly update?: boolean
 }
 
@@ -26,7 +26,7 @@ export async function runRun(opts: RunOptions): Promise<RunResult> {
   const { registry, createContext } = await loadSteps(cfg.steps, opts.cwd)
   const baselineStore = createFileBaselineStore(opts.cwd)
   const update =
-    opts.update === true || process.env.VAR_UPDATE === '1' || process.env.VAR_UPDATE === 'true'
+    opts.update === true || process.env.VARAR_UPDATE === '1' || process.env.VARAR_UPDATE === 'true'
 
   let passed = 0
   let failed = 0

@@ -19,5 +19,5 @@ bundle exec rspec
 `spec/var_spec.rb` calls `Varar::RSpec.generate`, which turns every
 matched spec into one RSpec example group with one `it` per Markdown example
 (header-bound table rows are separate examples). A paragraph that used to match
-a step and no longer does fails as **drift**; re-run with `VAR_UPDATE=1` to
+a step and no longer does fails as **drift**; re-run with `VARAR_UPDATE=1` to
 accept it. The committed `varar.lock.json` is that drift baseline.
