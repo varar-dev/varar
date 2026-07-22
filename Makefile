@@ -54,7 +54,14 @@ python:
 # spotless:check (CI runs plain `mvn install`, where drift fails the build).
 java:
 	cd java && mvn --batch-mode spotless:apply install
-	cd examples/java-junit-maven && mvn --batch-mode test
+	# `clean` is load-bearing, not tidiness. Maven decides a class is up to date
+	# by timestamp, and an IDE/language server watching this project recompiles
+	# into target/ whenever the pom changes — which release/stamp.sh does, to a
+	# version `mvn install` has not published yet. The IDE then writes
+	# error-stub classes ("Steps cannot be resolved to a type"), Maven sees them
+	# as newer than the sources, skips recompiling, and the run dies with
+	# NoClassDefFoundError deep inside test discovery.
+	cd examples/java-junit-maven && mvn --batch-mode clean test
 	cd examples/java-junit-gradle && ./gradlew --console=plain test
 	cd examples/kotlin-junit && ./gradlew --console=plain test
 	cd examples/kotlin-kotest && ./gradlew --console=plain test
