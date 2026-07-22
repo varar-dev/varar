@@ -66,6 +66,17 @@ git add CHANGELOG.md \
   examples/*/build.gradle.kts examples/java-junit-maven/pom.xml \
   ruby/packages ruby/Gemfile.lock \
   rust/Cargo.toml rust/Cargo.lock
+
+# Everything stamp.sh touched must be in this commit. When the Rust port was
+# added to stamp.sh but not to the list above, the release commit went out with
+# Rust still on the previous version and the tree left dirty — which blocks
+# `make release` outright, because cargo refuses to publish from a dirty
+# working directory. Catch the next such omission here instead.
+unstaged="$(git status --porcelain | grep -v '^M ' || true)"
+[[ -z "$unstaged" ]] || die "stamped files are missing from the release commit:
+$unstaged
+add them to the 'git add' list in release/prepare.sh"
+
 git commit -m "Release $TAG"
 git push origin main
 log "prepared $TAG and pushed to origin/main — now run: make release"
