@@ -53,14 +53,14 @@ export function buildSpecResults(
   return { version: 1, specPath, sourceHash: hashSource(source), examples }
 }
 
-export type VarResultsReporterOptions = { readonly cwd?: string }
+export type VararResultsReporterOptions = { readonly cwd?: string }
 
 // Vitest reporter (the only side-effecting piece). Reads each spec's source,
 // hashes it, and writes .var/<spec>.json. Registry-free: every ExampleResult
 // arrives prebuilt on task.meta from the worker.
-export class VarResultsReporter implements Reporter {
+export class VararResultsReporter implements Reporter {
   private readonly cwd: string
-  constructor(options: VarResultsReporterOptions = {}) {
+  constructor(options: VararResultsReporterOptions = {}) {
     this.cwd = options.cwd ?? process.cwd()
   }
 

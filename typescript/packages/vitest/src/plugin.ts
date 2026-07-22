@@ -6,19 +6,19 @@ import type { Plugin } from 'vite'
 import { configDefaults } from 'vitest/config'
 import { discoverStaticExamples, type StaticExample } from './static-examples.ts'
 
-export type VarVitestPluginOptions = {
+export type VararVitestPluginOptions = {
   readonly cwd?: string
 }
 
 // A file is a var spec iff it was discovered by the configured `docs` globs.
 // Vite may append a query suffix (e.g. `?v=123`) to module ids, so strip it
 // before matching against the discovered absolute paths.
-export function isVarSpecId(id: string, specFiles: ReadonlySet<string>): boolean {
+export function isVararSpecId(id: string, specFiles: ReadonlySet<string>): boolean {
   const path = id.split('?')[0] ?? id
   return specFiles.has(path)
 }
 
-export function varVitestPlugin(options: VarVitestPluginOptions = {}): Plugin {
+export function vararVitestPlugin(options: VararVitestPluginOptions = {}): Plugin {
   const cwd = options.cwd ?? process.cwd()
   let stepFiles: ReadonlyArray<string> = []
   // Absolute paths of the spec files discovered from `cfg.docs`. The `load`
@@ -72,7 +72,7 @@ export function varVitestPlugin(options: VarVitestPluginOptions = {}): Plugin {
       configJsonPath = existsSync(abs) ? abs : undefined
     },
     async load(id) {
-      if (!isVarSpecId(id, specFiles)) return null
+      if (!isVararSpecId(id, specFiles)) return null
       const varPath = id.split('?')[0] ?? id
       const source = readFileSync(varPath, 'utf8')
       // The transform result depends on the step definitions (they decide
@@ -110,7 +110,7 @@ export type GenerateInput = {
   readonly stepImports: ReadonlyArray<string>
   readonly source?: string
   // Scanner-plugin NAMES from varar.config.json. The generated module passes
-  // them to collectVarExamples, which resolves them against var-core's
+  // them to collectVararExamples, which resolves them against var-core's
   // registry — functions can't be serialized into generated source, names can.
   readonly scannerPluginNames: ReadonlyArray<string>
   // Statically discovered examples (see discoverStaticExamples). Each one
@@ -141,18 +141,18 @@ export function generateVirtualModule(input: GenerateInput): string {
     // @varar/core here would fail under pnpm's strict node_modules
     // layout, because the module id (the spec path) resolves in the
     // consumer's project, where transitive deps are not visible.
-    "import { collectVarExamples, varTestBody } from '@varar/vitest/runtime'",
+    "import { collectVararExamples, vararTestBody } from '@varar/vitest/runtime'",
     ...input.stepImports.map((p) => `import ${JSON.stringify(p)}`),
     `const PATH = ${pathJson}`,
     // Diagnostics and the stale-transform guard register their tests inside
-    // collectVarExamples, so the only `test(...)` callsites in this module
+    // collectVararExamples, so the only `test(...)` callsites in this module
     // are the real per-example ones below — static AST discovery sees an
     // exact test tree.
-    `const EXAMPLES = collectVarExamples(PATH, ${sourceJson}, { scannerPlugins: ${pluginNamesJson}, expectedCount: ${examples.length}, baseline: ${baselineJson} })`,
+    `const EXAMPLES = collectVararExamples(PATH, ${sourceJson}, { scannerPlugins: ${pluginNamesJson}, expectedCount: ${examples.length}, baseline: ${baselineJson} })`,
   ]
   const testCall = (ex: StaticExample, i: number): string => {
     const nameJson = JSON.stringify(ex.name)
-    return `test(${nameJson}, varTestBody(EXAMPLES, ${i}, ${nameJson}, PATH))`
+    return `test(${nameJson}, vararTestBody(EXAMPLES, ${i}, ${nameJson}, PATH))`
   }
   const lastLine = Math.max(1, ...examples.map((e) => e.line))
   const lines: string[] = new Array(lastLine).fill('')

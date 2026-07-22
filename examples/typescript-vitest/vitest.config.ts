@@ -1,4 +1,4 @@
-import varPlugin from '@varar/vitest'
+import vararPlugin from '@varar/vitest'
 import { defineConfig } from 'vitest/config'
 
 // The var plugin reads this project's varar.config.json and drives vitest's
@@ -7,7 +7,7 @@ import { defineConfig } from 'vitest/config'
 const projectDir = new URL('.', import.meta.url).pathname
 
 export default defineConfig({
-  plugins: [varPlugin({ cwd: projectDir })],
+  plugins: [vararPlugin({ cwd: projectDir })],
   test: {
     // Inline the var packages so the plugin and runtime are transformed by vite.
     server: { deps: { inline: [/^@varar\//] } },

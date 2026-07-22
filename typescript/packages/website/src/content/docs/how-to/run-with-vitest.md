@@ -22,14 +22,14 @@ Your step definitions keep importing `@varar/varar` — never the adapter.
 In `vitest.config.ts`:
 
 ```ts
-import varPlugin from '@varar/vitest'
-import { VarResultsReporter } from '@varar/vitest/reporter'
+import vararPlugin from '@varar/vitest'
+import { VararResultsReporter } from '@varar/vitest/reporter'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
-  plugins: [varPlugin()],
+  plugins: [vararPlugin()],
   test: {
-    reporters: ['default', new VarResultsReporter()],
+    reporters: ['default', new VararResultsReporter()],
   },
 })
 ```

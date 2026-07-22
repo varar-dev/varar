@@ -8,7 +8,7 @@ import {
 import { steps } from '@varar/varar'
 import { _resetBuilder } from '@varar/varar/registry'
 import { afterEach, beforeEach, expect, test } from 'vitest'
-import { collectVarExamples, varTestBody } from '../src/runtime.ts'
+import { collectVararExamples, vararTestBody } from '../src/runtime.ts'
 
 beforeEach(() => _resetBuilder())
 afterEach(() => {
@@ -31,7 +31,7 @@ function fakeCtx() {
   return { ctx: { task: { meta } }, meta }
 }
 
-test('collectVarExamples returns one indexed example per BDD example, with step lines', async () => {
+test('collectVararExamples returns one indexed example per BDD example, with step lines', async () => {
   const calls: string[] = []
   const { stimulus } = steps(() => ({}))
   stimulus('I have {int} cukes', (_ctx, n) => {
@@ -41,7 +41,7 @@ test('collectVarExamples returns one indexed example per BDD example, with step 
     calls.push(`eat:${n as number}`)
   })
 
-  const examples = collectVarExamples('belly.md', '# Eating\n\nI have 5 cukes. I eat 2.', {
+  const examples = collectVararExamples('belly.md', '# Eating\n\nI have 5 cukes. I eat 2.', {
     reporter: { diagnostic: () => {} },
   })
   // Paragraph-as-test: one paragraph becomes one example; the heading just
@@ -61,7 +61,7 @@ test('the drift gate reports a baseline example that no longer matches', () => {
     examples: [{ name: 'The vault is sealed', line: 1 }],
   }
   const { reporter, diags } = capturingReporter()
-  collectVarExamples('vault.md', 'The vault is sealed.', { reporter, baseline })
+  collectVararExamples('vault.md', 'The vault is sealed.', { reporter, baseline })
   expect(diags.map((d) => d.code)).toContain('drift')
   expect(diags.find((d) => d.code === 'drift')?.message).toContain('The vault is sealed')
 })
@@ -74,7 +74,7 @@ test('the drift gate stays quiet when the baseline example still matches', () =>
     examples: [{ name: 'I open the vault', line: 1 }],
   }
   const { reporter, diags } = capturingReporter()
-  collectVarExamples('vault.md', 'I open the vault.', { reporter, baseline })
+  collectVararExamples('vault.md', 'I open the vault.', { reporter, baseline })
   expect(diags.map((d) => d.code)).not.toContain('drift')
 })
 
@@ -85,33 +85,33 @@ test('VARAR_UPDATE skips the drift gate', () => {
     examples: [{ name: 'The vault is sealed', line: 1 }],
   }
   const { reporter, diags } = capturingReporter()
-  collectVarExamples('vault.md', 'The vault is sealed.', { reporter, baseline })
+  collectVararExamples('vault.md', 'The vault is sealed.', { reporter, baseline })
   expect(diags).toEqual([])
 })
 
-test('varTestBody runs the example and attaches a passed varResult to the task meta', async () => {
+test('vararTestBody runs the example and attaches a passed varResult to the task meta', async () => {
   const { stimulus } = steps(() => ({}))
   stimulus('I pass', () => {})
-  const examples = collectVarExamples('ok.md', 'I pass.', { reporter: { diagnostic: () => {} } })
+  const examples = collectVararExamples('ok.md', 'I pass.', { reporter: { diagnostic: () => {} } })
   const { ctx, meta } = fakeCtx()
-  await varTestBody(examples, 0, 'I pass', 'ok.md')(ctx)
+  await vararTestBody(examples, 0, 'I pass', 'ok.md')(ctx)
   expect(meta.varResult).toMatchObject({ name: 'I pass', status: 'passed', lines: [1] })
 })
 
-test('varTestBody attaches a failed varResult and rethrows when the example fails', async () => {
+test('vararTestBody attaches a failed varResult and rethrows when the example fails', async () => {
   const { stimulus } = steps(() => ({}))
   stimulus('I fail', () => {
     throw new Error('boom')
   })
-  const examples = collectVarExamples('bad.md', 'I fail.', { reporter: { diagnostic: () => {} } })
+  const examples = collectVararExamples('bad.md', 'I fail.', { reporter: { diagnostic: () => {} } })
   const { ctx, meta } = fakeCtx()
-  await expect(varTestBody(examples, 0, 'I fail', 'bad.md')(ctx)).rejects.toThrow('boom')
+  await expect(vararTestBody(examples, 0, 'I fail', 'bad.md')(ctx)).rejects.toThrow('boom')
   expect(meta.varResult).toMatchObject({ name: 'I fail', status: 'failed', lines: [1] })
 })
 
-test('varTestBody fails loudly when the transform is stale (name or index mismatch)', async () => {
+test('vararTestBody fails loudly when the transform is stale (name or index mismatch)', async () => {
   const { ctx } = fakeCtx()
-  await expect(varTestBody([], 0, 'gone', 'x.md')(ctx)).rejects.toThrow(/stale/)
+  await expect(vararTestBody([], 0, 'gone', 'x.md')(ctx)).rejects.toThrow(/stale/)
 })
 
 const sp = (startOffset: number, endOffset: number) => ({
@@ -136,11 +136,11 @@ async function rethrown(error: Error): Promise<Error & { expected?: string; actu
   stimulus('It mismatches', () => {
     throw error
   })
-  const examples = collectVarExamples('diff.md', 'It mismatches.', {
+  const examples = collectVararExamples('diff.md', 'It mismatches.', {
     reporter: { diagnostic: () => {} },
   })
   const { ctx } = fakeCtx()
-  return varTestBody(
+  return vararTestBody(
     examples,
     0,
     'It mismatches',

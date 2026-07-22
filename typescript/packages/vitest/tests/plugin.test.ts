@@ -1,19 +1,19 @@
 import { describe, expect, test } from 'vitest'
-import { generateVirtualModule, isVarSpecId, varVitestPlugin } from '../src/plugin.ts'
+import { generateVirtualModule, isVararSpecId, vararVitestPlugin } from '../src/plugin.ts'
 
-describe('isVarSpecId', () => {
+describe('isVararSpecId', () => {
   const specs = new Set(['/abs/docs/hello.md', '/abs/docs/airport.md'])
 
   test('true when the id is a configured spec file', () => {
-    expect(isVarSpecId('/abs/docs/hello.md', specs)).toBe(true)
+    expect(isVararSpecId('/abs/docs/hello.md', specs)).toBe(true)
   })
 
   test('false for a markdown file that is not a configured spec', () => {
-    expect(isVarSpecId('/abs/README.md', specs)).toBe(false)
+    expect(isVararSpecId('/abs/README.md', specs)).toBe(false)
   })
 
   test('strips a vite query suffix before matching', () => {
-    expect(isVarSpecId('/abs/docs/hello.md?v=123', specs)).toBe(true)
+    expect(isVararSpecId('/abs/docs/hello.md?v=123', specs)).toBe(true)
   })
 })
 
@@ -34,7 +34,7 @@ describe('generateVirtualModule', () => {
     // depends on (@varar/vitest, vitest) — a bare '@varar/core'
     // would not resolve from the spec's path under pnpm's strict layout.
     expect(lines[0]).toContain(
-      "import { collectVarExamples, varTestBody } from '@varar/vitest/runtime'",
+      "import { collectVararExamples, vararTestBody } from '@varar/vitest/runtime'",
     )
     expect(lines[0]).not.toContain("from '@varar/core'")
     expect(lines[0]).toContain('import "/abs/account.steps.ts"')
@@ -45,7 +45,7 @@ describe('generateVirtualModule', () => {
     // body looked up by index at runtime.
     expect(lines[1]).toBe('')
     expect(lines[2]).toBe(
-      'test("The answer is 42", varTestBody(EXAMPLES, 0, "The answer is 42", PATH))',
+      'test("The answer is 42", vararTestBody(EXAMPLES, 0, "The answer is 42", PATH))',
     )
   })
 
@@ -58,7 +58,7 @@ describe('generateVirtualModule', () => {
       examples: [{ name: 'The answer is 42', line: 2, col: 3 }],
     })
     expect(out.split('\n')[1]).toBe(
-      '  test("The answer is 42", varTestBody(EXAMPLES, 0, "The answer is 42", PATH))',
+      '  test("The answer is 42", vararTestBody(EXAMPLES, 0, "The answer is 42", PATH))',
     )
   })
 
@@ -71,8 +71,8 @@ describe('generateVirtualModule', () => {
       examples: [{ name: 'The answer is 42', line: 1, col: 1 }],
     })
     const first = out.split('\n')[0] ?? ''
-    expect(first).toContain('collectVarExamples')
-    expect(first).toContain('test("The answer is 42", varTestBody(EXAMPLES, 0,')
+    expect(first).toContain('collectVararExamples')
+    expect(first).toContain('test("The answer is 42", vararTestBody(EXAMPLES, 0,')
   })
 
   test('forwards the static example count so the runtime can guard against a stale transform', () => {
@@ -123,9 +123,9 @@ describe('generateVirtualModule', () => {
   })
 })
 
-describe('varVitestPlugin', () => {
+describe('vararVitestPlugin', () => {
   test('returns a vite plugin object with name and load hook', () => {
-    const plugin = varVitestPlugin()
+    const plugin = vararVitestPlugin()
     expect(plugin.name).toBe('@varar/vitest')
     expect(typeof plugin.load).toBe('function')
   })

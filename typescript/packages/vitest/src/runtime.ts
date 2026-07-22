@@ -49,8 +49,8 @@ export type CollectedExample = {
 // the spec, and hand back one lazily-executed closure per example. The
 // virtual module registers one STATIC `test("literal name", ...)` per example
 // — so editors can discover names and locations without running anything —
-// and looks each body up here by index via `varTestBody`.
-export function collectVarExamples(
+// and looks each body up here by index via `vararTestBody`.
+export function collectVararExamples(
   path: string,
   source: string,
   ports: CollectPorts,
@@ -145,7 +145,7 @@ function attachExpectedActual(error: unknown): void {
   }
 }
 
-export function varTestBody(
+export function vararTestBody(
   examples: ReadonlyArray<CollectedExample>,
   index: number,
   name: string,
