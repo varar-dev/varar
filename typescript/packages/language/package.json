@@ -21,7 +21,7 @@
   "dependencies": {
     "@cucumber/cucumber-expressions": "^20.0.0",
     "@varar/core": "workspace:*",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.0",
     "web-tree-sitter": "^0.26.10"
   },
   "devDependencies": {
