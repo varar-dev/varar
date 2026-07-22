@@ -204,7 +204,7 @@ translated them to snake_case 1:1 — use whatever the target language's
 convention is, but keep names *parallel* for reviewability):
 
 `span, ast, inline, table_cells, sentences, scanner, structurer, parse,
-step_role, registry, matcher, plan, diagnostics, execute, deep_freeze,
+step_role, registry, matcher, plan, diagnostics, execute,
 cell_diff, doc_string_diff, param_diff, failure, result, canonical_json,
 conformance, hash, drift` — plus the `BaselineStore` port interface and the
 facade module (`internal`/`state`) holding the state factory and the

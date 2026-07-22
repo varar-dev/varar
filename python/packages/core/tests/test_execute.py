@@ -838,31 +838,37 @@ def test_undefined_return_from_context_action_is_no_op() -> None:
     assert seen[0] == {"a": 1}
 
 
-def test_mutating_frozen_state_raises_type_error() -> None:
-    """mutating the frozen state throws at runtime."""
+def test_factory_state_reaches_the_handler_as_the_author_own_dict() -> None:
+    """The factory's dict arrives unfrozen, by identity, still a plain dict."""
+    made: dict[str, Any] = {"a": 1}
+    seen: list[Any] = []
 
-    def _mutate(state: Any) -> None:
-        state["a"] = 2
+    def _observe(state: Any) -> None:
+        seen.append(state)
 
     def register(r: Registry) -> Registry:
         return add_step(
             r,
-            expression="mutate",
+            expression="observe",
             expression_source_file=FILE,
             expression_source_line=1,
-            kind="stimulus",
-            handler=_mutate,
+            kind="sensor",
+            handler=_observe,
         )
 
-    caught = _run_capturing_error("# X\n\nmutate\n", register, lambda _: {"a": 1})
-    assert isinstance(caught[0], TypeError)
+    caught = _run_capturing_error("# X\n\nobserve\n", register, lambda _: made)
+    assert caught[0] is None
+    assert seen[0] is made
+    assert type(seen[0]) is dict
 
 
-def test_mutating_post_merge_refrozen_state_raises_type_error() -> None:
-    """mutating the post-merge (re-frozen) state throws at runtime."""
+def test_state_a_stimulus_returns_is_threaded_on_by_identity() -> None:
+    """A returned dict is threaded on unfrozen, and its lists stay lists."""
+    nxt: dict[str, Any] = {"a": 1, "items": [1, 2]}
+    seen: list[Any] = []
 
-    def _mutate_merged(state: Any) -> None:
-        state["a"] = 99
+    def _observe(state: Any) -> None:
+        seen.append(state)
 
     def register(r: Registry) -> Registry:
         r = add_step(
@@ -871,21 +877,22 @@ def test_mutating_post_merge_refrozen_state_raises_type_error() -> None:
             expression_source_file=FILE,
             expression_source_line=1,
             kind="stimulus",
-            handler=lambda *_: {"a": 1},
+            handler=lambda *_: nxt,
         )
         return add_step(
             r,
-            expression="mutate merged",
+            expression="observe",
             expression_source_file=FILE,
             expression_source_line=2,
-            kind="stimulus",
-            handler=_mutate_merged,
+            kind="sensor",
+            handler=_observe,
         )
 
-    caught = _run_capturing_error(
-        "# X\n\nstep one\nmutate merged\n", register, lambda _: {}
-    )
-    assert isinstance(caught[0], TypeError)
+    caught = _run_capturing_error("# X\n\nstep one\nobserve\n", register, lambda _: {})
+    assert caught[0] is None
+    assert seen[0] is nxt
+    assert type(seen[0]) is dict
+    assert type(seen[0]["items"]) is list
 
 
 # ---------------------------------------------------------------------------

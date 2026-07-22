@@ -182,50 +182,57 @@ test('an undefined (void) return from a context/action is a no-op', async () => 
   expect(seen).toEqual({ a: 1 })
 })
 
-test('mutating the frozen state throws at runtime', async () => {
+test('the factory state reaches the handler as the author own object, unfrozen', async () => {
+  const made = { a: 1 }
+  let seen: unknown
   const getErr = run(
-    '# X\n\nmutate\n',
+    '# X\n\nobserve\n',
     (r) =>
       addStep(r, {
-        expression: 'mutate',
+        expression: 'observe',
         expressionSourceFile: FILE,
         expressionSourceLine: 1,
-        kind: 'stimulus',
+        kind: 'sensor',
         handler: (state) => {
-          ;(state as { a: number }).a = 2
+          seen = state
         },
       }),
-    () => ({ a: 1 }),
+    () => made,
   )
   await new Promise((res) => setTimeout(res, 0))
-  expect(getErr()).toBeInstanceOf(TypeError)
+  expect(getErr()).toBeUndefined()
+  expect(seen).toBe(made)
+  expect(Object.isFrozen(made)).toBe(false)
 })
 
-test('mutating the post-merge (re-frozen) state throws at runtime', async () => {
-  // After a first action merges and re-freezes state, a second action that
-  // attempts to mutate the frozen merged state must still throw.
+test('a state a stimulus returns is threaded on unfrozen and by identity', async () => {
+  const next = { a: 1, nested: { b: 2 } }
+  let seen: unknown
   const getErr = run(
-    '# X\n\nstep one\nmutate merged\n',
+    '# X\n\nstep one\nobserve\n',
     (r) => {
       r = addStep(r, {
         expression: 'step one',
         expressionSourceFile: FILE,
         expressionSourceLine: 1,
         kind: 'stimulus',
-        handler: () => ({ a: 1 }),
+        handler: () => next,
       })
       return addStep(r, {
-        expression: 'mutate merged',
+        expression: 'observe',
         expressionSourceFile: FILE,
         expressionSourceLine: 2,
-        kind: 'stimulus',
+        kind: 'sensor',
         handler: (state) => {
-          ;(state as { a: number }).a = 99
+          seen = state
         },
       })
     },
     () => ({}),
   )
   await new Promise((res) => setTimeout(res, 0))
-  expect(getErr()).toBeInstanceOf(TypeError)
+  expect(getErr()).toBeUndefined()
+  expect(seen).toBe(next)
+  expect(Object.isFrozen(next)).toBe(false)
+  expect(Object.isFrozen(next.nested)).toBe(false)
 })

@@ -1,5 +1,4 @@
 import { CellMismatchError, compareRow, compareTable, ReturnShapeError } from './cell-diff.ts'
-import { deepFreeze } from './deep-freeze.ts'
 import { compareDocString, DocStringMismatchError } from './doc-string-diff.ts'
 import { failureAnchor } from './failure-anchor.ts'
 import { compareParams } from './param-diff.ts'
@@ -76,7 +75,7 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
           const file = step.stepDef.expressionSourceFile
           let state = stateByFile.get(file)
           if (!stateByFile.has(file)) {
-            state = deepFreeze(await createContext(file))
+            state = await createContext(file)
             stateByFile.set(file, state)
           }
           // A trailing data table or doc string is passed as the LAST handler
@@ -101,17 +100,20 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
             const kind = step.stepDef.kind
             if (kind === 'stimulus') {
               // A stimulus REPLACES state: the returned object IS the next state
-              // (re-frozen, then threaded to later steps in this stepfile). There
-              // is no merge — a return with fewer keys shrinks the state. Returning
-              // nothing leaves state unchanged. Any non-object return is a
-              // contract violation.
+              // (threaded to later steps in this stepfile). There is no merge — a
+              // return with fewer keys shrinks the state. Returning nothing leaves
+              // state unchanged. Any non-object return is a contract violation.
+              //
+              // The state is the author's own value, handed back untouched: we do
+              // not freeze it. Whether it is immutable is the author's call, made
+              // in their own state type.
               if (returned !== undefined && returned !== null) {
                 if (typeof returned !== 'object') {
                   throw new ReturnShapeError(
                     'a stimulus must return the complete next state, or nothing to leave it unchanged',
                   )
                 }
-                state = deepFreeze(returned)
+                state = returned
                 stateByFile.set(file, state)
               }
             } else if (kind === 'sensor') {

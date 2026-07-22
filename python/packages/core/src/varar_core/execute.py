@@ -21,7 +21,6 @@ from varar_core.cell_diff import (
     compare_row,
     compare_table,
 )
-from varar_core.deep_freeze import deep_freeze
 from varar_core.doc_string_diff import DocStringMismatchError, compare_doc_string
 from varar_core.failure_anchor import failure_anchor
 from varar_core.param_diff import compare_params
@@ -161,7 +160,7 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
                         ctx = _create_context(file)
                         if inspect.iscoroutine(ctx):
                             ctx = asyncio.run(ctx)
-                        state_by_file[file] = deep_freeze(ctx)
+                        state_by_file[file] = ctx
                     state = state_by_file[file]
 
                     # Build the trailing extra arg list (data table or doc string).
@@ -186,17 +185,22 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
                         kind = step.step_def.kind
 
                         if kind == "stimulus":
-                            # Full replacement: the returned dict IS the next state
-                            # (deep-frozen). There is no merge — a return with fewer
-                            # keys shrinks the state. None is a no-op; any other type
-                            # is a contract violation.
+                            # Full replacement: the returned dict IS the next state.
+                            # There is no merge — a return with fewer keys shrinks
+                            # the state. None is a no-op; any other type is a
+                            # contract violation.
+                            #
+                            # The state is the author's own value, handed back
+                            # untouched: we do not freeze it, and a dict stays a
+                            # dict rather than becoming a MappingProxyType. Whether
+                            # it is immutable is the author's call.
                             if returned is not None:
                                 if not isinstance(returned, dict):
                                     raise ReturnShapeError(
                                         "a stimulus must return the complete next"
                                         " state, or nothing to leave it unchanged"
                                     )
-                                state = deep_freeze(returned)
+                                state = returned
                                 state_by_file[file] = state
 
                         elif kind == "sensor":

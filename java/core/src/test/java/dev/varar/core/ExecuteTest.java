@@ -21,9 +21,9 @@ import org.junit.jupiter.api.Test;
  * <p>Several TS cases are intentionally NOT translated 1:1 — see the Task 18 report:
  *
  * <ul>
- *   <li>{@code deep-freeze.test.ts} in full, and {@code execute-state.test.ts}'s "mutating the
- *       (post-merge) frozen state throws" cases — Task 11's record state model needs no runtime
- *       mutation guard (see {@link Execute}'s DeepFreeze-decision javadoc).
+ *   <li>{@code execute-state.test.ts}'s "state reaches the handler unfrozen" cases — no port
+ *       guards state mutation any more, and Java's record state model could never be mutated in
+ *       the first place (see {@link Execute}'s no-mutation-guard javadoc).
  *   <li>{@code execute-roles.test.ts}'s "an action/context/sensor that returns a value throws
  *       ReturnShapeError" — Java's typed {@code Context0/1/2} always returns a full state by
  *       construction, so there's no runtime shape to violate.

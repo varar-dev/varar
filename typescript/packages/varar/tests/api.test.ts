@@ -140,7 +140,7 @@ test('steps() returns role functions typed against the state', () => {
   expect(r.steps.map((s) => s.kind)).toEqual(['stimulus', 'sensor'])
 })
 
-test('state is deeply readonly and stimulus returns are partial-state (type-level)', () => {
+test('state reaches a handler as the declared type, unwrapped (type-level)', () => {
   // TYPE-LEVEL assertions (fire via tsconfig.tests.json under `pnpm typecheck`).
   type S = { greeting: string; nested: { n: number } }
   const { stimulus: act } = steps((): S => ({ greeting: '', nested: { n: 0 } }))
@@ -149,17 +149,42 @@ test('state is deeply readonly and stimulus returns are partial-state (type-leve
   // returning nothing is fine
   act('b', () => {})
   act('c', (state) => {
-    // @ts-expect-error - state is deeply readonly; top-level mutation is forbidden
+    // State arrives as S itself — no mapped `Readonly`/`DeepReadonly` wrapper —
+    // so it stays assignable to whatever the author declared it as. Mutating it
+    // type-checks; whether that is allowed is the author's call, expressed with
+    // `readonly` in S, not Varar's.
+    expectTypeOf(state).toEqualTypeOf<S>()
     state.greeting = 'x'
   })
   act('d', (state) => {
-    // @ts-expect-error - nested mutation is forbidden too
     state.nested.n = 1
   })
   // @ts-expect-error - an unknown/excess key is rejected
   act('e', () => ({ nope: 1 }))
   const r = buildRegistry()
   expect(r.steps).toHaveLength(5)
+})
+
+test('a class instance in state stays assignable to its own type (type-level)', () => {
+  // TYPE-LEVEL assertions (fire via tsconfig.tests.json under `pnpm typecheck`).
+  // A mapped readonly wrapper would map `Client`'s properties one by one and drop
+  // its `#private` brand, so the state's `client` would no longer be a `Client` —
+  // the shape every real state hits, holding a DB client or page object.
+  class Client {
+    #open = true
+    query(sql: string): string {
+      return this.#open ? sql : ''
+    }
+  }
+  const useClient = (c: Client): string => c.query('select 1')
+
+  const { sensor: sense } = steps(() => ({ client: new Client() }))
+  sense('a', (state) => {
+    expectTypeOf(state.client).toEqualTypeOf<Client>()
+    return useClient(state.client)
+  })
+  const r = buildRegistry()
+  expect(r.steps).toHaveLength(1)
 })
 
 test('a second steps() in the SAME file throws', () => {
@@ -189,7 +214,7 @@ test('factory-less state is empty at the type level too', () => {
   act('a', () => {})
   sense('b', (state) => {
     // every field of the empty state is `never` — nothing real can be read
-    expectTypeOf(state).toEqualTypeOf<{ readonly [key: string]: never }>()
+    expectTypeOf(state).toEqualTypeOf<Record<string, never>>()
   })
   const r = buildRegistry()
   expect(r.steps).toHaveLength(2)

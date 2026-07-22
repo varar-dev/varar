@@ -103,41 +103,36 @@ type MapArgs<Names extends readonly string[], Custom> = {
 // describe it.
 type HandlerArgs<E extends string, Custom> = [...MapArgs<ParameterNames<E>, Custom>, ...AnyArg[]]
 
-// Deeply-readonly view of the state handed to every step: each nested property
-// is `readonly`, so a handler can read state but never mutate it (mutation is a
-// type error and — because the runtime deep-freezes — a runtime throw too).
-// Functions pass through; arrays and objects recurse.
-type DeepReadonly<T> = T extends (...args: never[]) => unknown
-  ? T
-  : T extends ReadonlyArray<infer U>
-    ? ReadonlyArray<DeepReadonly<U>>
-    : T extends object
-      ? { readonly [K in keyof T]: DeepReadonly<T[K]> }
-      : T
+// State reaches a handler as `C` — exactly the type the author declared in
+// `steps<C>(…)`, unwrapped. Varar neither freezes it at runtime nor rewrites it
+// at the type level: how immutable the state is, is the author's call, expressed
+// with `readonly` in their own state type. A mapped `Readonly`/`DeepReadonly`
+// here would recurse into class instances and strip their private brands, so a
+// state holding a DB client or page object would stop being assignable to the
+// very type it came from.
 
-// A stimulus handler receives the immutable `state` (deeply readonly) plus
-// the args inferred from the expression `E` (built-in parameter types, plus any
-// `Custom` types declared via `.param()`), so `(state, name) => …` types
-// `name` without an annotation and without TS2345. It EVOLVES state by RETURNING
-// a partial state object (shallow-merged by the runtime) — or nothing, for no
-// change. It never mutates `state`.
+// A stimulus handler receives `state` plus the args inferred from the expression
+// `E` (built-in parameter types, plus any `Custom` types declared via
+// `.param()`), so `(state, name) => …` types `name` without an annotation and
+// without TS2345. It EVOLVES state by RETURNING the next state — or nothing, for
+// no change.
 type StimulusFn<C = unknown, Custom = Record<never, never>> = <E extends string>(
   expression: E,
   handler: (
-    state: DeepReadonly<C>,
+    state: C,
     ...args: HandlerArgs<E, Custom>
     // biome-ignore lint/suspicious/noConfusingVoidType: mirrors the outer void; async handlers that return nothing satisfy Promise<void>, which is assignable here
   ) => Partial<C> | void | Promise<Partial<C> | void>,
 ) => void
 
-// A sensor is a pure OBSERVER: it reads the immutable `state` (deeply readonly)
-// and may RETURN a value for the pure core to compare against the Markdown. That
-// return shape is independent of the captured args — a by-index column tuple, a
-// header-bound row object, a whole reproduced table, or a doc-string tuple — so
-// `R` is inferred freely from the handler body. A sensor never changes state.
+// A sensor is an OBSERVER: it reads `state` and may RETURN a value for the pure
+// core to compare against the Markdown. That return shape is independent of the
+// captured args — a by-index column tuple, a header-bound row object, a whole
+// reproduced table, or a doc-string tuple — so `R` is inferred freely from the
+// handler body. A sensor never changes state.
 type SensorFn<C = unknown, Custom = Record<never, never>> = <E extends string, R>(
   expression: E,
-  handler: (state: DeepReadonly<C>, ...args: HandlerArgs<E, Custom>) => R | Promise<R>,
+  handler: (state: C, ...args: HandlerArgs<E, Custom>) => R | Promise<R>,
 ) => void
 
 // The step-authoring surface returned by `steps()`: the three roles a step

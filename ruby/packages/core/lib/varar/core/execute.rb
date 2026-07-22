@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'varar/core/span'
-require 'varar/core/deep_freeze'
 require 'varar/core/cell_diff'
 require 'varar/core/doc_string_diff'
 require 'varar/core/param_diff'
@@ -61,7 +60,7 @@ module Varar
 
           ex.steps.each_with_index do |step, i|
             file = step.step_def.expression_source_file
-            state_by_file[file] = DeepFreeze.deep_freeze(create_ctx.call(file)) unless state_by_file.key?(file)
+            state_by_file[file] = create_ctx.call(file) unless state_by_file.key?(file)
             state = state_by_file[file]
 
             extra = []
@@ -76,9 +75,12 @@ module Varar
               last_return = returned
               case step.step_def.kind
               when 'stimulus'
-                # Full replacement: the returned Hash IS the next state (deep-frozen).
-                # There is no merge — a return with fewer keys shrinks the state.
-                # nil is a no-op; any other type is a contract violation.
+                # Full replacement: the returned Hash IS the next state. There is
+                # no merge — a return with fewer keys shrinks the state. nil is a
+                # no-op; any other type is a contract violation.
+                #
+                # The state is the author's own value, handed back untouched: we
+                # do not freeze it. Whether it is immutable is the author's call.
                 unless returned.nil?
                   unless returned.is_a?(Hash)
                     raise ReturnShapeError,
@@ -86,7 +88,7 @@ module Varar
                           'or nothing to leave it unchanged'
                   end
 
-                  state = DeepFreeze.deep_freeze(returned)
+                  state = returned
                   state_by_file[file] = state
                 end
               when 'sensor'

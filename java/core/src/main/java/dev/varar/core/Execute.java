@@ -15,30 +15,23 @@ import java.util.function.Function;
  * The executor — port of {@code var-core/src/execute.ts}, adapted to Task 11's
  * full-replacement immutable-record state model.
  *
- * <h2>DeepFreeze decision (Task 18)</h2>
+ * <h2>No mutation guard, in any port</h2>
  *
- * <p>TS/Python port {@code deep-freeze.ts}/{@code deep_freeze.py}: a runtime guard that
- * recursively {@code Object.freeze}s the partially-merged plain-object state so a step
- * handler that tries to mutate it in place throws at runtime (see {@code
- * execute-state.test.ts}'s {@code "mutating the frozen state throws at runtime"}). That
- * guard exists only because TS/Python's state model is a plain mutable object/dict that
- * gets shallow-merged with each {@code stimulus} return — mutation is
- * otherwise silently possible and needs to be defended against at runtime.
+ * <p>No port polices what an author does with their own state. Varar hands the value the
+ * factory (or the previous {@code stimulus}) produced to the next handler untouched, and
+ * that is the whole contract. TS/Python/Ruby once deep-froze the plain-object state so an
+ * in-place mutation threw at runtime; that guard was removed as overreach. It never
+ * enforced much — it descended plain objects/dicts/hashes only, leaving every class
+ * instance live, so the invariant it claimed held for some of the state and not the rest.
+ * It also froze values the author still held references to elsewhere, and its type-level
+ * mirror recursed into class instances and stripped their private brands, so a state
+ * holding a DB client stopped being assignable to its own declared type.
  *
- * <p><b>Java needs no equivalent and none is ported here.</b> Task 11 committed to a
- * full-replacement {@code record}-based state model ({@code dev.varar.State}):
- * authors declare {@code record Ctx(...) implements State}, and every {@code
- * stimulus} handler returns a brand new, complete {@code Ctx} value —
- * there is no partial merge and no in-place mutation path to guard against. A Java
- * {@code record} is immutable by construction (all fields {@code final}, no setters);
- * the only way to violate that is reflection, which is not a runtime concern this port
- * defends against (TS/Python don't defend against {@code unsafe}/native mutation either
- * — the guard is scoped to the ordinary, easy-to-reach mutation an author's own code
- * could otherwise perform, and Java's type system already forecloses that path). Adding
- * a {@code DeepFreeze.java} that recursively "freezes" already-immutable records would
- * be pure ceremony with nothing to protect against — see the design doc's own note that
- * records need "no deep-freeze runtime guard ... for the AST layer itself," which
- * applies equally to the state layer given Task 11's choice.
+ * <p>Java therefore needs no equivalent, and never had one: {@code dev.varar.State} is a
+ * full-replacement {@code record} model. Authors declare {@code record Ctx(...) implements
+ * State} and every {@code stimulus} returns a brand new, complete {@code Ctx}. A record is
+ * immutable by construction (all fields {@code final}, no setters), so the language gives
+ * for free what the dynamic ports now leave to the author's own type declaration.
  *
  * <h2>Sensor return-comparison contract (the shared slot model)</h2>
  *

@@ -13,8 +13,8 @@ stimulus('the library has these books:', (state, rows: ReadonlyArray<ReadonlyArr
   const books = body.map((row) =>
     Object.fromEntries(header.map((h, i) => [h, row[i] ?? ''])),
   ) as Book[]
-  // `library` is a class instance — left live by deepFreeze — so this side
-  // effect on its internal shelf is allowed. The step returns nothing.
+  // `library` is a live class instance, so this side effect on its internal
+  // shelf is allowed. The step returns nothing.
   state.library.addBooks(books)
 })
 

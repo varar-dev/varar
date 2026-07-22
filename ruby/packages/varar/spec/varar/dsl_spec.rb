@@ -6,9 +6,9 @@ require 'varar/registry'
 
 # The state factory must produce a fresh value per example. Ruby is the port
 # where this was least obvious: `steps(count: 0)` used to close over one Hash
-# shared by every example, and correctness rested on DeepFreeze rather than on
-# the factory. DeepFreeze only descends Hash and Array, so a nested custom
-# object stayed mutable and shared — exactly the shape of
+# shared by every example. Varar hands the state to handlers untouched, so the
+# factory is the only thing standing between one example and the next one's
+# mutations — exactly the shape of
 # `examples/ruby-rspec/steps/library.steps.rb`, whose state held a Money.
 module Varar
   ::RSpec.describe 'steps state factory' do
@@ -34,7 +34,7 @@ module Varar
       second = factory.call(__FILE__)
 
       expect(first[:money]).not_to equal(second[:money]),
-                                   'a nested object DeepFreeze cannot descend into must not be shared'
+                                   'a nested object must not be shared between examples'
     end
 
     it 'rejects a Hash, which would be shared across every example' do
