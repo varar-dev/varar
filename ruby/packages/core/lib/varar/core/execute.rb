@@ -92,7 +92,7 @@ module Varar
                   state_by_file[file] = state
                 end
               when 'sensor'
-                compare_sensor_return(plan, ex, step, returned, extra) if ex.row_checks.nil? && !returned.nil?
+                compare_sensor_return(plan, ex, step, returned, extra) if ex.row_checks.nil?
               else
                 raise ReturnShapeError, "unknown step kind: #{step.step_def.kind}"
               end
@@ -108,10 +108,16 @@ module Varar
 
           # Header-bound row checks (after all steps).
           if thrown.nil? && ex.row_checks && !ex.row_checks.empty?
+            # Like a slotted sensor, a header-bound row step must answer the row
+            # it is bound to: no return means nothing was compared.
+            row_error = if last_return.nil?
+                          ReturnShapeError.new('a header-bound row step must return a row object ' \
+                                               'with one value per bound column, got nothing')
+                        end
             bad = CellDiffs.compare_row(last_return, ex.row_checks).reject(&:ok)
-            unless bad.empty?
+            if row_error || !bad.empty?
               last_step = ex.steps.last
-              augmented = augment_stack(CellMismatchError.new(bad), last_step, var_path)
+              augmented = augment_stack(row_error || CellMismatchError.new(bad), last_step, var_path)
               observer&.call(observation(ex, example_index, ex.steps.length,
                                          last_step.step_def.expression_source_file, 'fail', augmented))
               thrown = augmented
@@ -135,12 +141,22 @@ module Varar
       end
 
       # Sensor slot contract: zero slots + a return is a mistake; one slot IS
-      # the return; two+ is a positional array. Raises the appropriate diff error.
+      # the return; two+ is a positional array. With one or more slots the
+      # return is REQUIRED — returning nothing used to skip the comparison
+      # silently, so a typo turned an assertion into a no-op. Raises the
+      # appropriate diff error.
       def compare_sensor_return(plan, _ex, step, returned, extra)
         slot_count = step.args.length + extra.length
         if slot_count.zero?
+          return if returned.nil?
+
           raise ReturnShapeError, 'this sensor has no parameters, data table or doc string — ' \
                                   'nothing to compare a return value against (raise to fail, return nothing to pass)'
+        end
+
+        if returned.nil?
+          raise ReturnShapeError,
+                "a sensor with #{slot_count} slot(s) must return one value per slot, got nothing"
         end
 
         if slot_count == 1

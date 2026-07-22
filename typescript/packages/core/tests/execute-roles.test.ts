@@ -240,3 +240,63 @@ test('a zero-slot sensor returning undefined passes', async () => {
   await new Promise((res) => setTimeout(res, 0))
   expect(getErr()).toBeUndefined()
 })
+
+test('a sensor with a slot that returns nothing throws ReturnShapeError', async () => {
+  // The silent-pass hole: without this, a typo'd property access returns
+  // undefined, nothing is compared, and the document keeps claiming something
+  // nobody checked.
+  const getErr = runOne('# X\n\nThe name is "Ada"\n', (r) =>
+    addStep(r, {
+      expression: 'The name is {string}',
+      expressionSourceFile: 's.steps.ts',
+      expressionSourceLine: 1,
+      kind: 'sensor',
+      handler: () => undefined,
+    }),
+  )
+  await new Promise((res) => setTimeout(res, 0))
+  const err = getErr() as Error
+  expect(err?.name).toBe('ReturnShapeError')
+  expect(err.message).toBe('a sensor with 1 slot(s) must return one value per slot, got nothing')
+})
+
+test('a zero-slot sensor that returns nothing still passes', async () => {
+  const getErr = runOne('# X\n\nIt works\n', (r) =>
+    addStep(r, {
+      expression: 'It works',
+      expressionSourceFile: 's.steps.ts',
+      expressionSourceLine: 1,
+      kind: 'sensor',
+      handler: () => undefined,
+    }),
+  )
+  await new Promise((res) => setTimeout(res, 0))
+  expect(getErr()).toBeUndefined()
+})
+
+test('a header-bound row step that returns nothing throws ReturnShapeError', async () => {
+  const source = [
+    '# X',
+    '',
+    'I report the score and grade.',
+    '',
+    '| score | grade |',
+    '| ----- | ----- |',
+    '| 10    | A     |',
+  ].join('\n')
+  const getErr = runOne(source, (r) =>
+    addStep(r, {
+      expression: 'I report the score and grade',
+      expressionSourceFile: 's.steps.ts',
+      expressionSourceLine: 1,
+      kind: 'sensor',
+      handler: () => undefined,
+    }),
+  )
+  await new Promise((res) => setTimeout(res, 0))
+  const err = getErr() as Error
+  expect(err?.name).toBe('ReturnShapeError')
+  expect(err.message).toBe(
+    'a header-bound row step must return a row object with one value per bound column, got nothing',
+  )
+})

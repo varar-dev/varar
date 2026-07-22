@@ -9,8 +9,7 @@ def _(state, n):
     return {"n": state["n"] + n}
 @sensor("the total is {int}")
 def _(state, total):
-    if state["n"] != total:
-        raise AssertionError(f"expected {total} got {state['n']}")
+    return state["n"]
 '''
 SRC_PASS = "# Calc\n\n## adds\n\nI add 2\nthe total is 2\n"
 SRC_FAIL = "# Calc\n\n## adds wrong\n\nI add 2\nthe total is 99\n"

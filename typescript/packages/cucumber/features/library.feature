@@ -8,5 +8,5 @@ Feature: Library member borrows a book
     When the member borrows "Lolita"
     Then the receipt is:
       """json
-      {"ok": true, "due": "2026-06-19"}
+      {"ok":true,"due":"2026-06-19"}
       """

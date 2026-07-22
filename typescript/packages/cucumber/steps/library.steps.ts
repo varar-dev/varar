@@ -1,5 +1,4 @@
 import { steps } from '@varar/varar'
-import { expect } from 'vitest'
 import { type Book, type BorrowError, Library, type Receipt } from '../src/library.ts'
 
 const { stimulus, sensor } = steps(() => ({
@@ -19,10 +18,11 @@ stimulus('the library has these books:', (state, rows: ReadonlyArray<ReadonlyArr
 })
 
 stimulus('the member borrows {string}', (state, title: string) => ({
+  ...state,
   lastReceipt: state.library.borrow(title),
 }))
 
-sensor('the receipt is:', (state, _docString: string) => {
-  // Assertion-style sensor (returns void): compares via expect, not by return.
-  expect(state.lastReceipt).toEqual(JSON.parse(_docString))
-})
+// The doc string is this sensor's only slot, so it returns the receipt for the
+// core to compare against the document (doc strings compare exactly, trailing
+// newline included) rather than asserting by hand.
+sensor('the receipt is:', (state) => `${JSON.stringify(state.lastReceipt)}\n`)

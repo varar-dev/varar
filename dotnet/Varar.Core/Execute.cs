@@ -97,9 +97,14 @@ public static class Execute
         if (thrown is null && !ex.RowChecks.IsDefaultOrEmpty)
         {
             var bad = CellDiffs.CompareRow(lastReturn, ex.RowChecks).Where(d => !d.Ok).ToImmutableArray();
-            if (bad.Length > 0)
+            // Like a slotted sensor, a header-bound row step must answer the row it is bound to:
+            // no return means nothing was compared.
+            Exception? rowError = lastReturn is null
+                ? new ReturnShapeError("a header-bound row step must return a row object with one value per bound column, got nothing")
+                : null;
+            if (rowError is not null || bad.Length > 0)
             {
-                var err = new CellMismatchError(bad);
+                var err = rowError ?? new CellMismatchError(bad);
                 observations.Add(new StepObservation(steps.Length, "fail", err));
                 thrown = err;
             }
@@ -127,18 +132,27 @@ public static class Execute
 
     private static void CheckSensorReturn(string source, PlannedStep step, Value? returned)
     {
-        if (returned is null)
-        {
-            return;
-        }
-
         int extraCount = step.DataTable is not null || step.DocString is not null ? 1 : 0;
         int slotCount = step.Args.Length + extraCount;
         if (slotCount == 0)
         {
+            // Nothing to compare against: returning nothing is the pass, a value is a mistake.
+            if (returned is null)
+            {
+                return;
+            }
+
             throw new ReturnShapeError(
                 "this sensor has no parameters, data table or doc string — nothing to compare a return value against " +
                 "(throw to fail, return nothing to pass)");
+        }
+
+        // With one or more slots the return is REQUIRED: returning nothing used to skip the
+        // comparison silently, so a typo in a property access turned an assertion into a no-op.
+        if (returned is null)
+        {
+            throw new ReturnShapeError(
+                $"a sensor with {slotCount} slot(s) must return one value per slot, got nothing");
         }
 
         ImmutableArray<Value> slots;

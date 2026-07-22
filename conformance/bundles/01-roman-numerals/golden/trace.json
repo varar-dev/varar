@@ -21,7 +21,7 @@
             "stepFile": "numerals.steps"
           },
           "exampleName": "I convert 1 to roman numerals. The result is I",
-          "matchedExpression": "The result is {word}",
+          "matchedExpression": "The result is {word}.",
           "ordinal": 2,
           "outcome": "pass",
           "stepText": "The result is I."

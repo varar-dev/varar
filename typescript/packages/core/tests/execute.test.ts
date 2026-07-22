@@ -88,6 +88,7 @@ test('the sink.example run callback executes the step handlers in order', async 
       kind: 'sensor',
       handler: (_ctx, n) => {
         calls.push(`check:${n as number}`)
+        return n
       },
     },
   )
@@ -250,7 +251,9 @@ test('executePlan runs a header-bound table once per row, passing the row object
     expressionSourceLine: 1,
     kind: 'sensor',
     handler: (_ctx, ...args) => {
-      rows.push(args[args.length - 1])
+      const row = args[args.length - 1]
+      rows.push(row)
+      return row
     },
   })
   const source = `# Yahtzee
@@ -289,6 +292,7 @@ test('a failing header-bound row points the stack frame at that row line', async
     // production runtime API does (`handler as StepHandler`).
     handler: ((_ctx, row: { score: string }) => {
       if (row.score === '50') throw new Error('boom')
+      return row
     }) as StepHandler,
   })
   // Rows sit on source lines 7 and 8 (header=5, separator=6).

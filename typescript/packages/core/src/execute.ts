@@ -119,7 +119,7 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
             } else if (kind === 'sensor') {
               // Header-bound rows are compared after the loop via ex.rowChecks;
               // skip the slot contract for them (they return a row object).
-              if (!ex.rowChecks && returned !== undefined) {
+              if (!ex.rowChecks) {
                 // A sensor's comparison slots are its expression parameters
                 // followed by the trailing data table or doc string, if any.
                 // Zero slots: nothing to compare against — a returned value
@@ -127,53 +127,67 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
                 // One slot: the return IS that slot's value (never a tuple,
                 // so a parameter type transforming to an array is compared
                 // as-is). Two or more: a positional array, one per slot.
+                //
+                // With one or more slots the return is REQUIRED. Returning
+                // nothing used to skip the comparison silently, so a typo in a
+                // property access turned an assertion into a no-op and the
+                // document kept claiming something nobody checked. Assert by
+                // throwing if you don't want the core's comparison.
                 const slotCount = step.args.length + extra.length
-                let slots: ReadonlyArray<unknown>
                 if (slotCount === 0) {
+                  if (returned !== undefined) {
+                    throw new ReturnShapeError(
+                      'this sensor has no parameters, data table or doc string — nothing to compare a return value against (throw to fail, return nothing to pass)',
+                    )
+                  }
+                } else if (returned === undefined) {
                   throw new ReturnShapeError(
-                    'this sensor has no parameters, data table or doc string — nothing to compare a return value against (throw to fail, return nothing to pass)',
+                    `a sensor with ${slotCount} slot(s) must return one value per slot, got nothing`,
                   )
-                } else if (slotCount === 1) {
-                  slots = [returned]
                 } else {
-                  if (!Array.isArray(returned)) {
-                    throw new ReturnShapeError(
-                      `a sensor with ${slotCount} parameters must return an array of ${slotCount} values, got ${typeof returned}`,
-                    )
+                  let slots: ReadonlyArray<unknown>
+                  if (slotCount === 1) {
+                    slots = [returned]
+                  } else {
+                    if (!Array.isArray(returned)) {
+                      throw new ReturnShapeError(
+                        `a sensor with ${slotCount} parameters must return an array of ${slotCount} values, got ${typeof returned}`,
+                      )
+                    }
+                    if (returned.length !== slotCount) {
+                      throw new ReturnShapeError(
+                        `sensor return must have ${slotCount} element(s), got ${returned.length}`,
+                      )
+                    }
+                    slots = returned
                   }
-                  if (returned.length !== slotCount) {
-                    throw new ReturnShapeError(
-                      `sensor return must have ${slotCount} element(s), got ${returned.length}`,
+                  // Inline parameters: slots[0..args.length) vs captured args.
+                  const inlineReturned = slots.slice(0, step.args.length)
+                  const sourceTexts = step.paramSpans.map((s) =>
+                    plan.varDoc.source.slice(s.startOffset, s.endOffset),
+                  )
+                  const paramDiffs = compareParams(
+                    inlineReturned,
+                    step.args,
+                    step.paramSpans,
+                    sourceTexts,
+                    step.formats,
+                  ).filter((d) => !d.ok)
+                  if (paramDiffs.length > 0) throw new CellMismatchError(paramDiffs)
+                  // Trailing table / doc string occupies the last slot.
+                  if (step.dataTable) {
+                    const bad = compareTable(slots[step.args.length], step.dataTable).filter(
+                      (d) => !d.ok,
                     )
+                    if (bad.length > 0) throw new CellMismatchError(bad)
+                  } else if (step.docString) {
+                    const diff = compareDocString(
+                      slots[step.args.length],
+                      step.docString.content,
+                      step.docString.span,
+                    )
+                    if (diff) throw new DocStringMismatchError(diff)
                   }
-                  slots = returned
-                }
-                // Inline parameters: slots[0..args.length) vs captured args.
-                const inlineReturned = slots.slice(0, step.args.length)
-                const sourceTexts = step.paramSpans.map((s) =>
-                  plan.varDoc.source.slice(s.startOffset, s.endOffset),
-                )
-                const paramDiffs = compareParams(
-                  inlineReturned,
-                  step.args,
-                  step.paramSpans,
-                  sourceTexts,
-                  step.formats,
-                ).filter((d) => !d.ok)
-                if (paramDiffs.length > 0) throw new CellMismatchError(paramDiffs)
-                // Trailing table / doc string occupies the last slot.
-                if (step.dataTable) {
-                  const bad = compareTable(slots[step.args.length], step.dataTable).filter(
-                    (d) => !d.ok,
-                  )
-                  if (bad.length > 0) throw new CellMismatchError(bad)
-                } else if (step.docString) {
-                  const diff = compareDocString(
-                    slots[step.args.length],
-                    step.docString.content,
-                    step.docString.span,
-                  )
-                  if (diff) throw new DocStringMismatchError(diff)
                 }
               }
             } else {
@@ -201,10 +215,19 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
           })
         }
         if (thrown === undefined && ex.rowChecks && ex.rowChecks.length > 0) {
+          // Like a slotted sensor, a header-bound row step must answer the row
+          // it is bound to: no return means nothing was compared, which would
+          // pass while checking none of the row's cells.
+          const rowError =
+            lastReturn === undefined
+              ? new ReturnShapeError(
+                  'a header-bound row step must return a row object with one value per bound column, got nothing',
+                )
+              : undefined
           const bad = compareRow(lastReturn, ex.rowChecks).filter((d) => !d.ok)
-          if (bad.length > 0) {
+          if (rowError || bad.length > 0) {
             const lastStep = ex.steps[ex.steps.length - 1] as PlannedStep
-            const augmented = augmentStack(new CellMismatchError(bad), lastStep, path)
+            const augmented = augmentStack(rowError ?? new CellMismatchError(bad), lastStep, path)
             ports.observer?.step({
               exampleName: ex.name,
               exampleIndex,

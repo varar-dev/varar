@@ -15,19 +15,9 @@ public static class NumeralsSteps
             return roman is null ? Value.Map([]) : Value.Map([new("result", Value.Of(roman))]);
         });
 
-        s.Sensor("The result is {word}", (state, expected) =>
-        {
-            // {word} greedily captures trailing punctuation ("I." not "I"); strip it, then throw
-            // on mismatch (returning would compare the raw "I." and wrongly fail).
-            var cleaned = expected.AsString().TrimEnd('.', '!', '?');
-            var result = ResultOf(state);
-            if (cleaned != result)
-            {
-                throw new HandlerException($"expected {cleaned} but got {result}");
-            }
-
-            return null;
-        });
+        // The trailing "." is matched literally, so {word} captures just the numeral and this
+        // sensor returns the observed value for the core to compare.
+        s.Sensor("The result is {word}.", (state, expected) => Value.Of(ResultOf(state)));
     }
 
     public static Value State() => Value.Map([]);

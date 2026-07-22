@@ -26,7 +26,7 @@ describe('ruby dialect', () => {
     ])
     expect(simpleDefs[1]?.handlerParams?.params).toEqual([
       { name: 'state', typeText: '' },
-      { name: 'expected', typeText: '' },
+      { name: '_expected', typeText: '' },
     ])
 
     // 07: an optional block parameter (`|_state, _row = nil|`).
@@ -37,13 +37,13 @@ describe('ruby dialect', () => {
       { name: '_row', typeText: '' },
     ])
 
-    // 11: a splat block parameter (`|_state, _s, *_extra|`).
+    // 11: a splat block parameter (`|_state, s, *extra|`).
     const splat = bundleFixture('11-emoji-offsets', '.rb')
     const splatDefs = scanner.discoverStepDefs(splat.name, splat.source)
     expect(splatDefs[0]?.handlerParams?.params).toEqual([
       { name: '_state', typeText: '' },
-      { name: '_s', typeText: '' },
-      { name: '_extra', typeText: '' },
+      { name: 's', typeText: '' },
+      { name: 'extra', typeText: '' },
     ])
   })
 

@@ -239,9 +239,18 @@ fn run_example(
                     .into_iter()
                     .filter(|d| !d.ok)
                     .collect();
-                if !bad.is_empty() {
+                // Like a slotted sensor, a header-bound row step must answer the
+                // row it is bound to: no return means nothing was compared.
+                if last_return.is_none() || !bad.is_empty() {
                     let last_step = steps.last().unwrap();
-                    let failure = attach_location(StepError::CellMismatch(bad), last_step, path);
+                    let err = if last_return.is_none() {
+                        StepError::ReturnShape(
+                            "a header-bound row step must return a row object with one value per bound column, got nothing".to_string(),
+                        )
+                    } else {
+                        StepError::CellMismatch(bad)
+                    };
+                    let failure = attach_location(err, last_step, path);
                     observe(
                         ports,
                         StepObservation {
@@ -337,11 +346,20 @@ fn check_sensor_return(
     step: &PlannedStep,
     returned: Option<Value>,
 ) -> Result<(), StepError> {
-    let Some(returned) = returned else {
-        return Ok(());
-    };
     let extra_count = usize::from(step.data_table.is_some() || step.doc_string.is_some());
     let slot_count = step.args.len() + extra_count;
+    // With one or more slots the return is REQUIRED: returning nothing used to
+    // skip the comparison silently, so a typo turned an assertion into a no-op.
+    let returned = match returned {
+        // Nothing to compare against: returning nothing is the pass.
+        None if slot_count == 0 => return Ok(()),
+        None => {
+            return Err(StepError::ReturnShape(format!(
+                "a sensor with {slot_count} slot(s) must return one value per slot, got nothing"
+            )));
+        }
+        Some(v) => v,
+    };
     if slot_count == 0 {
         return Err(StepError::ReturnShape(
             "this sensor has no parameters, data table or doc string — nothing to compare a return value against \

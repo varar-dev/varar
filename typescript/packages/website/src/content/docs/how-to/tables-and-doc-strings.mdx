@@ -385,4 +385,6 @@ rules.
   redden exactly the failing characters.
 - A differing doc string fails with a `DocStringMismatchError`.
 - Returning a value of the wrong shape is a `ReturnShapeError`.
-- Returning `undefined` (`None` / `null` / `nil`) means "no assertion" — the step passes.
+- A table or doc string is itself a slot, so returning `undefined` (`None` / `null` /
+  `nil`) from one of these steps is a `ReturnShapeError`, not a pass. Throw if you
+  want to assert by hand instead.

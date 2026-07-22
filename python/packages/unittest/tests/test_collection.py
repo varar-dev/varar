@@ -11,7 +11,7 @@ def _(state, n):
     return {"n": state["n"] + n}
 @sensor("the total is {int}")
 def _(state, total):
-    assert state["n"] == total, f"expected {total} got {state['n']}"
+    return state["n"]
 """
 
 VAR_CONFIG = """\

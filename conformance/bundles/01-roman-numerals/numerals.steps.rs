@@ -2,7 +2,7 @@
 //!
 //! Full-replacement state (ADR 0006), in the file's own context type.
 
-use varar::{HandlerError, Steps};
+use varar::Steps;
 
 #[derive(Clone, Default)]
 pub struct Ctx {
@@ -25,15 +25,9 @@ pub fn register(s: &mut Steps<Ctx>) {
             result: roman(n).unwrap_or_default().to_string(),
         })
     });
-    // {word} greedily captures trailing punctuation ("I." not "I"), so this
-    // sensor asserts for itself rather than returning the slot for comparison.
-    s.sensor("The result is {word}", |ctx: Ctx, expected: String| -> Result<(), HandlerError> {
-        let cleaned = expected.trim_end_matches(['.', '!', '?']);
-        if cleaned != ctx.result {
-            return Err(HandlerError::new(format!("expected {cleaned} but got {}", ctx.result)));
-        }
-        Ok(())
-    });
+    // The trailing "." is matched literally, so {word} captures just the
+    // numeral and this sensor returns the observed value for the core.
+    s.sensor("The result is {word}.", |ctx: Ctx, _expected: String| Ok(ctx.result));
 }
 
 pub fn state() -> Ctx {

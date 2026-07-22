@@ -281,9 +281,17 @@ public final class Execute {
             List<CellDiff> bad = CellDiff.compareRow(lastReturn, checks).stream()
                     .filter(d -> !d.ok())
                     .toList();
-            if (!bad.isEmpty()) {
+            // Like a slotted sensor, a header-bound row step must answer the row it is bound
+            // to: no return means nothing was compared.
+            RuntimeException rowError = lastReturn == null
+                    ? new CellDiff.ReturnShapeException(
+                            "a header-bound row step must return a row object with one value per"
+                                    + " bound column, got nothing")
+                    : null;
+            if (rowError != null || !bad.isEmpty()) {
                 Plan.PlannedStep lastStep = steps.get(steps.size() - 1);
-                Throwable augmented = augmentStack(new CellDiff.CellMismatchException(bad), lastStep, path);
+                Throwable augmented = augmentStack(
+                        rowError != null ? rowError : new CellDiff.CellMismatchException(bad), lastStep, path);
                 if (ports.observer() != null) {
                     ports.observer().step(new StepObservation(exampleIndex, steps.size(), "fail", augmented));
                 }
@@ -330,13 +338,20 @@ public final class Execute {
     // -----------------------------------------------------------------------------------------
 
     private static void checkSensorReturn(String source, Plan.PlannedStep step, Object returned) {
-        if (returned == null) return;
         int extraCount = (step.dataTable() != null || step.docString() != null) ? 1 : 0;
         int slotCount = step.args().size() + extraCount;
         if (slotCount == 0) {
+            // Nothing to compare against: returning nothing is the pass, a value is a mistake.
+            if (returned == null) return;
             throw new CellDiff.ReturnShapeException(
                     "this sensor has no parameters, data table or doc string — nothing to compare"
                             + " a return value against (throw to fail, return nothing to pass)");
+        }
+        // With one or more slots the return is REQUIRED: returning nothing used to skip the
+        // comparison silently, so a typo in a field access turned an assertion into a no-op.
+        if (returned == null) {
+            throw new CellDiff.ReturnShapeException(
+                    "a sensor with " + slotCount + " slot(s) must return one value per slot," + " got nothing");
         }
         List<Object> slots;
         if (slotCount == 1) {

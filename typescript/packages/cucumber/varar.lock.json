@@ -2,7 +2,7 @@
   "version": 1,
   "specs": {
     "features/library.feature": {
-      "sourceHash": "fnv1a:de46f92c",
+      "sourceHash": "fnv1a:8d50a602",
       "examples": [
         {
           "name": "Scenario: An available book is borrowed and a receipt comes back Given the library has these books:",

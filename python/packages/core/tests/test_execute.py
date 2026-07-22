@@ -139,7 +139,7 @@ def test_sink_example_run_callback_executes_step_handlers_in_order() -> None:
         expression_source_file="s.ts",
         expression_source_line=2,
         kind="sensor",
-        handler=lambda _ctx, n: calls.append(f"check:{n}"),
+        handler=lambda _ctx, n: (calls.append(f"check:{n}"), n)[1],
     )
     p = plan(parse("e.md", "# Adding\n\nI add 5. I should have 5."), r)
     run = _capture_run(p)
@@ -266,7 +266,7 @@ def test_execute_plan_runs_header_bound_table_once_per_row() -> None:
         expression_source_file="s.ts",
         expression_source_line=1,
         kind="sensor",
-        handler=lambda _ctx, *args: rows.append(args[-1]),
+        handler=lambda _ctx, *args: (rows.append(args[-1]), args[-1])[1],
     )
     source = (
         "# Yahtzee\n\neach row lists the dice, the category and the score:\n\n"
@@ -298,9 +298,10 @@ def test_execute_plan_runs_header_bound_table_once_per_row() -> None:
 def test_failing_header_bound_row_points_stack_frame_at_row_line() -> None:
     """A failing header-bound row points the location note at that row's line."""
 
-    def _handler(_ctx: Any, row: dict) -> None:
+    def _handler(_ctx: Any, row: dict) -> dict:
         if row["score"] == "50":
             raise RuntimeError("boom")
+        return row
 
     r = add_step(
         create_registry(),
@@ -1054,6 +1055,55 @@ def test_zero_slot_sensor_returning_none_passes() -> None:
         ),
     )
     assert caught[0] is None
+
+
+def test_slotted_sensor_returning_none_raises_return_shape_error() -> None:
+    """A sensor with a slot that returns nothing raises ReturnShapeError.
+
+    The silent-pass hole: a typo'd lookup returns None, nothing is compared, and
+    the document keeps claiming something nobody checked.
+    """
+    caught = _run_one(
+        '# X\n\nThe name is "Ada"\n',
+        lambda r: add_step(
+            r,
+            expression="The name is {string}",
+            expression_source_file="s.steps.ts",
+            expression_source_line=1,
+            kind="sensor",
+            handler=lambda *_: None,
+        ),
+    )
+    assert isinstance(caught[0], ReturnShapeError)
+    assert str(caught[0]) == (
+        "a sensor with 1 slot(s) must return one value per slot, got nothing"
+    )
+
+
+def test_header_bound_row_returning_none_raises_return_shape_error() -> None:
+    """A header-bound row step that returns nothing raises ReturnShapeError."""
+    source = (
+        "# X\n\nI report the score and grade.\n\n"
+        "| score | grade |\n"
+        "| ----- | ----- |\n"
+        "| 10    | A     |\n"
+    )
+    caught = _run_one(
+        source,
+        lambda r: add_step(
+            r,
+            expression="I report the score and grade",
+            expression_source_file="s.steps.ts",
+            expression_source_line=1,
+            kind="sensor",
+            handler=lambda *_: None,
+        ),
+    )
+    assert isinstance(caught[0], ReturnShapeError)
+    assert str(caught[0]) == (
+        "a header-bound row step must return a row object with one value per"
+        " bound column, got nothing"
+    )
 
 
 def test_action_returning_non_dict_raises_return_shape_error() -> None:

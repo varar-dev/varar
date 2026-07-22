@@ -153,9 +153,15 @@ func runExample(plan ExecutionPlan, ex PlannedExample, exampleIndex int, ports E
 				bad = append(bad, d)
 			}
 		}
-		if len(bad) > 0 {
+		// Like a slotted sensor, a header-bound row step must answer the row it is
+		// bound to: no return means nothing was compared.
+		if lastReturn == nil || len(bad) > 0 {
 			lastStep := steps[len(steps)-1]
-			failure := attachLocation(cellMismatchError(bad), lastStep, path)
+			err := cellMismatchError(bad)
+			if lastReturn == nil {
+				err = returnShapeError("a header-bound row step must return a row object with one value per bound column, got nothing")
+			}
+			failure := attachLocation(err, lastStep, path)
 			observe(ports, StepObservation{ExampleIndex: exampleIndex, Ordinal: len(steps), Outcome: OutcomeFail, Error: &failure})
 			thrown = &failure
 		}
@@ -249,16 +255,23 @@ func truncateLabel(text string) string {
 }
 
 func checkSensorReturn(source string, step PlannedStep, returned *Value) *StepError {
-	if returned == nil {
-		return nil
-	}
 	extraCount := 0
 	if step.DataTable != nil || step.DocString != nil {
 		extraCount = 1
 	}
 	slotCount := len(step.Args) + extraCount
 	if slotCount == 0 {
+		// Nothing to compare against: returning nothing is the pass, a value is a mistake.
+		if returned == nil {
+			return nil
+		}
 		e := returnShapeError("this sensor has no parameters, data table or doc string — nothing to compare a return value against (throw to fail, return nothing to pass)")
+		return &e
+	}
+	// With one or more slots the return is REQUIRED: returning nothing used to
+	// skip the comparison silently, so a typo turned an assertion into a no-op.
+	if returned == nil {
+		e := returnShapeError(fmt.Sprintf("a sensor with %d slot(s) must return one value per slot, got nothing", slotCount))
 		return &e
 	}
 	var slots []Value

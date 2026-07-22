@@ -271,6 +271,55 @@ fn a_zero_slot_sensor_returning_null_passes() {
     assert!(collect_examples(&p, &ports)[0].run().is_ok());
 }
 
+#[test]
+fn a_slotted_sensor_returning_nothing_throws_return_shape() {
+    // The silent-pass hole: nothing is compared, yet the document keeps
+    // claiming something nobody checked.
+    let r = reg(
+        "the name is {string}",
+        "s.ts",
+        1,
+        Handler::sync1(|_s, _name| Ok(None)),
+        Some(StepKind::Sensor),
+    );
+    let p = plan_of("# X\n\nthe name is \"Ada\"", &r);
+    let ports = ExecutePorts::silent();
+    let err = collect_examples(&p, &ports)[0].run().unwrap_err().error;
+    match err {
+        StepError::ReturnShape(m) => {
+            assert_eq!(m, "a sensor with 1 slot(s) must return one value per slot, got nothing");
+        }
+        other => panic!("expected ReturnShape, got {other:?}"),
+    }
+}
+
+#[test]
+fn a_header_bound_row_returning_nothing_throws_return_shape() {
+    let r = reg(
+        "I report the score and grade",
+        "s.ts",
+        1,
+        Handler::sync1(|_s, _row| Ok(None)),
+        Some(StepKind::Sensor),
+    );
+    let source = "# X\n\nI report the score and grade.\n\n\
+                  | score | grade |\n\
+                  | ----- | ----- |\n\
+                  | 10    | A     |\n";
+    let p = plan_of(source, &r);
+    let ports = ExecutePorts::silent();
+    let err = collect_examples(&p, &ports)[0].run().unwrap_err().error;
+    match err {
+        StepError::ReturnShape(m) => {
+            assert_eq!(
+                m,
+                "a header-bound row step must return a row object with one value per bound column, got nothing"
+            );
+        }
+        other => panic!("expected ReturnShape, got {other:?}"),
+    }
+}
+
 // -----------------------------------------------------------------------------
 // createContext: once per (example, file), reused across steps
 // -----------------------------------------------------------------------------

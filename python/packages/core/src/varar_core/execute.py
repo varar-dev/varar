@@ -206,7 +206,7 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
                         elif kind == "sensor":
                             # Header-bound rows skip the slot contract (they return
                             # a row object compared via compare_row after the loop).
-                            if ex.row_checks is None and returned is not None:
+                            if ex.row_checks is None:
                                 # A sensor's comparison slots are its expression
                                 # parameters followed by the trailing data table or
                                 # doc string, if any. Zero slots: nothing to compare
@@ -215,71 +215,83 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
                                 # IS that slot's value (never a tuple, so a parameter
                                 # type transforming to a list is compared as-is).
                                 # Two or more: a positional list, one per slot.
+                                #
+                                # With one or more slots the return is REQUIRED:
+                                # returning nothing used to skip the comparison
+                                # silently, so a typo in an attribute lookup turned
+                                # an assertion into a no-op. Raise to fail instead.
                                 slot_count = len(step.args) + len(extra)
                                 if slot_count == 0:
+                                    if returned is not None:
+                                        raise ReturnShapeError(
+                                            "this sensor has no parameters, data table or"
+                                            " doc string — nothing to compare a return"
+                                            " value against (raise to fail, return"
+                                            " nothing to pass)"
+                                        )
+                                elif returned is None:
                                     raise ReturnShapeError(
-                                        "this sensor has no parameters, data table or"
-                                        " doc string — nothing to compare a return"
-                                        " value against (raise to fail, return"
-                                        " nothing to pass)"
+                                        f"a sensor with {slot_count} slot(s) must return"
+                                        " one value per slot, got nothing"
                                     )
-                                if slot_count == 1:
-                                    slots: list[Any] = [returned]
                                 else:
-                                    if not isinstance(returned, (list, tuple)):
-                                        raise ReturnShapeError(
-                                            f"a sensor with {slot_count} parameters"
-                                            f" must return a list of {slot_count}"
-                                            f" values, got {type(returned).__name__}"
+                                    if slot_count == 1:
+                                        slots: list[Any] = [returned]
+                                    else:
+                                        if not isinstance(returned, (list, tuple)):
+                                            raise ReturnShapeError(
+                                                f"a sensor with {slot_count} parameters"
+                                                f" must return a list of {slot_count}"
+                                                f" values, got {type(returned).__name__}"
+                                            )
+                                        if len(returned) != slot_count:
+                                            raise ReturnShapeError(
+                                                f"sensor return must have {slot_count}"
+                                                f" element(s), got {len(returned)}"
+                                            )
+                                        slots = list(returned)
+                                    # Inline parameter comparison.
+                                    inline_returned = slots[: len(step.args)]
+                                    source_texts = [
+                                        utf16_slice(
+                                            plan.var_doc.source,
+                                            s.start_offset,
+                                            s.end_offset,
                                         )
-                                    if len(returned) != slot_count:
-                                        raise ReturnShapeError(
-                                            f"sensor return must have {slot_count}"
-                                            f" element(s), got {len(returned)}"
-                                        )
-                                    slots = list(returned)
-                                # Inline parameter comparison.
-                                inline_returned = slots[: len(step.args)]
-                                source_texts = [
-                                    utf16_slice(
-                                        plan.var_doc.source,
-                                        s.start_offset,
-                                        s.end_offset,
-                                    )
-                                    for s in step.param_spans
-                                ]
-                                param_diffs = [
-                                    d
-                                    for d in compare_params(
-                                        inline_returned,
-                                        list(step.args),
-                                        list(step.param_spans),
-                                        source_texts,
-                                        list(step.formats),
-                                    )
-                                    if not d.ok
-                                ]
-                                if param_diffs:
-                                    raise CellMismatchError(param_diffs)
-                                # Trailing table / doc string occupies the last slot.
-                                if step.data_table is not None:
-                                    bad = [
+                                        for s in step.param_spans
+                                    ]
+                                    param_diffs = [
                                         d
-                                        for d in compare_table(
-                                            slots[len(step.args)], step.data_table
+                                        for d in compare_params(
+                                            inline_returned,
+                                            list(step.args),
+                                            list(step.param_spans),
+                                            source_texts,
+                                            list(step.formats),
                                         )
                                         if not d.ok
                                     ]
-                                    if bad:
-                                        raise CellMismatchError(bad)
-                                elif step.doc_string is not None:
-                                    diff = compare_doc_string(
-                                        slots[len(step.args)],
-                                        step.doc_string.content,
-                                        step.doc_string.span,
-                                    )
-                                    if diff is not None:
-                                        raise DocStringMismatchError(diff)
+                                    if param_diffs:
+                                        raise CellMismatchError(param_diffs)
+                                    # Trailing table / doc string occupies the last slot.
+                                    if step.data_table is not None:
+                                        bad = [
+                                            d
+                                            for d in compare_table(
+                                                slots[len(step.args)], step.data_table
+                                            )
+                                            if not d.ok
+                                        ]
+                                        if bad:
+                                            raise CellMismatchError(bad)
+                                    elif step.doc_string is not None:
+                                        diff = compare_doc_string(
+                                            slots[len(step.args)],
+                                            step.doc_string.content,
+                                            step.doc_string.span,
+                                        )
+                                        if diff is not None:
+                                            raise DocStringMismatchError(diff)
 
                         else:
                             raise ReturnShapeError(f"unknown step kind: {kind}")
@@ -314,10 +326,24 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
 
                 # Header-bound row checks (run after all steps complete).
                 if thrown is None and ex.row_checks:
+                    # Like a slotted sensor, a header-bound row step must answer the
+                    # row it is bound to: no return means nothing was compared.
+                    row_error = (
+                        ReturnShapeError(
+                            "a header-bound row step must return a row object with"
+                            " one value per bound column, got nothing"
+                        )
+                        if last_return is None
+                        else None
+                    )
                     bad = [d for d in compare_row(last_return, ex.row_checks) if not d.ok]
-                    if bad:
+                    if row_error is not None or bad:
                         last_step: PlannedStep = ex.steps[-1]
-                        augmented = _augment_stack(CellMismatchError(bad), last_step, var_path)
+                        augmented = _augment_stack(
+                            row_error if row_error is not None else CellMismatchError(bad),
+                            last_step,
+                            var_path,
+                        )
                         if ports.observer is not None:
                             ports.observer.step(
                                 StepObservation(

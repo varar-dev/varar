@@ -21,7 +21,7 @@
             "stepFile": "airports.steps"
           },
           "exampleName": "I fly to LHR. The destination code is lhr",
-          "matchedExpression": "The destination code is {word}",
+          "matchedExpression": "The destination code is {word}.",
           "ordinal": 2,
           "outcome": "pass",
           "stepText": "The destination code is lhr."

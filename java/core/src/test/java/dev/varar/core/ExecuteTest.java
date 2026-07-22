@@ -214,6 +214,32 @@ class ExecuteTest {
                 () -> Execute.collectExamples(p, silentPorts()).get(0).run().run());
     }
 
+    @Test
+    void aSlottedSensorReturningNullThrowsReturnShapeException() {
+        // The silent-pass hole: nothing is compared, yet the document keeps claiming
+        // something nobody checked.
+        Registry r = reg("the name is {string}", "s.ts", 1, (Fn1) (state, name) -> null, StepKind.SENSOR);
+        Plan.ExecutionPlan p = planOf("# X\n\nthe name is \"Ada\"", r);
+        CellDiff.ReturnShapeException e = assertThrows(
+                CellDiff.ReturnShapeException.class,
+                () -> Execute.collectExamples(p, silentPorts()).get(0).run().run());
+        assertEquals("a sensor with 1 slot(s) must return one value per slot, got nothing", e.getMessage());
+    }
+
+    @Test
+    void aHeaderBoundRowStepReturningNullThrowsReturnShapeException() {
+        Registry r = reg("I report the score and grade", "s.ts", 1, (Fn1) (state, row) -> null, StepKind.SENSOR);
+        String source = "# X\n\nI report the score and grade.\n\n"
+                + "| score | grade |\n| ----- | ----- |\n| 10    | A     |\n";
+        Plan.ExecutionPlan p = planOf(source, r);
+        CellDiff.ReturnShapeException e = assertThrows(
+                CellDiff.ReturnShapeException.class,
+                () -> Execute.collectExamples(p, silentPorts()).get(0).run().run());
+        assertEquals(
+                "a header-bound row step must return a row object with one value per bound column, got nothing",
+                e.getMessage());
+    }
+
     // -----------------------------------------------------------------------------------------
     // createContext: once per (example, file), reused across steps in the same file
     // -----------------------------------------------------------------------------------------

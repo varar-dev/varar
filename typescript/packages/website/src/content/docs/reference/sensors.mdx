@@ -142,6 +142,9 @@ The return value maps onto the slots by count:
 | 1     | the slot's value, bare                        | `(state) => state.total`         |
 | 2+    | an array/list, one element per slot, in order | `(state) => [state.n, state.s]`  |
 
+With **one or more slots the return is required**. Returning nothing is a
+`ReturnShapeError`, not a pass — see [Returning nothing](#returning-nothing).
+
 ### Zero slots — nothing to compare
 
 A sensor with no parameters, no table and no doc string has nothing to compare
@@ -640,9 +643,28 @@ sensor shape that bypasses the slot contract.
 ## Returning nothing
 
 Returning `undefined` (TypeScript), `None` (Python), `null` (Java, Kotlin) or
-`nil` (Ruby) always means "no assertion" — the step passes unless it throws. Use this when
-the sensor asserts by throwing (plain `throw`, or your test framework's own
-assertions), which is always allowed regardless of slot count.
+`nil` (Ruby) is allowed **only for a zero-slot sensor**, where there is nothing
+to compare against: throw to fail, return nothing to pass.
+
+A sensor **with** slots must answer them. Returning nothing raises a
+`ReturnShapeError`:
+
+```
+a sensor with 1 slot(s) must return one value per slot, got nothing
+```
+
+That closes a silent-coverage hole. The document makes a claim, so something has
+to check it — and a mistake as small as a typo'd property access returns
+`undefined`, which would otherwise skip the comparison and leave the example
+green while verifying nothing. The same applies to a
+[header-bound row step](#header-bound-rows): it must return its row object.
+
+Throwing is always allowed, at any slot count — a plain `throw` or your test
+framework's own assertions fail the step just as a mismatching return does. What
+is no longer allowed is answering *nothing at all* when the document asked a
+question. If a capture is awkward to echo back (a greedy `{word}` swallowing a
+trailing period, say), match the punctuation in the expression itself —
+`The result is {word}.` — so the slot holds just the value you want to compare.
 
 ## Errors
 
@@ -650,7 +672,7 @@ assertions), which is always allowed regardless of slot count.
 | ------------------------ | ------------------------------------------------------------------------------- |
 | `CellMismatchError`      | a parameter or table cell differs; carries one span-anchored diff per cell      |
 | `DocStringMismatchError` | the returned text differs from the doc string                                   |
-| `ReturnShapeError`       | the return doesn't fit the slots: a value from a zero-slot sensor, a non-array or wrong-length array for 2+ slots, or a malformed table |
+| `ReturnShapeError`       | the return doesn't fit the slots: a value from a zero-slot sensor, **nothing from a sensor with slots** (or from a header-bound row step), a non-array or wrong-length array for 2+ slots, or a malformed table |
 
 Because every diff is anchored to a source span, editors highlight exactly the
 failing characters in the Markdown and show the actual value in place.

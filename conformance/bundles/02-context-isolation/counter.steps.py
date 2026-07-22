@@ -8,7 +8,8 @@ def _(state):
     return {"count": state["count"] + 1}
 
 
+# One slot ({int}): return the observed count and let the core compare it
+# against the number in the document.
 @sensor("The count is {int}")
 def _(state, n):
-    if state["count"] != n:
-        raise AssertionError(f"expected {n} but got {state['count']}")
+    return state["count"]

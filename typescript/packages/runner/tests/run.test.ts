@@ -23,7 +23,8 @@ function makeRegistry() {
     expressionSourceFile: 'steps.ts',
     expressionSourceLine: 3,
     kind: 'sensor',
-    handler: () => {},
+    // One slot, so the sensor must answer it; echoing the capture passes.
+    handler: (_ctx, n) => n,
   })
   return r
 }

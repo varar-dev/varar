@@ -26,16 +26,7 @@ public final class AirportsSteps implements StepDefinitions<AirportsSteps.Ctx> {
 
         s.stimulus("I fly to {airport}", (Ctx ctx, String dest) -> new Ctx(dest));
 
-        s.sensor(
-                "The destination code is {word}",
-                (Ctx ctx, String expected) -> {
-                    // {word} greedily captures the sentence-ending period (same
-                    // cleanup as bundle 01) — strip it before comparing.
-                    String cleaned = expected.replaceAll("[.!?]$", "");
-                    if (!cleaned.equals(ctx.dest())) {
-                        throw new AssertionError("expected " + cleaned + " but got " + ctx.dest());
-                    }
-                    return null;
-                });
+        // The trailing "." is matched literally, so {word} captures just the code.
+        s.sensor("The destination code is {word}.", (Ctx ctx, String expected) -> ctx.dest());
     }
 }

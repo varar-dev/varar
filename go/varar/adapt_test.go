@@ -234,3 +234,39 @@ func TestFieldlessStructRejectedAtRegistration(t *testing.T) {
 		adapt[Value](func(state Value, o opaque) (Value, error) { return state, nil }, core.Stimulus, "expr")
 	})
 }
+
+// A sensor with slots must answer them. Returning nothing used to skip the
+// comparison silently, so a typo turned an assertion into a no-op.
+func TestSlottedSensorReturningNothingFailsTheStep(t *testing.T) {
+	s := NewSteps[Value]()
+	s.Sensor("the name is {string}", func(state Value, args []Value) (*Value, error) {
+		return nil, nil
+	})
+	plan := core.Plan(core.Parse("t.md", `the name is "Ada".`), s.Registry())
+	failure := core.ExecutePlan(plan, core.ExecutePorts{})
+	if failure == nil {
+		t.Fatal("expected the step to fail with a missing return")
+	}
+	want := "a sensor with 1 slot(s) must return one value per slot, got nothing"
+	if msg := failure.Error.Message(); msg != want {
+		t.Errorf("message %q should be %q", msg, want)
+	}
+}
+
+func TestHeaderBoundRowReturningNothingFailsTheStep(t *testing.T) {
+	s := NewSteps[Value]()
+	s.Sensor("I report the score and grade", func(state Value, args []Value) (*Value, error) {
+		return nil, nil
+	})
+	source := "I report the score and grade.\n\n" +
+		"| score | grade |\n| ----- | ----- |\n| 10    | A     |\n"
+	plan := core.Plan(core.Parse("t.md", source), s.Registry())
+	failure := core.ExecutePlan(plan, core.ExecutePorts{})
+	if failure == nil {
+		t.Fatal("expected the row step to fail with a missing return")
+	}
+	want := "a header-bound row step must return a row object with one value per bound column, got nothing"
+	if msg := failure.Error.Message(); msg != want {
+		t.Errorf("message %q should be %q", msg, want)
+	}
+}
