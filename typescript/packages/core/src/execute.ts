@@ -151,7 +151,7 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
                   } else {
                     if (!Array.isArray(returned)) {
                       throw new ReturnShapeError(
-                        `a sensor with ${slotCount} parameters must return an array of ${slotCount} values, got ${typeof returned}`,
+                        `a sensor with ${slotCount} slots must return an array of ${slotCount} values, got ${typeof returned}`,
                       )
                     }
                     if (returned.length !== slotCount) {
@@ -221,7 +221,7 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
           const rowError =
             lastReturn === undefined
               ? new ReturnShapeError(
-                  'a header-bound row step must return a row object with one value per bound column, got nothing',
+                  'a header-bound row step must return a row object with one value per bound cell, got nothing',
                 )
               : undefined
           const bad = compareRow(lastReturn, ex.rowChecks).filter((d) => !d.ok)

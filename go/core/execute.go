@@ -159,7 +159,7 @@ func runExample(plan ExecutionPlan, ex PlannedExample, exampleIndex int, ports E
 			lastStep := steps[len(steps)-1]
 			err := cellMismatchError(bad)
 			if lastReturn == nil {
-				err = returnShapeError("a header-bound row step must return a row object with one value per bound column, got nothing")
+				err = returnShapeError("a header-bound row step must return a row object with one value per bound cell, got nothing")
 			}
 			failure := attachLocation(err, lastStep, path)
 			observe(ports, StepObservation{ExampleIndex: exampleIndex, Ordinal: len(steps), Outcome: OutcomeFail, Error: &failure})
@@ -280,7 +280,7 @@ func checkSensorReturn(source string, step PlannedStep, returned *Value) *StepEr
 		slots = []Value{*returned}
 	} else {
 		if returned.Kind != KindList {
-			e := returnShapeError(fmt.Sprintf("a sensor with %d parameters must return a List of %d values, got %s", slotCount, slotCount, returned.TypeName()))
+			e := returnShapeError(fmt.Sprintf("a sensor with %d slots must return a List of %d values, got %s", slotCount, slotCount, returned.TypeName()))
 			return &e
 		}
 		if len(returned.List) != slotCount {

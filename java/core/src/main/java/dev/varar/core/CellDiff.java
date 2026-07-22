@@ -7,10 +7,12 @@ import java.util.Map;
 /**
  * Table row/cell comparison — port of {@code var-core/src/cell-diff.ts}.
  *
- * <p>{@code CellDiff} itself is the verdict for one checked column after comparing a step's
- * returned value against the authored Markdown cells: {@link #compareRow} produces these for a
- * header-bound row (only the columns the step actually returns are checked), {@link
- * #compareTable} for a whole reproduced table (every column of every data row is checked).
+ * <p>{@code CellDiff} itself is the verdict for one comparison of one CELL — the atomic value a
+ * sensor checks against the document. A cell is a table cell, a header-bound row's cell, or a
+ * value captured from a paragraph by an expression parameter; all three land here. {@link
+ * #compareRow} produces these for a header-bound row (only the cells the step actually returns
+ * are checked), {@link #compareTable} for a whole reproduced table (every cell of every data row
+ * is checked), and {@code ParamDiff} for inline captures.
  *
  * <p>A step's returned value has no static shape in this hexagonal core (it crosses from
  * user-authored step handlers), so {@code returned} is {@code Object} here and is narrowed via
@@ -80,7 +82,8 @@ public record CellDiff(
     }
 
     /**
-     * Thrown by the executor when a header-bound row's returned columns don't all match. Carries
+     * Thrown by the executor when one or more compared cells differ — an inline capture, a table
+     * cell, or a header-bound row's cell. Carries
      * the mismatched cells so adapters render/record them.
      */
     public static final class CellMismatchException extends RuntimeException {

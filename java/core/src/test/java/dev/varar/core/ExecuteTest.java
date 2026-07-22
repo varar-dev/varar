@@ -236,7 +236,7 @@ class ExecuteTest {
                 CellDiff.ReturnShapeException.class,
                 () -> Execute.collectExamples(p, silentPorts()).get(0).run().run());
         assertEquals(
-                "a header-bound row step must return a row object with one value per bound column, got nothing",
+                "a header-bound row step must return a row object with one value per bound cell, got nothing",
                 e.getMessage());
     }
 

@@ -240,7 +240,7 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
                                     else:
                                         if not isinstance(returned, (list, tuple)):
                                             raise ReturnShapeError(
-                                                f"a sensor with {slot_count} parameters"
+                                                f"a sensor with {slot_count} slots"
                                                 f" must return a list of {slot_count}"
                                                 f" values, got {type(returned).__name__}"
                                             )
@@ -331,7 +331,7 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
                     row_error = (
                         ReturnShapeError(
                             "a header-bound row step must return a row object with"
-                            " one value per bound column, got nothing"
+                            " one value per bound cell, got nothing"
                         )
                         if last_return is None
                         else None

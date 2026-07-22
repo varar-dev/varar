@@ -100,7 +100,7 @@ public static class Execute
             // Like a slotted sensor, a header-bound row step must answer the row it is bound to:
             // no return means nothing was compared.
             Exception? rowError = lastReturn is null
-                ? new ReturnShapeError("a header-bound row step must return a row object with one value per bound column, got nothing")
+                ? new ReturnShapeError("a header-bound row step must return a row object with one value per bound cell, got nothing")
                 : null;
             if (rowError is not null || bad.Length > 0)
             {
@@ -172,7 +172,7 @@ public static class Execute
         else
         {
             throw new ReturnShapeError(
-                $"a sensor with {slotCount} parameters must return a List of {slotCount} values, got {returned.TypeName}");
+                $"a sensor with {slotCount} slots must return a List of {slotCount} values, got {returned.TypeName}");
         }
 
         int argCount = step.Args.Length;

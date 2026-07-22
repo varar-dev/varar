@@ -1102,7 +1102,7 @@ def test_header_bound_row_returning_none_raises_return_shape_error() -> None:
     assert isinstance(caught[0], ReturnShapeError)
     assert str(caught[0]) == (
         "a header-bound row step must return a row object with one value per"
-        " bound column, got nothing"
+        " bound cell, got nothing"
     )
 
 

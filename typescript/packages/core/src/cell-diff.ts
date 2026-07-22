@@ -8,7 +8,11 @@ export type RowCheck = {
   readonly span: Span // the cell text's source range in the .md
 }
 
-// The verdict for one checked column after comparing against the table.
+// The verdict for one comparison of one CELL — the atomic value a sensor
+// checks against the document. A cell is a table cell, a header-bound row's
+// cell, or a value captured from a paragraph by an expression parameter; all
+// three land here. `column` labels the cell (a header cell's text, or `arg N`
+// for an inline capture).
 export type CellDiff = {
   readonly column: string
   readonly span: Span
@@ -66,8 +70,9 @@ export function compareRow(
   return diffs
 }
 
-// Thrown by the executor when a header-bound row's returned columns don't all
-// match. Carries the mismatched cells so adapters render/record them.
+// Thrown by the executor when one or more compared CELLS differ — an inline
+// capture, a table cell, or a header-bound row's cell. Carries the mismatched
+// cells so adapters render/record them.
 export class CellMismatchError extends Error {
   readonly cells: ReadonlyArray<CellDiff>
   constructor(cells: ReadonlyArray<CellDiff>) {

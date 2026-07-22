@@ -297,6 +297,6 @@ test('a header-bound row step that returns nothing throws ReturnShapeError', asy
   const err = getErr() as Error
   expect(err?.name).toBe('ReturnShapeError')
   expect(err.message).toBe(
-    'a header-bound row step must return a row object with one value per bound column, got nothing',
+    'a header-bound row step must return a row object with one value per bound cell, got nothing',
   )
 })

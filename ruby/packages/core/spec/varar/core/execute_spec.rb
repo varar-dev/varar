@@ -106,7 +106,7 @@ module Varar
 
         expect(caught).to be_a(ReturnShapeError)
         expect(caught.message).to eq(
-          'a header-bound row step must return a row object with one value per bound column, got nothing'
+          'a header-bound row step must return a row object with one value per bound cell, got nothing'
         )
       end
     end

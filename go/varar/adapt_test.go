@@ -265,7 +265,7 @@ func TestHeaderBoundRowReturningNothingFailsTheStep(t *testing.T) {
 	if failure == nil {
 		t.Fatal("expected the row step to fail with a missing return")
 	}
-	want := "a header-bound row step must return a row object with one value per bound column, got nothing"
+	want := "a header-bound row step must return a row object with one value per bound cell, got nothing"
 	if msg := failure.Error.Message(); msg != want {
 		t.Errorf("message %q should be %q", msg, want)
 	}

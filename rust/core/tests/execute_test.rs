@@ -313,7 +313,7 @@ fn a_header_bound_row_returning_nothing_throws_return_shape() {
         StepError::ReturnShape(m) => {
             assert_eq!(
                 m,
-                "a header-bound row step must return a row object with one value per bound column, got nothing"
+                "a header-bound row step must return a row object with one value per bound cell, got nothing"
             );
         }
         other => panic!("expected ReturnShape, got {other:?}"),

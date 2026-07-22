@@ -5,7 +5,11 @@ module Varar
     # One checked column of one header-bound row: the cell text and its span.
     RowCheck = Data.define(:column, :value, :span)
 
-    # The verdict for one checked column after comparing against the table.
+    # The verdict for one comparison of one CELL — the atomic value a sensor
+    # checks against the document. A cell is a table cell, a header-bound row's
+    # cell, or a value captured from a paragraph by an expression parameter; all
+    # three land here. `column` labels the cell (a header cell's text, or `arg N`
+    # for an inline capture).
     # expected_value/actual_value/formatted are adapter-facing, never serialized.
     CellDiff = Data.define(:column, :span, :expected, :actual, :ok,
                            :expected_value, :actual_value, :formatted) do
@@ -18,7 +22,8 @@ module Varar
     # The step returned the wrong type/shape — an author mistake, not a value diff.
     class ReturnShapeError < StandardError; end
 
-    # Raised when a header-bound row's / a table's returned columns don't match.
+    # Raised when one or more compared CELLS differ — an inline capture, a table
+    # cell, or a header-bound row's cell.
     class CellMismatchError < StandardError
       attr_reader :cells
 
