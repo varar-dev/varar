@@ -40,14 +40,9 @@ public final class LibrarySteps implements StepDefinitions<LibrarySteps.Ctx> {
                 Pattern.compile("£(?=.*\\d.*)[-+]?\\d*(?:\\.(?=\\d.*))?\\d*|\\d+p"),
                 groups -> toMoney(groups[0]),
                 LibrarySteps::formatMoney);
-        s.param(
-                "title",
-                Pattern.compile("\\*[^*]+\\*"),
-                groups -> groups[0].substring(1, groups[0].length() - 1),
-                title -> "*" + title + "*");
 
         s.stimulus(
-                "borrowed {title}, due back on {date}",
+                "borrowed {emph}, due back on {date}",
                 (Ctx ctx, String title, LocalDate due) -> new Ctx(
                         Stream.concat(ctx.loans().stream(), Stream.of(new Library.Loan(title, due)))
                                 .toList(),
@@ -68,7 +63,7 @@ public final class LibrarySteps implements StepDefinitions<LibrarySteps.Ctx> {
         s.sensor("{money} for each day overdue", (Ctx ctx, Library.Money expected) -> Library.FEE_PER_DAY);
 
         s.stimulus(
-                "asks to borrow {title} on {date}",
+                "asks to borrow {emph} on {date}",
                 (Ctx ctx, String title, LocalDate on) ->
                         new Ctx(ctx.loans(), ctx.fee(), Library.mayBorrow(ctx.loans(), on)));
 

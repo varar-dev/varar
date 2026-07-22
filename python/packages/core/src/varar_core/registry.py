@@ -41,9 +41,36 @@ class Registry:
     formats: Mapping[str, ParameterFormat] = field(default_factory=dict)
 
 
+# Markdown emphasis, as a built-in {emph} parameter type. Matches the uniform
+# emphasis notations (bold-italic, bold, italic; ``*`` and ``_`` delimiters),
+# ordered longest-delimiter-first so ``**x**`` isn't half-eaten by the ``*``
+# branch. Each branch captures the inner text in its own group, so only the
+# outermost delimiter pair is stripped (``**_x_**`` -> ``_x_``) and editors
+# highlight the value, not the markers.
+EMPH_REGEXP = r"\*\*\*([^*]+)\*\*\*|___([^_]+)___|\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*|_([^_]+)_"
+
+
+def _seed_builtins(registry: Registry) -> Registry:
+    """Seed var's own built-in parameter types (beyond cucumber-expressions'
+    int/float/string/word). Shared by every port so specs match identically.
+    """
+    return define_parameter_type(
+        registry,
+        name="emph",
+        regexp=EMPH_REGEXP,
+        # Exactly one alternation branch matches, so exactly one group is set.
+        parse=lambda *groups: next((g for g in groups if g is not None), ""),
+        # Emphasis is distinctive notation; don't auto-suggest it in snippets.
+        use_for_snippets=False,
+        # Mismatch display renders the value back in single-asterisk emphasis.
+        format=lambda value: f"*{value}*",
+    )
+
+
 def create_registry() -> Registry:
-    """Return an empty registry with a fresh default ParameterTypeRegistry."""
-    return Registry(steps=(), parameter_types=ParameterTypeRegistry(), formats={})
+    """Return a registry seeded with var's built-in parameter types."""
+    empty = Registry(steps=(), parameter_types=ParameterTypeRegistry(), formats={})
+    return _seed_builtins(empty)
 
 
 def add_step(

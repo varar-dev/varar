@@ -63,7 +63,9 @@ public sealed record Registry(
         ImmutableArray<StepRegistration>.Empty,
         ParameterTypeRegistry.CreateDefault(),
         ImmutableArray<CustomParameterType>.Empty,
-        ImmutableDictionary<string, ParameterFormat>.Empty,
+        // The built-in {emph} renders a mismatch back in single-asterisk emphasis.
+        ImmutableDictionary<string, ParameterFormat>.Empty.SetItem(
+            "emph", v => v is VString s ? "*" + s.Str + "*" : v.ToString()!),
         ImmutableDictionary<string, ContextFactory>.Empty);
 
     /// <summary>Records the initial-state factory for one step file (keyed by its caller path).</summary>

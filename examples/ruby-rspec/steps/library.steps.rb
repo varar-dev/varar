@@ -13,9 +13,8 @@ format_money = ->(m) { m.value < 1 ? "#{(m.value * 100).round}p" : format('£%.2
 steps(-> { { loans: [], fee: Library.gbp(0), granted: false } }) do
   param('date', '[A-Z][a-z]+ \d{1,2}, \d{4}', parse: to_date, format: format_date)
   param('money', '£(?=.*\d.*)[-+]?\d*(?:\.(?=\d.*))?\d*|\d+p', parse: to_money, format: format_money)
-  param('title', '\*[^*]+\*', parse: ->(raw) { raw[1...-1] }, format: ->(t) { "*#{t}*" })
 
-  stimulus('borrowed {title}, due back on {date}') do |state, title, due|
+  stimulus('borrowed {emph}, due back on {date}') do |state, title, due|
     state.merge(loans: state[:loans] + [{ title: title, due: due }])
   end
 
@@ -30,7 +29,7 @@ steps(-> { { loans: [], fee: Library.gbp(0), granted: false } }) do
 
   sensor('{money} for each day overdue') { |_state, _expected| Library::FEE_PER_DAY }
 
-  stimulus('asks to borrow {title} on {date}') do |state, _title, on|
+  stimulus('asks to borrow {emph} on {date}') do |state, _title, on|
     state.merge(granted: Library.may_borrow(state[:loans], on))
   end
 

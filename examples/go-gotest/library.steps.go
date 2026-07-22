@@ -41,11 +41,7 @@ func registerLibrary(s *varar.Steps[Ctx]) {
 			return fmt.Sprintf("£%.2f", m.Value), true
 		})
 
-	s.Param("title", `\*[^*]+\*`,
-		func(g []string) string { return strings.TrimSuffix(strings.TrimPrefix(g[0], "*"), "*") },
-		func(t string) (string, bool) { return "*" + t + "*", true })
-
-	s.Stimulus("borrowed {title}, due back on {date}", func(ctx Ctx, title string, due time.Time) (Ctx, error) {
+	s.Stimulus("borrowed {emph}, due back on {date}", func(ctx Ctx, title string, due time.Time) (Ctx, error) {
 		ctx.Loans = append(append([]Loan{}, ctx.Loans...), Loan{Title: title, Due: due})
 		return ctx, nil
 	})
@@ -71,7 +67,7 @@ func registerLibrary(s *varar.Steps[Ctx]) {
 		return FeePerDay, nil
 	})
 
-	s.Stimulus("asks to borrow {title} on {date}", func(ctx Ctx, title string, on time.Time) (Ctx, error) {
+	s.Stimulus("asks to borrow {emph} on {date}", func(ctx Ctx, title string, on time.Time) (Ctx, error) {
 		ctx.Granted = MayBorrow(ctx.Loans, on)
 		return ctx, nil
 	})

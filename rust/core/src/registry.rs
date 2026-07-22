@@ -55,13 +55,24 @@ pub struct Registry {
     pub formats: HashMap<String, FormatFn>,
 }
 
-/// An empty registry with a fresh default parameter-type registry.
+/// An empty registry with a fresh default parameter-type registry. Seeds the
+/// display format for the built-in `{emph}` type (its parameter type itself
+/// lives in [`ParameterTypeRegistry::new`]); a mismatch renders the value back
+/// in single-asterisk emphasis. Byte-identical to the TS port's `seedBuiltins`.
 pub fn create_registry() -> Registry {
+    let mut formats: HashMap<String, FormatFn> = HashMap::new();
+    formats.insert(
+        "emph".to_string(),
+        Rc::new(|v: &Value| match v {
+            Value::String(s) => Some(format!("*{s}*")),
+            _ => None,
+        }),
+    );
     Registry {
         steps: Vec::new(),
         parameter_types: ParameterTypeRegistry::new(),
         custom_parameter_types: Vec::new(),
-        formats: HashMap::new(),
+        formats,
     }
 }
 

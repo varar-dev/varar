@@ -129,4 +129,22 @@ class MatcherTest {
         assertEquals("\"tea\"", sentence.substring(span.start(), span.end()));
         assertEquals(List.of("tea"), hit.args());
     }
+
+    @Test
+    void builtinEmphMatchesItalicEmphasisAndStripsTheDelimiters() {
+        Registry r = Registry.addStep(Registry.createRegistry(), "I mention {emph}", "s.ts", 1, NOOP_HANDLER, null);
+        List<Matcher.Hit> hits = Matcher.findHits("I mention *Emma*.", r);
+        assertEquals(1, hits.size());
+        assertEquals("I mention {emph}", hits.get(0).expression());
+        // The built-in {emph} strips the outermost delimiter pair, passing the inner text.
+        assertEquals(List.of("Emma"), hits.get(0).args());
+    }
+
+    @Test
+    void builtinEmphMatchesBoldEmphasisAndStripsTheDelimiters() {
+        Registry r = Registry.addStep(Registry.createRegistry(), "I mention {emph}", "s.ts", 1, NOOP_HANDLER, null);
+        List<Matcher.Hit> hits = Matcher.findHits("I mention **Emma**.", r);
+        assertEquals(1, hits.size());
+        assertEquals(List.of("Emma"), hits.get(0).args());
+    }
 }

@@ -17,7 +17,21 @@ public class RegistryTests
         Assert.Empty(r.Steps);
         Assert.NotNull(r.ParameterTypes.LookupByTypeName("int"));
         Assert.NotNull(r.ParameterTypes.LookupByTypeName("string"));
+        // var's own built-in Markdown emphasis type.
+        Assert.NotNull(r.ParameterTypes.LookupByTypeName("emph"));
         Assert.Null(r.ParameterTypes.LookupByTypeName("airport"));
+    }
+
+    [Fact]
+    public void EmphIsABuiltInAndCompilingItSucceeds()
+    {
+        // {emph} needs no declaration — it is seeded into every registry.
+        var ex = Record.Exception(() =>
+            Registry.AddStep(Registry.Create(), new StepInput("I mention {emph}", "steps.cs", 1, NoOp)));
+        Assert.Null(ex);
+        // Built-ins are not recorded as custom parameter types (so they never
+        // leak into the conformance registry goldens).
+        Assert.Empty(Registry.Create().CustomParameterTypes);
     }
 
     [Fact]

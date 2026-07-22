@@ -40,15 +40,7 @@ val librarySteps =
         ) { groups ->
             toMoney(groups[0])
         }
-        param(
-            "title",
-            Regex("""\*[^*]+\*"""),
-            format = { "*$it*" },
-        ) { groups ->
-            groups[0].removeSurrounding("*")
-        }
-
-        stimulus("borrowed {title}, due back on {date}") { title: String, due: LocalDate ->
+        stimulus("borrowed {emph}, due back on {date}") { title: String, due: LocalDate ->
             copy(loans = loans + Loan(title, due))
         }
         stimulus("returns it on {date}") { returnedOn: LocalDate ->
@@ -58,7 +50,7 @@ val librarySteps =
         }
         sensor("owes a {money} late fee") { _: Money -> fee }
         sensor("{money} for each day overdue") { _: Money -> FEE_PER_DAY }
-        stimulus("asks to borrow {title} on {date}") { _: String, on: LocalDate ->
+        stimulus("asks to borrow {emph} on {date}") { _: String, on: LocalDate ->
             copy(granted = mayBorrow(loans, on))
         }
         sensor("the library refuses") {

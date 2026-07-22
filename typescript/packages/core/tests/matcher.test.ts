@@ -129,9 +129,9 @@ test('paramInnerSpans falls back to the whole match for group-less {int}', () =>
 
 test('a custom parameter type with a capture group highlights only the inner content', () => {
   let r = createRegistry()
-  r = defineParameterType(r, { name: 'emph', regexp: /\*([^*]+)\*/ })
+  r = defineParameterType(r, { name: 'title', regexp: /\*([^*]+)\*/ })
   r = addStep(r, {
-    expression: 'borrowed {emph}',
+    expression: 'borrowed {title}',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
     handler: () => {},
@@ -150,24 +150,24 @@ test('a custom parameter type with a capture group highlights only the inner con
 test('a custom parameter type with no capture group highlights the whole match', () => {
   let r = createRegistry()
   r = defineParameterType(r, {
-    name: 'emph',
-    regexp: /\*[^*]+\*/,
+    name: 'title',
+    regexp: /\+[^+]+\+/,
     parse: (raw) => raw.slice(1, -1),
   })
   r = addStep(r, {
-    expression: 'borrowed {emph}',
+    expression: 'borrowed {title}',
     expressionSourceFile: 's.ts',
     expressionSourceLine: 1,
     handler: () => {},
   })
-  const sentence = 'Maya borrowed *Emma* today'
+  const sentence = 'Maya borrowed +Emma+ today'
   const hits = findHits(sentence, r)
   const hit = hits[0]
   if (!hit) throw new Error('expected a hit')
   expect(hit.paramInnerSpans).toEqual(hit.paramSpans)
   const inner = hit.paramInnerSpans[0]
   if (!inner) throw new Error('expected a span')
-  expect(sentence.slice(inner.start, inner.end)).toBe('*Emma*')
+  expect(sentence.slice(inner.start, inner.end)).toBe('+Emma+')
 })
 
 test('resolveHits returns all non-overlapping hits left-to-right', () => {

@@ -53,18 +53,7 @@ public static class LibrarySteps
             g => MoneyValue(ParseMoney(g[0]!)),
             v => FormatMoney(ValueMoney(v)));
 
-        s.Param(
-            "title",
-            @"\*[^*]+\*",
-            g =>
-            {
-                var raw = g[0]!;
-                var inner = raw.Length >= 2 && raw[0] == '*' && raw[^1] == '*' ? raw[1..^1] : raw;
-                return Value.Of(inner);
-            },
-            v => $"*{AsStr(v)}*");
-
-        s.Stimulus("borrowed {title}, due back on {date}", (state, title, due) =>
+        s.Stimulus("borrowed {emph}, due back on {date}", (state, title, due) =>
         {
             var loans = LoansOf(state).ToList();
             loans.Add(VMap(("title", title), ("due", due)));
@@ -83,7 +72,7 @@ public static class LibrarySteps
 
         s.Sensor("{money} for each day overdue", (state, _) => MoneyValue(FeePerDay));
 
-        s.Stimulus("asks to borrow {title} on {date}", (state, title, on) =>
+        s.Stimulus("asks to borrow {emph} on {date}", (state, title, on) =>
         {
             var onDate = ValueDate(on);
             var loans = LoansOf(state).Select(ValueLoan);

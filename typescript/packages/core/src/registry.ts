@@ -31,8 +31,37 @@ export type Registry = {
   readonly formats: ReadonlyMap<string, ParameterFormat>
 }
 
+// Markdown emphasis, as a built-in {emph} parameter type. Matches the uniform
+// emphasis notations (bold-italic, bold, italic; `*` and `_` delimiters),
+// ordered longest-delimiter-first so `**x**` isn't half-eaten by the `*`
+// branch. Each branch captures the inner text in its own group, so only the
+// outermost delimiter pair is stripped (`**_x_**` → `_x_`) and editors
+// highlight the value, not the markers.
+export const EMPH_REGEXP =
+  /\*\*\*([^*]+)\*\*\*|___([^_]+)___|\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*|_([^_]+)_/
+
+// Seed var's own built-in parameter types (beyond cucumber-expressions'
+// int/float/string/word). Shared by every port so specs match identically.
+function seedBuiltins(registry: Registry): Registry {
+  return defineParameterType(registry, {
+    name: 'emph',
+    regexp: EMPH_REGEXP,
+    // Exactly one alternation branch matches, so exactly one group is defined.
+    parse: (...groups: ReadonlyArray<string | undefined>) =>
+      groups.find((g) => g !== undefined) ?? '',
+    // Emphasis is distinctive notation; don't auto-suggest it in snippets.
+    useForSnippets: false,
+    // Mismatch display renders the value back in single-asterisk emphasis.
+    format: (value) => `*${String(value)}*`,
+  })
+}
+
 export function createRegistry(): Registry {
-  return { steps: [], parameterTypes: new ParameterTypeRegistry(), formats: new Map() }
+  return seedBuiltins({
+    steps: [],
+    parameterTypes: new ParameterTypeRegistry(),
+    formats: new Map(),
+  })
 }
 
 export type StepInput = Omit<StepRegistration, 'compiled'>

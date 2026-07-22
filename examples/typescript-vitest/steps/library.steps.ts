@@ -27,14 +27,8 @@ const { stimulus, sensor } = steps(() => ({
       raw.endsWith('p') ? GBP(Number.parseFloat(raw) / 100) : GBP(Number.parseFloat(raw.slice(1))),
     (m) => (m.value < 1 ? `${Math.round(m.value * 100)}p` : `£${m.value.toFixed(2)}`),
   )
-  .param(
-    'title',
-    /\*[^*]+\*/,
-    (raw) => raw.slice(1, -1),
-    (t) => `*${t}*`,
-  )
 
-stimulus('borrowed {title}, due back on {date}', (state, title, due) => ({
+stimulus('borrowed {emph}, due back on {date}', (state, title, due) => ({
   ...state,
   loans: [...state.loans, { title, due }],
 }))
@@ -48,7 +42,7 @@ sensor('owes a {money} late fee', (state) => state.fee)
 
 sensor('{money} for each day overdue', () => FEE_PER_DAY)
 
-stimulus('asks to borrow {title} on {date}', (state, _title, on) => ({
+stimulus('asks to borrow {emph} on {date}', (state, _title, on) => ({
   ...state,
   granted: mayBorrow(state.loans, on),
 }))

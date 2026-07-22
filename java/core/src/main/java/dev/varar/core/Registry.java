@@ -72,9 +72,62 @@ public record Registry(
             Expression compiled,
             StepKind kind) {}
 
-    /** An empty registry with a fresh default {@link ParameterTypeRegistry}. */
+    /**
+     * var's built-in {@code {emph}} parameter type — Markdown emphasis, matching the uniform
+     * emphasis notations (bold-italic, bold, italic; {@code *} and {@code _} delimiters),
+     * ordered longest-delimiter-first so {@code **x**} isn't half-eaten by the {@code *} branch.
+     * Each of the six alternation branches captures the inner text in its own group, so only the
+     * outermost delimiter pair is stripped ({@code **_x_**} &rarr; {@code _x_}).
+     *
+     * <p>Byte-identical to the TS port's {@code EMPH_REGEXP} (mind Java's own backslash escaping —
+     * the {@code \*} of the source regexp is written {@code \\*} here). Seeded into every {@link
+     * Registry} by {@link #createRegistry()}, so it is a genuine built-in: it is <b>not</b> recorded
+     * in {@link #customParameterTypes()} and therefore never appears in a bundle's {@code
+     * golden/registry.json} {@code parameterTypes} list (which serializes only the author's explicit
+     * {@code defineParameterType} calls, exactly like the library's own {@code {string}}/{@code
+     * {int}}).
+     */
+    public static final String EMPH_REGEXP =
+            "\\*\\*\\*([^*]+)\\*\\*\\*|___([^_]+)___|\\*\\*([^*]+)\\*\\*|__([^_]+)__|\\*([^*]+)\\*|_([^_]+)_";
+
+    /** An empty registry with a fresh default {@link ParameterTypeRegistry}, plus var's built-ins. */
     public static Registry createRegistry() {
-        return new Registry(List.of(), new ParameterTypeRegistry(Locale.ENGLISH), List.of(), Map.of());
+        return seedBuiltins(new Registry(List.of(), new ParameterTypeRegistry(Locale.ENGLISH), List.of(), Map.of()));
+    }
+
+    /**
+     * Seeds var's own built-in parameter types (beyond cucumber-expressions' {@code
+     * int}/{@code float}/{@code string}/{@code word}) onto {@code registry}. Unlike {@link
+     * #defineParameterType}, the seeded types are defined on the shared {@link
+     * ParameterTypeRegistry} (and their formatters recorded in {@link #formats()}) but are
+     * deliberately <b>not</b> appended to {@link #customParameterTypes()} — they are built-ins, not
+     * author-registered custom types, so they must stay out of the {@code registry.json} artifact.
+     */
+    private static Registry seedBuiltins(Registry registry) {
+        // Exactly one of the six alternation branches matches, so exactly one capture group is
+        // non-null; return its inner text (mirrors the TS port's `groups.find(g => g !== undefined)`).
+        CaptureGroupTransformer<String> parse = groups -> {
+            for (String g : groups) {
+                if (g != null) {
+                    return g;
+                }
+            }
+            return "";
+        };
+        ParameterType<String> emph = new ParameterType<>(
+                "emph",
+                List.of(EMPH_REGEXP),
+                (Type) Object.class,
+                parse,
+                // Emphasis is distinctive notation; don't auto-suggest it in snippets.
+                /* useForSnippets= */ false,
+                /* preferForRegexpMatch= */ false,
+                /* useRegexpMatchAsStrongTypeHint= */ false);
+        registry.parameterTypes().defineParameterType(emph);
+        Map<String, Function<Object, String>> formats = new LinkedHashMap<>(registry.formats());
+        // Mismatch display renders the value back in single-asterisk emphasis.
+        formats.put("emph", value -> "*" + value + "*");
+        return new Registry(registry.steps(), registry.parameterTypes(), registry.customParameterTypes(), formats);
     }
 
     /**

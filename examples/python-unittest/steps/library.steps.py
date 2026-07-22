@@ -28,10 +28,9 @@ param(
     parse=to_money,
     format=format_money,
 )
-param("title", r"\*[^*]+\*", parse=lambda raw: raw[1:-1], format=lambda t: f"*{t}*")
 
 
-@stimulus("borrowed {title}, due back on {date}")
+@stimulus("borrowed {emph}, due back on {date}")
 def _(state, title, due):
     return {"loans": (*state["loans"], {"title": title, "due": due})}
 
@@ -54,7 +53,7 @@ def _(state, expected):
     return FEE_PER_DAY
 
 
-@stimulus("asks to borrow {title} on {date}")
+@stimulus("asks to borrow {emph} on {date}")
 def _(state, title, on):
     return {"granted": may_borrow(state["loans"], on)}
 

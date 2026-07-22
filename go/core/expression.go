@@ -45,8 +45,15 @@ const (
 	tInt transformKind = iota
 	tWord
 	tQuotedString
+	tEmph
 	tCustom
 )
+
+// EmphRegexp is the canonical {emph} pattern — byte-identical to the reference
+// port. Six alternation branches ordered longest-delimiter-first (bold-italic,
+// bold, italic; `*` and `_`), each capturing the inner text in its own group so
+// only the outermost delimiter pair is stripped (`**_x_**` → `_x_`).
+const EmphRegexp = `\*\*\*([^*]+)\*\*\*|___([^_]+)___|\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*|_([^_]+)_`
 
 // builtinKind returns the transform kind of a built-in parameter type, or
 // (tCustom, false) if name is not a built-in.
@@ -58,6 +65,8 @@ func builtinKind(name string) (transformKind, bool) {
 		return tWord, true
 	case "string":
 		return tQuotedString, true
+	case "emph":
+		return tEmph, true
 	}
 	return tCustom, false
 }
@@ -81,6 +90,16 @@ type compiledExpression struct {
 // types. Errors on an undefined parameter type or an un-compilable pattern.
 func compileExpression(source string, customTypes []CustomParameterType, customParse map[string]ParseFn) (*compiledExpression, error) {
 	libReg := ce.NewParameterTypeRegistry()
+	// Seed the built-in {emph} type: unlike {int}/{word}/{string} it is not
+	// known to the (stale) cucumber-expressions-go library, so its regexp must
+	// be registered for expressions to compile. It is deliberately kept out of
+	// the registry's CustomParameterTypes — {emph} is a built-in and must not
+	// surface in the conformance registry artifact's parameterTypes.
+	if emphRe, err := regexp.Compile(EmphRegexp); err == nil {
+		if pt, err := ce.NewParameterType("emph", []*regexp.Regexp{emphRe}, "", func(...*string) interface{} { return nil }, false, false); err == nil {
+			libReg.DefineParameterType(pt)
+		}
+	}
 	for _, ct := range customTypes {
 		re, err := regexp.Compile(ct.Regexp)
 		if err != nil {
@@ -138,6 +157,10 @@ func (c *compiledExpression) matchWhole(text string) []argument {
 			val = StrValue(*g.Value())
 		case tQuotedString:
 			val = StrValue(dequote(*g.Value()))
+		case tEmph:
+			// Exactly one alternation branch matches; the parsed value is that
+			// branch's inner-text group — the first non-empty capture.
+			val = StrValue(firstNonEmpty(groupValues(g)))
 		case tCustom:
 			groups := groupValues(g)
 			if p.custom != nil {
@@ -171,6 +194,16 @@ func groupValues(g *ce.Group) []string {
 		}
 	}
 	return out
+}
+
+// firstNonEmpty returns the first non-empty string in groups, or "".
+func firstNonEmpty(groups []string) string {
+	for _, g := range groups {
+		if g != "" {
+			return g
+		}
+	}
+	return ""
 }
 
 func parseIntValue(text string) Value {

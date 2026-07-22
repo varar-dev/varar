@@ -20,11 +20,39 @@ module Varar
     module Registries
       module_function
 
+      # Markdown emphasis, as a built-in {emph} parameter type. Matches the
+      # uniform emphasis notations (bold-italic, bold, italic; `*` and `_`
+      # delimiters), ordered longest-delimiter-first so `**x**` isn't
+      # half-eaten by the `*` branch. Each branch captures the inner text in
+      # its own group, so only the outermost delimiter pair is stripped
+      # (`**_x_**` -> `_x_`). Byte-identical to the TS port's EMPH_REGEXP.
+      EMPH_REGEXP = '\*\*\*([^*]+)\*\*\*|___([^_]+)___|\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*|_([^_]+)_'
+
       def create_registry
-        Registry.new(
-          steps: [],
-          parameter_types: Cucumber::CucumberExpressions::ParameterTypeRegistry.new,
-          formats: {}
+        seed_builtins(
+          Registry.new(
+            steps: [],
+            parameter_types: Cucumber::CucumberExpressions::ParameterTypeRegistry.new,
+            formats: {}
+          )
+        )
+      end
+
+      # Seed var's own built-in parameter types (beyond cucumber-expressions'
+      # int/float/string/word). Shared by every port so specs match
+      # identically. Built-ins are NOT tracked as custom parameter types, so
+      # they never appear in the conformance registry.json projection.
+      def seed_builtins(registry)
+        define_parameter_type(
+          registry,
+          name: 'emph',
+          regexp: EMPH_REGEXP,
+          # Exactly one alternation branch matches, so exactly one group is set.
+          parse: ->(*groups) { groups.find { |g| !g.nil? } || '' },
+          # Emphasis is distinctive notation; don't auto-suggest it in snippets.
+          use_for_snippets: false,
+          # Mismatch display renders the value back in single-asterisk emphasis.
+          format: ->(value) { "*#{value}*" }
         )
       end
 

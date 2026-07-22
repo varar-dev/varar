@@ -150,17 +150,18 @@ The pattern that recognizes the parameter inside a sentence.
 
 - **No capture groups.** The whole match is the parameter. Use non-capturing
   groups — `(?:st|nd|rd|th)` — where you need alternation or repetition.
-- Matching runs against the raw sentence text — markup and all. `*Emma*`
-  reaches your regexp as `*Emma*`, so when the marked-up run *is* your
+- Matching runs against the raw sentence text — markup and all. `#urgent`
+  reaches your regexp as `#urgent`, so when a notation run *is* your
   parameter, put the markers in the pattern and strip them in `parse`:
 
   ```ts
-  param('title', /\*[^*]+\*/, (raw) => raw.slice(1, -1), (t) => `*${t}*`)
+  param('tag', /#\w+/, (raw) => raw.slice(1))
   ```
 
-  The same recipe works for any markup — bold (`/\*\*[^*]+\*\*/`), AsciiDoc
-  underscores (`/_[^_]+_/`), quotes. Markup is notation, exactly like
-  `£2.50`.
+  Markdown emphasis is common enough that it ships built-in as `{emph}` (see
+  [Built-in parameter types](#built-in-parameter-types)) — you don't hand-roll
+  it. The recipe above is for any *other* notation that is really data: a
+  hashtag, a ticket id, a wiki link. Markup is notation, exactly like `£2.50`.
 - The pattern participates in step matching, so keep it anchored to real
   notation. A pattern that matches everywhere makes every sentence a step
   candidate.
@@ -236,6 +237,13 @@ built-ins are always available and need no declaration: `{int}`, `{float}`,
 in its port (`{int}` is a `number` in TypeScript, an `Integer` in Java, an
 `Int` in Kotlin, an `int` in Python). Their values are primitives or strings,
 so mismatch rendering never needs a `format` for them.
+
+On top of those, var adds one built-in of its own: **`{emph}`**, Markdown
+emphasis in any of its uniform forms — `*x*`, `_x_`, `**x**`, `__x__`,
+`***x***`, `___x___`. Only the inner text reaches your handler (`*Emma*` →
+`Emma`; only the outermost delimiter pair is stripped, so `**_Emma_**` →
+`_Emma_`), and editors highlight just that value, not the markers. It carries
+a `format` that renders a mismatch back as `*value*`.
 
 ## Scope
 

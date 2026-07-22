@@ -37,13 +37,22 @@ type Registry struct {
 	Formats              map[string]FormatFn
 }
 
-// CreateRegistry returns an empty registry.
+// CreateRegistry returns a registry seeded with var's built-in parameter types.
+// The built-in {emph} carries a display format (rendering a value back in
+// single-asterisk emphasis for parameter-mismatch display) but is deliberately
+// absent from CustomParameterTypes — it is a built-in, so it never surfaces in
+// the conformance registry artifact's parameterTypes.
 func CreateRegistry() Registry {
 	return Registry{
 		Steps:                nil,
 		CustomParameterTypes: nil,
 		customParse:          map[string]ParseFn{},
-		Formats:              map[string]FormatFn{},
+		Formats: map[string]FormatFn{
+			"emph": func(v Value) (string, bool) {
+				s, _ := v.AsString()
+				return "*" + s + "*", true
+			},
+		},
 	}
 }
 

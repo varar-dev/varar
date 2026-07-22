@@ -56,7 +56,7 @@ fn format_money(m: &Money) -> String {
 
 pub fn register(s: &mut Steps<Ctx>) {
     // Custom parameter types, declared in terms of the Rust types they produce:
-    // a date, an amount of money, and a plain title String.
+    // a date and an amount of money. The book title uses the built-in `{emph}`.
     s.param(
         "date",
         r"[A-Z][a-z]+ \d{1,2}, \d{4}",
@@ -71,19 +71,8 @@ pub fn register(s: &mut Steps<Ctx>) {
         |g: &[&str]| to_money(g[0]),
         Some(Box::new(format_money)),
     );
-    s.param(
-        "title",
-        r"\*[^*]+\*",
-        |g: &[&str]| {
-            g[0].strip_prefix('*')
-                .and_then(|t| t.strip_suffix('*'))
-                .unwrap_or(g[0])
-                .to_string()
-        },
-        Some(Box::new(|t: &String| format!("*{t}*"))),
-    );
 
-    s.stimulus("borrowed {title}, due back on {date}", |ctx: Ctx, title: String, due: Date| {
+    s.stimulus("borrowed {emph}, due back on {date}", |ctx: Ctx, title: String, due: Date| {
         let mut loans = ctx.loans.clone();
         loans.push(Loan { title, due: due.0 });
         Ok(Ctx { loans, ..ctx })
@@ -103,7 +92,7 @@ pub fn register(s: &mut Steps<Ctx>) {
 
     s.sensor("{money} for each day overdue", |_ctx: Ctx, _expected: Money| Ok(FEE_PER_DAY));
 
-    s.stimulus("asks to borrow {title} on {date}", |ctx: Ctx, _title: String, on: Date| {
+    s.stimulus("asks to borrow {emph} on {date}", |ctx: Ctx, _title: String, on: Date| {
         Ok(Ctx {
             granted: may_borrow(&ctx.loans, on.0),
             ..ctx

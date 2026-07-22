@@ -16,18 +16,27 @@ bold, links, inline code — none of it is stripped, normalized or rewritten.
 accounts for them will match.
 
 That sounds stricter than it is. In practice a marked-up run is almost
-always *data* — a book title, a product name — and data is what
-[custom parameters](/reference/custom-parameters/) are for:
+always *data* — a book title, a product name — and data is what parameter
+types are for. Emphasis is common enough that it ships built-in as `{emph}`:
+
+```md
+Maya borrowed {emph}, due back on {date}.
+```
+
+`Maya borrowed *Emma*` matches, and your handler receives `Emma` — the markers
+stripped, the value intact. Any *other* notation that is really data — a
+hashtag, a wiki link, a domain code — is a
+[custom parameter](/reference/custom-parameters/) away, put the markers in the
+regexp and strip them in `parse`:
 
 ```ts
-title: {
-  regexp: /\*[^*]+\*/,
-  parse: (raw) => raw.slice(1, -1),   // *Emma* → Emma
-  format: (t) => `*${t}*`,            // Emma → *Emma* (mismatch display)
+tag: {
+  regexp: /#\w+/,
+  parse: (raw) => raw.slice(1),   // #urgent → urgent
 }
 ```
 
-The markers are notation, no different from the `£` in `£2.50`. `parse`
+The markers are notation, no different from the `£` in `£2.50`. The pattern
 takes the notation apart, `format` puts it back, and neither Varar's core nor
 your handlers ever see markup they didn't ask for.
 
@@ -63,5 +72,5 @@ matcher; everything after it is your text, untouched.
 Nothing about sentences, matching or comparison knows Markdown exists. A
 future AsciiDoc plugin (`==` headings, `|===` tables, `----` blocks) would
 slot into the same seam without changing how a single expression matches —
-and your emphasis parameter type would simply use AsciiDoc's notation:
-`/_[^_]+_/`.
+and since `{emph}` already accepts underscore emphasis (`_Emma_`), AsciiDoc's
+emphasis notation keeps working with no change at all.

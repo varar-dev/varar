@@ -107,6 +107,16 @@ public sealed class ParameterTypeRegistry : IParameterTypeRegistry
             typeof(string),
             ParseString));
 
+        // var's own built-in: Markdown emphasis. Only the inner text is the value
+        // (the outermost delimiter pair is stripped). Kept byte-identical to the
+        // other ports' EMPH regexp.
+        registry.Define(new VararParameterType(
+            "emph",
+            [EmphRegex],
+            typeof(string),
+            ParseEmph,
+            useForSnippets: false));
+
         // The anonymous {} parameter.
         registry.Define(new VararParameterType(
             string.Empty,
@@ -116,6 +126,40 @@ public sealed class ParameterTypeRegistry : IParameterTypeRegistry
             useForSnippets: false));
 
         return registry;
+    }
+
+    // Markdown emphasis, ordered longest-delimiter-first so `**x**` isn't half-eaten
+    // by the `*` branch. Byte-identical to the other ports' EMPH regexp.
+    internal const string EmphRegex =
+        @"\*\*\*([^*]+)\*\*\*|___([^_]+)___|\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*|_([^_]+)_";
+
+    // The .NET cucumber-expressions build compiles a parameter's inner groups as
+    // non-capturing, so the transform receives the whole match (e.g. `**Emma**`).
+    // Strip the outermost delimiter run — 1..3 of the leading `*`/`_` from each end —
+    // to yield the inner text (`**_Emma_**` → `_Emma_`). Robust if a build instead
+    // hands us the already-inner text: its first char isn't a delimiter, so nothing
+    // is stripped.
+    private static Value ParseEmph(IReadOnlyList<string?> groups)
+    {
+        var raw = groups.FirstOrDefault(g => g is not null) ?? string.Empty;
+        if (raw.Length == 0)
+        {
+            return Value.Of(raw);
+        }
+
+        var delimiter = raw[0];
+        if (delimiter != '*' && delimiter != '_')
+        {
+            return Value.Of(raw);
+        }
+
+        var run = 0;
+        while (run < raw.Length && raw[run] == delimiter)
+        {
+            run++;
+        }
+
+        return Value.Of(raw.Substring(run, raw.Length - (2 * run)));
     }
 
     // Note: float/string value transforms are placeholders until matching (T5) pins their

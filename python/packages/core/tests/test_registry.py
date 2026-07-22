@@ -84,6 +84,22 @@ def test_add_step_raises_on_duplicate_expressions() -> None:
         )
 
 
+@pytest.mark.parametrize("sentence", ["I mention *Emma*", "I mention **Emma**"])
+def test_builtin_emph_matches_and_strips_delimiters(sentence: str) -> None:
+    r = create_registry()
+    r = add_step(
+        r,
+        expression="I mention {emph}",
+        expression_source_file="steps.py",
+        expression_source_line=1,
+        handler=lambda: None,
+    )
+    match = r.steps[0].compiled.match(sentence)
+    assert match is not None
+    # Only the outermost delimiter pair is stripped; the handler sees "Emma".
+    assert match[0].value == "Emma"
+
+
 def test_add_step_carries_kind() -> None:
     r = add_step(
         create_registry(),

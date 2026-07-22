@@ -519,6 +519,7 @@ const FRIENDLY_NAMES: Record<string, string> = {
   int: 'count',
   float: 'price',
   string: 'user',
+  emph: 'text',
 }
 
 // Default placeholder values for the built-in parameter types. Strings get
@@ -527,6 +528,7 @@ const BUILTIN_PLACEHOLDERS: Record<string, string> = {
   int: '0',
   float: '0.0',
   string: '"value"',
+  emph: '*value*',
 }
 
 function buildSnippet(
