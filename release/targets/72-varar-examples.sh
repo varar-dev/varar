@@ -64,13 +64,19 @@ find "$DEST" -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
 # un-parked, so the naive form fails the release on the first go-live rather
 # than while parked — see the same idiom in release.sh's RESULTS loop.
 #
-# While crates.io publishing is parked, omit the rust-* samples: var-core isn't
+# A parked port omits BOTH its sample directory and its workflow. Excluding only
+# the directory shipped a workflow whose `working-directory` did not exist, so
+# every run failed with "An error occurred trying to start process '/usr/bin/bash'
+# with working directory '…/csharp-vstest'. No such file or directory" — a
+# permanently red check in a public repo, for a port that has not shipped yet.
+#
+# While crates.io publishing is parked, omit the rust-* sample: varar-core isn't
 # on crates.io, so a synced rust sample couldn't resolve it (its path source is
 # monorepo-only). CRATES_IO_ENABLED (lib.sh) flips this and the pin block below
 # together — see 65-crates-io.sh's go-live checklist.
 rust_exclude=()
 if [[ "$CRATES_IO_ENABLED" != "1" ]]; then
-  rust_exclude+=(--exclude 'rust-*/')
+  rust_exclude+=(--exclude 'rust-*/' --exclude 'rust-*.yml')
 fi
 # Same story for the C# sample while NuGet publishing is parked: it references
 # dotnet/ by project path, so a synced copy couldn't resolve Varar until the
@@ -78,7 +84,7 @@ fi
 # block below together — see 68-nuget.sh's go-live checklist.
 csharp_exclude=()
 if [[ "$DOTNET_NUGET_ENABLED" != "1" ]]; then
-  csharp_exclude+=(--exclude 'csharp-*/')
+  csharp_exclude+=(--exclude 'csharp-*/' --exclude 'csharp-*.yml')
 fi
 # Same story for the Go sample while module publishing is parked: its go.mod
 # `replace`s the module to go/ in-repo, which a synced copy couldn't resolve
@@ -86,7 +92,7 @@ fi
 # block below together — see 71-go-modules.sh's go-live checklist.
 go_exclude=()
 if [[ "$GO_MODULES_ENABLED" != "1" ]]; then
-  go_exclude+=(--exclude 'go-*/')
+  go_exclude+=(--exclude 'go-*/' --exclude 'go-*.yml')
 fi
 rsync -a --copy-links \
   --exclude 'node_modules/' \

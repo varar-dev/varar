@@ -22,9 +22,15 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # No version here — pnpm/action-setup reads "packageManager" from
-      # this project's package.json, the same field corepack uses locally.
+      # No version here — pnpm/action-setup reads "packageManager" from this
+      # project's package.json, the same field corepack uses locally. The path
+      # is explicit because `defaults.run.working-directory` applies only to
+      # `run:` steps: an action still resolves paths from the repo root, and
+      # varar-examples has no package.json there ("No pnpm version is
+      # specified").
       - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: typescript-vitest/package.json
 
       # No version here — .node-version is the pin, read by setup-node and by
       # nvm/fnm/asdf alike, so CI and a developer machine cannot drift.
