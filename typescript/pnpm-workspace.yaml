@@ -17,8 +17,20 @@ packages:
 # vitest/src/node-grammar-loader.ts, the var-vscode bundler's copy list).
 # Denying them skips a native compile that nothing uses and drops the
 # requirement for a C toolchain to install this repo.
+#
+# workerd and sharp@0.34 arrive with wrangler, which the deploy-website CI job
+# installs on the fly (cloudflare/wrangler-action's `pnpm add wrangler@4`) — an
+# install that pnpm fails outright while they are undecided. Both are a NO:
+# workerd is the local `wrangler dev` runtime and sharp is miniflare's image
+# resizer, and the job neither serves nor resizes anything — it uploads the
+# prebuilt static assets (packages/website/wrangler.jsonc has `assets` and no
+# worker script). Note the website's own sharp (0.35, for Astro's image
+# optimisation) has no install script at all: it resolves the prebuilt binary
+# through optional dependencies, so this entry never touches it.
 allowBuilds:
   esbuild: true
+  workerd: false
+  sharp: false
   '@tree-sitter-grammars/tree-sitter-kotlin': false
   tree-sitter-c-sharp: false
   tree-sitter-go: false
