@@ -82,4 +82,4 @@ The usual complaints, taken seriously:
 
 ## Next
 
-See it in two minutes: [Try Varar in your browser](/tutorials/try-var/).
+See it in two minutes: [Try Varar in your browser](/tutorials/try-varar/).

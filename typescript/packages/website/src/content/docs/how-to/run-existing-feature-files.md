@@ -104,5 +104,5 @@ run rather than printing a warning.
 
 ## Next
 
-- [Varar for Cucumber users](/explanation/var-for-cucumber-users/) — why the
+- [Varar for Cucumber users](/explanation/varar-for-cucumber-users/) — why the
   model is different, not just the syntax.

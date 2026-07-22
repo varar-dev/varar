@@ -1,6 +1,6 @@
 ---
-title: Varar
-description: Varar overview.
+title: Varar overview
+description: How Varar connects a document to your software, through cells.
 ---
 
 Varar is an I/O layer that sits between your documentation and your software.
@@ -13,12 +13,12 @@ Table cells are identified by markdown tables in your document.
 
 There are two kinds of cells - input and output.
 
-# Input cells 
+## Input cells
 
 An input cell is like a spreadsheet cell *without* a formula.
 Its value is passed to a *stimulus* step function that modifies the state of the system.
 
-# Output cells
+## Output cells
 
 An output cell is like a spreadsheet cell *with* a formula.
 Its value is *compared* to the return value of a *sensor* step function.
