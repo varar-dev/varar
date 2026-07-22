@@ -1,7 +1,7 @@
-# Vár sample: Python + unittest
+# Varar sample: Python + unittest
 
 A small, standalone sample project that runs Markdown specs as tests with
-[Vár](https://varar.dev), using the `varar-unittest` adapter —
+[Varar](https://varar.dev), using the `varar-unittest` adapter —
 nothing but the standard library's test runner. Copy it as the starting
 point for your own project.
 
@@ -24,14 +24,14 @@ that generates one `TestCase` per spec, which plain `python -m unittest`
   the Markdown specs and `steps` globs the step-definition files.
 - **`steps/*.steps.py`** define the steps with `steps` +
   `@stimulus`/`@sensor`. A stimulus returns the next state, a sensor returns
-  a value for Vár to compare against what the Markdown says.
+  a value for Varar to compare against what the Markdown says.
 - **`src/yahtzee_example/`** is the sample's domain code — an ordinary
   installable package the steps import, just like your production code.
 
 ## Versioning note
 
 In the [varar-dev/varar](https://github.com/varar-dev/varar) monorepo this sample
-resolves the Vár packages from `[tool.uv.sources]` path sources, gating
+resolves the Varar packages from `[tool.uv.sources]` path sources, gating
 trunk against the local build. The release sync to
 [varar-dev/varar-examples](https://github.com/varar-dev/varar-examples) deletes
 that table and pins the released PyPI version — there, the plain

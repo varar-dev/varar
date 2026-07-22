@@ -1,4 +1,4 @@
-// Package example is a standalone Vár sample: it runs the Markdown specs at the
+// Package example is a standalone Varar sample: it runs the Markdown specs at the
 // project root as `go test` tests via the gotest adapter. The domain files
 // (yahtzee.go, roman.go, library.go) are the code under test; the *.steps.go
 // files hold the step definitions, one per spec, each named after it.

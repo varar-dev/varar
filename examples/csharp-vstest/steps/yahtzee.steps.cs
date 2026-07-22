@@ -9,7 +9,7 @@ public static class YahtzeeSteps
 {
     public static void Register(Steps s)
     {
-        // Header-bound: dice and category are inputs, score is the computed column Vár checks.
+        // Header-bound: dice and category are inputs, score is the computed column Varar checks.
         s.Sensor("Examples of dice, category and score", (state, row) =>
         {
             var m = SMap(row);

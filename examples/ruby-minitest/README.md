@@ -1,7 +1,7 @@
-# Vár + Ruby + Minitest
+# Varar + Ruby + Minitest
 
 A standalone sample project that runs Markdown specs as Minitest tests with
-[Vár](https://varar.dev).
+[Varar](https://varar.dev).
 
 The `*.md` files at the project root are the specs — plain Markdown prose that
 runs as tests. `steps/*.steps.rb` bind the sentences to Ruby inside a

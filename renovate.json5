@@ -13,8 +13,8 @@
   //
   // Grouping — one PR per language, by package manager (so the per-port,
   // path-filtered CI workflow in .github/workflows/ runs the right `make`
-  // gate on it). Matching by manager rather than path also sweeps in the
-  // per-language sample projects under examples/.
+  // gate on it). Every manager Renovate detects here has a rule; anything
+  // unmatched would fall through to an ungrouped `chore(deps):` PR.
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   extends: [
     "config:recommended",
@@ -26,14 +26,50 @@
   schedule: ["* 0-6 * * 1"], // scan Monday early morning; you approve/merge anytime
   automerge: false,
   labels: ["dependencies"],
+  // The `config:recommended` default ignores `**/examples/**`, which silently
+  // hid all twelve sample projects — the ones released 1:1 to
+  // varar-dev/varar-examples, and the proof that Varar builds on the toolchains
+  // consumers actually use. These are the upstream defaults minus that entry.
+  ignorePaths: [
+    "**/node_modules/**",
+    "**/bower_components/**",
+    "**/vendor/**",
+    "**/__tests__/**",
+    "**/test/**",
+    "**/tests/**",
+    "**/__fixtures__/**",
+  ],
   // Keep lockfiles fresh even when no dependency range changes (pnpm-lock,
-  // uv.lock, Gemfile.lock, Cargo.lock), as its own grouped, approval-gated PR.
+  // uv.lock, Gemfile.lock, Cargo.lock, go.sum), as its own grouped,
+  // approval-gated PR.
   lockFileMaintenance: {
     enabled: true,
     commitMessageAction: "refresh lockfiles",
   },
   packageRules: [
     {
+      // Varar's own packages, in every registry. The samples and the
+      // cross-package pins inside each port reference them by their published
+      // name, and release/stamp.sh owns those version strings — a Renovate PR
+      // bumping them would fight the release script (and, before the port is
+      // published, just fail to look the name up at all).
+      matchPackageNames: [
+        "/^[Vv]arar([.-]|$)/", // PyPI, RubyGems, crates.io, NuGet
+        "/^@varar\\//", // npm
+        "/^dev\\.varar:/", // Maven Central (Maven and Gradle alike)
+        "/^github\\.com\\/varar-dev\\//", // Go modules
+      ],
+      enabled: false,
+    },
+    {
+      // Includes examples/typescript-vitest, a pnpm workspace member reached
+      // via `../` from typescript/pnpm-workspace.yaml. Renovate can't walk up
+      // to that workspace file, so it doesn't tie the sample's package.json to
+      // typescript/pnpm-lock.yaml on its own — the shared group is what keeps
+      // them honest: every npm update lands on one branch, and regenerating the
+      // lockfile there picks the sample up as the workspace member it is. If a
+      // bump ever hits the sample alone, CI's `--frozen-lockfile` fails the PR
+      // rather than merging drift.
       matchManagers: ["npm"],
       groupName: "typescript dependencies",
       commitMessagePrefix: "chore(ts):",
@@ -44,6 +80,8 @@
       commitMessagePrefix: "chore(py):",
     },
     {
+      // `gradle`/`gradle-wrapper` cover the Gradle samples under examples/;
+      // the ports themselves are Maven.
       matchManagers: ["maven", "gradle", "gradle-wrapper", "maven-wrapper"],
       groupName: "java dependencies",
       commitMessagePrefix: "chore(java):",
@@ -59,18 +97,30 @@
       commitMessagePrefix: "chore(rust):",
     },
     {
-      // Cross-cutting: CI action pins across all six workflows.
+      matchManagers: ["gomod"],
+      groupName: "go dependencies",
+      commitMessagePrefix: "chore(go):",
+    },
+    {
+      // The .NET port: NuGet package references plus the SDK pin in
+      // dotnet/global.json and the tools in dotnet/.config/dotnet-tools.json.
+      matchManagers: ["nuget"],
+      groupName: "dotnet dependencies",
+      commitMessagePrefix: "chore(dotnet):",
+    },
+    {
+      // Cross-cutting: CI action pins across all eight workflows.
       matchManagers: ["github-actions"],
       groupName: "ci actions",
       commitMessagePrefix: "ci:",
     },
     {
-      // Toolchain pins for mise: node, ruby, JDK, adr-tools, etc. Renovate's
-      // `asdf` manager reads the asdf-compatible `.tool-versions` files this
-      // repo uses today (mise reads the same format); the `mise` manager
-      // covers a future `mise.toml`. Both are matched so the group survives
-      // either layout.
-      matchManagers: ["asdf", "mise"],
+      // Toolchain pins that sit in their own native files rather than in a
+      // manifest: `.tool-versions` (node, ruby, JDK, Go, adr-tools — read by
+      // asdf and mise alike), `typescript/.node-version` (nodenv), and
+      // `rust/rust-toolchain.toml`. The `mise` manager covers a future
+      // `mise.toml`, so the group survives either layout.
+      matchManagers: ["asdf", "mise", "nodenv", "rust-toolchain"],
       groupName: "toolchains",
       commitMessagePrefix: "chore(build):",
     },

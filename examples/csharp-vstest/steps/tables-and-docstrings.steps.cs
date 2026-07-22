@@ -8,7 +8,7 @@ public static class TablesAndDocstringsSteps
 {
     public static void Register(Steps s)
     {
-        // A whole table is handed to the step; it returns the computed rows and Vár checks each cell.
+        // A whole table is handed to the step; it returns the computed rows and Varar checks each cell.
         s.Sensor("Uppercase each one:", (state, table) =>
         {
             var rows = ((VList)table).Items;

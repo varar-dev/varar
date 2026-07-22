@@ -1,7 +1,7 @@
-# Vár + Ruby + RSpec
+# Varar + Ruby + RSpec
 
 A standalone sample project that runs Markdown specs as RSpec examples with
-[Vár](https://varar.dev).
+[Varar](https://varar.dev).
 
 The `*.md` files at the project root are the specs — plain Markdown prose that
 runs as tests. `steps/*.steps.rb` bind the sentences to Ruby inside a

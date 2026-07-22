@@ -1,7 +1,7 @@
-# Vár sample: TypeScript + vitest
+# Varar sample: TypeScript + vitest
 
 A small, standalone sample project that runs Markdown specs as tests with
-[Vár](https://varar.dev), using the vitest plugin (`@varar/vitest`).
+[Varar](https://varar.dev), using the vitest plugin (`@varar/vitest`).
 Copy it as the starting point for your own project.
 
 The `.md` files at the project root are the specs — they run as tests.
@@ -22,7 +22,7 @@ Each example in the Markdown specs becomes one vitest test.
   plugin drives vitest's own include/exclude from it.
 - **`steps/*.steps.ts`** define the steps with `steps` +
   `stimulus`/`sensor`. A stimulus returns the next state, a sensor returns a
-  value for Vár to compare against what the Markdown says.
+  value for Varar to compare against what the Markdown says.
 - **`src/yahtzee.ts`** and **`src/roman-numerals.ts`** are the sample's
   domain code (the system under test), imported by the steps like any other
   module.

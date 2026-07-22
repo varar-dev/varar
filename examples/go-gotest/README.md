@@ -1,7 +1,7 @@
-# Vár sample: Go + go test
+# Varar sample: Go + go test
 
 A small, standalone sample project that runs Markdown specs as tests with
-[Vár](https://varar.dev), driven by `go test`. Copy it as the starting point for
+[Varar](https://varar.dev), driven by `go test`. Copy it as the starting point for
 your own project.
 
 The `.md` files at the project root are the specs — they run as tests.

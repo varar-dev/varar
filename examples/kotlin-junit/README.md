@@ -1,7 +1,7 @@
-# Vár sample: Kotlin + JUnit + Gradle
+# Varar sample: Kotlin + JUnit + Gradle
 
 A small, standalone sample project that runs Markdown specs as tests with
-[Vár](https://varar.dev), using the Kotlin DSL (`var-kotlin`) and the
+[Varar](https://varar.dev), using the Kotlin DSL (`var-kotlin`) and the
 JUnit Platform engine (`var-junit`). Copy it as the starting point for your
 own project.
 
@@ -24,7 +24,7 @@ Each example in the Markdown specs becomes one JUnit test.
 - **`src/test/kotlin/examples/*.steps.kt`** define the steps with
   `steps` + `stimulus`/`sensor`. State is the lambda receiver; a
   stimulus returns the next state (`copy(...)`), a sensor returns a value for
-  Vár to compare against what the Markdown says.
+  Varar to compare against what the Markdown says.
 - **`src/main/kotlin/examples/{Library,RomanNumerals,Yahtzee}.kt`** are the
   sample's domain code (the system under test) — ordinary classes the steps
   call, kept in the production source set (`src/main`) separate from the test

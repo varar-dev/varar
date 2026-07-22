@@ -11,7 +11,7 @@
       ]
     },
     "hello-var.md": {
-      "sourceHash": "fnv1a:bf848cd6",
+      "sourceHash": "fnv1a:8eb1207a",
       "examples": [
         {
           "name": "First I greet \"world\" okay? I think the greeting should be \"Hello, world!\"",
@@ -50,7 +50,7 @@
       ]
     },
     "tables-and-docstrings.md": {
-      "sourceHash": "fnv1a:e9f7dc76",
+      "sourceHash": "fnv1a:f45255ca",
       "examples": [
         {
           "name": "Uppercase each one:",

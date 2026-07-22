@@ -5,11 +5,11 @@ build-backend = "hatchling.build"
 [project]
 name = "var-example-python-unittest"
 version = "0.0.1"
-description = "Standalone sample: run Markdown specs as unittest tests with Vár"
+description = "Standalone sample: run Markdown specs as unittest tests with Varar"
 requires-python = ">=3.12"
 dependencies = ["varar-unittest"]
 
-# In this monorepo the Vár packages resolve from source (editable path
+# In this monorepo the Varar packages resolve from source (editable path
 # sources), so the sample gates trunk against the local build. The release
 # sync to varar-dev/varar-examples deletes this whole table and pins the released
 # PyPI version — the plain dependency above is all a real project needs. The

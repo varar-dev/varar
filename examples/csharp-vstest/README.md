@@ -1,7 +1,7 @@
-# Vár sample: C# + dotnet test
+# Varar sample: C# + dotnet test
 
 A small, standalone sample project that runs Markdown specs as tests with
-[Vár](https://varar.dev), driven by `dotnet test` via the `Varar.TestAdapter`
+[Varar](https://varar.dev), driven by `dotnet test` via the `Varar.TestAdapter`
 VSTest adapter. Copy it as the starting point for your own project.
 
 The `.md` files at the project root are the specs — they run as tests.
@@ -30,5 +30,5 @@ reported as `spec.md::name` and pointing at the `.md` source line.
 - **`Varar.TestAdapter`** is a VSTest adapter, so installing the package is the
   whole integration story — `dotnet test` discovers one test per Markdown example.
 
-In this monorepo the Vár packages resolve from source (project references); a real
+In this monorepo the Varar packages resolve from source (project references); a real
 project depends on the published NuGet packages instead (see the `.csproj`).

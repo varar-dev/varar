@@ -1,7 +1,7 @@
-# Vár sample: Java + JUnit + Maven
+# Varar sample: Java + JUnit + Maven
 
 A small, standalone sample project that runs Markdown specs as tests with
-[Vár](https://varar.dev), using the Java author API and the JUnit
+[Varar](https://varar.dev), using the Java author API and the JUnit
 Platform engine (`var-junit`). Copy it as the starting point for your own
 project.
 
@@ -23,7 +23,7 @@ Each example in the Markdown specs becomes one JUnit test.
 - **`src/test/java/examples/*Steps.java`** implement `StepDefinitions`: a
   `register(Steps)` method binds a state record and registers
   `stimulus`/`sensor` handlers. A stimulus returns the next state, a sensor
-  returns a value for Vár to compare against what the Markdown says.
+  returns a value for Varar to compare against what the Markdown says.
 - **`src/main/java/examples/{Library,RomanNumerals,Yahtzee}.java`** are the
   sample's domain code (the system under test) — ordinary classes the steps
   call, kept in the production source set (`src/main`) separate from the test
