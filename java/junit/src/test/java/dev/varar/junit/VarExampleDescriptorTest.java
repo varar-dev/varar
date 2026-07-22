@@ -31,7 +31,7 @@ import org.junit.platform.testkit.engine.EngineTestKit;
  * VarFileDescriptor}, with a {@code UniqueId} keyed by the example's source line — not its
  * Markdown-derived display name.
  *
- * <p><strong>Uses the real {@code EngineTestKit.engine("var")...discover()} path</strong>
+ * <p><strong>Uses the real {@code EngineTestKit.engine("varar")...discover()} path</strong>
  * (unlike {@code DiscoverySelectorResolverTest}, which had to call {@link
  * VarTestEngine#discover} directly to dodge the Launcher's {@code
  * EngineDiscoveryOrchestrator}, which {@linkplain TestDescriptor#prune() prunes} every
@@ -57,7 +57,7 @@ class VarExampleDescriptorTest {
 
     private static EngineDiscoveryResults discoverWidgets(Path workspace) throws Exception {
         writeConfig(workspace, "examplefixture/**/*.md");
-        return EngineTestKit.engine("var")
+        return EngineTestKit.engine("varar")
                 .selectors(selectClasspathResource("examplefixture/widgets.md"))
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                 .discover();
@@ -115,7 +115,7 @@ class VarExampleDescriptorTest {
         TestDescriptor otherLeaf = examples.get(1);
         assertNotEquals(targetLeaf.getUniqueId(), otherLeaf.getUniqueId());
 
-        EngineDiscoveryResults singleSelection = EngineTestKit.engine("var")
+        EngineDiscoveryResults singleSelection = EngineTestKit.engine("varar")
                 .selectors(selectUniqueId(targetLeaf.getUniqueId()))
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                 .discover();
@@ -150,7 +150,7 @@ class VarExampleDescriptorTest {
         UniqueId line7 = examples.get(1).getUniqueId();
         assertNotEquals(line3, line7);
 
-        EngineDiscoveryResults twoSelectors = EngineTestKit.engine("var")
+        EngineDiscoveryResults twoSelectors = EngineTestKit.engine("varar")
                 .selectors(selectUniqueId(line3), selectUniqueId(line7))
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                 .discover();
@@ -199,7 +199,7 @@ class VarExampleDescriptorTest {
 
     private static TestDescriptor discoverOneFile(Path workspace, String classpathResource) throws Exception {
         writeConfig(workspace, "examplefixture/**/*.md");
-        EngineDiscoveryResults results = EngineTestKit.engine("var")
+        EngineDiscoveryResults results = EngineTestKit.engine("varar")
                 .selectors(selectClasspathResource(classpathResource))
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                 .discover();
@@ -219,7 +219,7 @@ class VarExampleDescriptorTest {
         // working directory (java/junit under this module's own `mvn test`), which has no
         // varar.config.json -- so docsInclude defaults to empty and nothing is discovered at all,
         // not merely "no examples inside an empty container".
-        EngineDiscoveryResults results = EngineTestKit.engine("var")
+        EngineDiscoveryResults results = EngineTestKit.engine("varar")
                 .selectors(selectClasspathResource("examplefixture/widgets.md"))
                 .discover();
         assertTrue(results.getEngineDescriptor().getChildren().isEmpty());
@@ -257,7 +257,7 @@ class VarExampleDescriptorTest {
                 .toString()
                 .replace('\\', '/');
         writeConfig(workspace, docsInclude);
-        EngineDiscoveryResults results = EngineTestKit.engine("var")
+        EngineDiscoveryResults results = EngineTestKit.engine("varar")
                 .selectors(selectFile(widgetsFile.toFile()))
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                 .discover();
@@ -273,7 +273,7 @@ class VarExampleDescriptorTest {
         // The bare-UniqueId single-leaf-selection path must also exclude siblings for a real
         // (non-classpath) file, not just the classpath-resource case tested above.
         UniqueId targetId = examples.get(0).getUniqueId();
-        EngineDiscoveryResults singleSelection = EngineTestKit.engine("var")
+        EngineDiscoveryResults singleSelection = EngineTestKit.engine("varar")
                 .selectors(selectUniqueId(targetId))
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                 .discover();

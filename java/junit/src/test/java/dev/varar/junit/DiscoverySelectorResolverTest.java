@@ -28,7 +28,7 @@ import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
  * {@code included.md} survives {@code docs.exclude=["**\/excluded.md"]}.
  *
  * <p><strong>Why this calls {@link VarTestEngine#discover} directly instead of going through
- * {@code EngineTestKit.engine("var")...discover()}/{@code .execute()}:</strong> both of those
+ * {@code EngineTestKit.engine("varar")...discover()}/{@code .execute()}:</strong> both of those
  * convenience entry points route through {@code
  * org.junit.platform.launcher.core.EngineDiscoveryOrchestrator}, which — confirmed by reading its
  * source and {@code TestDescriptor#prune()}'s default implementation
@@ -57,7 +57,7 @@ class DiscoverySelectorResolverTest {
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                 .build();
 
-        TestDescriptor engineDescriptor = new VarTestEngine().discover(request, UniqueId.forEngine("var"));
+        TestDescriptor engineDescriptor = new VarTestEngine().discover(request, UniqueId.forEngine("varar"));
         List<? extends TestDescriptor> children = List.copyOf(engineDescriptor.getChildren());
 
         assertEquals(1, children.size(), "expected exactly one container for the included spec");
@@ -79,7 +79,7 @@ class DiscoverySelectorResolverTest {
                 .selectors(selectPackage("discoveryfixture"))
                 .build();
 
-        TestDescriptor engineDescriptor = new VarTestEngine().discover(request, UniqueId.forEngine("var"));
+        TestDescriptor engineDescriptor = new VarTestEngine().discover(request, UniqueId.forEngine("varar"));
 
         assertTrue(
                 engineDescriptor.getChildren().isEmpty(),

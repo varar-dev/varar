@@ -10,7 +10,7 @@ import org.junit.platform.engine.support.discovery.DiscoveryIssueReporter;
 import org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine;
 
 /**
- * The var {@link org.junit.platform.engine.TestEngine TestEngine} (id {@code "var"}).
+ * The var {@link org.junit.platform.engine.TestEngine TestEngine} (id {@code "varar"}).
  *
  * <p>Registered via {@code META-INF/services/org.junit.platform.engine.TestEngine} —
  * installing the {@code var-junit} dependency is the entire integration story; no user
@@ -29,7 +29,7 @@ public final class VarTestEngine extends HierarchicalTestEngine<VarEngineExecuti
 
     @Override
     public String getId() {
-        return "var";
+        return "varar";
     }
 
     @Override

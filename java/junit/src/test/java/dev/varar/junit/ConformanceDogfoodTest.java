@@ -184,7 +184,7 @@ class ConformanceDogfoodTest {
                 """.formatted(docsInclude, bundleCase.stepsClassName()),
                 StandardCharsets.UTF_8);
 
-        EngineExecutionResults results = EngineTestKit.engine("var")
+        EngineExecutionResults results = EngineTestKit.engine("varar")
                 .selectors(selectFile(exampleMd.toFile()))
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                 .execute();

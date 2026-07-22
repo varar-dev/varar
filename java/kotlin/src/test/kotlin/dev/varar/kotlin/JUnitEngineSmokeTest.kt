@@ -34,7 +34,7 @@ class JUnitEngineSmokeTest {
                 """
                     .trimIndent(),
             )
-            EngineTestKit.engine("var")
+            EngineTestKit.engine("varar")
                 .selectors(selectFile(spec.toFile()))
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, dir.toRealPath().toString())
                 .execute()

@@ -38,7 +38,7 @@ class VarDriftGateTest {
     }
 
     private static EngineExecutionResults execute(Path workspace) {
-        return EngineTestKit.engine("var")
+        return EngineTestKit.engine("varar")
                 .selectors(selectFile(workspace.resolve("vault.md").toString()))
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                 .execute();

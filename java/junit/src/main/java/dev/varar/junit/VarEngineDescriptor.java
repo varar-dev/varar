@@ -28,7 +28,7 @@ final class VarEngineDescriptor extends EngineDescriptor implements Node<VarEngi
     private StepLoader.LoadedSteps loadedSteps;
 
     VarEngineDescriptor(UniqueId uniqueId) {
-        super(uniqueId, "var");
+        super(uniqueId, "varar");
     }
 
     /** Set once by {@link VarTestEngine#discover}, before resolving any file selectors. */

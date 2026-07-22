@@ -25,7 +25,7 @@ import org.junit.platform.testkit.engine.EngineTestKit;
 import org.junit.platform.testkit.engine.Event;
 
 /**
- * Proves Task 11's execution wiring end to end through the real {@code EngineTestKit.engine("var")
+ * Proves Task 11's execution wiring end to end through the real {@code EngineTestKit.engine("varar")
  * ...execute()} path (not mocks): {@link VarExampleDescriptor#execute} runs the {@link
  * VarFileDescriptor}-cached {@code Run.ExampleRun} for its own {@code Plan.PlannedExample}, reports
  * {@code SUCCESSFUL} on a pass, and on a real cell mismatch reports {@code FAILED} with {@code
@@ -44,7 +44,7 @@ class VarExampleDescriptorExecutionTest {
                   "steps": ["%s"]
                 }
                 """.formatted(stepsClass.getName()), StandardCharsets.UTF_8);
-        return EngineTestKit.engine("var")
+        return EngineTestKit.engine("varar")
                 .selectors(selectClasspathResource(classpathResource))
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                 .execute();

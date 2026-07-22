@@ -69,7 +69,7 @@ class VarDiagnosticsReportingTest {
                 }
                 """.formatted(CounterSteps.class.getName()),
                 StandardCharsets.UTF_8);
-        EngineExecutionResults results = EngineTestKit.engine("var")
+        EngineExecutionResults results = EngineTestKit.engine("varar")
                 .selectors(selectClasspathResource("examplefixture/counter.md"))
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                 .execute();
@@ -88,7 +88,7 @@ class VarDiagnosticsReportingTest {
                   "steps": ["%s"]
                 }
                 """.formatted(AMBIGUOUS_STEPS), StandardCharsets.UTF_8);
-        return EngineTestKit.engine("var")
+        return EngineTestKit.engine("varar")
                 .selectors(selectClasspathResource("examplefixture/ambiguous.md"))
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                 .execute();

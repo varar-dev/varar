@@ -17,7 +17,7 @@ import org.junit.platform.testkit.engine.EngineTestKit;
 /**
  * Proves the var {@link VarTestEngine} is registered via {@code ServiceLoader} and that a
  * discovery/execution cycle with zero matching {@code .md} files runs cleanly end to end
- * through the real {@code EngineTestKit.engine("var")...execute()} path (discovery/execution
+ * through the real {@code EngineTestKit.engine("varar")...execute()} path (discovery/execution
  * logic itself — Tasks 9-11 — is exercised in depth by {@code DiscoverySelectorResolverTest},
  * {@code VarExampleDescriptorTest}, and {@code VarExampleDescriptorExecutionTest}).
  */
@@ -25,24 +25,24 @@ class VarTestEngineTest {
 
     @Test
     void getIdReturnsVar() {
-        assertEquals("var", new VarTestEngine().getId());
+        assertEquals("varar", new VarTestEngine().getId());
     }
 
     @Test
     void isDiscoverableByEngineIdViaServiceLoader() {
-        // EngineTestKit.engine("var") resolves the engine by id through the Platform's
+        // EngineTestKit.engine("varar") resolves the engine by id through the Platform's
         // own ServiceLoader-based engine registry -- it does not accept an instance
         // here, so this line alone proves the META-INF/services registration works.
-        EngineExecutionResults results = EngineTestKit.engine("var").execute();
+        EngineExecutionResults results = EngineTestKit.engine("varar").execute();
 
         // No configuration parameters and no selectors are supplied, so docsInclude
         // defaults to empty (CLAUDE.md: no default include) and nothing is even attempted
-        // to be resolved: there is exactly one container event (the "var" engine itself)
+        // to be resolved: there is exactly one container event (the "varar" engine itself)
         // and no test events at all.
         results.containerEvents()
                 .assertThatEvents()
                 .hasSize(2) // started + finished
-                .haveExactly(1, event(container("var"), finishedSuccessfully()));
+                .haveExactly(1, event(container("varar"), finishedSuccessfully()));
 
         results.testEvents().assertThatEvents().isEmpty();
     }
@@ -65,7 +65,7 @@ class VarTestEngineTest {
         Files.writeString(workspace.resolve("varar.config.json"), """
                 { "docs": { "include": ["nowhere/**/*.md"], "exclude": [] } }
                 """, StandardCharsets.UTF_8);
-        EngineExecutionResults results = EngineTestKit.engine("var")
+        EngineExecutionResults results = EngineTestKit.engine("varar")
                 .selectors(selectPackage("discoveryfixture"))
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                 .execute();
@@ -73,7 +73,7 @@ class VarTestEngineTest {
         results.containerEvents()
                 .assertThatEvents()
                 .hasSize(2) // started + finished
-                .haveExactly(1, event(container("var"), finishedSuccessfully()));
+                .haveExactly(1, event(container("varar"), finishedSuccessfully()));
 
         results.testEvents().assertThatEvents().isEmpty();
         assertEquals(0, results.allEvents().failed().count(), "zero matching files must never fail the run");

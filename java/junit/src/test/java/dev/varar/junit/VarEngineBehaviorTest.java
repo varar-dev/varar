@@ -107,7 +107,7 @@ class VarEngineBehaviorTest {
 
         UniqueId failingExampleId = examples.get(1).getUniqueId(); // line 7, the one that fails
 
-        EngineExecutionResults results = EngineTestKit.engine("var")
+        EngineExecutionResults results = EngineTestKit.engine("varar")
                 .selectors(selectUniqueId(failingExampleId))
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                 .execute();
@@ -137,7 +137,7 @@ class VarEngineBehaviorTest {
     void varStepsOnlyLoadsTheNamedClassesNotEveryStepDefinitionOnTheClasspath(
             @TempDir Path onlyCounterStepsWorkspace, @TempDir Path bothStepsWorkspace) throws Exception {
         writeConfig(onlyCounterStepsWorkspace, "examplefixture/**/*.md", COUNTER_STEPS);
-        EngineDiscoveryResults onlyCounterSteps = EngineTestKit.engine("var")
+        EngineDiscoveryResults onlyCounterSteps = EngineTestKit.engine("varar")
                 .selectors(selectClasspathResource("examplefixture/widgets.md"))
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, onlyCounterStepsWorkspace.toString())
                 .discover();
@@ -148,7 +148,7 @@ class VarEngineBehaviorTest {
                         + " resulting childless container is itself pruned)");
 
         writeConfig(bothStepsWorkspace, "examplefixture/**/*.md", COUNTER_STEPS + "," + WIDGET_STEPS);
-        EngineDiscoveryResults bothSteps = EngineTestKit.engine("var")
+        EngineDiscoveryResults bothSteps = EngineTestKit.engine("varar")
                 .selectors(selectClasspathResource("examplefixture/widgets.md"))
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, bothStepsWorkspace.toString())
                 .discover();
@@ -180,7 +180,7 @@ class VarEngineBehaviorTest {
         Files.createSymbolicLink(project.resolve("widgets.md"), corpus.resolve("widgets.md"));
         writeConfig(project, "*.md", WIDGET_STEPS);
 
-        EngineExecutionResults results = EngineTestKit.engine("var")
+        EngineExecutionResults results = EngineTestKit.engine("varar")
                 .selectors(selectDirectory(project.toString()))
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, project.toString())
                 .execute();
@@ -190,7 +190,7 @@ class VarEngineBehaviorTest {
 
     private static EngineDiscoveryResults discoverMixed(Path workspace) throws Exception {
         writeConfig(workspace, "examplefixture/**/*.md", WIDGET_STEPS);
-        return EngineTestKit.engine("var")
+        return EngineTestKit.engine("varar")
                 .selectors(selectClasspathResource("examplefixture/mixed.md"))
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                 .discover();
@@ -198,7 +198,7 @@ class VarEngineBehaviorTest {
 
     private static EngineExecutionResults executeMixed(Path workspace) throws Exception {
         writeConfig(workspace, "examplefixture/**/*.md", WIDGET_STEPS);
-        return EngineTestKit.engine("var")
+        return EngineTestKit.engine("varar")
                 .selectors(selectClasspathResource("examplefixture/mixed.md"))
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                 .execute();
