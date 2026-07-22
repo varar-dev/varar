@@ -3,19 +3,28 @@ packages:
   - ../examples/typescript-vitest
 
 # Dependencies allowed to run install scripts. pnpm blocks them by default as a
-# supply-chain measure; every entry here is a package whose install script is
-# the whole point of the package — esbuild fetches its platform binary (vite and
-# vitest are unusable without it) and each tree-sitter grammar compiles a native
-# parser. pnpm 9 ran these silently; pnpm 10+ requires the allowlist, and
-# refuses the install (interactively — in CI it only warns) until it exists.
+# supply-chain measure and fails the install (exit 1, in CI as much as
+# interactively) until each one is decided either way.
+#
+# esbuild is the only yes: its install script fetches the platform binary, and
+# vite/vitest are unusable without it.
+#
+# Every tree-sitter grammar is a deliberate NO. Their install script is
+# `node-gyp-build`, which produces the NATIVE node binding — and Varar never
+# loads that. The scanner runs the grammars through web-tree-sitter, reading the
+# `.wasm` files the packages already ship prebuilt (see the `*.wasm` entries in
+# their `files`, and every grammar loader: lsp/src/node-grammar-loader.ts,
+# vitest/src/node-grammar-loader.ts, the var-vscode bundler's copy list).
+# Denying them skips a native compile that nothing uses and drops the
+# requirement for a C toolchain to install this repo.
 allowBuilds:
-  '@tree-sitter-grammars/tree-sitter-kotlin': true
   esbuild: true
-  tree-sitter-c-sharp: true
-  tree-sitter-go: true
-  tree-sitter-java: true
-  tree-sitter-javascript: true
-  tree-sitter-python: true
-  tree-sitter-ruby: true
-  tree-sitter-rust: true
-  tree-sitter-typescript: true
+  '@tree-sitter-grammars/tree-sitter-kotlin': false
+  tree-sitter-c-sharp: false
+  tree-sitter-go: false
+  tree-sitter-java: false
+  tree-sitter-javascript: false
+  tree-sitter-python: false
+  tree-sitter-ruby: false
+  tree-sitter-rust: false
+  tree-sitter-typescript: false

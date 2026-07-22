@@ -141,12 +141,18 @@ perl -pi -e "s/\"workspace:\\*\"/\"^$VERSION\"/g" "$DEST"/typescript-vitest/pack
 # neither `pnpm.onlyBuiltDependencies` nor `pnpm.allowBuilds` in package.json is
 # honoured any more (both verified against pnpm 11.15.0).
 cat > "$DEST"/typescript-vitest/pnpm-workspace.yaml <<'PNPM_WORKSPACE'
-# Dependencies allowed to run install scripts. pnpm blocks them by default as a
-# supply-chain measure; these two tree-sitter grammars each compile a native
-# parser, which is the whole point of the package.
+# pnpm blocks dependency install scripts by default as a supply-chain measure
+# and fails the install until each one is decided either way.
+#
+# Both of these are a deliberate NO. They arrive transitively through
+# @varar/vitest, and their install script (`node-gyp-build`) produces the NATIVE
+# node binding — which Varar never loads. Step definitions are scanned through
+# web-tree-sitter, reading the `.wasm` files these packages already ship
+# prebuilt. Denying them skips a native compile nothing uses, so installing this
+# sample needs no C toolchain.
 allowBuilds:
-  tree-sitter-javascript: true
-  tree-sitter-typescript: true
+  tree-sitter-javascript: false
+  tree-sitter-typescript: false
 PNPM_WORKSPACE
 
 # Pin the Python samples to the released PyPI version: delete the
