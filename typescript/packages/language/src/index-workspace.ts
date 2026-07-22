@@ -25,11 +25,15 @@ export type WorkspaceInput = {
 export type MatchRef = {
   readonly varPath: string
   readonly range: Range
+  // The range of the value passed to the handler for each parameter — the
+  // inner capture group, e.g. `world` for `{string}` matching `"world"` (the
+  // quotes are excluded). What editors highlight. Same order as the cucumber
+  // expression's parameter list.
   readonly paramRanges: ReadonlyArray<Range>
-  // The captured value for each parameter, sliced from the .md source at
-  // index time. Same order as `paramRanges` and the cucumber expression's
-  // parameter list. Used by the rename refactor to preserve values across
-  // expressions whose parameter list survives the edit.
+  // The full matched notation for each parameter, incl. delimiters (e.g. the
+  // quotes), sliced from the .md source at index time. Same order as
+  // `paramRanges` but a wider span. Used by the rename refactor to preserve
+  // values verbatim across expressions whose parameter list survives the edit.
   readonly paramValues: ReadonlyArray<string>
   // Present only on header-binding matches: one range per header cell, located
   // in the table's header row. Kept separate from `paramRanges` because that
@@ -140,7 +144,9 @@ export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
         matches.push({
           varPath: file.path,
           range: toRange(step.matchSpan),
-          paramRanges: step.paramSpans.map(toRange),
+          // Highlight only the value passed to the handler (inner capture
+          // group); paramValues keeps the full notation for rename.
+          paramRanges: step.paramInnerSpans.map(toRange),
           paramValues: step.paramSpans.map((s) => file.source.slice(s.startOffset, s.endOffset)),
           stepDef: def,
         })

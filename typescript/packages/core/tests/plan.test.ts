@@ -377,6 +377,27 @@ each row lists the dice, the category and the score:
   expect(headerRowLine).toBeGreaterThan(binding.paramSpans[0]?.startLine as number)
 })
 
+test('plan carries paramInnerSpans (value only) alongside paramSpans (full notation)', () => {
+  let r = createRegistry()
+  r = addStep(r, {
+    expression: 'I greet {string}',
+    expressionSourceFile: 's.ts',
+    expressionSourceLine: 1,
+    kind: 'stimulus',
+    handler: () => {},
+  })
+  const source = '# Greeting\n\nGiven I greet "world" warmly.'
+  const varDoc = parse('g.md', source)
+  const result = plan(varDoc, r)
+  const step = result.examples[0]?.steps[0]
+  if (!step) throw new Error('no planned step')
+  const outer = step.paramSpans[0]
+  const inner = step.paramInnerSpans[0]
+  if (!outer || !inner) throw new Error('expected spans')
+  expect(source.slice(outer.startOffset, outer.endOffset)).toBe('"world"')
+  expect(source.slice(inner.startOffset, inner.endOffset)).toBe('world')
+})
+
 test('a table not attached to a step is allowed — no diagnostic', () => {
   // Tables are valid Markdown on their own. A table that happens not to follow
   // a step-bearing paragraph is just content, not a mistake.

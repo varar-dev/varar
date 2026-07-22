@@ -148,6 +148,14 @@ test('stepAt resolves the step from a .md match and returns every matched site w
     expect(result?.matches).toHaveLength(2)
     const values = result?.matches.map((m) => m.paramValues[0]).sort()
     expect(values).toEqual(['"Aslak"', '"world"'])
+    // paramRanges highlight the value only: each range is two characters
+    // narrower than its quoted paramValue (the surrounding quotes are dropped).
+    for (const m of result?.matches ?? []) {
+      const range = m.paramRanges[0]
+      const value = m.paramValues[0]
+      if (!range || value === undefined) throw new Error('expected range and value')
+      expect(range.end.character - range.start.character).toBe(value.length - 2)
+    }
   } finally {
     cleanup()
   }

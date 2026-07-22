@@ -12,6 +12,9 @@ export type Range = { readonly start: Position; readonly end: Position }
 export type StepAtMatch = {
   readonly uri: string
   readonly range: Range
+  // Value-only ranges (the inner capture group — what the handler receives),
+  // while `paramValues` carries the full matched notation. Aligned 1:1, but
+  // `paramRanges` is the narrower span (e.g. excludes {string}'s quotes).
   readonly paramRanges: ReadonlyArray<Range>
   readonly paramValues: ReadonlyArray<string>
 }

@@ -48,7 +48,13 @@ export type HeaderBinding = {
 export type PlannedStep = {
   readonly text: string
   readonly matchSpan: Span
+  // Whole matched notation per parameter, incl. delimiters (e.g. quotes) —
+  // used for rename and the "actual" side of a mismatch.
   readonly paramSpans: ReadonlyArray<Span>
+  // The value passed to the handler per parameter (inner capture group), for
+  // editor highlighting. Aligned 1:1 with `paramSpans`; equals it when the
+  // parameter regexp has no capture group.
+  readonly paramInnerSpans: ReadonlyArray<Span>
   readonly stepDef: StepRegistration
   readonly args: ReadonlyArray<unknown>
   // Per-argument display formatters from the matched parameter types,
@@ -94,6 +100,9 @@ export function plan(varDoc: VarDoc, registry: Registry): ExecutionPlan {
           text: block.text.slice(hit.matchStart, hit.matchEnd),
           matchSpan: liftSpan(varDoc.source, block, hit.matchStart, hit.matchEnd),
           paramSpans: hit.paramSpans.map((p) => liftSpan(varDoc.source, block, p.start, p.end)),
+          paramInnerSpans: hit.paramInnerSpans.map((p) =>
+            liftSpan(varDoc.source, block, p.start, p.end),
+          ),
           stepDef: hit.stepDef,
           args: hit.args,
           formats: hit.formats,
@@ -281,6 +290,10 @@ function planBlock(text: string, registry: Registry): BlockPlan {
       matchStart: h.matchStart + sentence.startOffset,
       matchEnd: h.matchEnd + sentence.startOffset,
       paramSpans: h.paramSpans.map((p) => ({
+        start: p.start + sentence.startOffset,
+        end: p.end + sentence.startOffset,
+      })),
+      paramInnerSpans: h.paramInnerSpans.map((p) => ({
         start: p.start + sentence.startOffset,
         end: p.end + sentence.startOffset,
       })),

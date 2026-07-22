@@ -130,6 +130,21 @@ each row lists the dice, the category and the score:
   expect(m.headerCellRanges?.every((r) => r.start.line === 5)).toBe(true)
 })
 
+test('paramRanges highlight the value only, while paramValues keep the full notation', () => {
+  const idx = build({
+    stepFiles: [{ path: '/greet.steps.ts', source: `stimulus('I greet {string}', () => {})\n` }],
+    varFiles: [{ path: '/g.md', source: '# Greet\n\nGiven I greet "world"' }],
+  })
+  const m = idx.matches[0]
+  if (!m) throw new Error('expected a match')
+  // paramValues still carry the quotes — rename splices them back verbatim.
+  expect(m.paramValues).toEqual(['"world"'])
+  // The highlighted range excludes the quotes: 5 characters for `world`.
+  const range = m.paramRanges[0]
+  if (!range) throw new Error('expected a param range')
+  expect(range.end.character - range.start.character).toBe(5)
+})
+
 test('a plain (non-header-bound) match carries no headerCellRanges', () => {
   const idx = build({
     stepFiles: [
