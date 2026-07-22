@@ -64,7 +64,8 @@ git add CHANGELOG.md \
   python/packages/*/pyproject.toml python/uv.lock \
   java/pom.xml java/*/pom.xml \
   examples/*/build.gradle.kts examples/java-junit-maven/pom.xml \
-  ruby/packages ruby/Gemfile.lock
+  ruby/packages ruby/Gemfile.lock \
+  rust/Cargo.toml rust/Cargo.lock
 git commit -m "Release $TAG"
 git push origin main
 log "prepared $TAG and pushed to origin/main — now run: make release"
