@@ -116,13 +116,18 @@ type HandlerArgs<E extends string, Custom> = [...MapArgs<ParameterNames<E>, Cust
 // `.param()`), so `(state, name) => …` types `name` without an annotation and
 // without TS2345. It EVOLVES state by RETURNING the next state — or nothing, for
 // no change.
+//
+// The return is `C`, not `Partial<C>`: the runtime REPLACES state with what it
+// gets back, so a return that leaves a field out drops it. Typing it partial
+// would type-check the one thing the semantics forbid, and every later step
+// would keep the full `C` type over a value that had silently lost keys.
 type StimulusFn<C = unknown, Custom = Record<never, never>> = <E extends string>(
   expression: E,
   handler: (
     state: C,
     ...args: HandlerArgs<E, Custom>
     // biome-ignore lint/suspicious/noConfusingVoidType: mirrors the outer void; async handlers that return nothing satisfy Promise<void>, which is assignable here
-  ) => Partial<C> | void | Promise<Partial<C> | void>,
+  ) => C | void | Promise<C | void>,
 ) => void
 
 // A sensor is an OBSERVER: it reads `state` and may RETURN a value for the pure

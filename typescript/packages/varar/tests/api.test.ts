@@ -132,7 +132,7 @@ test('stimulus/sensor register with their kind', () => {
 
 test('steps() returns role functions typed against the state', () => {
   const { stimulus: ctxStep, sensor: sense } = steps(() => ({ greeting: '' }))
-  // A stimulus EVOLVES state by RETURNING a partial — never by mutating.
+  // A stimulus EVOLVES state by RETURNING the complete next state.
   ctxStep('I greet {string}', (_state, name: string) => ({ greeting: `Hello, ${name}!` }))
   sense('the greeting should be {string}', (state) => state.greeting)
   const r = buildRegistry()
@@ -144,10 +144,13 @@ test('state reaches a handler as the declared type, unwrapped (type-level)', () 
   // TYPE-LEVEL assertions (fire via tsconfig.tests.json under `pnpm typecheck`).
   type S = { greeting: string; nested: { n: number } }
   const { stimulus: act } = steps((): S => ({ greeting: '', nested: { n: 0 } }))
-  // returning a partial is fine
-  act('a', () => ({ greeting: 'hi' }))
-  // returning nothing is fine
+  // returning the COMPLETE next state is the contract
+  act('a', () => ({ greeting: 'hi', nested: { n: 1 } }))
+  // returning nothing is fine — it leaves state unchanged
   act('b', () => {})
+  // @ts-expect-error - a partial return is rejected: the runtime replaces state
+  // wholesale, so a return missing `nested` would silently drop it
+  act('a-partial', () => ({ greeting: 'hi' }))
   act('c', (state) => {
     // State arrives as S itself — no mapped `Readonly`/`DeepReadonly` wrapper —
     // so it stays assignable to whatever the author declared it as. Mutating it
@@ -162,7 +165,7 @@ test('state reaches a handler as the declared type, unwrapped (type-level)', () 
   // @ts-expect-error - an unknown/excess key is rejected
   act('e', () => ({ nope: 1 }))
   const r = buildRegistry()
-  expect(r.steps).toHaveLength(5)
+  expect(r.steps).toHaveLength(6)
 })
 
 test('a class instance in state stays assignable to its own type (type-level)', () => {
