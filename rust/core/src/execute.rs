@@ -245,7 +245,7 @@ fn run_example(
                     let last_step = steps.last().unwrap();
                     let err = if last_return.is_none() {
                         StepError::ReturnShape(
-                            "a header-bound row step must return a row object with one value per bound column, got nothing".to_string(),
+                            "a header-bound row step must return a row object with one value per bound cell, got nothing".to_string(),
                         )
                     } else {
                         StepError::CellMismatch(bad)
@@ -384,7 +384,7 @@ fn check_sensor_return(
             }
             other => {
                 return Err(StepError::ReturnShape(format!(
-                    "a sensor with {} parameters must return a List of {} values, got {}",
+                    "a sensor with {} slots must return a List of {} values, got {}",
                     slot_count,
                     slot_count,
                     other.type_name()
@@ -427,7 +427,7 @@ fn check_sensor_return(
         if let Some(diff) =
             compare_doc_string(Some(&slots[arg_count]), &fence.body, fence.body_span)?
         {
-            return Err(StepError::DocStringMismatch(diff));
+            return Err(StepError::CellMismatch(vec![diff]));
         }
     }
     Ok(())

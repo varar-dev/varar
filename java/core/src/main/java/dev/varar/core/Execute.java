@@ -286,7 +286,7 @@ public final class Execute {
             RuntimeException rowError = lastReturn == null
                     ? new CellDiff.ReturnShapeException(
                             "a header-bound row step must return a row object with one value per"
-                                    + " bound column, got nothing")
+                                    + " bound cell, got nothing")
                     : null;
             if (rowError != null || !bad.isEmpty()) {
                 Plan.PlannedStep lastStep = steps.get(steps.size() - 1);
@@ -360,10 +360,9 @@ public final class Execute {
             slots = List.of(returned);
         } else {
             if (!(returned instanceof List<?> list)) {
-                throw new CellDiff.ReturnShapeException(
-                        "a sensor with " + slotCount + " parameters must return a List of "
-                                + slotCount + " values, got "
-                                + returned.getClass().getSimpleName());
+                throw new CellDiff.ReturnShapeException("a sensor with " + slotCount + " slots must return a List of "
+                        + slotCount + " values, got "
+                        + returned.getClass().getSimpleName());
             }
             if (list.size() != slotCount) {
                 throw new CellDiff.ReturnShapeException(
@@ -388,11 +387,11 @@ public final class Execute {
                     .toList();
             if (!bad.isEmpty()) throw new CellDiff.CellMismatchException(bad);
         } else if (step.docString() != null) {
-            DocStringDiff diff = DocStringDiff.compareDocString(
+            CellDiff diff = DocStringDiff.compareDocString(
                     slots.get(argCount),
                     step.docString().body(),
                     step.docString().bodySpan());
-            if (diff != null) throw new DocStringDiff.DocStringMismatchException(diff);
+            if (diff != null) throw new CellDiff.CellMismatchException(java.util.List.of(diff));
         }
     }
 

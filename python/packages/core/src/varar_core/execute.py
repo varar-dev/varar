@@ -21,7 +21,7 @@ from varar_core.cell_diff import (
     compare_row,
     compare_table,
 )
-from varar_core.doc_string_diff import DocStringMismatchError, compare_doc_string
+from varar_core.doc_string_diff import compare_doc_string
 from varar_core.failure_anchor import failure_anchor
 from varar_core.param_diff import compare_params
 from varar_core.plan import ExecutionPlan, PlannedStep
@@ -240,7 +240,7 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
                                     else:
                                         if not isinstance(returned, (list, tuple)):
                                             raise ReturnShapeError(
-                                                f"a sensor with {slot_count} parameters"
+                                                f"a sensor with {slot_count} slots"
                                                 f" must return a list of {slot_count}"
                                                 f" values, got {type(returned).__name__}"
                                             )
@@ -291,7 +291,7 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
                                             step.doc_string.span,
                                         )
                                         if diff is not None:
-                                            raise DocStringMismatchError(diff)
+                                            raise CellMismatchError([diff])
 
                         else:
                             raise ReturnShapeError(f"unknown step kind: {kind}")
@@ -331,7 +331,7 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
                     row_error = (
                         ReturnShapeError(
                             "a header-bound row step must return a row object with"
-                            " one value per bound column, got nothing"
+                            " one value per bound cell, got nothing"
                         )
                         if last_return is None
                         else None

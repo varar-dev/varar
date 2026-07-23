@@ -183,6 +183,7 @@ fn example(e: &Example) -> Value {
         ),
         ("span", span(e.span)),
         ("body", Value::List(e.body.iter().map(block).collect())),
+        ("precededByDelimiter", Value::Bool(e.preceded_by_delimiter)),
     ])
 }
 
@@ -360,20 +361,6 @@ pub fn to_failure_artifact(failure: Option<&StepFailure>, match_span: Span) -> V
                 ("anchor", anchor),
                 ("message", Value::from(err.unwrap().message().as_str())),
                 ("cells", Value::List(failing)),
-            ])
-        }
-        Some(StepError::DocStringMismatch(diff)) => {
-            let d = obj(vec![
-                ("expected", Value::from(diff.expected.as_str())),
-                ("actual", Value::from(diff.actual.as_str())),
-                ("span", span(diff.span)),
-            ]);
-            obj(vec![
-                ("kind", Value::from("doc-string-mismatch")),
-                ("line", vint(line)),
-                ("anchor", anchor),
-                ("message", Value::from(err.unwrap().message().as_str())),
-                ("diff", d),
             ])
         }
         Some(e @ StepError::ReturnShape(_)) => {

@@ -26,8 +26,9 @@ This tutorial continues in the project you set up in
    ```
 
    That's the whole spec. It reads like documentation because it is documentation
-   — plain prose, with concrete values. The concrete values are what make it
-   checkable: `1+1` is the input we act with, `2` is the outcome we expect.
+   — plain prose, with concrete values. Varar calls those values **cells**, and
+   they are what make the prose checkable: `1+1` is the cell we act with, `2` is
+   the cell we expect back.
 
 2. Bind the steps
 
@@ -57,8 +58,7 @@ This tutorial continues in the project you set up in
      assertion.
 
    The `{int}` placeholders are [Cucumber Expressions](https://github.com/cucumber/cucumber-expressions):
-   they capture the concrete values from the prose and hand them to your function,
-   typed.
+   they capture the cells from the prose and hand them to your function, typed.
 
 3. Run it
 

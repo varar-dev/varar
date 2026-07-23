@@ -35,6 +35,7 @@ import (
 	b16 "github.com/varar-dev/varar/go/conformance/b16"
 	b17 "github.com/varar-dev/varar/go/conformance/b17"
 	b18 "github.com/varar-dev/varar/go/conformance/b18"
+	b19 "github.com/varar-dev/varar/go/conformance/b19"
 )
 
 type fixture struct {
@@ -60,7 +61,8 @@ var fixtures = map[string]fixture{
 	"15-custom-parameter-format":    {b15.Register, b15.State},
 	"16-stimulus-state-replacement": {b16.Register, b16.State},
 	"17-unexpected-pass":            {b17.Register, b17.State},
-	"18-emphasis-parameter":         {b18.Register, b18.State},
+	"18-multi-table-example":        {b18.Register, b18.State},
+	"19-emphasis-parameter":         {b19.Register, b19.State},
 }
 
 func bundlesDir() string { return filepath.Join("..", "..", "conformance", "bundles") }

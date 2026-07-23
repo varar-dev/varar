@@ -59,8 +59,10 @@ mod b15;
 mod b16;
 #[path = "../../../conformance/bundles/17-unexpected-pass/quiet.steps.rs"]
 mod b17;
-#[path = "../../../conformance/bundles/18-emphasis-parameter/mention.steps.rs"]
+#[path = "../../../conformance/bundles/18-multi-table-example/basket.steps.rs"]
 mod b18;
+#[path = "../../../conformance/bundles/19-emphasis-parameter/mention.steps.rs"]
+mod b19;
 
 // Each bundle now has its OWN context type, so the fixtures cannot share one
 // function-pointer type. This macro erases that difference: it builds the
@@ -96,7 +98,8 @@ fn fixture(bundle: &str) -> (Registry, ContextFactory) {
         "15-custom-parameter-format" => bundle!(b15),
         "16-stimulus-state-replacement" => bundle!(b16),
         "17-unexpected-pass" => bundle!(b17),
-        "18-emphasis-parameter" => bundle!(b18),
+        "18-multi-table-example" => bundle!(b18),
+        "19-emphasis-parameter" => bundle!(b19),
         other => panic!("no Rust step fixture for bundle {other}"),
     }
 }

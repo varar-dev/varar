@@ -112,7 +112,7 @@ module Varar
             # it is bound to: no return means nothing was compared.
             row_error = if last_return.nil?
                           ReturnShapeError.new('a header-bound row step must return a row object ' \
-                                               'with one value per bound column, got nothing')
+                                               'with one value per bound cell, got nothing')
                         end
             bad = CellDiffs.compare_row(last_return, ex.row_checks).reject(&:ok)
             if row_error || !bad.empty?
@@ -164,7 +164,7 @@ module Varar
         else
           unless returned.is_a?(Array)
             raise ReturnShapeError,
-                  "a sensor with #{slot_count} parameters must return a list of " \
+                  "a sensor with #{slot_count} slots must return a list of " \
                   "#{slot_count} values, got #{returned.class}"
           end
           unless returned.length == slot_count
@@ -189,7 +189,7 @@ module Varar
         elsif step.doc_string
           diff = DocStringDiffs.compare_doc_string(slots[step.args.length], step.doc_string.content,
                                                    step.doc_string.span)
-          raise DocStringMismatchError, diff unless diff.nil?
+          raise CellMismatchError, [diff] unless diff.nil?
         end
       end
 

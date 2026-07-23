@@ -43,6 +43,13 @@ const restorePrefs = () => ({
 // https://astro.build/config
 export default defineConfig({
   site: 'https://varar.dev',
+  // The project was renamed var → varar; these three pages carried the old name
+  // in their URL. Keep the published links working.
+  redirects: {
+    '/tutorials/try-var': '/tutorials/try-varar',
+    '/explanation/var-overview': '/explanation/varar-overview',
+    '/explanation/var-for-cucumber-users': '/explanation/varar-for-cucumber-users',
+  },
   integrations: [
     restorePrefs(),
     sitemap(),
@@ -80,14 +87,13 @@ export default defineConfig({
       sidebar: [
         {
           label: 'Start here',
-          items: ['tutorials/try-var', 'tutorials/get-started', 'tutorials/first-spec'],
+          items: ['tutorials/try-varar', 'tutorials/get-started', 'tutorials/first-spec'],
         },
         {
           label: 'How-to guides',
           items: [
             'how-to/tables-and-doc-strings',
             'how-to/run-with-vitest',
-            'how-to/run-existing-feature-files',
             'how-to/agent-instructions',
             'how-to/drive-a-feature-with-an-agent',
           ],
@@ -107,11 +113,12 @@ export default defineConfig({
         {
           label: 'Understanding Varar',
           items: [
+            'explanation/varar-overview',
             'explanation/oaths',
             'explanation/test-anatomy',
             'explanation/thin-steps',
             'explanation/markup-is-yours',
-            'explanation/var-for-cucumber-users',
+            'explanation/varar-for-cucumber-users',
           ],
         },
       ],

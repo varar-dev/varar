@@ -1,5 +1,5 @@
 import { CellMismatchError, compareRow, compareTable, ReturnShapeError } from './cell-diff.ts'
-import { compareDocString, DocStringMismatchError } from './doc-string-diff.ts'
+import { compareDocString } from './doc-string-diff.ts'
 import { failureAnchor } from './failure-anchor.ts'
 import { compareParams } from './param-diff.ts'
 import type { ExecutionPlan, PlannedStep } from './plan.ts'
@@ -151,7 +151,7 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
                   } else {
                     if (!Array.isArray(returned)) {
                       throw new ReturnShapeError(
-                        `a sensor with ${slotCount} parameters must return an array of ${slotCount} values, got ${typeof returned}`,
+                        `a sensor with ${slotCount} slots must return an array of ${slotCount} values, got ${typeof returned}`,
                       )
                     }
                     if (returned.length !== slotCount) {
@@ -186,7 +186,7 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
                       step.docString.content,
                       step.docString.span,
                     )
-                    if (diff) throw new DocStringMismatchError(diff)
+                    if (diff) throw new CellMismatchError([diff])
                   }
                 }
               }
@@ -221,7 +221,7 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
           const rowError =
             lastReturn === undefined
               ? new ReturnShapeError(
-                  'a header-bound row step must return a row object with one value per bound column, got nothing',
+                  'a header-bound row step must return a row object with one value per bound cell, got nothing',
                 )
               : undefined
           const bad = compareRow(lastReturn, ex.rowChecks).filter((d) => !d.ok)

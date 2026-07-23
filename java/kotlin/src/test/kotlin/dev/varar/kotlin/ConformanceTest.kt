@@ -23,6 +23,7 @@ import dev.varar.kotlin.conformance.bundle15.steps as bundle15Steps
 import dev.varar.kotlin.conformance.bundle16.steps as bundle16Steps
 import dev.varar.kotlin.conformance.bundle17.steps as bundle17Steps
 import dev.varar.kotlin.conformance.bundle18.steps as bundle18Steps
+import dev.varar.kotlin.conformance.bundle19.steps as bundle19Steps
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
@@ -116,7 +117,8 @@ class ConformanceTest {
                 "15-custom-parameter-format" -> bundle15Steps
                 "16-stimulus-state-replacement" -> bundle16Steps
                 "17-unexpected-pass" -> bundle17Steps
-                "18-emphasis-parameter" -> bundle18Steps
+                "18-multi-table-example" -> bundle18Steps
+                "19-emphasis-parameter" -> bundle19Steps
                 else ->
                     throw IllegalStateException(
                         "No Kotlin step fixture registered for bundle $bundleName"

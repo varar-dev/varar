@@ -98,14 +98,6 @@ public static class Conformance
                     ("actual", Value.Of(c.Actual)),
                     ("span", SpanValue(c.Span)))))));
                 break;
-            case DocStringMismatchError dm:
-                entries.Add(new("kind", Value.Of("doc-string-mismatch")));
-                entries.Add(new("message", Value.Of(dm.Message)));
-                entries.Add(new("diff", Map(
-                    ("expected", Value.Of(dm.Diff.Expected)),
-                    ("actual", Value.Of(dm.Diff.Actual)),
-                    ("span", SpanValue(dm.Diff.Span)))));
-                break;
             case ReturnShapeError rs:
                 entries.Add(new("kind", Value.Of("return-shape")));
                 entries.Add(new("message", Value.Of(rs.Message)));
@@ -181,6 +173,7 @@ public static class Conformance
     private static Value ExampleValue(Example example) => Map(
         ("scopeStack", Value.List(example.ScopeStack.Select(Value.Of))),
         ("span", SpanValue(example.Span)),
+        ("precededByDelimiter", Value.Of(example.PrecededByDelimiter)),
         ("body", List(example.Body, BlockValue)));
 
     private static Value BlockValue(Block block) => block switch

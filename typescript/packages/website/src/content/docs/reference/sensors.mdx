@@ -1,6 +1,6 @@
 ---
 title: Sensors
-description: The sensor return-value contract — slots, bare values, positional arrays, and every error a sensor can raise.
+description: The sensor return-value contract — cells, slots, bare values, positional arrays, and every error a sensor can raise.
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components';
@@ -125,14 +125,24 @@ This page is the reference for what a sensor may return and how each return
 value is compared. The rules are identical in every port (TypeScript, Java,
 Kotlin, Python, Ruby).
 
-## Slots
+## Cells and slots
 
-A sensor's **slots** are the values Varar will compare, in order:
+A **cell** is one value Varar compares — the atomic unit of a check. A cell can
+sit in a table, in a header-bound row, or in a paragraph, where an expression
+parameter captures it. (See [Varar overview](/explanation/varar-overview/) for
+the spreadsheet analogy this comes from.)
+
+A sensor's **slots** are the positions in its return, in order. A slot holds
+either a single cell or a whole table of cells:
 
 1. each parameter captured by the expression (`{int}`, `{word}`, `{string}`,
-   [custom types](/reference/custom-parameters/)), left to right;
+   [custom types](/reference/custom-parameters/)), left to right — one cell each;
 2. the trailing data table or doc string, if the step has one (always last, at
-   most one).
+   most one) — a table is a grid of cells; a doc string is one cell compared
+   whole.
+
+So a two-slot sensor may well compare a dozen cells: one for its `{int}`, and
+one per cell of the table that follows.
 
 The return value maps onto the slots by count:
 
@@ -543,20 +553,19 @@ last element:
 
 ## What each slot kind compares
 
-- **Inline parameter** — deep equality against the transformed captured value
-  (so `{int}` compares numbers, a custom type compares whatever its parse function
-  produced). A mismatch is a `CellMismatchError` anchored to the parameter's
-  span in the Markdown.
-- **Whole table** — the returned table (array of row-arrays or row-objects) is
-  compared cell by cell as exact strings → `CellMismatchError` anchored to the
-  failing cell. See [Check tables and doc strings](/how-to/tables-and-doc-strings/).
-- **Doc string** — exact string equality, including the trailing newline →
-  `DocStringMismatchError` anchored to the block's body.
+| Slot holds | Cells compared | How |
+| ---------- | -------------- | --- |
+| an inline parameter | one | deep equality against the transformed captured value, so `{int}` compares numbers and a custom type compares whatever its parse function produced |
+| a whole table | one per table cell | exact string comparison, cell by cell — see [Check tables and doc strings](/how-to/tables-and-doc-strings/) |
+| a doc string | one | exact string equality of the whole block, trailing newline included; expected/actual are quoted so a whitespace-only difference stays visible |
+
+Every mismatch is a `CellMismatchError` carrying one diff per failing cell,
+anchored to that cell's span in the Markdown.
 
 ## Header-bound table rows
 
 A sensor bound to a sentence that names a table's columns runs once per row and
-returns a **row object** keyed by the header — not slots:
+returns a **row object** keyed by the header — cells, not slots:
 
 <Tabs syncKey="lang">
   <TabItem label="TypeScript">
@@ -638,7 +647,8 @@ returns a **row object** keyed by the header — not slots:
 </Tabs>
 
 Each returned column is compared cell by cell against that row. This is the one
-sensor shape that bypasses the slot contract.
+sensor shape that bypasses the slot contract — a row is not a slot, it is a set
+of cells, one per bound column.
 
 ## Returning nothing
 
@@ -664,14 +674,13 @@ framework's own assertions fail the step just as a mismatching return does. What
 is no longer allowed is answering *nothing at all* when the document asked a
 question. If a capture is awkward to echo back (a greedy `{word}` swallowing a
 trailing period, say), match the punctuation in the expression itself —
-`The result is {word}.` — so the slot holds just the value you want to compare.
+`The result is {word}.` — so the cell holds just the value you want to compare.
 
 ## Errors
 
 | Error                    | Raised when                                                                     |
 | ------------------------ | ------------------------------------------------------------------------------- |
-| `CellMismatchError`      | a parameter or table cell differs; carries one span-anchored diff per cell      |
-| `DocStringMismatchError` | the returned text differs from the doc string                                   |
+| `CellMismatchError`      | one or more cells differ — an inline capture, a table cell, a header-bound row's cell, or a doc string; carries one span-anchored diff per failing cell |
 | `ReturnShapeError`       | the return doesn't fit the slots: a value from a zero-slot sensor, **nothing from a sensor with slots** (or from a header-bound row step), a non-array or wrong-length array for 2+ slots, or a malformed table |
 
 Because every diff is anchored to a source span, editors highlight exactly the
@@ -679,8 +688,8 @@ failing characters in the Markdown and show the actual value in place.
 
 ## Why an array at all?
 
-A sensor with several slots has several independent claims to check, and Varar
-needs to know which returned value belongs to which claim. Positional mapping —
-same order as the sentence — does that without naming ceremony. When there is
-only one claim, the position is unambiguous, so the wrapper would be pure
-noise; that's why one slot takes the bare value.
+A sensor with several slots is answering several independent questions the
+document asked, and Varar needs to know which returned value belongs to which.
+Positional mapping — same order as the sentence — does that without naming
+ceremony. With one slot the position is unambiguous, so the wrapper would be
+pure noise; that's why one slot takes the bare value.

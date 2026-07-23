@@ -227,7 +227,7 @@ Uppercase each one:
   </TabItem>
 </Tabs>
 
-The table is this sensor's only comparable value, so it is returned bare. Varar
+The table fills this sensor's only slot, so it is returned bare. Varar
 compares every cell of the returned table against the source, as exact strings.
 
 ## Check a doc string
@@ -317,9 +317,9 @@ the text the software actually produces:
 </Tabs>
 
 The comparison is exact equality, **including the trailing newline**. This step
-has two comparable values — the captured `{word}` and the doc string — so it
+has two slots — the captured `{word}` and the doc string — so it
 returns an array with one element per value, in order: `[name, text]`. A step
-whose doc string is its only comparable value returns the text bare:
+whose doc string fills its only slot returns the text bare:
 
 <Tabs syncKey="lang">
   <TabItem label="TypeScript">
@@ -383,7 +383,8 @@ rules.
 - A differing table cell fails with a `CellMismatchError`: each wrong cell gets
   its own `expected` / `actual`, anchored to the cell's source span — editors
   redden exactly the failing characters.
-- A differing doc string fails with a `DocStringMismatchError`.
+- A differing doc string fails with a `CellMismatchError` too: a doc string is one
+  cell, compared whole.
 - Returning a value of the wrong shape is a `ReturnShapeError`.
 - A table or doc string is itself a slot, so returning `undefined` (`None` / `null` /
   `nil`) from one of these steps is a `ReturnShapeError`, not a pass. Throw if you

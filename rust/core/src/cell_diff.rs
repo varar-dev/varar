@@ -6,7 +6,9 @@ use crate::error::StepError;
 use crate::span::Span;
 use crate::value::Value;
 
-/// The verdict for one checked column: expected vs actual, plus raw values and
+/// The verdict for one comparison of one CELL — the atomic value a sensor checks
+/// against the document (a table cell, a header-bound row's cell, or a value
+/// captured from a paragraph). `column` labels it. Expected vs actual, plus raw values and
 /// whether a parameter-type `format` produced `actual` (inline-parameter path).
 #[derive(Clone, Debug, PartialEq)]
 pub struct CellDiff {
