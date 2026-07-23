@@ -15,12 +15,17 @@ module Varar
     # only the bridge is Ruby-specific, because RSpec/Minitest — unlike
     # pytest — need an explicit generator call to discover the oaths.
     module CLI
-      CONFIG = <<~JSON
-        {
-          "docs": { "include": ["varar-examples/**/*.md"], "exclude": [] },
-          "steps": ["varar-examples/**/*.steps.rb"]
-        }
-      JSON
+      # The steps live under the framework's conventional root (spec/ for
+      # RSpec, test/ for Minitest), so the config depends on the framework.
+      def self.config_for(framework)
+        root = framework == :minitest ? 'test' : 'spec'
+        <<~JSON
+          {
+            "docs": { "include": ["varar/**/*.md"], "exclude": [] },
+            "steps": ["#{root}/varar/**/*.steps.rb"]
+          }
+        JSON
+      end
 
       EXAMPLE_MD = <<~MARKDOWN
         # Deep Thought
@@ -85,15 +90,16 @@ module Varar
       # The framework bridge matches whichever adapter gem is installed
       # (RSpec by default).
       def self.run_init(cwd, out, framework: detect_framework)
+        root = framework == :minitest ? 'test' : 'spec'
         files = [
-          ['varar.config.json', CONFIG],
-          ['varar-examples/deep-thought.md', EXAMPLE_MD],
-          ['varar-examples/steps/deep-thought.steps.rb', EXAMPLE_STEPS]
+          ['varar.config.json', config_for(framework)],
+          ['varar/deep-thought.md', EXAMPLE_MD],
+          ["#{root}/varar/deep_thought.steps.rb", EXAMPLE_STEPS]
         ]
         files << if framework == :minitest
-                   ['test/var_test.rb', MINITEST_BRIDGE]
+                   ['test/varar_test.rb', MINITEST_BRIDGE]
                  else
-                   ['spec/var_spec.rb', RSPEC_BRIDGE]
+                   ['spec/varar_spec.rb', RSPEC_BRIDGE]
                  end
 
         files.each do |rel, content|
