@@ -5,17 +5,29 @@ import dev.varar.StepDefinitions;
 import dev.varar.Steps;
 import dev.varar.core.Registry;
 import io.cucumber.cucumberexpressions.ParameterTypeRegistry;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.JarURLConnection;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.file.DirectoryStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.jar.JarEntry;
+import java.util.jar.JarFile;
 
 /**
  * Reflectively loads a run's {@link StepDefinitions} classes, merges each one's own
@@ -96,16 +108,18 @@ public final class StepLoader {
      * Loads every named {@link StepDefinitions} class from {@code loader}, merges their
      * registries into one, and returns the merged {@link LoadedSteps}.
      *
-     * @param stepClassNames fully-qualified class names, each either implementing {@link
-     *     StepDefinitions} with a public no-arg constructor, OR exposing one or more public
-     *     static no-arg methods whose return type is assignable to {@link StepDefinitions}
+     * @param stepClassNames each entry is either a fully-qualified class name — a class
+     *     implementing {@link StepDefinitions} with a public no-arg constructor, OR exposing
+     *     one or more public static no-arg methods whose return type is assignable to {@link
+     *     StepDefinitions} — or a package wildcard {@code pkg.*} resolving to every such
+     *     class directly in {@code pkg} (see {@link #resolveEntry})
      * @param loader the classloader to resolve {@code stepClassNames} against
-     * @throws IllegalArgumentException if a name can't be resolved to a class, the
-     *     resolved class neither implements {@link StepDefinitions} nor exposes a matching
-     *     static factory method, two classes register the identical step expression, two
-     *     classes register a custom parameter type with the same name, or two load units'
-     *     steps report the same {@code expressionSourceFile} (one steps per
-     *     step-definition file)
+     * @throws IllegalArgumentException if a name can't be resolved to a class, a package
+     *     wildcard matches no step-definition class, the resolved class neither implements
+     *     {@link StepDefinitions} nor exposes a matching static factory method, two classes
+     *     register the identical step expression, two classes register a custom parameter
+     *     type with the same name, or two load units' steps report the same {@code
+     *     expressionSourceFile} (one steps per step-definition file)
      * @throws IllegalStateException if a resolved class can't be instantiated or invoked
      */
     public static LoadedSteps loadSteps(List<String> stepClassNames, ClassLoader loader) {
@@ -115,7 +129,11 @@ public final class StepLoader {
         ParameterTypeRegistry parameterTypes = null;
         Map<String, Supplier<? extends State>> factoriesByFile = new HashMap<>();
 
-        for (String className : stepClassNames) {
+        List<String> resolvedClassNames = new ArrayList<>();
+        for (String entry : stepClassNames) {
+            resolvedClassNames.addAll(resolveEntry(entry, loader));
+        }
+        for (String className : resolvedClassNames) {
             for (StepDefinitions<?> instance : resolveUnits(className, loader)) {
                 Steps.Bound bound = Steps.bind(instance);
 
@@ -205,6 +223,144 @@ public final class StepLoader {
                 throw new IllegalArgumentException("duplicate custom parameter-type name \"" + incoming.name() + "\"");
             }
         }
+    }
+
+    /**
+     * Resolves one configured {@code steps} entry to the class names it denotes. A plain
+     * fully-qualified class name resolves to itself, unchecked — {@link #resolveUnits}
+     * still rejects it loudly if it isn't a step-definition holder. An entry ending in
+     * {@code .*} is a package wildcard with star-import semantics: it resolves to every
+     * step-definition holder <em>directly</em> in that package — top-level classes only,
+     * no nested classes, no subpackages — discovered via {@code loader} (both directory
+     * and jar classpath entries), name-sorted for determinism. A holder is what the
+     * explicit-FQN path accepts: a concrete class implementing {@link StepDefinitions},
+     * or one exposing a public static no-arg method returning it (the Kotlin file-facade
+     * shape). Classes in the package that are neither are skipped silently; a wildcard
+     * matching no holder at all fails exactly like an unknown fully-qualified name.
+     */
+    private static List<String> resolveEntry(String entry, ClassLoader loader) {
+        if (!entry.endsWith(".*")) return List.of(entry);
+        String packageName = entry.substring(0, entry.length() - ".*".length());
+        List<String> holders = new ArrayList<>();
+        for (String className : topLevelClassNamesIn(packageName, loader)) {
+            if (isStepDefinitionHolder(className, loader)) holders.add(className);
+        }
+        if (holders.isEmpty()) {
+            throw new IllegalArgumentException("step-definition class not found: " + entry
+                    + " (no class directly in package "
+                    + packageName
+                    + " implements "
+                    + StepDefinitions.class.getName()
+                    + " or exposes a public static no-arg method returning it)");
+        }
+        return holders;
+    }
+
+    /**
+     * Every top-level class name directly in {@code packageName} (no subpackages), from
+     * every classpath entry {@code loader} maps the package to — directory entries listed
+     * from the filesystem, jar entries enumerated from the jar index. Sorted. Nested and
+     * synthetic classes ({@code $} in the file name) and {@code package-info}/{@code
+     * module-info} are excluded — star-import semantics import top-level types only.
+     */
+    private static Set<String> topLevelClassNamesIn(String packageName, ClassLoader loader) {
+        String packagePath = packageName.replace('.', '/');
+        Set<String> names = new TreeSet<>();
+        Enumeration<URL> resources;
+        try {
+            resources = loader.getResources(packagePath);
+        } catch (IOException e) {
+            throw new IllegalStateException("cannot enumerate classpath entries for package " + packageName, e);
+        }
+        while (resources.hasMoreElements()) {
+            URL url = resources.nextElement();
+            switch (url.getProtocol()) {
+                case "file" -> collectFromDirectory(url, packageName, names);
+                case "jar" -> collectFromJar(url, packagePath, packageName, names);
+                default -> {
+                    // Some other classpath entry kind (e.g. a custom protocol) — nothing
+                    // this dependency-free scan knows how to enumerate.
+                }
+            }
+        }
+        return names;
+    }
+
+    private static void collectFromDirectory(URL url, String packageName, Set<String> names) {
+        Path dir;
+        try {
+            dir = Path.of(url.toURI());
+        } catch (URISyntaxException e) {
+            throw new IllegalStateException("cannot resolve classpath directory for package " + packageName, e);
+        }
+        try (DirectoryStream<Path> entries = Files.newDirectoryStream(dir, "*.class")) {
+            for (Path entry : entries) {
+                addClassName(names, packageName, entry.getFileName().toString());
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException(
+                    "cannot list classpath directory " + dir + " for package " + packageName, e);
+        }
+    }
+
+    private static void collectFromJar(URL url, String packagePath, String packageName, Set<String> names) {
+        String prefix = packagePath + "/";
+        try {
+            JarURLConnection connection = (JarURLConnection) url.openConnection();
+            // Never close a JarFile the URL-connection cache shares with the classloader.
+            connection.setUseCaches(false);
+            try (JarFile jar = connection.getJarFile()) {
+                Enumeration<JarEntry> entries = jar.entries();
+                while (entries.hasMoreElements()) {
+                    String name = entries.nextElement().getName();
+                    if (!name.startsWith(prefix) || !name.endsWith(".class")) continue;
+                    String fileName = name.substring(prefix.length());
+                    if (fileName.contains("/")) continue; // subpackage — not a star-import match
+                    addClassName(names, packageName, fileName);
+                }
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("cannot read classpath jar " + url + " for package " + packageName, e);
+        }
+    }
+
+    private static void addClassName(Set<String> names, String packageName, String classFileName) {
+        String simpleName = classFileName.substring(0, classFileName.length() - ".class".length());
+        if (simpleName.contains("$") || simpleName.equals("package-info") || simpleName.equals("module-info")) {
+            return;
+        }
+        names.add(packageName + "." + simpleName);
+    }
+
+    /**
+     * Does {@code className} qualify as a wildcard match — the same two shapes {@link
+     * #resolveUnits} accepts for an explicit FQN? Checked without initializing the class
+     * (so scanning a package never runs an unrelated class's static initializer); a class
+     * that can't even be loaded is a non-match, skipped silently like any other
+     * non-holder in the package.
+     */
+    private static boolean isStepDefinitionHolder(String className, ClassLoader loader) {
+        Class<?> rawClass;
+        try {
+            rawClass = Class.forName(className, false, loader);
+        } catch (ClassNotFoundException | LinkageError e) {
+            return false;
+        }
+        try {
+            if (StepDefinitions.class.isAssignableFrom(rawClass)) {
+                return !Modifier.isAbstract(rawClass.getModifiers());
+            }
+            for (Method m : rawClass.getMethods()) {
+                if (Modifier.isStatic(m.getModifiers())
+                        && m.getParameterCount() == 0
+                        && StepDefinitions.class.isAssignableFrom(m.getReturnType())) {
+                    return true;
+                }
+            }
+        } catch (LinkageError e) {
+            return false;
+        }
+        return false;
     }
 
     /**
