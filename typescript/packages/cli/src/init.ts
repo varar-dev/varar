@@ -2,8 +2,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
 const CONFIG = `{
-  "docs": { "include": ["varar-examples/**/*.md"], "exclude": [] },
-  "steps": ["varar-examples/**/*.steps.ts"]
+  "docs": { "include": ["varar/**/*.md"], "exclude": [] },
+  "steps": ["src/varar/**/*.steps.ts"]
 }
 `
 
@@ -65,8 +65,8 @@ function ensureEsm(cwd: string, writeStdout: (s: string) => void): void {
 export async function runInit(opts: InitOptions): Promise<InitResult> {
   const files: Array<{ readonly relPath: string; readonly content: string }> = [
     { relPath: 'varar.config.json', content: CONFIG },
-    { relPath: 'varar-examples/deep-thought.md', content: EXAMPLE_MD },
-    { relPath: 'varar-examples/steps/deep-thought.steps.ts', content: EXAMPLE_STEPS },
+    { relPath: 'varar/deep-thought.md', content: EXAMPLE_MD },
+    { relPath: 'src/varar/deep-thought.steps.ts', content: EXAMPLE_STEPS },
   ]
   for (const f of files) {
     const target = join(opts.cwd, f.relPath)

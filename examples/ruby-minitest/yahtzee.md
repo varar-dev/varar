@@ -1,1 +1,0 @@
-../typescript-vitest/yahtzee.md

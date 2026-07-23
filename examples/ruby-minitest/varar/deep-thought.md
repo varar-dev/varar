@@ -1,0 +1,1 @@
+../../typescript-vitest/varar/deep-thought.md
