@@ -3,7 +3,7 @@ import { expect, test } from 'vitest'
 // virtual module drifts from the actual @varar/varar API, this file stops
 // type-checking cleanly and the first test fails, exactly like the front
 // page would.
-import librarySteps from '../../../../examples/typescript-vitest/steps/library.steps.ts?raw'
+import librarySteps from '../../../../examples/typescript-vitest/src/varar/library.steps.ts?raw'
 import { createTsDiagnostics } from '../src/lib/ts-diagnostics.ts'
 
 // The sample imports its domain module ('../src/library'); the in-browser

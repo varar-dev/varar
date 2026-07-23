@@ -32,7 +32,7 @@ than pytest's file-collection shape.
 ### RSpec — a generator that emits one `it` per example
 
 `oselvar-var-rspec` exposes a generator (invoked from a tiny
-`spec/var_spec.rb`: `Oselvar::Var::RSpec.generate`). At load time it:
+`spec/varar_spec.rb`: `Oselvar::Var::RSpec.generate`). At load time it:
 
 - reads `var.config.json` via `var-config`, loads the step files via
   `var-runner`, and finds + plans every matching `.md` oath;
@@ -54,7 +54,7 @@ Plan-stage diagnostics (`ambiguous-match`, `error-fence-without-step`,
 ### Minitest — `generate_tests` injecting one `Test` subclass per oath
 
 `oselvar-var-minitest` exposes `Oselvar::Var::Minitest.generate_tests(namespace)`
-(invoked from a `test/var_test.rb`). It is a near-direct port of `var-unittest`:
+(invoked from a `test/varar_test.rb`). It is a near-direct port of `var-unittest`:
 at load time it reads config, loads steps, and for each matched oath injects a
 **`Minitest::Test` subclass** into the caller's namespace with **one `test_*`
 method per example** (identifier-safe method names; the real example name in the

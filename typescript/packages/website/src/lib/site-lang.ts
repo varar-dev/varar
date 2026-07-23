@@ -46,6 +46,12 @@ export type Language = {
   readonly ext: string
   /** Glob a scaffolded project uses to discover this language's steps. */
   readonly stepsGlob: string
+  /**
+   * Project-relative path of the steps file `varar init` scaffolds (or the
+   * conventional location on ports without a CLI), e.g.
+   * `src/varar/deep-thought.steps.ts`.
+   */
+  readonly stepsPath: string
   /** Whether the port ships a `var` CLI (TS/Python/Ruby) or is copy-paste (JVM). */
   readonly hasCli: boolean
   readonly install: CommandBlock

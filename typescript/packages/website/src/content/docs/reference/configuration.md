@@ -16,10 +16,10 @@ the worst failure mode this file has.
 {
   "$schema": "https://varar.dev/varar.config.schema.json",
   "docs": {
-    "include": ["varar-examples/**/*.md"],
-    "exclude": ["varar-examples/drafts/**"]
+    "include": ["varar/**/*.md"],
+    "exclude": ["varar/drafts/**"]
   },
-  "steps": ["varar-examples/**/*.steps.ts"],
+  "steps": ["src/varar/**/*.steps.ts"],
   "snippets": {}
 }
 ```
@@ -44,8 +44,10 @@ globs; see [Run oaths through vitest](/how-to/run-with-vitest/).
 
 An array of globs matching your step-definition files. Also no default.
 
-On the JVM ports this holds fully-qualified class names rather than file globs,
-because that is how the JVM loads them.
+On the JVM ports, entries are fully-qualified class names rather than file
+globs, because that is how the JVM loads them. An entry may also be a package
+wildcard: `varar.*` includes every step class directly in the `varar` package
+(star-import semantics — it does not recurse into sub-packages).
 
 ## `snippets`
 

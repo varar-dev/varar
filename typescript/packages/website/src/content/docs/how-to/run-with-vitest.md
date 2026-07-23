@@ -42,10 +42,10 @@ from it — you don't repeat the globs in the vitest config:
 ```json
 {
   "docs": {
-    "include": ["varar-examples/**/*.md"],
-    "exclude": ["varar-examples/drafts/**"]
+    "include": ["varar/**/*.md"],
+    "exclude": ["varar/drafts/**"]
   },
-  "steps": ["varar-examples/**/*.steps.ts"]
+  "steps": ["src/varar/**/*.steps.ts"]
 }
 ```
 

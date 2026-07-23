@@ -35,10 +35,10 @@ Every command and code sample below follows that choice.
 3. A first oath
 
    The example oath is plain Markdown with one concrete example — `varar init`
-   already wrote it for you; if your port has no CLI, create it now, at any path
-   matched by your config's `docs` globs:
+   already wrote it for you; if your port has no CLI, create it now, in the
+   `varar/` directory your config's `docs` globs match:
 
-   ```markdown title="deep-thought.md"
+   ```markdown title="varar/deep-thought.md"
    # Deep Thought
 
    You're really not going to like it.
@@ -58,7 +58,7 @@ Every command and code sample below follows that choice.
 
    <Tabs syncKey="lang">
      <TabItem label="TypeScript">
-       ```ts title="varar-examples/steps/deep-thought.steps.ts"
+       ```ts title="src/varar/deep-thought.steps.ts"
        import { steps } from '@varar/varar'
 
        const { sensor } = steps()
@@ -67,8 +67,8 @@ Every command and code sample below follows that choice.
        ```
      </TabItem>
      <TabItem label="Java">
-       ```java title="src/test/java/examples/DeepThoughtSteps.java"
-       package examples;
+       ```java title="src/test/java/varar/DeepThoughtSteps.java"
+       package varar;
 
        import dev.varar.State;
        import dev.varar.StepDefinitions;
@@ -86,10 +86,10 @@ Every command and code sample below follows that choice.
        ```
      </TabItem>
      <TabItem label="Kotlin">
-       ```kotlin title="src/test/kotlin/examples/deep-thought.steps.kt"
+       ```kotlin title="src/test/kotlin/varar/deep-thought.steps.kt"
        @file:JvmName("DeepThoughtSteps")
 
-       package examples
+       package varar
 
        import dev.varar.kotlin.sensor
        import dev.varar.kotlin.steps
@@ -101,7 +101,7 @@ Every command and code sample below follows that choice.
        ```
      </TabItem>
      <TabItem label="Python">
-       ```python title="varar-examples/steps/deep-thought.steps.py"
+       ```python title="tests/varar/deep_thought.steps.py"
        from varar import steps
 
        param, stimulus, sensor = steps()
@@ -113,7 +113,7 @@ Every command and code sample below follows that choice.
        ```
      </TabItem>
      <TabItem label="Ruby">
-       ```ruby title="varar-examples/steps/deep-thought.steps.rb"
+       ```ruby title="spec/varar/deep_thought.steps.rb"
        require 'varar'
 
        steps do
@@ -122,7 +122,7 @@ Every command and code sample below follows that choice.
        ```
      </TabItem>
      <TabItem label="Rust">
-       ```rust title="src/steps/deep_thought.steps.rs"
+       ```rust title="src/varar/deep_thought.steps.rs"
        use varar::Steps;
 
        pub fn register(s: &mut Steps<()>) {
@@ -168,7 +168,7 @@ Every command and code sample below follows that choice.
    Varar reports one example passing:
 
    ```
-   varar-examples/deep-thought.md
+   varar/deep-thought.md
      ✓ Deep Thought
 
    1 example, 1 passed, 0 failed

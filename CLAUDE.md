@@ -20,8 +20,8 @@ This is a multi-language monorepo (ADR 0001). Top level:
 - `doc/` — shared design docs (ADRs, specs, plans, ARCHITECTURE).
 - `examples/` — one standalone sample project per language/test-framework
   combo, mirroring the `varar-dev/varar-examples` repo 1:1 (synced there on every
-  release by `release/targets/72-varar-examples.sh`). The `.md` oaths sit at
-  each project's root; `typescript-vitest` holds the originals, the other
+  release by `release/targets/72-varar-examples.sh`). The `.md` oaths sit in
+  each project's `varar/` directory; `typescript-vitest` holds the originals, the other
   projects symlink their subset (the sync dereferences symlinks).
 
 ## Documentation
@@ -126,8 +126,13 @@ on everything since the last release tag):
   the single source of truth for "what is an oath", consulted by the runner, the LSP, and
   the vitest plugin alike — the plugin drives vitest's own `include`/`exclude` from it.
 - Step definition files: `*.steps.ts`.
-- Config: every example project in `examples/` carries its own `varar.config.json`
-  (docs `*.md` at the project root, steps per language). The repo-root
+- Config: every example project in `examples/` carries its own `varar.config.json`.
+  Oath `.md` files always live in a `varar/` directory ("varar means oaths"):
+  docs is `{ "include": ["varar/**/*.md"], "exclude": [] }`. Steps live at the
+  per-language conventional path — `languages.json` (`stepsGlob`/`stepsPath`) is
+  the source of truth (TS `src/varar/`, Python `tests/varar/`, Ruby `spec/varar/`
+  or `test/varar/`, JVM package `varar` with the `["varar.*"]` package wildcard,
+  Rust `src/varar/`, C# `steps/`, Go package root). The repo-root
   `varar.config.json` mirrors `examples/typescript-vitest` for the LSP when the
   repo root is the workspace folder.
 

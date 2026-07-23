@@ -30,16 +30,16 @@ This creates a config file and a first example, side by side:
 
 ```
 created varar.config.json
-created varar-examples/hello-var/hello-var.md
-created varar-examples/hello-var/hello-var.steps.ts
+created varar/hello-var.md
+created src/varar/hello-var.steps.ts
 ```
 
 `varar.config.json` says which files are oaths and which files bind their steps:
 
 ```json
 {
-  "docs": { "include": ["varar-examples/**/*.md"], "exclude": [] },
-  "steps": ["varar-examples/**/*.steps.ts"]
+  "docs": { "include": ["varar/**/*.md"], "exclude": [] },
+  "steps": ["src/varar/**/*.steps.ts"]
 }
 ```
 
@@ -60,7 +60,7 @@ pnpm exec varar run
 The freshly scaffolded example passes:
 
 ```
-varar-examples/hello-var/hello-var.md
+varar/hello-var.md
   ✓ Hello, Varar
 
 1 example, 1 passed
@@ -70,7 +70,7 @@ varar-examples/hello-var/hello-var.md
 
 [Never trust a test you haven't seen fail.](/var/docs/concepts/the-oaths-of-var/)
 A passing example you've never seen go red might be testing nothing at all.
-Open `varar-examples/hello-var/hello-var.steps.ts` and change the greeting it
+Open `src/varar/hello-var.steps.ts` and change the greeting it
 produces:
 
 ```ts
@@ -87,7 +87,7 @@ Now the oath is *broken* — the oath still says `"Hello, world!"`, but the step
 produces something else:
 
 ```
-varar-examples/hello-var/hello-var.md
+varar/hello-var.md
   ✗ Hello, Varar
       expected "Hello, world!", actual "Hi, world!"
 
