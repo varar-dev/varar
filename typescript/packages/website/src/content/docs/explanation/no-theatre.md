@@ -1,11 +1,11 @@
 ---
-title: Specs that can't be theatre
-description: The failure mode where a spec decorates the code instead of checking it — and the mechanisms Varar uses to make that fail loudly instead of passing quietly.
+title: Oaths that can't be theatre
+description: The failure mode where an oath decorates the code instead of checking it — and the mechanisms Varar uses to make that fail loudly instead of passing quietly.
 ---
 
-Every specification practice has the same well-known decay path. The spec is
+Every specification practice has the same well-known decay path. The oath is
 written after the code, shaped to match whatever the code already does. Or it
-was honest once, and then the code moved and the spec didn't. Or the checks
+was honest once, and then the code moved and the oath didn't. Or the checks
 behind it quietly thinned out until the document *performed* confidence without
 producing any. Call it **theatre**: a document that looks like a passing
 specification and verifies nothing.
@@ -13,16 +13,16 @@ specification and verifies nothing.
 Most methodologies defend against theatre with process — review gates, sign-off,
 discipline. Process works until it doesn't: vigilance decays, reviewers skim,
 and when an AI agent is writing most of the code and the tests, the volume of
-output makes "a human carefully checks that the spec really checks something"
+output makes "a human carefully checks that the oath really checks something"
 the weakest link in the chain.
 
 Varar's position is that theatre should be *mechanically unprofitable*: the
-cheap ways a spec becomes decorative are made to fail the build, so what's left
+cheap ways an oath becomes decorative are made to fail the build, so what's left
 for human judgment is small and well-defined. Three mechanisms do the work.
 
 ## The document holds the assertion
 
-In most test frameworks the spec text and the assertion are two artefacts: a
+In most test frameworks the oath text and the assertion are two artefacts: a
 sentence that claims something, and test code somewhere else that hopefully
 checks it. The two can disagree — a scenario that says "the balance is 70" bound
 to a step that asserts nothing at all still passes.
@@ -47,7 +47,7 @@ Varar treats that transition as [**drift**](/reference/examples/#drift-detection
 and fails the run until you explicitly acknowledge it. The acknowledgment
 rewrites a committed baseline (`varar.lock.json`), so the decision "this
 paragraph is intentionally no longer a test" is visible in review instead of
-swallowed. A spec can stop being executable — but never silently.
+swallowed. An oath can stop being executable — but never silently.
 
 ## Failures land in the document
 
@@ -55,8 +55,8 @@ When a comparison fails, the diff is anchored to the exact source span of the
 failing cell: the editor reddens the value in the Markdown and shows what the
 software actually produced against it. That keeps the document the artefact you
 debug — the place where the disagreement between claim and behaviour is
-displayed is the place where the claim is written. A spec you never return to
-is a spec free to rot; span-anchored failure keeps pulling you back into it.
+displayed is the place where the claim is written. An oath you never return to
+is an oath free to rot; span-anchored failure keeps pulling you back into it.
 
 ## What mechanism can't catch
 
@@ -65,14 +65,14 @@ not guard the document's *meaning*, and it would be theatre of our own to
 pretend otherwise. Nothing mechanical stops someone — human or agent — from:
 
 - **editing a claimed value to whatever the code produced.** The example still
-  matches, the comparison now passes, and the spec has been quietly weakened
+  matches, the comparison now passes, and the oath has been quietly weakened
   from "what we want" to "what we got";
-- **deleting an example, or a whole spec file** (file removal is a different
+- **deleting an example, or a whole oath file** (file removal is a different
   signal from drift, and is not gated);
 - **writing examples that match and pass but claim very little.**
 
 Every one of these changes the Markdown, which is why the human review unit in
-Varar is the **spec diff**, not the code diff. The tooling shrinks the review
+Varar is the **oath diff**, not the code diff. The tooling shrinks the review
 problem to a readable document written in your language — it doesn't remove it.
 [Drive a feature with Varar and an agent](/how-to/drive-a-feature-with-an-agent/)
 turns this boundary into a working loop.

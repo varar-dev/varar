@@ -60,7 +60,7 @@ Two practical consequences:
 
 ## Formats are block structure
 
-What does Markdown actually contribute to a spec? Sections (`#` headings
+What does Markdown actually contribute to an oath? Sections (`#` headings
 become example boundaries and `describe` scopes), prose blocks (paragraphs,
 list items, blockquotes), tables, and fenced blocks (doc strings and
 `error` fences). All of it is *block* structure. None of it is inline.

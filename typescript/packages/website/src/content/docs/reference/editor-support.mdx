@@ -5,7 +5,7 @@ description: The Varar VS Code extension and its language server — matched-ste
 
 import { Aside } from '@astrojs/starlight/components';
 
-Varar ships an editor integration so that a spec — plain Markdown that happens to
+Varar ships an editor integration so that an oath — plain Markdown that happens to
 be executable — reads and edits like real code: matched steps are highlighted,
 you can jump from a sentence to the function that runs it, and the editor tells
 you when a paragraph has stopped being an example. It comes in two pieces:
@@ -35,9 +35,9 @@ Windsurf — that resolves extensions from Open VSX:
 
 The extension activates when a workspace contains a `varar.config.json`, or when
 you open a Markdown, TypeScript, Python, Java, or Kotlin file. It needs that
-config to know which files are specs and where your step definitions live — see
+config to know which files are oaths and where your step definitions live — see
 the [Examples reference](/reference/examples/) for the `docs` globs that decide
-what counts as a spec.
+what counts as an oath.
 
 <Aside type="note" title="VS Code Marketplace">
 Publishing to Microsoft's VS Code Marketplace is parked for now. Install from
@@ -47,7 +47,7 @@ must be configured to include the Open VSX gallery, or install from the CLI.
 
 ## Feature set
 
-The features below work in any spec (`.md`) and its step-definition files.
+The features below work in any oath (`.md`) and its step-definition files.
 Step definitions are supported in **TypeScript, Python, Java, Kotlin, and
 Ruby** — the language server carries a tree-sitter grammar for each, so
 matching, go-to-definition, and rename cross the Markdown ↔ code boundary in
@@ -55,7 +55,7 @@ whichever language your steps are written.
 
 ### Matched-step highlighting
 
-The editor colours the sentences in a spec that actually match a registered
+The editor colours the sentences in an oath that actually match a registered
 [stimulus](/reference/stimuli/) or [sensor](/reference/sensors/), and the
 parameter spans within them, using semantic tokens. Prose that matches nothing
 stays plain. At a glance you can see which paragraphs are executable examples
@@ -72,11 +72,11 @@ expression.
 ### Hover
 
 Hovering a matched step surfaces details about the step it resolves to — the
-binding behind the sentence — without leaving the spec.
+binding behind the sentence — without leaving the oath.
 
 ### Completion
 
-As you write a sentence in a spec, completion offers the registered steps that
+As you write a sentence in an oath, completion offers the registered steps that
 could match, so you can author against the vocabulary your step definitions
 already provide instead of guessing at wording.
 
@@ -104,7 +104,7 @@ acknowledging the drift in the runner.
 
 ### Generate Step Definition from selection
 
-Select a sentence in a spec and run **BDD: Generate Step Definition from
+Select a sentence in an oath and run **BDD: Generate Step Definition from
 Selection** — from the context menu, the Command Palette, or as a refactor
 action. The server generates a step-definition snippet for the selection (with a
 parameter for each captured value), you pick which steps file to add it to, and
@@ -116,9 +116,9 @@ working step.
 Press **F2** on a matched step — either on the sentence in the Markdown or on the
 `stimulus()` / `sensor()` expression in a steps file — and Varar renames the step
 everywhere at once: it rewrites the step-definition expression and its handler,
-and re-renders every matching sentence across every spec to the new wording. If
+and re-renders every matching sentence across every oath to the new wording. If
 the new form adds a parameter or changes a parameter's type, the editor prompts
-for the value each affected example should use, so the specs stay runnable
+for the value each affected example should use, so the oaths stay runnable
 through the rename.
 
 ## Using the language server in other editors

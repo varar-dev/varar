@@ -1,18 +1,18 @@
 ---
 title: Examples
-description: How Varar identifies an example in a Markdown spec — where one begins and ends, how tables, doc strings, headings, and prose fit in, and how drift is detected when an example stops being one.
+description: How Varar identifies an example in a Markdown oath — where one begins and ends, how tables, doc strings, headings, and prose fit in, and how drift is detected when an example stops being one.
 ---
 
-In Varar the Markdown *is* the test. A spec file is ordinary Markdown — prose,
+In Varar the Markdown *is* the test. An oath file is ordinary Markdown — prose,
 headings, lists, tables, code blocks — and Varar runs the parts of it that match
 your step definitions. This page is the reference for the unit it runs: the
 **example**. It covers exactly what becomes an example, where one begins and
 ends, how tables and doc strings attach, what role headings play, and how Varar
 notices when something that used to be an example no longer is.
 
-## What is a spec
+## What is an oath
 
-A file is a spec if — and only if — its path matches the `docs` globs in
+A file is an oath if — and only if — its path matches the `docs` globs in
 `varar.config.json`. That config is the single source of truth, consulted by the
 runner, the LSP, and the vitest plugin alike:
 
@@ -27,13 +27,13 @@ runner, the LSP, and the vitest plugin alike:
 
 Both `include` and `exclude` are plain globs (no `!` prefix). `include` has no
 default — an empty list discovers nothing; `exclude` removes matches from it.
-There is no special file extension: a plain `.md` file is a spec purely because
+There is no special file extension: a plain `.md` file is an oath purely because
 the globs select it. Any Markdown file the globs don't select is invisible to
 Varar.
 
 ## What is an example
 
-Within a spec, the candidate unit is a **paragraph** — or a list item, or a
+Within an oath, the candidate unit is a **paragraph** — or a list item, or a
 blockquote. Varar splits each candidate into sentences and matches those sentences
 against your registered [stimuli](/reference/stimuli/) and
 [sensors](/reference/sensors/).
@@ -272,12 +272,12 @@ failing test.
 Varar treats this transition — **was an example, now matches nothing** — as
 **drift**, and refuses to let it pass unnoticed.
 
-To recognise it, Varar records a fingerprint of each spec's source in a baseline
+To recognise it, Varar records a fingerprint of each oath's source in a baseline
 file, **`varar.lock.json`**, at the root of your project: an
 [FNV-1a](https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function)
 hash written as `fnv1a:…`. It is a tiny, dependency-free change-detector,
 computed identically in every Varar runtime, so drift is recognised the same way
-whatever language you run in. When a spec changes such that a previously matching
+whatever language you run in. When an oath changes such that a previously matching
 paragraph no longer matches any step, Varar compares the new source against the
 recorded baseline and reports the drifted example by name and line.
 

@@ -1,9 +1,9 @@
 ---
-title: Run specs through vitest
-description: Wire the Varar plugin into vitest so your Markdown specs run inside your existing test suite.
+title: Run oaths through vitest
+description: Wire the Varar plugin into vitest so your Markdown oaths run inside your existing test suite.
 ---
 
-This guide shows you how to run Varar specs as part of a vitest suite instead of
+This guide shows you how to run Varar oaths as part of a vitest suite instead of
 (or alongside) the `varar` CLI — one runner, one watch mode, one CI job.
 
 It assumes Varar is already set up in your repo. If not, start with
@@ -34,7 +34,7 @@ export default defineConfig({
 })
 ```
 
-## 3. Let varar.config.json decide what is a spec
+## 3. Let varar.config.json decide what is an oath
 
 The plugin reads `varar.config.json` and drives vitest's own `include`/`exclude`
 from it — you don't repeat the globs in the vitest config:
@@ -49,7 +49,7 @@ from it — you don't repeat the globs in the vitest config:
 }
 ```
 
-A file is a spec iff it matches the `docs.include` globs (minus `docs.exclude`).
+A file is an oath iff it matches the `docs.include` globs (minus `docs.exclude`).
 The same config is consulted by the `varar` CLI and the language server, so all
 three always agree.
 
@@ -63,7 +63,7 @@ export default defineConfig({
   test: {
     projects: [
       { test: { name: 'unit', include: ['src/**/*.test.ts'] } },
-      { plugins: [vararPlugin()], test: { name: 'specs' } },
+      { plugins: [vararPlugin()], test: { name: 'oaths' } },
     ],
   },
 })
@@ -75,7 +75,7 @@ export default defineConfig({
 npx vitest run
 ```
 
-Your `.md` specs now appear as test files in vitest's output, watch mode, and
+Your `.md` oaths now appear as test files in vitest's output, watch mode, and
 CI reporting, next to your ordinary `*.test.ts` files.
 
 ## Accept drift
@@ -95,7 +95,7 @@ visible in review.
 ## Set-up and tear-down
 
 Varar has no lifecycle hooks of its own. Use vitest's native `beforeEach` /
-`afterEach` in a regular test-setup file for anything the specs need around
+`afterEach` in a regular test-setup file for anything the oaths need around
 them (databases, servers, fixtures).
 
 Note that `afterEach` cannot see the example's state: the state factory is

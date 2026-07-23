@@ -4,7 +4,7 @@ description: Every key of the Varar config file — what it means, what it defau
 ---
 
 One `varar.config.json` sits at the root of your project. It is the single
-source of truth for **what is a spec** and **where the step definitions are**,
+source of truth for **what is an oath** and **where the step definitions are**,
 and the same file is read identically by the `varar` CLI, the language server,
 and the test-framework adapters — so all of them always agree.
 
@@ -26,19 +26,19 @@ the worst failure mode this file has.
 
 ## `docs`
 
-An object with `include` and `exclude`, both arrays of plain globs. A file is a
-spec **iff** it matches `include` and does not match `exclude`.
+An object with `include` and `exclude`, both arrays of plain globs. A file is an
+oath **iff** it matches `include` and does not match `exclude`.
 
 - There is **no default**: an empty or absent `include` discovers nothing.
 - Globs are plain — no `!` prefix. Exclusion is what `exclude` is for.
 - The array shorthand (`"docs": [...]`) is not accepted; the object is the
   canonical shape.
 
-The extension does not decide anything: a file is a spec because it matches
+The extension does not decide anything: a file is an oath because it matches
 these globs, not because it is called `.md`.
 
 Under vitest, the plugin drives vitest's own `include`/`exclude` from these
-globs; see [Run specs through vitest](/how-to/run-with-vitest/).
+globs; see [Run oaths through vitest](/how-to/run-with-vitest/).
 
 ## `steps`
 
@@ -62,5 +62,5 @@ complete the file.
 ## What is *not* in this file
 
 The drift baseline is a separate, generated file: `varar.lock.json`, written by
-the runner and committed alongside your specs. See
+the runner and committed alongside your oaths. See
 [Drift detection](/reference/examples/#drift-detection).

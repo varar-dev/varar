@@ -22,12 +22,12 @@ bound by matching phrases in the text.
 
 | Cucumber | Varar |
 | --- | --- |
-| `.feature` files in Gherkin | Plain Markdown specs. Varar has no Gherkin parser and does not run `.feature` files — a spec is any file matching the `docs` globs in `varar.config.json`. |
+| `.feature` files in Gherkin | Plain Markdown [oaths](/explanation/oaths/). Varar has no Gherkin parser and does not run `.feature` files — an oath is any file matching the `docs` globs in `varar.config.json`. |
 | `Given` / `When` / `Then` step types | Two roles — `stimulus` and `sensor` — chosen by what a step *does*, not by a keyword. Keywords in prose are narration for the reader; they're never matched. |
 | Assertions inside step bodies | Steps *return* what the software did; Varar compares it against what the document claims, and failures are anchored to the exact span in the source. |
 | `DataTable` and doc-string APIs | Native Markdown tables and fenced code blocks, checked by [return-based comparison](/how-to/tables-and-doc-strings/). |
 | `Scenario Outline` + `Examples:` table | A [**header-bound table**](/reference/examples/#header-bound-tables): one step whose parameters name every column, and each data row runs as its own example. |
-| `World` and untyped state | `steps` — a typed state factory per spec; every example starts fresh. |
+| `World` and untyped state | `steps` — a typed state factory per oath; every example starts fresh. |
 | `Before` / `After` hooks | None in Varar. Use your test runner's own `beforeEach` / `afterEach`. |
 | `Background:` | No equivalent. Inline its steps into the examples that need them. |
 | Tags | Not in v1. |
@@ -36,9 +36,9 @@ bound by matching phrases in the text.
 ## Migrating from Cucumber
 
 Varar does not run `.feature` files, and there is no Gherkin compatibility layer
-to configure — a Varar spec is just Markdown. To migrate, hand your `.feature`
+to configure — a Varar oath is just Markdown. To migrate, hand your `.feature`
 files and step definitions to a coding agent and ask it to translate them into
-Markdown specs and Varar step definitions. Agents are good at this mechanical
+Markdown oaths and Varar step definitions. Agents are good at this mechanical
 translation, and the result reads as documentation rather than a dialect only
 the test suite parses.
 
@@ -60,10 +60,10 @@ What to expect in the translated result:
 
 ## If you loved Cucumber
 
-Everything you valued — examples first, ubiquitous language, a spec readable by
+Everything you valued — examples first, ubiquitous language, an oath readable by
 non-programmers — is still the point. What's gone is the ceremony around it:
 the separate Gherkin dialect, the parallel artefact that only the test suite
-ever read. Your specs live in ordinary Markdown, so they render on GitHub, in
+ever read. Your oaths live in ordinary Markdown, so they render on GitHub, in
 your docs site, in your editor — and they fail your build when they stop being
 true.
 

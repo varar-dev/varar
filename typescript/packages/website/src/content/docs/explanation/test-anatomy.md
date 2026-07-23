@@ -57,7 +57,7 @@ domain experts know which "obvious" rules aren't.
 ## Not every example becomes a Varar example
 
 The conversation will surface far more examples than belong in your document —
-and that's the point of the conversation, not a quota for the spec. A document
+and that's the point of the conversation, not a quota for the oath. A document
 that tries to hold every discovered example gets so long that nobody reads it,
 and nobody maintains it. Then it's no longer documentation.
 
