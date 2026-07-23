@@ -23,7 +23,7 @@
 one of its sentences matches a step definition. A paragraph that matches nothing
 is **prose** — documentation, silently ignored by the runner. This is what lets a
 spec file freely mix narrative with executable examples (see
-[Examples and drift](../../typescript/packages/website/src/content/docs/reference/examples-and-drift.mdx)).
+[Examples](../../typescript/packages/website/src/content/docs/reference/examples.mdx)).
 
 That rule has a dangerous edge. A paragraph that **was** an example can stop
 matching — a step definition is renamed or deleted, or a typo creeps into the
@@ -145,7 +145,7 @@ The distinction the decision turns on:
 
 ## References
 
-- [Examples and drift](../../typescript/packages/website/src/content/docs/reference/examples-and-drift.mdx) — the user-facing statement of these semantics.
+- [Examples](../../typescript/packages/website/src/content/docs/reference/examples.mdx) — the user-facing statement of these semantics (the [Drift detection](../../typescript/packages/website/src/content/docs/reference/examples.mdx#drift-detection) section).
 - `typescript/packages/var-core/src/{hash,result,run-diagnostics}.ts` — the existing TS substrate (fingerprint + run-result + staleness).
 - [Run-result format design](../superpowers/specs/2026-06-28-run-result-format-design.md), [Run-result diagnostics design](../superpowers/specs/2026-06-28-run-result-diagnostics-design.md).
 - [ADR 0001 — Python as the second supported language](0001-second-language-python.md).

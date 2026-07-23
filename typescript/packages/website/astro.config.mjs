@@ -118,6 +118,7 @@ export default defineConfig({
             'explanation/test-anatomy',
             'explanation/thin-steps',
             'explanation/markup-is-yours',
+            'explanation/no-theatre',
             'explanation/varar-for-cucumber-users',
           ],
         },

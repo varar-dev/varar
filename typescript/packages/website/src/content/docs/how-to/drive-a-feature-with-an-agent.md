@@ -56,6 +56,32 @@ feat: refuse bookings with empty or whitespace-only names
 not the implementation (`feat: add name validator to BookingForm`). The first
 survives a refactor; the second doesn't.
 
+## What the tooling catches — and what needs your eyes
+
+You don't have to police everything: the cheap ways an agent can game the suite
+fail mechanically (see
+[Specs that can't be theatre](/explanation/no-theatre/)):
+
+- **Wrong behaviour.** A sensor returns what the code actually did, and Varar
+  compares it against the document — an agent can't make a failing example pass
+  by weakening an assertion, because the assertion is the document.
+- **A step renamed or deleted** so an example quietly stops matching. That's
+  [drift](/reference/examples/#drift-detection): the run fails until it's
+  explicitly acknowledged, and the acknowledgment rewrites `varar.lock.json` —
+  visible in the diff, not swallowed.
+
+What no mechanism can catch is a change to the spec's *meaning* that still
+matches and still passes — the value in the Markdown edited to whatever the
+code produced, an example deleted, a new example that claims very little. Every
+one of those shows up in two places you review anyway:
+
+- **the spec diff** — read it as "did what we're promising change?", and
+- **`varar.lock.json` changes** — each one is an accepted drift; ask the agent
+  why it accepted rather than restored.
+
+That's the division of labour: the tooling guards the link between document and
+code; you guard what the document says.
+
 ## When to step in
 
 Signs the loop isn't converging — and in all three cases the spec is the
