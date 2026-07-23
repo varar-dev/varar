@@ -1,14 +1,15 @@
 ---
 title: Get started on your computer
-description: Install Varar, scaffold a first spec, run it — and watch it fail on purpose. In TypeScript, Python, Java, Kotlin or Ruby.
+description: Install Varar, configure a project, run your first oath — and watch it fail on purpose. In TypeScript, Java, Kotlin, Python, Ruby, Rust, C# or Go.
 ---
 
-import { Tabs, TabItem, Aside, Steps } from '@astrojs/starlight/components';
+import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 import LangCommand from '$components/LangCommand.astro';
+import LangConfigure from '$components/LangConfigure.astro';
 
-In this tutorial we'll install Varar into a project, scaffold a working example, run
-it, and then deliberately break it. By the end you will have seen an [oath](/explanation/oaths/)
-pass and fail as a test on your own machine.
+In this tutorial we'll install Varar into a project, configure it, run a first
+[oath](/explanation/oaths/), and then deliberately break it. By the end you will
+have seen an oath pass and fail as a test on your own machine.
 
 **Pick your preferred programming language in the language selector in the top-right corner of the page**.
 Every command and code sample below follows that choice.
@@ -20,33 +21,24 @@ Every command and code sample below follows that choice.
    <LangCommand kind="install" />
 
    This adds Varar's author API (the package your step definitions import) and the
-   adapter that runs specs in your test framework.
+   adapter that runs oaths in your test framework.
 
-2. Scaffold a first spec
+2. Configure
 
-   <LangCommand kind="scaffold" />
+   Varar is configured by one file, `varar.config.json` — the single source of
+   truth for which Markdown files are oaths and which files bind their steps.
+   Ports with a `varar` CLI scaffold it (and a working example) in one command;
+   on the others you create it by hand.
 
-   ```
-   created varar.config.json
-   created varar-examples/deep-thought.md
-   created varar-examples/steps/deep-thought.steps.<ext>
-   ```
+   <LangConfigure />
 
-   (`<ext>` is your language's step-file extension — `ts`, `py`, `rb`, and so on.)
+3. A first oath
 
-   `varar.config.json` is the single source of truth for which files are specs and
-   which files bind their steps:
+   The example oath is plain Markdown with one concrete example — `varar init`
+   already wrote it for you; if your port has no CLI, create it now, at any path
+   matched by your config's `docs` globs:
 
-   ```json
-   {
-     "docs": { "include": ["varar-examples/**/*.md"], "exclude": [] },
-     "steps": ["varar-examples/**/*.steps.<ext>"]
-   }
-   ```
-
-   The spec itself is plain Markdown with one concrete example:
-
-   ```markdown
+   ```markdown title="deep-thought.md"
    # Deep Thought
 
    You're really not going to like it.
@@ -66,7 +58,7 @@ Every command and code sample below follows that choice.
 
    <Tabs syncKey="lang">
      <TabItem label="TypeScript">
-       ```ts
+       ```ts title="varar-examples/steps/deep-thought.steps.ts"
        import { steps } from '@varar/varar'
 
        const { sensor } = steps()
@@ -75,12 +67,10 @@ Every command and code sample below follows that choice.
        ```
      </TabItem>
      <TabItem label="Java">
-       ```java
+       ```java title="src/test/java/examples/DeepThoughtSteps.java"
        package examples;
 
-       import dev.varar.Registrar;
        import dev.varar.State;
-       import dev.varar.Steps;
        import dev.varar.StepDefinitions;
        import dev.varar.Steps;
 
@@ -96,7 +86,7 @@ Every command and code sample below follows that choice.
        ```
      </TabItem>
      <TabItem label="Kotlin">
-       ```kotlin
+       ```kotlin title="src/test/kotlin/examples/deep-thought.steps.kt"
        @file:JvmName("DeepThoughtSteps")
 
        package examples
@@ -111,7 +101,7 @@ Every command and code sample below follows that choice.
        ```
      </TabItem>
      <TabItem label="Python">
-       ```python
+       ```python title="varar-examples/steps/deep-thought.steps.py"
        from varar import steps
 
        param, stimulus, sensor = steps()
@@ -123,7 +113,7 @@ Every command and code sample below follows that choice.
        ```
      </TabItem>
      <TabItem label="Ruby">
-       ```ruby
+       ```ruby title="varar-examples/steps/deep-thought.steps.rb"
        require 'varar'
 
        steps do
@@ -132,7 +122,7 @@ Every command and code sample below follows that choice.
        ```
      </TabItem>
      <TabItem label="Rust">
-       ```rust
+       ```rust title="src/steps/deep_thought.steps.rs"
        use varar::Steps;
 
        pub fn register(s: &mut Steps<()>) {
@@ -141,7 +131,7 @@ Every command and code sample below follows that choice.
        ```
      </TabItem>
      <TabItem label="C#">
-       ```csharp
+       ```csharp title="steps/deep-thought.steps.cs"
        using Varar;
        using Varar.Core;
 
@@ -157,7 +147,7 @@ Every command and code sample below follows that choice.
        ```
      </TabItem>
      <TabItem label="Go">
-       ```go
+       ```go title="deep_thought.steps.go"
        package examples
 
        import "github.com/varar-dev/varar/go/varar"
@@ -171,25 +161,7 @@ Every command and code sample below follows that choice.
      </TabItem>
    </Tabs>
 
-   <Aside type="note" title="Java & Kotlin: two extra steps">
-   The JVM ports have no `varar init` yet, so create `varar.config.json`, the spec, and
-   the steps file by hand. Two JVM-specific details:
-
-   - `varar.config.json` lists step classes by fully-qualified name instead of a glob:
-     ```json
-     { "docs": { "include": ["*.md"], "exclude": [] }, "steps": ["examples.DeepThoughtSteps"] }
-     ```
-   - add a one-line JUnit suite so Maven or Gradle discovers the specs — `RunVarSpecsTest.java` / `.kt`:
-     ```java
-     @Suite @IncludeEngines("var") @SelectDirectories(".") class RunVarSpecsTest {}
-     ```
-
-   The [Java](https://github.com/varar-dev/varar-examples/tree/main/java-junit-maven) and
-   [Kotlin](https://github.com/varar-dev/varar-examples/tree/main/kotlin-junit) sample
-   projects are complete, runnable copies you can start from.
-   </Aside>
-
-3. Run it
+4. Run it
 
    <LangCommand kind="run" />
 
@@ -202,10 +174,11 @@ Every command and code sample below follows that choice.
    1 example, 1 passed, 0 failed
    ```
 
-   pytest, RSpec and JUnit each report the same example passing in their own
-   format. The Markdown file just ran as a test, and the software kept its word.
+   pytest, RSpec, JUnit, cargo test, dotnet test and go test each report the
+   same example passing in their own format. The Markdown file just ran as a
+   test, and the software kept its word.
 
-4. Watch it fail on purpose
+5. Watch it fail on purpose
 
    Never trust a test you haven't seen fail. Open the steps file and change the
    answer the sensor returns from `42` to `43`:
@@ -262,7 +235,7 @@ Every command and code sample below follows that choice.
      </TabItem>
    </Tabs>
 
-   Run Varar again. The example now fails: the spec still says `42`, but the sensor
+   Run Varar again. The example now fails: the oath still says `42`, but the sensor
    observed `43`. The output shows both values and points at the exact `42` in the
    Markdown where the promise broke.
 
@@ -272,7 +245,7 @@ Every command and code sample below follows that choice.
 
 ## Next
 
-- [Your first spec from scratch](/tutorials/first-spec/) — write your own spec
+- [Your first oath from scratch](/tutorials/first-oath/) — write your own oath
   in a blank Markdown file and bind its steps.
 - Already have a vitest suite?
-  [Run specs through vitest](/how-to/run-with-vitest/) instead of the CLI.
+  [Run oaths through vitest](/how-to/run-with-vitest/) instead of the CLI.

@@ -1,0 +1,191 @@
+---
+/**
+ * The "Configure" step of the get-started tutorial: a `<Tabs syncKey="lang">`
+ * group with one tab per language, so the page only ever shows the setup for
+ * the language chosen in the header dropdown.
+ *
+ * Ports with a `varar` CLI show `varar init` and what it scaffolds — the
+ * command and step-file extension come from the shared `languages.json`
+ * manifest so they never drift from what the port ships. Ports without a CLI
+ * show the files to create by hand: `varar.config.json` (the JVM ports list
+ * step classes by fully-qualified name, plus a one-line JUnit suite), with a
+ * link to the runnable sample project to copy the rest from.
+ */
+import { Code, TabItem, Tabs } from '@astrojs/starlight/components'
+import { LANGUAGES, type SiteLang } from '../lib/site-lang'
+
+const EXAMPLES_REPO = 'https://github.com/varar-dev/varar-examples/tree/main'
+
+// What `varar init` scaffolds, mirrored from each port's CLI. The three files
+// are identical across ports (only the steps extension differs); some ports
+// write one more thing.
+const scaffoldOutput = (ext: string, extra?: string): string =>
+  [
+    'created varar.config.json',
+    'created varar-examples/deep-thought.md',
+    `created varar-examples/steps/deep-thought.steps${ext}`,
+    ...(extra ? [extra] : []),
+  ].join('\n')
+
+const EXTRA_OUTPUT: Partial<Record<SiteLang, string>> = {
+  ts: 'updated package.json (added "type": "module")',
+  ruby: 'created spec/var_spec.rb',
+}
+
+const cliConfig = (stepsGlob: string): string => `{
+  "docs": { "include": ["varar-examples/**/*.md"], "exclude": [] },
+  "steps": ["${stepsGlob}"]
+}`
+
+const manualConfig = (steps: string): string => `{
+  "docs": { "include": ["*.md"], "exclude": [] },
+  "steps": ["${steps}"]
+}`
+
+const JVM_SUITE: Record<'java' | 'kotlin', { title: string; lang: string; code: string }> = {
+  java: {
+    title: 'src/test/java/examples/RunOathsTest.java',
+    lang: 'java',
+    code: `package examples;
+
+import org.junit.platform.suite.api.IncludeEngines;
+import org.junit.platform.suite.api.SelectDirectories;
+import org.junit.platform.suite.api.Suite;
+
+@Suite @IncludeEngines("varar") @SelectDirectories(".") public class RunOathsTest {}`,
+  },
+  kotlin: {
+    title: 'src/test/kotlin/examples/RunOathsTest.kt',
+    lang: 'kotlin',
+    code: `package examples
+
+import org.junit.platform.suite.api.IncludeEngines
+import org.junit.platform.suite.api.SelectDirectories
+import org.junit.platform.suite.api.Suite
+
+@Suite @IncludeEngines("varar") @SelectDirectories(".") class RunOathsTest`,
+  },
+}
+
+/** Manual-setup ports: the config to write, plus where the runnable copy lives. */
+const MANUAL: Partial<
+  Record<SiteLang, { config: string; samples: ReadonlyArray<{ label: string; slug: string }> }>
+> = {
+  java: {
+    config: manualConfig('examples.DeepThoughtSteps'),
+    samples: [
+      { label: 'Maven', slug: 'java-junit-maven' },
+      { label: 'Gradle', slug: 'java-junit-gradle' },
+    ],
+  },
+  kotlin: {
+    config: manualConfig('examples.DeepThoughtSteps'),
+    samples: [{ label: 'Kotlin', slug: 'kotlin-junit' }],
+  },
+  rust: {
+    config: manualConfig('src/steps/*.steps.rs'),
+    samples: [{ label: 'Rust', slug: 'rust-cargotest' }],
+  },
+  csharp: {
+    config: manualConfig('steps/*.steps.cs'),
+    samples: [{ label: 'C#', slug: 'csharp-vstest' }],
+  },
+  go: {
+    config: manualConfig('*.steps.go'),
+    samples: [{ label: 'Go', slug: 'go-gotest' }],
+  },
+}
+
+// The harness that feeds the oaths to the port's test framework, for ports
+// where that is a file to copy from the sample rather than the JUnit suite
+// shown inline.
+const HARNESS_NOTE: Partial<Record<SiteLang, { file: string; runner: string }>> = {
+  rust: { file: 'tests/oaths.rs', runner: 'cargo test' },
+  go: { file: 'oaths_test.go', runner: 'go test' },
+}
+---
+
+<Tabs syncKey="lang">
+  {
+    LANGUAGES.map((lang) => {
+      const manual = MANUAL[lang.id]
+      const suite = lang.id === 'java' || lang.id === 'kotlin' ? JVM_SUITE[lang.id] : undefined
+      const harness = HARNESS_NOTE[lang.id]
+      return (
+        <TabItem label={lang.label}>
+          {lang.scaffold ? (
+            <>
+              <Code code={lang.scaffold.code} lang={lang.scaffold.lang} />
+              <p>One command writes the config and a working example oath:</p>
+              <Code code={scaffoldOutput(lang.ext, EXTRA_OUTPUT[lang.id])} lang="txt" />
+              {lang.id === 'ruby' && (
+                <p>
+                  (With <code>varar-minitest</code> installed instead of <code>varar-rspec</code>,
+                  the bridge lands in <code>test/var_test.rb</code>.)
+                </p>
+              )}
+              <p>
+                <code>varar.config.json</code> decides which Markdown files are oaths and which
+                files bind their steps:
+              </p>
+              <Code code={cliConfig(lang.stepsGlob)} lang="json" title="varar.config.json" />
+            </>
+          ) : suite && manual ? (
+            <>
+              <p>
+                The {lang.label} port has no <code>varar init</code> yet, so configuration is two
+                small files you create by hand. <code>varar.config.json</code> decides which
+                Markdown files are oaths — and lists step classes by fully-qualified name instead
+                of a glob:
+              </p>
+              <Code code={manual.config} lang="json" title="varar.config.json" />
+              <p>A one-line JUnit suite makes Maven or Gradle discover the oaths:</p>
+              <Code code={suite.code} lang={suite.lang} title={suite.title} />
+              <p>
+                The{' '}
+                {manual.samples.map((s, i) => (
+                  <>
+                    {i > 0 && ' and '}
+                    <a href={`${EXAMPLES_REPO}/${s.slug}`}>{s.label}</a>
+                  </>
+                ))}
+                {manual.samples.length > 1
+                  ? ' sample projects are complete, runnable copies'
+                  : ' sample project is a complete, runnable copy'}{' '}
+                you can start from.
+              </p>
+            </>
+          ) : (
+            manual && (
+              <>
+                <p>
+                  The {lang.label} port has no <code>varar init</code> yet, so create{' '}
+                  <code>varar.config.json</code> at the project root by hand. It decides which
+                  Markdown files are oaths and which files bind their steps:
+                </p>
+                <Code code={manual.config} lang="json" title="varar.config.json" />
+                <p>
+                  {harness ? (
+                    <>
+                      A small <code>{harness.file}</code> harness hands the oaths to{' '}
+                      <code>{harness.runner}</code> — copy it from the{' '}
+                    </>
+                  ) : (
+                    <>
+                      <code>dotnet test</code> discovers the oaths through the{' '}
+                      <code>Varar.TestAdapter</code> package — copy the project wiring from the{' '}
+                    </>
+                  )}
+                  <a href={`${EXAMPLES_REPO}/${manual.samples[0].slug}`}>
+                    {manual.samples[0].label} sample project
+                  </a>{' '}
+                  — a complete, runnable copy you can start from.
+                </p>
+              </>
+            )
+          )}
+        </TabItem>
+      )
+    })
+  }
+</Tabs>
