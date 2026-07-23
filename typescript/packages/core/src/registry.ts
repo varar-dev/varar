@@ -40,7 +40,7 @@ export type Registry = {
 export const EMPH_REGEXP =
   /\*\*\*([^*]+)\*\*\*|___([^_]+)___|\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*|_([^_]+)_/
 
-// Seed var's own built-in parameter types (beyond cucumber-expressions'
+// Seed Varar's own built-in parameter types (beyond cucumber-expressions'
 // int/float/string/word). Shared by every port so specs match identically.
 function seedBuiltins(registry: Registry): Registry {
   return defineParameterType(registry, {

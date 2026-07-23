@@ -17,7 +17,7 @@ public class RegistryTests
         Assert.Empty(r.Steps);
         Assert.NotNull(r.ParameterTypes.LookupByTypeName("int"));
         Assert.NotNull(r.ParameterTypes.LookupByTypeName("string"));
-        // var's own built-in Markdown emphasis type.
+        // Varar's own built-in Markdown emphasis type.
         Assert.NotNull(r.ParameterTypes.LookupByTypeName("emph"));
         Assert.Null(r.ParameterTypes.LookupByTypeName("airport"));
     }

@@ -26,19 +26,22 @@ Maya borrowed {emph}, due back on {date}.
 `Maya borrowed *Emma*` matches, and your handler receives `Emma` — the markers
 stripped, the value intact. Any *other* notation that is really data — a
 hashtag, a wiki link, a domain code — is a
-[custom parameter](/reference/custom-parameters/) away, put the markers in the
-regexp and strip them in `parse`:
+[custom parameter](/reference/custom-parameters/) away. Put the markers in the
+regexp and a **capture group** around the part that is the value:
 
 ```ts
 tag: {
-  regexp: /#\w+/,
-  parse: (raw) => raw.slice(1),   // #urgent → urgent
+  regexp: /#(\w+)/,   // #urgent → urgent
 }
 ```
 
-The markers are notation, no different from the `£` in `£2.50`. The pattern
-takes the notation apart, `format` puts it back, and neither Varar's core nor
-your handlers ever see markup they didn't ask for.
+The first capture group is what your handler receives — and the exact span an
+editor highlights — so the `#` outside it stays notation with no `parse` needed
+to strip it. (Leave the capture group out and the whole match is the value,
+markers and all; that is when you reach for `parse`.) The markers are notation,
+no different from the `£` in `£2.50`: the pattern takes them apart, `format`
+puts them back, and neither Varar's core nor your handlers ever see markup they
+didn't ask for.
 
 An earlier design stripped emphasis before matching, so `*Emma*` invisibly
 became `Emma`. It felt convenient and read as magic: expressions matched

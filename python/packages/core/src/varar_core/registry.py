@@ -51,7 +51,7 @@ EMPH_REGEXP = r"\*\*\*([^*]+)\*\*\*|___([^_]+)___|\*\*([^*]+)\*\*|__([^_]+)__|\*
 
 
 def _seed_builtins(registry: Registry) -> Registry:
-    """Seed var's own built-in parameter types (beyond cucumber-expressions'
+    """Seed Varar's own built-in parameter types (beyond cucumber-expressions'
     int/float/string/word). Shared by every port so specs match identically.
     """
     return define_parameter_type(
@@ -68,7 +68,7 @@ def _seed_builtins(registry: Registry) -> Registry:
 
 
 def create_registry() -> Registry:
-    """Return a registry seeded with var's built-in parameter types."""
+    """Return a registry seeded with Varar's built-in parameter types."""
     empty = Registry(steps=(), parameter_types=ParameterTypeRegistry(), formats={})
     return _seed_builtins(empty)
 

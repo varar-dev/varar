@@ -73,7 +73,7 @@ public record Registry(
             StepKind kind) {}
 
     /**
-     * var's built-in {@code {emph}} parameter type — Markdown emphasis, matching the uniform
+     * Varar's built-in {@code {emph}} parameter type — Markdown emphasis, matching the uniform
      * emphasis notations (bold-italic, bold, italic; {@code *} and {@code _} delimiters),
      * ordered longest-delimiter-first so {@code **x**} isn't half-eaten by the {@code *} branch.
      * Each of the six alternation branches captures the inner text in its own group, so only the
@@ -90,13 +90,13 @@ public record Registry(
     public static final String EMPH_REGEXP =
             "\\*\\*\\*([^*]+)\\*\\*\\*|___([^_]+)___|\\*\\*([^*]+)\\*\\*|__([^_]+)__|\\*([^*]+)\\*|_([^_]+)_";
 
-    /** An empty registry with a fresh default {@link ParameterTypeRegistry}, plus var's built-ins. */
+    /** An empty registry with a fresh default {@link ParameterTypeRegistry}, plus Varar's built-ins. */
     public static Registry createRegistry() {
         return seedBuiltins(new Registry(List.of(), new ParameterTypeRegistry(Locale.ENGLISH), List.of(), Map.of()));
     }
 
     /**
-     * Seeds var's own built-in parameter types (beyond cucumber-expressions' {@code
+     * Seeds Varar's own built-in parameter types (beyond cucumber-expressions' {@code
      * int}/{@code float}/{@code string}/{@code word}) onto {@code registry}. Unlike {@link
      * #defineParameterType}, the seeded types are defined on the shared {@link
      * ParameterTypeRegistry} (and their formatters recorded in {@link #formats()}) but are

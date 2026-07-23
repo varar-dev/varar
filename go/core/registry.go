@@ -37,7 +37,7 @@ type Registry struct {
 	Formats              map[string]FormatFn
 }
 
-// CreateRegistry returns a registry seeded with var's built-in parameter types.
+// CreateRegistry returns a registry seeded with Varar's built-in parameter types.
 // The built-in {emph} carries a display format (rendering a value back in
 // single-asterisk emphasis for parameter-mismatch display) but is deliberately
 // absent from CustomParameterTypes — it is a built-in, so it never surfaces in

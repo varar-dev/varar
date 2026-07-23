@@ -107,7 +107,7 @@ public sealed class ParameterTypeRegistry : IParameterTypeRegistry
             typeof(string),
             ParseString));
 
-        // var's own built-in: Markdown emphasis. Only the inner text is the value
+        // Varar's own built-in: Markdown emphasis. Only the inner text is the value
         // (the outermost delimiter pair is stripped). Kept byte-identical to the
         // other ports' EMPH regexp.
         registry.Define(new VararParameterType(
