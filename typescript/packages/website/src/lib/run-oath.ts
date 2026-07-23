@@ -4,21 +4,21 @@ import {
   type ExampleResult,
   executePlan,
   hashSource,
+  type OathResults,
   parse,
   plan,
   reconcileDrift,
-  type SpecResults,
   type TestSink,
   toFailure,
 } from '@varar/core'
 import { buildRegistry, contextFactory } from '@varar/varar/registry'
 
 export type RunOutcome = {
-  readonly results: SpecResults
+  readonly results: OathResults
   readonly drifts: ReadonlyArray<Drift>
 }
 
-export type RunSpecOptions = {
+export type RunOathOptions = {
   readonly exampleIndex?: number
   // When present, drift is reconciled against this store (in-memory in the
   // browser). Omit to skip drift entirely.
@@ -27,10 +27,10 @@ export type RunSpecOptions = {
   readonly update?: boolean
 }
 
-export async function runRegisteredSpec(
+export async function runRegisteredOath(
   varPath: string,
   varSource: string,
-  options: RunSpecOptions = {},
+  options: RunOathOptions = {},
 ): Promise<RunOutcome> {
   const registry = buildRegistry()
   const varDoc = parse(varPath, varSource, [])
@@ -70,9 +70,9 @@ export async function runRegisteredSpec(
 
   executePlan(toRun, { sink, reporter: { diagnostic() {} }, createContext })
   await Promise.all(pending)
-  const results: SpecResults = {
+  const results: OathResults = {
     version: 1,
-    specPath: varPath,
+    oathPath: varPath,
     sourceHash: hashSource(varSource),
     examples: out,
   }
@@ -83,7 +83,7 @@ export async function runRegisteredSpec(
     options.baselineStore && exampleIndex == null
       ? await reconcileDrift({
           store: options.baselineStore,
-          specPath: varPath,
+          oathPath: varPath,
           source: varSource,
           varDoc,
           plan: full,

@@ -22,7 +22,7 @@ export function examplesWithRuns(
   }))
 }
 
-export function planSpec(path: string, source: string, registry: Registry): ExecutionPlan {
+export function planOath(path: string, source: string, registry: Registry): ExecutionPlan {
   return plan(parse(path, source), registry)
 }
 

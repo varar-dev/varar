@@ -17,14 +17,14 @@ VAR_CONFIG = """\
 """
 
 
-def _project(harness, spec_rel: str, spec: str) -> None:
+def _project(harness, oath_rel: str, oath: str) -> None:
     harness.write("varar.config.json", VAR_CONFIG)
     harness.write("steps/calc.steps.py", STEPS)
-    harness.write(spec_rel, spec)
+    harness.write(oath_rel, oath)
 
 
-def _baseline(harness, spec_key: str, examples) -> None:
-    lock = {"version": 1, "specs": {spec_key: {"sourceHash": "fnv1a:0", "examples": examples}}}
+def _baseline(harness, oath_key: str, examples) -> None:
+    lock = {"version": 2, "oaths": {oath_key: {"sourceHash": "fnv1a:0", "examples": examples}}}
     harness.write("varar.lock.json", json.dumps(lock))
 
 
@@ -36,7 +36,7 @@ def test_first_run_records_the_baseline(harness):
     _project(harness, "features/calc.md", "I add 2\n")
     result, _ = harness.generate_and_run()
     assert result.wasSuccessful()
-    assert _lock(harness)["specs"]["features/calc.md"]["examples"] == [
+    assert _lock(harness)["oaths"]["features/calc.md"]["examples"] == [
         {"name": "I add 2", "line": 1}
     ]
 
@@ -58,4 +58,4 @@ def test_var_update_accepts_drift(harness, monkeypatch):
     _baseline(harness, "features/vault.md", [{"name": "The vault is sealed", "line": 1}])
     result, _ = harness.generate_and_run()
     assert result.wasSuccessful()
-    assert _lock(harness)["specs"]["features/vault.md"]["examples"] == []
+    assert _lock(harness)["oaths"]["features/vault.md"]["examples"] == []

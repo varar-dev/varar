@@ -28,7 +28,7 @@ public final class ConfigBridge {
     }
 
     /**
-     * The directory {@code varar.config.json} was loaded from — the same root file-based spec
+     * The directory {@code varar.config.json} was loaded from — the same root file-based oath
      * discovery must resolve {@code docs} globs against ({@link VarFileSelectorResolver}), so
      * pointing {@code var.config.root} elsewhere relocates config and matching together.
      */

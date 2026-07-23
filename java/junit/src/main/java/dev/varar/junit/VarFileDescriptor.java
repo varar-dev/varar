@@ -13,9 +13,9 @@ import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor;
 import org.junit.platform.engine.support.hierarchical.Node;
 
 /**
- * One container per discovered {@code .md} spec resource/file.
+ * One container per discovered {@code .md} oath resource/file.
  *
- * <p>{@code UniqueId} segment type {@link #SEGMENT_TYPE} ({@code "spec"}), value = the
+ * <p>{@code UniqueId} segment type {@link #SEGMENT_TYPE} ({@code "oath"}), value = the
  * resource's relative path, POSIX-separated (mirrors {@code
  * cucumber-junit-platform-engine}'s {@code "feature"} segment). The display name is the same
  * relative path.
@@ -42,9 +42,9 @@ import org.junit.platform.engine.support.hierarchical.Node;
  */
 final class VarFileDescriptor extends AbstractTestDescriptor implements Node<VarEngineExecutionContext> {
 
-    static final String SEGMENT_TYPE = "spec";
+    static final String SEGMENT_TYPE = "oath";
 
-    private final String specPath;
+    private final String oathPath;
     private final String content;
     private final StepLoader.LoadedSteps loadedSteps;
     private final Plan.ExecutionPlan plan;
@@ -54,13 +54,13 @@ final class VarFileDescriptor extends AbstractTestDescriptor implements Node<Var
 
     VarFileDescriptor(
             UniqueId uniqueId,
-            String specPath,
+            String oathPath,
             TestSource source,
             String content,
             StepLoader.LoadedSteps loadedSteps,
             Plan.ExecutionPlan plan) {
-        super(uniqueId, specPath, source);
-        this.specPath = specPath;
+        super(uniqueId, oathPath, source);
+        this.oathPath = oathPath;
         this.content = content;
         this.loadedSteps = loadedSteps;
         this.plan = plan;
@@ -94,13 +94,13 @@ final class VarFileDescriptor extends AbstractTestDescriptor implements Node<Var
     }
 
     /**
-     * This file's path, exactly as passed to {@link Run#planSpec} at discovery time — the same
+     * This file's path, exactly as passed to {@link Run#planOath} at discovery time — the same
      * string an injected failure stack frame's {@code fileName} carries, so it must be passed
      * unchanged to {@code Render.renderFailure} for {@code Failure.toFailure}'s failing-line
      * lookup to find it.
      */
-    String specPath() {
-        return specPath;
+    String oathPath() {
+        return oathPath;
     }
 
     /** The session-scoped, once-per-discovery-pass merged steps this file was planned against. */
@@ -167,13 +167,13 @@ final class VarFileDescriptor extends AbstractTestDescriptor implements Node<Var
      */
     Runnable runFor(Plan.PlannedExample example) {
         if (exampleRuns == null) {
-            throw new IllegalStateException("runFor() called before before(): " + specPath);
+            throw new IllegalStateException("runFor() called before before(): " + oathPath);
         }
         for (Run.ExampleRun run : exampleRuns) {
             if (run.example().equals(example)) {
                 return run.run();
             }
         }
-        throw new IllegalStateException("no ExampleRun found for " + example + " in " + specPath);
+        throw new IllegalStateException("no ExampleRun found for " + example + " in " + oathPath);
     }
 }

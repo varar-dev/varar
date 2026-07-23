@@ -1,4 +1,4 @@
-//! Unit tests for the runner shell: glob discovery, spec finding, and the
+//! Unit tests for the runner shell: glob discovery, oath finding, and the
 //! filesystem baseline store driving drift reconciliation.
 
 use std::path::PathBuf;
@@ -10,7 +10,7 @@ use varar_core::plan::plan;
 use varar_core::registry::{add_step, create_registry};
 use varar_core::step_kind::StepKind;
 use varar_runner::discovery::glob_to_regex;
-use varar_runner::{FileBaselineStore, find_specs};
+use varar_runner::{FileBaselineStore, find_oaths};
 
 fn tmp(name: &str) -> PathBuf {
     let dir = std::env::temp_dir().join(format!("var-runner-{}-{name}", std::process::id()));
@@ -36,15 +36,15 @@ fn leading_doublestar_matches_zero_or_more_segments() {
 
 #[test]
 fn nested_doublestar_and_trailing_doublestar() {
-    assert!(glob_to_regex("specs/**/*.md").is_match("specs/a.md"));
-    assert!(glob_to_regex("specs/**/*.md").is_match("specs/x/a.md"));
-    let wip = glob_to_regex("specs/wip/**");
-    assert!(wip.is_match("specs/wip"));
-    assert!(wip.is_match("specs/wip/draft.md"));
+    assert!(glob_to_regex("oaths/**/*.md").is_match("oaths/a.md"));
+    assert!(glob_to_regex("oaths/**/*.md").is_match("oaths/x/a.md"));
+    let wip = glob_to_regex("oaths/wip/**");
+    assert!(wip.is_match("oaths/wip"));
+    assert!(wip.is_match("oaths/wip/draft.md"));
 }
 
 #[test]
-fn find_specs_honours_include_and_exclude() {
+fn find_oaths_honours_include_and_exclude() {
     let root = tmp("find");
     std::fs::write(root.join("a.md"), "x").unwrap();
     std::fs::write(root.join("README.md"), "x").unwrap();
@@ -56,7 +56,7 @@ fn find_specs_honours_include_and_exclude() {
         docs_exclude: vec!["README.md".to_string()],
         ..Default::default()
     };
-    let names: Vec<String> = find_specs(&flat, &root)
+    let names: Vec<String> = find_oaths(&flat, &root)
         .iter()
         .map(|p| p.file_name().unwrap().to_string_lossy().into_owned())
         .collect();
@@ -67,7 +67,7 @@ fn find_specs_honours_include_and_exclude() {
         docs_exclude: vec!["README.md".to_string()],
         ..Default::default()
     };
-    assert_eq!(find_specs(&recursive, &root).len(), 2); // a.md + sub/b.md
+    assert_eq!(find_oaths(&recursive, &root).len(), 2); // a.md + sub/b.md
 }
 
 #[test]

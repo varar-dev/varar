@@ -12,16 +12,16 @@ from varar_core.cell_diff import is_cell_mismatch_error
 from varar_core.result import CellFailure, ExampleFailure
 
 
-def _failing_line(stack: str, spec_path: str) -> int | None:
-    """Recover the 1-based failing line from a ``<specPath>:line:col`` frame."""
-    escaped = re.escape(spec_path)
+def _failing_line(stack: str, oath_path: str) -> int | None:
+    """Recover the 1-based failing line from a ``<oathPath>:line:col`` frame."""
+    escaped = re.escape(oath_path)
     m = re.search(rf"{escaped}:(\d+):\d+", stack)
     return int(m.group(1)) if m else None
 
 
 def to_failure(
     error: Any,
-    spec_path: str,
+    oath_path: str,
     fallback_line: int,
 ) -> ExampleFailure:
     """Convert a thrown step error to an ExampleFailure.
@@ -31,7 +31,7 @@ def to_failure(
     message + stack for any other exception.
 
     ``error.stack`` (if present as a string attribute) is used verbatim — this
-    matches the TypeScript port where execute.ts injects a ``<specPath>:line:col``
+    matches the TypeScript port where execute.ts injects a ``<oathPath>:line:col``
     frame that ``_failing_line`` then extracts.
     """
     # Prefer a manually-set .stack attribute (mirrors TS Error.stack behaviour).
@@ -53,7 +53,7 @@ def to_failure(
         if failing:
             cells = failing
 
-    line = _failing_line(stack, spec_path) if stack else None
+    line = _failing_line(stack, oath_path) if stack else None
 
     return ExampleFailure(
         line=line if line is not None else fallback_line,

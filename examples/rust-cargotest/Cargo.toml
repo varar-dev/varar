@@ -3,7 +3,7 @@ name = "varar-example-rust-cargotest"
 version = "0.0.1"
 edition = "2024"
 publish = false
-description = "Standalone sample: run Markdown specs as `cargo test` tests with Varar"
+description = "Standalone sample: run Markdown oaths as `cargo test` tests with Varar"
 
 # In this monorepo the Varar crates resolve from source (path deps), so the sample
 # gates trunk against the local build. A real project depends on the published
@@ -26,11 +26,11 @@ varar-runner = { path = "../../rust/runner" }
 name = "example"
 path = "src/lib.rs"
 
-# The specs run through the varar-cargotest adapter, which owns the libtest
-# harness — hence `harness = false` and a `main` in tests/specs.rs.
+# The oaths run through the varar-cargotest adapter, which owns the libtest
+# harness — hence `harness = false` and a `main` in tests/oaths.rs.
 [[test]]
-name = "specs"
-path = "tests/specs.rs"
+name = "oaths"
+path = "tests/oaths.rs"
 harness = false
 
 [[test]]

@@ -50,7 +50,7 @@ import org.junit.platform.engine.support.discovery.SelectorResolver;
  * Surefire) since no {@code var.root} configuration key exists yet — flagged as a follow-up if a
  * real caller ever needs a different root.
  *
- * <p><strong>Task 10:</strong> once a resolved selector's {@code specPath}/{@code TestSource} is
+ * <p><strong>Task 10:</strong> once a resolved selector's {@code oathPath}/{@code TestSource} is
  * known, this resolver also reads that file's actual text ({@link #readContent}), plans it against
  * the {@link StepLoader.LoadedSteps} threaded through the constructor (loaded once per discovery
  * pass by {@link VarTestEngine#discover}, not per file — see {@link VarEngineDescriptor}'s
@@ -58,7 +58,7 @@ import org.junit.platform.engine.support.discovery.SelectorResolver;
  * child of the {@link VarFileDescriptor} it creates.
  *
  * <p><strong>Task 17:</strong> {@link #fileDescriptors} caches the one {@link VarFileDescriptor}
- * built per {@code specPath}, for the lifetime of this resolver instance — one discovery pass (see
+ * built per {@code oathPath}, for the lifetime of this resolver instance — one discovery pass (see
  * {@link DiscoverySelectorResolver}'s constructor, which builds a fresh {@link
  * VarFileSelectorResolver} per {@code EngineDiscoveryRequestResolver}, itself built fresh per
  * {@link VarTestEngine#discover} call). Without it, resolving two bare {@code UniqueIdSelector}s
@@ -73,13 +73,13 @@ final class VarFileSelectorResolver implements SelectorResolver {
 
     /**
      * The directory varar.config.json was loaded from ({@code var.config.root}, default the JVM
-     * working directory) — docs globs and spec paths are relative to it, so pointing the
+     * working directory) — docs globs and oath paths are relative to it, so pointing the
      * parameter at another directory relocates config and file matching together.
      */
     private final Path root;
 
     /**
-     * One {@link VarFileDescriptor} per {@code specPath}, reused across every {@code resolve(...)}
+     * One {@link VarFileDescriptor} per {@code oathPath}, reused across every {@code resolve(...)}
      * call in this discovery pass (Task 17) — see this class's javadoc.
      */
     private final Map<String, VarFileDescriptor> fileDescriptors = new HashMap<>();
@@ -97,15 +97,15 @@ final class VarFileSelectorResolver implements SelectorResolver {
                 || "true".equals(System.getenv("VARAR_UPDATE"));
     }
 
-    /** Whether a classpath resource name (already relative, POSIX-separated) is a spec. */
-    boolean matchesSpec(String resourceName) {
-        return Discovery.matchSpec(Path.of(resourceName), config.docsInclude(), config.docsExclude(), Path.of(""));
+    /** Whether a classpath resource name (already relative, POSIX-separated) is an oath. */
+    boolean matchesOath(String resourceName) {
+        return Discovery.matchOath(Path.of(resourceName), config.docsInclude(), config.docsExclude(), Path.of(""));
     }
 
     @Override
     public Resolution resolve(ClasspathResourceSelector selector, Context context) {
         String name = selector.getClasspathResourceName();
-        if (!matchesSpec(name)) {
+        if (!matchesOath(name)) {
             return Resolution.unresolved();
         }
         return toResolution(context, name, ClasspathResourceSource.from(name));
@@ -122,7 +122,7 @@ final class VarFileSelectorResolver implements SelectorResolver {
             walk.filter(Files::isRegularFile)
                     .filter(p -> p.getFileName().toString().endsWith(".md"))
                     // selectFile(String), not selectFile(File): the File overload
-                    // canonicalizes, dereferencing symlinks — a symlinked spec must
+                    // canonicalizes, dereferencing symlinks — a symlinked oath must
                     // match docsInclude by its apparent path, not its target's.
                     .forEach(p -> selectors.add(DiscoverySelectors.selectFile(p.toString())));
         } catch (IOException e) {
@@ -137,7 +137,7 @@ final class VarFileSelectorResolver implements SelectorResolver {
     @Override
     public Resolution resolve(FileSelector selector, Context context) {
         Path path = selector.getPath();
-        if (!Discovery.matchSpec(path, config.docsInclude(), config.docsExclude(), root)) {
+        if (!Discovery.matchOath(path, config.docsInclude(), config.docsExclude(), root)) {
             return Resolution.unresolved();
         }
         String relPath =
@@ -190,8 +190,8 @@ final class VarFileSelectorResolver implements SelectorResolver {
      * exception, no duplicate.
      *
      * <p>The fix: {@link #fileDescriptors} caches the one {@link VarFileDescriptor} built per {@code
-     * specPath} for this resolver's lifetime (one discovery pass). A later call for the same {@code
-     * specPath} reuses that exact object and adds the newly-requested example as an additional child
+     * oathPath} for this resolver's lifetime (one discovery pass). A later call for the same {@code
+     * oathPath} reuses that exact object and adds the newly-requested example as an additional child
      * of it, via {@link #createDescriptor}/{@link #mergeChildren} — so {@code
      * context.addToParent}'s eventual {@code parent.addChild(...)} re-adds the very same object
      * already wired into the tree (a genuine no-op, not a silently-discarded duplicate), and the new
@@ -201,34 +201,34 @@ final class VarFileSelectorResolver implements SelectorResolver {
     @Override
     public Resolution resolve(UniqueIdSelector selector, Context context) {
         UniqueId uniqueId = selector.getUniqueId();
-        Optional<String> specPath = segmentValue(uniqueId, VarFileDescriptor.SEGMENT_TYPE);
-        if (specPath.isEmpty()) {
+        Optional<String> oathPath = segmentValue(uniqueId, VarFileDescriptor.SEGMENT_TYPE);
+        if (oathPath.isEmpty()) {
             return Resolution.unresolved();
         }
         Optional<String> exampleLine = segmentValue(uniqueId, VarExampleDescriptor.SEGMENT_TYPE);
         if (exampleLine.isEmpty()) {
-            return context.resolve(fileSelectorFor(specPath.get()))
+            return context.resolve(fileSelectorFor(oathPath.get()))
                     .map(Match::exact)
                     .map(Resolution::match)
                     .orElseGet(Resolution::unresolved);
         }
-        return resolveOneExample(context, specPath.get(), exampleLine.get());
+        return resolveOneExample(context, oathPath.get(), exampleLine.get());
     }
 
-    private Resolution resolveOneExample(Context context, String specPath, String lineValue) {
+    private Resolution resolveOneExample(Context context, String oathPath, String lineValue) {
         int line;
         try {
             line = Integer.parseInt(lineValue);
         } catch (NumberFormatException e) {
             return Resolution.unresolved();
         }
-        DiscoverySelector fileSelector = fileSelectorFor(specPath);
+        DiscoverySelector fileSelector = fileSelectorFor(oathPath);
         if (!matchesFileSelector(fileSelector)) {
             return Resolution.unresolved();
         }
         TestSource source = sourceForSelector(fileSelector);
         Optional<VarFileDescriptor> fileDescriptor =
-                context.addToParent(parent -> Optional.of(createDescriptor(parent, specPath, source, line)));
+                context.addToParent(parent -> Optional.of(createDescriptor(parent, oathPath, source, line)));
         // Task 17: look up the child that matches THIS call's line, rather than blindly taking
         // getChildren()'s first entry — once the cache (below) lets a second resolveOneExample call
         // for the same file return the SAME, now-two-child VarFileDescriptor, "first child" would
@@ -260,31 +260,31 @@ final class VarFileSelectorResolver implements SelectorResolver {
 
     /**
      * Reconstructs the same selector kind {@link #resolve(FileSelector, Context)}/{@link
-     * #resolve(ClasspathResourceSelector, Context)} would have been given for {@code specPath} —
+     * #resolve(ClasspathResourceSelector, Context)} would have been given for {@code oathPath} —
      * a real file on disk (relative to {@link #root}) if one exists there, a classpath resource
      * otherwise (mirrors how a Maven/Gradle test-resource's classpath copy lives under {@code
      * target/test-classes}, NOT under {@code root}, so this check never misclassifies one as the
      * other).
      */
-    private DiscoverySelector fileSelectorFor(String specPath) {
-        // normalize() lexically: a ..-laden specPath (spec outside the config root)
+    private DiscoverySelector fileSelectorFor(String oathPath) {
+        // normalize() lexically: a ..-laden oathPath (oath outside the config root)
         // resolved against root must not be handed to the filesystem raw — physical
         // ..-traversal through a symlinked ancestor diverges from the lexical path.
-        Path candidate = root.resolve(specPath).normalize();
+        Path candidate = root.resolve(oathPath).normalize();
         if (Files.isRegularFile(candidate)) {
             // selectFile(String), not selectFile(File) — see resolve(DirectorySelector).
             return DiscoverySelectors.selectFile(candidate.toString());
         }
-        return DiscoverySelectors.selectClasspathResource(specPath);
+        return DiscoverySelectors.selectClasspathResource(oathPath);
     }
 
     /** The same {@code config.docsInclude()}/{@code docsExclude()} guard {@link #resolve} methods apply. */
     private boolean matchesFileSelector(DiscoverySelector selector) {
         if (selector instanceof FileSelector fileSelector) {
-            return Discovery.matchSpec(fileSelector.getPath(), config.docsInclude(), config.docsExclude(), root);
+            return Discovery.matchOath(fileSelector.getPath(), config.docsInclude(), config.docsExclude(), root);
         }
         if (selector instanceof ClasspathResourceSelector classpathSelector) {
-            return matchesSpec(classpathSelector.getClasspathResourceName());
+            return matchesOath(classpathSelector.getClasspathResourceName());
         }
         return false;
     }
@@ -299,15 +299,15 @@ final class VarFileSelectorResolver implements SelectorResolver {
         throw new IllegalStateException("unsupported selector: " + selector);
     }
 
-    private Resolution toResolution(Context context, String specPath, TestSource source) {
-        return context.addToParent(parent -> Optional.of(createDescriptor(parent, specPath, source, null)))
+    private Resolution toResolution(Context context, String oathPath, TestSource source) {
+        return context.addToParent(parent -> Optional.of(createDescriptor(parent, oathPath, source, null)))
                 .map(Match::exact)
                 .map(Resolution::match)
                 .orElseGet(Resolution::unresolved);
     }
 
     /**
-     * Returns the ONE {@link VarFileDescriptor} for {@code specPath} within this discovery pass —
+     * Returns the ONE {@link VarFileDescriptor} for {@code oathPath} within this discovery pass —
      * from {@link #fileDescriptors} if a previous call (for this or a different example/selector)
      * already built it, otherwise a freshly-planned one, cached for every subsequent call. Either
      * way, ensures a {@link VarExampleDescriptor} child exists for every {@link Plan.PlannedExample}
@@ -318,25 +318,25 @@ final class VarFileSelectorResolver implements SelectorResolver {
      * file add a sibling instead of silently vanishing (see {@link #resolveOneExample}'s javadoc).
      */
     private VarFileDescriptor createDescriptor(
-            TestDescriptor parent, String specPath, TestSource source, Integer onlyLine) {
-        VarFileDescriptor existing = fileDescriptors.get(specPath);
+            TestDescriptor parent, String oathPath, TestSource source, Integer onlyLine) {
+        VarFileDescriptor existing = fileDescriptors.get(oathPath);
         if (existing != null) {
             mergeChildren(existing, source, onlyLine);
             return existing;
         }
-        UniqueId uniqueId = parent.getUniqueId().append(VarFileDescriptor.SEGMENT_TYPE, specPath);
+        UniqueId uniqueId = parent.getUniqueId().append(VarFileDescriptor.SEGMENT_TYPE, oathPath);
         String content = readContent(source);
-        Plan.ExecutionPlan plan = Run.planSpec(specPath, content, loadedSteps.registry());
+        Plan.ExecutionPlan plan = Run.planOath(oathPath, content, loadedSteps.registry());
         VarFileDescriptor fileDescriptor =
-                new VarFileDescriptor(uniqueId, specPath, source, content, loadedSteps, plan);
+                new VarFileDescriptor(uniqueId, oathPath, source, content, loadedSteps, plan);
         mergeChildren(fileDescriptor, source, onlyLine);
-        // Reconcile drift once per spec (only on a full-file discovery — never a single-example
+        // Reconcile drift once per oath (only on a full-file discovery — never a single-example
         // re-run, where onlyLine is set): a clean run records/updates varar.lock.json; a paragraph
         // that was an example and no longer matches becomes a failing drift leaf.
         if (onlyLine == null) {
             addDriftChildren(fileDescriptor, source, content, plan);
         }
-        fileDescriptors.put(specPath, fileDescriptor);
+        fileDescriptors.put(oathPath, fileDescriptor);
         return fileDescriptor;
     }
 
@@ -366,15 +366,15 @@ final class VarFileSelectorResolver implements SelectorResolver {
     }
 
     /**
-     * Reconciles {@code fileDescriptor}'s spec against {@code varar.lock.json} and adds one failing
-     * {@link VarDriftDescriptor} per drift. The spec path used as the baseline key is {@link
-     * VarFileDescriptor#specPath()} — the same relative, POSIX-separated path {@code varar run} and
+     * Reconciles {@code fileDescriptor}'s oath against {@code varar.lock.json} and adds one failing
+     * {@link VarDriftDescriptor} per drift. The oath path used as the baseline key is {@link
+     * VarFileDescriptor#oathPath()} — the same relative, POSIX-separated path {@code varar run} and
      * the other ports key by.
      */
     private void addDriftChildren(
             VarFileDescriptor fileDescriptor, TestSource fileSource, String content, Plan.ExecutionPlan plan) {
         List<Drift.Drifted> drifts =
-                Drift.reconcileDrift(baselineStore, fileDescriptor.specPath(), content, plan.varDoc(), plan, update);
+                Drift.reconcileDrift(baselineStore, fileDescriptor.oathPath(), content, plan.varDoc(), plan, update);
         for (Drift.Drifted drift : drifts) {
             UniqueId uniqueId =
                     fileDescriptor.getUniqueId().append(VarDriftDescriptor.SEGMENT_TYPE, "drift-" + drift.line());
@@ -405,7 +405,7 @@ final class VarFileSelectorResolver implements SelectorResolver {
         throw new IllegalStateException("unsupported TestSource: " + fileSource);
     }
 
-    /** Reads a resolved spec's actual text — the classpath-resource or real-file case. */
+    /** Reads a resolved oath's actual text — the classpath-resource or real-file case. */
     private static String readContent(TestSource source) {
         if (source instanceof ClasspathResourceSource crs) {
             return readClasspathResource(crs.getClasspathResourceName());

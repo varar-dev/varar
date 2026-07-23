@@ -3,8 +3,8 @@ import { CellMismatchError, compareDocString, ReturnShapeError } from '@varar/co
 import { expect, test } from 'vitest'
 import { renderFailure } from '../src/render.ts'
 
-const PATH = 'spec.md'
-const SOURCE = '# Spec\n\nSome step.\n'
+const PATH = 'oath.md'
+const SOURCE = '# Oath\n\nSome step.\n'
 
 function makeSpan(startLine: number) {
   return {
@@ -26,7 +26,7 @@ test('renderFailure: CellMismatchError → contains expected/actual and .md line
   expect(result).toContain('CellMismatchError')
   expect(result).toContain('"100"')
   expect(result).toContain('"99"')
-  expect(result).toContain('spec.md:5')
+  expect(result).toContain('oath.md:5')
   expect(result).toContain('"amount"')
 })
 
@@ -37,8 +37,8 @@ test('renderFailure: CellMismatchError with multiple failing cells', () => {
   ]
   const err = new CellMismatchError(cells)
   const result = renderFailure(err, SOURCE, PATH)
-  expect(result).toContain('spec.md:3')
-  expect(result).toContain('spec.md:4')
+  expect(result).toContain('oath.md:3')
+  expect(result).toContain('oath.md:4')
   expect(result).toContain('"a"')
   expect(result).toContain('"b"')
 })
@@ -59,7 +59,7 @@ test('renderFailure: a doc-string cell → contains expected/actual and .md line
   const diff = compareDocString('Hello earth\n', 'Hello world\n', makeSpan(7))
   const result = renderFailure(new CellMismatchError([diff!]), SOURCE, PATH)
   expect(result).toContain('CellMismatchError')
-  expect(result).toContain('spec.md:7')
+  expect(result).toContain('oath.md:7')
   expect(result).toContain('doc string')
   expect(result).toContain('Hello world')
   expect(result).toContain('Hello earth')

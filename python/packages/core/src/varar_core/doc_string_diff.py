@@ -21,7 +21,7 @@ def _quote(s: str) -> str:
     Every port quotes doc-string cells identically (Java/Rust/Go use a
     hand-rolled quote(), Ruby uses String#inspect) because the message text is
     matched by substring in an ``error`` fence — a port that quotes differently
-    fails a spec its siblings pass. Python's repr would emit single quotes.
+    fails an oath its siblings pass. Python's repr would emit single quotes.
     """
     return json.dumps(s)
 

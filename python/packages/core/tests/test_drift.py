@@ -3,9 +3,9 @@ from __future__ import annotations
 
 from varar_core.drift import (
     BaselineExample,
-    SpecBaseline,
+    OathBaseline,
     VarLock,
-    derive_spec_baseline,
+    derive_oath_baseline,
     detect_drift,
     drift_diagnostics,
     live_examples,
@@ -78,10 +78,10 @@ def test_a_never_matched_paragraph_is_not_a_live_example() -> None:
     assert live_examples(var_doc, plan(var_doc, _reg())) == ()
 
 
-def test_derive_spec_baseline_carries_the_source_fingerprint() -> None:
+def test_derive_oath_baseline_carries_the_source_fingerprint() -> None:
     source = "I withdraw 40."
     var_doc = parse("w.md", source)
-    baseline = derive_spec_baseline(source, var_doc, plan(var_doc, _reg()))
+    baseline = derive_oath_baseline(source, var_doc, plan(var_doc, _reg()))
     assert baseline.source_hash == hash_source(source)
     assert baseline.examples == (BaselineExample(name="I withdraw 40", line=1),)
 
@@ -91,17 +91,17 @@ def test_no_baseline_means_no_drift() -> None:
     assert detect_drift(None, var_doc, plan(var_doc, _reg())) == ()
 
 
-def test_an_unchanged_spec_and_steps_have_no_drift() -> None:
+def test_an_unchanged_oath_and_steps_have_no_drift() -> None:
     source = "I withdraw 40."
     var_doc = parse("w.md", source)
-    baseline = derive_spec_baseline(source, var_doc, plan(var_doc, _reg()))
+    baseline = derive_oath_baseline(source, var_doc, plan(var_doc, _reg()))
     assert detect_drift(baseline, var_doc, plan(var_doc, _reg())) == ()
 
 
 def test_a_renamed_step_drifts_matched_by_name() -> None:
     source = "I withdraw 40."
     var_doc = parse("w.md", source)
-    baseline = derive_spec_baseline(source, var_doc, plan(var_doc, _reg(True)))
+    baseline = derive_oath_baseline(source, var_doc, plan(var_doc, _reg(True)))
     drift = detect_drift(baseline, var_doc, plan(var_doc, _reg(False)))
     assert _bare(drift) == [("I withdraw 40", 1)]
 
@@ -109,7 +109,7 @@ def test_a_renamed_step_drifts_matched_by_name() -> None:
 def test_an_in_place_typo_drifts_matched_by_line() -> None:
     before = "I withdraw 40."
     before_doc = parse("w.md", before)
-    baseline = derive_spec_baseline(before, before_doc, plan(before_doc, _reg()))
+    baseline = derive_oath_baseline(before, before_doc, plan(before_doc, _reg()))
     after_doc = parse("w.md", "I withdrraw 40.")
     drift = detect_drift(baseline, after_doc, plan(after_doc, _reg()))
     assert _bare(drift) == [("I withdraw 40", 1)]
@@ -118,7 +118,7 @@ def test_an_in_place_typo_drifts_matched_by_line() -> None:
 def test_a_deleted_paragraph_is_not_drift() -> None:
     before = "I withdraw 40."
     before_doc = parse("w.md", before)
-    baseline = derive_spec_baseline(before, before_doc, plan(before_doc, _reg()))
+    baseline = derive_oath_baseline(before, before_doc, plan(before_doc, _reg()))
     after_doc = parse("w.md", "")
     assert detect_drift(baseline, after_doc, plan(after_doc, _reg())) == ()
 
@@ -126,7 +126,7 @@ def test_a_deleted_paragraph_is_not_drift() -> None:
 def test_moving_and_rewording_a_still_matching_example_does_not_drift() -> None:
     before = "I withdraw 40.\n\nI withdraw 10."
     before_doc = parse("w.md", before)
-    baseline = derive_spec_baseline(before, before_doc, plan(before_doc, _reg()))
+    baseline = derive_oath_baseline(before, before_doc, plan(before_doc, _reg()))
     after_doc = parse("w.md", "I withdraw 11.\n\nI withdraw 40.")
     assert detect_drift(baseline, after_doc, plan(after_doc, _reg())) == ()
 
@@ -134,7 +134,7 @@ def test_moving_and_rewording_a_still_matching_example_does_not_drift() -> None:
 def test_move_plus_reword_plus_prose_on_old_line_does_not_false_positive() -> None:
     before = "I withdraw 40."
     before_doc = parse("w.md", before)
-    baseline = derive_spec_baseline(before, before_doc, plan(before_doc, _reg()))
+    baseline = derive_oath_baseline(before, before_doc, plan(before_doc, _reg()))
     after_doc = parse("w.md", "Just some notes.\n\nI withdraw 41.")
     assert detect_drift(baseline, after_doc, plan(after_doc, _reg())) == ()
 
@@ -142,7 +142,7 @@ def test_move_plus_reword_plus_prose_on_old_line_does_not_false_positive() -> No
 def test_a_paragraph_rewritten_past_recognition_is_remove_add_not_drift() -> None:
     before = "I withdraw 40."
     before_doc = parse("w.md", before)
-    baseline = derive_spec_baseline(before, before_doc, plan(before_doc, _reg()))
+    baseline = derive_oath_baseline(before, before_doc, plan(before_doc, _reg()))
     after_doc = parse("w.md", "The branch closed years ago.")
     assert detect_drift(baseline, after_doc, plan(after_doc, _reg())) == ()
 
@@ -162,7 +162,7 @@ def test_header_bound_table_records_its_binding_paragraph_once() -> None:
 
 def test_a_header_bound_binding_paragraph_that_stops_matching_drifts() -> None:
     var_doc = parse("r.md", _ROMAN)
-    baseline = derive_spec_baseline(_ROMAN, var_doc, plan(var_doc, _roman_reg(True)))
+    baseline = derive_oath_baseline(_ROMAN, var_doc, plan(var_doc, _roman_reg(True)))
     drift = detect_drift(baseline, var_doc, plan(var_doc, _roman_reg(False)))
     assert _bare(drift) == [("Each row gives a decimal and a roman number:", 1)]
 
@@ -170,7 +170,7 @@ def test_a_header_bound_binding_paragraph_that_stops_matching_drifts() -> None:
 def test_drift_diagnostics_are_error_severity() -> None:
     source = "I withdraw 40."
     var_doc = parse("w.md", source)
-    baseline = derive_spec_baseline(source, var_doc, plan(var_doc, _reg(True)))
+    baseline = derive_oath_baseline(source, var_doc, plan(var_doc, _reg(True)))
     diags = drift_diagnostics(detect_drift(baseline, var_doc, plan(var_doc, _reg(False))))
     assert len(diags) == 1
     assert diags[0].severity == "error"
@@ -200,13 +200,13 @@ def test_reconcile_update_mode_accepts_drift() -> None:
     assert drift == ()
     lock = parse_var_lock(store.contents or "")
     assert lock is not None
-    assert lock.specs["w.md"].examples == ()
+    assert lock.oaths["w.md"].examples == ()
 
 
 _EXPECTED_LOCK = """\
 {
-  "version": 1,
-  "specs": {
+  "version": 2,
+  "oaths": {
     "library.md": {
       "sourceHash": "fnv1a:1a2b3c4d",
       "examples": [
@@ -223,9 +223,9 @@ _EXPECTED_LOCK = """\
 
 def test_stringify_matches_the_typescript_serializer_byte_for_byte() -> None:
     lock = VarLock(
-        version=1,
-        specs={
-            "library.md": SpecBaseline(
+        version=2,
+        oaths={
+            "library.md": OathBaseline(
                 source_hash="fnv1a:1a2b3c4d",
                 examples=(BaselineExample(name="I check out", line=7),),
             )
@@ -236,9 +236,9 @@ def test_stringify_matches_the_typescript_serializer_byte_for_byte() -> None:
 
 def test_parse_round_trips_a_valid_lock() -> None:
     lock = VarLock(
-        version=1,
-        specs={
-            "library.md": SpecBaseline(
+        version=2,
+        oaths={
+            "library.md": OathBaseline(
                 source_hash="fnv1a:1a2b3c4d",
                 examples=(BaselineExample(name="I check out", line=7),),
             )
@@ -247,12 +247,12 @@ def test_parse_round_trips_a_valid_lock() -> None:
     assert parse_var_lock(stringify_var_lock(lock)) == lock
 
 
-def test_stringify_sorts_spec_paths() -> None:
+def test_stringify_sorts_oath_paths() -> None:
     lock = VarLock(
-        version=1,
-        specs={
-            "zebra.md": SpecBaseline(source_hash="fnv1a:00000001", examples=()),
-            "alpha.md": SpecBaseline(source_hash="fnv1a:00000002", examples=()),
+        version=2,
+        oaths={
+            "zebra.md": OathBaseline(source_hash="fnv1a:00000001", examples=()),
+            "alpha.md": OathBaseline(source_hash="fnv1a:00000002", examples=()),
         },
     )
     text = stringify_var_lock(lock)
@@ -263,8 +263,10 @@ def test_stringify_sorts_spec_paths() -> None:
 def test_parse_rejects_malformed_input() -> None:
     assert parse_var_lock("not json") is None
     assert parse_var_lock("{}") is None
-    assert parse_var_lock('{"version":2,"specs":{}}') is None
-    assert parse_var_lock('{"version":1,"specs":{"a.md":{"examples":[]}}}') is None
+    # The old version-1 "specs" format is rejected outright — no migration.
+    assert parse_var_lock('{"version":1,"specs":{}}') is None
+    assert parse_var_lock('{"version":3,"oaths":{}}') is None
+    assert parse_var_lock('{"version":2,"oaths":{"a.md":{"examples":[]}}}') is None
 
 
 # ---- Merged examples keep per-paragraph drift granularity (ADR 0012) -------
@@ -307,7 +309,7 @@ def test_two_paragraphs_that_merge_are_each_recorded_as_a_live_baseline_entry() 
 def test_deleting_one_step_def_of_a_merged_example_drifts_only_the_now_prose_paragraph() -> None:
     source = "I deposit 100.\n\nI withdraw 40."
     var_doc = parse("w.md", source)
-    baseline = derive_spec_baseline(source, var_doc, plan(var_doc, _deposit_withdraw_reg(True)))
+    baseline = derive_oath_baseline(source, var_doc, plan(var_doc, _deposit_withdraw_reg(True)))
     # The deposit step is gone: its paragraph becomes prose, splitting the
     # example. The withdraw paragraph is still live; the deposit one drifts.
     drift = detect_drift(baseline, var_doc, plan(var_doc, _deposit_withdraw_reg(False)))

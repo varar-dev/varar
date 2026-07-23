@@ -6,9 +6,9 @@
 // main goroutine: a clean run rewrites varar.lock.json; VARAR_UPDATE=1 accepts
 // drift instead of failing.
 //
-// Usage from a consumer's specs_test.go:
+// Usage from a consumer's oaths_test.go:
 //
-//	func TestSpecs(t *testing.T) {
+//	func TestOaths(t *testing.T) {
 //	    gotest.Run(t, ".", mysteps.BuildRegistry, mysteps.Context)
 //	}
 package gotest
@@ -51,17 +51,17 @@ func Collect(root string, build BuildRegistry, ctx ContextFactory, update bool) 
 		return nil, err
 	}
 	var cases []Case
-	for _, specPath := range runner.FindSpecs(cfg, root) {
-		sourceBytes, _ := os.ReadFile(specPath)
+	for _, oathPath := range runner.FindOaths(cfg, root) {
+		sourceBytes, _ := os.ReadFile(oathPath)
 		source := string(sourceBytes)
-		specFile := filepath.Base(specPath)
-		rel, relErr := filepath.Rel(root, specPath)
+		oathFile := filepath.Base(oathPath)
+		rel, relErr := filepath.Rel(root, oathPath)
 		if relErr != nil {
-			rel = specFile
+			rel = oathFile
 		}
 		rel = filepath.ToSlash(rel)
 
-		plan := runner.PlanSpec(specFile, source, build())
+		plan := runner.PlanOath(oathFile, source, build())
 		for i, display := range runner.ExampleNames(plan) {
 			index := i
 			src := source
@@ -79,7 +79,7 @@ func Collect(root string, build BuildRegistry, ctx ContextFactory, update bool) 
 		// Drift reconciliation: rewrites the baseline on a clean run; each
 		// drifted paragraph becomes a failing case (ADR 0002).
 		store := runner.NewFileBaselineStore(root)
-		doc := core.Parse(specFile, source)
+		doc := core.Parse(oathFile, source)
 		for _, drifted := range core.ReconcileDrift(store, rel, source, doc, plan, update) {
 			cases = append(cases, Case{
 				Name:         rel + "::var:drift:" + strconv.Itoa(drifted.Line),
@@ -92,7 +92,7 @@ func Collect(root string, build BuildRegistry, ctx ContextFactory, update bool) 
 	return cases, nil
 }
 
-// Run enumerates the specs under root and reports one Go subtest per example
+// Run enumerates the oaths under root and reports one Go subtest per example
 // (and per drift finding). VARAR_UPDATE=1/true accepts drift instead of failing.
 func Run(t *testing.T, root string, build BuildRegistry, ctx ContextFactory) {
 	t.Helper()

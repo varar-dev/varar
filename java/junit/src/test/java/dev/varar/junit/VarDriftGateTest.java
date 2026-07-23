@@ -31,7 +31,7 @@ class VarDriftGateTest {
         Files.writeString(workspace.resolve("vault.md"), "The vault is sealed.\n", StandardCharsets.UTF_8);
         Files.writeString(
                 workspace.resolve("varar.lock.json"),
-                "{\"version\":1,\"specs\":{\"vault.md\":{\"sourceHash\":\"fnv1a:0\",\"examples\":["
+                "{\"version\":2,\"oaths\":{\"vault.md\":{\"sourceHash\":\"fnv1a:0\",\"examples\":["
                         + baselineExamples
                         + "]}}}",
                 StandardCharsets.UTF_8);

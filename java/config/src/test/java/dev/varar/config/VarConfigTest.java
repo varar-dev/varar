@@ -19,13 +19,13 @@ class VarConfigTest {
     void parsesAllKeys() {
         VarConfig config = VarConfig.parse("""
                 {
-                  "docs": { "include": ["specs/**/*.md"], "exclude": ["specs/wip/**"] },
+                  "docs": { "include": ["oaths/**/*.md"], "exclude": ["oaths/wip/**"] },
                   "steps": ["**/*Steps.java"],
                   "snippets": { "java": "J" }
                 }
                 """, "varar.config.json");
-        assertEquals(List.of("specs/**/*.md"), config.docsInclude());
-        assertEquals(List.of("specs/wip/**"), config.docsExclude());
+        assertEquals(List.of("oaths/**/*.md"), config.docsInclude());
+        assertEquals(List.of("oaths/wip/**"), config.docsExclude());
         assertEquals(List.of("**/*Steps.java"), config.steps());
         assertEquals(Map.of("java", "J"), config.snippets());
     }

@@ -20,7 +20,7 @@ against your registered step definitions (`stimulus` / `sensor`).
 - **No sentence matches** → the paragraph is prose. It is silently ignored: no
   test, no failure.
 
-This is what lets a spec file mix narrative explanation with executable
+This is what lets an oath file mix narrative explanation with executable
 examples. Headings, background, and prose paragraphs sit happily next to the
 paragraphs that actually drive the system — only the matching ones run.
 
@@ -35,7 +35,7 @@ worst kind of false confidence: coverage decaying without a single failing test.
 Varar treats this transition — **was an example, now matches nothing** — as
 **drift**, and refuses to let it pass unnoticed.
 
-To detect it, Varar records a fingerprint of each spec's source alongside its run
+To detect it, Varar records a fingerprint of each oath's source alongside its run
 results: an [FNV-1a](https://en.wikipedia.org/wiki/Fowler%E2%80%93Noll%E2%80%93Vo_hash_function)
 hash, written as `fnv1a:…`. It is a tiny, dependency-free change-detector,
 identical across every Varar runtime, so drift is recognised the same way no

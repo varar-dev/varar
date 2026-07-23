@@ -218,7 +218,7 @@ export function toFailureArtifact(error: unknown, matchSpan: Span): FailureArtif
   const anchor = failureAnchor(error, matchSpan)
   // `message` is projected for the kinds the CORE generates, so the corpus pins
   // their wording across ports — an `error` fence matches by substring, so a port
-  // that words or quotes a message differently fails a spec its siblings pass.
+  // that words or quotes a message differently fails an oath its siblings pass.
   // `thrown` is deliberately excluded: those messages come from user handlers and
   // from language runtimes, which differ legitimately (dividing by zero reads
   // "division by zero" in Python, "/ by zero" in Java, "runtime error: integer

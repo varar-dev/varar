@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "specs": {
+  "version": 2,
+  "oaths": {
     "deep-thought.md": {
       "sourceHash": "fnv1a:a4027d33",
       "examples": [

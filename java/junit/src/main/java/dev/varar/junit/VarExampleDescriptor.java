@@ -73,7 +73,7 @@ final class VarExampleDescriptor extends AbstractTestDescriptor implements Node<
         try {
             run.run();
         } catch (Throwable error) {
-            String rendered = Render.renderFailure(error, fileDescriptor.content(), fileDescriptor.specPath());
+            String rendered = Render.renderFailure(error, fileDescriptor.content(), fileDescriptor.oathPath());
             throw new RenderedFailure(rendered, error);
         }
         return context;

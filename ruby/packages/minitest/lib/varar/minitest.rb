@@ -4,8 +4,8 @@ require 'minitest'
 require 'varar/runner'
 
 module Varar
-  # Minitest adapter. One call turns every spec matched by varar.config.json into
-  # a generated Minitest::Test subclass — one class per spec file, one test
+  # Minitest adapter. One call turns every oath matched by varar.config.json into
+  # a generated Minitest::Test subclass — one class per oath file, one test
   # method per example. Mirrors var-unittest.
   #
   #   # test/var_test.rb
@@ -24,16 +24,16 @@ module Varar
       store = Runner.create_file_baseline_store(root)
       update = %w[1 true].include?(ENV.fetch('VARAR_UPDATE', nil))
 
-      Runner.find_specs(cfg.docs_include, cfg.docs_exclude, root).each do |spec_path|
-        klass = build_test_case(spec_path, root, loaded, store, update)
-        namespace.const_set("Var_#{identifier(Runner.rel_posix(spec_path, root))}", klass)
+      Runner.find_oaths(cfg.docs_include, cfg.docs_exclude, root).each do |oath_path|
+        klass = build_test_case(oath_path, root, loaded, store, update)
+        namespace.const_set("Var_#{identifier(Runner.rel_posix(oath_path, root))}", klass)
       end
     end
 
-    def build_test_case(spec_path, root, loaded, store, update)
-      rel = Runner.rel_posix(spec_path, root)
-      source = File.read(spec_path, encoding: 'UTF-8')
-      plan = Runner.plan_spec(File.basename(spec_path), source, loaded.registry)
+    def build_test_case(oath_path, root, loaded, store, update)
+      rel = Runner.rel_posix(oath_path, root)
+      source = File.read(oath_path, encoding: 'UTF-8')
+      plan = Runner.plan_oath(File.basename(oath_path), source, loaded.registry)
       pairs = Runner.examples_with_runs(plan, loaded.create_context, Runner::RecordingReporter.new)
 
       klass = Class.new(::Minitest::Test)

@@ -91,8 +91,8 @@ export function registerHandlers(
       const path = uriToPath(change.uri)
       if (!path.includes('/.var/') || !path.endsWith('.json')) continue
       // FileChangeType: 1 Created, 2 Changed, 3 Deleted
-      const specUri = change.type === 3 ? runResults.remove(path) : await ingestWatched(path)
-      if (specUri) await publishFor(specUri)
+      const oathUri = change.type === 3 ? runResults.remove(path) : await ingestWatched(path)
+      if (oathUri) await publishFor(oathUri)
     }
   })
 
@@ -142,7 +142,7 @@ export function registerHandlers(
     if (!store) return
     const uris = new Set<string>()
     for (const d of store.index().diagnostics) uris.add(`file://${d.varPath}`)
-    if (runResults) for (const u of runResults.specUris()) uris.add(u)
+    if (runResults) for (const u of runResults.oathUris()) uris.add(u)
     for (const u of uris) void publishFor(u)
   }
 

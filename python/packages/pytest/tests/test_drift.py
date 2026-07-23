@@ -24,8 +24,8 @@ def _project(pytester):
 
 def _write_baseline(pytester, examples):
     lock = {
-        "version": 1,
-        "specs": {"features/vault.md": {"sourceHash": "fnv1a:0", "examples": examples}},
+        "version": 2,
+        "oaths": {"features/vault.md": {"sourceHash": "fnv1a:0", "examples": examples}},
     }
     (pytester.path / "varar.lock.json").write_text(json.dumps(lock), encoding="utf-8")
 
@@ -40,7 +40,7 @@ def test_first_run_records_the_baseline_and_passes(pytester):
     result = pytester.runpytest("-v")
     result.assert_outcomes(passed=1)
     lock = _lock(pytester)
-    assert lock["specs"]["features/calc.md"]["examples"] == [{"name": "I add 2", "line": 1}]
+    assert lock["oaths"]["features/calc.md"]["examples"] == [{"name": "I add 2", "line": 1}]
 
 
 def test_a_paragraph_that_stopped_matching_drifts_and_fails(pytester):
@@ -62,4 +62,4 @@ def test_var_update_accepts_drift(pytester):
     _write_baseline(pytester, [{"name": "The vault is sealed", "line": 1}])
     result = pytester.runpytest("--varar-update")
     result.assert_outcomes()
-    assert _lock(pytester)["specs"]["features/vault.md"]["examples"] == []
+    assert _lock(pytester)["oaths"]["features/vault.md"]["examples"] == []

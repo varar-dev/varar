@@ -1,11 +1,11 @@
 import { isCellMismatchError } from './cell-diff.ts'
 import type { CellFailure, ExampleResult } from './result.ts'
 
-// Recover the 1-based failing line from the `<specPath>:line:col` frame
+// Recover the 1-based failing line from the `<oathPath>:line:col` frame
 // executePlan injects (see execute.ts augmentStack). Internal — not exported
 // from the package index.
-function failingLine(stack: string, specPath: string): number | undefined {
-  const escaped = specPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+function failingLine(stack: string, oathPath: string): number | undefined {
+  const escaped = oathPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const m = new RegExp(`${escaped}:(\\d+):\\d+`).exec(stack)
   return m ? Number(m[1]) : undefined
 }
@@ -16,7 +16,7 @@ function failingLine(stack: string, specPath: string): number | undefined {
 // payload.
 export function toFailure(
   error: unknown,
-  specPath: string,
+  oathPath: string,
   fallbackLine: number,
 ): NonNullable<ExampleResult['failure']> {
   const e = error as { message?: unknown; stack?: unknown }
@@ -30,7 +30,7 @@ export function toFailure(
     : undefined
 
   return {
-    line: failingLine(stack, specPath) ?? fallbackLine,
+    line: failingLine(stack, oathPath) ?? fallbackLine,
     message,
     stack,
     ...(cells && cells.length > 0 ? { cells } : {}),

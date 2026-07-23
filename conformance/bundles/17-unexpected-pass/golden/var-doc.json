@@ -13,12 +13,12 @@
           "span": {
             "endCol": 14,
             "endLine": 5,
-            "endOffset": 192,
+            "endOffset": 193,
             "startCol": 1,
             "startLine": 3,
             "startOffset": 19
           },
-          "text": "An `error` fence asserts the example fails. When every step passes instead, the\nfence itself is the failure — otherwise a spec could silently stop testing what\nit claims to."
+          "text": "An `error` fence asserts the example fails. When every step passes instead, the\nfence itself is the failure — otherwise an oath could silently stop testing what\nit claims to."
         }
       ],
       "precededByDelimiter": true,
@@ -28,7 +28,7 @@
       "span": {
         "endCol": 14,
         "endLine": 5,
-        "endOffset": 192,
+        "endOffset": 193,
         "startCol": 1,
         "startLine": 3,
         "startOffset": 19
@@ -40,17 +40,17 @@
           "kind": "paragraph",
           "segmentMap": [
             {
-              "sourceOffset": 253,
+              "sourceOffset": 254,
               "textOffset": 0
             }
           ],
           "span": {
             "endCol": 21,
             "endLine": 9,
-            "endOffset": 273,
+            "endOffset": 274,
             "startCol": 1,
             "startLine": 9,
-            "startOffset": 253
+            "startOffset": 254
           },
           "text": "I do nothing at all."
         },
@@ -59,20 +59,20 @@
           "bodySpan": {
             "endCol": 1,
             "endLine": 13,
-            "endOffset": 289,
+            "endOffset": 290,
             "startCol": 1,
             "startLine": 12,
-            "startOffset": 284
+            "startOffset": 285
           },
           "info": "error",
           "kind": "fence",
           "span": {
             "endCol": 4,
             "endLine": 13,
-            "endOffset": 292,
+            "endOffset": 293,
             "startCol": 1,
             "startLine": 11,
-            "startOffset": 275
+            "startOffset": 276
           }
         }
       ],
@@ -84,10 +84,10 @@
       "span": {
         "endCol": 4,
         "endLine": 13,
-        "endOffset": 292,
+        "endOffset": 293,
         "startCol": 1,
         "startLine": 9,
-        "startOffset": 253
+        "startOffset": 254
       }
     }
   ],

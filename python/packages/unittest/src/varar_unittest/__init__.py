@@ -1,7 +1,7 @@
 """unittest adapter for var.
 
-One call in a test module turns every spec matched by varar.config.json into
-generated ``unittest.TestCase`` classes — one class per spec file, one test
+One call in a test module turns every oath matched by varar.config.json into
+generated ``unittest.TestCase`` classes — one class per oath file, one test
 method per example::
 
     # test_var.py
@@ -28,21 +28,21 @@ from varar_core.diagnostics import drift_detected
 from varar_core.drift import reconcile_drift
 from varar_core.execute import is_unexpected_pass_error
 from varar_runner.baseline_store import create_file_baseline_store
-from varar_runner.discovery import find_specs
+from varar_runner.discovery import find_oaths
 from varar_runner.render import render_failure
-from varar_runner.run import RecordingReporter, examples_with_runs, plan_spec
+from varar_runner.run import RecordingReporter, examples_with_runs, plan_oath
 from varar_runner.steps import LoadedSteps, load_steps
 
 __version__ = "0.0.0"
 
 
 def generate_tests(namespace: dict[str, Any], root: str | Path | None = None) -> None:
-    """Generate unittest test cases for every spec into *namespace*.
+    """Generate unittest test cases for every oath into *namespace*.
 
     Reads ``varar.config.json`` from *root* (default: the directory of the
     module *namespace* belongs to, via its ``__file__``), loads the step
     definition files it globs, and assigns one ``unittest.TestCase`` subclass
-    per matched spec file into *namespace* — one ``test_*`` method per
+    per matched oath file into *namespace* — one ``test_*`` method per
     example.
     """
     if root is None:
@@ -52,24 +52,24 @@ def generate_tests(namespace: dict[str, Any], root: str | Path | None = None) ->
     loaded = load_steps(cfg.steps, root)
     store = create_file_baseline_store(root)
     module_name = namespace.get("__name__")
-    for spec_path in find_specs(cfg.docs_include, cfg.docs_exclude, root):
-        cls = _spec_test_case(spec_path, root, loaded, module_name, store)
+    for oath_path in find_oaths(cfg.docs_include, cfg.docs_exclude, root):
+        cls = _oath_test_case(oath_path, root, loaded, module_name, store)
         namespace[cls.__name__] = cls
 
 
-def _spec_test_case(
-    spec_path: Path,
+def _oath_test_case(
+    oath_path: Path,
     root: Path,
     loaded: LoadedSteps,
     module_name: str | None,
     store: Any,
 ) -> type[unittest.TestCase]:
-    """Build one TestCase subclass for *spec_path*, one method per example."""
-    # walk_up: a spec outside the config root (matched via a ../ glob) still
+    """Build one TestCase subclass for *oath_path*, one method per example."""
+    # walk_up: an oath outside the config root (matched via a ../ glob) still
     # gets a stable relative label.
-    rel = Path(os.path.abspath(spec_path)).relative_to(root, walk_up=True).as_posix()
-    source = spec_path.read_text(encoding="utf-8")
-    execution_plan = plan_spec(spec_path.name, source, loaded.registry)
+    rel = Path(os.path.abspath(oath_path)).relative_to(root, walk_up=True).as_posix()
+    source = oath_path.read_text(encoding="utf-8")
+    execution_plan = plan_oath(oath_path.name, source, loaded.registry)
     pairs = examples_with_runs(execution_plan, loaded.create_context, RecordingReporter())
 
     methods: dict[str, Any] = {"__doc__": rel}

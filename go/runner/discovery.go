@@ -1,5 +1,5 @@
 // Package runner is the imperative shell shared by var test-runner adapters:
-// spec discovery (the shared glob semantics), planning/running examples, failure
+// oath discovery (the shared glob semantics), planning/running examples, failure
 // rendering, and the filesystem varar.lock.json baseline store for drift. It
 // contains no pipeline logic — it delegates to core. Steps are supplied by
 // the caller (Go compiles step files in; there is no dynamic load_steps) as a
@@ -82,9 +82,9 @@ func relPosix(path, root string) string {
 	return filepath.ToSlash(rel)
 }
 
-// MatchSpec reports whether path (relative to root) matches an include glob and
+// MatchOath reports whether path (relative to root) matches an include glob and
 // no exclude.
-func MatchSpec(path string, include, exclude []string, root string) bool {
+func MatchOath(path string, include, exclude []string, root string) bool {
 	rel := relPosix(path, root)
 	return matchesAny(rel, include) && !matchesAny(rel, exclude)
 }
@@ -97,7 +97,7 @@ func walk(dir string, out *[]string) {
 	for _, e := range entries {
 		p := filepath.Join(dir, e.Name())
 		// os.Stat follows symlinks, matching the other runners' is_dir/is_file
-		// (a symlinked `.md` spec must be discovered).
+		// (a symlinked `.md` oath must be discovered).
 		info, err := os.Stat(p)
 		if err != nil {
 			continue
@@ -110,14 +110,14 @@ func walk(dir string, out *[]string) {
 	}
 }
 
-// FindSpecs returns files under root matching any docs.include glob and no
+// FindOaths returns files under root matching any docs.include glob and no
 // docs.exclude glob, sorted.
-func FindSpecs(cfg config.VarConfig, root string) []string {
+func FindOaths(cfg config.VarConfig, root string) []string {
 	var files []string
 	walk(root, &files)
 	var kept []string
 	for _, p := range files {
-		if MatchSpec(p, cfg.DocsInclude, cfg.DocsExclude, root) {
+		if MatchOath(p, cfg.DocsInclude, cfg.DocsExclude, root) {
 			kept = append(kept, p)
 		}
 	}

@@ -45,7 +45,7 @@ class DefineStateTest {
 
     /**
      * The arity ladder must reach far enough for the shared "two or more slots" rule. Capped at two
-     * captures, a spec with three inline parameters plus a trailing table ran in the dynamic ports
+     * captures, an oath with three inline parameters plus a trailing table ran in the dynamic ports
      * but would not compile here. The adapters must also accept the wider call shapes, so each
      * handler is invoked the way Execute.invokeHandler does rather than merely registered.
      */

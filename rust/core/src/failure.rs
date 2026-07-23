@@ -6,8 +6,8 @@ use crate::error::{StepError, StepFailure};
 use crate::result::{CellFailure, ExampleFailure};
 
 /// A caught step failure → the `ExampleResult.failure` payload. `fallback_line`
-/// is used when `failure` carries no location matching `spec_path`.
-pub fn to_failure(failure: &StepFailure, spec_path: &str, fallback_line: i64) -> ExampleFailure {
+/// is used when `failure` carries no location matching `oath_path`.
+pub fn to_failure(failure: &StepFailure, oath_path: &str, fallback_line: i64) -> ExampleFailure {
     let message = failure.error.message();
 
     let cells = match &failure.error {
@@ -26,7 +26,7 @@ pub fn to_failure(failure: &StepFailure, spec_path: &str, fallback_line: i64) ->
     let line = failure
         .location
         .as_ref()
-        .filter(|l| l.path == spec_path)
+        .filter(|l| l.path == oath_path)
         .map_or(fallback_line, |l| l.line as i64);
 
     let stack = render_stack(failure);

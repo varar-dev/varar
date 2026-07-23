@@ -182,12 +182,12 @@ fn var_doc_exposes_fields() {
         body_span: SPAN,
     });
     let doc = VarDoc {
-        path: "spec.md".to_string(),
+        path: "oath.md".to_string(),
         source: "# Title".to_string(),
         examples: vec![example],
         orphan_attachments: vec![orphan],
     };
-    assert_eq!("spec.md", doc.path);
+    assert_eq!("oath.md", doc.path);
     assert_eq!("# Title", doc.source);
     assert_eq!(1, doc.examples.len());
     assert_eq!(1, doc.orphan_attachments.len());

@@ -1,6 +1,6 @@
 import { addStep, createRegistry, type Diagnostic } from '@varar/core'
 import { expect, test } from 'vitest'
-import { examplesWithRuns, planSpec, RecordingReporter } from '../src/run.ts'
+import { examplesWithRuns, planOath, RecordingReporter } from '../src/run.ts'
 
 function makeRegistry() {
   let r = createRegistry()
@@ -29,14 +29,14 @@ function makeRegistry() {
   return r
 }
 
-test('planSpec returns an ExecutionPlan with examples and steps', () => {
+test('planOath returns an ExecutionPlan with examples and steps', () => {
   const source = [
     '# Cucumbers',
     '',
     'I have 10 cucumbers. I eat 3 cucumbers. I should have 7 cucumbers left.',
   ].join('\n')
 
-  const result = planSpec('spec.md', source, makeRegistry())
+  const result = planOath('oath.md', source, makeRegistry())
 
   expect(result.diagnostics).toHaveLength(0)
   expect(result.examples).toHaveLength(1)
@@ -51,9 +51,9 @@ test('planSpec returns an ExecutionPlan with examples and steps', () => {
   ])
 })
 
-test('planSpec parses and plans a spec', () => {
+test('planOath parses and plans an oath', () => {
   const source = '# Simple\n\nI have 5 cucumbers.\n'
-  const result = planSpec('spec.md', source, makeRegistry())
+  const result = planOath('oath.md', source, makeRegistry())
   expect(result.varDoc.source).toBe(source)
   expect(result.examples).toHaveLength(1)
 })
@@ -79,7 +79,7 @@ test('examplesWithRuns pairs examples with run functions', async () => {
     '',
     'I have 10 cucumbers. I eat 3 cucumbers. I should have 7 cucumbers left.',
   ].join('\n')
-  const plan = planSpec('spec.md', source, makeRegistry())
+  const plan = planOath('oath.md', source, makeRegistry())
   const reporter = new RecordingReporter()
   const pairs = examplesWithRuns(plan, () => ({}), reporter)
 
@@ -105,7 +105,7 @@ test('examplesWithRuns — failing run rejects', async () => {
     },
   })
   const source = '# Test\n\nthe value is 42.\n'
-  const plan = planSpec('spec.md', source, r)
+  const plan = planOath('oath.md', source, r)
   const reporter = new RecordingReporter()
   const pairs = examplesWithRuns(plan, () => ({}), reporter)
 

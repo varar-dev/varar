@@ -1,6 +1,6 @@
 //! `varar-runner` — the imperative shell shared by var test-runner adapters.
 //!
-//! Spec discovery (the shared glob semantics), planning/running examples,
+//! Oath discovery (the shared glob semantics), planning/running examples,
 //! failure rendering, and the filesystem `varar.lock.json` baseline store for
 //! drift. Contains no pipeline logic — it delegates to `varar-core`. Steps are
 //! supplied by the caller (Rust compiles step files in; there is no dynamic
@@ -16,6 +16,6 @@ pub mod render;
 pub mod run;
 
 pub use baseline_store::FileBaselineStore;
-pub use discovery::{find_specs, match_spec};
+pub use discovery::{find_oaths, match_oath};
 pub use render::render_failure;
-pub use run::{example_names, plan_spec, run_example};
+pub use run::{example_names, plan_oath, run_example};

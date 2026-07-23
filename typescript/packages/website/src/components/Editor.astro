@@ -28,7 +28,7 @@ const {
 
 // Render the <File> children once so we can both check them and emit them.
 // Every File renders a `data-uri`; its extension maps to a SiteLang (or to
-// undefined for the language-neutral .md spec). A required language with no
+// undefined for the language-neutral .md oath). A required language with no
 // tab would fall back silently at runtime (see editor-mount.ts) — here it
 // fails `astro build` instead, so a new port can't ship with empty examples.
 const slotHtml = await Astro.slots.render('default')

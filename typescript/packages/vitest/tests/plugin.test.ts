@@ -1,19 +1,19 @@
 import { describe, expect, test } from 'vitest'
-import { generateVirtualModule, isVararSpecId, vararVitestPlugin } from '../src/plugin.ts'
+import { generateVirtualModule, isVararOathId, vararVitestPlugin } from '../src/plugin.ts'
 
-describe('isVararSpecId', () => {
-  const specs = new Set(['/abs/docs/hello.md', '/abs/docs/airport.md'])
+describe('isVararOathId', () => {
+  const oaths = new Set(['/abs/docs/hello.md', '/abs/docs/airport.md'])
 
-  test('true when the id is a configured spec file', () => {
-    expect(isVararSpecId('/abs/docs/hello.md', specs)).toBe(true)
+  test('true when the id is a configured oath file', () => {
+    expect(isVararOathId('/abs/docs/hello.md', oaths)).toBe(true)
   })
 
-  test('false for a markdown file that is not a configured spec', () => {
-    expect(isVararSpecId('/abs/README.md', specs)).toBe(false)
+  test('false for a markdown file that is not a configured oath', () => {
+    expect(isVararOathId('/abs/README.md', oaths)).toBe(false)
   })
 
   test('strips a vite query suffix before matching', () => {
-    expect(isVararSpecId('/abs/docs/hello.md?v=123', specs)).toBe(true)
+    expect(isVararOathId('/abs/docs/hello.md?v=123', oaths)).toBe(true)
   })
 })
 
@@ -31,7 +31,7 @@ describe('generateVirtualModule', () => {
     expect(lines[0]).toContain("import { test } from 'vitest'")
     // Generated code may only import from packages the CONSUMER directly
     // depends on (@varar/vitest, vitest) — a bare '@varar/core'
-    // would not resolve from the spec's path under pnpm's strict layout.
+    // would not resolve from the oath's path under pnpm's strict layout.
     expect(lines[0]).toContain(
       "import { collectVararExamples, vararTestBody } from '@varar/vitest/runtime'",
     )
@@ -84,7 +84,7 @@ describe('generateVirtualModule', () => {
     expect(out.match(/test\(/g)).toHaveLength(1)
   })
 
-  test('inlines the spec baseline so the runtime can run the read-only drift gate', () => {
+  test('inlines the oath baseline so the runtime can run the read-only drift gate', () => {
     const out = generateVirtualModule({
       varPath: '/abs/foo.md',
       stepImports: [],
@@ -96,7 +96,7 @@ describe('generateVirtualModule', () => {
     expect(out).toContain('baseline:')
   })
 
-  test('inlines a null baseline when the spec is not yet in varar.lock.json', () => {
+  test('inlines a null baseline when the oath is not yet in varar.lock.json', () => {
     const out = generateVirtualModule({
       varPath: '/abs/foo.md',
       stepImports: [],

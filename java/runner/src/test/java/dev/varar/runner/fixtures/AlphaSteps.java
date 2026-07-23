@@ -6,7 +6,7 @@ import dev.varar.Steps;
 
 /**
  * A standalone (top-level, own-file) {@link StepDefinitions} fixture for {@code
- * StepLoaderTest} — mirrors what a real {@code *.md} spec's own step-definition file
+ * StepLoaderTest} — mirrors what a real {@code *.md} oath's own step-definition file
  * would look like. Deliberately a top-level class (not nested inside the test class)
  * so its {@code RegistryRegistrar}-captured {@code expressionSourceFile} is genuinely
  * {@code "AlphaSteps.java"}, distinct from {@link BetaSteps}' {@code "BetaSteps.java"}

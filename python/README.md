@@ -18,10 +18,10 @@ uv run ruff check
 | `varar` / `var` | author facade: `steps` (+ `internal`, `registry` glue) |
 | `varar-config` / `varar_config` | reads `varar.config.json` — the shared config file for all var tools |
 | `varar-runner` / `varar_runner` | shared imperative shell: discovery, step loading, run orchestration, failure rendering |
-| `pytest-varar` / `varar_pytest` | pytest plugin: `.md` specs as first-class tests |
+| `pytest-varar` / `varar_pytest` | pytest plugin: `.md` oaths as first-class tests |
 | `varar-unittest` / `varar_unittest` | unittest adapter: `generate_tests(globals())` in one test module |
 
-## Run Markdown specs as live var tests (dogfood)
+## Run Markdown oaths as live var tests (dogfood)
 
 The `pytest-varar` plugin turns a `.md` file into pytest tests (one item per
 example). `varar.config.json` points it at a **collision-free
@@ -41,17 +41,17 @@ uv run pytest --rootdir=. ../conformance/bundles
 #     line 9 | column 'score' — expected: '10', actual: '99'
 ```
 
-**Want to edit a spec/step and watch it flip?** Do NOT edit files under
+**Want to edit an oath/step and watch it flip?** Do NOT edit files under
 `conformance/bundles/` — they are the shared golden corpus, and changing them
 breaks the conformance suite (Python *and* TypeScript). Instead, copy a bundle to
 a scratch location you own, point `varar.config.json` at it, and edit freely:
 
 ```sh
-cp -r ../conformance/bundles/01-roman-numerals /tmp/myspec
-# add "/tmp/myspec/*.md" to varar.config.json's docs.include and
-# "/tmp/myspec/*.steps.py" to steps
-uv run pytest --rootdir=. /tmp/myspec        # green
-# now change a number in /tmp/myspec/example.md or break a handler → red
+cp -r ../conformance/bundles/01-roman-numerals /tmp/myoath
+# add "/tmp/myoath/*.md" to varar.config.json's docs.include and
+# "/tmp/myoath/*.steps.py" to steps
+uv run pytest --rootdir=. /tmp/myoath        # green
+# now change a number in /tmp/myoath/example.md or break a handler → red
 ```
 
 (The default `uv run pytest` runs only the package test suite — `testpaths =

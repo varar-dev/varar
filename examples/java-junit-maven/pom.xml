@@ -29,7 +29,7 @@
       <scope>test</scope>
     </dependency>
     <!-- Maven Surefire only discovers class-based tests, so the sample uses a
-         JUnit @Suite (see RunVarSpecs) to hand the spec corpus to the "varar"
+         JUnit @Suite (see RunOathsTest) to hand the oath corpus to the "varar"
          engine. -->
     <dependency>
       <groupId>org.junit.platform</groupId>

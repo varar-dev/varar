@@ -1,7 +1,7 @@
 {
-  "version": 1,
-  "specs": {
-    "specs/wrong.md": {
+  "version": 2,
+  "oaths": {
+    "oaths/wrong.md": {
       "sourceHash": "fnv1a:863233bb",
       "examples": [
         {

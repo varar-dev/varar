@@ -8,14 +8,14 @@ import { findFiles } from '../src/find-files.ts'
 test('parseVarConfig reads all keys', () => {
   const parsed = parseVarConfig(
     `{
-      "docs": { "include": ["specs/**/*.md"], "exclude": ["specs/wip/**"] },
+      "docs": { "include": ["oaths/**/*.md"], "exclude": ["oaths/wip/**"] },
       "steps": ["**/*.steps.ts"],
       "snippets": { "typescript": "T" }
     }`,
     'varar.config.json',
   )
   expect(parsed).toEqual({
-    docs: { include: ['specs/**/*.md'], exclude: ['specs/wip/**'] },
+    docs: { include: ['oaths/**/*.md'], exclude: ['oaths/wip/**'] },
     steps: ['**/*.steps.ts'],
     snippets: { typescript: 'T' },
   })
@@ -89,8 +89,8 @@ test('missing varar.config.json yields the empty config (no default steps glob)'
 test('findFiles resolves include globs to absolute paths', () => {
   const dir = mkdtempSync(join(tmpdir(), 'var-config-find-'))
   try {
-    writeFileSync(join(dir, 'a.md'), '# Spec A\n')
-    writeFileSync(join(dir, 'b.md'), '# Spec B\n')
+    writeFileSync(join(dir, 'a.md'), '# Oath A\n')
+    writeFileSync(join(dir, 'b.md'), '# Oath B\n')
     const files = findFiles(dir, ['*.md'])
     expect(files).toHaveLength(2)
     expect(files.every((f) => f.startsWith(dir))).toBe(true)
@@ -103,7 +103,7 @@ test('findFiles resolves include globs to absolute paths', () => {
 test('findFiles respects exclude globs', () => {
   const dir = mkdtempSync(join(tmpdir(), 'var-config-find-excl-'))
   try {
-    writeFileSync(join(dir, 'a.md'), '# Spec A\n')
+    writeFileSync(join(dir, 'a.md'), '# Oath A\n')
     writeFileSync(join(dir, 'wip.md'), '# WIP\n')
     const files = findFiles(dir, ['*.md'], ['wip.md'])
     expect(files).toHaveLength(1)

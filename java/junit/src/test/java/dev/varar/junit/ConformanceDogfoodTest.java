@@ -52,8 +52,8 @@ import org.junit.platform.testkit.engine.EngineTestKit;
  * that workspace's varar.config.json, so no OTHER bundle's {@code example.md} can accidentally
  * satisfy this request. The config's {@code steps}
  * names the one fixture class {@link StepLoader} should load, exactly as {@link
- * VarEngineBehaviorTest} already proves end to end for classpath-resource specs — this task is
- * the same mechanism for a real-file spec.
+ * VarEngineBehaviorTest} already proves end to end for classpath-resource oaths — this task is
+ * the same mechanism for a real-file oath.
  *
  * <p><b>What's asserted:</b> not a JSON diff (that's {@code var}'s job) but the per-example
  * pass/fail OUTCOME the real engine reports, matching each bundle's committed {@code
@@ -164,10 +164,10 @@ class ConformanceDogfoodTest {
     void bundleOutcomesMatchGoldenTrace(BundleCase bundleCase, @TempDir Path workspace) throws IOException {
         Path bundleDir = BUNDLES_DIR.resolve(bundleCase.bundleName());
         Path exampleMd = bundleDir.resolve("example.md");
-        assertTrue(Files.isRegularFile(exampleMd), () -> "missing bundle spec: " + exampleMd.toAbsolutePath());
+        assertTrue(Files.isRegularFile(exampleMd), () -> "missing bundle oath: " + exampleMd.toAbsolutePath());
 
         // docs globs resolve against the config root (the workspace), not the JVM
-        // working directory — so the include is the spec's workspace-relative path.
+        // working directory — so the include is the oath's workspace-relative path.
         String docsInclude = workspace
                 .toAbsolutePath()
                 .normalize()

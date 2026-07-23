@@ -10,8 +10,8 @@ from varar_config import read_varar_config
 from varar_core.diagnostics import drift_detected
 from varar_core.drift import reconcile_drift
 from varar_runner.baseline_store import create_file_baseline_store
-from varar_runner.discovery import match_spec
-from varar_runner.run import RecordingReporter, examples_with_runs, plan_spec
+from varar_runner.discovery import match_oath
+from varar_runner.run import RecordingReporter, examples_with_runs, plan_oath
 from varar_runner.steps import load_steps
 from varar_pytest.fixtures import _active_request, get_active_request, wrap_registry_for_fixtures
 
@@ -50,7 +50,7 @@ def pytest_collect_file(file_path: Path, parent: pytest.Collector):
     if file_path.suffix != ".md":
         return None
     cfg, _loaded, root, _store = _STASH[id(parent.config)]
-    if not match_spec(file_path, cfg.docs_include, cfg.docs_exclude, root):
+    if not match_oath(file_path, cfg.docs_include, cfg.docs_exclude, root):
         return None
     return VarFile.from_parent(parent, path=file_path)
 
@@ -59,7 +59,7 @@ class VarFile(pytest.File):
     def collect(self):
         _cfg, loaded, root, store = _STASH[id(self.config)]
         source = self.path.read_text(encoding="utf-8")
-        execution_plan = plan_spec(self.path.name, source, loaded.registry)
+        execution_plan = plan_oath(self.path.name, source, loaded.registry)
         pairs = examples_with_runs(execution_plan, loaded.create_context, RecordingReporter())
         seen: dict[str, int] = {}
         for example, run in pairs:
@@ -76,12 +76,12 @@ class VarFile(pytest.File):
         # baseline; a paragraph that was an example and no longer matches any
         # step yields a failing item (unless --varar-update / VARAR_UPDATE accepts).
         try:
-            spec_path = self.path.relative_to(root).as_posix()
+            oath_path = self.path.relative_to(root).as_posix()
         except ValueError:
-            spec_path = self.path.name
+            oath_path = self.path.name
         drifts = reconcile_drift(
             store,
-            spec_path,
+            oath_path,
             source,
             execution_plan.var_doc,
             execution_plan,

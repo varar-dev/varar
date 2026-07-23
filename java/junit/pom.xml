@@ -14,8 +14,8 @@
   <packaging>jar</packaging>
   <name>var-junit — JUnit Platform TestEngine</name>
   <description>
-    Custom JUnit Platform TestEngine (id "varar") turning .md specs into first-class,
-    individually selectable JUnit tests — one container per spec file, one leaf per
+    Custom JUnit Platform TestEngine (id "varar") turning .md oaths into first-class,
+    individually selectable JUnit tests — one container per oath file, one leaf per
     example. See doc/adr/0003-java-junit-integration.md and
     doc/superpowers/specs/2026-07-01-java-junit-engine-design.md.
   </description>

@@ -287,7 +287,7 @@ export function buildHandlers(store: Store): Handlers {
       }
     },
     completions({ uri, position, linePrefix }) {
-      // Only offer completions in var spec docs (those matched by the `vars`
+      // Only offer completions in var oath docs (those matched by the `vars`
       // globs). .steps.ts gets its own TS completions from the TypeScript
       // service, and ordinary markdown is left alone.
       if (!store.isVarDoc(uriToPath(uri))) return []

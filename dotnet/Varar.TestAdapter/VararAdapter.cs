@@ -17,8 +17,8 @@ internal static class VararAdapter
 {
     public const string ExecutorUri = "executor://varar";
 
-    private static readonly TestProperty SpecPathProperty = TestProperty.Register(
-        "Varar.SpecPath", "SpecPath", typeof(string), typeof(VararAdapter));
+    private static readonly TestProperty OathPathProperty = TestProperty.Register(
+        "Varar.OathPath", "OathPath", typeof(string), typeof(VararAdapter));
 
     private static readonly TestProperty ExampleIndexProperty = TestProperty.Register(
         "Varar.ExampleIndex", "ExampleIndex", typeof(int), typeof(VararAdapter));
@@ -42,13 +42,13 @@ internal static class VararAdapter
             yield break;
         }
 
-        foreach (var spec in Discovery.FindSpecs(workspace.Config, workspace.Root))
+        foreach (var oath in Discovery.FindOaths(workspace.Config, workspace.Root))
         {
-            var relName = Discovery.RelPosix(spec, workspace.Root);
+            var relName = Discovery.RelPosix(oath, workspace.Root);
             ExecutionPlan plan;
             try
             {
-                plan = RunnerApi.PlanSpec(relName, File.ReadAllText(spec), workspace.Registry);
+                plan = RunnerApi.PlanOath(relName, File.ReadAllText(oath), workspace.Registry);
             }
             catch (Exception e)
             {
@@ -62,10 +62,10 @@ internal static class VararAdapter
                 var testCase = new TestCase($"{relName}::{ex.Name}", new Uri(ExecutorUri), source)
                 {
                     DisplayName = ex.Name,
-                    CodeFilePath = spec,
+                    CodeFilePath = oath,
                     LineNumber = ex.Span.StartLine,
                 };
-                testCase.SetPropertyValue(SpecPathProperty, relName);
+                testCase.SetPropertyValue(OathPathProperty, relName);
                 testCase.SetPropertyValue(ExampleIndexProperty, i);
                 yield return testCase;
             }
@@ -100,9 +100,9 @@ internal static class VararAdapter
 
             foreach (var testCase in bySource)
             {
-                var specPath = testCase.GetPropertyValue(SpecPathProperty) as string;
+                var oathPath = testCase.GetPropertyValue(OathPathProperty) as string;
                 int index = testCase.GetPropertyValue(ExampleIndexProperty, -1);
-                if (specPath is null || index < 0)
+                if (oathPath is null || index < 0)
                 {
                     continue;
                 }
@@ -111,10 +111,10 @@ internal static class VararAdapter
                 var result = new TestResult(testCase);
                 try
                 {
-                    if (!planCache.TryGetValue(specPath, out var plan))
+                    if (!planCache.TryGetValue(oathPath, out var plan))
                     {
-                        plan = RunnerApi.PlanSpec(specPath, File.ReadAllText(Path.Combine(workspace.Root, specPath)), workspace.Registry);
-                        planCache[specPath] = plan;
+                        plan = RunnerApi.PlanOath(oathPath, File.ReadAllText(Path.Combine(workspace.Root, oathPath)), workspace.Registry);
+                        planCache[oathPath] = plan;
                     }
 
                     var failure = RunnerApi.RunExample(plan, CreateContext, index);
@@ -125,7 +125,7 @@ internal static class VararAdapter
                     else
                     {
                         result.Outcome = TestOutcome.Failed;
-                        result.ErrorMessage = RunnerApi.RenderFailure(failure, specPath);
+                        result.ErrorMessage = RunnerApi.RenderFailure(failure, oathPath);
                     }
                 }
                 catch (Exception e)

@@ -145,9 +145,9 @@ class AstTest {
         Ast.Example example = new Ast.Example(List.of(), SPAN, List.of(new Ast.ThematicBreak(SPAN)), true);
         List<Ast.Example> examples = new ArrayList<>(List.of(example));
         List<Ast.TableOrFence> orphanAttachments = new ArrayList<>(List.of(new Ast.Fence(SPAN, "", "", SPAN)));
-        Ast.VarDoc doc = new Ast.VarDoc("spec.md", "# Title", examples, orphanAttachments);
+        Ast.VarDoc doc = new Ast.VarDoc("oath.md", "# Title", examples, orphanAttachments);
 
-        assertEquals("spec.md", doc.path());
+        assertEquals("oath.md", doc.path());
         assertEquals("# Title", doc.source());
         assertEquals(1, doc.examples().size());
         assertEquals(1, doc.orphanAttachments().size());

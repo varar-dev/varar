@@ -98,7 +98,7 @@ export const langOfLabel = (label: string): SiteLang | undefined =>
   SITE_LANGS.find((lang) => LANG_LABELS[lang] === label)
 
 // Maps a code file extension to its language; undefined for language-neutral
-// files (the .md spec) that are shown regardless of the site language.
+// files (the .md oath) that are shown regardless of the site language.
 export function langOfPath(path: string): SiteLang | undefined {
   for (const [ext, lang] of LANG_BY_EXT) {
     if (path.endsWith(ext)) return lang

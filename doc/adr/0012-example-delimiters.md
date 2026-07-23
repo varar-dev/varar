@@ -17,7 +17,7 @@ The hug is not valid GFM (issue #61). In GFM a table body runs until a blank
 line, so a hugging paragraph is parsed as **another table row**. Every GFM
 renderer (GitHub, `marked`) shows the step as a junk table cell, and every
 formatter (`prettier`, `markdownlint`'s MD012) rewrites the source — silently
-changing what the spec means, sometimes into a passing example that asserts
+changing what the oath means, sometimes into a passing example that asserts
 nothing. The one layout we documented for multi-table examples could not survive
 contact with the tools every repo runs.
 
@@ -51,7 +51,7 @@ Consequences that follow from the rule, by design:
 - **Two adjacent step-only examples merge.** If you write several examples as
   matching paragraphs with nothing but blank lines between them, they become one
   example with shared state. Separate them with a `---` or a heading. This is the
-  one migration the change forces on existing specs.
+  one migration the change forces on existing oaths.
 - **Prose in the middle of an example ends it.** A non-matching paragraph placed
   between the steps of one example splits it; the steps after the prose start a
   fresh example and do not see the earlier state. Keep narration out of the
@@ -91,10 +91,10 @@ so every port computes delimiters identically.
 
 ## Consequences
 
-- **Breaking** (`fix(spec)!`): specs that packed multiple step-only examples
+- **Breaking** (`fix(spec)!`): oaths that packed multiple step-only examples
   under one heading with only blank lines between them now run as a single
   shared-state example until a `---` or heading is inserted. The reference,
-  the Cucumber-migration explanation, and the dogfood specs are updated.
+  the Cucumber-migration explanation, and the dogfood oaths are updated.
 - Multi-table examples are now written in ordinary, formatter-stable GFM.
 - The scanner and structurer get simpler (no blank-line peeking); the grouping
   logic is explicit and lives in one place (`plan()`).

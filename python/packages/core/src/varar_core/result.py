@@ -1,6 +1,6 @@
 """result.py — port of typescript/packages/core/src/result.ts.
 
-Immutable dataclasses for run results (CellFailure, ExampleResult, SpecResults).
+Immutable dataclasses for run results (CellFailure, ExampleResult, OathResults).
 """
 from __future__ import annotations
 
@@ -42,10 +42,10 @@ class ExampleResult:
 
 
 @dataclass(frozen=True, slots=True)
-class SpecResults:
-    """The persisted run result for one spec file (.var/<spec>.json)."""
+class OathResults:
+    """The persisted run result for one oath file (.var/<oath>.json)."""
 
     version: int  # always 1
-    spec_path: str  # POSIX separators, relative to cwd
-    source_hash: str  # hashSource(spec source) at run time
+    oath_path: str  # POSIX separators, relative to cwd
+    source_hash: str  # hashSource(oath source) at run time
     examples: tuple[ExampleResult, ...]

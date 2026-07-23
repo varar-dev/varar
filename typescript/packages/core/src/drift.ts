@@ -24,17 +24,17 @@ export type BaselineExample = {
   readonly line: number
 }
 
-// The committed baseline for one spec file.
-export type SpecBaseline = {
+// The committed baseline for one oath file.
+export type OathBaseline = {
   readonly sourceHash: string
   readonly examples: ReadonlyArray<BaselineExample>
 }
 
-// The whole `varar.lock.json`: every spec keyed by its POSIX path relative to the
+// The whole `varar.lock.json`: every oath keyed by its POSIX path relative to the
 // project root.
 export type VarLock = {
-  readonly version: 1
-  readonly specs: Readonly<Record<string, SpecBaseline>>
+  readonly version: 2
+  readonly oaths: Readonly<Record<string, OathBaseline>>
 }
 
 // A paragraph that the baseline says was an example and now matches zero steps.
@@ -82,7 +82,7 @@ function similarity(a: ReadonlySet<string>, b: ReadonlySet<string>): number {
 }
 
 // The current example-producing paragraphs, in document order — what a clean
-// run records as the new baseline for a spec.
+// run records as the new baseline for an oath.
 export function liveExamples(varDoc: VarDoc, plan: ExecutionPlan): ReadonlyArray<BaselineExample> {
   const out: BaselineExample[] = []
   for (const candidate of varDoc.examples) {
@@ -93,17 +93,17 @@ export function liveExamples(varDoc: VarDoc, plan: ExecutionPlan): ReadonlyArray
   return out
 }
 
-// The full baseline record for a spec: its source fingerprint plus its live
+// The full baseline record for an oath: its source fingerprint plus its live
 // examples.
-export function deriveSpecBaseline(
+export function deriveOathBaseline(
   source: string,
   varDoc: VarDoc,
   plan: ExecutionPlan,
-): SpecBaseline {
+): OathBaseline {
   return { sourceHash: hashSource(source), examples: liveExamples(varDoc, plan) }
 }
 
-// Detect drift for one spec: paragraphs the baseline recorded as examples that
+// Detect drift for one oath: paragraphs the baseline recorded as examples that
 // now match zero steps. Pure — no `sourceHash` short-circuit, because a step
 // definition can be renamed with the Markdown (and its hash) untouched.
 //
@@ -113,7 +113,7 @@ export function deriveSpecBaseline(
 // looks like drift, and rewording within the threshold keeps its identity.
 //   matched & live → not drift · matched & dead → DRIFT · no match → remove+add
 export function detectDrift(
-  baseline: SpecBaseline | undefined,
+  baseline: OathBaseline | undefined,
   varDoc: VarDoc,
   plan: ExecutionPlan,
 ): ReadonlyArray<Drift> {
@@ -158,7 +158,7 @@ export function driftDiagnostics(drifts: ReadonlyArray<Drift>): ReadonlyArray<Di
   return drifts.map((d) => driftDetected({ name: d.name, span: d.span }))
 }
 
-// One spec's baseline reconciliation against a BaselineStore — the shared
+// One oath's baseline reconciliation against a BaselineStore — the shared
 // read → detect → write step every runner uses (browser and Node alike; only
 // the store differs). Returns the drifts to report.
 //   - `update` accepts all drift: re-record the baseline, report nothing.
@@ -166,7 +166,7 @@ export function driftDiagnostics(drifts: ReadonlyArray<Drift>): ReadonlyArray<Di
 //     unacknowledged drift keeps its old baseline entry (and stays red).
 export async function reconcileDrift(opts: {
   readonly store: BaselineStore
-  readonly specPath: string
+  readonly oathPath: string
   readonly source: string
   readonly varDoc: VarDoc
   readonly plan: ExecutionPlan
@@ -174,13 +174,13 @@ export async function reconcileDrift(opts: {
 }): Promise<ReadonlyArray<Drift>> {
   const text = await opts.store.read()
   const lock = text ? parseVarLock(text) : null
-  const baseline = lock?.specs[opts.specPath]
+  const baseline = lock?.oaths[opts.oathPath]
   const drifts = opts.update ? [] : detectDrift(baseline, opts.varDoc, opts.plan)
   if (opts.update || drifts.length === 0) {
-    const nextSpec = deriveSpecBaseline(opts.source, opts.varDoc, opts.plan)
+    const nextOath = deriveOathBaseline(opts.source, opts.varDoc, opts.plan)
     const nextLock: VarLock = {
-      version: 1,
-      specs: { ...(lock?.specs ?? {}), [opts.specPath]: nextSpec },
+      version: 2,
+      oaths: { ...(lock?.oaths ?? {}), [opts.oathPath]: nextOath },
     }
     await opts.store.write(stringifyVarLock(nextLock))
   }
@@ -193,7 +193,7 @@ function isBaselineExample(v: unknown): v is BaselineExample {
   return typeof e.name === 'string' && typeof e.line === 'number'
 }
 
-function isSpecBaseline(v: unknown): v is SpecBaseline {
+function isOathBaseline(v: unknown): v is OathBaseline {
   if (typeof v !== 'object' || v === null) return false
   const b = v as Record<string, unknown>
   return (
@@ -214,23 +214,23 @@ export function parseVarLock(text: string): VarLock | null {
   }
   if (typeof parsed !== 'object' || parsed === null) return null
   const obj = parsed as Record<string, unknown>
-  if (obj.version !== 1 || typeof obj.specs !== 'object' || obj.specs === null) return null
-  const specs: Record<string, SpecBaseline> = {}
-  for (const [path, value] of Object.entries(obj.specs as Record<string, unknown>)) {
-    if (!isSpecBaseline(value)) return null
-    specs[path] = value
+  if (obj.version !== 2 || typeof obj.oaths !== 'object' || obj.oaths === null) return null
+  const oaths: Record<string, OathBaseline> = {}
+  for (const [path, value] of Object.entries(obj.oaths as Record<string, unknown>)) {
+    if (!isOathBaseline(value)) return null
+    oaths[path] = value
   }
-  return { version: 1, specs }
+  return { version: 2, oaths }
 }
 
-// Serialize a `varar.lock.json` deterministically: spec paths sorted, examples in
+// Serialize a `varar.lock.json` deterministically: oath paths sorted, examples in
 // document order, two-space indent, trailing newline. Byte-stable across runs
 // so a clean re-run produces no git diff.
 export function stringifyVarLock(lock: VarLock): string {
-  const specs: Record<string, SpecBaseline> = {}
-  for (const path of Object.keys(lock.specs).sort()) {
-    const b = lock.specs[path]
-    if (b) specs[path] = b
+  const oaths: Record<string, OathBaseline> = {}
+  for (const path of Object.keys(lock.oaths).sort()) {
+    const b = lock.oaths[path]
+    if (b) oaths[path] = b
   }
-  return `${JSON.stringify({ version: 1, specs }, null, 2)}\n`
+  return `${JSON.stringify({ version: 2, oaths }, null, 2)}\n`
 }

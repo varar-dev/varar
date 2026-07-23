@@ -67,7 +67,7 @@ not four:
 | `<lang>-core` (e.g. `var-core` / `var_core`) | nothing runtime-ish | pure pipeline: parse → match → plan → execute, diffs, drift, conformance projections | filesystem, network, globals, time, test-framework types |
 | `<lang>` facade (e.g. `@varar/varar` / `var`) | `<lang>-core` | author API only: `steps(factory)` / `Steps.state(factory)` (stimulus/sensor), `registry` glue subpath | pipeline internals directly (goes through core) |
 | `<lang>-config` (e.g. `@varar/config` / `var_config`) | nothing (pure) | the `varar.config.json` reader — strict, fail-loud; its own conformance corpus | filesystem beyond reading the one config file |
-| `<lang>-runner` (e.g. `var-runner`) | facade + config + core | imperative shell: spec/step discovery (globs), `load_steps`, `run_spec`/`plan_spec`, failure rendering, the filesystem `BaselineStore` (drift) | any one test framework's types |
+| `<lang>-runner` (e.g. `var-runner`) | facade + config + core | imperative shell: oath/step discovery (globs), `load_steps`, `run_oath`/`plan_oath`, failure rendering, the filesystem `BaselineStore` (drift) | any one test framework's types |
 | `<lang>-<framework>` (e.g. `var-vitest`, `var-pytest`) | `<lang>-runner` | one test-framework binding: collection (one test item per example), fixture/DI bridging, reporting, the drift gate | pipeline logic (delegates to runner/core) |
 
 `var-config` is a **distinct shared package**, not folded into the runner — it
@@ -137,8 +137,8 @@ gated milestone:
    is the one core feature proven by **translating the unit tests**
    (`hash.test.ts`, `drift.test.ts`) rather than reproducing goldens. Note
    `varar.lock.json` uses its *own* serializer — `JSON.stringify(_, null, 2) +
-   "\n"` with spec paths sorted but **insertion-order keys otherwise**
-   (`version, specs`; per spec `sourceHash, examples`; per example `name,
+   "\n"` with oath paths sorted but **insertion-order keys otherwise**
+   (`version, oaths`; per oath `sourceHash, examples`; per example `name,
    line`) — NOT the recursive alphabetical key-sort of `canonical_json`. Drift
    is already ported to TS, Python, and the JVM; follow the closest precedent
    (`python/packages/core/src/varar_core/{hash,drift}.py`, Java
@@ -289,14 +289,14 @@ integration-mechanism decision recorded as an ADR** (the precedent is
 *one independently selectable/reportable test per Markdown example, failures
 anchored to the `.md` span* — but the mechanism differs per framework: a custom
 TestEngine (JUnit), a `pytest_collect_file` hook (pytest), a generated
-`TestCase` subclass per spec (unittest), a `FunSpec` subclass (Kotest), etc.
+`TestCase` subclass per oath (unittest), a `FunSpec` subclass (Kotest), etc.
 
 - **Collection**: one test item per *example* (not per file), independently
   selectable/reportable, with the item's location pointing at the `.md`
   source line, not adapter internals.
 - **Discovery/config**: one `varar.config.json` per workspace root, shared
   verbatim across every port — canonical keys `docs: {include, exclude}`
-  (globs; no special file extension, a file is a spec iff its path matches
+  (globs; no special file extension, a file is an oath iff its path matches
   the `docs` globs), `steps` (a glob array), `snippets`, and `scannerPlugins`
   (plugin name strings, resolved to functions per-language via a name
   registry). The schema lives at `conformance/config/varar.config.schema.json`.
@@ -319,7 +319,7 @@ TestEngine (JUnit), a `pytest_collect_file` hook (pytest), a generated
   re-derive failure text from scratch in the adapter.
 - **Async**: if the language has an async/coroutine convention, the executor
   should drive it transparently; the adapter needs no special casing.
-- **Drift gate**: each adapter reconciles every spec against `varar.lock.json`
+- **Drift gate**: each adapter reconciles every oath against `varar.lock.json`
   via the runner's filesystem `BaselineStore` + `reconcileDrift`, surfaces a
   `drift` diagnostic on the same Diagnostic rail as `ambiguous-match` (a drifted
   example fails the suite), writes the baseline on a clean run, and honours an
@@ -365,7 +365,7 @@ suite:
   locally-installed) artifacts exactly like a user's project, carry their own
   `varar.config.json`, and implement the feature-covering subset (`hello-var`,
   `deep-thought`, `tables-and-docstrings`, `yahtzee`, `roman-numerals`). Their
-  `.md` specs are symlinks to the `typescript-vitest` originals (the release
+  `.md` oaths are symlinks to the `typescript-vitest` originals (the release
   sync dereferences them). Add rows to `examples/README.md` **and a `<Card>` to
   the website's example-projects page** (see the next bullet).
 - **Website example-projects page**: add a `<Card title="<Language> +

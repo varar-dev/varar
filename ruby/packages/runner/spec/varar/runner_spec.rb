@@ -6,7 +6,7 @@ require 'varar/runner'
 
 module Varar
   ::RSpec.describe Runner do
-    describe '.glob_to_regex / .match_spec?' do
+    describe '.glob_to_regex / .match_oath?' do
       it 'matches * within a segment but not across /' do
         expect(described_class.glob_to_regex('*.md').match?('a.md')).to be(true)
         expect(described_class.glob_to_regex('*.md').match?('dir/a.md')).to be(false)
@@ -21,8 +21,8 @@ module Varar
 
       it 'honours excludes' do
         root = Dir.pwd
-        expect(described_class.match_spec?(File.join(root, 'a.md'), ['*.md'], [], root)).to be(true)
-        expect(described_class.match_spec?(File.join(root, 'README.md'), ['*.md'], ['README.md'], root)).to be(false)
+        expect(described_class.match_oath?(File.join(root, 'a.md'), ['*.md'], [], root)).to be(true)
+        expect(described_class.match_oath?(File.join(root, 'README.md'), ['*.md'], ['README.md'], root)).to be(false)
       end
     end
 
@@ -44,7 +44,7 @@ module Varar
         it "#{bundle} — runner outcomes agree with the trace goldens" do
           loaded = described_class.load_steps(['*.steps.rb'], bundle_dir)
           source = File.read(File.join(bundle_dir, 'example.md'), encoding: 'UTF-8')
-          plan = described_class.plan_spec('example.md', source, loaded.registry)
+          plan = described_class.plan_oath('example.md', source, loaded.registry)
           pairs = described_class.examples_with_runs(plan, loaded.create_context, Runner::RecordingReporter.new)
 
           actual = pairs.map do |example, run|

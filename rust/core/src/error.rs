@@ -105,7 +105,7 @@ impl StepFailure {
 ///
 /// Every port quotes doc-string mismatch messages identically because the text is
 /// matched by substring in an `error` fence — a port that quotes differently fails
-/// a spec its siblings pass. Escaping only `\\`, `"` and `\n` is not enough: doc
+/// an oath its siblings pass. Escaping only `\\`, `"` and `\n` is not enough: doc
 /// strings routinely carry tab-indented code.
 pub(crate) fn quote(s: &str) -> String {
     let mut out = String::with_capacity(s.len() + 2);

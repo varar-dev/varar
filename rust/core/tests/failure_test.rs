@@ -31,7 +31,7 @@ fn to_failure_extracts_cells_from_a_cell_mismatch() {
         "4",
         false,
     )]));
-    let f = to_failure(&sf, "spec.md", 3);
+    let f = to_failure(&sf, "oath.md", 3);
     assert_eq!(Some(vec![CellFailure::new(4, 5, "4")]), f.cells);
 }
 
@@ -46,16 +46,16 @@ fn to_failure_extracts_a_doc_string_mismatch_as_a_cell() {
     .unwrap()
     .unwrap();
     let sf = StepFailure::bare(StepError::CellMismatch(vec![diff]));
-    let f = to_failure(&sf, "spec.md", 3);
+    let f = to_failure(&sf, "oath.md", 3);
     assert_eq!(Some(vec![CellFailure::new(0, 7, "\"Goodbye!\\n\"")]), f.cells);
 }
 
 #[test]
 fn to_failure_leaves_cells_null_for_a_plain_exception_or_return_shape() {
     let plain = StepFailure::bare(StepError::Handler(HandlerError::new("nope")));
-    assert_eq!(None, to_failure(&plain, "spec.md", 3).cells);
+    assert_eq!(None, to_failure(&plain, "oath.md", 3).cells);
     let shape = StepFailure::bare(StepError::ReturnShape("bad".to_string()));
-    assert_eq!(None, to_failure(&shape, "spec.md", 3).cells);
+    assert_eq!(None, to_failure(&shape, "oath.md", 3).cells);
 }
 
 #[test]
@@ -68,8 +68,8 @@ fn to_failure_reads_the_failing_line_from_an_injected_location_else_falls_back()
 }
 
 #[test]
-fn to_failure_uses_an_exact_spec_path_match() {
-    // 'aXmd' must not be treated as matching spec path 'a.md' (Java escapes the
+fn to_failure_uses_an_exact_oath_path_match() {
+    // 'aXmd' must not be treated as matching oath path 'a.md' (Java escapes the
     // regex dot; Rust compares paths by `==`).
     let sf = located(StepError::Handler(HandlerError::new("boom")), "aXmd", 7);
     assert_eq!(42, to_failure(&sf, "a.md", 42).line);

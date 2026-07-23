@@ -2,10 +2,10 @@ import { join } from 'node:path'
 import { hashSource } from '@varar/core'
 import { describe, expect, test } from 'vitest'
 import {
-  buildSpecResults,
+  buildOathResults,
   collectFromModules,
   resultFilePath,
-  toSpecPath,
+  toOathPath,
 } from '../src/reporter.ts'
 
 const passed = { name: 'A', status: 'passed' as const, lines: [3] }
@@ -16,12 +16,12 @@ const failed = {
   failure: { line: 5, message: 'm', stack: 's', cells: [{ from: 1, to: 2, actual: '4' }] },
 }
 
-describe('buildSpecResults', () => {
+describe('buildOathResults', () => {
   test('wraps examples with version, path, and source hash', () => {
-    const r = buildSpecResults('docs/a.md', 'src', [passed, failed])
+    const r = buildOathResults('docs/a.md', 'src', [passed, failed])
     expect(r).toEqual({
       version: 1,
-      specPath: 'docs/a.md',
+      oathPath: 'docs/a.md',
       sourceHash: hashSource('src'),
       examples: [passed, failed],
     })
@@ -53,11 +53,11 @@ describe('collectFromModules', () => {
 })
 
 describe('path helpers', () => {
-  test('toSpecPath returns a POSIX path relative to cwd', () => {
+  test('toOathPath returns a POSIX path relative to cwd', () => {
     const abs = join('/cwd', 'docs', 'a.md')
-    expect(toSpecPath(abs, '/cwd')).toBe('docs/a.md')
+    expect(toOathPath(abs, '/cwd')).toBe('docs/a.md')
   })
-  test('resultFilePath mirrors the spec path under .var/', () => {
+  test('resultFilePath mirrors the oath path under .var/', () => {
     expect(resultFilePath('docs/a.md', '/cwd')).toBe(join('/cwd', '.var', 'docs/a.md.json'))
   })
 })

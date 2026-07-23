@@ -29,13 +29,13 @@ def test_cell_mismatch_lists_failing_cells():
         CellDiff(column="label", span=_span(7), expected="foo", actual="foo", ok=True),
     )
     error = CellMismatchError(cells)
-    result = render_failure(error, "", "spec.md")
+    result = render_failure(error, "", "oath.md")
 
     assert "total" in result
     assert "9" in result       # expected
     assert "8" in result       # actual
     assert "7" in result       # line number
-    assert "spec.md" in result
+    assert "oath.md" in result
 
 
 def test_cell_mismatch_omits_passing_cells():
@@ -43,7 +43,7 @@ def test_cell_mismatch_omits_passing_cells():
         CellDiff(column="ok_col", span=_span(3), expected="x", actual="x", ok=True),
     )
     error = CellMismatchError(cells)
-    result = render_failure(error, "", "spec.md")
+    result = render_failure(error, "", "oath.md")
     # No failing cells — should still mention the file but not "ok_col"
     assert "ok_col" not in result
 
@@ -84,7 +84,7 @@ def test_doc_string_cell_shows_expected_actual_and_line():
 
 def test_return_shape_error_renders_message():
     error = ReturnShapeError("expected a table, got str")
-    result = render_failure(error, "", "spec.md")
+    result = render_failure(error, "", "oath.md")
 
     assert "expected a table, got str" in result
 
@@ -96,6 +96,6 @@ def test_return_shape_error_renders_message():
 
 def test_generic_exception_renders_type_and_message():
     error = ValueError("boom")
-    result = render_failure(error, "", "spec.md")
+    result = render_failure(error, "", "oath.md")
 
     assert result == "ValueError: boom"

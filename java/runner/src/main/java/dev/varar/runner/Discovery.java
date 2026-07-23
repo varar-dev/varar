@@ -10,9 +10,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
- * Glob include/exclude spec discovery — port of {@code var_runner.discovery} (Python).
+ * Glob include/exclude oath discovery — port of {@code var_runner.discovery} (Python).
  *
- * <p>{@link #matchSpec} and {@link #findSpecs} share a single glob-to-regex compiler
+ * <p>{@link #matchOath} and {@link #findOaths} share a single glob-to-regex compiler
  * ({@link #globToRegex}) so the two never independently reimplement (and silently drift from
  * each other on) the same matching rules — same discipline as {@link
  * dev.varar.core.CanonicalJson CanonicalJson}'s
@@ -96,7 +96,7 @@ public final class Discovery {
     }
 
     /** Returns {@code true} iff {@code path} matches an include glob and no exclude glob. */
-    public static boolean matchSpec(Path path, List<String> include, List<String> exclude, Path root) {
+    public static boolean matchOath(Path path, List<String> include, List<String> exclude, Path root) {
         String rel = relPosix(path, root);
         return matchesAny(rel, include) && !matchesAny(rel, exclude);
     }
@@ -107,9 +107,9 @@ public final class Discovery {
      * "../corpus/**\/*.md"} &rarr; a sibling of {@code root}, since a leading {@code ..} segment
      * has no {@code *}/{@code ?} and is walked through like any other literal segment.
      *
-     * <p>This lets {@link #findSpecs} walk only the subtree a pattern can possibly match — the
+     * <p>This lets {@link #findOaths} walk only the subtree a pattern can possibly match — the
      * same reason Python's {@code root.glob(g)} can escape {@code root} via a {@code ../} glob
-     * (see {@code test_specs_outside_root_via_parent_glob} in {@code test_discovery.py}): the
+     * (see {@code test_oaths_outside_root_via_parent_glob} in {@code test_discovery.py}): the
      * literal prefix, including any {@code ..}, is resolved first, and only the remainder is
      * glob-matched.
      */
@@ -130,11 +130,11 @@ public final class Discovery {
      *
      * <p>Unlike Python's {@code root.glob(g)} (which resolves {@code **} natively per pattern),
      * this walks the file tree rooted at each pattern's {@link #literalPrefixDir} and tests each
-     * file against the same regex-matching helper {@link #matchSpec} uses — deliberately not
+     * file against the same regex-matching helper {@link #matchOath} uses — deliberately not
      * {@code FileSystem.getPathMatcher("glob:...")}, whose {@code **} semantics differ from this
      * project's convention.
      */
-    public static List<Path> findSpecs(List<String> include, List<String> exclude, Path root) {
+    public static List<Path> findOaths(List<String> include, List<String> exclude, Path root) {
         var out = new LinkedHashSet<Path>();
         for (String glob : include) {
             Path base = literalPrefixDir(glob, root);

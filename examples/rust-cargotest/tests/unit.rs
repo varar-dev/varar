@@ -1,12 +1,12 @@
 //! Checks the adapter's libtest harness can't express as items: that the config
-//! globs discover exactly the six specs, and that a deliberately-wrong
+//! globs discover exactly the six oaths, and that a deliberately-wrong
 //! expectation renders a cell mismatch (hello-var.md's "watch it fail").
 
 use example::steps::{build_registry, context_value};
 use std::path::Path;
 use varar_cargotest::run_one;
 use varar_config::read_var_config;
-use varar_runner::find_specs;
+use varar_runner::find_oaths;
 
 fn root() -> &'static Path {
     Path::new(env!("CARGO_MANIFEST_DIR"))
@@ -15,7 +15,7 @@ fn root() -> &'static Path {
 #[test]
 fn discovery_matches_config() {
     let config = read_var_config(root()).unwrap();
-    let mut names: Vec<String> = find_specs(&config, root())
+    let mut names: Vec<String> = find_oaths(&config, root())
         .iter()
         .map(|p| p.file_name().unwrap().to_string_lossy().into_owned())
         .collect();

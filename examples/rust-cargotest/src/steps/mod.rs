@@ -1,4 +1,4 @@
-//! Step definitions for every spec, plus the registry glue.
+//! Step definitions for every oath, plus the registry glue.
 //!
 //! Rust has no import-for-side-effect story, so — like the Java/Kotlin/Go/C#
 //! ports, and unlike TypeScript/Python's module-scope accumulator — each step
@@ -29,7 +29,7 @@ pub mod yahtzee;
 
 use crate::library::{Loan, Money};
 
-/// This project's step state. `varar-core` keys it per step file, so each spec
+/// This project's step state. `varar-core` keys it per step file, so each oath
 /// starts from `Ctx::default()`.
 #[derive(Clone, Default)]
 pub struct Ctx {
@@ -42,7 +42,7 @@ pub struct Ctx {
     pub granted: bool,
 }
 
-/// The combined registry for all specs.
+/// The combined registry for all oaths.
 pub fn build_registry() -> Registry {
     let mut s = Steps::<Ctx>::new();
     hello_var::register(&mut s);
@@ -54,8 +54,8 @@ pub fn build_registry() -> Registry {
     s.into_registry()
 }
 
-/// Fresh initial state per step file. Every spec starts from `Ctx::default()`;
-/// `varar-core` keys state per step file, so specs never see each other's. A
+/// Fresh initial state per step file. Every oath starts from `Ctx::default()`;
+/// `varar-core` keys state per step file, so oaths never see each other's. A
 /// plain `fn` (not a closure) so the adapter can move it across the libtest
 /// thread boundary.
 pub fn context_value(_file: &str) -> std::rc::Rc<dyn std::any::Any> {

@@ -39,7 +39,7 @@ module Varar
       end
 
       # Seed Varar's own built-in parameter types (beyond cucumber-expressions'
-      # int/float/string/word). Shared by every port so specs match
+      # int/float/string/word). Shared by every port so oaths match
       # identically. Built-ins are NOT tracked as custom parameter types, so
       # they never appear in the conformance registry.json projection.
       def seed_builtins(registry)

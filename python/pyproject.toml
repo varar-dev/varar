@@ -18,7 +18,7 @@ dev = [
 testpaths = ["packages"]
 addopts = "--import-mode=importlib"
 
-# Dogfood: run the shared conformance bundles as LIVE var-pytest specs.
+# Dogfood: run the shared conformance bundles as LIVE var-pytest oaths.
 #   cd python && uv run pytest --rootdir=. ../conformance/bundles
 # Edit any listed bundle's example.md or *.steps.py and re-run to see var
 # pass/fail change. NOTE: the plugin builds ONE global step registry, but the

@@ -14,7 +14,7 @@ import org.junit.platform.testkit.engine.TestExecutionResultConditions.message
 /**
  * Deliberately-failing spec driven ONLY programmatically by [VarSpecFailureTest] via EngineTestKit
  * — its name must not match Surefire's default *Test includes, or the red example would fail the
- * module's own build. Reuses the smoke fixture's steps: the sensor returns 5 while specs/wrong.md
+ * module's own build. Reuses the smoke fixture's steps: the sensor returns 5 while oaths/wrong.md
  * claims 99. Config comes from `src/test/resources/kotest-failing/varar.config.json`.
  */
 class FailingVarSpec : VarSpec(root = Path.of("src/test/resources/kotest-failing"))

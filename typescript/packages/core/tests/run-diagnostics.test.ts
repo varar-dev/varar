@@ -1,10 +1,10 @@
 import { expect, test } from 'vitest'
 import { hashSource } from '../src/hash.ts'
-import type { SpecResults } from '../src/result.ts'
+import type { OathResults } from '../src/result.ts'
 import { runResultDiagnostics } from '../src/run-diagnostics.ts'
 
-function results(source: string, examples: SpecResults['examples']): SpecResults {
-  return { version: 1, specPath: 's.md', sourceHash: hashSource(source), examples }
+function results(source: string, examples: OathResults['examples']): OathResults {
+  return { version: 1, oathPath: 's.md', sourceHash: hashSource(source), examples }
 }
 
 test('cell mismatch → one diagnostic per cell with expected/actual message', () => {
@@ -71,9 +71,9 @@ test('plain throw (no cells/doc) → one diagnostic spanning the failing line, w
 
 test('stale sourceHash → no diagnostics', () => {
   const source = 'x 6 y'
-  const r: SpecResults = {
+  const r: OathResults = {
     version: 1,
-    specPath: 's.md',
+    oathPath: 's.md',
     sourceHash: 'fnv1a:00000000',
     examples: [
       {

@@ -32,9 +32,9 @@ public final class Render {
      * source} at {@code path}) into a human-readable failure message.
      *
      * @param error the caught step exception.
-     * @param source the spec's full markdown text, used to slice the expected value for
+     * @param source the oath's full markdown text, used to slice the expected value for
      *     a cell/doc-string mismatch (the payload stores only source offsets).
-     * @param path the spec's path, as it would appear in an injected stack frame — passed
+     * @param path the oath's path, as it would appear in an injected stack frame — passed
      *     through to {@link Failure#toFailure} to resolve the failing line.
      */
     public static String renderFailure(Throwable error, String source, String path) {

@@ -21,7 +21,7 @@ import org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine;
  * discovery pass ({@link StepLoader#loadSteps}, mirroring Python's {@code pytest_configure}) —
  * cached on the returned {@link VarEngineDescriptor} — then resolves the request's selectors
  * ({@link DiscoverySelectorResolver}) into one {@link VarFileDescriptor} container per {@code .md}
- * spec matching {@code docsInclude}/{@code docsExclude} ({@link ConfigBridge}), each with one
+ * oath matching {@code docsInclude}/{@code docsExclude} ({@link ConfigBridge}), each with one
  * {@link VarExampleDescriptor} leaf per {@link dev.varar.core.Plan.PlannedExample} planned
  * against that shared, merged registry. It does not yet execute anything (Task 11).
  */

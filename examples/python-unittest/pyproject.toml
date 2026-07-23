@@ -5,7 +5,7 @@ build-backend = "hatchling.build"
 [project]
 name = "var-example-python-unittest"
 version = "0.0.1"
-description = "Standalone sample: run Markdown specs as unittest tests with Varar"
+description = "Standalone sample: run Markdown oaths as unittest tests with Varar"
 requires-python = ">=3.12"
 dependencies = ["varar-unittest"]
 

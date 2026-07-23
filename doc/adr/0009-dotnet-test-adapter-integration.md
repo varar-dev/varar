@@ -35,13 +35,13 @@ as later, additive work.
 referenced (no user wiring — the ergonomic parallel to the JUnit adapter's
 ServiceLoader and the pytest adapter's `pytest11` entry point). The adapter:
 - **Discovery** (`DiscoverTests`): given the built test assembly, locates the
-  workspace `varar.config.json`, globs the configured `.md` specs, parses+plans
+  workspace `varar.config.json`, globs the configured `.md` oaths, parses+plans
   each via `Varar.Runner`, and emits one `TestCase` per planned example —
   **before any test runs** — with `CodeFilePath`/`LineNumber` pointing at the
   `.md` example line, so IDEs and `dotnet test --filter` can select and report
   each example individually.
 - **Execution** (`RunTests`): executes each `TestCase` (or re-discovers from a
-  source), delegates to `Varar.Runner`'s `run_spec` equivalent, and maps the
+  source), delegates to `Varar.Runner`'s `run_oath` equivalent, and maps the
   core's span-anchored failures to `TestResult` with the `.md` location.
 
 **B. Data-driven tests on an existing framework** — an xUnit `[Theory]` +
@@ -69,9 +69,9 @@ ServiceLoader and the pytest adapter's `pytest11` entry point). The adapter:
 convention and `[DefaultExecutorUri]`:
 
 - Executor URI `executor://varar`; registered for `[FileExtension(".dll")]` (the
-  built test project is the discovery *source*; the `.md` specs are found
+  built test project is the discovery *source*; the `.md` oaths are found
   relative to it via `varar.config.json`).
-- One `TestCase` per `PlannedExample`; `FullyQualifiedName` = `<spec-relative
+- One `TestCase` per `PlannedExample`; `FullyQualifiedName` = `<oath-relative
   path>::<example name>` (stable across runs so re-run-single-test round-trips);
   `TestCase.CodeFilePath` = the `.md` path, `LineNumber` = the example's source
   line — never adapter internals.
@@ -83,7 +83,7 @@ convention and `[DefaultExecutorUri]`:
   `.runsettings` may point at the workspace root, but the canonical
   `docs`/`steps` globs live in `varar.config.json`, shared verbatim with every
   other port).
-- **Drift gate:** reconcile each spec against `varar.lock.json` via the runner's
+- **Drift gate:** reconcile each oath against `varar.lock.json` via the runner's
   filesystem `BaselineStore` + `reconcileDrift`, surface a `drift` failure on the
   same rail as `ambiguous-match`, write the baseline on a clean run, and honour
   an acknowledgment path (a `VAR_UPDATE` env var / `.runsettings` parameter) —

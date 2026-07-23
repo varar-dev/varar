@@ -1,4 +1,4 @@
-# ADR 0002 — Spec drift detection and explicit acknowledgment
+# ADR 0002 — Oath drift detection and explicit acknowledgment
 
 - **Status:** Accepted — **implemented** across all ports (2026-07-07)
 - **Date:** 2026-07-01
@@ -21,8 +21,8 @@
 
 `var` deliberately treats a Markdown paragraph as an **example** only if at least
 one of its sentences matches a step definition. A paragraph that matches nothing
-is **prose** — documentation, silently ignored by the runner. This is what lets a
-spec file freely mix narrative with executable examples (see
+is **prose** — documentation, silently ignored by the runner. This is what lets an
+oath file freely mix narrative with executable examples (see
 [Examples](../../typescript/packages/website/src/content/docs/reference/examples.mdx)).
 
 That rule has a dangerous edge. A paragraph that **was** an example can stop
@@ -39,8 +39,8 @@ only for a narrower purpose:
 - `hashSource` — an FNV-1a (32-bit, over UTF-16 code units, `fnv1a:` prefix)
   change-detector in `typescript/packages/var-core/src/hash.ts`. Tiny,
   dependency-free, trivially re-implementable in any language.
-- `SpecResults` (`typescript/packages/var-core/src/result.ts`) — the persisted
-  per-spec run record (`.var/<spec>.json`) carrying `sourceHash` and the list of
+- `OathResults` (`typescript/packages/var-core/src/result.ts`) — the persisted
+  per-oath run record (`.var/<oath>.json`) carrying `sourceHash` and the list of
   examples that ran.
 - `runResultDiagnostics` (`.../run-diagnostics.ts`) — projects a recorded result
   onto the *current* source and, if `hashSource(source) !== results.sourceHash`,
@@ -61,10 +61,10 @@ acknowledge** it. Drift is never resolved silently: neither silently dropped
 
 Mechanism (specified enough to build; details refined at implementation):
 
-1. **Baseline.** Persist, per spec file, the set of examples that ran last time
+1. **Baseline.** Persist, per oath file, the set of examples that ran last time
    (each example's name + source anchor) alongside the source fingerprint
-   `sourceHash`. Reuse/extend the existing run-result record (`SpecResults` /
-   `.var/<spec>.json`) rather than inventing a parallel store.
+   `sourceHash`. Reuse/extend the existing run-result record (`OathResults` /
+   `.var/<oath>.json`) rather than inventing a parallel store.
 2. **Detect.** On each run:
    - if `hashSource(currentSource) === baseline.sourceHash`, the file is
      unchanged — no drift possible;
@@ -100,8 +100,8 @@ The distinction the decision turns on:
 - **It must slot into the normal runner run to be useful** — surfaced through a
   regular `pytest` / `vitest` / `var run`, in **both** implementations — not as a
   separate tool.
-- Implementation order (each its own spec → plan): port `hash.ts` + the
-  `SpecResults` run-result format + baseline persistence to Python; then add
+- Implementation order (each its own design spec → plan): port `hash.ts` + the
+  `OathResults` run-result format + baseline persistence to Python; then add
   drift detection + the acknowledgment affordance to **both** `var-runner`s and
   surface it through the adapters. The cross-implementation consistency rules
   apply: same fingerprint, same record shape, same drift semantics, same
@@ -121,11 +121,11 @@ The distinction the decision turns on:
 
 ### Negative / risks
 
-- Requires persisting a per-spec **baseline** (state on disk, under `.var/`), and
+- Requires persisting a per-oath **baseline** (state on disk, under `.var/`), and
   that baseline must be committed / shared for the gate to hold in CI.
 - Introduces an approval workflow (some ceremony, like snapshot tests) — the cost
   of not being silent.
-- Whole-file deletion or rename is a *different* signal (the spec is gone, not
+- Whole-file deletion or rename is a *different* signal (the oath is gone, not
   drifted) and is out of scope here.
 
 ## Alternatives considered
@@ -134,7 +134,7 @@ The distinction the decision turns on:
   but is exactly the footgun — a typo'd or renamed step silently stops testing.
   Rejected.
 - **Any zero-match sentence is an error.** Rejected earlier during the pytest
-  plugin work: legitimate prose in a spec would spuriously fail, and there is no
+  plugin work: legitimate prose in an oath would spuriously fail, and there is no
   way to distinguish a typo from intended prose *without history*.
 - **Editor / LSP "missing step" diagnostic only.** Helpful for authoring, but it
   does not gate the runner or CI — a developer who never opens the editor never

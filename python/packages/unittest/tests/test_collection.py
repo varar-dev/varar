@@ -1,4 +1,4 @@
-"""test_collection.py — one TestCase per spec file, one test method per example."""
+"""test_collection.py — one TestCase per oath file, one test method per example."""
 from __future__ import annotations
 
 import unittest
@@ -21,13 +21,13 @@ VAR_CONFIG = """\
 
 # Steps must be in the same paragraph (single newline, not blank line) so the
 # structurer groups them into one example per ## section.
-SPEC = "# Calc\n\n## adds two\n\nI add 2\nthe total is 2\n\n## adds wrong\n\nI add 2\nthe total is 9\n"
+OATH = "# Calc\n\n## adds two\n\nI add 2\nthe total is 2\n\n## adds wrong\n\nI add 2\nthe total is 9\n"
 
 
-def _write_calc(harness, spec: str = SPEC) -> None:
+def _write_calc(harness, oath: str = OATH) -> None:
     harness.write("varar.config.json", VAR_CONFIG)
     harness.write("steps/calc.steps.py", STEPS)
-    harness.write("features/calc.md", spec)
+    harness.write("features/calc.md", oath)
 
 
 def test_one_method_per_example_pass_and_fail(harness):
@@ -63,14 +63,14 @@ def test_dotted_id_addresses_a_single_example(harness):
 def test_duplicate_heading_methods_get_unique_names(harness):
     """Two paragraphs under identical ## headings must not collide: the second
     method gets a _1 suffix and its display name the [1] suffix."""
-    spec = (
+    oath = (
         "# Calc\n\n"
         "## same heading\n\n"
         "I add 2\nthe total is 2\n\n"
         "## same heading\n\n"
         "I add 2\nthe total is 9\n"
     )
-    _write_calc(harness, spec)
+    _write_calc(harness, oath)
     ns = harness.generate()
     cls = ns["features_calc_md"]
     assert sorted(n for n in vars(cls) if n.startswith("test_")) == [
@@ -83,7 +83,7 @@ def test_duplicate_heading_methods_get_unique_names(harness):
 
 def test_non_matching_md_is_ignored(harness):
     harness.write("varar.config.json", VAR_CONFIG)
-    harness.write("README.md", "# not a spec\n")
+    harness.write("README.md", "# not an oath\n")
     ns = harness.generate()
     assert not [
         v for v in ns.values() if isinstance(v, type) and issubclass(v, unittest.TestCase)

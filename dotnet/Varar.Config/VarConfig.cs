@@ -13,7 +13,7 @@ public sealed class VarConfigException : Exception
     }
 }
 
-/// <summary>Spec-doc discovery globs. Both are plain globs (no <c>!</c> prefix).</summary>
+/// <summary>Oath-doc discovery globs. Both are plain globs (no <c>!</c> prefix).</summary>
 public sealed record VarGlobs(ImmutableArray<string> Include, ImmutableArray<string> Exclude);
 
 /// <summary>

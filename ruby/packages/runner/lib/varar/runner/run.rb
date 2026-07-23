@@ -19,7 +19,7 @@ module Varar
 
     module_function
 
-    def plan_spec(path, source, registry)
+    def plan_oath(path, source, registry)
       Core::Plan.plan(Core::Parse.parse(path, source), registry)
     end
 

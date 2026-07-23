@@ -7,7 +7,7 @@ import dev.varar.Steps;
 /**
  * A standalone (top-level, own-file) {@link StepDefinitions} fixture for {@code
  * RenderTest} — registers one {@code action} that unconditionally throws a plain
- * {@link RuntimeException}, so a real spec produces a genuine arbitrary-{@code
+ * {@link RuntimeException}, so a real oath produces a genuine arbitrary-{@code
  * Throwable} failure (no {@code cells}/{@code doc}, per {@code
  * Failure.toFailure}) for {@code Render} to format via its message-only fallback.
  */

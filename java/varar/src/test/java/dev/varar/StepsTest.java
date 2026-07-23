@@ -62,7 +62,7 @@ class StepsTest {
 
     /**
      * The typed arity ladder must reach far enough for the shared "two or more slots"
-     * rule. Capped at two captures, a spec with three inline parameters plus a trailing
+     * rule. Capped at two captures, an oath with three inline parameters plus a trailing
      * table ran in the dynamic ports but would not compile here.
      */
     @Test

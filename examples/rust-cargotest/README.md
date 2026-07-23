@@ -1,29 +1,29 @@
 # Varar sample: Rust + cargo test
 
-A small, standalone sample project that runs Markdown specs as tests with
+A small, standalone sample project that runs Markdown oaths as tests with
 [Varar](https://varar.dev), driven by `cargo test`. Copy it as the starting
 point for your own project.
 
-The `.md` files at the project root are the specs — they run as tests.
+The `.md` files at the project root are the oaths — they run as tests.
 
 ## Run it
 
 ```sh
-cargo test                       # one test per spec, all green
+cargo test                       # one test per oath, all green
 cargo test -- --nocapture        # also prints one line per example (30 total)
-cargo test --test specs yahtzee  # run a single spec
+cargo test --test oaths yahtzee  # run a single oath
 ```
 
-Each Markdown spec becomes one `cargo test` test; every example in it is run
-and printed as `spec.md::name`, mirroring `pytest -v` / `python -m unittest -v`
+Each Markdown oath becomes one `cargo test` test; every example in it is run
+and printed as `oath.md::name`, mirroring `pytest -v` / `python -m unittest -v`
 in the sibling Python samples. (Because varar-core is single-threaded — `Rc`, not
-`Send` — the samples group examples per spec rather than emitting one libtest
+`Send` — the samples group examples per oath rather than emitting one libtest
 item per example.)
 
 ## How it fits together
 
 - **`varar.config.json`** is the single source of truth: `docs.include` globs the
-  Markdown specs. (`steps` is carried for parity with the other ports; Rust
+  Markdown oaths. (`steps` is carried for parity with the other ports; Rust
   compiles its step files in, so there is nothing to glob at runtime.)
 - **`src/steps/*.steps.rs`** define the steps. Rust has no
   import-for-side-effect, so — like the Java/Kotlin/Go/C# ports and unlike
@@ -35,7 +35,7 @@ item per example.)
 - **`src/library.rs`**, **`src/roman_numerals.rs`** and **`src/yahtzee.rs`** are
   the sample's domain code — ordinary modules the steps call, just like your
   production code.
-- **`tests/specs.rs`** is the whole imperative shell: it hands the project root,
+- **`tests/oaths.rs`** is the whole imperative shell: it hands the project root,
   the registry and the context factory to `varar-cargotest`. Discovery, planning,
   running, rendering and drift all live in the shared `varar-*` crates, so the
   sample carries no runner of its own.

@@ -87,7 +87,7 @@ import java.util.function.Function;
  *
  * <p>Mirrors {@code execute.ts}'s {@code augmentStack}: when a step throws, a synthetic
  * {@link StackTraceElement} whose {@code fileName}/{@code lineNumber} are the {@code
- * .md} spec path/line is prepended to the thrown exception's stack trace via {@link
+ * .md} oath path/line is prepended to the thrown exception's stack trace via {@link
  * Throwable#setStackTrace}. {@link Failure#toFailure} (Task 17, unchanged) later reads
  * this back via its {@code failingLine} regex against the printed stack trace text —
  * this executor doesn't call {@code Failure.toFailure} itself; it just makes sure

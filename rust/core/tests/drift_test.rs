@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 use varar_core::drift::{
-    BaselineExample, BaselineStore, Drifted, SpecBaseline, VarLock, derive_spec_baseline,
+    BaselineExample, BaselineStore, Drifted, OathBaseline, VarLock, derive_oath_baseline,
     detect_drift, live_examples, message, parse_var_lock, reconcile_drift, stringify_var_lock,
 };
 use varar_core::handler::Handler;
@@ -66,10 +66,10 @@ impl BaselineStore for MemoryStore {
 }
 
 fn library_lock() -> VarLock {
-    let mut specs = BTreeMap::new();
-    specs.insert(
+    let mut oaths = BTreeMap::new();
+    oaths.insert(
         "library.md".to_string(),
-        SpecBaseline {
+        OathBaseline {
             source_hash: "fnv1a:1a2b3c4d".to_string(),
             examples: vec![BaselineExample {
                 name: "I check out".to_string(),
@@ -77,7 +77,7 @@ fn library_lock() -> VarLock {
             }],
         },
     );
-    VarLock { version: 1, specs }
+    VarLock { version: 2, oaths }
 }
 
 #[test]
@@ -100,10 +100,10 @@ fn live_examples_records_one_entry_per_example_producing_paragraph() {
 }
 
 #[test]
-fn derive_spec_baseline_carries_the_fingerprint() {
+fn derive_oath_baseline_carries_the_fingerprint() {
     let source = "I withdraw 40.";
     let var_doc = parse("w.md", source);
-    let baseline = derive_spec_baseline(source, &var_doc, &plan_of(source, &reg(true)));
+    let baseline = derive_oath_baseline(source, &var_doc, &plan_of(source, &reg(true)));
     assert_eq!(hash_source(source), baseline.source_hash);
     assert_eq!(
         vec![BaselineExample {
@@ -124,7 +124,7 @@ fn no_baseline_means_no_drift() {
 fn a_renamed_step_drifts() {
     let source = "I withdraw 40.";
     let var_doc = parse("w.md", source);
-    let baseline = derive_spec_baseline(source, &var_doc, &plan_of(source, &reg(true)));
+    let baseline = derive_oath_baseline(source, &var_doc, &plan_of(source, &reg(true)));
     assert_eq!(
         vec!["I withdraw 40@1".to_string()],
         bare(&detect_drift(Some(&baseline), &var_doc, &plan_of(source, &reg(false))))
@@ -135,7 +135,7 @@ fn a_renamed_step_drifts() {
 fn an_in_place_typo_drifts() {
     let before = "I withdraw 40.";
     let baseline =
-        derive_spec_baseline(before, &parse("w.md", before), &plan_of(before, &reg(true)));
+        derive_oath_baseline(before, &parse("w.md", before), &plan_of(before, &reg(true)));
     let after = "I withdrraw 40.";
     let after_doc = parse("w.md", after);
     assert_eq!(
@@ -148,7 +148,7 @@ fn an_in_place_typo_drifts() {
 fn a_deleted_paragraph_is_not_drift() {
     let before = "I withdraw 40.";
     let baseline =
-        derive_spec_baseline(before, &parse("w.md", before), &plan_of(before, &reg(true)));
+        derive_oath_baseline(before, &parse("w.md", before), &plan_of(before, &reg(true)));
     let after_doc = parse("w.md", "");
     assert!(detect_drift(Some(&baseline), &after_doc, &plan_of("", &reg(true))).is_empty());
 }
@@ -157,7 +157,7 @@ fn a_deleted_paragraph_is_not_drift() {
 fn moving_and_rewording_a_still_matching_example_does_not_drift() {
     let before = "I withdraw 40.\n\nI withdraw 10.";
     let baseline =
-        derive_spec_baseline(before, &parse("w.md", before), &plan_of(before, &reg(true)));
+        derive_oath_baseline(before, &parse("w.md", before), &plan_of(before, &reg(true)));
     let after = "I withdraw 11.\n\nI withdraw 40.";
     assert!(
         detect_drift(Some(&baseline), &parse("w.md", after), &plan_of(after, &reg(true)))
@@ -169,7 +169,7 @@ fn moving_and_rewording_a_still_matching_example_does_not_drift() {
 fn move_reword_prose_on_old_line_does_not_false_positive() {
     let before = "I withdraw 40.";
     let baseline =
-        derive_spec_baseline(before, &parse("w.md", before), &plan_of(before, &reg(true)));
+        derive_oath_baseline(before, &parse("w.md", before), &plan_of(before, &reg(true)));
     let after = "Just some notes.\n\nI withdraw 41.";
     assert!(
         detect_drift(Some(&baseline), &parse("w.md", after), &plan_of(after, &reg(true)))
@@ -181,7 +181,7 @@ fn move_reword_prose_on_old_line_does_not_false_positive() {
 fn a_paragraph_rewritten_past_recognition_is_not_drift() {
     let before = "I withdraw 40.";
     let baseline =
-        derive_spec_baseline(before, &parse("w.md", before), &plan_of(before, &reg(true)));
+        derive_oath_baseline(before, &parse("w.md", before), &plan_of(before, &reg(true)));
     let after = "The branch closed years ago.";
     assert!(
         detect_drift(Some(&baseline), &parse("w.md", after), &plan_of(after, &reg(true)))
@@ -206,7 +206,7 @@ fn header_bound_table_records_its_binding_paragraph_once() {
 #[test]
 fn a_header_bound_binding_paragraph_that_stops_matching_drifts() {
     let var_doc = parse("r.md", ROMAN);
-    let baseline = derive_spec_baseline(ROMAN, &var_doc, &plan(&var_doc, &roman_reg(true)));
+    let baseline = derive_oath_baseline(ROMAN, &var_doc, &plan(&var_doc, &roman_reg(true)));
     assert_eq!(
         vec!["Each row gives a decimal and a roman number:@1".to_string()],
         bare(&detect_drift(Some(&baseline), &var_doc, &plan(&var_doc, &roman_reg(false))))
@@ -240,10 +240,10 @@ fn reconcile_update_mode_accepts_drift() {
             .is_empty()
     );
     let lock = parse_var_lock(store.contents.as_ref().unwrap()).unwrap();
-    assert_eq!(Vec::<BaselineExample>::new(), lock.specs.get("w.md").unwrap().examples);
+    assert_eq!(Vec::<BaselineExample>::new(), lock.oaths.get("w.md").unwrap().examples);
 }
 
-const EXPECTED_LOCK: &str = "{\n  \"version\": 1,\n  \"specs\": {\n    \"library.md\": {\n      \"sourceHash\": \"fnv1a:1a2b3c4d\",\n      \"examples\": [\n        {\n          \"name\": \"I check out\",\n          \"line\": 7\n        }\n      ]\n    }\n  }\n}\n";
+const EXPECTED_LOCK: &str = "{\n  \"version\": 2,\n  \"oaths\": {\n    \"library.md\": {\n      \"sourceHash\": \"fnv1a:1a2b3c4d\",\n      \"examples\": [\n        {\n          \"name\": \"I check out\",\n          \"line\": 7\n        }\n      ]\n    }\n  }\n}\n";
 
 #[test]
 fn stringify_matches_the_typescript_serializer_byte_for_byte() {
@@ -253,13 +253,13 @@ fn stringify_matches_the_typescript_serializer_byte_for_byte() {
 #[test]
 fn parse_round_trips_a_valid_lock() {
     let parsed = parse_var_lock(&stringify_var_lock(&library_lock())).unwrap();
-    assert_eq!("fnv1a:1a2b3c4d", parsed.specs.get("library.md").unwrap().source_hash);
+    assert_eq!("fnv1a:1a2b3c4d", parsed.oaths.get("library.md").unwrap().source_hash);
     assert_eq!(
         vec![BaselineExample {
             name: "I check out".to_string(),
             line: 7
         }],
-        parsed.specs.get("library.md").unwrap().examples
+        parsed.oaths.get("library.md").unwrap().examples
     );
 }
 
@@ -267,8 +267,8 @@ fn parse_round_trips_a_valid_lock() {
 fn parse_rejects_malformed_input() {
     assert!(parse_var_lock("not json").is_none());
     assert!(parse_var_lock("{}").is_none());
-    assert!(parse_var_lock("{\"version\":2,\"specs\":{}}").is_none());
-    assert!(parse_var_lock("{\"version\":1,\"specs\":{\"a.md\":{\"examples\":[]}}}").is_none());
+    assert!(parse_var_lock("{\"version\":1,\"oaths\":{}}").is_none());
+    assert!(parse_var_lock("{\"version\":2,\"oaths\":{\"a.md\":{\"examples\":[]}}}").is_none());
 }
 
 // ---- Merged examples keep per-paragraph drift granularity (ADR 0012) -------
@@ -317,7 +317,7 @@ fn deleting_one_step_def_of_a_merged_example_drifts_only_the_now_prose_paragraph
     let source = "I deposit 100.\n\nI withdraw 40.";
     let var_doc = parse("w.md", source);
     let baseline =
-        derive_spec_baseline(source, &var_doc, &plan(&var_doc, &deposit_withdraw_reg(true)));
+        derive_oath_baseline(source, &var_doc, &plan(&var_doc, &deposit_withdraw_reg(true)));
     // The deposit step is gone: its paragraph becomes prose, splitting the
     // example. The withdraw paragraph is still live; the deposit one drifts.
     let drift =

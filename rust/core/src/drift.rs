@@ -1,4 +1,4 @@
-//! Spec drift detection — port of `drift.ts` / `Drift.java`. A paragraph the
+//! Oath drift detection — port of `drift.ts` / `Drift.java`. A paragraph the
 //! committed `varar.lock.json` baseline recorded as an example that now matches no
 //! step. Byte-identical to the other ports (FNV-1a fingerprint, insertion-ordered
 //! lockfile serializer, Jaccard word-similarity re-identification).
@@ -22,18 +22,18 @@ pub struct BaselineExample {
     pub line: usize,
 }
 
-/// The committed baseline for one spec file.
+/// The committed baseline for one oath file.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SpecBaseline {
+pub struct OathBaseline {
     pub source_hash: String,
     pub examples: Vec<BaselineExample>,
 }
 
-/// The whole `varar.lock.json`: every spec keyed by its POSIX path.
+/// The whole `varar.lock.json`: every oath keyed by its POSIX path.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct VarLock {
     pub version: u32,
-    pub specs: BTreeMap<String, SpecBaseline>,
+    pub oaths: BTreeMap<String, OathBaseline>,
 }
 
 /// A paragraph the baseline says was an example and now matches no step.
@@ -106,9 +106,9 @@ pub fn live_examples(var_doc: &VarDoc, plan: &ExecutionPlan) -> Vec<BaselineExam
         .collect()
 }
 
-/// The full baseline record for a spec: fingerprint plus live examples.
-pub fn derive_spec_baseline(source: &str, var_doc: &VarDoc, plan: &ExecutionPlan) -> SpecBaseline {
-    SpecBaseline {
+/// The full baseline record for an oath: fingerprint plus live examples.
+pub fn derive_oath_baseline(source: &str, var_doc: &VarDoc, plan: &ExecutionPlan) -> OathBaseline {
+    OathBaseline {
         source_hash: hash_source(source),
         examples: live_examples(var_doc, plan),
     }
@@ -116,7 +116,7 @@ pub fn derive_spec_baseline(source: &str, var_doc: &VarDoc, plan: &ExecutionPlan
 
 /// Paragraphs the baseline recorded as examples that now match zero steps.
 pub fn detect_drift(
-    baseline: Option<&SpecBaseline>,
+    baseline: Option<&OathBaseline>,
     var_doc: &VarDoc,
     plan: &ExecutionPlan,
 ) -> Vec<Drifted> {
@@ -174,12 +174,12 @@ pub fn message(drifted: &Drifted) -> String {
     )
 }
 
-/// One spec's baseline reconciliation against a [`BaselineStore`]. `update`
+/// One oath's baseline reconciliation against a [`BaselineStore`]. `update`
 /// accepts all drift; otherwise detect drift and rewrite the baseline only on a
 /// clean run.
 pub fn reconcile_drift(
     store: &mut dyn BaselineStore,
-    spec_path: &str,
+    oath_path: &str,
     source: &str,
     var_doc: &VarDoc,
     plan: &ExecutionPlan,
@@ -189,29 +189,29 @@ pub fn reconcile_drift(
     let drifts = if update {
         Vec::new()
     } else {
-        detect_drift(lock.as_ref().and_then(|l| l.specs.get(spec_path)), var_doc, plan)
+        detect_drift(lock.as_ref().and_then(|l| l.oaths.get(oath_path)), var_doc, plan)
     };
     if update || drifts.is_empty() {
-        let next = derive_spec_baseline(source, var_doc, plan);
-        let mut specs = lock.map_or_else(BTreeMap::new, |l| l.specs);
-        specs.insert(spec_path.to_string(), next);
-        store.write(&stringify_var_lock(&VarLock { version: 1, specs }));
+        let next = derive_oath_baseline(source, var_doc, plan);
+        let mut oaths = lock.map_or_else(BTreeMap::new, |l| l.oaths);
+        oaths.insert(oath_path.to_string(), next);
+        store.write(&stringify_var_lock(&VarLock { version: 2, oaths }));
     }
     drifts
 }
 
-/// Serializes `varar.lock.json` deterministically (fixed field order, sorted spec
+/// Serializes `varar.lock.json` deterministically (fixed field order, sorted oath
 /// paths, two-space indent, trailing newline) — NOT [`crate::canonical_json`].
 pub fn stringify_var_lock(lock: &VarLock) -> String {
     let mut sb = String::new();
-    sb.push_str("{\n  \"version\": 1,\n  \"specs\": ");
-    if lock.specs.is_empty() {
+    sb.push_str("{\n  \"version\": 2,\n  \"oaths\": ");
+    if lock.oaths.is_empty() {
         sb.push_str("{}");
     } else {
         sb.push_str("{\n");
-        let n = lock.specs.len();
-        // `BTreeMap` iterates spec paths in sorted order.
-        for (p, (path, baseline)) in lock.specs.iter().enumerate() {
+        let n = lock.oaths.len();
+        // `BTreeMap` iterates oath paths in sorted order.
+        for (p, (path, baseline)) in lock.oaths.iter().enumerate() {
             sb.push_str("    ");
             write_json_string(&mut sb, path);
             sb.push_str(": {\n      \"sourceHash\": ");
@@ -272,20 +272,20 @@ fn write_json_string(sb: &mut String, s: &str) {
 pub fn parse_var_lock(text: &str) -> Option<VarLock> {
     let parsed = JsonReader::new(text).parse_whole()?;
     let Value::Map(obj) = parsed else { return None };
-    if !matches!(obj.get("version"), Some(Value::Int(1))) {
+    if !matches!(obj.get("version"), Some(Value::Int(2))) {
         return None;
     }
-    let Some(Value::Map(specs_raw)) = obj.get("specs") else {
+    let Some(Value::Map(oaths_raw)) = obj.get("oaths") else {
         return None;
     };
-    let mut specs = BTreeMap::new();
-    for (k, v) in specs_raw {
-        specs.insert(k.clone(), parse_spec_baseline(v)?);
+    let mut oaths = BTreeMap::new();
+    for (k, v) in oaths_raw {
+        oaths.insert(k.clone(), parse_oath_baseline(v)?);
     }
-    Some(VarLock { version: 1, specs })
+    Some(VarLock { version: 2, oaths })
 }
 
-fn parse_spec_baseline(value: &Value) -> Option<SpecBaseline> {
+fn parse_oath_baseline(value: &Value) -> Option<OathBaseline> {
     let Value::Map(map) = value else { return None };
     let Some(Value::String(source_hash)) = map.get("sourceHash") else {
         return None;
@@ -307,7 +307,7 @@ fn parse_spec_baseline(value: &Value) -> Option<SpecBaseline> {
             line: *line as usize,
         });
     }
-    Some(SpecBaseline {
+    Some(OathBaseline {
         source_hash: source_hash.clone(),
         examples,
     })

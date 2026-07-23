@@ -7,8 +7,8 @@ namespace Varar.Runner;
 /// <summary>Planning, running, load-steps, and failure rendering. Port of the runner <c>run</c>/<c>render</c>/<c>steps</c>.</summary>
 public static class Runner
 {
-    /// <summary>Parse + plan one spec.</summary>
-    public static ExecutionPlan PlanSpec(string name, string source, Registry registry) =>
+    /// <summary>Parse + plan one oath.</summary>
+    public static ExecutionPlan PlanOath(string name, string source, Registry registry) =>
         Plan.Run(Parse.Run(name, source), registry);
 
     /// <summary>

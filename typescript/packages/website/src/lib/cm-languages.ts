@@ -31,6 +31,6 @@ export const CM_LANGUAGE: Readonly<Record<SiteLang, () => Extension>> = {
   go: () => StreamLanguage.define(go),
 }
 
-// The language-neutral `.md` spec (`langOfPath` → `undefined`) highlights as
+// The language-neutral `.md` oath (`langOfPath` → `undefined`) highlights as
 // Markdown.
 export const markdownHighlight = (): Extension => markdown()

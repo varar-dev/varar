@@ -1,11 +1,11 @@
-import { hashSource, type SpecResults } from '@varar/core'
+import { hashSource, type OathResults } from '@varar/core'
 import { describe, expect, it } from 'vitest'
 import { createRunResultsStore, runLspDiagnostics } from './run-results.ts'
 
 const SOURCE = 'x 6 y'
-const SPEC: SpecResults = {
+const OATH: OathResults = {
   version: 1,
-  specPath: 'docs/a.md',
+  oathPath: 'docs/a.md',
   sourceHash: hashSource(SOURCE),
   examples: [
     {
@@ -19,7 +19,7 @@ const SPEC: SpecResults = {
 
 describe('runLspDiagnostics', () => {
   it('maps run diagnostics to 0-based LSP diagnostics tagged source: var, severity error', () => {
-    expect(runLspDiagnostics(SPEC, SOURCE)).toEqual([
+    expect(runLspDiagnostics(OATH, SOURCE)).toEqual([
       {
         severity: 1,
         source: 'var',
@@ -30,17 +30,17 @@ describe('runLspDiagnostics', () => {
   })
 
   it('returns nothing when the source no longer hash-matches (stale)', () => {
-    expect(runLspDiagnostics(SPEC, `${SOURCE} edited`)).toEqual([])
+    expect(runLspDiagnostics(OATH, `${SOURCE} edited`)).toEqual([])
   })
 })
 
 describe('RunResultsStore', () => {
-  it('ingests a valid .var json and keys it by the spec file URI', () => {
+  it('ingests a valid .var json and keys it by the oath file URI', () => {
     const store = createRunResultsStore('file:///root')
-    const uri = store.ingest('/root/.var/docs/a.md.json', JSON.stringify(SPEC))
+    const uri = store.ingest('/root/.var/docs/a.md.json', JSON.stringify(OATH))
     expect(uri).toBe('file:///root/docs/a.md')
-    expect(store.get('file:///root/docs/a.md')).toEqual(SPEC)
-    expect(store.specUris()).toEqual(['file:///root/docs/a.md'])
+    expect(store.get('file:///root/docs/a.md')).toEqual(OATH)
+    expect(store.oathUris()).toEqual(['file:///root/docs/a.md'])
   })
 
   it('rejects malformed JSON and a wrong version (stores nothing)', () => {
@@ -49,15 +49,15 @@ describe('RunResultsStore', () => {
     expect(
       store.ingest(
         '/root/.var/x.json',
-        JSON.stringify({ version: 2, specPath: 'x', sourceHash: 'h', examples: [] }),
+        JSON.stringify({ version: 2, oathPath: 'x', sourceHash: 'h', examples: [] }),
       ),
     ).toBeNull()
-    expect(store.specUris()).toEqual([])
+    expect(store.oathUris()).toEqual([])
   })
 
-  it('remove() drops the entry and returns its spec URI', () => {
+  it('remove() drops the entry and returns its oath URI', () => {
     const store = createRunResultsStore('file:///root')
-    store.ingest('/root/.var/docs/a.md.json', JSON.stringify(SPEC))
+    store.ingest('/root/.var/docs/a.md.json', JSON.stringify(OATH))
     expect(store.remove('/root/.var/docs/a.md.json')).toBe('file:///root/docs/a.md')
     expect(store.get('file:///root/docs/a.md')).toBeUndefined()
   })

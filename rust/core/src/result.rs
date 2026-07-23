@@ -1,5 +1,5 @@
 //! Immutable run-result records — port of `result.ts` / `Result.java`. The
-//! persisted `.var/<spec>.json` file is a serialized [`SpecResults`].
+//! persisted `.var/<oath>.json` file is a serialized [`OathResults`].
 
 /// One mismatched CELL as a source-offset range plus the runtime value.
 /// `from`/`to` are absolute UTF-16 source offsets; `to` is exclusive.
@@ -46,11 +46,11 @@ pub struct ExampleResult {
     pub failure: Option<ExampleFailure>,
 }
 
-/// The persisted run result for one spec file.
+/// The persisted run result for one oath file.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SpecResults {
+pub struct OathResults {
     pub version: u32,
-    pub spec_path: String,
+    pub oath_path: String,
     pub source_hash: String,
     pub examples: Vec<ExampleResult>,
 }

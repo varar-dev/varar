@@ -53,13 +53,13 @@ module Varar
     end
 
     # True iff +path+ matches an include glob and no exclude glob.
-    def match_spec?(path, include, exclude, root)
+    def match_oath?(path, include, exclude, root)
       rel = rel_posix(path, root)
       matches_any?(rel, include) && !matches_any?(rel, exclude)
     end
 
     # Existing files under +root+ matching any include glob, minus excludes; sorted.
-    def find_specs(include, exclude, root)
+    def find_oaths(include, exclude, root)
       out = []
       include.each do |g|
         out.concat(Dir.glob(g, base: root).map { |rel| File.join(root, rel) })

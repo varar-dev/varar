@@ -4,7 +4,7 @@ require 'rspec/core'
 require 'varar/runner'
 
 module Varar
-  # RSpec adapter. One call defines an RSpec example group per spec matched by
+  # RSpec adapter. One call defines an RSpec example group per oath matched by
   # varar.config.json, with one `it` per Markdown example (header-bound rows are
   # separate examples) and a drift gate. See ADR 0005.
   #
@@ -24,15 +24,15 @@ module Varar
       store = Runner.create_file_baseline_store(root)
       update = %w[1 true].include?(ENV.fetch('VARAR_UPDATE', nil))
 
-      Runner.find_specs(cfg.docs_include, cfg.docs_exclude, root).each do |spec_path|
-        define_group(spec_path, root, loaded, store, update)
+      Runner.find_oaths(cfg.docs_include, cfg.docs_exclude, root).each do |oath_path|
+        define_group(oath_path, root, loaded, store, update)
       end
     end
 
-    def define_group(spec_path, root, loaded, store, update)
-      rel = Runner.rel_posix(spec_path, root)
-      source = File.read(spec_path, encoding: 'UTF-8')
-      plan = Runner.plan_spec(File.basename(spec_path), source, loaded.registry)
+    def define_group(oath_path, root, loaded, store, update)
+      rel = Runner.rel_posix(oath_path, root)
+      source = File.read(oath_path, encoding: 'UTF-8')
+      plan = Runner.plan_oath(File.basename(oath_path), source, loaded.registry)
       pairs = Runner.examples_with_runs(plan, loaded.create_context, Runner::RecordingReporter.new)
       drifts = Core::Drifts.reconcile_drift(store, rel, source, plan.var_doc, plan, update: update)
 

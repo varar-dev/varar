@@ -3,7 +3,7 @@
 #
 # The monorepo's examples/ directory IS the varar-examples repo layout: this
 # target wipes the destination (everything but .git), copies examples/ over
-# with symlinks dereferenced (the subset projects' .md specs are symlinks to
+# with symlinks dereferenced (the subset projects' .md oaths are symlinks to
 # the typescript-vitest originals here, plain files there), rewrites the
 # local/SNAPSHOT references to the released coordinates, pushes, and tags the
 # varar-examples repo with the same v<version> tag as the release.

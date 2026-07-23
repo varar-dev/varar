@@ -40,12 +40,12 @@ def _setup_bundle(pytester, bundle_name: str, steps_filename: str) -> None:
     steps_py = (bundle_dir / steps_filename).read_text(encoding="utf-8")
 
     (pytester.path / "varar.config.json").write_text(
-        '{"docs": {"include": ["specs/**/*.md"], "exclude": []},'
+        '{"docs": {"include": ["oaths/**/*.md"], "exclude": []},'
         ' "steps": ["steps/**/*.steps.py"]}',
         encoding="utf-8",
     )
-    (pytester.path / "specs").mkdir()
-    (pytester.path / "specs" / "example.md").write_text(example_md, encoding="utf-8")
+    (pytester.path / "oaths").mkdir()
+    (pytester.path / "oaths" / "example.md").write_text(example_md, encoding="utf-8")
     (pytester.path / "steps").mkdir()
     (pytester.path / "steps" / steps_filename).write_text(steps_py, encoding="utf-8")
 

@@ -21,11 +21,11 @@ export type ExampleResult = {
   }
 }
 
-// The persisted run result for one spec file. The `.var/<spec>.json` file IS a
-// serialized SpecResults.
-export type SpecResults = {
+// The persisted run result for one oath file. The `.var/<oath>.json` file IS a
+// serialized OathResults.
+export type OathResults = {
   readonly version: 1
-  readonly specPath: string // POSIX separators, relative to cwd
-  readonly sourceHash: string // hashSource(spec source) at run time
+  readonly oathPath: string // POSIX separators, relative to cwd
+  readonly sourceHash: string // hashSource(oath source) at run time
   readonly examples: ReadonlyArray<ExampleResult>
 }

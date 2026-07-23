@@ -65,7 +65,7 @@ class VarExampleDescriptorTest {
 
     private static TestDescriptor onlyFileDescriptor(TestDescriptor engineDescriptor) {
         List<? extends TestDescriptor> children = List.copyOf(engineDescriptor.getChildren());
-        assertEquals(1, children.size(), "expected exactly one spec container");
+        assertEquals(1, children.size(), "expected exactly one oath container");
         return children.get(0);
     }
 
@@ -79,7 +79,7 @@ class VarExampleDescriptorTest {
         assertEquals(2, examples.size(), "widgets.md has two step-matched examples");
 
         // examplefixture/widgets.md: "I have 3 widgets. ..." starts on line 3, "I have 9
-        // widgets. ..." on line 7 (confirmed directly against Run.planSpec's own
+        // widgets. ..." on line 7 (confirmed directly against Run.planOath's own
         // PlannedExample#span#startLine for this exact file content, not guessed).
         assertExampleLeaf(examples.get(0), 3);
         assertExampleLeaf(examples.get(1), 7);

@@ -14,7 +14,7 @@
   <packaging>jar</packaging>
   <name>var (Kotlin) — Kotest adapter</name>
   <description>
-    Runs var specs as Kotest tests: subclass VarSpec, one Kotest test per
+    Runs var oaths as Kotest tests: subclass VarSpec, one Kotest test per
     planned example. Delegates discovery/loading/planning wholesale to
     var-runner; no pipeline logic here.
   </description>

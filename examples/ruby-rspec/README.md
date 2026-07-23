@@ -1,12 +1,12 @@
 # Varar + Ruby + RSpec
 
-A standalone sample project that runs Markdown specs as RSpec examples with
+A standalone sample project that runs Markdown oaths as RSpec examples with
 [Varar](https://varar.dev).
 
-The `*.md` files at the project root are the specs — plain Markdown prose that
+The `*.md` files at the project root are the oaths — plain Markdown prose that
 runs as tests. `steps/*.steps.rb` bind the sentences to Ruby inside a
 `steps(...) do … end` block with `stimulus`/`sensor` (and `param` for custom
-types). `varar.config.json` says which files are specs (`docs`) and where the
+types). `varar.config.json` says which files are oaths (`docs`) and where the
 step definitions live (`steps`).
 
 ## Run

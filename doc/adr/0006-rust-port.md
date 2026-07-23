@@ -20,7 +20,7 @@ facade over an existing engine.
 
 - A **dependency-light, GC-free native core** widens where var can run: CLI
   tools, embedded/systems test suites, and — the strategic pull — a **WebAssembly**
-  target for the browser playground and the website's live spec runner, which
+  target for the browser playground and the website's live oath runner, which
   today shells out to the TS core.
 - Rust's ownership model makes the project's **immutable-by-construction**
   principle a compiler guarantee rather than a runtime convention (Python/Ruby
@@ -33,7 +33,7 @@ facade over an existing engine.
 
 `var-core` is already ported and conformance-green on the **var-doc** artifact
 (209 tests, ported 1:1 from the Java suite; drift/hash unit-gated). A standalone
-`examples/rust-cargotest` sample runs the six shared example specs via
+`examples/rust-cargotest` sample runs the six shared example oaths via
 `cargo test` and matches the Python samples byte-for-byte. What remains is the
 rest of the package shape and the three deferred golden gates — see the
 [completion plan](../superpowers/plans/2026-07-12-rust-port-completion.md).

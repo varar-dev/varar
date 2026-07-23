@@ -7,7 +7,7 @@ require 'varar/rspec'
 module Varar
   # The RSpec adapter is exercised end-to-end by examples/ruby-rspec (run via
   # the real `rspec` binary). Here we unit-test the failure classification and
-  # that generate no-ops cleanly on a project with no specs.
+  # that generate no-ops cleanly on a project with no oaths.
   ::RSpec.describe RSpec do
     describe '.var_diff_error?' do
       it 'classifies var diff/shape errors as failures' do

@@ -1,30 +1,30 @@
 # Varar sample: Go + go test
 
-A small, standalone sample project that runs Markdown specs as tests with
+A small, standalone sample project that runs Markdown oaths as tests with
 [Varar](https://varar.dev), driven by `go test`. Copy it as the starting point for
 your own project.
 
-The `.md` files at the project root are the specs — they run as tests.
+The `.md` files at the project root are the oaths — they run as tests.
 
 ## Run it
 
 ```sh
 go test                          # one subtest per example, all green
 go test -v                       # lists every example (30 total)
-go test -run 'TestSpecs/yahtzee' # run a single spec
+go test -run 'TestOaths/yahtzee' # run a single oath
 VARAR_UPDATE=1 go test             # accept drift (rewrites varar.lock.json)
 ```
 
-Each Markdown example becomes one Go subtest, named `spec.md::name`, reported by
+Each Markdown example becomes one Go subtest, named `oath.md::name`, reported by
 `go test` like any native subtest (`go test -run`, `-v`, exit codes) — see
 [ADR 0011](https://github.com/varar-dev/varar/blob/main/doc/adr/0011-go-test-integration.md).
 
 ## How it fits together
 
 - **`varar.config.json`** is the single source of truth: `docs.include` globs the
-  Markdown specs. (`steps` is carried for parity with the other ports; Go compiles
+  Markdown oaths. (`steps` is carried for parity with the other ports; Go compiles
   its step files in, so there is nothing to glob at runtime.)
-- **`*.steps.go`** define the steps, one file per spec and named after it
+- **`*.steps.go`** define the steps, one file per oath and named after it
   (`library.md` → `library.steps.go`). Go has no import-for-side-effect, so — like
   the Rust/Java/Kotlin/C# ports and unlike TypeScript/Python — each file exposes a
   `register(*varar.Steps)` that adds its steps to an injected builder, and

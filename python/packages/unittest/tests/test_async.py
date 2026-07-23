@@ -29,7 +29,7 @@ async def _(state, expected):
     return state["value"]
 """
 
-ASYNC_SPEC = """\
+ASYNC_OATH = """\
 # Async feature
 
 ## adds two values asynchronously
@@ -39,7 +39,7 @@ I asynchronously add 4
 the async total is 7
 """
 
-ASYNC_WRONG_SPEC = """\
+ASYNC_WRONG_OATH = """\
 # Async feature
 
 ## async mismatch is detected
@@ -49,21 +49,21 @@ the async total is 99
 """
 
 
-def _write(harness, spec: str) -> None:
+def _write(harness, oath: str) -> None:
     harness.write("varar.config.json", VAR_CONFIG)
     harness.write("steps/async_calc.steps.py", ASYNC_STEPS)
-    harness.write("features/async.md", spec)
+    harness.write("features/async.md", oath)
 
 
 def test_async_handler_example_passes(harness):
-    _write(harness, ASYNC_SPEC)
+    _write(harness, ASYNC_OATH)
     result, _output = harness.generate_and_run()
     assert result.testsRun == 1
     assert not result.failures and not result.errors
 
 
 def test_async_mismatch_is_detected(harness):
-    _write(harness, ASYNC_WRONG_SPEC)
+    _write(harness, ASYNC_WRONG_OATH)
     result, _output = harness.generate_and_run()
     assert len(result.failures) == 1
     (_test, message) = result.failures[0]

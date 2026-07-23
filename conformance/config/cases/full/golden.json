@@ -1,10 +1,10 @@
 {
   "docs": {
     "exclude": [
-      "specs/wip/**"
+      "oaths/wip/**"
     ],
     "include": [
-      "specs/**/*.md",
+      "oaths/**/*.md",
       "docs/**/*.md"
     ]
   },

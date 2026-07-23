@@ -3,7 +3,7 @@ import {
   CellMismatchError,
   compareDocString,
   type Diagnostic,
-  type SpecBaseline,
+  type OathBaseline,
 } from '@varar/core'
 import { steps } from '@varar/varar'
 import { _resetBuilder } from '@varar/varar/registry'
@@ -56,7 +56,7 @@ test('collectVararExamples returns one indexed example per BDD example, with ste
 test('the drift gate reports a baseline example that no longer matches', () => {
   // No steps registered, so "The vault is sealed." matches nothing; the
   // baseline says it was an example → drift.
-  const baseline: SpecBaseline = {
+  const baseline: OathBaseline = {
     sourceHash: 'fnv1a:00000000',
     examples: [{ name: 'The vault is sealed', line: 1 }],
   }
@@ -69,7 +69,7 @@ test('the drift gate reports a baseline example that no longer matches', () => {
 test('the drift gate stays quiet when the baseline example still matches', () => {
   const { stimulus } = steps(() => ({}))
   stimulus('I open the vault', () => {})
-  const baseline: SpecBaseline = {
+  const baseline: OathBaseline = {
     sourceHash: 'fnv1a:00000000',
     examples: [{ name: 'I open the vault', line: 1 }],
   }
@@ -80,7 +80,7 @@ test('the drift gate stays quiet when the baseline example still matches', () =>
 
 test('VARAR_UPDATE skips the drift gate', () => {
   process.env.VARAR_UPDATE = '1'
-  const baseline: SpecBaseline = {
+  const baseline: OathBaseline = {
     sourceHash: 'fnv1a:00000000',
     examples: [{ name: 'The vault is sealed', line: 1 }],
   }

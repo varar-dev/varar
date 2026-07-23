@@ -23,7 +23,7 @@ async function main(): Promise<void> {
           'varar — markdown-native BDD',
           '',
           'Usage:',
-          '  varar run [globs]        run markdown spec examples (no test runner)',
+          '  varar run [globs]        run markdown oath examples (no test runner)',
           '  varar run --update       accept drift and re-record varar.lock.json',
           '  varar lint [globs]       check for missing/ambiguous/orphan steps',
           '  varar init               scaffold a new project',

@@ -15,16 +15,16 @@ module Varar
 
     # Build a throwaway project from a conformance bundle (its example.md +
     # *.steps.rb) with a matching varar.config.json.
-    def project_from_bundle(tmp, bundle, spec_name)
+    def project_from_bundle(tmp, bundle, oath_name)
       src = File.join(corpus_dir, bundle)
       FileUtils.mkdir_p(File.join(tmp, 'steps'))
-      FileUtils.cp(File.join(src, 'example.md'), File.join(tmp, spec_name))
+      FileUtils.cp(File.join(src, 'example.md'), File.join(tmp, oath_name))
       FileUtils.cp(Dir.glob(File.join(src, '*.steps.rb')).first, File.join(tmp, 'steps'))
       File.write(File.join(tmp, 'varar.config.json'),
                  '{"docs":{"include":["*.md"]},"steps":["steps/*.steps.rb"]}')
     end
 
-    it 'generates one Test subclass per spec with a passing method for a passing example' do
+    it 'generates one Test subclass per oath with a passing method for a passing example' do
       Dir.mktmpdir do |tmp|
         project_from_bundle(tmp, '01-roman-numerals', 'pass.md')
         namespace = Module.new

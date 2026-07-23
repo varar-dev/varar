@@ -11,7 +11,7 @@ import java.util.function.Function;
 
 /**
  * Bridges {@code var-core}'s pure {@code Plan}/{@code Execute} pipeline into a
- * runner-friendly shape: plan a spec in one call ({@link #planSpec}), then pair each
+ * runner-friendly shape: plan an oath in one call ({@link #planOath}), then pair each
  * {@link Plan.PlannedExample} with a {@link Runnable} that actually runs it ({@link
  * #examplesWithRuns}) — mirrors Python's {@code examples_with_runs}.
  *
@@ -24,7 +24,7 @@ public final class Run {
     private Run() {}
 
     /** Parses {@code source} and plans it against {@code registry} in one call. */
-    public static Plan.ExecutionPlan planSpec(String path, String source, Registry registry) {
+    public static Plan.ExecutionPlan planOath(String path, String source, Registry registry) {
         return Plan.plan(Parse.parse(path, source), registry);
     }
 

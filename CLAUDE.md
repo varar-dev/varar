@@ -20,7 +20,7 @@ This is a multi-language monorepo (ADR 0001). Top level:
 - `doc/` — shared design docs (ADRs, specs, plans, ARCHITECTURE).
 - `examples/` — one standalone sample project per language/test-framework
   combo, mirroring the `varar-dev/varar-examples` repo 1:1 (synced there on every
-  release by `release/targets/72-varar-examples.sh`). The `.md` specs sit at
+  release by `release/targets/72-varar-examples.sh`). The `.md` oaths sit at
   each project's root; `typescript-vitest` holds the originals, the other
   projects symlink their subset (the sync dereferences symlinks).
 
@@ -69,10 +69,10 @@ pnpm workspace · biome · vitest (for the core's own tests) · knip · jscpd ·
 - **Trunk-based development.** We commit small, working increments straight to `main` — no long-lived feature branches. Keep each commit self-contained and green (build + tests pass), so trunk is always releasable.
 - **Type-check is a separate gate.** vitest runs source through esbuild/tsx, which strips types without checking them — a fully green suite can still fail `tsc`. Run `pnpm -r build` (exit 0) before calling any change done, especially after touching a shared type, an AST node, or a package's public exports (new required fields and new exports are the usual culprits). Note `pnpm build` and `pnpm check` both exclude the website packages — the Starlight website is built separately via `pnpm --filter @varar/website... build`, run in two CI places: the `test` job (a PR gate — its `<Editor>` components assert every port in `languages.json` has example files, so a forgotten port fails the build) and the `deploy-website` job (which also deploys to https://varar.dev). The legacy `packages/website` is never built. To check the website locally: `pnpm --filter @varar/website build`.
   - `pnpm -r build` only type-checks each package's `src/` (its `tsconfig.json` emits with `rootDir: src`). **Test files (`tests/**`) are type-checked by `pnpm typecheck`** (root `tsconfig.tests.json`, `noEmit`, covers every non-website package's `tests/`). It's part of `pnpm check`, so run `pnpm check` (or `pnpm typecheck` alone) after touching tests — a green vitest run does *not* mean the tests type-check. Note `expectTypeOf` assertions are validated here by `tsc`, not by vitest (we don't run `vitest --typecheck`).
-- **Dogfood specs**: `examples/typescript-vitest` (package
+- **Dogfood oaths**: `examples/typescript-vitest` (package
   `@varar/example-typescript-vitest`, a pnpm workspace member via
   `../examples/typescript-vitest`, workspace deps, never released) holds the
-  original `.md` specs at its root plus their `steps/*.steps.ts`, and runs in
+  original `.md` oaths at its root plus their `steps/*.steps.ts`, and runs in
   the root vitest workspace. The JVM samples consume the SNAPSHOT installed by
   `mvn install`; the Python samples use uv path sources.
 
@@ -119,11 +119,11 @@ on everything since the last release tag):
 
 - Test files in the project's own test suite: `*.test.ts` (vitest).
 - BDD example files (dogfood + docs): plain `*.md`. There is no special `.var.md`
-  extension — a file is a spec iff its path matches the `docs` globs in `varar.config.json`.
+  extension — a file is an oath iff its path matches the `docs` globs in `varar.config.json`.
   `docs` is `{ include, exclude }` (canonical shape — no array shorthand); both
   are plain globs, no `!` prefix. `include` has no default (empty discovers nothing);
   `exclude` removes matches (e.g. a not-implemented tutorial exercise). That config is
-  the single source of truth for "what is a spec", consulted by the runner, the LSP, and
+  the single source of truth for "what is an oath", consulted by the runner, the LSP, and
   the vitest plugin alike — the plugin drives vitest's own `include`/`exclude` from it.
 - Step definition files: `*.steps.ts`.
 - Config: every example project in `examples/` carries its own `varar.config.json`

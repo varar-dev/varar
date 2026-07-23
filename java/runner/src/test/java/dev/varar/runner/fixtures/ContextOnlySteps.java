@@ -9,7 +9,7 @@ import dev.varar.Steps;
  * {@code context}/{@code action}/{@code sensor} steps — the edge case {@code
  * StepLoaderTest} uses to prove {@link dev.varar.runner.StepLoader} skips (rather
  * than crashes on) a class with a {@code stateFactory} but no {@code
- * expressionSourceFile} to key it by. No real {@code .md} spec would exercise a file
+ * expressionSourceFile} to key it by. No real {@code .md} oath would exercise a file
  * like this at runtime (there being no step to invoke {@code createContext.apply} for
  * its file in the first place), but {@code StepLoader} must not choke on it.
  */

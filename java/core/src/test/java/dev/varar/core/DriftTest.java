@@ -72,10 +72,10 @@ class DriftTest {
     }
 
     @Test
-    void deriveSpecBaselineCarriesTheFingerprint() {
+    void deriveOathBaselineCarriesTheFingerprint() {
         String source = "I withdraw 40.";
         Ast.VarDoc varDoc = Parse.parse("w.md", source);
-        Drift.SpecBaseline baseline = Drift.deriveSpecBaseline(source, varDoc, planOf(source, reg(true)));
+        Drift.OathBaseline baseline = Drift.deriveOathBaseline(source, varDoc, planOf(source, reg(true)));
         assertEquals(Hash.hashSource(source), baseline.sourceHash());
         assertEquals(List.of(new Drift.BaselineExample("I withdraw 40", 1)), baseline.examples());
     }
@@ -91,15 +91,15 @@ class DriftTest {
     void aRenamedStepDrifts() {
         String source = "I withdraw 40.";
         Ast.VarDoc varDoc = Parse.parse("w.md", source);
-        Drift.SpecBaseline baseline = Drift.deriveSpecBaseline(source, varDoc, planOf(source, reg(true)));
+        Drift.OathBaseline baseline = Drift.deriveOathBaseline(source, varDoc, planOf(source, reg(true)));
         assertEquals(List.of("I withdraw 40@1"), bare(Drift.detectDrift(baseline, varDoc, planOf(source, reg(false)))));
     }
 
     @Test
     void anInPlaceTypoDrifts() {
         String before = "I withdraw 40.";
-        Drift.SpecBaseline baseline =
-                Drift.deriveSpecBaseline(before, Parse.parse("w.md", before), planOf(before, reg(true)));
+        Drift.OathBaseline baseline =
+                Drift.deriveOathBaseline(before, Parse.parse("w.md", before), planOf(before, reg(true)));
         String after = "I withdrraw 40.";
         Ast.VarDoc afterDoc = Parse.parse("w.md", after);
         assertEquals(List.of("I withdraw 40@1"), bare(Drift.detectDrift(baseline, afterDoc, planOf(after, reg(true)))));
@@ -108,8 +108,8 @@ class DriftTest {
     @Test
     void aDeletedParagraphIsNotDrift() {
         String before = "I withdraw 40.";
-        Drift.SpecBaseline baseline =
-                Drift.deriveSpecBaseline(before, Parse.parse("w.md", before), planOf(before, reg(true)));
+        Drift.OathBaseline baseline =
+                Drift.deriveOathBaseline(before, Parse.parse("w.md", before), planOf(before, reg(true)));
         Ast.VarDoc afterDoc = Parse.parse("w.md", "");
         assertTrue(Drift.detectDrift(baseline, afterDoc, planOf("", reg(true))).isEmpty());
     }
@@ -117,8 +117,8 @@ class DriftTest {
     @Test
     void movingAndRewordingAStillMatchingExampleDoesNotDrift() {
         String before = "I withdraw 40.\n\nI withdraw 10.";
-        Drift.SpecBaseline baseline =
-                Drift.deriveSpecBaseline(before, Parse.parse("w.md", before), planOf(before, reg(true)));
+        Drift.OathBaseline baseline =
+                Drift.deriveOathBaseline(before, Parse.parse("w.md", before), planOf(before, reg(true)));
         String after = "I withdraw 11.\n\nI withdraw 40.";
         assertTrue(Drift.detectDrift(baseline, Parse.parse("w.md", after), planOf(after, reg(true)))
                 .isEmpty());
@@ -127,8 +127,8 @@ class DriftTest {
     @Test
     void moveRewordProseOnOldLineDoesNotFalsePositive() {
         String before = "I withdraw 40.";
-        Drift.SpecBaseline baseline =
-                Drift.deriveSpecBaseline(before, Parse.parse("w.md", before), planOf(before, reg(true)));
+        Drift.OathBaseline baseline =
+                Drift.deriveOathBaseline(before, Parse.parse("w.md", before), planOf(before, reg(true)));
         String after = "Just some notes.\n\nI withdraw 41.";
         assertTrue(Drift.detectDrift(baseline, Parse.parse("w.md", after), planOf(after, reg(true)))
                 .isEmpty());
@@ -137,8 +137,8 @@ class DriftTest {
     @Test
     void aParagraphRewrittenPastRecognitionIsNotDrift() {
         String before = "I withdraw 40.";
-        Drift.SpecBaseline baseline =
-                Drift.deriveSpecBaseline(before, Parse.parse("w.md", before), planOf(before, reg(true)));
+        Drift.OathBaseline baseline =
+                Drift.deriveOathBaseline(before, Parse.parse("w.md", before), planOf(before, reg(true)));
         String after = "The branch closed years ago.";
         assertTrue(Drift.detectDrift(baseline, Parse.parse("w.md", after), planOf(after, reg(true)))
                 .isEmpty());
@@ -158,7 +158,7 @@ class DriftTest {
     @Test
     void aHeaderBoundBindingParagraphThatStopsMatchingDrifts() {
         Ast.VarDoc varDoc = Parse.parse("r.md", ROMAN);
-        Drift.SpecBaseline baseline = Drift.deriveSpecBaseline(ROMAN, varDoc, Plan.plan(varDoc, romanReg(true)));
+        Drift.OathBaseline baseline = Drift.deriveOathBaseline(ROMAN, varDoc, Plan.plan(varDoc, romanReg(true)));
         assertEquals(
                 List.of("Each row gives a decimal and a roman number:@1"),
                 bare(Drift.detectDrift(baseline, varDoc, Plan.plan(varDoc, romanReg(false)))));
@@ -187,12 +187,12 @@ class DriftTest {
         assertTrue(Drift.reconcileDrift(store, "w.md", source, varDoc, planOf(source, reg(false)), true)
                 .isEmpty());
         Drift.VarLock lock = Drift.parseVarLock(store.contents);
-        assertEquals(List.of(), lock.specs().get("w.md").examples());
+        assertEquals(List.of(), lock.oaths().get("w.md").examples());
     }
 
     private static final String EXPECTED_LOCK = "{\n"
-            + "  \"version\": 1,\n"
-            + "  \"specs\": {\n"
+            + "  \"version\": 2,\n"
+            + "  \"oaths\": {\n"
             + "    \"library.md\": {\n"
             + "      \"sourceHash\": \"fnv1a:1a2b3c4d\",\n"
             + "      \"examples\": [\n"
@@ -208,10 +208,10 @@ class DriftTest {
     @Test
     void stringifyMatchesTheTypescriptSerializerByteForByte() {
         Drift.VarLock lock = new Drift.VarLock(
-                1,
+                2,
                 Map.of(
                         "library.md",
-                        new Drift.SpecBaseline(
+                        new Drift.OathBaseline(
                                 "fnv1a:1a2b3c4d", List.of(new Drift.BaselineExample("I check out", 7)))));
         assertEquals(EXPECTED_LOCK, Drift.stringifyVarLock(lock));
     }
@@ -219,24 +219,24 @@ class DriftTest {
     @Test
     void parseRoundTripsAValidLock() {
         Drift.VarLock lock = new Drift.VarLock(
-                1,
+                2,
                 Map.of(
                         "library.md",
-                        new Drift.SpecBaseline(
+                        new Drift.OathBaseline(
                                 "fnv1a:1a2b3c4d", List.of(new Drift.BaselineExample("I check out", 7)))));
         Drift.VarLock parsed = Drift.parseVarLock(Drift.stringifyVarLock(lock));
-        assertEquals("fnv1a:1a2b3c4d", parsed.specs().get("library.md").sourceHash());
+        assertEquals("fnv1a:1a2b3c4d", parsed.oaths().get("library.md").sourceHash());
         assertEquals(
                 List.of(new Drift.BaselineExample("I check out", 7)),
-                parsed.specs().get("library.md").examples());
+                parsed.oaths().get("library.md").examples());
     }
 
     @Test
     void parseRejectsMalformedInput() {
         assertNull(Drift.parseVarLock("not json"));
         assertNull(Drift.parseVarLock("{}"));
-        assertNull(Drift.parseVarLock("{\"version\":2,\"specs\":{}}"));
-        assertNull(Drift.parseVarLock("{\"version\":1,\"specs\":{\"a.md\":{\"examples\":[]}}}"));
+        assertNull(Drift.parseVarLock("{\"version\":1,\"oaths\":{}}"));
+        assertNull(Drift.parseVarLock("{\"version\":2,\"oaths\":{\"a.md\":{\"examples\":[]}}}"));
     }
 
     @Test
@@ -273,8 +273,8 @@ class DriftTest {
     void deletingOneStepDefOfAMergedExampleDriftsOnlyTheNowProseParagraph() {
         String source = "I deposit 100.\n\nI withdraw 40.";
         Ast.VarDoc varDoc = Parse.parse("w.md", source);
-        Drift.SpecBaseline baseline =
-                Drift.deriveSpecBaseline(source, varDoc, Plan.plan(varDoc, depositWithdrawReg(true)));
+        Drift.OathBaseline baseline =
+                Drift.deriveOathBaseline(source, varDoc, Plan.plan(varDoc, depositWithdrawReg(true)));
         // The deposit step is gone: its paragraph becomes prose, splitting the example. The
         // withdraw paragraph is still live; the deposit one drifts.
         List<Drift.Drifted> drift = Drift.detectDrift(baseline, varDoc, Plan.plan(varDoc, depositWithdrawReg(false)));

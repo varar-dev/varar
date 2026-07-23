@@ -52,7 +52,7 @@ EMPH_REGEXP = r"\*\*\*([^*]+)\*\*\*|___([^_]+)___|\*\*([^*]+)\*\*|__([^_]+)__|\*
 
 def _seed_builtins(registry: Registry) -> Registry:
     """Seed Varar's own built-in parameter types (beyond cucumber-expressions'
-    int/float/string/word). Shared by every port so specs match identically.
+    int/float/string/word). Shared by every port so oaths match identically.
     """
     return define_parameter_type(
         registry,

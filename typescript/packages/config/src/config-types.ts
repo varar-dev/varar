@@ -1,4 +1,4 @@
-// Spec-doc discovery globs. `include` is globbed; anything also matching
+// Oath-doc discovery globs. `include` is globbed; anything also matching
 // `exclude` is dropped. Both are plain globs — no `!` prefix semantics.
 export type VarGlobs = {
   readonly include: ReadonlyArray<string>

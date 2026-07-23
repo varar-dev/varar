@@ -6,7 +6,7 @@ using Varar.Config;
 namespace Varar.Runner;
 
 /// <summary>
-/// Spec discovery: the shared glob→regex semantics (matching every other runner byte-for-byte on
+/// Oath discovery: the shared glob→regex semantics (matching every other runner byte-for-byte on
 /// <c>**</c>, <c>*</c>, <c>?</c>), a recursive file walk, and include/exclude filtering. Port of the
 /// runner <c>discovery</c> module.
 /// </summary>
@@ -76,11 +76,11 @@ public static class Discovery
     }
 
     /// <summary>True iff <paramref name="relPosix"/> matches an include glob and no exclude glob.</summary>
-    public static bool MatchSpec(string relPosix, ImmutableArray<string> include, ImmutableArray<string> exclude) =>
+    public static bool MatchOath(string relPosix, ImmutableArray<string> include, ImmutableArray<string> exclude) =>
         include.Any(g => GlobToRegex(g).IsMatch(relPosix)) && !exclude.Any(g => GlobToRegex(g).IsMatch(relPosix));
 
     /// <summary>Files under <paramref name="root"/> matching <c>docs.include</c> and no <c>docs.exclude</c>, sorted.</summary>
-    public static ImmutableArray<string> FindSpecs(ParsedVarConfig config, string root)
+    public static ImmutableArray<string> FindOaths(ParsedVarConfig config, string root)
     {
         if (!Directory.Exists(root))
         {
@@ -90,7 +90,7 @@ public static class Discovery
         return
         [
             .. Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories)
-                .Where(path => MatchSpec(RelPosix(path, root), config.Docs.Include, config.Docs.Exclude))
+                .Where(path => MatchOath(RelPosix(path, root), config.Docs.Include, config.Docs.Exclude))
                 .OrderBy(p => p, StringComparer.Ordinal),
         ];
     }

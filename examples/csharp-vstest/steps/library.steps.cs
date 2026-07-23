@@ -8,7 +8,7 @@ namespace Varar.Example;
 
 public static class LibrarySteps
 {
-    // The prose format the spec is written in, e.g. "January 5, 2024".
+    // The prose format the oath is written in, e.g. "January 5, 2024".
     private const string DateFormat = "MMMM d, yyyy";
 
     // How a DateOnly is carried inside the dynamic state Value.
@@ -100,7 +100,7 @@ public static class LibrarySteps
         });
     }
 
-    // Money notation is spec prose, so it is parsed and rendered here — the SUT only
+    // Money notation is oath prose, so it is parsed and rendered here — the SUT only
     // ever sees Money values. Under £1 renders as "50p", otherwise as "£2.55".
     private static Money ParseMoney(string raw) =>
         raw.EndsWith('p')

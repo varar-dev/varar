@@ -1,12 +1,12 @@
 import { type Diagnostic, linter } from '@codemirror/lint'
 import { type Extension, RangeSetBuilder, StateEffect, StateField } from '@codemirror/state'
 import { Decoration, type DecorationSet, EditorView } from '@codemirror/view'
-import { type Drift, runResultDiagnostics, type SpecResults } from '@varar/core'
+import { type Drift, type OathResults, runResultDiagnostics } from '@varar/core'
 
 // Effect carrying the latest run results (null clears them).
-export const setRunResults = StateEffect.define<SpecResults | null>()
+export const setRunResults = StateEffect.define<OathResults | null>()
 
-// Effect carrying the latest drifts for this spec (empty clears them).
+// Effect carrying the latest drifts for this oath (empty clears them).
 export const setDrift = StateEffect.define<ReadonlyArray<Drift>>()
 
 // Latest drifts; cleared on edit (offsets go stale until the next run).
@@ -57,7 +57,7 @@ const driftLinter = linter((view) => driftDiagnostics(view.state.field(driftFiel
   needsRefresh: (u) => u.transactions.some((t) => t.effects.some((e) => e.is(setDrift))),
 })
 
-const resultsField = StateField.define<SpecResults | null>({
+const resultsField = StateField.define<OathResults | null>({
   create: () => null,
   update(value, tr) {
     if (tr.docChanged) return null // results go stale on edit
@@ -74,7 +74,7 @@ const decoField = StateField.define<DecorationSet>({
     // keep the previous wash, remapped through the edit, instead of blanking
     // it and repainting a few hundred ms later (a visible green→white→green
     // flicker). Only a setRunResults effect rebuilds (or clears) the wash.
-    let results: SpecResults | null | undefined
+    let results: OathResults | null | undefined
     for (const e of tr.effects) if (e.is(setRunResults)) results = e.value
     if (results === undefined) return deco.map(tr.changes)
     if (results === null) return Decoration.none
@@ -98,7 +98,7 @@ const decoField = StateField.define<DecorationSet>({
 })
 
 // Pure projection used by the linter and unit-tested directly.
-export function varDiagnostics(results: SpecResults | null, docText: string): Diagnostic[] {
+export function varDiagnostics(results: OathResults | null, docText: string): Diagnostic[] {
   if (!results) return []
   return runResultDiagnostics(results, docText).map((d) => ({
     from: d.from,

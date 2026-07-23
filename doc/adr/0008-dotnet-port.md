@@ -27,7 +27,7 @@ route — see *Consequences*).
 This port lands **on top of the [Varar rename](../RENAME-VARAR.md)** (PR #39):
 the project is `Varar` (was `Vár`/`@oselvar`), packages publish under the `varar`
 base name, product tokens are `varar.config.json` / `varar.lock.json`, and
-example specs live in `varar-examples/`. All .NET coordinates below already use
+example oaths live in `varar-examples/`. All .NET coordinates below already use
 the post-rename scheme.
 
 ### Why .NET, why now

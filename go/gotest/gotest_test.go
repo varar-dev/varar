@@ -28,7 +28,7 @@ func setup(t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()
 	os.WriteFile(filepath.Join(root, "varar.config.json"), []byte(`{"docs":{"include":["*.md"]}}`), 0o644)
-	os.WriteFile(filepath.Join(root, "spec.md"), []byte("I greet \"world\"."), 0o644)
+	os.WriteFile(filepath.Join(root, "oath.md"), []byte("I greet \"world\"."), 0o644)
 	return root
 }
 

@@ -10,7 +10,7 @@ import { setDrift, setRunResults, varRunExtension } from '../lib/cm-run.ts'
 import { semanticTokens } from '../lib/cm-semantic-tokens.ts'
 import { varEditorThemeExt } from '../lib/cm-var-theme.ts'
 import { planReplay, type ReplayOp } from '../lib/replay-plan.ts'
-import { runSpec } from '../lib/run-client.ts'
+import { runOath } from '../lib/run-client.ts'
 import { groupRunInputs } from '../lib/run-grouping.ts'
 import { currentLang, langOfPath, onLangChange, type SiteLang } from '../lib/site-lang.ts'
 import { joinStepParamTokens } from '../lib/var-capsule-tokens.ts'
@@ -22,7 +22,7 @@ let sharedClient: LSPClient | null = null
 
 // Collects every mounted <Editor>'s <File> children across the WHOLE page —
 // not just the caller's own editor — so the LSP worker can cross-reference
-// specs against step definitions even if they live in a different <Editor>
+// oaths against step definitions even if they live in a different <Editor>
 // instance. Called once, before the worker is created, so the full seed is
 // known upfront.
 function collectPageSeed(): Record<string, string> {
@@ -30,7 +30,7 @@ function collectPageSeed(): Record<string, string> {
   for (const fileEl of document.querySelectorAll<HTMLElement>('[data-var-file]')) {
     const uri = fileEl.dataset.uri
     if (!uri) continue
-    // Only the executable world goes to the language server: specs (.md) and
+    // Only the executable world goes to the language server: oaths (.md) and
     // TypeScript. Java/Kotlin/Python/Ruby tabs are display-only.
     const fileLang = langOfPath(uri)
     if (fileLang !== undefined && fileLang !== 'ts') continue
@@ -223,7 +223,7 @@ function mountEditor(editorEl: HTMLElement): void {
   let activeUri: string = files[0] ? files[0].uri : ''
 
   // The site-wide language choice decides which code tabs this editor shows.
-  // Language-neutral files (the .md spec) are always visible; code files show
+  // Language-neutral files (the .md oath) are always visible; code files show
   // only when theirs is the effective language. TypeScript is special: it is
   // what actually executes, so its views stay mounted (hidden) in every mode,
   // and an editor with no files in the chosen language falls back to showing
@@ -261,7 +261,7 @@ function mountEditor(editorEl: HTMLElement): void {
     const [input] = groupRunInputs(editors, new Map([['editor', []]]))
     if (!input) return
     try {
-      const { results, drifts } = await runSpec({
+      const { results, drifts } = await runOath({
         varPath: input.varPath,
         varSource: input.varSource,
         stepFiles: input.stepFiles,
@@ -275,7 +275,7 @@ function mountEditor(editorEl: HTMLElement): void {
         effects: [
           setRunResults.of({
             version: 1,
-            specPath: input.varPath,
+            oathPath: input.varPath,
             sourceHash: hashSource(input.varSource),
             examples: [
               {
@@ -381,7 +381,7 @@ function mountEditor(editorEl: HTMLElement): void {
 
   // Applies the current site language: hide/show code tabs, and if the active
   // tab just vanished, jump to the same-position file of the new language
-  // (steps file → steps file, library → library), falling back to the spec.
+  // (steps file → steps file, library → library), falling back to the oath.
   function applySiteLang(): void {
     const eff = effectiveLang()
     for (const file of files) {
@@ -412,7 +412,7 @@ function mountEditor(editorEl: HTMLElement): void {
     scheduleRun()
   })
 
-  // The language-neutral .md spec (langOfPath → undefined) is Markdown; every
+  // The language-neutral .md oath (langOfPath → undefined) is Markdown; every
   // SiteLang resolves through CM_LANGUAGE, which is exhaustive by construction
   // (a missing port is a type error there and a failing test in the CI gate).
   const languageExt = (uri: string): Extension => {
@@ -432,7 +432,7 @@ function mountEditor(editorEl: HTMLElement): void {
         : [minimalSetup, wantLineNumbers ? lineNumbers() : [], wantFolding ? foldGutter() : []]
     const ext = [setup, language, varEditorThemeExt(), varTokenTheme, autoRun, flashExtension()]
     if (fileLang === undefined || fileLang === 'ts') {
-      // Specs and TypeScript get the language server (diagnostics, semantic
+      // Oaths and TypeScript get the language server (diagnostics, semantic
       // tokens). The other languages are read-only showcases of the same
       // steps — the TypeScript files keep executing underneath.
       ext.push(client.plugin(file.uri))

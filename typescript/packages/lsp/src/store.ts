@@ -1,7 +1,7 @@
 import type { VarConfig } from '@varar/config'
 import {
   createRegistry,
-  deriveSpecBaseline,
+  deriveOathBaseline,
   detectDrift,
   driftDetected,
   parse,
@@ -43,17 +43,17 @@ export type Store = {
   // per-language snippet-selection algorithm to pick the language owning the
   // most step files when several are configured.
   stepPaths(): ReadonlyArray<string>
-  // Whether a file is a var spec — i.e. it was discovered by the `docs` globs.
-  // There is no `.md` extension to key off of; the config defines specs.
+  // Whether a file is a var oath — i.e. it was discovered by the `docs` globs.
+  // There is no `.md` extension to key off of; the config defines oaths.
   isVarDoc(path: string): boolean
-  // Accept drift for one spec: re-record its varar.lock.json baseline to the
+  // Accept drift for one oath: re-record its varar.lock.json baseline to the
   // current live examples, so a now-prose paragraph is no longer flagged. The
   // caller reindexes afterwards to clear the squiggle.
   acceptDrift(varPath: string): Promise<void>
   fs(): FileSystem
 }
 
-// Drift diagnostics for the workspace: for each spec with a varar.lock.json
+// Drift diagnostics for the workspace: for each oath with a varar.lock.json
 // baseline entry, a paragraph that was an example and now matches no step.
 // Returns [] when there is no baseline (e.g. the browser, whose memory FS has
 // no varar.lock.json — drift there is shown via the run pipeline, not the LSP).
@@ -77,8 +77,8 @@ async function driftDiagnosticRefs(
   const root = lockAbs.slice(0, lockAbs.length - 'varar.lock.json'.length).replace(/[/\\]+$/, '')
   const refs: DiagnosticRef[] = []
   for (const vf of varFiles) {
-    const specPath = toSpecPath(root, vf.path)
-    const baseline = lock.specs[specPath]
+    const oathPath = toOathPath(root, vf.path)
+    const baseline = lock.oaths[oathPath]
     if (!baseline) continue
     const varDoc = parse(vf.path, vf.source)
     const executionPlan = plan(varDoc, registry)
@@ -101,7 +101,7 @@ async function driftDiagnosticRefs(
   return refs
 }
 
-function toSpecPath(root: string, abs: string): string {
+function toOathPath(root: string, abs: string): string {
   const rel = abs.startsWith(root) ? abs.slice(root.length) : abs
   return rel
     .replace(/^[/\\]+/, '')
@@ -172,7 +172,7 @@ export function createStore(deps: StoreDeps): Store {
     stepGlobs: () => config.steps,
     stepPaths: () => currentStepPaths,
     // Delegates to the filesystem port so unsaved editor buffers (which the
-    // disk-backed index can't see) are still recognised as spec docs.
+    // disk-backed index can't see) are still recognised as oath docs.
     isVarDoc: (path) => fs.matches(path, config.docs),
     async acceptDrift(varPath) {
       const [lockAbs] = await fs.list({ include: ['varar.lock.json'], exclude: [] })
@@ -182,13 +182,13 @@ export function createStore(deps: StoreDeps): Store {
       const root = lockAbs
         .slice(0, lockAbs.length - 'varar.lock.json'.length)
         .replace(/[/\\]+$/, '')
-      const specPath = toSpecPath(root, varPath)
+      const oathPath = toOathPath(root, varPath)
       const source = await fs.read(varPath)
       const varDoc = parse(varPath, source)
-      const baseline = deriveSpecBaseline(source, varDoc, plan(varDoc, current.registry))
+      const baseline = deriveOathBaseline(source, varDoc, plan(varDoc, current.registry))
       const next: VarLock = {
-        version: 1,
-        specs: { ...(existing?.specs ?? {}), [specPath]: baseline },
+        version: 2,
+        oaths: { ...(existing?.oaths ?? {}), [oathPath]: baseline },
       }
       await fs.write(lockAbs, stringifyVarLock(next))
     },

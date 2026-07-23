@@ -60,7 +60,7 @@ public class DriftTests
     private static ImmutableArray<Drift> DetectFor(string source, Registry baselineReg, Registry currentReg)
     {
         var doc = Parse.Run("w.md", source);
-        var baseline = DriftDetection.DeriveSpecBaseline(source, doc, Plan.Run(doc, baselineReg));
+        var baseline = DriftDetection.DeriveOathBaseline(source, doc, Plan.Run(doc, baselineReg));
         return DriftDetection.DetectDrift(baseline, doc, Plan.Run(doc, currentReg));
     }
 
@@ -80,11 +80,11 @@ public class DriftTests
     }
 
     [Fact]
-    public void DeriveSpecBaselineCarriesTheSourceFingerprint()
+    public void DeriveOathBaselineCarriesTheSourceFingerprint()
     {
         const string source = "I withdraw 40.";
         var doc = Parse.Run("w.md", source);
-        var baseline = DriftDetection.DeriveSpecBaseline(source, doc, Plan.Run(doc, Reg()));
+        var baseline = DriftDetection.DeriveOathBaseline(source, doc, Plan.Run(doc, Reg()));
         Assert.Equal(Hash.HashSource(source), baseline.SourceHash);
         Assert.Equal(new[] { new BaselineExample("I withdraw 40", 1) }, baseline.Examples);
     }
@@ -97,7 +97,7 @@ public class DriftTests
     }
 
     [Fact]
-    public void AnUnchangedSpecHasNoDrift() =>
+    public void AnUnchangedOathHasNoDrift() =>
         Assert.Empty(DetectFor("I withdraw 40.", Reg(), Reg()));
 
     [Fact]
@@ -108,7 +108,7 @@ public class DriftTests
     public void AnInPlaceTypoDrifts()
     {
         var beforeDoc = Parse.Run("w.md", "I withdraw 40.");
-        var baseline = DriftDetection.DeriveSpecBaseline("I withdraw 40.", beforeDoc, Plan.Run(beforeDoc, Reg()));
+        var baseline = DriftDetection.DeriveOathBaseline("I withdraw 40.", beforeDoc, Plan.Run(beforeDoc, Reg()));
         var afterDoc = Parse.Run("w.md", "I withdrraw 40.");
         var drift = DriftDetection.DetectDrift(baseline, afterDoc, Plan.Run(afterDoc, Reg()));
         Assert.Equal(new[] { ("I withdraw 40", 1) }, Bare(drift));
@@ -118,7 +118,7 @@ public class DriftTests
     public void ADeletedParagraphIsNotDrift()
     {
         var beforeDoc = Parse.Run("w.md", "I withdraw 40.");
-        var baseline = DriftDetection.DeriveSpecBaseline("I withdraw 40.", beforeDoc, Plan.Run(beforeDoc, Reg()));
+        var baseline = DriftDetection.DeriveOathBaseline("I withdraw 40.", beforeDoc, Plan.Run(beforeDoc, Reg()));
         var afterDoc = Parse.Run("w.md", string.Empty);
         Assert.Empty(DriftDetection.DetectDrift(baseline, afterDoc, Plan.Run(afterDoc, Reg())));
     }
@@ -127,7 +127,7 @@ public class DriftTests
     public void ANewProseParagraphIsNotDrift()
     {
         var beforeDoc = Parse.Run("w.md", "I withdraw 40.");
-        var baseline = DriftDetection.DeriveSpecBaseline("I withdraw 40.", beforeDoc, Plan.Run(beforeDoc, Reg()));
+        var baseline = DriftDetection.DeriveOathBaseline("I withdraw 40.", beforeDoc, Plan.Run(beforeDoc, Reg()));
         var afterDoc = Parse.Run("w.md", "I withdraw 40.\n\nSome new narration.");
         Assert.Empty(DriftDetection.DetectDrift(baseline, afterDoc, Plan.Run(afterDoc, Reg())));
     }
@@ -136,7 +136,7 @@ public class DriftTests
     public void MovingAnExampleNeverDrifts()
     {
         var beforeDoc = Parse.Run("w.md", "I withdraw 40.\n\nI withdraw 10.");
-        var baseline = DriftDetection.DeriveSpecBaseline("I withdraw 40.\n\nI withdraw 10.", beforeDoc, Plan.Run(beforeDoc, Reg()));
+        var baseline = DriftDetection.DeriveOathBaseline("I withdraw 40.\n\nI withdraw 10.", beforeDoc, Plan.Run(beforeDoc, Reg()));
         var afterDoc = Parse.Run("w.md", "I withdraw 10.\n\nI withdraw 40.");
         Assert.Empty(DriftDetection.DetectDrift(baseline, afterDoc, Plan.Run(afterDoc, Reg())));
     }
@@ -145,7 +145,7 @@ public class DriftTests
     public void MovingAndRewordingAStillMatchingExampleDoesNotDrift()
     {
         var beforeDoc = Parse.Run("w.md", "I withdraw 40.\n\nI withdraw 10.");
-        var baseline = DriftDetection.DeriveSpecBaseline("I withdraw 40.\n\nI withdraw 10.", beforeDoc, Plan.Run(beforeDoc, Reg()));
+        var baseline = DriftDetection.DeriveOathBaseline("I withdraw 40.\n\nI withdraw 10.", beforeDoc, Plan.Run(beforeDoc, Reg()));
         var afterDoc = Parse.Run("w.md", "I withdraw 11.\n\nI withdraw 40.");
         Assert.Empty(DriftDetection.DetectDrift(baseline, afterDoc, Plan.Run(afterDoc, Reg())));
     }
@@ -154,7 +154,7 @@ public class DriftTests
     public void MoveRewordAndProseOnOldLineDoesNotFalsePositive()
     {
         var beforeDoc = Parse.Run("w.md", "I withdraw 40.");
-        var baseline = DriftDetection.DeriveSpecBaseline("I withdraw 40.", beforeDoc, Plan.Run(beforeDoc, Reg()));
+        var baseline = DriftDetection.DeriveOathBaseline("I withdraw 40.", beforeDoc, Plan.Run(beforeDoc, Reg()));
         var afterDoc = Parse.Run("w.md", "Just some notes.\n\nI withdraw 41.");
         Assert.Empty(DriftDetection.DetectDrift(baseline, afterDoc, Plan.Run(afterDoc, Reg())));
     }
@@ -163,7 +163,7 @@ public class DriftTests
     public void AParagraphRewrittenPastRecognitionIsNotDrift()
     {
         var beforeDoc = Parse.Run("w.md", "I withdraw 40.");
-        var baseline = DriftDetection.DeriveSpecBaseline("I withdraw 40.", beforeDoc, Plan.Run(beforeDoc, Reg()));
+        var baseline = DriftDetection.DeriveOathBaseline("I withdraw 40.", beforeDoc, Plan.Run(beforeDoc, Reg()));
         var afterDoc = Parse.Run("w.md", "The branch closed years ago.");
         Assert.Empty(DriftDetection.DetectDrift(baseline, afterDoc, Plan.Run(afterDoc, Reg())));
     }
@@ -182,7 +182,7 @@ public class DriftTests
     {
         const string source = "Each row gives a decimal and a roman number:\n\n| decimal | roman |\n| ------: | :---- |\n| 3 | III |\n| 9 | IX |\n";
         var doc = Parse.Run("r.md", source);
-        var baseline = DriftDetection.DeriveSpecBaseline(source, doc, Plan.Run(doc, RomanReg(true)));
+        var baseline = DriftDetection.DeriveOathBaseline(source, doc, Plan.Run(doc, RomanReg(true)));
         var drift = DriftDetection.DetectDrift(baseline, doc, Plan.Run(doc, RomanReg(false)));
         Assert.Equal(new[] { ("Each row gives a decimal and a roman number:", 1) }, Bare(drift));
     }
@@ -192,7 +192,7 @@ public class DriftTests
     {
         const string source = "Some prose first.\n\nI withdraw 40.";
         var doc = Parse.Run("w.md", source);
-        var baseline = DriftDetection.DeriveSpecBaseline(source, doc, Plan.Run(doc, Reg(true)));
+        var baseline = DriftDetection.DeriveOathBaseline(source, doc, Plan.Run(doc, Reg(true)));
         var drift = DriftDetection.DetectDrift(baseline, doc, Plan.Run(doc, Reg(false)))[0];
         Assert.Equal(3, drift.Line);
         Assert.Equal(3, drift.Span.StartLine);
@@ -220,7 +220,7 @@ public class DriftTests
         var drifts = DriftDetection.ReconcileDrift(store, "w.md", source, doc, Plan.Run(doc, Reg()));
         Assert.Empty(drifts);
         var lockFile = DriftDetection.ParseVarLock(store.Contents ?? string.Empty);
-        Assert.Equal(new[] { new BaselineExample("I withdraw 40", 1) }, lockFile!.Specs["w.md"].Examples);
+        Assert.Equal(new[] { new BaselineExample("I withdraw 40", 1) }, lockFile!.Oaths["w.md"].Examples);
     }
 
     [Fact]
@@ -245,25 +245,25 @@ public class DriftTests
         DriftDetection.ReconcileDrift(store, "w.md", source, doc, Plan.Run(doc, Reg(true)));
         var drifts = DriftDetection.ReconcileDrift(store, "w.md", source, doc, Plan.Run(doc, Reg(false)), update: true);
         Assert.Empty(drifts);
-        Assert.Empty(DriftDetection.ParseVarLock(store.Contents ?? string.Empty)!.Specs["w.md"].Examples);
+        Assert.Empty(DriftDetection.ParseVarLock(store.Contents ?? string.Empty)!.Oaths["w.md"].Examples);
     }
 
     [Fact]
     public void ParseVarLockRoundTripsAValidLock()
     {
-        var lockFile = new VarLock(1, ImmutableDictionary<string, SpecBaseline>.Empty
-            .SetItem("library.md", new SpecBaseline("fnv1a:1a2b3c4d", ImmutableArray.Create(new BaselineExample("I check out", 7)))));
+        var lockFile = new VarLock(2, ImmutableDictionary<string, OathBaseline>.Empty
+            .SetItem("library.md", new OathBaseline("fnv1a:1a2b3c4d", ImmutableArray.Create(new BaselineExample("I check out", 7)))));
         var parsed = DriftDetection.ParseVarLock(DriftDetection.StringifyVarLock(lockFile));
         Assert.NotNull(parsed);
         Assert.Equal(DriftDetection.StringifyVarLock(lockFile), DriftDetection.StringifyVarLock(parsed!));
     }
 
     [Fact]
-    public void StringifyVarLockSortsSpecPaths()
+    public void StringifyVarLockSortsOathPaths()
     {
-        var lockFile = new VarLock(1, ImmutableDictionary<string, SpecBaseline>.Empty
-            .SetItem("zebra.md", new SpecBaseline("fnv1a:00000001", ImmutableArray<BaselineExample>.Empty))
-            .SetItem("alpha.md", new SpecBaseline("fnv1a:00000002", ImmutableArray<BaselineExample>.Empty)));
+        var lockFile = new VarLock(2, ImmutableDictionary<string, OathBaseline>.Empty
+            .SetItem("zebra.md", new OathBaseline("fnv1a:00000001", ImmutableArray<BaselineExample>.Empty))
+            .SetItem("alpha.md", new OathBaseline("fnv1a:00000002", ImmutableArray<BaselineExample>.Empty)));
         var text = DriftDetection.StringifyVarLock(lockFile);
         Assert.True(text.IndexOf("alpha.md", StringComparison.Ordinal) < text.IndexOf("zebra.md", StringComparison.Ordinal));
         Assert.EndsWith("}\n", text);
@@ -290,7 +290,7 @@ public class DriftTests
     {
         const string source = "I deposit 100.\n\nI withdraw 40.";
         var doc = Parse.Run("w.md", source);
-        var baseline = DriftDetection.DeriveSpecBaseline(source, doc, Plan.Run(doc, DepositWithdrawReg(true)));
+        var baseline = DriftDetection.DeriveOathBaseline(source, doc, Plan.Run(doc, DepositWithdrawReg(true)));
 
         // The deposit step is gone: its paragraph becomes prose, splitting the example. The withdraw
         // paragraph is still live; the deposit one drifts.
@@ -303,7 +303,8 @@ public class DriftTests
     {
         Assert.Null(DriftDetection.ParseVarLock("not json"));
         Assert.Null(DriftDetection.ParseVarLock("{}"));
+        Assert.Null(DriftDetection.ParseVarLock("{\"version\":1,\"oaths\":{}}"));
         Assert.Null(DriftDetection.ParseVarLock("{\"version\":2,\"specs\":{}}"));
-        Assert.Null(DriftDetection.ParseVarLock("{\"version\":1,\"specs\":{\"a.md\":{\"examples\":[]}}}"));
+        Assert.Null(DriftDetection.ParseVarLock("{\"version\":2,\"oaths\":{\"a.md\":{\"examples\":[]}}}"));
     }
 }

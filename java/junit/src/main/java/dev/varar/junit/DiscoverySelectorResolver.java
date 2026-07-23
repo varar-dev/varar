@@ -10,7 +10,7 @@ import org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolve
 
 /**
  * Resolves an {@link EngineDiscoveryRequest}'s selectors into one {@link VarFileDescriptor} per
- * matching {@code .md} spec, added as a child of {@link VarEngineDescriptor}.
+ * matching {@code .md} oath, added as a child of {@link VarEngineDescriptor}.
  *
  * <p>Built on {@code junit-platform-engine}'s real generic selector-resolution machinery
  * ({@link EngineDiscoveryRequestResolver}/{@code SelectorResolver}) rather than hand-dispatching
@@ -35,7 +35,7 @@ import org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolve
  *       addResourceContainerSelectorResolver(ResourceFilter)}, which performs exactly this
  *       expansion generically (classpath/module/package scanning) for any engine; var supplies
  *       only the {@link ResourceFilter} predicate (delegating to {@code
- *       dev.varar.runner.Discovery.matchSpec}).
+ *       dev.varar.runner.Discovery.matchOath}).
  *   <li>{@code ClasspathResourceSelector}/{@code FileSelector}/{@code DirectorySelector} &rarr;
  *       one {@link VarFileDescriptor} (a directory first expands into candidate {@code
  *       FileSelector}s, which the same resolver then re-resolves) &mdash; {@link
@@ -67,7 +67,7 @@ final class DiscoverySelectorResolver {
         VarFileSelectorResolver fileSelectorResolver = new VarFileSelectorResolver(config, root, loadedSteps);
         this.resolver = EngineDiscoveryRequestResolver.<VarEngineDescriptor>builder()
                 .addResourceContainerSelectorResolver(
-                        ResourceFilter.of(resource -> fileSelectorResolver.matchesSpec(resource.getName())))
+                        ResourceFilter.of(resource -> fileSelectorResolver.matchesOath(resource.getName())))
                 .addSelectorResolver(fileSelectorResolver)
                 .build();
     }

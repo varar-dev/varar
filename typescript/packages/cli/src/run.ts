@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { relative, sep } from 'node:path'
 import { findFiles, loadVarConfig } from '@varar/config'
 import { type Diagnostic, driftDiagnostics, reconcileDrift } from '@varar/core'
-import { createFileBaselineStore, examplesWithRuns, loadSteps, planSpec } from '@varar/runner'
+import { createFileBaselineStore, examplesWithRuns, loadSteps, planOath } from '@varar/runner'
 
 export type RunOptions = {
   readonly cwd: string
@@ -34,7 +34,7 @@ export async function runRun(opts: RunOptions): Promise<RunResult> {
 
   for (const path of varFiles) {
     const source = readFileSync(path, 'utf8')
-    const execution = planSpec(path, source, registry)
+    const execution = planOath(path, source, registry)
 
     const reporter = {
       diagnostic: (d: Diagnostic) => {
@@ -64,10 +64,10 @@ export async function runRun(opts: RunOptions): Promise<RunResult> {
     // Reconcile drift against the committed baseline. On a clean run this
     // records/updates varar.lock.json; an unacknowledged drift is reported as an
     // error diagnostic (non-zero exit) and leaves the baseline untouched.
-    const specPath = rel.split(sep).join('/')
+    const oathPath = rel.split(sep).join('/')
     const drifts = await reconcileDrift({
       store: baselineStore,
-      specPath,
+      oathPath,
       source,
       varDoc: execution.varDoc,
       plan: execution,

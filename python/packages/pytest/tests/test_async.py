@@ -30,7 +30,7 @@ async def _(state, expected):
     return state["value"]
 """
 
-ASYNC_SPEC = """\
+ASYNC_OATH = """\
 # Async feature
 
 ## adds two values asynchronously
@@ -40,7 +40,7 @@ I asynchronously add 4
 the async total is 7
 """
 
-ASYNC_WRONG_SPEC = """\
+ASYNC_WRONG_OATH = """\
 # Async feature
 
 ## async mismatch is detected
@@ -50,19 +50,19 @@ the async total is 99
 """
 
 
-def _write_fixture(pytester, spec_content: str, steps_content: str) -> None:
+def _write_fixture(pytester, oath_content: str, steps_content: str) -> None:
     (pytester.path / "varar.config.json").write_text(VAR_CONFIG, encoding="utf-8")
     (pytester.path / "steps").mkdir(exist_ok=True)
     (pytester.path / "steps" / "async_calc.steps.py").write_text(
         steps_content.strip(), encoding="utf-8"
     )
     (pytester.path / "features").mkdir(exist_ok=True)
-    (pytester.path / "features" / "async.md").write_text(spec_content, encoding="utf-8")
+    (pytester.path / "features" / "async.md").write_text(oath_content, encoding="utf-8")
 
 
 def test_async_handler_example_passes(pytester):
     """An async def action and async def sensor are driven to completion by the core."""
-    _write_fixture(pytester, ASYNC_SPEC, ASYNC_STEPS)
+    _write_fixture(pytester, ASYNC_OATH, ASYNC_STEPS)
     result = pytester.runpytest("-v")
     result.assert_outcomes(passed=1)
     result.stdout.fnmatch_lines(["*async*PASSED*"])
@@ -70,7 +70,7 @@ def test_async_handler_example_passes(pytester):
 
 def test_async_mismatch_is_detected(pytester):
     """A mismatch in an async sensor is still caught and reported as a failure."""
-    _write_fixture(pytester, ASYNC_WRONG_SPEC, ASYNC_STEPS)
+    _write_fixture(pytester, ASYNC_WRONG_OATH, ASYNC_STEPS)
     result = pytester.runpytest("-v")
     result.assert_outcomes(failed=1)
     # render_failure emits "expected: 99, actual: 3" — confirm it's a real cell-mismatch.

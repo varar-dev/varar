@@ -1,10 +1,10 @@
 import * as varCore from '@varar/core'
-import { type Drift, hashSource, type SpecResults } from '@varar/core'
+import { type Drift, hashSource, type OathResults } from '@varar/core'
 import * as varRuntime from '@varar/varar'
 import { _resetBuilder } from '@varar/varar/registry'
 import * as ts from 'typescript'
 import { createMemoryBaselineStore } from './memory-baseline-store.ts'
-import { runRegisteredSpec } from './run-spec.ts'
+import { runRegisteredOath } from './run-oath.ts'
 
 type RunInput = {
   varPath: string
@@ -14,7 +14,7 @@ type RunInput = {
   update?: boolean
 }
 
-// One baseline store for the whole page (all specs keyed inside varar.lock.json),
+// One baseline store for the whole page (all oaths keyed inside varar.lock.json),
 // living as long as the worker. Drift is measured against it across edits.
 const baselineStore = createMemoryBaselineStore()
 // Mirrors run-client.ts's WorkerRequest/WorkerResponse — the requestId lets
@@ -33,11 +33,11 @@ function createModuleLoader(files: ReadonlyArray<SourceFile>) {
   const byPath = new Map(files.map((f) => [f.path, f]))
   const cache = new Map<string, Record<string, unknown>>()
 
-  const resolveRelative = (spec: string, fromPath: string): SourceFile | undefined => {
+  const resolveRelative = (oath: string, fromPath: string): SourceFile | undefined => {
     // Normalize ./ and ../ segments against the importer's directory.
     const dir = fromPath.includes('/') ? fromPath.slice(0, fromPath.lastIndexOf('/') + 1) : ''
     const segments: string[] = []
-    for (const seg of `${dir}${spec}`.split('/')) {
+    for (const seg of `${dir}${oath}`.split('/')) {
       if (seg === '' || seg === '.') continue
       if (seg === '..') segments.pop()
       else segments.push(seg)
@@ -57,15 +57,15 @@ function createModuleLoader(files: ReadonlyArray<SourceFile>) {
       compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
       fileName: file.path,
     }).outputText
-    const require = (spec: string): unknown => {
-      if (spec === '@varar/varar' || spec === '@varar/vitest') return varRuntime
-      if (spec === '@varar/core') return varCore
-      if (spec.startsWith('.')) {
-        const target = resolveRelative(spec, file.path)
+    const require = (oath: string): unknown => {
+      if (oath === '@varar/varar' || oath === '@varar/vitest') return varRuntime
+      if (oath === '@varar/core') return varCore
+      if (oath.startsWith('.')) {
+        const target = resolveRelative(oath, file.path)
         if (target) return load(target)
       }
       throw new Error(
-        `Cannot import "${spec}" in the browser runner — import steps() from "@varar/varar", or add the imported file to this editor.`,
+        `Cannot import "${oath}" in the browser runner — import steps() from "@varar/varar", or add the imported file to this editor.`,
       )
     }
     const mod = { exports: {} as Record<string, unknown> }
@@ -88,7 +88,7 @@ function createModuleLoader(files: ReadonlyArray<SourceFile>) {
 
 self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
   const { requestId, ...input } = e.data
-  let results: SpecResults
+  let results: OathResults
   let drifts: ReadonlyArray<Drift> = []
   try {
     _resetBuilder()
@@ -96,7 +96,7 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
     // Only .steps.ts files run eagerly (they register steps as a side effect);
     // plain .ts library files load lazily when a steps file imports them.
     for (const f of input.stepFiles) if (f.path.endsWith('.steps.ts')) loader.load(f)
-    const outcome = await runRegisteredSpec(input.varPath, input.varSource, {
+    const outcome = await runRegisteredOath(input.varPath, input.varSource, {
       exampleIndex: input.exampleIndex,
       baselineStore,
       update: input.update,
@@ -107,7 +107,7 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
     const e2 = err as Error
     results = {
       version: 1,
-      specPath: input.varPath,
+      oathPath: input.varPath,
       sourceHash: hashSource(input.varSource),
       examples: [
         {

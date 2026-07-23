@@ -10,14 +10,14 @@ module Varar
   module Core
     # One example-producing paragraph, as recorded in the baseline.
     BaselineExample = Data.define(:name, :line)
-    # The committed baseline for one spec file.
-    SpecBaseline = Data.define(:source_hash, :examples)
-    # The whole varar.lock.json: every spec keyed by its POSIX path.
-    VarLock = Data.define(:version, :specs)
+    # The committed baseline for one oath file.
+    OathBaseline = Data.define(:source_hash, :examples)
+    # The whole varar.lock.json: every oath keyed by its POSIX path.
+    VarLock = Data.define(:version, :oaths)
     # A paragraph the baseline says was an example and now matches no step.
     Drift = Data.define(:name, :line, :span)
 
-    # Spec drift detection: a paragraph the committed varar.lock.json baseline
+    # Oath drift detection: a paragraph the committed varar.lock.json baseline
     # recorded as an example that now matches no step. Pure, byte-identical to
     # the TS port so varar.lock.json is shared across languages. Port of drift.ts.
     #
@@ -70,8 +70,8 @@ module Varar
         end
       end
 
-      def derive_spec_baseline(source, var_doc, plan)
-        SpecBaseline.new(source_hash: Hash32.hash_source(source), examples: live_examples(var_doc, plan))
+      def derive_oath_baseline(source, var_doc, plan)
+        OathBaseline.new(source_hash: Hash32.hash_source(source), examples: live_examples(var_doc, plan))
       end
 
       # Paragraphs the baseline recorded as examples that now match zero steps.
@@ -111,43 +111,43 @@ module Varar
         drifts.map { |d| Diagnostics.drift_detected(d.name, d.span) }
       end
 
-      # One spec's baseline reconciliation against a BaselineStore. In update
+      # One oath's baseline reconciliation against a BaselineStore. In update
       # mode, accept all drift (re-record, report nothing); otherwise detect
       # drift and rewrite the baseline only on a clean run, so an unacknowledged
       # drift keeps its old entry (and stays red).
-      def reconcile_drift(store, spec_path, source, var_doc, plan, update: false)
+      def reconcile_drift(store, oath_path, source, var_doc, plan, update: false)
         text = store.read
         lock = text ? parse_var_lock(text) : nil
-        baseline = lock ? lock.specs[spec_path] : nil
+        baseline = lock ? lock.oaths[oath_path] : nil
         drifts = update ? [] : detect_drift(baseline, var_doc, plan)
         if update || drifts.empty?
-          specs = lock ? lock.specs.dup : {}
-          specs[spec_path] = derive_spec_baseline(source, var_doc, plan)
-          store.write(stringify_var_lock(VarLock.new(version: 1, specs: specs)))
+          oaths = lock ? lock.oaths.dup : {}
+          oaths[oath_path] = derive_oath_baseline(source, var_doc, plan)
+          store.write(stringify_var_lock(VarLock.new(version: 2, oaths: oaths)))
         end
         drifts
       end
 
       def parse_var_lock(text)
         parsed = JSON.parse(text)
-        return nil unless parsed.is_a?(::Hash) && parsed['version'] == 1
+        return nil unless parsed.is_a?(::Hash) && parsed['version'] == 2
 
-        specs_raw = parsed['specs']
-        return nil unless specs_raw.is_a?(::Hash)
+        oaths_raw = parsed['oaths']
+        return nil unless oaths_raw.is_a?(::Hash)
 
-        specs = {}
-        specs_raw.each do |path, value|
-          baseline = parse_spec_baseline(value)
+        oaths = {}
+        oaths_raw.each do |path, value|
+          baseline = parse_oath_baseline(value)
           return nil if baseline.nil?
 
-          specs[path] = baseline
+          oaths[path] = baseline
         end
-        VarLock.new(version: 1, specs: specs)
+        VarLock.new(version: 2, oaths: oaths)
       rescue JSON::ParserError, TypeError
         nil
       end
 
-      def parse_spec_baseline(value)
+      def parse_oath_baseline(value)
         return nil unless value.is_a?(::Hash)
 
         source_hash = value['sourceHash']
@@ -161,7 +161,7 @@ module Varar
 
           examples << parsed
         end
-        SpecBaseline.new(source_hash: source_hash, examples: examples)
+        OathBaseline.new(source_hash: source_hash, examples: examples)
       end
 
       def parse_baseline_example(value)
@@ -174,19 +174,19 @@ module Varar
         BaselineExample.new(name: name, line: line)
       end
 
-      # Serialize varar.lock.json deterministically: spec paths sorted, examples
-      # in document order, insertion-order keys otherwise (version, specs;
+      # Serialize varar.lock.json deterministically: oath paths sorted, examples
+      # in document order, insertion-order keys otherwise (version, oaths;
       # sourceHash, examples; name, line) — NOT canonical JSON's key sort.
       def stringify_var_lock(lock)
-        specs = {}
-        lock.specs.keys.sort.each do |path|
-          baseline = lock.specs[path]
-          specs[path] = {
+        oaths = {}
+        lock.oaths.keys.sort.each do |path|
+          baseline = lock.oaths[path]
+          oaths[path] = {
             'sourceHash' => baseline.source_hash,
             'examples' => baseline.examples.map { |e| { 'name' => e.name, 'line' => e.line } }
           }
         end
-        CanonicalJson.ordered_stringify({ 'version' => 1, 'specs' => specs })
+        CanonicalJson.ordered_stringify({ 'version' => 2, 'oaths' => oaths })
       end
     end
   end

@@ -49,9 +49,9 @@ export type {
 } from './diagnostics.ts'
 export { ambiguousMatch, driftDetected } from './diagnostics.ts'
 export { compareDocString, DOC_STRING_COLUMN } from './doc-string-diff.ts'
-export type { BaselineExample, Drift, SpecBaseline, VarLock } from './drift.ts'
+export type { BaselineExample, Drift, OathBaseline, VarLock } from './drift.ts'
 export {
-  deriveSpecBaseline,
+  deriveOathBaseline,
   detectDrift,
   driftDiagnostics,
   liveExamples,
@@ -85,7 +85,7 @@ export type {
   StepRegistration,
 } from './registry.ts'
 export { addStep, createRegistry, defineParameterType } from './registry.ts'
-export type { CellFailure, ExampleResult, SpecResults } from './result.ts'
+export type { CellFailure, ExampleResult, OathResults } from './result.ts'
 export type { RunDiagnostic } from './run-diagnostics.ts'
 export { runResultDiagnostics } from './run-diagnostics.ts'
 export { scan } from './scanner.ts'

@@ -1,4 +1,4 @@
-import { runResultDiagnostics, type SpecResults, spanFromOffsets } from '@varar/core'
+import { type OathResults, runResultDiagnostics, spanFromOffsets } from '@varar/core'
 
 export type LspPosition = { readonly line: number; readonly character: number }
 export type LspDiagnostic = {
@@ -9,10 +9,10 @@ export type LspDiagnostic = {
   readonly code?: string // preserved from parse diagnostics; run diagnostics omit it
 }
 
-// Pure: SpecResults + current source → LSP diagnostics (0-based positions).
+// Pure: OathResults + current source → LSP diagnostics (0-based positions).
 // Reuses the core projection; converts each offset range via spanFromOffsets
 // (1-based span → 0-based LSP), matching the existing parse-diagnostic mapping.
-export function runLspDiagnostics(results: SpecResults, source: string): LspDiagnostic[] {
+export function runLspDiagnostics(results: OathResults, source: string): LspDiagnostic[] {
   return runResultDiagnostics(results, source).map((d) => {
     const span = spanFromOffsets(source, d.from, d.to)
     return {
@@ -27,31 +27,31 @@ export function runLspDiagnostics(results: SpecResults, source: string): LspDiag
   })
 }
 
-function isSpecResults(v: unknown): v is SpecResults {
+function isOathResults(v: unknown): v is OathResults {
   if (typeof v !== 'object' || v === null) return false
   const o = v as Record<string, unknown>
   return (
     o.version === 1 &&
-    typeof o.specPath === 'string' &&
+    typeof o.oathPath === 'string' &&
     typeof o.sourceHash === 'string' &&
     Array.isArray(o.examples)
   )
 }
 
 export type RunResultsStore = {
-  // Parse a .var/<spec>.json and key it by its spec's file:// URI. Returns that
+  // Parse a .var/<oath>.json and key it by its oath's file:// URI. Returns that
   // URI, or null if the content is unparseable / the wrong version.
   ingest(varJsonPath: string, content: string): string | null
-  // Forget a .var json (on delete). Returns the spec URI it had mapped, or null.
+  // Forget a .var json (on delete). Returns the oath URI it had mapped, or null.
   remove(varJsonPath: string): string | null
-  get(specUri: string): SpecResults | undefined
-  specUris(): ReadonlyArray<string>
+  get(oathUri: string): OathResults | undefined
+  oathUris(): ReadonlyArray<string>
 }
 
 export function createRunResultsStore(rootUri: string): RunResultsStore {
   const root = rootUri.replace(/\/$/, '')
-  const byUri = new Map<string, SpecResults>()
-  const uriByPath = new Map<string, string>() // varJsonPath → specUri, so deletes resolve
+  const byUri = new Map<string, OathResults>()
+  const uriByPath = new Map<string, string>() // varJsonPath → oathUri, so deletes resolve
   return {
     ingest(varJsonPath, content) {
       let parsed: unknown
@@ -60,20 +60,20 @@ export function createRunResultsStore(rootUri: string): RunResultsStore {
       } catch {
         return null
       }
-      if (!isSpecResults(parsed)) return null
-      const specUri = `${root}/${parsed.specPath}`
-      byUri.set(specUri, parsed)
-      uriByPath.set(varJsonPath, specUri)
-      return specUri
+      if (!isOathResults(parsed)) return null
+      const oathUri = `${root}/${parsed.oathPath}`
+      byUri.set(oathUri, parsed)
+      uriByPath.set(varJsonPath, oathUri)
+      return oathUri
     },
     remove(varJsonPath) {
-      const specUri = uriByPath.get(varJsonPath)
-      if (specUri === undefined) return null
-      byUri.delete(specUri)
+      const oathUri = uriByPath.get(varJsonPath)
+      if (oathUri === undefined) return null
+      byUri.delete(oathUri)
       uriByPath.delete(varJsonPath)
-      return specUri
+      return oathUri
     },
-    get: (specUri) => byUri.get(specUri),
-    specUris: () => [...byUri.keys()],
+    get: (oathUri) => byUri.get(oathUri),
+    oathUris: () => [...byUri.keys()],
   }
 }

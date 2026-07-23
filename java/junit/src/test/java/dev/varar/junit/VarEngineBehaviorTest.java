@@ -101,7 +101,7 @@ class VarEngineBehaviorTest {
     void reRunningOneFailingExampleByUniqueIdAmongThreeExecutesOnlyThatOneExample(@TempDir Path workspace)
             throws Exception {
         EngineDiscoveryResults discovery = discoverMixed(workspace);
-        TestDescriptor fileDescriptor = onlySpecDescriptor(discovery.getEngineDescriptor());
+        TestDescriptor fileDescriptor = onlyOathDescriptor(discovery.getEngineDescriptor());
         List<? extends TestDescriptor> examples = List.copyOf(fileDescriptor.getChildren());
         assertEquals(3, examples.size(), "mixed.md has three examples");
 
@@ -152,7 +152,7 @@ class VarEngineBehaviorTest {
                 .selectors(selectClasspathResource("examplefixture/widgets.md"))
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, bothStepsWorkspace.toString())
                 .discover();
-        TestDescriptor fileDescriptor = onlySpecDescriptor(bothSteps.getEngineDescriptor());
+        TestDescriptor fileDescriptor = onlyOathDescriptor(bothSteps.getEngineDescriptor());
         assertEquals(
                 2,
                 fileDescriptor.getChildren().size(),
@@ -162,15 +162,15 @@ class VarEngineBehaviorTest {
     }
 
     /**
-     * A spec that is a symlink (e.g. a project linking its specs from a shared corpus) must match
+     * An oath that is a symlink (e.g. a project linking its oaths from a shared corpus) must match
      * {@code docsInclude} by its apparent path, not its target's: {@code selectFile(File)}
      * canonicalizes — dereferencing the link into a {@code ../corpus/...} relative path no
      * {@code *.md} glob matches — so {@code resolve(DirectorySelector)} uses the raw-path
      * {@code selectFile(String)} variant instead (mirrors Python's {@code
-     * test_symlinked_spec_matches_by_apparent_path}).
+     * test_symlinked_oath_matches_by_apparent_path}).
      */
     @Test
-    void symlinkedSpecDiscoveredByItsApparentPath(@TempDir Path workspace) throws Exception {
+    void symlinkedOathDiscoveredByItsApparentPath(@TempDir Path workspace) throws Exception {
         Path corpus = Files.createDirectory(workspace.resolve("corpus"));
         Files.writeString(
                 corpus.resolve("widgets.md"),
@@ -185,7 +185,7 @@ class VarEngineBehaviorTest {
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, project.toString())
                 .execute();
 
-        assertEquals(1, results.testEvents().succeeded().count(), "the symlinked spec's example runs");
+        assertEquals(1, results.testEvents().succeeded().count(), "the symlinked oath's example runs");
     }
 
     private static EngineDiscoveryResults discoverMixed(Path workspace) throws Exception {
@@ -223,9 +223,9 @@ class VarEngineBehaviorTest {
                 StandardCharsets.UTF_8);
     }
 
-    private static TestDescriptor onlySpecDescriptor(TestDescriptor engineDescriptor) {
+    private static TestDescriptor onlyOathDescriptor(TestDescriptor engineDescriptor) {
         List<? extends TestDescriptor> children = List.copyOf(engineDescriptor.getChildren());
-        assertEquals(1, children.size(), "expected exactly one spec container");
+        assertEquals(1, children.size(), "expected exactly one oath container");
         return children.get(0);
     }
 }

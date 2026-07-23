@@ -5,13 +5,13 @@ import io.kotest.matchers.shouldBe
 import java.nio.file.Path
 
 /**
- * Executed by the Kotest engine under Surefire: one container (the spec file), one passing example.
+ * Executed by the Kotest engine under Surefire: one container (the oath file), one passing example.
  * Note: Surefire's console summary shows "Tests run: 0" for Kotest specs (a nested-test counting
  * quirk); the surefire-reports XML records the real per-example testcase, and a failing example
  * still fails the build (proven by VarSpecFailureTest).
  *
  * Config comes from `src/test/resources/kotest-smoke/varar.config.json` (docs.include matches every
- * .md file under specs, steps = SmokeSteps).
+ * .md file under oaths, steps = SmokeSteps).
  */
 class VarSpecSmokeTest : VarSpec(root = Path.of("src/test/resources/kotest-smoke"))
 
@@ -26,7 +26,7 @@ class VarSpecSmokeTest : VarSpec(root = Path.of("src/test/resources/kotest-smoke
  * `DslDrivenSpec.add`). `TestDefinition.name` is a `TestName`, whose `.name` is the raw name string
  * as passed to `context(...)` — the `FunSpecRootScope.contextName` prefix ("context ") is stored in
  * `TestName.prefix`, a SEPARATE field, and does not affect `.name`. So `spec.tests()[0].name.name`
- * is exactly `"specs/cukes.md"`, matching the brief's invariant with `tests()` swapped in for the
+ * is exactly `"oaths/cukes.md"`, matching the brief's invariant with `tests()` swapped in for the
  * nonexistent `rootTests()`.
  */
 class VarSpecRegistrationTest :
@@ -39,6 +39,6 @@ class VarSpecRegistrationTest :
             // the engine. The @OptIn keeps the build warning-free.
             @OptIn(io.kotest.common.KotestInternal::class) val roots = spec.tests()
             roots.size shouldBe 1
-            roots[0].name.name shouldBe "specs/cukes.md"
+            roots[0].name.name shouldBe "oaths/cukes.md"
         }
     })

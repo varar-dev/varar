@@ -32,7 +32,7 @@ impl varar::FromSlot for Date {
     }
 }
 
-/// Money notation is spec prose, so it is read and rendered here — the code
+/// Money notation is oath prose, so it is read and rendered here — the code
 /// under test only ever sees [`Money`]. Under £1 renders as "50p", otherwise as
 /// "£2.55".
 fn to_money(raw: &str) -> Money {

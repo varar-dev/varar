@@ -34,7 +34,7 @@ created varar-examples/hello-var/hello-var.md
 created varar-examples/hello-var/hello-var.steps.ts
 ```
 
-`varar.config.json` says which files are specs and which files bind their steps:
+`varar.config.json` says which files are oaths and which files bind their steps:
 
 ```json
 {
@@ -43,7 +43,7 @@ created varar-examples/hello-var/hello-var.steps.ts
 }
 ```
 
-And `hello-var.md` is the spec itself — plain prose with one concrete example:
+And `hello-var.md` is the oath itself — plain prose with one concrete example:
 
 ```markdown
 # Hello, Varar
@@ -83,7 +83,7 @@ Run var again:
 pnpm exec varar run
 ```
 
-Now the oath is *broken* — the spec still says `"Hello, world!"`, but the step
+Now the oath is *broken* — the oath still says `"Hello, world!"`, but the step
 produces something else:
 
 ```
@@ -102,5 +102,5 @@ Revert the change and run once more. The oath is *kept* again:
 
 ## Next
 
-- [Hello Varar: your first spec](/var/docs/start-here/hello-var-your-first-spec/) walks through writing a spec from a blank file.
-- [Wire Varar into your AI agent's instructions](/var/docs/guides/wire-var-into-agent-instructions/) so an agent writes specs first.
+- [Hello Varar: your first oath](/var/docs/start-here/hello-var-your-first-oath/) walks through writing an oath from a blank file.
+- [Wire Varar into your AI agent's instructions](/var/docs/guides/wire-var-into-agent-instructions/) so an agent writes oaths first.

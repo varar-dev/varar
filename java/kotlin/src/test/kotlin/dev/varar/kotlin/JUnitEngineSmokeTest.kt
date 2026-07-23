@@ -10,20 +10,20 @@ import org.junit.platform.engine.discovery.DiscoverySelectors.selectFile
 import org.junit.platform.testkit.engine.EngineTestKit
 
 /**
- * End-to-end smoke: the UNMODIFIED var-junit TestEngine discovers a real .md spec and executes
+ * End-to-end smoke: the UNMODIFIED var-junit TestEngine discovers a real .md oath and executes
  * Kotlin-authored steps (Task 6's top-level-val fixture, loaded through Task 5's StepLoader
  * generalization). Same EngineTestKit + selectFile pattern as var-junit's ConformanceDogfoodTest.
  */
 class JUnitEngineSmokeTest {
 
     // VarFileSelectorResolver relativizes a FileSelector's path against the config root
-    // (var.config.root) before testing it against docsInclude, so a spec written INTO the
+    // (var.config.root) before testing it against docsInclude, so an oath written INTO the
     // workspace just needs the bare filename as its include. On macOS
     // DiscoverySelectors.selectFile(File) canonicalizes (resolving @TempDir's
     // /var -> /private/var symlink), so the root must be canonicalized the same way or the
     // relativization silently mismatches and discovery resolves zero test events.
-    private fun runSpec(dir: Path, body: String) =
-        Files.writeString(dir.resolve("cukes.md"), body).let { spec ->
+    private fun runOath(dir: Path, body: String) =
+        Files.writeString(dir.resolve("cukes.md"), body).let { oath ->
             Files.writeString(
                 dir.resolve("varar.config.json"),
                 """
@@ -35,7 +35,7 @@ class JUnitEngineSmokeTest {
                     .trimIndent(),
             )
             EngineTestKit.engine("varar")
-                .selectors(selectFile(spec.toFile()))
+                .selectors(selectFile(oath.toFile()))
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, dir.toRealPath().toString())
                 .execute()
         }
@@ -43,7 +43,7 @@ class JUnitEngineSmokeTest {
     @Test
     fun `a passing example authored against Kotlin steps succeeds`(@TempDir dir: Path) {
         val results =
-            runSpec(
+            runOath(
                 dir,
                 "# Cukes\n\n## Eating\n\nI have 8 cukes. I eat 3 cukes. I should have 5 cukes left.\n",
             )
@@ -54,7 +54,7 @@ class JUnitEngineSmokeTest {
     @Test
     fun `a mismatching sensor fails the example through the engine`(@TempDir dir: Path) {
         val results =
-            runSpec(
+            runOath(
                 dir,
                 "# Cukes\n\n## Eating\n\nI have 8 cukes. I eat 3 cukes. I should have 99 cukes left.\n",
             )

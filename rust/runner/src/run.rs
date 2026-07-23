@@ -9,8 +9,8 @@ use varar_core::parse::parse;
 use varar_core::plan::{ExecutionPlan, plan};
 use varar_core::registry::Registry;
 
-/// Parse + plan one spec.
-pub fn plan_spec(name: &str, source: &str, registry: &Registry) -> ExecutionPlan {
+/// Parse + plan one oath.
+pub fn plan_oath(name: &str, source: &str, registry: &Registry) -> ExecutionPlan {
     plan(&parse(name, source), registry)
 }
 

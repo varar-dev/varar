@@ -13,9 +13,9 @@ import java.nio.file.Path
 
 /**
  * The Kotest adapter: subclass, point `root` at the directory holding varar.config.json (whose
- * docs.include / docs.exclude / steps drive spec discovery and step loading — identical contract to
+ * docs.include / docs.exclude / steps drive oath discovery and step loading — identical contract to
  * var-junit's ConfigBridge/var.config.root), and every planned example becomes one Kotest test
- * inside a per-spec-file container. All discovery/loading/ planning/failure-rendering is delegated
+ * inside a per-oath-file container. All discovery/loading/ planning/failure-rendering is delegated
  * to var-runner — this class contains zero pipeline logic.
  *
  * v1 defers (matching var-pytest): no per-example fixture lifecycle, no plan-diagnostic surfacing
@@ -36,16 +36,16 @@ abstract class VarSpec(root: Path = Path.of(".")) : FunSpec() {
             System.getProperty("varar.update") == "true" ||
                 System.getenv("VARAR_UPDATE") == "1" ||
                 System.getenv("VARAR_UPDATE") == "true"
-        for (specPath in Discovery.findSpecs(config.docsInclude(), config.docsExclude(), root)) {
+        for (oathPath in Discovery.findOaths(config.docsInclude(), config.docsExclude(), root)) {
             val rel =
                 root
                     .toAbsolutePath()
                     .normalize()
-                    .relativize(specPath.toAbsolutePath().normalize())
+                    .relativize(oathPath.toAbsolutePath().normalize())
                     .toString()
                     .replace('\\', '/')
-            val source = Files.readString(specPath)
-            val plan = Run.planSpec(rel, source, loaded.registry())
+            val source = Files.readString(oathPath)
+            val plan = Run.planOath(rel, source, loaded.registry())
             val runs = Run.examplesWithRuns(plan, loaded.createContext(), Run.RecordingReporter())
             // Reconcile drift: a clean run records/updates varar.lock.json; a paragraph that was
             // an example and no longer matches becomes a failing test (accept with -Dvar.update).

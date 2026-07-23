@@ -3,7 +3,7 @@
 Gem::Specification.new do |s|
   s.name = 'varar-rspec'
   s.version = '0.7.0'
-  s.summary = 'Markdown-native BDD — run Markdown specs as RSpec examples'
+  s.summary = 'Markdown-native BDD — run Markdown oaths as RSpec examples'
   s.description = 'RSpec adapter: one selectable example per Markdown example, with a drift gate.'
   s.authors = ['Aslak Hellesøy']
   s.email = ['aslak@oselvar.com']

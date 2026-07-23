@@ -3,18 +3,18 @@ import {
   detectDrift,
   driftDiagnostics,
   isCellMismatchError,
+  type OathBaseline,
   type Reporter,
-  type SpecBaseline,
   toFailure,
 } from '@varar/core'
-import { examplesWithRuns, planSpec } from '@varar/runner'
+import { examplesWithRuns, planOath } from '@varar/runner'
 import { buildRegistry, contextFactory } from '@varar/varar/registry'
 import { test } from 'vitest'
 
 export type CollectPorts = {
   // Defaults to registering one failing vitest test per diagnostic. The
   // registration lives HERE (not in the generated module) so editors doing
-  // static AST test discovery on the transformed spec never see a phantom
+  // static AST test discovery on the transformed oath never see a phantom
   // `test(...)` callsite — only the real per-example ones.
   readonly reporter?: Reporter
   // The number of examples the build-time static plan produced. When the
@@ -22,12 +22,12 @@ export type CollectPorts = {
   // see appeared or vanished), a failing guard test is registered instead of
   // letting the suites silently diverge.
   readonly expectedCount?: number
-  // This spec's committed drift baseline (from varar.lock.json), injected by the
+  // This oath's committed drift baseline (from varar.lock.json), injected by the
   // plugin. When present, drift is detected and reported as a diagnostic (a
   // failing `var:diagnostic:drift` test) — a read-only gate. The baseline is
   // written only by `varar run`; VARAR_UPDATE=1 skips the gate so you can
   // re-record it there without vitest going red first.
-  readonly baseline?: SpecBaseline | null
+  readonly baseline?: OathBaseline | null
 }
 
 export type CollectedExample = {
@@ -38,7 +38,7 @@ export type CollectedExample = {
 }
 
 // Build the registry from the step modules the virtual module imported, plan
-// the spec, and hand back one lazily-executed closure per example. The
+// the oath, and hand back one lazily-executed closure per example. The
 // virtual module registers one STATIC `test("literal name", ...)` per example
 // — so editors can discover names and locations without running anything —
 // and looks each body up here by index via `vararTestBody`.
@@ -54,7 +54,7 @@ export function collectVararExamples(
       }),
   }
   const registry = buildRegistry()
-  const p = planSpec(path, source, registry)
+  const p = planOath(path, source, registry)
   // Read-only drift gate: a paragraph the baseline recorded as an example that
   // now matches no step surfaces as a drift diagnostic (a failing test) unless
   // VARAR_UPDATE is set (then re-record via `varar run --update`).
@@ -72,10 +72,10 @@ export function collectVararExamples(
     run,
   }))
   if (ports.expectedCount !== undefined && examples.length !== ports.expectedCount) {
-    test('var:stale-spec-transform', () => {
+    test('var:stale-oath-transform', () => {
       throw new Error(
         `expected ${ports.expectedCount} example(s) in ${path} but the runtime planned ` +
-          `${examples.length} — the step definitions changed after this spec was transformed; re-run the suite`,
+          `${examples.length} — the step definitions changed after this oath was transformed; re-run the suite`,
       )
     })
   }
@@ -139,9 +139,9 @@ export function vararTestBody(
     const ex = examples[index]
     if (!ex || ex.name !== name) {
       throw new Error(
-        `stale spec transform: expected example #${index} of ${path} to be named ` +
+        `stale oath transform: expected example #${index} of ${path} to be named ` +
           `${JSON.stringify(name)}${ex ? `, found ${JSON.stringify(ex.name)}` : ', but it no longer exists'}. ` +
-          'The step definitions changed after this spec was transformed — re-run the suite.',
+          'The step definitions changed after this oath was transformed — re-run the suite.',
       )
     }
     const lines = ex.lines

@@ -6,8 +6,8 @@ import (
 	"github.com/varar-dev/varar/go/core"
 )
 
-// PlanSpec parses + plans one spec.
-func PlanSpec(name, source string, registry core.Registry) core.ExecutionPlan {
+// PlanOath parses + plans one oath.
+func PlanOath(name, source string, registry core.Registry) core.ExecutionPlan {
 	return core.Plan(core.Parse(name, source), registry)
 }
 

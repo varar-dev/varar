@@ -39,7 +39,7 @@ register it via `META-INF/services/org.junit.platform.engine.TestEngine`
 - **Discovery** (`discover(EngineDiscoveryRequest, UniqueId)`): resolves the platform's
   standard selectors (classpath root, package, file, directory, unique-id, URI) into a
   `TestDescriptor` tree, built **before** any test runs.
-- **The descriptor tree**: one container node per spec file, one leaf `Node<Context>`
+- **The descriptor tree**: one container node per oath file, one leaf `Node<Context>`
   per example — each independently addressable by `UniqueId`, so IDEs/Maven/Gradle can
   select, filter, and report on individual examples exactly like they do individual
   `@Test` methods.
@@ -48,7 +48,7 @@ register it via `META-INF/services/org.junit.platform.engine.TestEngine`
 
 **B. Jupiter `@TestFactory` dynamic tests.** Ship a JUnit Jupiter extension/base class
 where a user (or a generated test class) has one `@TestFactory` method that scans
-`.md` specs and returns a `Stream<DynamicNode>` (`DynamicContainer`/`DynamicTest`) — one
+`.md` oaths and returns a `Stream<DynamicNode>` (`DynamicContainer`/`DynamicTest`) — one
 `DynamicTest` per example. Runs on the stock Jupiter engine everyone already has; no
 custom `TestEngine`, no discovery SPI to implement.
 
@@ -82,7 +82,7 @@ this project's cross-language adapter contract.
   is the entire setup (matches `var-pytest`'s `pytest11` entry-point ergonomics —
   "add the dependency" is the whole integration story, no user wiring).
 - Engine id: `"var"`.
-- Descriptor tree: `VarEngineDescriptor` (root) → one container per discovered spec file
+- Descriptor tree: `VarEngineDescriptor` (root) → one container per discovered oath file
   → one leaf per `PlannedExample` (flat — var has no scenario-outline/rule nesting like
   Gherkin, so the tree is shallower than Cucumber's).
 - Discovery selectors to support at minimum: `ClasspathRootSelector`,
@@ -91,7 +91,7 @@ this project's cross-language adapter contract.
   `cucumber-junit-platform-engine`'s `DiscoverySelectorResolver` supports, adapted to
   `var`'s glob-based `vars`/`steps` config instead of Cucumber's `glue`/`features`
   properties.
-- Leaf execution delegates to `var-runner` (`run_spec`/`plan_spec` equivalents), reusing
+- Leaf execution delegates to `var-runner` (`run_oath`/`plan_oath` equivalents), reusing
   the pure core's diffs/`to_failure` for span-anchored failure messages — same contract
   as every other adapter.
 - Config surface: a `var.properties`-style JUnit Platform configuration parameter block

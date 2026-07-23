@@ -3,7 +3,7 @@
 Gem::Specification.new do |s|
   s.name = 'varar-minitest'
   s.version = '0.7.0'
-  s.summary = 'Markdown-native BDD — run Markdown specs as Minitest tests'
+  s.summary = 'Markdown-native BDD — run Markdown oaths as Minitest tests'
   s.description = 'Minitest adapter: one selectable test per Markdown example, with a drift gate.'
   s.authors = ['Aslak Hellesøy']
   s.email = ['aslak@oselvar.com']

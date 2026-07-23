@@ -219,7 +219,7 @@ All phases done, every port's gate re-run green (807 files changed):
 - **Internal code identifiers** (`VarConfig`, `loadVarConfig`, `parseVarLock`,
   the website `var-lang`/`var-palette` localStorage keys) — not user-facing
   coordinates; left to avoid churn/risk.
-- **Test data** `Vár`/`vár` in specs, step files, and conformance goldens
+- **Test data** `Vár`/`vár` in oaths, step files, and conformance goldens
   (golden-compared — not branding).
 - The dated **`doc/superpowers` + `doc/adr` archive** and `CHANGELOG.md` —
   historical records.

@@ -41,7 +41,7 @@ export const EMPH_REGEXP =
   /\*\*\*([^*]+)\*\*\*|___([^_]+)___|\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*|_([^_]+)_/
 
 // Seed Varar's own built-in parameter types (beyond cucumber-expressions'
-// int/float/string/word). Shared by every port so specs match identically.
+// int/float/string/word). Shared by every port so oaths match identically.
 function seedBuiltins(registry: Registry): Registry {
   return defineParameterType(registry, {
     name: 'emph',

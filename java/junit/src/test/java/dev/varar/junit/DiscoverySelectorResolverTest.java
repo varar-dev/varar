@@ -48,7 +48,7 @@ import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
 class DiscoverySelectorResolverTest {
 
     @Test
-    void resolvesOneContainerPerMatchingSpecResource(@TempDir Path workspace) throws Exception {
+    void resolvesOneContainerPerMatchingOathResource(@TempDir Path workspace) throws Exception {
         Files.writeString(workspace.resolve("varar.config.json"), """
                 { "docs": { "include": ["discoveryfixture/**/*.md"], "exclude": ["**/excluded.md"] } }
                 """, StandardCharsets.UTF_8);
@@ -60,17 +60,17 @@ class DiscoverySelectorResolverTest {
         TestDescriptor engineDescriptor = new VarTestEngine().discover(request, UniqueId.forEngine("varar"));
         List<? extends TestDescriptor> children = List.copyOf(engineDescriptor.getChildren());
 
-        assertEquals(1, children.size(), "expected exactly one container for the included spec");
+        assertEquals(1, children.size(), "expected exactly one container for the included oath");
 
-        TestDescriptor specDescriptor = children.get(0);
-        assertEquals(TestDescriptor.Type.CONTAINER, specDescriptor.getType());
-        assertEquals("discoveryfixture/included.md", specDescriptor.getDisplayName());
+        TestDescriptor oathDescriptor = children.get(0);
+        assertEquals(TestDescriptor.Type.CONTAINER, oathDescriptor.getType());
+        assertEquals("discoveryfixture/included.md", oathDescriptor.getDisplayName());
 
-        UniqueId.Segment lastSegment = specDescriptor.getUniqueId().getLastSegment();
-        assertEquals("spec", lastSegment.getType());
+        UniqueId.Segment lastSegment = oathDescriptor.getUniqueId().getLastSegment();
+        assertEquals("oath", lastSegment.getType());
         assertEquals("discoveryfixture/included.md", lastSegment.getValue());
 
-        assertTrue(specDescriptor.getChildren().isEmpty(), "Task 9 creates containers only, no example leaves yet");
+        assertTrue(oathDescriptor.getChildren().isEmpty(), "Task 9 creates containers only, no example leaves yet");
     }
 
     @Test

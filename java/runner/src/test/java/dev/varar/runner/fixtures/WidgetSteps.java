@@ -7,7 +7,7 @@ import dev.varar.Steps;
 /**
  * A small standalone (top-level, own-file) {@link StepDefinitions} fixture for {@code
  * RunTest} — registers one {@code context} step that sets a widget count and one {@code
- * sensor} step that reports it, so a real spec can be planned and run end to end
+ * sensor} step that reports it, so a real oath can be planned and run end to end
  * through {@link dev.varar.runner.Run#examplesWithRuns}. Deliberately its own
  * top-level file (see {@code AlphaSteps}' javadoc for why: {@code RegistryRegistrar}'s
  * {@code StackWalker}-captured {@code expressionSourceFile} must be this file's own

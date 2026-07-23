@@ -30,22 +30,22 @@ func TestLeadingDoublestarMatchesZeroOrMoreSegments(t *testing.T) {
 }
 
 func TestNestedAndTrailingDoublestar(t *testing.T) {
-	if !runner.GlobToRegex("specs/**/*.md").MatchString("specs/a.md") {
-		t.Error("specs/a.md")
+	if !runner.GlobToRegex("oaths/**/*.md").MatchString("oaths/a.md") {
+		t.Error("oaths/a.md")
 	}
-	if !runner.GlobToRegex("specs/**/*.md").MatchString("specs/x/a.md") {
-		t.Error("specs/x/a.md")
+	if !runner.GlobToRegex("oaths/**/*.md").MatchString("oaths/x/a.md") {
+		t.Error("oaths/x/a.md")
 	}
-	wip := runner.GlobToRegex("specs/wip/**")
-	if !wip.MatchString("specs/wip") {
-		t.Error("specs/wip")
+	wip := runner.GlobToRegex("oaths/wip/**")
+	if !wip.MatchString("oaths/wip") {
+		t.Error("oaths/wip")
 	}
-	if !wip.MatchString("specs/wip/draft.md") {
-		t.Error("specs/wip/draft.md")
+	if !wip.MatchString("oaths/wip/draft.md") {
+		t.Error("oaths/wip/draft.md")
 	}
 }
 
-func TestFindSpecsHonoursIncludeAndExclude(t *testing.T) {
+func TestFindOathsHonoursIncludeAndExclude(t *testing.T) {
 	root := t.TempDir()
 	os.WriteFile(filepath.Join(root, "a.md"), []byte("x"), 0o644)
 	os.WriteFile(filepath.Join(root, "README.md"), []byte("x"), 0o644)
@@ -53,13 +53,13 @@ func TestFindSpecsHonoursIncludeAndExclude(t *testing.T) {
 	os.WriteFile(filepath.Join(root, "sub", "b.md"), []byte("x"), 0o644)
 
 	flat := config.VarConfig{DocsInclude: []string{"*.md"}, DocsExclude: []string{"README.md"}}
-	specs := runner.FindSpecs(flat, root)
-	if len(specs) != 1 || filepath.Base(specs[0]) != "a.md" {
-		t.Errorf("flat: got %v", specs)
+	oaths := runner.FindOaths(flat, root)
+	if len(oaths) != 1 || filepath.Base(oaths[0]) != "a.md" {
+		t.Errorf("flat: got %v", oaths)
 	}
 
 	recursive := config.VarConfig{DocsInclude: []string{"**/*.md"}, DocsExclude: []string{"README.md"}}
-	if got := runner.FindSpecs(recursive, root); len(got) != 2 {
+	if got := runner.FindOaths(recursive, root); len(got) != 2 {
 		t.Errorf("recursive: got %v", got)
 	}
 }

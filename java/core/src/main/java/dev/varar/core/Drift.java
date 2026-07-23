@@ -12,13 +12,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Spec drift detection — port of {@code var-core/src/drift.ts}.
+ * Oath drift detection — port of {@code var-core/src/drift.ts}.
  *
  * <p>A paragraph the committed {@code varar.lock.json} baseline recorded as an example that now
  * matches no step. Pure over the existing {@link Ast.VarDoc} + {@link Plan.ExecutionPlan}, and
  * byte-identical to the TypeScript and Python ports so a baseline written by one runs green under
  * the others: the same FNV-1a fingerprint ({@link Hash}), the same {@code varar.lock.json} bytes
- * (insertion-ordered keys, sorted spec paths, raw non-ASCII), and the same similarity semantics.
+ * (insertion-ordered keys, sorted oath paths, raw non-ASCII), and the same similarity semantics.
  */
 public final class Drift {
 
@@ -35,17 +35,17 @@ public final class Drift {
     /** One example-producing paragraph, as recorded in the baseline. */
     public record BaselineExample(String name, int line) {}
 
-    /** The committed baseline for one spec file. */
-    public record SpecBaseline(String sourceHash, List<BaselineExample> examples) {
-        public SpecBaseline {
+    /** The committed baseline for one oath file. */
+    public record OathBaseline(String sourceHash, List<BaselineExample> examples) {
+        public OathBaseline {
             examples = List.copyOf(examples);
         }
     }
 
-    /** The whole {@code varar.lock.json}: every spec keyed by its POSIX path. */
-    public record VarLock(int version, Map<String, SpecBaseline> specs) {
+    /** The whole {@code varar.lock.json}: every oath keyed by its POSIX path. */
+    public record VarLock(int version, Map<String, OathBaseline> oaths) {
         public VarLock {
-            specs = Collections.unmodifiableMap(new LinkedHashMap<>(specs));
+            oaths = Collections.unmodifiableMap(new LinkedHashMap<>(oaths));
         }
     }
 
@@ -114,9 +114,9 @@ public final class Drift {
         return out;
     }
 
-    /** The full baseline record for a spec: fingerprint plus live examples. */
-    public static SpecBaseline deriveSpecBaseline(String source, Ast.VarDoc varDoc, Plan.ExecutionPlan plan) {
-        return new SpecBaseline(Hash.hashSource(source), liveExamples(varDoc, plan));
+    /** The full baseline record for an oath: fingerprint plus live examples. */
+    public static OathBaseline deriveOathBaseline(String source, Ast.VarDoc varDoc, Plan.ExecutionPlan plan) {
+        return new OathBaseline(Hash.hashSource(source), liveExamples(varDoc, plan));
     }
 
     /**
@@ -125,7 +125,7 @@ public final class Drift {
      * name scores 1; ties break toward the nearest line). No sourceHash short-circuit — a step
      * rename leaves the hash untouched.
      */
-    public static List<Drifted> detectDrift(SpecBaseline baseline, Ast.VarDoc varDoc, Plan.ExecutionPlan plan) {
+    public static List<Drifted> detectDrift(OathBaseline baseline, Ast.VarDoc varDoc, Plan.ExecutionPlan plan) {
         List<Drifted> drifts = new ArrayList<>();
         if (baseline == null) return drifts;
         List<Ast.Example> candidates = varDoc.examples();
@@ -167,27 +167,27 @@ public final class Drift {
     }
 
     /**
-     * One spec's baseline reconciliation against a {@link BaselineStore}. {@code update} accepts
+     * One oath's baseline reconciliation against a {@link BaselineStore}. {@code update} accepts
      * all drift (re-record, report nothing). Otherwise detect drift; rewrite the baseline only on a
      * clean run so an unacknowledged drift keeps its old entry (and stays red).
      */
     public static List<Drifted> reconcileDrift(
             BaselineStore store,
-            String specPath,
+            String oathPath,
             String source,
             Ast.VarDoc varDoc,
             Plan.ExecutionPlan plan,
             boolean update) {
         String text = store.read();
         VarLock lock = text != null ? parseVarLock(text) : null;
-        SpecBaseline baseline = lock != null ? lock.specs().get(specPath) : null;
+        OathBaseline baseline = lock != null ? lock.oaths().get(oathPath) : null;
         List<Drifted> drifts = update ? new ArrayList<>() : detectDrift(baseline, varDoc, plan);
         if (update || drifts.isEmpty()) {
-            SpecBaseline next = deriveSpecBaseline(source, varDoc, plan);
-            Map<String, SpecBaseline> specs = new LinkedHashMap<>();
-            if (lock != null) specs.putAll(lock.specs());
-            specs.put(specPath, next);
-            store.write(stringifyVarLock(new VarLock(1, specs)));
+            OathBaseline next = deriveOathBaseline(source, varDoc, plan);
+            Map<String, OathBaseline> oaths = new LinkedHashMap<>();
+            if (lock != null) oaths.putAll(lock.oaths());
+            oaths.put(oathPath, next);
+            store.write(stringifyVarLock(new VarLock(2, oaths)));
         }
         return drifts;
     }
@@ -195,22 +195,22 @@ public final class Drift {
     // ---- serialize (byte-identical to JSON.stringify(...,null,2)+"\n") ------
 
     /**
-     * Serializes {@code varar.lock.json} deterministically: {@code version} then {@code specs} (spec
+     * Serializes {@code varar.lock.json} deterministically: {@code version} then {@code oaths} (oath
      * paths sorted), examples in document order, two-space indent, trailing newline, non-ASCII
      * raw. NOT {@link CanonicalJson} (which sorts every key) — the lockfile keeps insertion order.
      */
     public static String stringifyVarLock(VarLock lock) {
-        List<String> paths = new ArrayList<>(lock.specs().keySet());
+        List<String> paths = new ArrayList<>(lock.oaths().keySet());
         Collections.sort(paths);
         StringBuilder sb = new StringBuilder();
-        sb.append("{\n  \"version\": 1,\n  \"specs\": ");
+        sb.append("{\n  \"version\": 2,\n  \"oaths\": ");
         if (paths.isEmpty()) {
             sb.append("{}");
         } else {
             sb.append("{\n");
             for (int p = 0; p < paths.size(); p++) {
                 String path = paths.get(p);
-                SpecBaseline b = lock.specs().get(path);
+                OathBaseline b = lock.oaths().get(path);
                 sb.append("    ");
                 writeString(sb, path);
                 sb.append(": {\n      \"sourceHash\": ");
@@ -277,18 +277,18 @@ public final class Drift {
             return null;
         }
         if (!(parsed instanceof Map<?, ?> obj)) return null;
-        if (!(obj.get("version") instanceof Number version) || version.intValue() != 1) return null;
-        if (!(obj.get("specs") instanceof Map<?, ?> specsRaw)) return null;
-        Map<String, SpecBaseline> specs = new LinkedHashMap<>();
-        for (Map.Entry<?, ?> entry : specsRaw.entrySet()) {
-            SpecBaseline b = parseSpecBaseline(entry.getValue());
+        if (!(obj.get("version") instanceof Number version) || version.intValue() != 2) return null;
+        if (!(obj.get("oaths") instanceof Map<?, ?> oathsRaw)) return null;
+        Map<String, OathBaseline> oaths = new LinkedHashMap<>();
+        for (Map.Entry<?, ?> entry : oathsRaw.entrySet()) {
+            OathBaseline b = parseOathBaseline(entry.getValue());
             if (b == null) return null;
-            specs.put((String) entry.getKey(), b);
+            oaths.put((String) entry.getKey(), b);
         }
-        return new VarLock(1, specs);
+        return new VarLock(2, oaths);
     }
 
-    private static SpecBaseline parseSpecBaseline(Object value) {
+    private static OathBaseline parseOathBaseline(Object value) {
         if (!(value instanceof Map<?, ?> map)) return null;
         if (!(map.get("sourceHash") instanceof String sourceHash)) return null;
         if (!(map.get("examples") instanceof List<?> examplesRaw)) return null;
@@ -300,7 +300,7 @@ public final class Drift {
             }
             examples.add(new BaselineExample(name, line.intValue()));
         }
-        return new SpecBaseline(sourceHash, examples);
+        return new OathBaseline(sourceHash, examples);
     }
 
     /** A tiny recursive-descent JSON reader — enough for varar.lock.json, throws on malformed. */

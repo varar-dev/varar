@@ -22,7 +22,7 @@ Unlike JUnit (which exposes a discovery SPI) or pytest (which exposes a
 collects non-Ruby files**. Both discover tests by loading Ruby files and
 observing the example/`Test`-subclass structure those files declare at load
 time. So the mechanism for both is necessarily "a Ruby entry-point file that,
-when loaded, reads `var.config.json`, plans every matched spec through
+when loaded, reads `var.config.json`, plans every matched oath through
 `var-runner`, and *generates* one framework-native test per example" — the same
 generate-at-load-time shape `var-unittest` and `var-kotest` already use, rather
 than pytest's file-collection shape.
@@ -35,12 +35,12 @@ than pytest's file-collection shape.
 `spec/var_spec.rb`: `Oselvar::Var::RSpec.generate`). At load time it:
 
 - reads `var.config.json` via `var-config`, loads the step files via
-  `var-runner`, and finds + plans every matching `.md` spec;
-- defines **one `RSpec.describe` per spec file**, and within it **one `it` per
+  `var-runner`, and finds + plans every matching `.md` oath;
+- defines **one `RSpec.describe` per oath file**, and within it **one `it` per
   planned example** (header-bound table rows are separate examples), preserving
   the example's scope-stack headings as nested `describe`/`context`;
 - anchors each `it` to its `.md` source line via example metadata
-  (`location`/`absolute_file_path` set to `"<spec>.md:<startLine>"`) so IDE/CLI
+  (`location`/`absolute_file_path` set to `"<oath>.md:<startLine>"`) so IDE/CLI
   "run this example" and reporting point at the Markdown, not the generator
   frame — the RSpec equivalent of `var-junit`'s `UniqueId`/`TestSource` care;
 - runs the example through the core executor inside the `it` block; on a `var`
@@ -51,11 +51,11 @@ than pytest's file-collection shape.
 Plan-stage diagnostics (`ambiguous-match`, `error-fence-without-step`,
 `drift`) surface as failing marker examples so they are reportable, not silent.
 
-### Minitest — `generate_tests` injecting one `Test` subclass per spec
+### Minitest — `generate_tests` injecting one `Test` subclass per oath
 
 `oselvar-var-minitest` exposes `Oselvar::Var::Minitest.generate_tests(namespace)`
 (invoked from a `test/var_test.rb`). It is a near-direct port of `var-unittest`:
-at load time it reads config, loads steps, and for each matched spec injects a
+at load time it reads config, loads steps, and for each matched oath injects a
 **`Minitest::Test` subclass** into the caller's namespace with **one `test_*`
 method per example** (identifier-safe method names; the real example name in the
 failure message and, where supported, the reported description). A `var`
@@ -67,7 +67,7 @@ Minitest's `-n`/`--name` filter.
 
 Both adapters are thin: discovery, planning, drift reconciliation, and failure
 rendering all live in `var-runner`/`var-core`. Neither contains pipeline logic.
-Both gate on drift — reconciling each spec against `var.lock.json` through the
+Both gate on drift — reconciling each oath against `var.lock.json` through the
 runner's filesystem `BaselineStore`, surfacing a `drift` diagnostic that fails
 the suite, writing the baseline on a clean run, and honouring an
 `--update`/acknowledgment path ([ADR 0002](0002-drift-detection-and-acknowledgment.md)).

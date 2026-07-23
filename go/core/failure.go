@@ -89,7 +89,7 @@ func bareFailure(error StepError) StepFailure {
 //
 // Every port quotes doc-string mismatch messages identically because the text is
 // matched by substring in an `error` fence — a port that quotes differently fails a
-// spec its siblings pass. Escaping only \\, " and \n is not enough: doc strings
+// oath its siblings pass. Escaping only \\, " and \n is not enough: doc strings
 // routinely carry tab-indented code. encoding/json is not usable here because it
 // also escapes <, > and & by default.
 func quote(s string) string {

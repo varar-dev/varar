@@ -1,11 +1,11 @@
 # Varar examples
 
-Small, standalone sample projects that run Markdown specs as tests with
+Small, standalone sample projects that run Markdown oaths as tests with
 [Varar](https://varar.dev) — one project per language/test-framework
 combination. Each is a complete project you can copy as the starting point
 for your own.
 
-The `.md` files at each project's root are the specs — plain Markdown prose
+The `.md` files at each project's root are the oaths — plain Markdown prose
 that runs as tests. They are first-class: readable by anyone, owned by the
 whole team, and checked against the code on every test run.
 
@@ -26,7 +26,7 @@ whole team, and checked against the code on every test run.
 
 `typescript-vitest` implements the full example set; the other projects
 implement a feature-covering subset — `hello-var` (basic steps),
-`deep-thought` (a one-sensor spec), `tables-and-docstrings` (whole tables +
+`deep-thought` (a one-sensor oath), `tables-and-docstrings` (whole tables +
 doc strings), `yahtzee` and `roman-numerals` (header-bound table rows), and
 `library` (custom parameter types that pair `parse` with `format`, so a
 mismatch renders in the document's own notation — money, dates, and an

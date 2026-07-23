@@ -1,11 +1,11 @@
 # Varar sample: Kotlin + Kotest + Gradle
 
-A small, standalone sample project that runs Markdown specs as tests with
+A small, standalone sample project that runs Markdown oaths as tests with
 [Varar](https://varar.dev), using the Kotlin DSL (`var-kotlin`) and the
 Kotest adapter (`var-kotest`). Copy it as the starting point for your own
 project.
 
-The `.md` files at the project root are the specs — they run as tests.
+The `.md` files at the project root are the oaths — they run as tests.
 
 ## Run it
 
@@ -13,12 +13,12 @@ The `.md` files at the project root are the specs — they run as tests.
 ./gradlew test
 ```
 
-Each example in the Markdown specs becomes one Kotest test.
+Each example in the Markdown oaths becomes one Kotest test.
 
 ## How it fits together
 
 - **`varar.config.json`** is the single source of truth: `docs.include` globs
-  the Markdown specs, and `steps` lists the fully-qualified step-definition
+  the Markdown oaths, and `steps` lists the fully-qualified step-definition
   classes. For a Kotlin file with a top-level `val steps = steps(...)`,
   that's the file-facade class pinned by `@file:JvmName(...)`.
 - **`src/test/kotlin/examples/*.steps.kt`** define the steps with

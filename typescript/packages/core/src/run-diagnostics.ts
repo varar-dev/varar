@@ -1,5 +1,5 @@
 import { hashSource } from './hash.ts'
-import type { SpecResults } from './result.ts'
+import type { OathResults } from './result.ts'
 
 // One renderable failure: a source-offset range plus a human message. Offsets
 // are absolute source positions (== CodeMirror positions); `to` is exclusive.
@@ -25,11 +25,11 @@ function lineRange(source: string, line: number): { from: number; to: number } {
   return { from, to: nl === -1 ? source.length : nl }
 }
 
-// Project a SpecResults onto offset-based diagnostics against the CURRENT
+// Project an OathResults onto offset-based diagnostics against the CURRENT
 // source. If the source changed since the run (hash mismatch) the offsets no
 // longer apply, so emit nothing.
 export function runResultDiagnostics(
-  results: SpecResults,
+  results: OathResults,
   source: string,
 ): ReadonlyArray<RunDiagnostic> {
   if (hashSource(source) !== results.sourceHash) return []

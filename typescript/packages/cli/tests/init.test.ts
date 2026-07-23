@@ -14,7 +14,7 @@ test('scaffolds varar.config.json and an example .md + steps file', async () => 
     expect(existsSync(join(dir, 'varar-examples/deep-thought.md'))).toBe(true)
     expect(existsSync(join(dir, 'varar-examples/steps/deep-thought.steps.ts'))).toBe(true)
     const exampleMd = readFileSync(join(dir, 'varar-examples/deep-thought.md'), 'utf8')
-    // The scaffolded spec is plain prose — no Given/When/Then keyword ceremony.
+    // The scaffolded oath is plain prose — no Given/When/Then keyword ceremony.
     expect(exampleMd).not.toMatch(/^\s*(Given|When|Then)\b/m)
     const stepsTs = readFileSync(join(dir, 'varar-examples/steps/deep-thought.steps.ts'), 'utf8')
     expect(stepsTs).toContain('steps')

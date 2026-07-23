@@ -5,8 +5,8 @@ import java.util.List;
 /**
  * Immutable run-result records — port of {@code var-core/src/result.ts}.
  *
- * <p>{@code SpecResults} is the persisted run result for one spec file: the {@code
- * .var/<spec>.json} file IS a serialized {@code SpecResults}.
+ * <p>{@code OathResults} is the persisted run result for one oath file: the {@code
+ * .var/<oath>.json} file IS a serialized {@code OathResults}.
  */
 public final class Result {
 
@@ -55,9 +55,9 @@ public final class Result {
         }
     }
 
-    /** The persisted run result for one spec file. */
-    public record SpecResults(int version, String specPath, String sourceHash, List<ExampleResult> examples) {
-        public SpecResults {
+    /** The persisted run result for one oath file. */
+    public record OathResults(int version, String oathPath, String sourceHash, List<ExampleResult> examples) {
+        public OathResults {
             examples = List.copyOf(examples);
         }
     }

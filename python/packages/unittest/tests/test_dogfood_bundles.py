@@ -19,7 +19,7 @@ _BUNDLES = Path(__file__).resolve().parents[4] / "conformance" / "bundles"
 assert _BUNDLES.is_dir(), f"bundles dir not found: {_BUNDLES}"
 
 VAR_CONFIG = """\
-{"docs": {"include": ["specs/**/*.md"], "exclude": []},
+{"docs": {"include": ["oaths/**/*.md"], "exclude": []},
  "steps": ["steps/**/*.steps.py"]}
 """
 
@@ -27,7 +27,7 @@ VAR_CONFIG = """\
 def _setup_bundle(harness, bundle_name: str, steps_filename: str) -> None:
     bundle_dir = _BUNDLES / bundle_name
     harness.write("varar.config.json", VAR_CONFIG)
-    harness.write("specs/example.md", (bundle_dir / "example.md").read_text(encoding="utf-8"))
+    harness.write("oaths/example.md", (bundle_dir / "example.md").read_text(encoding="utf-8"))
     harness.write(
         f"steps/{steps_filename}", (bundle_dir / steps_filename).read_text(encoding="utf-8")
     )
