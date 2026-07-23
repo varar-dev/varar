@@ -7,7 +7,7 @@ import {
   lateFee,
   type Money,
   mayBorrow,
-} from '../src/library'
+} from '../library'
 
 const { stimulus, sensor } = steps(() => ({
   loans: [] as ReadonlyArray<Loan>,

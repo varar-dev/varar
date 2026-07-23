@@ -5,7 +5,7 @@ Small, standalone sample projects that run Markdown oaths as tests with
 combination. Each is a complete project you can copy as the starting point
 for your own.
 
-The `.md` files at each project's root are the oaths — plain Markdown prose
+The `.md` files in each project's `varar/` directory are the oaths — plain Markdown prose
 that runs as tests. They are first-class: readable by anyone, owned by the
 whole team, and checked against the code on every test run.
 
@@ -36,8 +36,8 @@ emphasised title where the markup *is* the parameter).
 
 The source of truth is the [`varar-dev/varar`](https://github.com/varar-dev/varar)
 monorepo's `examples/` directory, where the projects run against the local
-build on every push (in there, the subset projects' `.md` files are symlinks
-to the `typescript-vitest` originals). On every release they are synced —
+build on every push (in there, the subset projects' `varar/*.md` files are
+symlinks to the `typescript-vitest` originals). On every release they are synced —
 symlinks resolved, versions pinned to the release — to
 [`varar-dev/varar-examples`](https://github.com/varar-dev/varar-examples). Send
 changes to `varar-dev/varar`.

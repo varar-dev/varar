@@ -5,7 +5,7 @@ A small, standalone sample project that runs Markdown oaths as tests with
 Platform engine (`var-junit`). Copy it as the starting point for your own
 project.
 
-The `.md` files at the project root are the oaths — they run as tests.
+The `.md` files in the `varar/` directory are the oaths — they run as tests.
 
 ## Run it
 
@@ -18,9 +18,10 @@ Each example in the Markdown oaths becomes one JUnit test.
 ## How it fits together
 
 - **`varar.config.json`** is the single source of truth: `docs.include` globs
-  the Markdown oaths, and `steps` lists the fully-qualified step-definition
-  classes.
-- **`src/test/java/examples/*Steps.java`** implement `StepDefinitions`: a
+  the Markdown oaths, and `steps` lists the step-definition classes —
+  `varar.*` is a package wildcard meaning every step class in the `varar`
+  package.
+- **`src/test/java/varar/*Steps.java`** implement `StepDefinitions`: a
   `register(Steps)` method binds a state record and registers
   `stimulus`/`sensor` handlers. A stimulus returns the next state, a sensor
   returns a value for Varar to compare against what the Markdown says.
@@ -28,7 +29,7 @@ Each example in the Markdown oaths becomes one JUnit test.
   sample's domain code (the system under test) — ordinary classes the steps
   call, kept in the production source set (`src/main`) separate from the test
   steps, just like your production code.
-- **`RunVarSpecsTest.java`** is a JUnit `@Suite` that includes the `"var"`
+- **`RunVararTest.java`** is a JUnit `@Suite` that includes the `"var"`
   engine. It exists only because Gradle discovers tests by class — the engine
   itself needs no wiring beyond having `var-junit` on the test classpath.
 

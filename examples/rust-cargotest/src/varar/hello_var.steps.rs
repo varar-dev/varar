@@ -1,5 +1,5 @@
 use super::Ctx;
-use varar::Steps;
+use ::varar::Steps;
 
 pub fn register(s: &mut Steps<Ctx>) {
     s.stimulus("I greet {string}", |ctx: Ctx, name: String| {

@@ -1,5 +1,5 @@
 import { steps } from '@varar/varar'
-import { toRoman } from '../src/roman-numerals'
+import { toRoman } from '../roman-numerals'
 
 const { sensor } = steps()
 

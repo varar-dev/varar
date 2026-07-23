@@ -8,7 +8,7 @@ module Varar
   # a generated Minitest::Test subclass — one class per oath file, one test
   # method per example. Mirrors var-unittest.
   #
-  #   # test/var_test.rb
+  #   # test/varar_test.rb
   #   require "varar/minitest"
   #   Varar::Minitest.generate_tests
   module Minitest

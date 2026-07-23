@@ -1,7 +1,7 @@
 {
   "version": 2,
   "oaths": {
-    "deep-thought.md": {
+    "varar/deep-thought.md": {
       "sourceHash": "fnv1a:a4027d33",
       "examples": [
         {
@@ -10,7 +10,7 @@
         }
       ]
     },
-    "hello-var.md": {
+    "varar/hello-var.md": {
       "sourceHash": "fnv1a:8eb1207a",
       "examples": [
         {
@@ -23,7 +23,7 @@
         }
       ]
     },
-    "library.md": {
+    "varar/library.md": {
       "sourceHash": "fnv1a:1622dfca",
       "examples": [
         {
@@ -40,7 +40,7 @@
         }
       ]
     },
-    "roman-numerals.md": {
+    "varar/roman-numerals.md": {
       "sourceHash": "fnv1a:a3b97c9a",
       "examples": [
         {
@@ -49,7 +49,7 @@
         }
       ]
     },
-    "tables-and-docstrings.md": {
+    "varar/tables-and-docstrings.md": {
       "sourceHash": "fnv1a:f45255ca",
       "examples": [
         {
@@ -62,7 +62,7 @@
         }
       ]
     },
-    "yahtzee.md": {
+    "varar/yahtzee.md": {
       "sourceHash": "fnv1a:c10cc12e",
       "examples": [
         {

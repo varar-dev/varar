@@ -1,10 +1,17 @@
 @file:JvmName("LibrarySteps")
 
-package examples
+package varar
 
 import dev.varar.kotlin.sensor
 import dev.varar.kotlin.steps
 import dev.varar.kotlin.stimulus
+import examples.FEE_PER_DAY
+import examples.Loan
+import examples.Money
+import examples.addMoney
+import examples.gbp
+import examples.lateFee
+import examples.mayBorrow
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Locale

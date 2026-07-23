@@ -1,4 +1,4 @@
-package examples;
+package varar;
 
 import org.junit.platform.suite.api.IncludeEngines;
 import org.junit.platform.suite.api.SelectDirectories;
@@ -14,4 +14,4 @@ import org.junit.platform.suite.api.Suite;
 @Suite
 @IncludeEngines("varar")
 @SelectDirectories(".")
-public class RunOathsTest {}
+public class RunVararTest {}

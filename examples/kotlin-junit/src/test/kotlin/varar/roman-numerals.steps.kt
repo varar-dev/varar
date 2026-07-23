@@ -1,9 +1,10 @@
 @file:JvmName("RomanNumeralsSteps")
 
-package examples
+package varar
 
 import dev.varar.kotlin.sensor
 import dev.varar.kotlin.steps
+import examples.toRoman
 
 val romanNumeralsSteps = steps {
     sensor("a decimal and a roman number") { row: Map<String, String> ->

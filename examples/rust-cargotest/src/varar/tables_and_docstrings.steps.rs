@@ -1,5 +1,5 @@
 use super::Ctx;
-use varar::Steps;
+use ::varar::Steps;
 
 pub fn register(s: &mut Steps<Ctx>) {
     // A whole-table slot arrives as rows of cells, and the computed table goes

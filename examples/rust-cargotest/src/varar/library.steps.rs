@@ -1,7 +1,7 @@
 use super::Ctx;
 use crate::library::{FEE_PER_DAY, Loan, Money, add_money, gbp, late_fee, may_borrow};
+use ::varar::{HandlerError, Steps};
 use chrono::NaiveDate;
-use varar::{HandlerError, Steps};
 
 /// The document's date notation, e.g. "June 1, 2026". `%-d` drops the zero
 /// padding on the day; chrono's parser ignores padding, so one format string
@@ -15,15 +15,15 @@ const DATE_FORMAT: &str = "%B %-d, %Y";
 #[derive(Clone, Copy)]
 pub struct Date(NaiveDate);
 
-impl varar::ToSlot for Date {
-    fn to_slot(&self) -> varar::Value {
-        varar::Value::String(self.0.format(DATE_FORMAT).to_string())
+impl ::varar::ToSlot for Date {
+    fn to_slot(&self) -> ::varar::Value {
+        ::varar::Value::String(self.0.format(DATE_FORMAT).to_string())
     }
 }
 
-impl varar::FromSlot for Date {
-    fn from_slot(value: &varar::Value) -> Result<Date, HandlerError> {
-        let varar::Value::String(raw) = value else {
+impl ::varar::FromSlot for Date {
+    fn from_slot(value: &::varar::Value) -> Result<Date, HandlerError> {
+        let ::varar::Value::String(raw) = value else {
             return Err(HandlerError::new("expected a date"));
         };
         NaiveDate::parse_from_str(raw, DATE_FORMAT)

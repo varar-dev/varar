@@ -10,7 +10,9 @@
 //! Note what is absent: `varar::Value`. The context is this crate's own `Ctx`,
 //! and every slot arrives as the Rust type the handler declares.
 
-use varar::{Registry, Steps};
+// This module is itself named `varar`, so a plain `use varar::…` would be
+// ambiguous with the crate — the leading `::` names the extern crate.
+use ::varar::{Registry, Steps};
 
 // Step files carry the `.steps.` infix every other port's do, which Rust's
 // module resolver does not derive from the module name — hence `#[path]`.

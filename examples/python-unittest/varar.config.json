@@ -2,13 +2,11 @@
   "$schema": "../../conformance/config/varar.config.schema.json",
   "docs": {
     "include": [
-      "*.md"
+      "varar/**/*.md"
     ],
-    "exclude": [
-      "README.md"
-    ]
+    "exclude": []
   },
   "steps": [
-    "steps/*.steps.py"
+    "tests/varar/**/*.steps.py"
   ]
 }

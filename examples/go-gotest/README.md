@@ -4,14 +4,14 @@ A small, standalone sample project that runs Markdown oaths as tests with
 [Varar](https://varar.dev), driven by `go test`. Copy it as the starting point for
 your own project.
 
-The `.md` files at the project root are the oaths — they run as tests.
+The `.md` files in the `varar/` directory are the oaths — they run as tests.
 
 ## Run it
 
 ```sh
 go test                          # one subtest per example, all green
 go test -v                       # lists every example (30 total)
-go test -run 'TestOaths/yahtzee' # run a single oath
+go test -run 'TestVarar/yahtzee' # run a single oath
 VARAR_UPDATE=1 go test             # accept drift (rewrites varar.lock.json)
 ```
 
@@ -34,7 +34,7 @@ Each Markdown example becomes one Go subtest, named `oath.md::name`, reported by
   They speak plain Go types (`time.Time`, a `Money` struct) — every bit of the
   document's own notation (`June 1, 2026`, `50p`, `£2.50`) is parsed and rendered
   in the step file's `s.Param(…)` declarations, never in the domain.
-- **`specs_test.go`** wires it into `go test` via `gotest.Run` — one subtest
+- **`varar_test.go`** wires it into `go test` via `gotest.Run` — one subtest
   per Markdown example. Discovery, planning, running, rendering, and drift all
   live in the shared `varar-go` packages, so the sample carries no runner of its
   own.

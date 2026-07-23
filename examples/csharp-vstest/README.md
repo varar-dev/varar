@@ -4,7 +4,7 @@ A small, standalone sample project that runs Markdown oaths as tests with
 [Varar](https://varar.dev), driven by `dotnet test` via the `Varar.TestAdapter`
 VSTest adapter. Copy it as the starting point for your own project.
 
-The `.md` files at the project root are the oaths — they run as tests.
+The `.md` files in the `varar/` directory are the oaths — they run as tests.
 
 ## Run it
 

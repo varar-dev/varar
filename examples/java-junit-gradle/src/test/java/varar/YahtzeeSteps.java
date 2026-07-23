@@ -1,8 +1,9 @@
-package examples;
+package varar;
 
 import dev.varar.State;
 import dev.varar.StepDefinitions;
 import dev.varar.Steps;
+import examples.Yahtzee;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;

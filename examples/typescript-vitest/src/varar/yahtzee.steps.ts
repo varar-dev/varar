@@ -1,5 +1,5 @@
 import { steps } from '@varar/varar'
-import { score } from '../src/yahtzee'
+import { score } from '../yahtzee'
 
 const { sensor } = steps()
 

@@ -53,7 +53,7 @@
       "project": ["src/**/*.ts"]
     },
     "../examples/typescript-vitest": {
-      "entry": ["steps/*.steps.ts"],
+      "entry": ["src/varar/*.steps.ts"],
       "project": ["**/*.ts"],
       "ignoreDependencies": ["@varar/core"]
     }

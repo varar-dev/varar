@@ -1,8 +1,8 @@
 {
   "$schema": "../../conformance/config/varar.config.schema.json",
   "docs": {
-    "include": ["*.md"],
-    "exclude": ["README.md"]
+    "include": ["varar/**/*.md"],
+    "exclude": []
   },
-  "steps": ["steps/*.steps.ts"]
+  "steps": ["src/varar/**/*.steps.ts"]
 }

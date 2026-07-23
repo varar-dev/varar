@@ -1,4 +1,4 @@
-package examples
+package varar
 
 import org.junit.platform.suite.api.IncludeEngines
 import org.junit.platform.suite.api.SelectDirectories
@@ -10,4 +10,4 @@ import org.junit.platform.suite.api.Suite
 // files are oaths and which classes define the steps. The
 // *Test suffix matters under Maven: Surefire only scans classes matching its
 // naming convention.
-@Suite @IncludeEngines("varar") @SelectDirectories(".") class RunOathsTest
+@Suite @IncludeEngines("varar") @SelectDirectories(".") class RunVararTest

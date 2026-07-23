@@ -5,7 +5,7 @@ A small, standalone sample project that runs Markdown oaths as tests with
 Kotest adapter (`var-kotest`). Copy it as the starting point for your own
 project.
 
-The `.md` files at the project root are the oaths — they run as tests.
+The `.md` files in the `varar/` directory are the oaths — they run as tests.
 
 ## Run it
 
@@ -18,10 +18,11 @@ Each example in the Markdown oaths becomes one Kotest test.
 ## How it fits together
 
 - **`varar.config.json`** is the single source of truth: `docs.include` globs
-  the Markdown oaths, and `steps` lists the fully-qualified step-definition
-  classes. For a Kotlin file with a top-level `val steps = steps(...)`,
+  the Markdown oaths, and `steps` lists the step-definition classes —
+  `varar.*` is a package wildcard meaning every step class in the `varar`
+  package. For a Kotlin file with a top-level `val steps = steps(...)`,
   that's the file-facade class pinned by `@file:JvmName(...)`.
-- **`src/test/kotlin/examples/*.steps.kt`** define the steps with
+- **`src/test/kotlin/varar/*.steps.kt`** define the steps with
   `steps` + `stimulus`/`sensor`. State is the lambda receiver; a
   stimulus returns the next state (`copy(...)`), a sensor returns a value for
   Varar to compare against what the Markdown says.

@@ -1,8 +1,9 @@
-package examples;
+package varar;
 
 import dev.varar.State;
 import dev.varar.StepDefinitions;
 import dev.varar.Steps;
+import examples.RomanNumerals;
 import java.util.Map;
 
 public final class RomanNumeralsSteps implements StepDefinitions<RomanNumeralsSteps.Ctx> {

@@ -1,7 +1,7 @@
 use super::Ctx;
 use crate::roman_numerals::to_roman;
+use ::varar::Steps;
 use std::collections::BTreeMap;
-use varar::Steps;
 
 pub fn register(s: &mut Steps<Ctx>) {
     s.sensor("a decimal and a roman number", |_ctx: Ctx, row: BTreeMap<String, String>| {

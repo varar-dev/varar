@@ -2,7 +2,7 @@
 
 require 'date'
 require 'varar'
-require_relative '../lib/library'
+require_relative '../../lib/library'
 
 to_date = ->(raw) { Date.strptime(raw, '%B %d, %Y') }
 format_date = ->(d) { "#{d.strftime('%B')} #{d.day}, #{d.year}" }

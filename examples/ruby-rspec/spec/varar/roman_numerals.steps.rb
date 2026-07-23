@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'varar'
-require_relative '../lib/roman_numerals'
+require_relative '../../lib/roman_numerals'
 
 steps do
   sensor('a decimal and a roman number') do |_state, row|

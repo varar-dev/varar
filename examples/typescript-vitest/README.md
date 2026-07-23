@@ -4,7 +4,7 @@ A small, standalone sample project that runs Markdown oaths as tests with
 [Varar](https://varar.dev), using the vitest plugin (`@varar/vitest`).
 Copy it as the starting point for your own project.
 
-The `.md` files at the project root are the oaths — they run as tests.
+The `.md` files in the `varar/` directory are the oaths — they run as tests.
 
 ## Run it
 
@@ -20,7 +20,7 @@ Each example in the Markdown oaths becomes one vitest test.
 - **`varar.config.json`** is the single source of truth: `docs.include` globs
   the Markdown oaths and `steps` globs the step-definition files. The vitest
   plugin drives vitest's own include/exclude from it.
-- **`steps/*.steps.ts`** define the steps with `steps` +
+- **`src/varar/*.steps.ts`** define the steps with `steps` +
   `stimulus`/`sensor`. A stimulus returns the next state, a sensor returns a
   value for Varar to compare against what the Markdown says.
 - **`src/yahtzee.ts`** and **`src/roman-numerals.ts`** are the sample's

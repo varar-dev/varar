@@ -2,14 +2,14 @@
 //!
 //! - the domain modules (`library`, `roman_numerals`, `yahtzee`) are the code
 //!   under test;
-//! - `steps` holds the step definitions plus the registry/context glue.
+//! - `varar` holds the step definitions plus the registry/context glue.
 //!
-//! `tests/oaths.rs` wires it into `cargo test` via the `varar-cargotest`
+//! `tests/varar.rs` wires it into `cargo test` via the `varar-cargotest`
 //! adapter — one libtest item per Markdown example. Discovery, planning,
 //! running, rendering, and drift all live in the shared `var-*` crates now, so
 //! the sample carries no runner of its own.
 
 pub mod library;
 pub mod roman_numerals;
-pub mod steps;
+pub mod varar;
 pub mod yahtzee;

@@ -1,4 +1,4 @@
-package examples;
+package varar;
 
 import dev.varar.State;
 import dev.varar.StepDefinitions;

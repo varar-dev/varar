@@ -19,5 +19,5 @@
     "noEmit": true,
     "types": ["node"]
   },
-  "include": ["src/**/*.ts", "steps/**/*.ts"]
+  "include": ["src/**/*.ts"]
 }

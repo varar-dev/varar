@@ -9,7 +9,7 @@ use std::path::Path;
 fn main() {
     varar_cargotest::run(
         Path::new(env!("CARGO_MANIFEST_DIR")),
-        example::steps::build_registry,
-        example::steps::context_value,
+        example::varar::build_registry,
+        example::varar::context_value,
     );
 }

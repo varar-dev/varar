@@ -7,7 +7,7 @@ inherit_from: ../ruby/.rubocop.yml
 
 AllCops:
   Exclude:
-    # ruby-minitest symlinks lib/ and steps/ to ruby-rspec's, so inspecting both
-    # projects would otherwise report every offence in them twice.
+    # ruby-minitest symlinks lib/ and test/varar/ to ruby-rspec's, so inspecting
+    # both projects would otherwise report every offence in them twice.
     - 'ruby-minitest/lib/**/*'
-    - 'ruby-minitest/steps/**/*'
+    - 'ruby-minitest/test/varar/**/*'

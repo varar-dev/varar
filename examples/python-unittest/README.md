@@ -5,7 +5,7 @@ A small, standalone sample project that runs Markdown oaths as tests with
 nothing but the standard library's test runner. Copy it as the starting
 point for your own project.
 
-The `.md` files at the project root are the oaths — they run as tests.
+The `.md` files in the `varar/` directory are the oaths — they run as tests.
 
 ## Run it
 
@@ -14,7 +14,7 @@ uv run python -m unittest
 ```
 
 Each example in the Markdown oaths becomes one unittest test.
-[`test_var.py`](test_var.py) is the entire integration — a two-line module
+[`test_varar.py`](test_varar.py) is the entire integration — a two-line module
 that generates one `TestCase` per oath, which plain `python -m unittest`
 (or any unittest-compatible runner) then discovers like hand-written tests.
 
@@ -22,7 +22,7 @@ that generates one `TestCase` per oath, which plain `python -m unittest`
 
 - **`varar.config.json`** is the single source of truth: `docs.include` globs
   the Markdown oaths and `steps` globs the step-definition files.
-- **`steps/*.steps.py`** define the steps with `steps` +
+- **`tests/varar/*.steps.py`** define the steps with `steps` +
   `@stimulus`/`@sensor`. A stimulus returns the next state, a sensor returns
   a value for Varar to compare against what the Markdown says.
 - **`src/yahtzee_example/`** is the sample's domain code — an ordinary

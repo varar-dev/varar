@@ -3,8 +3,8 @@
 A standalone sample project that runs Markdown oaths as Minitest tests with
 [Varar](https://varar.dev).
 
-The `*.md` files at the project root are the oaths — plain Markdown prose that
-runs as tests. `steps/*.steps.rb` bind the sentences to Ruby inside a
+The `*.md` files in the `varar/` directory are the oaths — plain Markdown prose
+that runs as tests. `test/varar/*.steps.rb` bind the sentences to Ruby inside a
 `steps(...) do … end` block with `stimulus`/`sensor` (and `param` for custom
 types). `varar.config.json` says which files are oaths (`docs`) and where the
 step definitions live (`steps`).
@@ -16,7 +16,7 @@ bundle install
 bundle exec rake test
 ```
 
-`test/var_test.rb` calls `Varar::Minitest.generate_tests`, which injects
+`test/varar_test.rb` calls `Varar::Minitest.generate_tests`, which injects
 one `Minitest::Test` subclass per oath with one test method per Markdown example
 (header-bound table rows are separate methods). A paragraph that used to match a
 step and no longer does fails as **drift**; re-run with `VARAR_UPDATE=1` to accept

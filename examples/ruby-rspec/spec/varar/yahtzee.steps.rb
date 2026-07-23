@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 require 'varar'
-require_relative '../lib/yahtzee'
+require_relative '../../lib/yahtzee'
 
 steps do
   sensor('Examples of dice, category and score') do |_state, row|

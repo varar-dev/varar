@@ -9,7 +9,7 @@ require 'varar/registry'
 # shared by every example. Varar hands the state to handlers untouched, so the
 # factory is the only thing standing between one example and the next one's
 # mutations — exactly the shape of
-# `examples/ruby-rspec/steps/library.steps.rb`, whose state held a Money.
+# `examples/ruby-rspec/spec/varar/library.steps.rb`, whose state held a Money.
 module Varar
   ::RSpec.describe 'steps state factory' do
     before { RegistryGlue.reset_builder }

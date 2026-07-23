@@ -2,7 +2,7 @@
 //! globs discover exactly the six oaths, and that a deliberately-wrong
 //! expectation renders a cell mismatch (hello-var.md's "watch it fail").
 
-use example::steps::{build_registry, context_value};
+use example::varar::{build_registry, context_value};
 use std::path::Path;
 use varar_cargotest::run_one;
 use varar_config::read_var_config;
@@ -35,11 +35,12 @@ fn discovery_matches_config() {
 
 #[test]
 fn a_mutated_expectation_fails_with_a_cell_mismatch() {
-    let source = std::fs::read_to_string(root().join("hello-var.md"))
+    let source = std::fs::read_to_string(root().join("varar/hello-var.md"))
         .unwrap()
         .replace("\"Hello, world!\"", "\"Hello, Varar!\"");
-    let err = run_one("hello-var.md", &source, "hello-var.md", build_registry, context_value, 0)
-        .expect_err("expected a failure");
+    let err =
+        run_one("hello-var.md", &source, "varar/hello-var.md", build_registry, context_value, 0)
+            .expect_err("expected a failure");
     // Expected column is the source token as written (quotes included); actual
     // is what the sensor returned.
     assert!(

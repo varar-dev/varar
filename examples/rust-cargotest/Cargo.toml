@@ -27,10 +27,10 @@ name = "example"
 path = "src/lib.rs"
 
 # The oaths run through the varar-cargotest adapter, which owns the libtest
-# harness — hence `harness = false` and a `main` in tests/oaths.rs.
+# harness — hence `harness = false` and a `main` in tests/varar.rs.
 [[test]]
-name = "oaths"
-path = "tests/oaths.rs"
+name = "varar"
+path = "tests/varar.rs"
 harness = false
 
 [[test]]

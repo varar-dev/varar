@@ -1,5 +1,5 @@
-// Package example is a standalone Varar sample: it runs the Markdown oaths at the
-// project root as `go test` tests via the gotest adapter. The domain files
+// Package example is a standalone Varar sample: it runs the Markdown oaths in
+// varar/ as `go test` tests via the gotest adapter. The domain files
 // (yahtzee.go, roman.go, library.go) are the code under test; the *.steps.go
 // files hold the step definitions, one per oath, each named after it.
 package example

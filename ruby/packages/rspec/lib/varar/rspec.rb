@@ -8,7 +8,7 @@ module Varar
   # varar.config.json, with one `it` per Markdown example (header-bound rows are
   # separate examples) and a drift gate. See ADR 0005.
   #
-  #   # spec/var_spec.rb
+  #   # spec/varar_spec.rb
   #   require "varar/rspec"
   #   Varar::RSpec.generate
   module RSpec

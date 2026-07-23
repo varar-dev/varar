@@ -1,7 +1,7 @@
 use super::Ctx;
 use crate::yahtzee::score;
+use ::varar::Steps;
 use std::collections::BTreeMap;
-use varar::Steps;
 
 pub fn register(s: &mut Steps<Ctx>) {
     // Header-bound row: the row arrives keyed by column, and the computed

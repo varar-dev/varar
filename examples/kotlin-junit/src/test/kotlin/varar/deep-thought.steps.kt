@@ -1,6 +1,6 @@
 @file:JvmName("DeepThoughtSteps")
 
-package examples
+package varar
 
 import dev.varar.kotlin.sensor
 import dev.varar.kotlin.steps
