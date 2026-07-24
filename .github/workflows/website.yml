@@ -1,0 +1,193 @@
+name: Website
+
+# Builds and deploys https://varar.dev, and maintains the version archive served
+# under https://varar.dev/v/<version>/ — a build-accurate copy of the website as
+# it shipped for each past release (interactive editor and all).
+#
+# Flow:
+#   - push to main       → deploy (live site + existing archives overlaid)
+#   - push tag v*        → snapshot that release, commit it to the orphan
+#                          `website-snapshots` branch, then deploy
+#   - workflow_dispatch  → backfill: snapshot one version (input) or every
+#                          release tag still missing an archive, then deploy
+#
+# `deploy` chains after `snapshot` via `needs`, so a freshly-archived release
+# ships in the same run — no reliance on a bot push re-triggering CI (it doesn't).
+#
+# The website PR build gate lives in typescript.yml's `test` job and stays there.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Backfill: bare semver to (re)snapshot, e.g. 0.6.1. Blank = every release tag missing an archive.'
+        required: false
+        default: ''
+
+jobs:
+  snapshot:
+    # Only tag pushes and manual backfills produce archives; a plain main push
+    # skips straight to deploy.
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    concurrency:
+      group: website-snapshots
+      cancel-in-progress: false
+    steps:
+      # Full history + tags: we build each release from a worktree of its tag,
+      # using the snapshot tooling from this (current) checkout.
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: typescript/package.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: typescript/.node-version
+          cache: pnpm
+          cache-dependency-path: typescript/pnpm-lock.yaml
+
+      # The archive lives on an orphan `website-snapshots` branch — built assets
+      # for every past release, kept off main's history. Check it out beside the
+      # source; start it empty the first time.
+      - uses: actions/checkout@v7
+        id: archive
+        continue-on-error: true
+        with:
+          ref: website-snapshots
+          path: snapshots
+          fetch-depth: 0
+
+      - name: Initialise archive branch if absent
+        if: steps.archive.outcome != 'success'
+        run: |
+          rm -rf snapshots && mkdir snapshots
+          cd snapshots
+          git init -q -b website-snapshots
+
+      - name: Compute versions to snapshot
+        id: versions
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = workflow_dispatch ]; then
+            if [ -n "${{ inputs.version }}" ]; then
+              list="${{ inputs.version }}"
+            else
+              list=""
+              for t in $(git tag -l 'v*' | sed 's/^v//' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$'); do
+                [ -d "snapshots/v/$t" ] || list="$list $t"
+              done
+            fi
+          else
+            list="${GITHUB_REF_NAME#v}"   # tag push
+          fi
+          echo "list=$(echo "$list" | xargs)" >> "$GITHUB_OUTPUT"
+
+      - name: Build snapshots
+        if: steps.versions.outputs.list != ''
+        run: |
+          set -euo pipefail
+          mkdir -p snapshots/v
+          for v in ${{ steps.versions.outputs.list }}; do
+            echo "::group::snapshot v$v"
+            wt="$RUNNER_TEMP/src-$v"
+            rm -rf "$wt"
+            git worktree add --force "$wt" "v$v"
+            (cd "$wt/typescript" && pnpm install --frozen-lockfile)
+            release/website-snapshot.sh "$v" "$PWD/snapshots/v/$v" "$wt"
+            git worktree remove --force "$wt"
+            echo "::endgroup::"
+          done
+
+      - name: Regenerate archive index
+        run: node release/website-index.mjs snapshots/v
+
+      - name: Commit and push archive
+        run: |
+          set -euo pipefail
+          cd snapshots
+          git add -A
+          if git diff --cached --quiet; then
+            echo "archive unchanged"
+            exit 0
+          fi
+          git -c user.name='github-actions[bot]' \
+              -c user.email='41898282+github-actions[bot]@users.noreply.github.com' \
+              commit -m "chore(website): archive snapshot(s) ${{ steps.versions.outputs.list }}"
+          # Explicit token auth so the push works both when this branch was
+          # checked out (auth in a sibling dir) and when we just init'd it. A
+          # GITHUB_TOKEN push doesn't re-trigger CI, which is fine: `deploy`
+          # chains off this job via `needs`, it isn't waiting on a push event.
+          git remote remove origin 2>/dev/null || true
+          git remote add origin \
+            "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git"
+          git push -u origin website-snapshots
+
+  deploy:
+    needs: [snapshot]
+    # Runs after snapshot on tag/dispatch, and on its own for a plain main push
+    # (where snapshot is skipped). Never on PRs.
+    if: |
+      always() &&
+      github.event_name != 'pull_request' &&
+      (needs.snapshot.result == 'success' || needs.snapshot.result == 'skipped')
+    runs-on: ubuntu-latest
+    concurrency:
+      group: deploy-website
+      cancel-in-progress: false
+    defaults:
+      run:
+        working-directory: typescript
+    steps:
+      # Always deploy main's live site, whatever ref triggered the run.
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+
+      # The version archives to overlay onto the live build.
+      - uses: actions/checkout@v7
+        id: archive
+        continue-on-error: true
+        with:
+          ref: website-snapshots
+          path: snapshots
+
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: typescript/package.json
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: typescript/.node-version
+          cache: pnpm
+          cache-dependency-path: typescript/pnpm-lock.yaml
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: pnpm --filter @varar/website... build
+
+      # Fold the archived versions into the deploy so /v/<version>/ is served
+      # from the same Worker as the live site.
+      - name: Overlay version archives
+        if: steps.archive.outcome == 'success'
+        run: |
+          if [ -d ../snapshots/v ]; then
+            mkdir -p packages/website/dist/v
+            cp -R ../snapshots/v/. packages/website/dist/v/
+          fi
+
+      - uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: typescript/packages/website
+          wranglerVersion: "4"
+          packageManager: pnpm

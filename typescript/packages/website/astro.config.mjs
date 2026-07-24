@@ -40,9 +40,17 @@ const restorePrefs = () => ({
   },
 })
 
+// Version snapshots (build-accurate archives of past releases) are served under
+// a path prefix, e.g. https://varar.dev/v/0.7.0/. The release-tag snapshot build
+// sets VARAR_SITE_BASE to that prefix; Astro/Vite then rewrite every internal
+// link, emitted asset, and web-worker URL to live under it. Unset (the live
+// site build) means base '/', the normal root deployment.
+const base = process.env.VARAR_SITE_BASE || undefined
+
 // https://astro.build/config
 export default defineConfig({
   site: 'https://varar.dev',
+  base,
   // The project was renamed var → varar; these three pages carried the old name
   // in their URL. Keep the published links working.
   redirects: {
@@ -56,6 +64,12 @@ export default defineConfig({
     starlight({
       title: 'Varar',
       tableOfContents: true,
+      // A version snapshot (base set) is an archive of a past release. Keep it
+      // out of search so the twelve-plus historical copies don't compete with
+      // the live docs for the same queries; readers reach them via direct links.
+      head: base
+        ? [{ tag: 'meta', attrs: { name: 'robots', content: 'noindex, follow' } }]
+        : [],
       plugins: [
         // Generate /llms.txt (a curated index) and /llms-full.txt (every doc
         // page concatenated as clean Markdown) at build time. Agents are a
@@ -82,6 +96,7 @@ export default defineConfig({
       ],
       components: {
         ThemeSelect: './src/components/ThemeSelect.astro',
+        Footer: './src/components/Footer.astro',
       },
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/varar-dev/varar' }],
       sidebar: [

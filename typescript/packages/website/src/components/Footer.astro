@@ -1,0 +1,34 @@
+---
+/**
+ * Starlight `Footer` override: renders the built-in footer (pagination, edit
+ * link, last-updated) and appends a link to the version archive at /v/.
+ *
+ * Past releases are kept as build-accurate snapshots served under
+ * /v/<version>/ (see doc/website-versioning.md and .github/workflows/website.yml);
+ * this footer link is how a reader on the live site discovers them. It points at
+ * the generated archive hub (/v/), which lists every archived version.
+ */
+import Default from '@astrojs/starlight/components/Footer.astro'
+---
+
+<Default><slot /></Default>
+
+<div class="var-versions-link">
+  <a href="/v/">Version history</a>
+</div>
+
+<style>
+  .var-versions-link {
+    margin-top: 1.5rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--sl-color-hairline);
+    font-size: var(--sl-text-sm);
+  }
+  .var-versions-link a {
+    color: var(--sl-color-gray-3);
+    text-decoration: none;
+  }
+  .var-versions-link a:hover {
+    color: var(--sl-color-text-accent);
+  }
+</style>

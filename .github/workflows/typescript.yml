@@ -51,43 +51,8 @@ jobs:
       # its <Editor> components assert at build time that every port in
       # languages.json has example files, so this is where a forgotten port's
       # missing examples become a red build instead of surfacing only at deploy.
+      #
+      # Deployment (and the versioned archive under /v/<version>/) lives in
+      # website.yml — it needs the release tags this workflow's path filter
+      # doesn't react to.
       - run: pnpm --filter @varar/website... build
-
-  deploy-website:
-    needs: test
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
-    concurrency:
-      group: deploy-website
-      cancel-in-progress: false
-    defaults:
-      run:
-        working-directory: typescript
-    steps:
-      - uses: actions/checkout@v7
-
-      # No version here — pnpm/action-setup reads "packageManager" from
-      # typescript/package.json, the same field corepack uses locally.
-      - uses: pnpm/action-setup@v6
-        with:
-          package_json_file: typescript/package.json
-
-      # No version here — .node-version is the pin, read by setup-node and by
-      # nvm/fnm/asdf alike, so CI and a developer machine cannot drift.
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: typescript/.node-version
-          cache: pnpm
-          cache-dependency-path: typescript/pnpm-lock.yaml
-
-      - run: pnpm install --frozen-lockfile
-
-      - run: pnpm --filter @varar/website... build
-
-      - uses: cloudflare/wrangler-action@v4
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: typescript/packages/website
-          wranglerVersion: "4"
-          packageManager: pnpm
