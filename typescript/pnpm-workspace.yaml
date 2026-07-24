@@ -18,7 +18,7 @@ packages:
 # Denying them skips a native compile that nothing uses and drops the
 # requirement for a C toolchain to install this repo.
 #
-# workerd and sharp@0.34 arrive with wrangler, which the deploy-website CI job
+# workerd and sharp@0.34 arrive with wrangler, which the website deploy CI job
 # installs on the fly (cloudflare/wrangler-action's `pnpm add wrangler@4`) — an
 # install that pnpm fails outright while they are undecided. Both are a NO:
 # workerd is the local `wrangler dev` runtime and sharp is miniflare's image
