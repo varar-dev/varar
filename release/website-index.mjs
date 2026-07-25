@@ -50,6 +50,9 @@ const html = `<!doctype html>
       name="description"
       content="Build-accurate archives of past releases of the Varar website."
     />
+    <!-- The hub only lists archived releases; keep it (and them) out of search
+         so the live docs are the single indexed version. -->
+    <meta name="robots" content="noindex, follow" />
     <link rel="canonical" href="https://varar.dev/v/" />
     <style>
       :root {

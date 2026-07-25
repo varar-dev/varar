@@ -1,0 +1,63 @@
+---
+/**
+ * Starlight `Banner` override.
+ *
+ * Renders the built-in frontmatter banner (unchanged), and — only in a version
+ * snapshot build (VARAR_SITE_BASE set, so `import.meta.env.BASE_URL` is
+ * `/v/<version>/`) — prepends a warning that the reader is on an archived
+ * release, linking to the same page on the live site.
+ *
+ * The "view the latest" link is built as an ABSOLUTE URL via `Astro.site` on
+ * purpose: a root-absolute `/reference/…` link would be rewritten back under the
+ * version prefix by release/website-rebase-links.mjs, sending the reader in a
+ * circle. An absolute https URL is left alone and always points at the live
+ * site.
+ */
+import Default from '@astrojs/starlight/components/Banner.astro'
+
+const base = import.meta.env.BASE_URL
+const archived = base !== '/'
+const version = archived ? (base.match(/\/v\/([^/]+)\//)?.[1] ?? null) : null
+
+// The same page on the live site: drop the /v/<version>/ prefix from this
+// page's path, then resolve against the configured site origin.
+const pathname = Astro.url.pathname
+const latestPath = archived && pathname.startsWith(base) ? `/${pathname.slice(base.length)}` : '/'
+const latestHref = Astro.site ? new URL(latestPath, Astro.site).href : latestPath
+---
+
+{
+  version && (
+    <div class="var-archived-banner" data-pagefind-ignore>
+      <span>
+        You’re reading the docs for <strong>Varar v{version}</strong>, an older
+        release.
+      </span>
+      <a href={latestHref}>View the latest&nbsp;→</a>
+    </div>
+  )
+}
+
+<Default><slot /></Default>
+
+<style>
+  .var-archived-banner {
+    padding: 0.75rem var(--sl-nav-pad-x);
+    background-color: var(--sl-color-orange-low);
+    color: var(--sl-color-orange-high);
+    line-height: var(--sl-line-height-headings);
+    text-align: center;
+    text-wrap: balance;
+    box-shadow: var(--sl-shadow-sm);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.75rem;
+    align-items: baseline;
+    justify-content: center;
+  }
+  .var-archived-banner a {
+    color: var(--sl-color-orange-high);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+</style>

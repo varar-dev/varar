@@ -67,9 +67,7 @@ export default defineConfig({
       // A version snapshot (base set) is an archive of a past release. Keep it
       // out of search so the twelve-plus historical copies don't compete with
       // the live docs for the same queries; readers reach them via direct links.
-      head: base
-        ? [{ tag: 'meta', attrs: { name: 'robots', content: 'noindex, follow' } }]
-        : [],
+      head: base ? [{ tag: 'meta', attrs: { name: 'robots', content: 'noindex, follow' } }] : [],
       plugins: [
         // Generate /llms.txt (a curated index) and /llms-full.txt (every doc
         // page concatenated as clean Markdown) at build time. Agents are a
@@ -97,6 +95,7 @@ export default defineConfig({
       components: {
         ThemeSelect: './src/components/ThemeSelect.astro',
         Footer: './src/components/Footer.astro',
+        Banner: './src/components/Banner.astro',
       },
       social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/varar-dev/varar' }],
       sidebar: [

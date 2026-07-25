@@ -8,6 +8,13 @@ interactive `<Editor>` components running exactly the `@varar/varar` code that
 shipped in that release. A "Version history" link in the site footer, and the
 hub page at [`/v/`](https://varar.dev/v/), list every archived version.
 
+Only the live site is meant to rank in search: every archived page (and the
+`/v/` hub) carries `<meta name="robots" content="noindex, follow">`, and the
+site sitemap lists live pages only. A reader who lands on an archived page — via
+a direct link or a bookmark — gets a warning banner across the top ("You're
+reading the docs for Varar vX, an older release. View the latest →") linking to
+the same page on the live site.
+
 ## Why build-accurate, not content-only
 
 There is a Starlight plugin (`starlight-versions`) that snapshots docs *content*
@@ -25,7 +32,15 @@ The pieces:
 
 - **`packages/website/astro.config.mjs`** reads `VARAR_SITE_BASE`. When set (e.g.
   `/v/0.7.0/`), Astro/Vite rewrite every internal link, emitted asset, and
-  web-worker/wasm URL to sit under that prefix. Unset ⇒ the normal root build.
+  web-worker/wasm URL to sit under that prefix, and the build gets the `noindex`
+  robots tag. Unset ⇒ the normal, indexable root build.
+
+- **`packages/website/src/components/Banner.astro`** and **`Footer.astro`** are
+  Starlight overrides. In a snapshot build (base set) the Banner shows the
+  old-version warning, its "view the latest" link built as an absolute URL via
+  `Astro.site` so the link rebaser leaves it pointing at the live site. The
+  Footer adds the "Version history" link to `/v/`. Both are inert on the live
+  build.
 
 - **`release/website-rebase-links.mjs`** fixes the one thing Astro won't:
   hand-written root-absolute links in the Markdown (`[sensors](/reference/sensors)`).
