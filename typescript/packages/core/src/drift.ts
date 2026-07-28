@@ -187,6 +187,48 @@ export async function reconcileDrift(opts: {
   return drifts
 }
 
+// Drop every baseline whose oath path is not in `keepPaths` — the entries left
+// behind when an oath is deleted or moved. Pure counterpart of parseVarLock /
+// stringifyVarLock; the caller decides what "still exists" means.
+export function pruneVarLock(lock: VarLock, keepPaths: ReadonlyArray<string>): VarLock {
+  const keep = new Set(keepPaths)
+  const oaths: Record<string, OathBaseline> = {}
+  for (const [path, baseline] of Object.entries(lock.oaths)) {
+    if (keep.has(path)) oaths[path] = baseline
+  }
+  return { version: 2, oaths }
+}
+
+// The whole-lock counterpart of reconcileDrift, run ONCE per run rather than per
+// oath: reconciliation cannot see paths that no longer exist, so without this the
+// lock silently accumulates dead entries and stops being a faithful inventory of
+// the oath set (#70).
+//
+// `keepPaths` MUST be everything the `docs` globs currently match — never the set
+// the run happened to execute. Runs are routinely filtered (`varar run --globs`,
+// a pytest path argument, a JUnit method selector), and pruning against a
+// filtered set would delete live baselines.
+//
+// Removal is still not *gated*: a deleted oath is a different signal from drift
+// and stays ungated (ADR 0002). This only stops preserving dead state, and only
+// under `update` — nothing is deleted behind the author's back. Returns the paths
+// removed (or, without `update`, the ones that would be).
+export async function pruneBaselines(opts: {
+  readonly store: BaselineStore
+  readonly keepPaths: ReadonlyArray<string>
+  readonly update?: boolean
+}): Promise<ReadonlyArray<string>> {
+  const text = await opts.store.read()
+  const lock = text ? parseVarLock(text) : null
+  if (!lock) return []
+  const keep = new Set(opts.keepPaths)
+  const stale = Object.keys(lock.oaths).filter((path) => !keep.has(path))
+  if (opts.update && stale.length > 0) {
+    await opts.store.write(stringifyVarLock(pruneVarLock(lock, opts.keepPaths)))
+  }
+  return stale
+}
+
 function isBaselineExample(v: unknown): v is BaselineExample {
   if (typeof v !== 'object' || v === null) return false
   const e = v as Record<string, unknown>

@@ -72,8 +72,18 @@ internal static class VararAdapter
 
         var baselineStore = new FileBaselineStore(workspace.Root);
         bool update = IsUpdate();
+        var oaths = Discovery.FindOaths(workspace.Config, workspace.Root).ToList();
 
-        foreach (var oath in Discovery.FindOaths(workspace.Config, workspace.Root))
+        // Drop baselines for oaths the config no longer discovers. Reconciliation is per-oath and
+        // never sees a path that has gone, so the lock would otherwise accumulate dead entries
+        // forever (#70). Once per discovery, keyed off the config globs — which here IS the full
+        // set, since VSTest filters the discovered test cases, not the discovery itself.
+        DriftDetection.PruneBaselines(
+            baselineStore,
+            [.. oaths.Select(oath => Discovery.RelPosix(oath, workspace.Root))],
+            update);
+
+        foreach (var oath in oaths)
         {
             var relName = Discovery.RelPosix(oath, workspace.Root);
             string text;

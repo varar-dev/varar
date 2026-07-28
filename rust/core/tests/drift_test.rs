@@ -3,7 +3,8 @@
 use std::collections::BTreeMap;
 use varar_core::drift::{
     BaselineExample, BaselineStore, Drifted, OathBaseline, VarLock, derive_oath_baseline,
-    detect_drift, live_examples, message, parse_var_lock, reconcile_drift, stringify_var_lock,
+    detect_drift, live_examples, message, parse_var_lock, prune_baselines, prune_var_lock,
+    reconcile_drift, stringify_var_lock,
 };
 use varar_core::handler::Handler;
 use varar_core::hash::hash_source;
@@ -334,4 +335,78 @@ fn drift_message_names_the_paragraph() {
     };
     assert!(message(&d).contains("I withdraw 40"));
     assert!(!message(&d).trim().is_empty());
+}
+
+// ---- Pruning baselines for oaths that no longer exist (#70) ----
+
+// A lock carrying two oaths, one of which the docs globs no longer match — the
+// state a deleted or moved .md leaves behind.
+fn lock_with_stale_path() -> String {
+    let source = "I withdraw 40.";
+    let var_doc = parse("w.md", source);
+    let baseline = derive_oath_baseline(source, &var_doc, &plan(&var_doc, &reg(true)));
+    let mut oaths = BTreeMap::new();
+    oaths.insert("varar/w.md".to_string(), baseline.clone());
+    oaths.insert("w.md".to_string(), baseline);
+    stringify_var_lock(&VarLock { version: 2, oaths })
+}
+
+fn keep(paths: &[&str]) -> Vec<String> {
+    paths.iter().map(|p| (*p).to_string()).collect()
+}
+
+#[test]
+fn prune_var_lock_keeps_only_the_paths_it_is_given() {
+    let lock = parse_var_lock(&lock_with_stale_path()).unwrap();
+    let pruned = prune_var_lock(&lock, &keep(&["varar/w.md"]));
+    assert_eq!(pruned.oaths.keys().collect::<Vec<_>>(), vec!["varar/w.md"]);
+}
+
+#[test]
+fn prune_var_lock_is_a_no_op_when_every_path_is_still_live() {
+    let lock = parse_var_lock(&lock_with_stale_path()).unwrap();
+    assert_eq!(prune_var_lock(&lock, &keep(&["varar/w.md", "w.md"])), lock);
+}
+
+#[test]
+fn prune_reports_stale_paths_without_update_and_does_not_write() {
+    let mut store = MemoryStore {
+        contents: Some(lock_with_stale_path()),
+    };
+    let before = store.contents.clone();
+
+    assert_eq!(prune_baselines(&mut store, &keep(&["varar/w.md"]), false), vec!["w.md"]);
+    // Reporting is not deleting: nothing is removed behind the author's back.
+    assert_eq!(store.contents, before);
+}
+
+#[test]
+fn prune_drops_stale_paths_under_update() {
+    let mut store = MemoryStore {
+        contents: Some(lock_with_stale_path()),
+    };
+
+    assert_eq!(prune_baselines(&mut store, &keep(&["varar/w.md"]), true), vec!["w.md"]);
+    let lock = parse_var_lock(&store.contents.unwrap()).unwrap();
+    assert_eq!(lock.oaths.keys().collect::<Vec<_>>(), vec!["varar/w.md"]);
+}
+
+#[test]
+fn prune_leaves_a_lock_with_no_stale_paths_untouched() {
+    let mut store = MemoryStore {
+        contents: Some(lock_with_stale_path()),
+    };
+    let before = store.contents.clone();
+
+    assert!(prune_baselines(&mut store, &keep(&["varar/w.md", "w.md"]), true).is_empty());
+    // Byte-identical, not merely equivalent — an unnecessary rewrite would show
+    // up as a spurious diff in every consumer's working tree.
+    assert_eq!(store.contents, before);
+}
+
+#[test]
+fn prune_is_a_no_op_when_there_is_no_baseline_yet() {
+    let mut store = MemoryStore::default();
+    assert!(prune_baselines(&mut store, &keep(&["varar/w.md"]), true).is_empty());
+    assert_eq!(store.contents, None);
 }

@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -294,5 +295,92 @@ func TestDriftMessageNamesTheParagraph(t *testing.T) {
 	}
 	if strings.TrimSpace(msg) == "" {
 		t.Errorf("empty message")
+	}
+}
+
+// ---- Pruning baselines for oaths that no longer exist (#70) ----
+
+// A lock carrying two oaths, one of which the docs globs no longer match — the
+// state a deleted or moved .md leaves behind.
+func lockWithStalePath() string {
+	source := "I withdraw 40."
+	varDoc := Parse("w.md", source)
+	baseline := DeriveOathBaseline(source, varDoc, Plan(varDoc, reg(true)))
+	return StringifyVarLock(VarLock{
+		Version: 2,
+		Oaths:   map[string]OathBaseline{"varar/w.md": baseline, "w.md": baseline},
+	})
+}
+
+func lockPaths(t *testing.T, contents string) []string {
+	t.Helper()
+	lock := ParseVarLock(contents)
+	if lock == nil {
+		t.Fatalf("could not parse lock: %q", contents)
+	}
+	var paths []string
+	for path := range lock.Oaths {
+		paths = append(paths, path)
+	}
+	sort.Strings(paths)
+	return paths
+}
+
+func TestPruneVarLockKeepsOnlyThePathsItIsGiven(t *testing.T) {
+	lock := ParseVarLock(lockWithStalePath())
+	pruned := PruneVarLock(*lock, []string{"varar/w.md"})
+	if got := lockPaths(t, StringifyVarLock(pruned)); !reflect.DeepEqual(got, []string{"varar/w.md"}) {
+		t.Errorf("got %v", got)
+	}
+}
+
+func TestPruneReportsStalePathsWithoutUpdateAndDoesNotWrite(t *testing.T) {
+	contents := lockWithStalePath()
+	store := &memoryStore{contents: &contents}
+	before := *store.contents
+
+	if got := PruneBaselines(store, []string{"varar/w.md"}, false); !reflect.DeepEqual(got, []string{"w.md"}) {
+		t.Errorf("got %v", got)
+	}
+	// Reporting is not deleting: nothing is removed behind the author's back.
+	if *store.contents != before {
+		t.Errorf("store was written")
+	}
+}
+
+func TestPruneDropsStalePathsUnderUpdate(t *testing.T) {
+	contents := lockWithStalePath()
+	store := &memoryStore{contents: &contents}
+
+	if got := PruneBaselines(store, []string{"varar/w.md"}, true); !reflect.DeepEqual(got, []string{"w.md"}) {
+		t.Errorf("got %v", got)
+	}
+	if got := lockPaths(t, *store.contents); !reflect.DeepEqual(got, []string{"varar/w.md"}) {
+		t.Errorf("got %v", got)
+	}
+}
+
+func TestPruneLeavesALockWithNoStalePathsUntouched(t *testing.T) {
+	contents := lockWithStalePath()
+	store := &memoryStore{contents: &contents}
+	before := *store.contents
+
+	if got := PruneBaselines(store, []string{"varar/w.md", "w.md"}, true); len(got) != 0 {
+		t.Errorf("got %v", got)
+	}
+	// Byte-identical, not merely equivalent — an unnecessary rewrite would show
+	// up as a spurious diff in every consumer's working tree.
+	if *store.contents != before {
+		t.Errorf("store was rewritten")
+	}
+}
+
+func TestPruneIsANoOpWhenThereIsNoBaselineYet(t *testing.T) {
+	store := &memoryStore{}
+	if got := PruneBaselines(store, []string{"varar/w.md"}, true); len(got) != 0 {
+		t.Errorf("got %v", got)
+	}
+	if store.contents != nil {
+		t.Errorf("store was written")
 	}
 }

@@ -307,4 +307,69 @@ public class DriftTests
         Assert.Null(DriftDetection.ParseVarLock("{\"version\":2,\"specs\":{}}"));
         Assert.Null(DriftDetection.ParseVarLock("{\"version\":2,\"oaths\":{\"a.md\":{\"examples\":[]}}}"));
     }
+
+    // ---- Pruning baselines for oaths that no longer exist (#70) ----
+
+    // A lock carrying two oaths, one of which the docs globs no longer match — the
+    // state a deleted or moved .md leaves behind.
+    private static string LockWithStalePath()
+    {
+        const string source = "I withdraw 40.";
+        var doc = Parse.Run("w.md", source);
+        var baseline = DriftDetection.DeriveOathBaseline(source, doc, Plan.Run(doc, Reg()));
+        return DriftDetection.StringifyVarLock(new VarLock(
+            2,
+            ImmutableDictionary<string, OathBaseline>.Empty
+                .Add("varar/w.md", baseline)
+                .Add("w.md", baseline)));
+    }
+
+    [Fact]
+    public void PruneVarLockKeepsOnlyThePathsItIsGiven()
+    {
+        var lockFile = DriftDetection.ParseVarLock(LockWithStalePath())!;
+        var pruned = DriftDetection.PruneVarLock(lockFile, ["varar/w.md"]);
+        Assert.Equal(["varar/w.md"], pruned.Oaths.Keys.OrderBy(k => k, StringComparer.Ordinal));
+    }
+
+    [Fact]
+    public void PruneReportsStalePathsWithoutUpdateAndDoesNotWrite()
+    {
+        var store = new MemoryStore(LockWithStalePath());
+        var before = store.Contents;
+
+        Assert.Equal(["w.md"], DriftDetection.PruneBaselines(store, ["varar/w.md"]));
+        // Reporting is not deleting: nothing is removed behind the author's back.
+        Assert.Equal(before, store.Contents);
+    }
+
+    [Fact]
+    public void PruneDropsStalePathsUnderUpdate()
+    {
+        var store = new MemoryStore(LockWithStalePath());
+
+        Assert.Equal(["w.md"], DriftDetection.PruneBaselines(store, ["varar/w.md"], update: true));
+        var lockFile = DriftDetection.ParseVarLock(store.Contents!)!;
+        Assert.Equal(["varar/w.md"], lockFile.Oaths.Keys);
+    }
+
+    [Fact]
+    public void PruneLeavesALockWithNoStalePathsUntouched()
+    {
+        var store = new MemoryStore(LockWithStalePath());
+        var before = store.Contents;
+
+        Assert.Empty(DriftDetection.PruneBaselines(store, ["varar/w.md", "w.md"], update: true));
+        // Byte-identical, not merely equivalent — an unnecessary rewrite would show
+        // up as a spurious diff in every consumer's working tree.
+        Assert.Equal(before, store.Contents);
+    }
+
+    [Fact]
+    public void PruneIsANoOpWhenThereIsNoBaselineYet()
+    {
+        var store = new MemoryStore();
+        Assert.Empty(DriftDetection.PruneBaselines(store, ["varar/w.md"], update: true));
+        Assert.Null(store.Contents);
+    }
 }

@@ -56,6 +56,8 @@ export {
   driftDiagnostics,
   liveExamples,
   parseVarLock,
+  pruneBaselines,
+  pruneVarLock,
   reconcileDrift,
   stringifyVarLock,
 } from './drift.ts'

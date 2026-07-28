@@ -51,7 +51,24 @@ func Collect(root string, build BuildRegistry, ctx ContextFactory, update bool) 
 		return nil, err
 	}
 	var cases []Case
-	for _, oathPath := range runner.FindOaths(cfg, root) {
+	oaths := runner.FindOaths(cfg, root)
+
+	// Drop baselines for oaths the config no longer discovers. Reconciliation is
+	// per-oath and never sees a path that has gone, so the lock would otherwise
+	// accumulate dead entries forever (#70). Once per run, keyed off the config
+	// globs — which here IS the full set, since Collect always discovers
+	// everything (`go test -run` filters the subtests, not the discovery).
+	keep := make([]string, 0, len(oaths))
+	for _, oathPath := range oaths {
+		rel, relErr := filepath.Rel(root, oathPath)
+		if relErr != nil {
+			rel = filepath.Base(oathPath)
+		}
+		keep = append(keep, filepath.ToSlash(rel))
+	}
+	core.PruneBaselines(runner.NewFileBaselineStore(root), keep, update)
+
+	for _, oathPath := range oaths {
 		sourceBytes, _ := os.ReadFile(oathPath)
 		source := string(sourceBytes)
 		oathFile := filepath.Base(oathPath)

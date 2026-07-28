@@ -200,6 +200,53 @@ pub fn reconcile_drift(
     drifts
 }
 
+/// Drops every baseline whose oath path is not in `keep_paths` — the entries left
+/// behind when an oath is deleted or moved. Pure counterpart of [`parse_var_lock`]
+/// / [`stringify_var_lock`]; the caller decides what "still exists" means.
+pub fn prune_var_lock(lock: &VarLock, keep_paths: &[String]) -> VarLock {
+    VarLock {
+        version: 2,
+        oaths: lock
+            .oaths
+            .iter()
+            .filter(|(path, _)| keep_paths.iter().any(|k| k == *path))
+            .map(|(path, baseline)| (path.clone(), baseline.clone()))
+            .collect(),
+    }
+}
+
+/// The whole-lock counterpart of [`reconcile_drift`], run ONCE per run rather than
+/// per oath: reconciliation cannot see paths that no longer exist, so without this
+/// the lock silently accumulates dead entries and stops being a faithful inventory
+/// of the oath set (#70).
+///
+/// `keep_paths` MUST be everything the `docs` globs currently match — never the set
+/// the run happened to execute. Runs are routinely filtered, and pruning against a
+/// filtered set would delete live baselines.
+///
+/// Removal is still not *gated*: a deleted oath is a different signal from drift and
+/// stays ungated (ADR 0002). This only stops preserving dead state, and only under
+/// `update`. Returns the paths removed (or, without `update`, the ones that would be).
+pub fn prune_baselines(
+    store: &mut dyn BaselineStore,
+    keep_paths: &[String],
+    update: bool,
+) -> Vec<String> {
+    let Some(lock) = store.read().as_deref().and_then(parse_var_lock) else {
+        return Vec::new();
+    };
+    let stale: Vec<String> = lock
+        .oaths
+        .keys()
+        .filter(|path| !keep_paths.iter().any(|k| k == *path))
+        .cloned()
+        .collect();
+    if update && !stale.is_empty() {
+        store.write(&stringify_var_lock(&prune_var_lock(&lock, keep_paths)));
+    }
+    stale
+}
+
 /// Serializes `varar.lock.json` deterministically (fixed field order, sorted oath
 /// paths, two-space indent, trailing newline) — NOT [`crate::canonical_json`].
 pub fn stringify_var_lock(lock: &VarLock) -> String {

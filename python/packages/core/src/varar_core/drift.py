@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -194,6 +195,51 @@ def reconcile_drift(
         oaths[oath_path] = next_oath
         store.write(stringify_var_lock(VarLock(version=2, oaths=oaths)))
     return drifts
+
+
+def prune_var_lock(lock: VarLock, keep_paths: Sequence[str]) -> VarLock:
+    """Drop every baseline whose oath path is not in ``keep_paths``.
+
+    The entries left behind when an oath is deleted or moved. Pure counterpart of
+    parse_var_lock / stringify_var_lock; the caller decides what "still exists" means.
+    """
+    keep = set(keep_paths)
+    return VarLock(
+        version=2,
+        oaths={path: baseline for path, baseline in lock.oaths.items() if path in keep},
+    )
+
+
+def prune_baselines(
+    store: BaselineStore,
+    keep_paths: Sequence[str],
+    update: bool = False,
+) -> tuple[str, ...]:
+    """The whole-lock counterpart of reconcile_drift, run ONCE per run.
+
+    Reconciliation is per-oath and cannot see a path that no longer exists, so
+    without this the lock silently accumulates dead entries and stops being a
+    faithful inventory of the oath set (#70).
+
+    ``keep_paths`` MUST be everything the ``docs`` globs currently match — never the
+    set the run happened to execute. Runs are routinely filtered (a pytest path
+    argument, a ``--globs`` override), and pruning against a filtered set would
+    delete live baselines.
+
+    Removal is still not *gated*: a deleted oath is a different signal from drift
+    and stays ungated (ADR 0002). This only stops preserving dead state, and only
+    under ``update``. Returns the paths removed (or, without ``update``, the ones
+    that would be).
+    """
+    text = store.read()
+    lock = parse_var_lock(text) if text else None
+    if lock is None:
+        return ()
+    keep = set(keep_paths)
+    stale = tuple(path for path in lock.oaths if path not in keep)
+    if update and stale:
+        store.write(stringify_var_lock(prune_var_lock(lock, keep_paths)))
+    return stale
 
 
 def _parse_baseline_example(value: object) -> BaselineExample | None:

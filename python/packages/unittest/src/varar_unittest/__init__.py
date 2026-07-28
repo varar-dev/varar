@@ -25,7 +25,7 @@ from typing import Any, Callable
 from varar_config import read_varar_config
 from varar_core.cell_diff import ReturnShapeError, is_cell_mismatch_error
 from varar_core.diagnostics import drift_detected
-from varar_core.drift import reconcile_drift
+from varar_core.drift import prune_baselines, reconcile_drift
 from varar_core.execute import is_unexpected_pass_error
 from varar_runner.baseline_store import create_file_baseline_store
 from varar_runner.discovery import find_oaths
@@ -52,7 +52,20 @@ def generate_tests(namespace: dict[str, Any], root: str | Path | None = None) ->
     loaded = load_steps(cfg.steps, root)
     store = create_file_baseline_store(root)
     module_name = namespace.get("__name__")
-    for oath_path in find_oaths(cfg.docs_include, cfg.docs_exclude, root):
+    oaths = find_oaths(cfg.docs_include, cfg.docs_exclude, root)
+
+    # Drop baselines for oaths the config no longer discovers. Reconciliation is
+    # per-oath and never sees a path that has gone, so the lock would otherwise
+    # accumulate dead entries forever (#70). Once per run, keyed off the config
+    # globs — which here IS the full set, since generate_tests always discovers
+    # everything.
+    prune_baselines(
+        store,
+        [p.relative_to(root).as_posix() for p in oaths],
+        update=os.environ.get("VARAR_UPDATE") in ("1", "true"),
+    )
+
+    for oath_path in oaths:
         cls = _oath_test_case(oath_path, root, loaded, module_name, store)
         namespace[cls.__name__] = cls
 

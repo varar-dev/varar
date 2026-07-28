@@ -36,14 +36,23 @@ abstract class VarSpec(root: Path = Path.of(".")) : FunSpec() {
             System.getProperty("varar.update") == "true" ||
                 System.getenv("VARAR_UPDATE") == "1" ||
                 System.getenv("VARAR_UPDATE") == "true"
-        for (oathPath in Discovery.findOaths(config.docsInclude(), config.docsExclude(), root)) {
-            val rel =
-                root
-                    .toAbsolutePath()
-                    .normalize()
-                    .relativize(oathPath.toAbsolutePath().normalize())
-                    .toString()
-                    .replace('\\', '/')
+        val oaths = Discovery.findOaths(config.docsInclude(), config.docsExclude(), root)
+        fun relOf(oathPath: Path) =
+            root
+                .toAbsolutePath()
+                .normalize()
+                .relativize(oathPath.toAbsolutePath().normalize())
+                .toString()
+                .replace('\\', '/')
+
+        // Drop baselines for oaths the config no longer discovers. Reconciliation is per-oath and
+        // never sees a path that has gone, so the lock would otherwise accumulate dead entries
+        // forever (issue #70). Once per spec, keyed off the config globs — which here IS the full
+        // set, since findOaths ignores whatever test filter Kotest was given.
+        Drift.pruneBaselines(baselineStore, oaths.map(::relOf), update)
+
+        for (oathPath in oaths) {
+            val rel = relOf(oathPath)
             val source = Files.readString(oathPath)
             val plan = Run.planOath(rel, source, loaded.registry())
             val runs = Run.examplesWithRuns(plan, loaded.createContext(), Run.RecordingReporter())

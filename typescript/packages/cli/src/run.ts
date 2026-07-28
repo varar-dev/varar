@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { relative, sep } from 'node:path'
 import { findFiles, loadVarConfig } from '@varar/config'
-import { type Diagnostic, driftDiagnostics, reconcileDrift } from '@varar/core'
+import { type Diagnostic, driftDiagnostics, pruneBaselines, reconcileDrift } from '@varar/core'
 import { createFileBaselineStore, examplesWithRuns, loadSteps, planOath } from '@varar/runner'
 
 export type RunOptions = {
@@ -74,6 +74,22 @@ export async function runRun(opts: RunOptions): Promise<RunResult> {
       update,
     })
     for (const d of driftDiagnostics(drifts)) reporter.diagnostic(d)
+  }
+
+  // Drop baselines for oaths the config no longer discovers — reconciliation is
+  // per-oath and cannot see a path that has gone (#70). Keyed off cfg.docs, NOT
+  // varFiles: a `--globs` run is a filtered view, and pruning against it would
+  // delete live baselines. Only `--update` writes; a plain run just reports.
+  const configured = findFiles(opts.cwd, cfg.docs.include, cfg.docs.exclude).map((p) =>
+    (relative(opts.cwd, p) || p).split(sep).join('/'),
+  )
+  const pruned = await pruneBaselines({ store: baselineStore, keepPaths: configured, update })
+  for (const path of pruned) {
+    opts.writeStderr(
+      update
+        ? `varar: pruned ${path} from varar.lock.json (no longer matched by docs globs)\n`
+        : `varar: varar.lock.json still lists ${path}, which the docs globs no longer match — re-run with --update to prune it\n`,
+    )
   }
 
   const total = passed + failed

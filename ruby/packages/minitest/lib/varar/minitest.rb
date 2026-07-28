@@ -24,7 +24,16 @@ module Varar
       store = Runner.create_file_baseline_store(root)
       update = %w[1 true].include?(ENV.fetch('VARAR_UPDATE', nil))
 
-      Runner.find_oaths(cfg.docs_include, cfg.docs_exclude, root).each do |oath_path|
+      oaths = Runner.find_oaths(cfg.docs_include, cfg.docs_exclude, root)
+
+      # Drop baselines for oaths the config no longer discovers. Reconciliation is
+      # per-oath and never sees a path that has gone, so the lock would otherwise
+      # accumulate dead entries forever (#70). Once per run, keyed off the config
+      # globs — which here IS the full set, since generate_tests always discovers
+      # everything.
+      Core::Drifts.prune_baselines(store, oaths.map { |p| Runner.rel_posix(p, root) }, update: update)
+
+      oaths.each do |oath_path|
         klass = build_test_case(oath_path, root, loaded, store, update)
         namespace.const_set("Var_#{identifier(Runner.rel_posix(oath_path, root))}", klass)
       end

@@ -8,9 +8,9 @@ import pytest
 
 from varar_config import read_varar_config
 from varar_core.diagnostics import drift_detected
-from varar_core.drift import reconcile_drift
+from varar_core.drift import prune_baselines, reconcile_drift
 from varar_runner.baseline_store import create_file_baseline_store
-from varar_runner.discovery import match_oath
+from varar_runner.discovery import find_oaths, match_oath
 from varar_runner.run import RecordingReporter, examples_with_runs, plan_oath
 from varar_runner.steps import load_steps
 from varar_pytest.fixtures import _active_request, get_active_request, wrap_registry_for_fixtures
@@ -39,7 +39,20 @@ def pytest_configure(config: pytest.Config) -> None:
     loaded = load_steps(cfg.steps, root)
     wrapped_registry = wrap_registry_for_fixtures(loaded.registry, get_active_request)
     loaded = dataclasses.replace(loaded, registry=wrapped_registry)
-    _STASH[id(config)] = (cfg, loaded, root, create_file_baseline_store(root))
+    store = create_file_baseline_store(root)
+    _STASH[id(config)] = (cfg, loaded, root, store)
+
+    # Drop baselines for oaths the config no longer discovers. Reconciliation is
+    # per-oath and never sees a path that has gone, so the lock would otherwise
+    # accumulate dead entries forever (#70). Once per run, here rather than in
+    # VarFile.collect, and keyed off the config globs — NOT the files pytest
+    # happened to collect, since `pytest tests/one_dir/` is a filtered view and
+    # pruning against it would delete live baselines.
+    prune_baselines(
+        store,
+        [p.relative_to(root).as_posix() for p in find_oaths(cfg.docs_include, cfg.docs_exclude, root)],
+        update=_update_mode(config),
+    )
 
 
 def pytest_unconfigure(config: pytest.Config) -> None:

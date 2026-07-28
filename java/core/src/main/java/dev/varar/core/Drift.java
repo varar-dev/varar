@@ -1,9 +1,11 @@
 package dev.varar.core;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -190,6 +192,50 @@ public final class Drift {
             store.write(stringifyVarLock(new VarLock(2, oaths)));
         }
         return drifts;
+    }
+
+    /**
+     * Drops every baseline whose oath path is not in {@code keepPaths} — the entries left behind
+     * when an oath is deleted or moved. Pure counterpart of {@link #parseVarLock} / {@link
+     * #stringifyVarLock}; the caller decides what "still exists" means.
+     */
+    public static VarLock pruneVarLock(VarLock lock, Collection<String> keepPaths) {
+        Set<String> keep = new LinkedHashSet<>(keepPaths);
+        Map<String, OathBaseline> oaths = new LinkedHashMap<>();
+        for (Map.Entry<String, OathBaseline> entry : lock.oaths().entrySet()) {
+            if (keep.contains(entry.getKey())) oaths.put(entry.getKey(), entry.getValue());
+        }
+        return new VarLock(2, oaths);
+    }
+
+    /**
+     * The whole-lock counterpart of {@link #reconcileDrift}, run ONCE per run rather than per oath:
+     * reconciliation cannot see paths that no longer exist, so without this the lock silently
+     * accumulates dead entries and stops being a faithful inventory of the oath set (issue #70).
+     *
+     * <p>{@code keepPaths} MUST be everything the {@code docs} globs currently match — never the set
+     * the run happened to execute. Runs are routinely filtered (an IDE's single-example re-run), and
+     * pruning against a filtered set would delete live baselines.
+     *
+     * <p>Removal is still not <em>gated</em>: a deleted oath is a different signal from drift and
+     * stays ungated (ADR 0002). This only stops preserving dead state, and only under {@code update}.
+     *
+     * @return the paths removed, sorted (or, without {@code update}, the ones that would be)
+     */
+    public static List<String> pruneBaselines(BaselineStore store, Collection<String> keepPaths, boolean update) {
+        String text = store.read();
+        VarLock lock = text != null ? parseVarLock(text) : null;
+        if (lock == null) return new ArrayList<>();
+        Set<String> keep = new LinkedHashSet<>(keepPaths);
+        List<String> stale = new ArrayList<>();
+        for (String path : lock.oaths().keySet()) {
+            if (!keep.contains(path)) stale.add(path);
+        }
+        Collections.sort(stale);
+        if (update && !stale.isEmpty()) {
+            store.write(stringifyVarLock(pruneVarLock(lock, keepPaths)));
+        }
+        return stale;
     }
 
     // ---- serialize (byte-identical to JSON.stringify(...,null,2)+"\n") ------

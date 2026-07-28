@@ -264,6 +264,58 @@ module Varar
         expect(described_class.parse_var_lock('{"version":2,"specs":{}}')).to be_nil
         expect(described_class.parse_var_lock('{"version":2,"oaths":{"a.md":{"examples":[]}}}')).to be_nil
       end
+
+      # ---- Pruning baselines for oaths that no longer exist (#70) ----
+
+      # A lock carrying two oaths, one of which the docs globs no longer match —
+      # the state a deleted or moved .md leaves behind.
+      def lock_with_stale_path
+        source = 'I withdraw 40.'
+        var_doc, plan = plan_for(source, reg)
+        baseline = described_class.derive_oath_baseline(source, var_doc, plan)
+        described_class.stringify_var_lock(
+          VarLock.new(version: 2, oaths: { 'varar/w.md' => baseline, 'w.md' => baseline })
+        )
+      end
+
+      it 'prune_var_lock keeps only the paths it is given' do
+        lock = described_class.parse_var_lock(lock_with_stale_path)
+        expect(described_class.prune_var_lock(lock, ['varar/w.md']).oaths.keys).to eq(['varar/w.md'])
+      end
+
+      it 'prune_var_lock is a no-op when every path is still live' do
+        lock = described_class.parse_var_lock(lock_with_stale_path)
+        expect(described_class.prune_var_lock(lock, ['varar/w.md', 'w.md'])).to eq(lock)
+      end
+
+      it 'prune reports stale paths without update, and does not write' do
+        store = MemoryStore.new(lock_with_stale_path)
+        before = store.contents
+        expect(described_class.prune_baselines(store, ['varar/w.md'])).to eq(['w.md'])
+        # Reporting is not deleting: nothing is removed behind the author's back.
+        expect(store.contents).to eq(before)
+      end
+
+      it 'prune drops stale paths under update' do
+        store = MemoryStore.new(lock_with_stale_path)
+        expect(described_class.prune_baselines(store, ['varar/w.md'], update: true)).to eq(['w.md'])
+        expect(described_class.parse_var_lock(store.contents).oaths.keys).to eq(['varar/w.md'])
+      end
+
+      it 'prune leaves a lock with no stale paths untouched' do
+        store = MemoryStore.new(lock_with_stale_path)
+        before = store.contents
+        expect(described_class.prune_baselines(store, ['varar/w.md', 'w.md'], update: true)).to eq([])
+        # Byte-identical, not merely equivalent — an unnecessary rewrite would
+        # show up as a spurious diff in every consumer's working tree.
+        expect(store.contents).to eq(before)
+      end
+
+      it 'prune is a no-op when there is no baseline yet' do
+        store = MemoryStore.new(nil)
+        expect(described_class.prune_baselines(store, ['varar/w.md'], update: true)).to eq([])
+        expect(store.contents).to be_nil
+      end
     end
   end
 end

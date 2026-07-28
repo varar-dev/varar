@@ -280,4 +280,66 @@ class DriftTest {
         List<Drift.Drifted> drift = Drift.detectDrift(baseline, varDoc, Plan.plan(varDoc, depositWithdrawReg(false)));
         assertEquals(List.of("I deposit 100@1"), bare(drift));
     }
+
+    // ---- Pruning baselines for oaths that no longer exist (issue #70) ----
+
+    /**
+     * A lock carrying two oaths, one of which the docs globs no longer match — the state a deleted
+     * or moved .md leaves behind.
+     */
+    private static String lockWithStalePath() {
+        String source = "I withdraw 40.";
+        Ast.VarDoc varDoc = Parse.parse("w.md", source);
+        Drift.OathBaseline baseline = Drift.deriveOathBaseline(source, varDoc, Plan.plan(varDoc, reg(true)));
+        return Drift.stringifyVarLock(new Drift.VarLock(2, Map.of("varar/w.md", baseline, "w.md", baseline)));
+    }
+
+    @Test
+    void pruneVarLockKeepsOnlyThePathsItIsGiven() {
+        Drift.VarLock lock = Drift.parseVarLock(lockWithStalePath());
+        Drift.VarLock pruned = Drift.pruneVarLock(lock, List.of("varar/w.md"));
+        assertEquals(List.of("varar/w.md"), new ArrayList<>(pruned.oaths().keySet()));
+    }
+
+    @Test
+    void pruneReportsStalePathsWithoutUpdateAndDoesNotWrite() {
+        MemoryStore store = new MemoryStore();
+        store.contents = lockWithStalePath();
+        String before = store.contents;
+
+        assertEquals(List.of("w.md"), Drift.pruneBaselines(store, List.of("varar/w.md"), false));
+        // Reporting is not deleting: nothing is removed behind the author's back.
+        assertEquals(before, store.contents);
+    }
+
+    @Test
+    void pruneDropsStalePathsUnderUpdate() {
+        MemoryStore store = new MemoryStore();
+        store.contents = lockWithStalePath();
+
+        assertEquals(List.of("w.md"), Drift.pruneBaselines(store, List.of("varar/w.md"), true));
+        assertEquals(
+                List.of("varar/w.md"),
+                new ArrayList<>(Drift.parseVarLock(store.contents).oaths().keySet()));
+    }
+
+    @Test
+    void pruneLeavesALockWithNoStalePathsUntouched() {
+        MemoryStore store = new MemoryStore();
+        store.contents = lockWithStalePath();
+        String before = store.contents;
+
+        assertTrue(
+                Drift.pruneBaselines(store, List.of("varar/w.md", "w.md"), true).isEmpty());
+        // Byte-identical, not merely equivalent — an unnecessary rewrite would show up as a
+        // spurious diff in every consumer's working tree.
+        assertEquals(before, store.contents);
+    }
+
+    @Test
+    void pruneIsANoOpWhenThereIsNoBaselineYet() {
+        MemoryStore store = new MemoryStore();
+        assertTrue(Drift.pruneBaselines(store, List.of("varar/w.md"), true).isEmpty());
+        assertNull(store.contents);
+    }
 }

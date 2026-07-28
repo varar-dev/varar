@@ -126,6 +126,57 @@ public static class DriftDetection
         return drifts;
     }
 
+    /// <summary>
+    /// Drops every baseline whose oath path is not in <paramref name="keepPaths"/> — the entries
+    /// left behind when an oath is deleted or moved. Pure counterpart of <see cref="ParseVarLock"/>
+    /// / <see cref="StringifyVarLock"/>; the caller decides what "still exists" means.
+    /// </summary>
+    public static VarLock PruneVarLock(VarLock lockFile, IReadOnlyCollection<string> keepPaths)
+    {
+        var keep = new HashSet<string>(keepPaths, StringComparer.Ordinal);
+        return new VarLock(
+            2,
+            lockFile.Oaths.Where(entry => keep.Contains(entry.Key)).ToImmutableDictionary(StringComparer.Ordinal));
+    }
+
+    /// <summary>
+    /// The whole-lock counterpart of <see cref="ReconcileDrift"/>, run ONCE per run rather than per
+    /// oath: reconciliation cannot see paths that no longer exist, so without this the lock silently
+    /// accumulates dead entries and stops being a faithful inventory of the oath set (#70).
+    /// </summary>
+    /// <remarks>
+    /// <paramref name="keepPaths"/> MUST be everything the <c>docs</c> globs currently match — never
+    /// the set the run happened to execute. Runs are routinely filtered, and pruning against a
+    /// filtered set would delete live baselines.
+    /// <para>Removal is still not <em>gated</em>: a deleted oath is a different signal from drift and
+    /// stays ungated (ADR 0002). This only stops preserving dead state, and only under
+    /// <paramref name="update"/>. Returns the paths removed (or, without it, the ones that would be).</para>
+    /// </remarks>
+    public static ImmutableArray<string> PruneBaselines(
+        IBaselineStore store,
+        IReadOnlyCollection<string> keepPaths,
+        bool update = false)
+    {
+        var text = store.Read();
+        var lockFile = text is not null ? ParseVarLock(text) : null;
+        if (lockFile is null)
+        {
+            return [];
+        }
+
+        var keep = new HashSet<string>(keepPaths, StringComparer.Ordinal);
+        var stale = lockFile.Oaths.Keys
+            .Where(path => !keep.Contains(path))
+            .OrderBy(path => path, StringComparer.Ordinal)
+            .ToImmutableArray();
+        if (update && stale.Length > 0)
+        {
+            store.Write(StringifyVarLock(PruneVarLock(lockFile, keepPaths)));
+        }
+
+        return stale;
+    }
+
     /// <summary>Parse <c>varar.lock.json</c>; null on malformed input (treated as "no baseline yet").</summary>
     public static VarLock? ParseVarLock(string text)
     {

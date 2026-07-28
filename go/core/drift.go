@@ -177,6 +177,62 @@ func DriftMessage(drifted Drifted) string {
 	)
 }
 
+// PruneVarLock drops every baseline whose oath path is not in keepPaths — the
+// entries left behind when an oath is deleted or moved. Pure counterpart of
+// ParseVarLock/StringifyVarLock; the caller decides what "still exists" means.
+func PruneVarLock(lock VarLock, keepPaths []string) VarLock {
+	keep := make(map[string]struct{}, len(keepPaths))
+	for _, path := range keepPaths {
+		keep[path] = struct{}{}
+	}
+	oaths := map[string]OathBaseline{}
+	for path, baseline := range lock.Oaths {
+		if _, ok := keep[path]; ok {
+			oaths[path] = baseline
+		}
+	}
+	return VarLock{Version: 2, Oaths: oaths}
+}
+
+// PruneBaselines is the whole-lock counterpart of ReconcileDrift, run ONCE per
+// run rather than per oath: reconciliation cannot see paths that no longer exist,
+// so without this the lock silently accumulates dead entries and stops being a
+// faithful inventory of the oath set (#70).
+//
+// keepPaths MUST be everything the docs globs currently match — never the set the
+// run happened to execute. Runs are routinely filtered, and pruning against a
+// filtered set would delete live baselines.
+//
+// Removal is still not *gated*: a deleted oath is a different signal from drift
+// and stays ungated (ADR 0002). This only stops preserving dead state, and only
+// under update. Returns the paths removed (or, without update, the ones that
+// would be), sorted.
+func PruneBaselines(store BaselineStore, keepPaths []string, update bool) []string {
+	contents, ok := store.Read()
+	if !ok {
+		return nil
+	}
+	lock := ParseVarLock(contents)
+	if lock == nil {
+		return nil
+	}
+	keep := make(map[string]struct{}, len(keepPaths))
+	for _, path := range keepPaths {
+		keep[path] = struct{}{}
+	}
+	var stale []string
+	for path := range lock.Oaths {
+		if _, ok := keep[path]; !ok {
+			stale = append(stale, path)
+		}
+	}
+	sort.Strings(stale)
+	if update && len(stale) > 0 {
+		store.Write(StringifyVarLock(PruneVarLock(*lock, keepPaths)))
+	}
+	return stale
+}
+
 // ReconcileDrift is one oath's baseline reconciliation against a BaselineStore.
 // update accepts all drift; otherwise detect drift and rewrite the baseline only
 // on a clean run.

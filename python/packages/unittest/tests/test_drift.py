@@ -59,3 +59,32 @@ def test_var_update_accepts_drift(harness, monkeypatch):
     result, _ = harness.generate_and_run()
     assert result.wasSuccessful()
     assert _lock(harness)["oaths"]["features/vault.md"]["examples"] == []
+
+
+def _baseline_with_stale_path(harness) -> None:
+    """A baseline naming an oath the docs globs no longer match (#70)."""
+    entry = {"sourceHash": "fnv1a:0", "examples": []}
+    lock = {"version": 2, "oaths": {"features/calc.md": entry, "moved-away.md": entry}}
+    harness.write("varar.lock.json", json.dumps(lock))
+
+
+def test_a_plain_run_keeps_a_stale_baseline_path(harness):
+    _project(harness, "features/calc.md", "I add 2\n")
+    _baseline_with_stale_path(harness)
+
+    result, _ = harness.generate_and_run()
+
+    assert result.wasSuccessful()
+    # Removal stays an explicit act — nothing is deleted behind the author's back.
+    assert sorted(_lock(harness)["oaths"]) == ["features/calc.md", "moved-away.md"]
+
+
+def test_var_update_prunes_a_baseline_path_the_globs_no_longer_match(harness, monkeypatch):
+    monkeypatch.setenv("VARAR_UPDATE", "1")
+    _project(harness, "features/calc.md", "I add 2\n")
+    _baseline_with_stale_path(harness)
+
+    result, _ = harness.generate_and_run()
+
+    assert result.wasSuccessful()
+    assert list(_lock(harness)["oaths"]) == ["features/calc.md"]

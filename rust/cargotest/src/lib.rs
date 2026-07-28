@@ -25,7 +25,7 @@ use std::path::Path;
 use std::rc::Rc;
 
 use libtest_mimic::{Arguments, Failed, Trial};
-use varar_core::drift::{self, reconcile_drift};
+use varar_core::drift::{self, prune_baselines, reconcile_drift};
 use varar_core::parse::parse;
 use varar_core::registry::Registry;
 use varar_runner::{
@@ -61,8 +61,25 @@ pub fn trials(root: &Path, build_registry: BuildRegistry, context: ContextFactor
     let config = read_config(root);
     let update = matches!(std::env::var("VARAR_UPDATE").as_deref(), Ok("1") | Ok("true"));
     let mut trials = Vec::new();
+    let oaths = find_oaths(&config, root);
 
-    for oath_path in find_oaths(&config, root) {
+    // Drop baselines for oaths the config no longer discovers. Reconciliation is
+    // per-oath and never sees a path that has gone, so the lock would otherwise
+    // accumulate dead entries forever (#70). Once per run, keyed off the config
+    // globs — which here IS the full set, since `trials` always discovers
+    // everything (`cargo test <filter>` filters the trials, not the discovery).
+    let keep: Vec<String> = oaths
+        .iter()
+        .map(|p| {
+            p.strip_prefix(root)
+                .unwrap_or(p)
+                .to_string_lossy()
+                .replace('\\', "/")
+        })
+        .collect();
+    prune_baselines(&mut FileBaselineStore::new(root), &keep, update);
+
+    for oath_path in oaths {
         let source = std::fs::read_to_string(&oath_path).unwrap_or_default();
         let oath_file = oath_path
             .file_name()

@@ -1,7 +1,14 @@
 package dev.varar.junit;
 
 import dev.varar.config.VarConfig;
+import dev.varar.core.Drift;
+import dev.varar.runner.BaselineStores;
+import dev.varar.runner.Discovery;
 import dev.varar.runner.StepLoader;
+import java.nio.file.Path;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 import org.junit.platform.engine.EngineDiscoveryRequest;
 import org.junit.platform.engine.ExecutionRequest;
 import org.junit.platform.engine.TestDescriptor;
@@ -41,10 +48,61 @@ public final class VarTestEngine extends HierarchicalTestEngine<VarEngineExecuti
         engineDescriptor.setLoadedSteps(loadedSteps);
         DiscoveryIssueReporter issueReporter =
                 DiscoveryIssueReporter.forwarding(discoveryRequest.getDiscoveryListener(), uniqueId);
-        new DiscoverySelectorResolver(
-                        config, ConfigBridge.rootFrom(discoveryRequest.getConfigurationParameters()), loadedSteps)
+        Path root = ConfigBridge.rootFrom(discoveryRequest.getConfigurationParameters());
+        new DiscoverySelectorResolver(config, root, loadedSteps)
                 .resolveSelectors(discoveryRequest, engineDescriptor, issueReporter);
+        pruneStaleBaselines(engineDescriptor, config, root);
         return engineDescriptor;
+    }
+
+    /**
+     * Drops baselines for oaths the config no longer discovers. Reconciliation is per-oath and never
+     * sees a path that has gone, so {@code varar.lock.json} would otherwise accumulate dead entries
+     * forever (issue #70). Once per discovery pass, here rather than in the resolver, which runs per
+     * selector.
+     *
+     * <p>The kept set is the union of two views, because this engine discovers oaths two ways and
+     * neither alone is complete:
+     *
+     * <ul>
+     *   <li>the <strong>filesystem</strong> walk of the {@code docs} globs under {@code root} — the
+     *       full set regardless of how narrowly the request was scoped, which is what makes an IDE's
+     *       single-example re-run safe to prune from;
+     *   <li>the oaths <strong>actually resolved</strong> in this request — which is how a
+     *       classpath-resource oath (one that is on the classpath but not under {@code root} on
+     *       disk) stays in the lock.
+     * </ul>
+     *
+     * <p>A union can only ever keep more, never less. And if the filesystem walk finds nothing at
+     * all, this bails out entirely: {@code root} is then not a project directory we understand, and
+     * pruning on that basis could delete every live baseline.
+     */
+    private static void pruneStaleBaselines(VarEngineDescriptor engineDescriptor, VarConfig config, Path root) {
+        List<Path> onDisk = Discovery.findOaths(config.docsInclude(), config.docsExclude(), root);
+        if (onDisk.isEmpty()) {
+            return;
+        }
+        Set<String> keep = new LinkedHashSet<>();
+        for (Path oath : onDisk) {
+            keep.add(root.toAbsolutePath()
+                    .normalize()
+                    .relativize(oath.toAbsolutePath().normalize())
+                    .toString()
+                    .replace('\\', '/'));
+        }
+        for (TestDescriptor child : engineDescriptor.getChildren()) {
+            if (child instanceof VarFileDescriptor fileDescriptor) {
+                keep.add(fileDescriptor.oathPath());
+            }
+        }
+        Drift.pruneBaselines(BaselineStores.file(root.toAbsolutePath().normalize()), keep, updateMode());
+    }
+
+    /** Same acknowledgment switch the resolver honours: {@code -Dvar.update} / {@code VARAR_UPDATE}. */
+    private static boolean updateMode() {
+        return "true".equals(System.getProperty("varar.update"))
+                || "1".equals(System.getenv("VARAR_UPDATE"))
+                || "true".equals(System.getenv("VARAR_UPDATE"));
     }
 
     @Override

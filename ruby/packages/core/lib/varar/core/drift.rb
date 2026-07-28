@@ -128,6 +128,39 @@ module Varar
         drifts
       end
 
+      # Drop every baseline whose oath path is not in +keep_paths+ — the entries
+      # left behind when an oath is deleted or moved. Pure counterpart of
+      # parse_var_lock / stringify_var_lock; the caller decides what "still
+      # exists" means.
+      def prune_var_lock(lock, keep_paths)
+        keep = keep_paths.to_a
+        VarLock.new(version: 2, oaths: lock.oaths.slice(*keep))
+      end
+
+      # The whole-lock counterpart of reconcile_drift, run ONCE per run rather
+      # than per oath: reconciliation cannot see paths that no longer exist, so
+      # without this the lock silently accumulates dead entries and stops being
+      # a faithful inventory of the oath set (#70).
+      #
+      # +keep_paths+ MUST be everything the +docs+ globs currently match — never
+      # the set the run happened to execute. Runs are routinely filtered, and
+      # pruning against a filtered set would delete live baselines.
+      #
+      # Removal is still not *gated*: a deleted oath is a different signal from
+      # drift and stays ungated (ADR 0002). This only stops preserving dead
+      # state, and only under +update+. Returns the paths removed (or, without
+      # +update+, the ones that would be).
+      def prune_baselines(store, keep_paths, update: false)
+        text = store.read
+        lock = text ? parse_var_lock(text) : nil
+        return [] unless lock
+
+        keep = keep_paths.to_a
+        stale = lock.oaths.keys.reject { |path| keep.include?(path) }
+        store.write(stringify_var_lock(prune_var_lock(lock, keep))) if update && !stale.empty?
+        stale
+      end
+
       def parse_var_lock(text)
         parsed = JSON.parse(text)
         return nil unless parsed.is_a?(::Hash) && parsed['version'] == 2

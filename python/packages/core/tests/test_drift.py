@@ -10,6 +10,8 @@ from varar_core.drift import (
     drift_diagnostics,
     live_examples,
     parse_var_lock,
+    prune_baselines,
+    prune_var_lock,
     reconcile_drift,
     stringify_var_lock,
 )
@@ -314,3 +316,60 @@ def test_deleting_one_step_def_of_a_merged_example_drifts_only_the_now_prose_par
     # example. The withdraw paragraph is still live; the deposit one drifts.
     drift = detect_drift(baseline, var_doc, plan(var_doc, _deposit_withdraw_reg(False)))
     assert _bare(drift) == [("I deposit 100", 1)]
+
+
+def _lock_with_stale_path() -> str:
+    """A lock carrying two oaths, one of which the docs globs no longer match.
+
+    The state a deleted or moved .md leaves behind (#70).
+    """
+    source = "I withdraw 40."
+    var_doc = parse("w.md", source)
+    baseline = derive_oath_baseline(source, var_doc, plan(var_doc, _reg()))
+    return stringify_var_lock(VarLock(version=2, oaths={"varar/w.md": baseline, "w.md": baseline}))
+
+
+def test_prune_var_lock_keeps_only_the_paths_it_is_given() -> None:
+    lock = parse_var_lock(_lock_with_stale_path())
+    assert lock is not None
+    assert list(prune_var_lock(lock, ["varar/w.md"]).oaths) == ["varar/w.md"]
+
+
+def test_prune_var_lock_is_a_no_op_when_every_path_is_still_live() -> None:
+    lock = parse_var_lock(_lock_with_stale_path())
+    assert lock is not None
+    assert prune_var_lock(lock, ["varar/w.md", "w.md"]) == lock
+
+
+def test_prune_baselines_reports_stale_paths_without_update_and_does_not_write() -> None:
+    store = MemoryStore(_lock_with_stale_path())
+    before = store.contents
+
+    assert prune_baselines(store, ["varar/w.md"]) == ("w.md",)
+    # Reporting is not deleting: nothing is removed behind the author's back.
+    assert store.contents == before
+
+
+def test_prune_baselines_drops_stale_paths_under_update() -> None:
+    store = MemoryStore(_lock_with_stale_path())
+
+    assert prune_baselines(store, ["varar/w.md"], update=True) == ("w.md",)
+    lock = parse_var_lock(store.contents or "")
+    assert lock is not None
+    assert list(lock.oaths) == ["varar/w.md"]
+
+
+def test_prune_baselines_leaves_a_lock_with_no_stale_paths_untouched() -> None:
+    store = MemoryStore(_lock_with_stale_path())
+    before = store.contents
+
+    assert prune_baselines(store, ["varar/w.md", "w.md"], update=True) == ()
+    # Byte-identical, not merely equivalent — an unnecessary rewrite would show
+    # up as a spurious diff in every consumer's working tree.
+    assert store.contents == before
+
+
+def test_prune_baselines_is_a_no_op_when_there_is_no_baseline_yet() -> None:
+    store = MemoryStore()
+    assert prune_baselines(store, ["varar/w.md"], update=True) == ()
+    assert store.contents is None

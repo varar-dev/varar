@@ -6,6 +6,8 @@ import {
   driftDiagnostics,
   liveExamples,
   parseVarLock,
+  pruneBaselines,
+  pruneVarLock,
   reconcileDrift,
   stringifyVarLock,
   type VarLock,
@@ -350,4 +352,60 @@ test('deleting one step def of a merged example drifts only the now-prose paragr
   // example. The withdraw paragraph is still live; the deposit one drifts.
   const drift = detectDrift(baseline, varDoc, plan(varDoc, depositWithdrawReg(false)))
   expect(bare(drift)).toEqual([{ name: 'I deposit 100', line: 1 }])
+})
+
+// A lock carrying two oaths, one of which the docs globs no longer match — the
+// state a deleted or moved .md leaves behind (#70).
+function lockWithStalePath(): string {
+  const source = 'I withdraw 40.'
+  const varDoc = parse('w.md', source)
+  const baseline = deriveOathBaseline(source, varDoc, plan(varDoc, depositWithdrawReg()))
+  return stringifyVarLock({
+    version: 2,
+    oaths: { 'varar/w.md': baseline, 'w.md': baseline },
+  })
+}
+
+test('pruneVarLock keeps only the paths it is given', () => {
+  const lock = parseVarLock(lockWithStalePath()) as VarLock
+  expect(Object.keys(pruneVarLock(lock, ['varar/w.md']).oaths)).toEqual(['varar/w.md'])
+})
+
+test('pruneVarLock is a no-op when every path is still live', () => {
+  const lock = parseVarLock(lockWithStalePath()) as VarLock
+  expect(pruneVarLock(lock, ['varar/w.md', 'w.md'])).toEqual(lock)
+})
+
+test('pruneBaselines reports stale paths without update, and does not write', async () => {
+  const store = memoryStore(lockWithStalePath())
+  const before = store.contents
+
+  expect(await pruneBaselines({ store, keepPaths: ['varar/w.md'] })).toEqual(['w.md'])
+  // Reporting is not deleting: nothing is removed behind the author's back.
+  expect(store.contents).toBe(before)
+})
+
+test('pruneBaselines drops stale paths under update', async () => {
+  const store = memoryStore(lockWithStalePath())
+
+  expect(await pruneBaselines({ store, keepPaths: ['varar/w.md'], update: true })).toEqual(['w.md'])
+  expect(Object.keys((parseVarLock(store.contents ?? '') as VarLock).oaths)).toEqual(['varar/w.md'])
+})
+
+test('pruneBaselines leaves a lock with no stale paths untouched', async () => {
+  const store = memoryStore(lockWithStalePath())
+  const before = store.contents
+
+  expect(await pruneBaselines({ store, keepPaths: ['varar/w.md', 'w.md'], update: true })).toEqual(
+    [],
+  )
+  // Byte-identical, not merely equivalent — an unnecessary rewrite would show up
+  // as a spurious diff in every consumer's working tree.
+  expect(store.contents).toBe(before)
+})
+
+test('pruneBaselines is a no-op when there is no baseline yet', async () => {
+  const store = memoryStore()
+  expect(await pruneBaselines({ store, keepPaths: ['varar/w.md'], update: true })).toEqual([])
+  expect(store.contents).toBeNull()
 })
