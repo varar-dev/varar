@@ -30,8 +30,21 @@ sensor … end`); Ruby, Rust, and C# all shipped with their tree-sitter
 dialect wired from the start (see the repo-integration checklist). Every port follows the
 same package shape and is proven correct by reproducing the shared
 `conformance/bundles/*/golden/*.json` byte-for-byte — never by writing fresh
-tests against a new spec (the one carve-out is **drift**, which is unit-gated —
-see its stage below).
+tests against a new spec (the one carve-out is **drift**, whose *algorithm* is
+unit-gated — see its stage below; its *wiring* is gated by the adapter smoke
+contract, `conformance/adapter/`).
+
+There are three conformance corpora, and they gate different things. Passing all
+of the first two and still shipping a broken port is possible — that is exactly
+what happened in [#69][i69-intro]:
+
+| Corpus | Gates | Shape |
+|---|---|---|
+| `conformance/bundles/` | the pure core: var-doc, registry, plan, trace | golden JSON, byte-for-byte |
+| `conformance/config/` | the `varar.config.json` reader | golden JSON / expect-error |
+| `conformance/adapter/` | **that the adapter is wired** — discovery, the drift gate, `VARAR_UPDATE` | runs the sample project's real test command |
+
+[i69-intro]: https://github.com/varar-dev/varar/issues/69
 
 Two docs are the primary source for this skill and are worth reading in full
 before starting a new port, not just skimming this summary:
@@ -326,7 +339,30 @@ TestEngine (JUnit), a `pytest_collect_file` hook (pytest), a generated
   `--update`/acknowledgment path (ADR 0002 — never silently accept drift). Add
   a per-adapter drift test with a `varar.lock.json` fixture (precedent:
   `var-pytest`/`var-unittest` `tests/test_drift.py`, `var-kotest`'s
-  `kotest-drift/` resources).
+  `kotest-drift/` resources, `Varar.TestAdapter.Tests/DriftGateTests.cs`).
+
+  **This bullet used to be prose, and prose was not enough** — the .NET adapter
+  had every drift function present and unit-tested and called none of them from
+  Discover/Run, while every conformance gate stayed green ([#69][i69]). It is now
+  machine-enforced by the **adapter smoke contract**
+  (`conformance/adapter/README.md`), a third corpus alongside `bundles/` and
+  `config/`. Where those gate pure functions, it gates *wiring*: it runs your
+  sample project's real test command against a deliberately drifted baseline and
+  requires it to go red, then requires `VARAR_UPDATE=1` to accept.
+
+  A new port must therefore:
+  1. commit a `varar.lock.json` in its `examples/<lang>-<framework>/` project —
+     the gate is armed by data, and a project with no baseline gates nothing;
+  2. register that project in `conformance/adapter/projects.json`, whose
+     `command` **must defeat the build tool's result cache** (the smoke run
+     changes only the lock file — see `-count=1` for go, `cleanTest` for gradle);
+  3. call `conformance/adapter/smoke.sh examples/<project>` at the end of the
+     port's `make` target and CI workflow.
+
+  Step 2 is self-enforcing: `smoke.sh` fails if any directory under `examples/`
+  is unregistered, so a forgotten port breaks the *first* port's smoke run.
+
+[i69]: https://github.com/varar-dev/varar/issues/69
 
 ## Repo integration checklist
 
@@ -453,6 +489,20 @@ your `canonical_json`, byte-compare) or an `expect-error.txt` marker (loading
 must **raise** — the txt is human-only, not asserted). Reproduce all cases
 (currently 8: `empty-object, full, invalid-json, minimal, no-config-file,
 null-values, unknown-key, wrong-type`) before the config reader is "done".
+
+## Adapter smoke contract (the gate on wiring, not on functions)
+
+`conformance/adapter/` is the third corpus — read its `README.md`. Unlike the
+other two it runs your sample project's real test command
+(`go test` / `mvn test` / `dotnet test` / …) and asserts things no golden can
+see: that `varar.lock.json` is committed and covers every oath, that a drifted
+baseline makes the suite exit non-zero naming the drift, and that
+`VARAR_UPDATE=1` accepts and re-records it.
+
+It exists because the goldens only ever exercise the pure core. An adapter that
+discovers zero oaths — or that never calls `reconcileDrift` — is 100%
+conformance-green and reports a passing suite. Wire it as described in the drift
+gate bullet above.
 
 ## What's shared — don't reimplement per language
 

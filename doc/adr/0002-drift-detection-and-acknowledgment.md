@@ -96,7 +96,23 @@ The distinction the decision turns on:
 - Drift is a **runtime / run-result** concern, so it lives in the shared shell
   (`var-runner`) and the runner adapters, layered on the pure core's
   parse/match (which already knows which paragraphs are examples). It is *not*
-  runtime-collection behaviour and *not* part of the conformance corpus.
+  runtime-collection behaviour and *not* part of the golden conformance corpus.
+
+  **Amendment (2026-07-28).** "Not part of the conformance corpus" turned out to
+  be the loophole. Because no corpus covered the adapters, the .NET VSTest
+  adapter shipped with `FileBaselineStore` and `ReconcileDrift` present and
+  unit-tested, and called neither from Discover/Run — every gate green, the drift
+  gate absent, and `examples/csharp-vstest` with no baseline at all
+  ([#69](https://github.com/varar-dev/varar/issues/69)). The same hole had a
+  second instance: `examples/typescript-vitest` shipped no baseline either, and
+  the vitest gate is armed by data, so it never fired in the dogfood project.
+
+  Drift's *algorithm* remains unit-gated per port (no golden), but its *wiring*
+  is now gated by a third corpus, `conformance/adapter/` — which runs each sample
+  project's real test command against a deliberately drifted baseline and
+  requires it to go red, then requires `VARAR_UPDATE=1` to accept and re-record.
+  Every port's `make` target and CI workflow runs it. See
+  `conformance/adapter/README.md`.
 - **It must slot into the normal runner run to be useful** — surfaced through a
   regular `pytest` / `vitest` / `var run`, in **both** implementations — not as a
   separate tool.

@@ -15,8 +15,15 @@ This is a multi-language monorepo (ADR 0001). Top level:
 - `java/` — the Maven multi-module workspace for the Java port (JDK pinned in the
   repo-root `.tool-versions`, alongside every other asdf toolchain; run
   `make install-tools` to install them all).
-- `conformance/` — language-neutral corpus (`bundles/<n>/{example.md, *.steps.ts,
-  golden/*.json}`) read by every language's conformance harness.
+- `conformance/` — language-neutral corpora read by every port. Three of them,
+  gating different things: `bundles/<n>/{example.md, *.steps.ts, golden/*.json}`
+  (the pure core, byte-for-byte goldens), `config/cases/` (the
+  `varar.config.json` reader), and `adapter/` (the **smoke contract** — that a
+  test-framework adapter is actually wired, not merely conformance-green; it
+  runs each `examples/` project's real test command against a deliberately
+  drifted baseline and requires it to go red). A port can pass the first two and
+  still test nothing, which is what `adapter/` exists to stop — see
+  `conformance/adapter/README.md`.
 - `doc/` — shared design docs (ADRs, specs, plans, ARCHITECTURE).
 - `examples/` — one standalone sample project per language/test-framework
   combo, mirroring the `varar-dev/varar-examples` repo 1:1 (synced there on every
