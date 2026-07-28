@@ -58,3 +58,10 @@ jobs:
       - name: examples
         working-directory: examples/go-gotest
         run: go test ./...
+
+      # The adapter smoke contract: the golden corpora only see the pure core, so an
+      # adapter can be conformance-green and still test nothing. This runs the sample's
+      # real test command against a deliberately drifted baseline and requires it to go
+      # red. See conformance/adapter/README.md.
+      - name: adapter smoke contract
+        run: conformance/adapter/smoke.sh examples/go-gotest

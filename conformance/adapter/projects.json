@@ -1,0 +1,96 @@
+{
+  "$comment": [
+    "Every test-framework adapter, and the sample project that proves it is wired.",
+    "smoke.sh asserts this list covers every directory under examples/ — so a new port",
+    "that forgets to register itself fails the FIRST port's smoke run, not a code review.",
+    "",
+    "command runs from the project directory via `sh -c`. It MUST defeat the build tool's",
+    "result cache: the smoke run changes only varar.lock.json, and a tool that decides",
+    "'nothing to do' from source timestamps reports a stale green and makes the whole",
+    "contract vacuous. That is why go carries -count=1 and gradle carries cleanTest.",
+    "",
+    "baseline is how the adapter treats varar.lock.json:",
+    "  reconcile — reads AND rewrites it on a clean run (most adapters)",
+    "  gate      — read-only; the file is written by `varar run` (var-vitest, whose",
+    "              plugin is a build-time transform and must not write during it)"
+  ],
+  "probe": {
+    "oath": "varar/deep-thought.md",
+    "name": "You're really not going to like it",
+    "line": 1
+  },
+  "projects": [
+    {
+      "dir": "examples/typescript-vitest",
+      "adapter": "@varar/vitest",
+      "command": "pnpm vitest run",
+      "baseline": "gate"
+    },
+    {
+      "dir": "examples/python-pytest",
+      "adapter": "pytest-varar",
+      "command": "uv run pytest",
+      "baseline": "reconcile"
+    },
+    {
+      "dir": "examples/python-unittest",
+      "adapter": "varar-unittest",
+      "command": "uv run python -m unittest",
+      "baseline": "reconcile"
+    },
+    {
+      "dir": "examples/java-junit-maven",
+      "adapter": "dev.varar:junit",
+      "command": "mvn --batch-mode test",
+      "baseline": "reconcile"
+    },
+    {
+      "dir": "examples/java-junit-gradle",
+      "adapter": "dev.varar:junit",
+      "command": "./gradlew --console=plain cleanTest test",
+      "baseline": "reconcile"
+    },
+    {
+      "dir": "examples/kotlin-junit",
+      "adapter": "dev.varar:junit",
+      "command": "./gradlew --console=plain cleanTest test",
+      "baseline": "reconcile"
+    },
+    {
+      "dir": "examples/kotlin-kotest",
+      "adapter": "dev.varar:kotest",
+      "command": "./gradlew --console=plain cleanTest test",
+      "baseline": "reconcile"
+    },
+    {
+      "dir": "examples/ruby-rspec",
+      "adapter": "varar-rspec",
+      "command": "bundle exec rspec",
+      "baseline": "reconcile"
+    },
+    {
+      "dir": "examples/ruby-minitest",
+      "adapter": "varar-minitest",
+      "command": "bundle exec rake test",
+      "baseline": "reconcile"
+    },
+    {
+      "dir": "examples/rust-cargotest",
+      "adapter": "varar-cargotest",
+      "command": "cargo test",
+      "baseline": "reconcile"
+    },
+    {
+      "dir": "examples/csharp-vstest",
+      "adapter": "Varar.TestAdapter",
+      "command": "dotnet test",
+      "baseline": "reconcile"
+    },
+    {
+      "dir": "examples/go-gotest",
+      "adapter": "varar/go/gotest",
+      "command": "go test -count=1 ./...",
+      "baseline": "reconcile"
+    }
+  ]
+}
