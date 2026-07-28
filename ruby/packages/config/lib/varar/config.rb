@@ -21,12 +21,26 @@ module Varar
 
     module_function
 
+    # Read <root>/varar.config.json. The filesystem edge over #parse_var_config;
+    # a missing file yields the empty config (tools no-op, as in every port).
     def read_var_config(root)
       path = File.join(root.to_s, 'varar.config.json')
       return VarConfig.new unless File.file?(path)
 
+      parse_var_config(File.read(path, encoding: 'UTF-8'), path)
+    end
+
+    # Parse varar.config.json TEXT. Pure — no filesystem.
+    #
+    # +source+ only labels errors (a path, a URL, '<memory>'); nothing is read
+    # from it. Splitting this out from #read_var_config is what lets a caller
+    # with the text already in hand — an editor buffer, an in-memory fixture,
+    # the LSP — validate it without inventing a file, and mirrors TypeScript's
+    # parseVarConfig / Java's VarConfig.parse.
+    def parse_var_config(text, source)
+      path = source
       data = begin
-        JSON.parse(File.read(path, encoding: 'UTF-8'))
+        JSON.parse(text)
       rescue JSON::ParserError => e
         raise ArgumentError, "#{path}: invalid JSON: #{e.message}"
       end
