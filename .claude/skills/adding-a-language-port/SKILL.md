@@ -79,7 +79,7 @@ not four:
 |---|---|---|---|
 | `<lang>-core` (e.g. `var-core` / `var_core`) | nothing runtime-ish | pure pipeline: parse → match → plan → execute, diffs, drift, conformance projections | filesystem, network, globals, time, test-framework types |
 | `<lang>` facade (e.g. `@varar/varar` / `var`) | `<lang>-core` | author API only: `steps(factory)` / `Steps.state(factory)` (stimulus/sensor), `registry` glue subpath | pipeline internals directly (goes through core) |
-| `<lang>-config` (e.g. `@varar/config` / `var_config`) | nothing (pure) | the `varar.config.json` reader — strict, fail-loud; its own conformance corpus | filesystem beyond reading the one config file |
+| `<lang>-config` (e.g. `@varar/config` / `var_config`) | nothing (pure) | the `varar.config.json` reader — strict, fail-loud; a pure `parse(text, source)` plus the thin `read(root)` over it; its own conformance corpus | filesystem beyond reading the one config file |
 | `<lang>-runner` (e.g. `var-runner`) | facade + config + core | imperative shell: oath/step discovery (globs), `load_steps`, `run_oath`/`plan_oath`, failure rendering, the filesystem `BaselineStore` (drift) | any one test framework's types |
 | `<lang>-<framework>` (e.g. `var-vitest`, `var-pytest`) | `<lang>-runner` | one test-framework binding: collection (one test item per example), fixture/DI bridging, reporting, the drift gate | pipeline logic (delegates to runner/core) |
 
@@ -507,6 +507,26 @@ your `canonical_json`, byte-compare) or an `expect-error.txt` marker (loading
 must **raise** — the txt is human-only, not asserted). Reproduce all cases
 (currently 8: `empty-object, full, invalid-json, minimal, no-config-file,
 null-values, unknown-key, wrong-type`) before the config reader is "done".
+
+**Split the reader in two, and expose both.** The corpus only ever loads from a
+directory, so it will happily pass a reader that fuses reading and parsing into
+one function — and three ports shipped exactly that before anyone noticed
+([#11][i11]):
+
+| | pure | filesystem edge |
+|---|---|---|
+| TypeScript | `parseVarConfig(jsonText, sourcePath)` | `loadVarConfig(cwd)` |
+| Java / C# | `VarConfig.parse(text, source)` | `VarConfig.load(root)` |
+| Python | `parse_varar_config(text, source)` | `read_varar_config(root)` |
+| Ruby / Rust | `parse_var_config(text, source)` | `read_var_config(root)` |
+| Go | `ParseVarConfig(text, source)` | `ReadVarConfig(root)` |
+
+`source` only *labels errors* — a path, a URL, `"<memory>"` — and nothing is read
+from it. Without the split, a caller holding config text (an editor buffer, the
+LSP, an in-memory fixture) has to invent a temp file to validate it, and the
+package stops being pure in the sense the hexagonal table claims.
+
+[i11]: https://github.com/varar-dev/varar/issues/11
 
 ## Adapter smoke contract (the gate on wiring, not on functions)
 
