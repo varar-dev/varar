@@ -21,17 +21,30 @@ pub struct VarConfig {
     pub snippets: BTreeMap<String, String>,
 }
 
-/// Read `<root>/varar.config.json`. Missing file → empty config. Any malformed
-/// input → `Err(message)` beginning with the file path.
+/// Read `<root>/varar.config.json`. The filesystem edge over [`parse_var_config`];
+/// a missing file yields the empty config (tools no-op, as in every port).
 pub fn read_var_config(root: &Path) -> Result<VarConfig, String> {
     let path = root.join("varar.config.json");
-    let loc = path.display();
     if !path.is_file() {
         return Ok(VarConfig::default());
     }
+    let loc = path.display().to_string();
     let text = std::fs::read_to_string(&path).map_err(|e| format!("{loc}: {e}"))?;
+    parse_var_config(&text, &loc)
+}
+
+/// Parse `varar.config.json` TEXT. Pure — no filesystem.
+///
+/// `source` only labels errors (a path, a URL, `"<memory>"`); nothing is read from
+/// it. Splitting this out from [`read_var_config`] is what lets a caller with the
+/// text already in hand — an editor buffer, an in-memory fixture, the LSP —
+/// validate it without inventing a file, and mirrors TypeScript's `parseVarConfig`
+/// / Java's `VarConfig.parse`. Any malformed input → `Err(message)` beginning with
+/// `source`.
+pub fn parse_var_config(text: &str, source: &str) -> Result<VarConfig, String> {
+    let loc = source;
     let data: serde_json::Value =
-        serde_json::from_str(&text).map_err(|e| format!("{loc}: invalid JSON: {e}"))?;
+        serde_json::from_str(text).map_err(|e| format!("{loc}: invalid JSON: {e}"))?;
     let obj = data
         .as_object()
         .ok_or_else(|| format!("{loc}: top level must be an object"))?;
