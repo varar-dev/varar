@@ -44,6 +44,9 @@ command and asserts:
 | `baseline-complete` | one lock entry per oath on disk | discovery that silently covers a subset, or nothing |
 | `drift-detected` | with a drifted baseline the suite exits non-zero, naming the drift and the paragraph | **the adapter never reconciles at all — #69** |
 | `drift-accepted` | `VARAR_UPDATE=1` exits zero, and a reconciling adapter re-records the baseline byte-identically | a missing acknowledgment path; a divergent lock serializer |
+| `baseline-pruned` | accepting drift also drops entries for oaths the config no longer discovers | the lock hoarding dead paths forever ([#70][]) |
+
+[#70]: https://github.com/varar-dev/varar/issues/70
 
 Plus one check on the corpus itself: **every directory under `examples/` must be
 registered in `projects.json`**. A new port that adds a sample project and
@@ -66,6 +69,15 @@ sample project. It is a *candidate* paragraph the plan never turns into an
 example, so drift re-identifies it by Jaccard word-similarity and reports it —
 exactly the state a renamed or deleted step definition leaves behind. Only the
 lock file is touched, and it is restored on every exit path.
+
+`baseline-pruned` uses a second probe, `probe.stalePath`: a whole extra oath
+entry keyed at `deep-thought.md`, the pre-`varar/` location these samples
+actually migrated from. It is well-formed in every respect except that no `docs`
+glob matches it any more.
+
+Note that `baseline-pruned` only runs for `reconcile` adapters. `@varar/vitest`
+never writes the lock at all, so for `examples/typescript-vitest` the pruning
+path lives in `varar run` and is covered by `@varar/cli`'s own tests instead.
 
 ## Registering an adapter
 

@@ -144,6 +144,29 @@ The distinction the decision turns on:
 - Whole-file deletion or rename is a *different* signal (the oath is gone, not
   drifted) and is out of scope here.
 
+  **Amendment (2026-07-28).** Out of scope for *gating* — but the baseline still
+  had to stop hoarding the entries. Reconciliation is per-oath, so a path that no
+  longer exists is never visited and its entry survived forever: moving the sample
+  projects' oaths into `varar/` left every port's lock carrying both the old
+  root-level keys and the new ones, curable only by deleting the file
+  ([#70](https://github.com/varar-dev/varar/issues/70)). The lock stopped being a
+  faithful inventory, and a file later re-introduced at an old path would have
+  been reconciled against a years-stale baseline.
+
+  `pruneBaselines` (all seven cores) now drops those entries, under the same
+  explicit acknowledgment as accepting drift. Two properties keep it honest:
+
+  - **The predicate is the `docs` globs, not the set the run executed.** Runs are
+    routinely filtered — `varar run --globs`, a pytest path argument, an IDE's
+    single-example re-run — and pruning against a filtered view would delete live
+    baselines. Every adapter passes the full configured set.
+  - **It only writes under `update`.** A plain run reports (the CLI prints which
+    paths are stale and how to prune them) and changes nothing. Removal stays as
+    deliberate as accepting drift; this is not silent garbage collection.
+
+  Removal is still not gated. Deleting an oath remains a decision the tool does
+  not second-guess — it just no longer preserves the corpse.
+
 ## Alternatives considered
 
 - **Silent drop (status quo).** A zero-match paragraph is prose, dropped. Simple,

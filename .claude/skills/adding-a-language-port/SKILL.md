@@ -361,6 +361,24 @@ TestEngine (JUnit), a `pytest_collect_file` hook (pytest), a generated
 
   Step 2 is self-enforcing: `smoke.sh` fails if any directory under `examples/`
   is unregistered, so a forgotten port breaks the *first* port's smoke run.
+- **Pruning the baseline**: `reconcileDrift` is per-oath and never visits a path
+  that has gone, so the lock hoards entries for deleted or moved oaths forever
+  ([#70][i70]). Port `pruneVarLock` (pure) and `pruneBaselines` (store-facing)
+  alongside them, and call the latter **once per run** from the adapter. Two
+  rules, both load-bearing — the smoke contract's `baseline-pruned` check gates
+  that you did it, but not that you did it safely:
+  1. **`keepPaths` is everything the `docs` globs match, never the set the run
+     executed.** Filtered runs are normal; pruning against one deletes live
+     baselines. The TS CLI test `--globs does not prune the baselines it
+     filtered out` is the shape of the regression test to translate.
+  2. **Only `update` writes.** A plain run reports and changes nothing.
+
+  If your adapter can discover oaths by more than one mechanism, the filesystem
+  glob walk alone may be an incomplete view — `var-junit` also resolves oaths as
+  classpath resources, so it prunes against the *union* of the walk and the oaths
+  actually resolved, and bails out entirely when the walk finds nothing.
+
+[i70]: https://github.com/varar-dev/varar/issues/70
 
 [i69]: https://github.com/varar-dev/varar/issues/69
 
