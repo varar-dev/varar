@@ -36,6 +36,11 @@ Decide the quadrant before writing and don't mix them in one page.
   Published to https://varar.dev.
 - Internal/design docs (ADRs, specs, plans, ARCHITECTURE) stay in `doc/` at
   the repo root — they are not part of the Diátaxis structure.
+- The website deploys from every push to `main` (ADR 0013). A **new** page
+  documenting an unreleased feature must carry `draft: true` frontmatter
+  (excluded from production builds; the release commit removes it). An **edit**
+  to an existing page describing changed behavior can't be draft-gated — land
+  it with the code and release promptly.
 
 ## Architectural principles (non-negotiable)
 
