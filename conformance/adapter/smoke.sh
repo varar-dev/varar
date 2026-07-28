@@ -154,6 +154,29 @@ run_contract() {
     pass "drift-accepted (read-only gate — baseline is written by \`varar run\`)"
   fi
 
+  # 5. baseline-pruned — accepting drift must also drop entries for oaths the config no
+  #    longer discovers. Without this the lock silently accumulates dead paths: moving the
+  #    oaths into varar/ left every port's lock carrying both the old root-level keys and the
+  #    new ones, and the only cure was deleting the file (#70). Removal is still not *gated*
+  #    (a deleted oath is not drift, per ADR 0002) — dead state is just no longer preserved.
+  if [ "$baseline" = "reconcile" ]; then
+    DIRTIED_LOCK="$dir/varar.lock.json"
+    inject_stale_oath "$lock"
+    output="$(cd "$abs" && VARAR_UPDATE=1 eval "$command" 2>&1)" && status=0 || status=$?
+    if [ "$status" -ne 0 ]; then
+      fail "$dir: the suite failed with a stale lock entry present" \
+        "A path the config no longer discovers must not break the run." \
+        "Got:" "$(tail -n 20 <<<"$output")"
+    fi
+    if ! git -C "$REPO_ROOT" diff --quiet -- "$dir/varar.lock.json"; then
+      fail "$dir: VARAR_UPDATE=1 did not prune the entry for a deleted oath" \
+        "The lock still lists a path that varar.config.json no longer matches." \
+        "$(git -C "$REPO_ROOT" diff -- "$dir/varar.lock.json" | head -n 20)"
+    fi
+    pass "baseline-pruned"
+    restore_lock
+  fi
+
   # Between projects, not just at exit — --all must not leave A's probe behind while B runs.
   restore_lock
 }
@@ -169,6 +192,20 @@ inject_probe() {
   tmp="$(mktemp)"
   jq --indent 2 --arg o "$oath" --arg n "$name" --argjson l "$line" \
     '.oaths[$o].examples = ([{name: $n, line: $l}] + .oaths[$o].examples)' "$lock" >"$tmp"
+  mv "$tmp" "$lock"
+}
+
+# Add an entry for an oath that does not exist — what a deleted or moved .md leaves behind.
+# Keyed off the probe oath's own baseline so the entry is otherwise well-formed: what makes it
+# stale is only that varar.config.json no longer matches the path.
+inject_stale_oath() {
+  local lock="$1" oath stale tmp
+  oath="$(jq -r '.probe.oath' "$MANIFEST")"
+  stale="$(jq -r '.probe.stalePath' "$MANIFEST")"
+  tmp="$(mktemp)"
+  jq --indent 2 --arg o "$oath" --arg s "$stale" \
+    '.oaths[$s] = .oaths[$o] | .oaths |= (to_entries | sort_by(.key) | from_entries)' \
+    "$lock" >"$tmp"
   mv "$tmp" "$lock"
 }
 

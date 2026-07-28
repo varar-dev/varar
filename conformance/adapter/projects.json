@@ -12,12 +12,17 @@
     "baseline is how the adapter treats varar.lock.json:",
     "  reconcile — reads AND rewrites it on a clean run (most adapters)",
     "  gate      — read-only; the file is written by `varar run` (var-vitest, whose",
-    "              plugin is a build-time transform and must not write during it)"
+    "              plugin is a build-time transform and must not write during it)",
+    "",
+    "probe.stalePath is the baseline-pruned probe: a path no docs glob matches (the",
+    "pre-varar/ location the samples actually migrated from, #70). Accepting drift must",
+    "drop it — removal is not gated, but dead state is not preserved either."
   ],
   "probe": {
     "oath": "varar/deep-thought.md",
     "name": "You're really not going to like it",
-    "line": 1
+    "line": 1,
+    "stalePath": "deep-thought.md"
   },
   "projects": [
     {
