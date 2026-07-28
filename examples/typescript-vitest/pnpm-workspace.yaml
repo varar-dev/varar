@@ -1,0 +1,10 @@
+# Makes `pnpm test` work from this directory. pnpm discovers the workspace
+# root by walking UP the tree, and typescript/ (the real workspace root that
+# lists this project) is a sibling, not an ancestor — so pnpm treats this
+# directory as a standalone root and its verify-deps check runs an install
+# here, where workspace:* cannot resolve. Disabling the check lets scripts
+# run against the node_modules links created by `pnpm install` in typescript/.
+# Not synced to var-examples (release/targets/60-var-examples.sh excludes it):
+# there the deps are real released versions and the default auto-install on
+# `pnpm test` is what cloners want.
+verifyDepsBeforeRun: false
