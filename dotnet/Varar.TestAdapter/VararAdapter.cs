@@ -1,3 +1,4 @@
+using System.Collections.Immutable;
 using System.Reflection;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel;
 using Microsoft.VisualStudio.TestPlatform.ObjectModel.Logging;
@@ -23,13 +24,40 @@ internal static class VararAdapter
     private static readonly TestProperty ExampleIndexProperty = TestProperty.Register(
         "Varar.ExampleIndex", "ExampleIndex", typeof(int), typeof(VararAdapter));
 
-    /// <summary>Discover one test per Markdown example under the assembly's workspace.</summary>
-    public static IEnumerable<TestCase> Discover(string source, IMessageLogger? logger)
+    /// <summary>
+    /// Set on a drift <see cref="TestCase"/> instead of <see cref="ExampleIndexProperty"/>: the
+    /// rendered drift message. Its presence is what marks the case as a drift leaf rather than an
+    /// example, so <see cref="Run"/> can fail it without re-deriving anything.
+    /// </summary>
+    private static readonly TestProperty DriftMessageProperty = TestProperty.Register(
+        "Varar.DriftMessage", "DriftMessage", typeof(string), typeof(VararAdapter));
+
+    /// <summary>
+    /// Discover one test per Markdown example under the assembly's workspace, plus one failing test
+    /// per drift finding.
+    /// </summary>
+    /// <remarks>
+    /// Discovery is also where drift is reconciled against <c>varar.lock.json</c> (ADR 0002) — every
+    /// path into the executor funnels through here, and VSTest always discovers before it runs. A
+    /// clean pass rewrites the baseline; a paragraph the baseline recorded as an example that now
+    /// matches no step becomes a failing drift leaf, so the build goes red until the step is fixed
+    /// or the drift is accepted with <c>VARAR_UPDATE=1</c>.
+    /// </remarks>
+    public static IEnumerable<TestCase> Discover(string source, IMessageLogger? logger) =>
+        Discover(source, Workspace.Load, logger);
+
+    /// <summary>
+    /// <see cref="Discover(string, IMessageLogger?)"/> with the workspace loader injected, so the
+    /// discovery + drift-reconciliation logic can be unit-tested over a temp directory instead of a
+    /// built assembly. Same seam rationale as <see cref="ITestReporter"/>.
+    /// </summary>
+    internal static IEnumerable<TestCase> Discover(
+        string source, Func<string, Workspace?> loadWorkspace, IMessageLogger? logger)
     {
         Workspace? workspace;
         try
         {
-            workspace = Workspace.Load(source);
+            workspace = loadWorkspace(source);
         }
         catch (Exception e)
         {
@@ -42,13 +70,20 @@ internal static class VararAdapter
             yield break;
         }
 
+        var baselineStore = new FileBaselineStore(workspace.Root);
+        bool update = IsUpdate();
+
         foreach (var oath in Discovery.FindOaths(workspace.Config, workspace.Root))
         {
             var relName = Discovery.RelPosix(oath, workspace.Root);
+            string text;
+            VarDoc varDoc;
             ExecutionPlan plan;
             try
             {
-                plan = RunnerApi.PlanOath(relName, File.ReadAllText(oath), workspace.Registry);
+                text = File.ReadAllText(oath);
+                varDoc = Parse.Run(relName, text);
+                plan = Plan.Run(varDoc, workspace.Registry);
             }
             catch (Exception e)
             {
@@ -69,18 +104,62 @@ internal static class VararAdapter
                 testCase.SetPropertyValue(ExampleIndexProperty, i);
                 yield return testCase;
             }
+
+            ImmutableArray<Drift> drifts;
+            try
+            {
+                drifts = DriftDetection.ReconcileDrift(baselineStore, relName, text, varDoc, plan, update);
+            }
+            catch (Exception e)
+            {
+                logger?.SendMessage(TestMessageLevel.Warning, $"varar: could not reconcile {relName}: {e.Message}");
+                continue;
+            }
+
+            foreach (var drift in drifts)
+            {
+                var testCase = new TestCase($"{relName}::var:drift:{drift.Line}", new Uri(ExecutorUri), source)
+                {
+                    DisplayName = $"drift: {drift.Name}",
+                    CodeFilePath = oath,
+                    LineNumber = drift.Line,
+                };
+                testCase.SetPropertyValue(OathPathProperty, relName);
+                testCase.SetPropertyValue(
+                    DriftMessageProperty,
+                    Diagnostics.DriftDetected(drift.Name, drift.Span).Message);
+                yield return testCase;
+            }
         }
     }
 
+    /// <summary>
+    /// Whether drift should be accepted and re-recorded instead of failing the run —
+    /// <c>VARAR_UPDATE=1</c>/<c>true</c>, the same switch every other port honours.
+    /// </summary>
+    private static bool IsUpdate() =>
+        Environment.GetEnvironmentVariable("VARAR_UPDATE") is "1" or "true";
+
     /// <summary>Execute the given test cases, grouped by source, reporting one result each.</summary>
-    public static void Run(IEnumerable<TestCase> tests, ITestReporter reporter, IMessageLogger? logger)
+    public static void Run(IEnumerable<TestCase> tests, ITestReporter reporter, IMessageLogger? logger) =>
+        Run(tests, Workspace.Load, reporter, logger);
+
+    /// <summary>
+    /// <see cref="Run(IEnumerable{TestCase}, ITestReporter, IMessageLogger?)"/> with the workspace
+    /// loader injected — the unit-testable counterpart, paired with <see cref="ITestReporter"/>.
+    /// </summary>
+    internal static void Run(
+        IEnumerable<TestCase> tests,
+        Func<string, Workspace?> loadWorkspace,
+        ITestReporter reporter,
+        IMessageLogger? logger)
     {
         foreach (var bySource in tests.GroupBy(t => t.Source))
         {
             Workspace? workspace;
             try
             {
-                workspace = Workspace.Load(bySource.Key);
+                workspace = loadWorkspace(bySource.Key);
             }
             catch (Exception e)
             {
@@ -101,6 +180,22 @@ internal static class VararAdapter
             foreach (var testCase in bySource)
             {
                 var oathPath = testCase.GetPropertyValue(OathPathProperty) as string;
+
+                // A drift leaf carries its message instead of an example index, and always fails —
+                // the build stays red until the step is fixed or the drift is accepted (ADR 0002).
+                if (testCase.GetPropertyValue(DriftMessageProperty) is string driftMessage)
+                {
+                    reporter.RecordStart(testCase);
+                    var driftResult = new TestResult(testCase)
+                    {
+                        Outcome = TestOutcome.Failed,
+                        ErrorMessage = driftMessage,
+                    };
+                    reporter.RecordResult(driftResult);
+                    reporter.RecordEnd(testCase, driftResult.Outcome);
+                    continue;
+                }
+
                 int index = testCase.GetPropertyValue(ExampleIndexProperty, -1);
                 if (oathPath is null || index < 0)
                 {
@@ -141,9 +236,9 @@ internal static class VararAdapter
     }
 
     /// <summary>The built test assembly plus its workspace root (nearest <c>varar.config.json</c>) and registry.</summary>
-    private sealed class Workspace
+    internal sealed class Workspace
     {
-        private Workspace(string root, ParsedVarConfig config, Registry registry)
+        internal Workspace(string root, ParsedVarConfig config, Registry registry)
         {
             Root = root;
             Config = config;
