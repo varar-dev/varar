@@ -17,27 +17,30 @@ class VarConfig:
     snippets: Mapping[str, str] = field(default_factory=dict)
 
 
-def _string_tuple(value: object, key: str, path: Path) -> tuple[str, ...]:
+def _string_tuple(value: object, key: str, source: str) -> tuple[str, ...]:
     if value is None:
         return ()
     if not isinstance(value, list) or not all(isinstance(v, str) for v in value):
-        raise ValueError(f"{path}: '{key}' must be an array of strings")
+        raise ValueError(f"{source}: '{key}' must be an array of strings")
     return tuple(value)
 
 
-def read_varar_config(root: str | Path) -> VarConfig:
-    """Read ``<root>/varar.config.json``.
+def parse_varar_config(text: str, source: str) -> VarConfig:
+    """Parse ``varar.config.json`` TEXT. Pure — no filesystem.
 
-    Missing file -> empty config (tools no-op; matches every other port).
-    Malformed JSON, wrong types, or unknown keys -> ``ValueError`` starting
-    with the file path — a typo'd config must fail loudly, never silently
-    discover nothing. See conformance/config/README.md for the shared rules.
+    ``source`` only labels errors (a path, a URL, ``"<memory>"``); nothing is
+    read from it. Splitting this out from :func:`read_varar_config` is what lets
+    a caller with the text already in hand — an editor buffer, an in-memory
+    fixture, the LSP — validate it without inventing a file, and mirrors
+    TypeScript's ``parseVarConfig`` / Java's ``VarConfig.parse``.
+
+    Malformed JSON, wrong types, or unknown keys -> ``ValueError`` starting with
+    ``source`` — a typo'd config must fail loudly, never silently discover
+    nothing. See conformance/config/README.md for the shared rules.
     """
-    path = Path(root) / "varar.config.json"
-    if not path.is_file():
-        return VarConfig()
+    path = source
     try:
-        data = json.loads(path.read_text(encoding="utf-8"))
+        data = json.loads(text)
     except json.JSONDecodeError as e:
         raise ValueError(f"{path}: invalid JSON: {e}") from e
     if not isinstance(data, dict):
@@ -69,3 +72,14 @@ def read_varar_config(root: str | Path) -> VarConfig:
         steps=_string_tuple(data.get("steps"), "steps", path),
         snippets=dict(snippets),
     )
+
+
+def read_varar_config(root: str | Path) -> VarConfig:
+    """Read ``<root>/varar.config.json``. The filesystem edge over :func:`parse_varar_config`.
+
+    Missing file -> empty config (tools no-op; matches every other port).
+    """
+    path = Path(root) / "varar.config.json"
+    if not path.is_file():
+        return VarConfig()
+    return parse_varar_config(path.read_text(encoding="utf-8"), str(path))
