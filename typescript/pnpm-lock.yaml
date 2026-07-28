@@ -38,6 +38,9 @@ importers:
       '@types/node':
         specifier: ^26.1.0
         version: 26.1.1
+      '@varar/cli':
+        specifier: workspace:*
+        version: link:../../typescript/packages/cli
       '@varar/core':
         specifier: workspace:*
         version: link:../../typescript/packages/core

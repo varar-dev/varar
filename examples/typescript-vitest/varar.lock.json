@@ -1,0 +1,93 @@
+{
+  "version": 2,
+  "oaths": {
+    "varar/airport.md": {
+      "sourceHash": "fnv1a:8840f7bb",
+      "examples": [
+        {
+          "name": "I fly from LHR to JFK. In the end, the route should be from LHR to JFK",
+          "line": 7
+        }
+      ]
+    },
+    "varar/deep-thought.md": {
+      "sourceHash": "fnv1a:a4027d33",
+      "examples": [
+        {
+          "name": "The answer to the great question of life, the universe and everything is 42",
+          "line": 3
+        }
+      ]
+    },
+    "varar/hello-var.md": {
+      "sourceHash": "fnv1a:8eb1207a",
+      "examples": [
+        {
+          "name": "First I greet \"world\" okay? I think the greeting should be \"Hello, world!\"",
+          "line": 5
+        },
+        {
+          "name": "The expression `1+1` should evaluate to `2`",
+          "line": 11
+        }
+      ]
+    },
+    "varar/library.md": {
+      "sourceHash": "fnv1a:1622dfca",
+      "examples": [
+        {
+          "name": "Maya borrowed *Emma*, due back on June 1, 2026. She returns it on June 6, 2026 and owes a £2.50 late fee — 50p for each day overdue",
+          "line": 3
+        },
+        {
+          "name": "Noor borrowed *Kindred*, due back on June 1, 2026. When she asks to borrow *Beloved* on June 10, 2026, the library refuses: an overdue book blocks new loans",
+          "line": 8
+        },
+        {
+          "name": "Ben borrowed *Dune*, due back on June 12, 2026. When he asks to borrow *Hyperion* on June 10, 2026, the library agrees",
+          "line": 13
+        }
+      ]
+    },
+    "varar/return-sensor.md": {
+      "sourceHash": "fnv1a:4fdae02d",
+      "examples": [
+        {
+          "name": "I should have 3 cukes in my big belly",
+          "line": 3
+        }
+      ]
+    },
+    "varar/roman-numerals.md": {
+      "sourceHash": "fnv1a:a3b97c9a",
+      "examples": [
+        {
+          "name": "Each row gives an example of a decimal and a roman number:",
+          "line": 3
+        }
+      ]
+    },
+    "varar/tables-and-docstrings.md": {
+      "sourceHash": "fnv1a:f45255ca",
+      "examples": [
+        {
+          "name": "Uppercase each one:",
+          "line": 6
+        },
+        {
+          "name": "Greet Bob:",
+          "line": 16
+        }
+      ]
+    },
+    "varar/yahtzee.md": {
+      "sourceHash": "fnv1a:c10cc12e",
+      "examples": [
+        {
+          "name": "Examples of dice, category and score:",
+          "line": 7
+        }
+      ]
+    }
+  }
+}
