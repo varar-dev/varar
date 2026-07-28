@@ -37,8 +37,9 @@ func Default() VarConfig {
 	}
 }
 
-// ReadVarConfig reads <root>/varar.config.json. Missing file → empty config. Any
-// malformed input → an error beginning with the file path.
+// ReadVarConfig reads <root>/varar.config.json. The filesystem edge over
+// ParseVarConfig; a missing file yields the empty config (tools no-op, as in
+// every port).
 func ReadVarConfig(root string) (VarConfig, error) {
 	path := filepath.Join(root, "varar.config.json")
 	info, err := os.Stat(path)
@@ -49,6 +50,21 @@ func ReadVarConfig(root string) (VarConfig, error) {
 	if err != nil {
 		return VarConfig{}, fmt.Errorf("%s: %w", path, err)
 	}
+	return ParseVarConfig(text, path)
+}
+
+// ParseVarConfig parses varar.config.json TEXT. Pure — no filesystem.
+//
+// source only labels errors (a path, a URL, "<memory>"); nothing is read from
+// it. Splitting this out from ReadVarConfig is what lets a caller with the text
+// already in hand — an editor buffer, an in-memory fixture, the LSP — validate
+// it without inventing a file, and mirrors TypeScript's parseVarConfig / Java's
+// VarConfig.parse. Any malformed input → an error beginning with source.
+func ParseVarConfig(text []byte, source string) (VarConfig, error) {
+	path := source
+	// Declared up front: the assignments below are `=`, not `:=`, so they fill
+	// cfg's fields rather than shadowing them in each if-statement's scope.
+	var err error
 	var top any
 	if err := json.Unmarshal(text, &top); err != nil {
 		return VarConfig{}, fmt.Errorf("%s: invalid JSON: %w", path, err)
