@@ -417,10 +417,13 @@ suite:
 - **Standalone `examples/<lang>-<framework>/` consumer projects** — one per
   adapter, **not** workspace members: they depend on the released (or
   locally-installed) artifacts exactly like a user's project, carry their own
-  `varar.config.json`, and implement the feature-covering subset (`hello-var`,
-  `deep-thought`, `tables-and-docstrings`, `yahtzee`, `roman-numerals`). Their
-  `.md` oaths are symlinks to the `typescript-vitest` originals (the release
-  sync dereferences them). Add rows to `examples/README.md` **and a `<Card>` to
+  `varar.config.json`, and implement the feature-covering subset (`hello-varar`,
+  `deep-thought`, `tables-and-docstrings`, `yahtzee`, `roman-numerals`). **Most**
+  of their `.md` oaths are symlinks to the `typescript-vitest` originals (the release
+  sync dereferences them) — but `hello-varar.md` and `tables-and-docstrings.md`
+  are **real files in every project**, because their text differs per language.
+  Don't assume a rename touching those two is a single edit: it is twelve.
+  Add rows to `examples/README.md` **and a `<Card>` to
   the website's example-projects page** (see the next bullet).
 - **Website example-projects page**: add a `<Card title="<Language> +
   <framework>" icon="<seti icon>">` to the `<CardGrid>` in
