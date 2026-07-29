@@ -4,6 +4,7 @@ import * as varRuntime from '@varar/varar'
 import { _resetBuilder } from '@varar/varar/registry'
 import * as ts from 'typescript'
 import { createMemoryBaselineStore } from './memory-baseline-store.ts'
+import { resolveRelative } from './module-resolution.ts'
 import { runRegisteredOath } from './run-oath.ts'
 
 type RunInput = {
@@ -33,21 +34,9 @@ function createModuleLoader(files: ReadonlyArray<SourceFile>) {
   const byPath = new Map(files.map((f) => [f.path, f]))
   const cache = new Map<string, Record<string, unknown>>()
 
-  const resolveRelative = (oath: string, fromPath: string): SourceFile | undefined => {
-    // Normalize ./ and ../ segments against the importer's directory.
-    const dir = fromPath.includes('/') ? fromPath.slice(0, fromPath.lastIndexOf('/') + 1) : ''
-    const segments: string[] = []
-    for (const seg of `${dir}${oath}`.split('/')) {
-      if (seg === '' || seg === '.') continue
-      if (seg === '..') segments.pop()
-      else segments.push(seg)
-    }
-    const path = segments.join('/')
-    for (const candidate of [path, `${path}.ts`, path.replace(/\.js$/, '.ts')]) {
-      const file = byPath.get(candidate)
-      if (file) return file
-    }
-    return undefined
+  const resolve = (specifier: string, fromPath: string): SourceFile | undefined => {
+    const path = resolveRelative(specifier, fromPath, byPath.keys())
+    return path === undefined ? undefined : byPath.get(path)
   }
 
   const load = (file: SourceFile): Record<string, unknown> => {
@@ -61,7 +50,7 @@ function createModuleLoader(files: ReadonlyArray<SourceFile>) {
       if (oath === '@varar/varar' || oath === '@varar/vitest') return varRuntime
       if (oath === '@varar/core') return varCore
       if (oath.startsWith('.')) {
-        const target = resolveRelative(oath, file.path)
+        const target = resolve(oath, file.path)
         if (target) return load(target)
       }
       throw new Error(

@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest'
+import libraryLogic from '../../../../examples/typescript-vitest/src/library.ts?raw'
 // The real dogfood sample the front-page editor shows — if the editor's
 // virtual module drifts from the actual @varar/varar API, this file stops
 // type-checking cleanly and the first test fails, exactly like the front
@@ -22,6 +23,18 @@ function realProblems(tsd: ReturnType<typeof createTsDiagnostics>, name: string,
 test('the front-page library sample type-checks against the real @varar/varar types', () => {
   const problems = realProblems(createTsDiagnostics(), 'library_steps.ts', librarySteps)
   expect(problems).toEqual([])
+})
+
+// The uris here are the ones LibraryEditor.astro mounts, and they mirror the
+// example project's own layout — steps in src/varar/, the domain module in
+// src/. Mount them anywhere else and the sample's '../library.ts' misses,
+// which the editor shows as a red squiggle on an otherwise correct file.
+test('a steps tab resolves the domain module tab mounted beside it', () => {
+  const tsd = createTsDiagnostics()
+  const stepsUri = 'file:///src/varar/library.steps.ts'
+  tsd.updateDoc('file:///src/library.ts', libraryLogic)
+  tsd.updateDoc(stepsUri, librarySteps)
+  expect(tsd.diagnostics(stepsUri)).toEqual([])
 })
 
 test('stimulus and sensor are the destructurable names steps returns', () => {
