@@ -1,6 +1,6 @@
 //! Checks the adapter's libtest harness can't express as items: that the config
 //! globs discover exactly the six oaths, and that a deliberately-wrong
-//! expectation renders a cell mismatch (hello-var.md's "watch it fail").
+//! expectation renders a cell mismatch (hello-varar.md's "watch it fail").
 
 use example::varar::{build_registry, context_value};
 use std::path::Path;
@@ -24,7 +24,7 @@ fn discovery_matches_config() {
         names,
         vec![
             "deep-thought.md",
-            "hello-var.md",
+            "hello-varar.md",
             "library.md",
             "roman-numerals.md",
             "tables-and-docstrings.md",
@@ -35,12 +35,18 @@ fn discovery_matches_config() {
 
 #[test]
 fn a_mutated_expectation_fails_with_a_cell_mismatch() {
-    let source = std::fs::read_to_string(root().join("varar/hello-var.md"))
+    let source = std::fs::read_to_string(root().join("varar/hello-varar.md"))
         .unwrap()
         .replace("\"Hello, world!\"", "\"Hello, Varar!\"");
-    let err =
-        run_one("hello-var.md", &source, "varar/hello-var.md", build_registry, context_value, 0)
-            .expect_err("expected a failure");
+    let err = run_one(
+        "hello-varar.md",
+        &source,
+        "varar/hello-varar.md",
+        build_registry,
+        context_value,
+        0,
+    )
+    .expect_err("expected a failure");
     // Expected column is the source token as written (quotes included); actual
     // is what the sensor returned.
     assert!(

@@ -4,7 +4,7 @@ import dev.varar.State;
 import dev.varar.StepDefinitions;
 import dev.varar.Steps;
 
-public final class HelloVarSteps implements StepDefinitions<HelloVarSteps.Ctx> {
+public final class HelloVararSteps implements StepDefinitions<HelloVararSteps.Ctx> {
 
     record Ctx(String greeting, int result) implements State {}
 

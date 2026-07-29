@@ -1,4 +1,4 @@
-@file:JvmName("HelloVarSteps")
+@file:JvmName("HelloVararSteps")
 
 package varar
 
@@ -8,7 +8,7 @@ import dev.varar.kotlin.stimulus
 
 data class HelloCtx(val greeting: String = "", val result: Int = 0)
 
-val helloVarSteps =
+val helloVararSteps =
     steps(::HelloCtx) {
         stimulus("I greet {string}") { name: String -> copy(greeting = "Hello, $name!") }
         sensor("the greeting should be {string}") { _: String -> greeting }

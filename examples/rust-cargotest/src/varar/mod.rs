@@ -18,8 +18,8 @@ use ::varar::{Registry, Steps};
 // module resolver does not derive from the module name — hence `#[path]`.
 #[path = "deep_thought.steps.rs"]
 pub mod deep_thought;
-#[path = "hello_var.steps.rs"]
-pub mod hello_var;
+#[path = "hello_varar.steps.rs"]
+pub mod hello_varar;
 #[path = "library.steps.rs"]
 pub mod library;
 #[path = "roman_numerals.steps.rs"]
@@ -35,7 +35,7 @@ use crate::library::{Loan, Money};
 /// starts from `Ctx::default()`.
 #[derive(Clone, Default)]
 pub struct Ctx {
-    // hello-var
+    // hello-varar
     pub greeting: String,
     pub result: i64,
     // library
@@ -47,7 +47,7 @@ pub struct Ctx {
 /// The combined registry for all oaths.
 pub fn build_registry() -> Registry {
     let mut s = Steps::<Ctx>::new();
-    hello_var::register(&mut s);
+    hello_varar::register(&mut s);
     deep_thought::register(&mut s);
     tables_and_docstrings::register(&mut s);
     yahtzee::register(&mut s);

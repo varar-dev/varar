@@ -4,7 +4,7 @@ using static Varar.Example.StepHelpers;
 
 namespace Varar.Example;
 
-public static class HelloVarSteps
+public static class HelloVararSteps
 {
     public static void Register(Steps s)
     {

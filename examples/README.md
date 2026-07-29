@@ -25,7 +25,7 @@ whole team, and checked against the code on every test run.
 | [`go-gotest`](go-gotest) | Go + go test | `go test` | [![go-gotest](https://github.com/varar-dev/varar-examples/actions/workflows/go-gotest.yml/badge.svg)](https://github.com/varar-dev/varar-examples/actions/workflows/go-gotest.yml) |
 
 `typescript-vitest` implements the full example set; the other projects
-implement a feature-covering subset — `hello-var` (basic steps),
+implement a feature-covering subset — `hello-varar` (basic steps),
 `deep-thought` (a one-sensor oath), `tables-and-docstrings` (whole tables +
 doc strings), `yahtzee` and `roman-numerals` (header-bound table rows), and
 `library` (custom parameter types that pair `parse` with `format`, so a

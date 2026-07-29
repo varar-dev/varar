@@ -12,7 +12,7 @@ method per example::
 Plain ``python -m unittest`` (or any unittest-compatible runner) then
 discovers and runs them like hand-written tests: ``-v`` shows one line per
 example, ``-k`` selects by name, and dotted ids
-(``test_var.hello_var_md.test_greeting``) address a single example.
+(``test_varar.hello_varar_md.test_greeting``) address a single example.
 """
 from __future__ import annotations
 

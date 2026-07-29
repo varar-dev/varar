@@ -6,7 +6,7 @@ order: 1
 ---
 
 import Editor from '$components/Editor.astro'
-import helloSteps from '$examples/typescript-vitest/src/varar/hello-var.steps.ts?raw'
+import helloSteps from '$examples/typescript-vitest/src/varar/hello-varar.steps.ts?raw'
 
 # Step argument types
 
@@ -41,7 +41,7 @@ handler `(state, a, b)` where both `a` and `b` are `number`. Here is the whole
 `01-hello` step file — note that **no parameter is annotated** — running against
 its oath:
 
-<Editor uri="file:///hello.md" chrome lineNumbers folding group="step-arguments" steps={[{ path: 'hello-var.steps.ts', source: helloSteps }]}>{`
+<Editor uri="file:///hello.md" chrome lineNumbers folding group="step-arguments" steps={[{ path: 'hello-varar.steps.ts', source: helloSteps }]}>{`
 # Hello, Varar
 
 First I greet "world" okay? I think the greeting should be "Hello, world!"

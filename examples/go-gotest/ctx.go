@@ -7,7 +7,7 @@ package example
 // mutating, and varcore keys it per step file, so each oath starts from the
 // same fresh initial value (see Context in steps.go).
 type Ctx struct {
-	// hello-var
+	// hello-varar
 	Greeting string
 	Result   int
 
