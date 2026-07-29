@@ -15,10 +15,20 @@ function run(args: ReadonlyArray<string>, cwd: string) {
   return spawnSync(process.execPath, [BIN_TS, ...args], { cwd, encoding: 'utf8' })
 }
 
+// Node's notice is two lines, each with a fixed prefix:
+//
+//   (node:12345) ExperimentalWarning: globSync is an experimental feature ...
+//   (Use `node --trace-warnings ...` to show where the warning was created)
+//
+// Anchor on those prefixes rather than matching the text anywhere in the line,
+// so a CLI-emitted line that happens to contain it is still asserted on.
+const NODE_WARNING = /^\(node:\d+\) ExperimentalWarning:/
+const NODE_WARNING_HINT = /^\(Use `node --trace-warnings/
+
 function filterWarnings(stderr: string): string {
   return stderr
     .split('\n')
-    .filter((line) => !line.includes('ExperimentalWarning') && !line.includes('--trace-warnings'))
+    .filter((line) => !NODE_WARNING.test(line) && !NODE_WARNING_HINT.test(line))
     .join('\n')
     .trim()
 }
