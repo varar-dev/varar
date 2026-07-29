@@ -57,7 +57,7 @@ abstract class VarSpec(root: Path = Path.of(".")) : FunSpec() {
             val plan = Run.planOath(rel, source, loaded.registry())
             val runs = Run.examplesWithRuns(plan, loaded.createContext(), Run.RecordingReporter())
             // Reconcile drift: a clean run records/updates varar.lock.json; a paragraph that was
-            // an example and no longer matches becomes a failing test (accept with -Dvar.update).
+            // an example and no longer matches becomes a failing test (accept with -Dvarar.update).
             val drifts =
                 Drift.reconcileDrift(baselineStore, rel, source, plan.varDoc(), plan, update)
             context(rel) {

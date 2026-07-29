@@ -17,7 +17,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.platform.testkit.engine.EngineExecutionResults;
 import org.junit.platform.testkit.engine.EngineTestKit;
 
-/** The JUnit surface of the drift gate: a drifted paragraph fails; -Dvar.update accepts it. */
+/** The JUnit surface of the drift gate: a drifted paragraph fails; -Dvarar.update accepts it. */
 class VarDriftGateTest {
 
     private static void writeProject(Path workspace, String baselineExamples) throws Exception {

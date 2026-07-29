@@ -98,7 +98,7 @@ public final class VarTestEngine extends HierarchicalTestEngine<VarEngineExecuti
         Drift.pruneBaselines(BaselineStores.file(root.toAbsolutePath().normalize()), keep, updateMode());
     }
 
-    /** Same acknowledgment switch the resolver honours: {@code -Dvar.update} / {@code VARAR_UPDATE}. */
+    /** Same acknowledgment switch the resolver honours: {@code -Dvarar.update} / {@code VARAR_UPDATE}. */
     private static boolean updateMode() {
         return "true".equals(System.getProperty("varar.update"))
                 || "1".equals(System.getenv("VARAR_UPDATE"))
