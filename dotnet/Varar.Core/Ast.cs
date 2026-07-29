@@ -13,7 +13,7 @@ public sealed record Row(ImmutableArray<string> Cells, ImmutableArray<Span> Cell
 
 public abstract record Block
 {
-    /// <summary>The wire discriminant emitted into var-doc.json.</summary>
+    /// <summary>The wire discriminant emitted into doc.json.</summary>
     public abstract string Kind { get; }
 
     public abstract Span Span { get; }
@@ -87,8 +87,8 @@ public sealed record Example(
     ImmutableArray<Block> Body,
     bool PrecededByDelimiter);
 
-/// <summary>The parsed document. <c>Source</c> is kept for the runner but not projected to var-doc.json.</summary>
-public sealed record VarDoc(
+/// <summary>The parsed document. <c>Source</c> is kept for the runner but not projected to doc.json.</summary>
+public sealed record Doc(
     string Path,
     string Source,
     ImmutableArray<Example> Examples,

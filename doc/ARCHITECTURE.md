@@ -36,7 +36,7 @@ obtain the step-definition registry, and what they do with the result.
 
 ```mermaid
 graph LR
-  MD[".md<br/>examples"] --> PARSE["parse → VarDoc<br/><i>(shared core)</i>"]
+  MD[".md<br/>examples"] --> PARSE["parse → Doc<br/><i>(shared core)</i>"]
   STEPS["step source<br/>(.ts / .py / …)"] --> EXTRACT["tree-sitter extract<br/>→ StepDef[]<br/><i>(per-language query)</i>"]
 
   PARSE --> MATCH["match + plan<br/><i>(shared core)</i>"]
@@ -57,7 +57,7 @@ language is step-definition *extraction* (Side A) and step-definition
 
 The single most important seam. `discoverStepDefs(path, source)` /
 `discoverParameterTypes(path, source)` are pure functions behind the
-`StepDefScanner` port (`var-language/scanner.ts`).
+`StepDefScanner` port (`varar-language/scanner.ts`).
 
 **One extractor mechanism for *all* languages — tree-sitter** — with a small
 per-language query set replacing per-language parser code. TypeScript is no
@@ -184,22 +184,22 @@ These immutable types are the wire format between stages and are reproduced
 
 ```mermaid
 classDiagram
-  class VarDoc { path; source; examples: Example[]; orphanAttachments }
+  class Doc { path; source; examples: Example[]; orphanAttachments }
   class Registry { steps: StepRegistration[]; parameterTypes }
   class StepRegistration { expression; sourceFile; sourceLine; handler; compiled }
-  class ExecutionPlan { varDoc; examples: PlannedExample[]; diagnostics }
+  class ExecutionPlan { doc; examples: PlannedExample[]; diagnostics }
   class PlannedExample { name; scopeStack; span; steps: PlannedStep[] }
   class PlannedStep { text; matchSpan; paramSpans; stepDef; args; dataTable?; docString? }
 
-  VarDoc "1" --> "*" Example
+  Doc "1" --> "*" Example
   Registry "1" --> "*" StepRegistration
-  ExecutionPlan --> VarDoc
+  ExecutionPlan --> Doc
   ExecutionPlan "1" --> "*" PlannedExample
   PlannedExample "1" --> "*" PlannedStep
   PlannedStep --> StepRegistration
 ```
 
-`plan(VarDoc, Registry) → ExecutionPlan` is the join: it matches each text block,
+`plan(Doc, Registry) → ExecutionPlan` is the join: it matches each text block,
 resolves ambiguities, attaches trailing tables/fences to the last matched step,
 derives example names, and collects diagnostics. It is pure. Under Model A,
 `ExecutionPlan` additionally becomes the **serializable contract** shipped to a
@@ -221,7 +221,7 @@ on TypeScript alone, before any Python exists:
 3. **Make `StepDef` neutral** — `typeText` becomes opaque.
 4. **Extract a `SnippetEmitter` port** from the TS-emitting snippet code.
 5. **De-hardcode file patterns** into per-language config (`.md` stays neutral).
-6. **Lock Model A vs B** (§3); if A, make `ExecutionPlan` serializable.
+6. **LockFile Model A vs B** (§3); if A, make `ExecutionPlan` serializable.
 7. **Stand up the conformance harness** with TS as the only column.
 
 A detailed, sequenced refactoring plan follows separately.

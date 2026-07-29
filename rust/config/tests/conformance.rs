@@ -5,7 +5,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use varar_config::{VarConfig, read_var_config};
+use varar_config::{Config, read_config};
 use varar_core::canonical_json::canonical_stringify;
 use varar_core::value::Value;
 
@@ -18,7 +18,7 @@ fn list(strings: &[String]) -> Value {
 }
 
 /// Project to `{ docs: { include, exclude }, steps, snippets }`.
-fn artifact(config: &VarConfig) -> Value {
+fn artifact(config: &Config) -> Value {
     let docs = Value::map(vec![
         ("include".to_string(), list(&config.docs_include)),
         ("exclude".to_string(), list(&config.docs_exclude)),
@@ -49,7 +49,7 @@ fn config_cases_match_golden() {
     let mut fails = Vec::new();
     for dir in dirs {
         let name = dir.file_name().unwrap().to_string_lossy().into_owned();
-        let result = read_var_config(&dir);
+        let result = read_config(&dir);
         if dir.join("expect-error.txt").is_file() {
             if result.is_ok() {
                 fails.push(format!("{name}: expected an error, got Ok"));

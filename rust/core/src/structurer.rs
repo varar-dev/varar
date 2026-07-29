@@ -1,17 +1,17 @@
 //! Groups the flat scanner output into [`Example`]s, tracking a heading scope
 //! stack — port of `structurer.ts` / `Structurer.java`.
 
-use crate::ast::{Block, Example, TableOrFence, VarDoc};
+use crate::ast::{Block, Doc, Example, TableOrFence};
 use crate::span::Span;
 
-/// Groups `blocks` (scanned from `source`) into a [`VarDoc`].
+/// Groups `blocks` (scanned from `source`) into a [`Doc`].
 ///
 /// This is pure syntax — it does NOT decide where one example ends and the next
 /// begins. Instead each candidate records `preceded_by_delimiter` (a heading or
 /// `---` sits before it), and the planner groups adjacent matching candidates
 /// into examples using that flag plus which candidates match a step. See ADR
 /// 0012.
-pub fn structure(path: &str, source: &str, blocks: Vec<Block>) -> VarDoc {
+pub fn structure(path: &str, source: &str, blocks: Vec<Block>) -> Doc {
     let mut examples: Vec<Example> = Vec::new();
     let mut orphan_attachments: Vec<TableOrFence> = Vec::new();
     let mut scope_stack: Vec<(usize, String)> = Vec::new();
@@ -74,7 +74,7 @@ pub fn structure(path: &str, source: &str, blocks: Vec<Block>) -> VarDoc {
         }
     }
 
-    VarDoc {
+    Doc {
         path: path.to_string(),
         source: source.to_string(),
         examples,

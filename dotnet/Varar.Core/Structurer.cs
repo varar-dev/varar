@@ -16,7 +16,7 @@ namespace Varar.Core;
 /// </summary>
 public static class Structurer
 {
-    public static VarDoc Structure(string path, string source, ImmutableArray<Block> blocks)
+    public static Doc Structure(string path, string source, ImmutableArray<Block> blocks)
     {
         var examples = new List<Example>();
         var orphanAttachments = ImmutableArray.CreateBuilder<Block>();
@@ -77,6 +77,6 @@ public static class Structurer
             }
         }
 
-        return new VarDoc(path, source, [.. examples], orphanAttachments.ToImmutable());
+        return new Doc(path, source, [.. examples], orphanAttachments.ToImmutable());
     }
 }

@@ -2,11 +2,11 @@ import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { expect, test } from 'vitest'
-import { loadVarConfig, parseVarConfig } from '../src/config.ts'
+import { loadConfig, parseConfig } from '../src/config.ts'
 import { findFiles } from '../src/find-files.ts'
 
-test('parseVarConfig reads all keys', () => {
-  const parsed = parseVarConfig(
+test('parseConfig reads all keys', () => {
+  const parsed = parseConfig(
     `{
       "docs": { "include": ["oaths/**/*.md"], "exclude": ["oaths/wip/**"] },
       "steps": ["**/*.steps.ts"],
@@ -22,7 +22,7 @@ test('parseVarConfig reads all keys', () => {
 })
 
 test('all keys are optional and default to empty; $schema is ignored', () => {
-  const parsed = parseVarConfig('{ "$schema": "https://x/y.json" }', 'varar.config.json')
+  const parsed = parseConfig('{ "$schema": "https://x/y.json" }', 'varar.config.json')
   expect(parsed).toEqual({
     docs: { include: [], exclude: [] },
     steps: [],
@@ -31,7 +31,7 @@ test('all keys are optional and default to empty; $schema is ignored', () => {
 })
 
 test('null values are treated as absent, not errors', () => {
-  const parsed = parseVarConfig(
+  const parsed = parseConfig(
     '{ "docs": { "include": null, "exclude": null }, "steps": null, "snippets": null }',
     'varar.config.json',
   )
@@ -43,30 +43,30 @@ test('null values are treated as absent, not errors', () => {
 })
 
 test('malformed JSON throws with the source path in the message', () => {
-  expect(() => parseVarConfig('{ nope', '/w/varar.config.json')).toThrowError(
+  expect(() => parseConfig('{ nope', '/w/varar.config.json')).toThrowError(
     /^\/w\/varar\.config\.json/,
   )
 })
 
 test('an unknown top-level key throws (migration tripwire for the old "vars" key)', () => {
-  expect(() => parseVarConfig('{ "vars": {} }', 'varar.config.json')).toThrowError(
+  expect(() => parseConfig('{ "vars": {} }', 'varar.config.json')).toThrowError(
     /unknown key.*"vars"/i,
   )
 })
 
 test('a wrong-typed value throws naming the key', () => {
-  expect(() => parseVarConfig('{ "steps": "x" }', 'varar.config.json')).toThrowError(/steps/)
-  expect(() => parseVarConfig('{ "docs": [] }', 'varar.config.json')).toThrowError(/docs/)
+  expect(() => parseConfig('{ "steps": "x" }', 'varar.config.json')).toThrowError(/steps/)
+  expect(() => parseConfig('{ "docs": [] }', 'varar.config.json')).toThrowError(/docs/)
   expect(() =>
-    parseVarConfig('{ "snippets": { "typescript": 1 } }', 'varar.config.json'),
+    parseConfig('{ "snippets": { "typescript": 1 } }', 'varar.config.json'),
   ).toThrowError(/snippets/)
 })
 
-test('loadVarConfig reads docs/steps/snippets', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'var-cfg-'))
+test('loadConfig reads docs/steps/snippets', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'varar-cfg-'))
   try {
     writeFileSync(join(dir, 'varar.config.json'), '{ "docs": { "include": ["**/*.md"] } }\n')
-    const cfg = await loadVarConfig(dir)
+    const cfg = await loadConfig(dir)
     expect(cfg.docs).toEqual({ include: ['**/*.md'], exclude: [] })
     expect(cfg.steps).toEqual([])
   } finally {
@@ -75,9 +75,9 @@ test('loadVarConfig reads docs/steps/snippets', async () => {
 })
 
 test('missing varar.config.json yields the empty config (no default steps glob)', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'var-cfg-none-'))
+  const dir = mkdtempSync(join(tmpdir(), 'varar-cfg-none-'))
   try {
-    const cfg = await loadVarConfig(dir)
+    const cfg = await loadConfig(dir)
     expect(cfg.docs).toEqual({ include: [], exclude: [] })
     expect(cfg.steps).toEqual([])
     expect(cfg.snippets).toEqual({})
@@ -87,7 +87,7 @@ test('missing varar.config.json yields the empty config (no default steps glob)'
 })
 
 test('findFiles resolves include globs to absolute paths', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'var-config-find-'))
+  const dir = mkdtempSync(join(tmpdir(), 'varar-config-find-'))
   try {
     writeFileSync(join(dir, 'a.md'), '# Oath A\n')
     writeFileSync(join(dir, 'b.md'), '# Oath B\n')
@@ -101,7 +101,7 @@ test('findFiles resolves include globs to absolute paths', () => {
 })
 
 test('findFiles respects exclude globs', () => {
-  const dir = mkdtempSync(join(tmpdir(), 'var-config-find-excl-'))
+  const dir = mkdtempSync(join(tmpdir(), 'varar-config-find-excl-'))
   try {
     writeFileSync(join(dir, 'a.md'), '# Oath A\n')
     writeFileSync(join(dir, 'wip.md'), '# WIP\n')

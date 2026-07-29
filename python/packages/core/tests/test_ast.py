@@ -1,7 +1,7 @@
 import pytest
 from dataclasses import FrozenInstanceError
 from varar_core.span import span_from_offsets
-from varar_core.ast import Paragraph, SegmentOffset, VarDoc
+from varar_core.ast import Paragraph, SegmentOffset, Doc
 
 
 def test_nodes_construct_and_are_frozen():
@@ -17,5 +17,5 @@ def test_nodes_construct_and_are_frozen():
 
 
 def test_vardoc_holds_examples():
-    d = VarDoc(path="example.md", source="", examples=(), orphan_attachments=())
+    d = Doc(path="example.md", source="", examples=(), orphan_attachments=())
     assert d.path == "example.md" and d.examples == ()

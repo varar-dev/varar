@@ -141,11 +141,11 @@ class AstTest {
     }
 
     @Test
-    void varDocExposesFieldsAndDefensivelyCopiesExamplesAndOrphanAttachments() {
+    void docExposesFieldsAndDefensivelyCopiesExamplesAndOrphanAttachments() {
         Ast.Example example = new Ast.Example(List.of(), SPAN, List.of(new Ast.ThematicBreak(SPAN)), true);
         List<Ast.Example> examples = new ArrayList<>(List.of(example));
         List<Ast.TableOrFence> orphanAttachments = new ArrayList<>(List.of(new Ast.Fence(SPAN, "", "", SPAN)));
-        Ast.VarDoc doc = new Ast.VarDoc("oath.md", "# Title", examples, orphanAttachments);
+        Ast.Doc doc = new Ast.Doc("oath.md", "# Title", examples, orphanAttachments);
 
         assertEquals("oath.md", doc.path());
         assertEquals("# Title", doc.source());

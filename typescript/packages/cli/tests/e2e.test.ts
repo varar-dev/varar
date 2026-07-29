@@ -18,7 +18,7 @@ function run(args: ReadonlyArray<string>, cwd: string) {
 
 describe('var CLI (source)', () => {
   test('init scaffolds three files and exits 0', () => {
-    const dir = mkdtempSync(join(tmpdir(), 'var-e2e-init-'))
+    const dir = mkdtempSync(join(tmpdir(), 'varar-e2e-init-'))
     try {
       const r = run(['init'], dir)
       expect(r.status).toBe(0)
@@ -31,7 +31,7 @@ describe('var CLI (source)', () => {
   test('lint --json exits 0 when a .md has only prose / unmatched keyword-led lines', () => {
     // No Given/When/Then heuristic: keyword-led but unmatched sentences are
     // not diagnostics, so lint must exit 0.
-    const dir = mkdtempSync(join(tmpdir(), 'var-e2e-lint-'))
+    const dir = mkdtempSync(join(tmpdir(), 'varar-e2e-lint-'))
     try {
       writeFileSync(join(dir, 'a.md'), '# A\n\nGiven I have 5 cukes')
       const r = run(['lint', '--json'], dir)

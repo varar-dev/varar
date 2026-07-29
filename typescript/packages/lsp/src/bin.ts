@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { loadVarConfig } from '@varar/config'
+import { loadConfig } from '@varar/config'
 import { createConnection, ProposedFeatures } from 'vscode-languageserver/node'
 import { createNodeFileSystem } from './node-file-system.ts'
 import { createNodeGrammarLoader } from './node-grammar-loader.ts'
@@ -10,7 +10,7 @@ registerHandlers(connection, async (rootUri) => {
   const root = (rootUri ?? process.cwd()).replace(/^file:\/\//, '')
   return {
     fs: createNodeFileSystem(root),
-    config: await loadVarConfig(root),
+    config: await loadConfig(root),
     grammarLoader: createNodeGrammarLoader(),
   }
 })

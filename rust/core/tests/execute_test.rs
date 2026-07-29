@@ -176,7 +176,7 @@ fn an_inline_sensor_mismatch_throws_cell_mismatch_at_its_param_span() {
     assert_eq!(1, cells.len());
     assert_eq!("42", cells[0].expected);
     assert_eq!("41", cells[0].actual);
-    let source = &p.var_doc.source;
+    let source = &p.doc.source;
     assert_eq!("42", utf16_slice(source, cells[0].span.start_offset, cells[0].span.end_offset));
 }
 
@@ -546,7 +546,7 @@ fn a_mismatching_header_bound_row_throws_cell_mismatch_at_the_cell_span() {
     assert_eq!("score", cells[0].column);
     assert_eq!("50", cells[0].expected);
     assert_eq!("999", cells[0].actual);
-    let source = &p.var_doc.source;
+    let source = &p.doc.source;
     assert_eq!("50", utf16_slice(source, cells[0].span.start_offset, cells[0].span.end_offset));
 }
 
@@ -744,7 +744,7 @@ fn a_sensor_that_panics_instead_of_returning_a_mismatch_gets_a_located_failure()
     let ports = ExecutePorts::silent();
     let caught = collect_examples(&p, &ports)[0].run().unwrap_err();
     assert_eq!("expected 42 but was 41", caught.error.message());
-    let failure = to_failure(&caught, &p.var_doc.path, -1);
+    let failure = to_failure(&caught, &p.doc.path, -1);
     assert_eq!(step_line as i64, failure.line);
 }
 
@@ -862,7 +862,7 @@ fn a_thrown_step_gets_a_located_failure_that_failure_to_failure_resolves_to_the_
     let ports = ExecutePorts::silent();
     let caught = collect_examples(&p, &ports)[0].run().unwrap_err();
     assert_eq!("boom", caught.error.message());
-    let failure = to_failure(&caught, &p.var_doc.path, -1);
+    let failure = to_failure(&caught, &p.doc.path, -1);
     assert_eq!(step_line as i64, failure.line);
     assert_eq!("boom", failure.message);
 }

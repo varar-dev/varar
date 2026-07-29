@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "oathPath": "examples/typescript-vitest/varar/yahtzee.md",
+  "sourceHash": "fnv1a:c10cc12e",
+  "examples": [
+    {
+      "name": "3, 3, 3, 4, 4 / full house / 17",
+      "status": "passed",
+      "lines": [
+        11
+      ]
+    },
+    {
+      "name": "3, 3, 3, 4, 4 / threes / 9",
+      "status": "passed",
+      "lines": [
+        12
+      ]
+    },
+    {
+      "name": "3, 3, 3, 4, 4 / fours / 8",
+      "status": "passed",
+      "lines": [
+        13
+      ]
+    },
+    {
+      "name": "3, 3, 3, 3, 3 / full house / 0",
+      "status": "passed",
+      "lines": [
+        14
+      ]
+    },
+    {
+      "name": "3, 3, 3, 3, 3 / Yahtzee / 50",
+      "status": "passed",
+      "lines": [
+        15
+      ]
+    },
+    {
+      "name": "1, 2, 3, 4, 5 / small straight / 15",
+      "status": "passed",
+      "lines": [
+        16
+      ]
+    },
+    {
+      "name": "2, 3, 4, 5, 6 / large straight / 20",
+      "status": "passed",
+      "lines": [
+        17
+      ]
+    },
+    {
+      "name": "1, 1, 2, 4, 4 / pair / 8",
+      "status": "passed",
+      "lines": [
+        18
+      ]
+    },
+    {
+      "name": "2, 3, 3, 4, 4 / two pairs / 14",
+      "status": "passed",
+      "lines": [
+        19
+      ]
+    },
+    {
+      "name": "1, 1, 1, 4, 5 / three of a kind / 3",
+      "status": "passed",
+      "lines": [
+        20
+      ]
+    },
+    {
+      "name": "6, 6, 6, 6, 2 / four of a kind / 24",
+      "status": "passed",
+      "lines": [
+        21
+      ]
+    },
+    {
+      "name": "1, 2, 3, 4, 5 / chance / 15",
+      "status": "passed",
+      "lines": [
+        22
+      ]
+    }
+  ]
+}

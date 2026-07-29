@@ -90,9 +90,9 @@ export const LANG_ICONS: Readonly<Record<SiteLang, string>> = Object.fromEntries
 // Step-file extension → language, for the interactive editor tabs.
 const LANG_BY_EXT: ReadonlyMap<string, SiteLang> = new Map(LANGUAGES.map((l) => [l.ext, l.id]))
 
-export const LANG_CHANGE_EVENT = 'var-lang-change'
+export const LANG_CHANGE_EVENT = 'varar-lang-change'
 
-const storageKey = 'var-lang'
+const storageKey = 'varar-lang'
 
 // Every language except the attribute-less TypeScript default.
 const NON_DEFAULT_LANGS: ReadonlyArray<SiteLang> = SITE_LANGS.filter((l) => l !== 'ts')

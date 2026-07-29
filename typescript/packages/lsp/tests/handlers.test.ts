@@ -1,7 +1,7 @@
 import { mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import { loadVarConfig } from '@varar/config'
+import { loadConfig } from '@varar/config'
 import { expect, test } from 'vitest'
 import { buildHandlers } from '../src/handlers.ts'
 import { createNodeFileSystem } from '../src/node-file-system.ts'
@@ -9,13 +9,13 @@ import { createNodeGrammarLoader } from '../src/node-grammar-loader.ts'
 import { createStore } from '../src/store.ts'
 
 function tempWorkspace(setup: (dir: string) => void): { dir: string; cleanup: () => void } {
-  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'var-lsp-')))
+  const dir = realpathSync(mkdtempSync(join(tmpdir(), 'varar-lsp-')))
   setup(dir)
   return { dir, cleanup: () => rmSync(dir, { recursive: true, force: true }) }
 }
 
 async function makeStore(dir: string) {
-  const config = await loadVarConfig(dir)
+  const config = await loadConfig(dir)
   const fs = createNodeFileSystem(dir)
   const store = createStore({ fs, config, grammarLoader: createNodeGrammarLoader() })
   await store.reindex()

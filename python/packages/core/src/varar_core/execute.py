@@ -133,7 +133,7 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
     _create_context: Callable[[str], Any] = (
         ports.create_context if ports.create_context is not None else lambda _: {}
     )
-    var_path = plan.var_doc.path
+    var_path = plan.doc.path
 
     for example_index, ex in enumerate(plan.examples):
         # Deduplicated step lines, preserving document order.
@@ -254,7 +254,7 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
                                     inline_returned = slots[: len(step.args)]
                                     source_texts = [
                                         utf16_slice(
-                                            plan.var_doc.source,
+                                            plan.doc.source,
                                             s.start_offset,
                                             s.end_offset,
                                         )

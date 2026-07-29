@@ -1,7 +1,7 @@
 """drift.py — port of typescript/packages/core/src/drift.ts.
 
 Oath drift detection: a paragraph the committed varar.lock.json baseline recorded
-as an example that now matches no step. Pure over the existing VarDoc +
+as an example that now matches no step. Pure over the existing Doc +
 ExecutionPlan, byte-identical to the TypeScript port so varar.lock.json is shared
 across languages.
 """
@@ -13,7 +13,7 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
-from varar_core.ast import VarDoc
+from varar_core.ast import Doc
 from varar_core.diagnostics import Diagnostic, drift_detected
 from varar_core.hash import hash_source
 from varar_core.plan import ExecutionPlan, derive_example_name
@@ -44,7 +44,7 @@ class OathBaseline:
 
 
 @dataclass(frozen=True, slots=True)
-class VarLock:
+class LockFile:
     """The whole varar.lock.json: every oath keyed by its POSIX path."""
 
     version: int  # always 2
@@ -102,10 +102,10 @@ def _similarity(a: frozenset[str], b: frozenset[str]) -> float:
     return 0.0 if union == 0 else intersection / union
 
 
-def live_examples(var_doc: VarDoc, plan: ExecutionPlan) -> tuple[BaselineExample, ...]:
+def live_examples(doc: Doc, plan: ExecutionPlan) -> tuple[BaselineExample, ...]:
     """The current example-producing paragraphs, in document order."""
     out: list[BaselineExample] = []
-    for candidate in var_doc.examples:
+    for candidate in doc.examples:
         if _is_live(candidate.span, plan):
             out.append(
                 BaselineExample(
@@ -116,14 +116,14 @@ def live_examples(var_doc: VarDoc, plan: ExecutionPlan) -> tuple[BaselineExample
     return tuple(out)
 
 
-def derive_oath_baseline(source: str, var_doc: VarDoc, plan: ExecutionPlan) -> OathBaseline:
+def derive_oath_baseline(source: str, doc: Doc, plan: ExecutionPlan) -> OathBaseline:
     """The full baseline record for an oath: fingerprint plus live examples."""
-    return OathBaseline(source_hash=hash_source(source), examples=live_examples(var_doc, plan))
+    return OathBaseline(source_hash=hash_source(source), examples=live_examples(doc, plan))
 
 
 def detect_drift(
     baseline: OathBaseline | None,
-    var_doc: VarDoc,
+    doc: Doc,
     plan: ExecutionPlan,
 ) -> tuple[Drift, ...]:
     """Paragraphs the baseline recorded as examples that now match zero steps.
@@ -135,7 +135,7 @@ def detect_drift(
     """
     if baseline is None:
         return ()
-    candidates = var_doc.examples
+    candidates = doc.examples
     tokens = [_tokenize(derive_example_name(c.body)) for c in candidates]
     live = [_is_live(c.span, plan) for c in candidates]
 
@@ -175,7 +175,7 @@ def reconcile_drift(
     store: BaselineStore,
     oath_path: str,
     source: str,
-    var_doc: VarDoc,
+    doc: Doc,
     plan: ExecutionPlan,
     update: bool = False,
 ) -> tuple[Drift, ...]:
@@ -186,25 +186,25 @@ def reconcile_drift(
     keeps its old entry (and stays red).
     """
     text = store.read()
-    lock = parse_var_lock(text) if text else None
+    lock = parse_lock_file(text) if text else None
     baseline = lock.oaths.get(oath_path) if lock else None
-    drifts = () if update else detect_drift(baseline, var_doc, plan)
+    drifts = () if update else detect_drift(baseline, doc, plan)
     if update or len(drifts) == 0:
-        next_oath = derive_oath_baseline(source, var_doc, plan)
+        next_oath = derive_oath_baseline(source, doc, plan)
         oaths = dict(lock.oaths) if lock else {}
         oaths[oath_path] = next_oath
-        store.write(stringify_var_lock(VarLock(version=2, oaths=oaths)))
+        store.write(stringify_lock_file(LockFile(version=2, oaths=oaths)))
     return drifts
 
 
-def prune_var_lock(lock: VarLock, keep_paths: Sequence[str]) -> VarLock:
+def prune_lock_file(lock: LockFile, keep_paths: Sequence[str]) -> LockFile:
     """Drop every baseline whose oath path is not in ``keep_paths``.
 
     The entries left behind when an oath is deleted or moved. Pure counterpart of
-    parse_var_lock / stringify_var_lock; the caller decides what "still exists" means.
+    parse_lock_file / stringify_lock_file; the caller decides what "still exists" means.
     """
     keep = set(keep_paths)
-    return VarLock(
+    return LockFile(
         version=2,
         oaths={path: baseline for path, baseline in lock.oaths.items() if path in keep},
     )
@@ -232,13 +232,13 @@ def prune_baselines(
     that would be).
     """
     text = store.read()
-    lock = parse_var_lock(text) if text else None
+    lock = parse_lock_file(text) if text else None
     if lock is None:
         return ()
     keep = set(keep_paths)
     stale = tuple(path for path in lock.oaths if path not in keep)
     if update and stale:
-        store.write(stringify_var_lock(prune_var_lock(lock, keep_paths)))
+        store.write(stringify_lock_file(prune_lock_file(lock, keep_paths)))
     return stale
 
 
@@ -269,7 +269,7 @@ def _parse_oath_baseline(value: object) -> OathBaseline | None:
     return OathBaseline(source_hash=source_hash, examples=tuple(examples))
 
 
-def parse_var_lock(text: str) -> VarLock | None:
+def parse_lock_file(text: str) -> LockFile | None:
     """Parse varar.lock.json; None on malformed input (treated as no baseline)."""
     try:
         parsed = json.loads(text)
@@ -286,10 +286,10 @@ def parse_var_lock(text: str) -> VarLock | None:
         if baseline is None:
             return None
         oaths[path] = baseline
-    return VarLock(version=2, oaths=oaths)
+    return LockFile(version=2, oaths=oaths)
 
 
-def stringify_var_lock(lock: VarLock) -> str:
+def stringify_lock_file(lock: LockFile) -> str:
     """Serialize varar.lock.json deterministically: oath paths sorted, examples in
     document order, two-space indent, trailing newline. Byte-identical to the
     TypeScript serializer (camelCase keys, non-ASCII kept raw)."""

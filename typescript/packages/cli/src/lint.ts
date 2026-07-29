@@ -1,5 +1,5 @@
 import { readFileSync } from 'node:fs'
-import { findFiles, loadVarConfig } from '@varar/config'
+import { findFiles, loadConfig } from '@varar/config'
 import { createRegistry, parse, plan } from '@varar/core'
 
 export type LintOptions = {
@@ -21,11 +21,11 @@ type Item = {
 }
 
 export async function runLint(opts: LintOptions): Promise<LintResult> {
-  const cfg = await loadVarConfig(opts.cwd)
+  const cfg = await loadConfig(opts.cwd)
   // A CLI `--globs` override is include-only; excludes live in varar.config.json.
-  const varGlobs =
+  const globs =
     opts.globs && opts.globs.length > 0 ? { include: opts.globs, exclude: [] } : cfg.docs
-  const files = findFiles(opts.cwd, varGlobs.include, varGlobs.exclude)
+  const files = findFiles(opts.cwd, globs.include, globs.exclude)
   const registry = createRegistry()
   const items: Item[] = []
   for (const path of files) {

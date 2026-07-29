@@ -19,7 +19,7 @@ module Varar
     def generate(root: nil)
       root ||= File.dirname(caller_locations(1, 1).first.path)
       root = File.expand_path(root)
-      cfg = Config.read_var_config(root)
+      cfg = Config.read_config(root)
       loaded = Runner.load_steps(cfg.steps, root)
       store = Runner.create_file_baseline_store(root)
       update = %w[1 true].include?(ENV.fetch('VARAR_UPDATE', nil))
@@ -43,7 +43,7 @@ module Varar
       source = File.read(oath_path, encoding: 'UTF-8')
       plan = Runner.plan_oath(File.basename(oath_path), source, loaded.registry)
       pairs = Runner.examples_with_runs(plan, loaded.create_context, Runner::RecordingReporter.new)
-      drifts = Core::Drifts.reconcile_drift(store, rel, source, plan.var_doc, plan, update: update)
+      drifts = Core::Drifts.reconcile_drift(store, rel, source, plan.doc, plan, update: update)
 
       ::RSpec.describe(rel) do
         pairs.each do |example, run|

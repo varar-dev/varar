@@ -140,7 +140,7 @@ class Example:
 
 
 @dataclass(frozen=True, slots=True)
-class VarDoc:
+class Doc:
     path: str = ""
     source: str = ""
     examples: tuple[Example, ...] = ()

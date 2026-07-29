@@ -114,7 +114,7 @@ impl Block {
     }
 }
 
-/// The block kinds that may appear as a [`VarDoc`] orphan attachment (`Table | Fence`).
+/// The block kinds that may appear as a [`Doc`] orphan attachment (`Table | Fence`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum TableOrFence {
     Table(Table),
@@ -138,7 +138,7 @@ pub struct Example {
 
 /// A parsed source file: its matched examples plus unattached table/fence blocks.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct VarDoc {
+pub struct Doc {
     pub path: String,
     pub source: String,
     pub examples: Vec<Example>,

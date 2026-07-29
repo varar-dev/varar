@@ -219,7 +219,7 @@ public class DriftTests
         var store = new MemoryStore();
         var drifts = DriftDetection.ReconcileDrift(store, "w.md", source, doc, Plan.Run(doc, Reg()));
         Assert.Empty(drifts);
-        var lockFile = DriftDetection.ParseVarLock(store.Contents ?? string.Empty);
+        var lockFile = DriftDetection.ParseLockFile(store.Contents ?? string.Empty);
         Assert.Equal(new[] { new BaselineExample("I withdraw 40", 1) }, lockFile!.Oaths["w.md"].Examples);
     }
 
@@ -245,26 +245,26 @@ public class DriftTests
         DriftDetection.ReconcileDrift(store, "w.md", source, doc, Plan.Run(doc, Reg(true)));
         var drifts = DriftDetection.ReconcileDrift(store, "w.md", source, doc, Plan.Run(doc, Reg(false)), update: true);
         Assert.Empty(drifts);
-        Assert.Empty(DriftDetection.ParseVarLock(store.Contents ?? string.Empty)!.Oaths["w.md"].Examples);
+        Assert.Empty(DriftDetection.ParseLockFile(store.Contents ?? string.Empty)!.Oaths["w.md"].Examples);
     }
 
     [Fact]
-    public void ParseVarLockRoundTripsAValidLock()
+    public void ParseLockFileRoundTripsAValidLock()
     {
-        var lockFile = new VarLock(2, ImmutableDictionary<string, OathBaseline>.Empty
+        var lockFile = new LockFile(2, ImmutableDictionary<string, OathBaseline>.Empty
             .SetItem("library.md", new OathBaseline("fnv1a:1a2b3c4d", ImmutableArray.Create(new BaselineExample("I check out", 7)))));
-        var parsed = DriftDetection.ParseVarLock(DriftDetection.StringifyVarLock(lockFile));
+        var parsed = DriftDetection.ParseLockFile(DriftDetection.StringifyLockFile(lockFile));
         Assert.NotNull(parsed);
-        Assert.Equal(DriftDetection.StringifyVarLock(lockFile), DriftDetection.StringifyVarLock(parsed!));
+        Assert.Equal(DriftDetection.StringifyLockFile(lockFile), DriftDetection.StringifyLockFile(parsed!));
     }
 
     [Fact]
-    public void StringifyVarLockSortsOathPaths()
+    public void StringifyLockFileSortsOathPaths()
     {
-        var lockFile = new VarLock(2, ImmutableDictionary<string, OathBaseline>.Empty
+        var lockFile = new LockFile(2, ImmutableDictionary<string, OathBaseline>.Empty
             .SetItem("zebra.md", new OathBaseline("fnv1a:00000001", ImmutableArray<BaselineExample>.Empty))
             .SetItem("alpha.md", new OathBaseline("fnv1a:00000002", ImmutableArray<BaselineExample>.Empty)));
-        var text = DriftDetection.StringifyVarLock(lockFile);
+        var text = DriftDetection.StringifyLockFile(lockFile);
         Assert.True(text.IndexOf("alpha.md", StringComparison.Ordinal) < text.IndexOf("zebra.md", StringComparison.Ordinal));
         Assert.EndsWith("}\n", text);
     }
@@ -299,13 +299,13 @@ public class DriftTests
     }
 
     [Fact]
-    public void ParseVarLockRejectsMalformedInput()
+    public void ParseLockFileRejectsMalformedInput()
     {
-        Assert.Null(DriftDetection.ParseVarLock("not json"));
-        Assert.Null(DriftDetection.ParseVarLock("{}"));
-        Assert.Null(DriftDetection.ParseVarLock("{\"version\":1,\"oaths\":{}}"));
-        Assert.Null(DriftDetection.ParseVarLock("{\"version\":2,\"specs\":{}}"));
-        Assert.Null(DriftDetection.ParseVarLock("{\"version\":2,\"oaths\":{\"a.md\":{\"examples\":[]}}}"));
+        Assert.Null(DriftDetection.ParseLockFile("not json"));
+        Assert.Null(DriftDetection.ParseLockFile("{}"));
+        Assert.Null(DriftDetection.ParseLockFile("{\"version\":1,\"oaths\":{}}"));
+        Assert.Null(DriftDetection.ParseLockFile("{\"version\":2,\"specs\":{}}"));
+        Assert.Null(DriftDetection.ParseLockFile("{\"version\":2,\"oaths\":{\"a.md\":{\"examples\":[]}}}"));
     }
 
     // ---- Pruning baselines for oaths that no longer exist (#70) ----
@@ -317,7 +317,7 @@ public class DriftTests
         const string source = "I withdraw 40.";
         var doc = Parse.Run("w.md", source);
         var baseline = DriftDetection.DeriveOathBaseline(source, doc, Plan.Run(doc, Reg()));
-        return DriftDetection.StringifyVarLock(new VarLock(
+        return DriftDetection.StringifyLockFile(new LockFile(
             2,
             ImmutableDictionary<string, OathBaseline>.Empty
                 .Add("varar/w.md", baseline)
@@ -325,10 +325,10 @@ public class DriftTests
     }
 
     [Fact]
-    public void PruneVarLockKeepsOnlyThePathsItIsGiven()
+    public void PruneLockFileKeepsOnlyThePathsItIsGiven()
     {
-        var lockFile = DriftDetection.ParseVarLock(LockWithStalePath())!;
-        var pruned = DriftDetection.PruneVarLock(lockFile, ["varar/w.md"]);
+        var lockFile = DriftDetection.ParseLockFile(LockWithStalePath())!;
+        var pruned = DriftDetection.PruneLockFile(lockFile, ["varar/w.md"]);
         Assert.Equal(["varar/w.md"], pruned.Oaths.Keys.OrderBy(k => k, StringComparer.Ordinal));
     }
 
@@ -349,7 +349,7 @@ public class DriftTests
         var store = new MemoryStore(LockWithStalePath());
 
         Assert.Equal(["w.md"], DriftDetection.PruneBaselines(store, ["varar/w.md"], update: true));
-        var lockFile = DriftDetection.ParseVarLock(store.Contents!)!;
+        var lockFile = DriftDetection.ParseLockFile(store.Contents!)!;
         Assert.Equal(["varar/w.md"], lockFile.Oaths.Keys);
     }
 

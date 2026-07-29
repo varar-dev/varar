@@ -216,9 +216,32 @@ All phases done, every port's gate re-run green (807 files changed):
   `packages/core`, `packages/config`, …, facade `packages/varar`); published
   names/coordinates are unchanged, only the on-disk dirs moved. `make check`
   green after the move.
-- **Internal code identifiers** (`VarConfig`, `loadVarConfig`, `parseVarLock`,
-  the website `var-lang`/`var-palette` localStorage keys) — not user-facing
-  coordinates; left to avoid churn/risk.
+- ~~**Internal code identifiers**~~ (`VarConfig`, `loadVarConfig`, `parseVarLock`,
+  the website `var-lang`/`var-palette` localStorage keys) — originally left to
+  avoid churn/risk. **Reversed 2026-07-29 ([#71][i71])**: several were not
+  internal at all (`VarSpec` is subclassed by every Kotest user; `var.config.root`
+  and `var.acceptDrift` are JUnit configuration parameters; `.var/` is where run
+  results land), and the deferral was quietly costing more each release as new
+  `Var*` names were added to the public surface.
+
+  The prefix is now **dropped**, not translated — each package already namespaces
+  its types (`VarDoc` → `Doc`, `VarLock` → `LockFile`, `VarConfig` → `Config`).
+  Two exceptions, both forced by collisions rather than taste:
+  - `Oath*` where the bare name would collide with a framework type we extend or
+    implement: `OathSpec` (Kotest's `Spec`), `OathTestEngine`,
+    `OathEngineDescriptor`, `OathEngineExecutionContext`, `OathFileDescriptor`
+    (`java.io.FileDescriptor`), `OathItem`/`OathFile` (pytest's `Item`/`File`).
+  - `LockFile` rather than `Lock`, because `System.Threading.Lock` (.NET 9+) is
+    imported by `ImplicitUsings` and makes a bare `Lock` permanently ambiguous in
+    C#. `.NET` also needs `ConfigFile` for the static reader, since C# — unlike
+    Java — cannot disambiguate a `Config` class inside a `Varar.Config` namespace.
+
+  User-visible *strings* went the other way: with no package to namespace them,
+  they take the full product name (`varar.config.root`, `varar:drift:`,
+  `vararResult`, `.varar/`, `varar-lang`). The conformance corpus's
+  `golden/var-doc.json` became `doc.json`, matching its three siblings.
+
+[i71]: https://github.com/varar-dev/varar/issues/71
 - **Test data** `Vár`/`vár` in oaths, step files, and conformance goldens
   (golden-compared — not branding).
 - The dated **`doc/superpowers` + `doc/adr` archive** and `CHANGELOG.md` —

@@ -6,7 +6,7 @@ import languages from '../../../../languages.json' with { type: 'json' }
 import { runInit } from '../src/init.ts'
 
 test('scaffolds varar.config.json and an example .md + steps file', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'var-init-'))
+  const dir = mkdtempSync(join(tmpdir(), 'varar-init-'))
   try {
     const result = await runInit({ cwd: dir, writeStdout: () => {} })
     expect(result.exitCode).toBe(0)
@@ -30,7 +30,7 @@ test('the scaffolded config uses the steps glob declared for TypeScript in langu
   // manifest (the single source of truth every port scaffolds from).
   const ts = languages.find((l) => l.id === 'ts')
   expect(ts).toBeDefined()
-  const dir = mkdtempSync(join(tmpdir(), 'var-init-manifest-'))
+  const dir = mkdtempSync(join(tmpdir(), 'varar-init-manifest-'))
   try {
     await runInit({ cwd: dir, writeStdout: () => {} })
     const config = JSON.parse(readFileSync(join(dir, 'varar.config.json'), 'utf8'))
@@ -42,7 +42,7 @@ test('the scaffolded config uses the steps glob declared for TypeScript in langu
 })
 
 test('refuses to overwrite an existing varar.config.json; reports which files were skipped', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'var-init-conflict-'))
+  const dir = mkdtempSync(join(tmpdir(), 'varar-init-conflict-'))
   try {
     writeFileSync(join(dir, 'varar.config.json'), '{ "docs": { "include": [] } }')
     const captured: string[] = []
@@ -59,7 +59,7 @@ test('refuses to overwrite an existing varar.config.json; reports which files we
 })
 
 test('creates a package.json with "type": "module" when the project has none', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'var-init-nopkg-'))
+  const dir = mkdtempSync(join(tmpdir(), 'varar-init-nopkg-'))
   try {
     const captured: string[] = []
     await runInit({ cwd: dir, writeStdout: (s) => captured.push(s) })
@@ -75,7 +75,7 @@ test('adds "type": "module" to a package.json that declares no type, keeping its
   // The `npm init -y` case: the scaffolded .steps.ts is an ES module, so
   // without this `varar run` fails with "Cannot use import statement outside a
   // module".
-  const dir = mkdtempSync(join(tmpdir(), 'var-init-addtype-'))
+  const dir = mkdtempSync(join(tmpdir(), 'varar-init-addtype-'))
   try {
     writeFileSync(join(dir, 'package.json'), '{ "name": "demo", "version": "1.0.0" }')
     const captured: string[] = []
@@ -89,7 +89,7 @@ test('adds "type": "module" to a package.json that declares no type, keeping its
 })
 
 test('never rewrites a type the project already chose, and warns when it is not module', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'var-init-cjs-'))
+  const dir = mkdtempSync(join(tmpdir(), 'varar-init-cjs-'))
   try {
     const original = '{ "name": "demo", "type": "commonjs" }'
     writeFileSync(join(dir, 'package.json'), original)

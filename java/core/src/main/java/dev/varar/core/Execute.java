@@ -197,8 +197,8 @@ public final class Execute {
             Plan.ExecutionPlan plan, Plan.PlannedExample ex, int exampleIndex, ExecutePorts ports) {
         Function<String, Object> createContext =
                 ports.createContext() != null ? ports.createContext() : DEFAULT_CONTEXT;
-        String path = plan.varDoc().path();
-        String source = plan.varDoc().source();
+        String path = plan.doc().path();
+        String source = plan.doc().source();
         List<Plan.PlannedStep> steps = ex.steps();
 
         // Cache one state value per stepfile within this example. Lazy creation keeps the

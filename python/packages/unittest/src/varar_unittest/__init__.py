@@ -22,7 +22,7 @@ import unittest
 from pathlib import Path
 from typing import Any, Callable
 
-from varar_config import read_varar_config
+from varar_config import read_config
 from varar_core.cell_diff import ReturnShapeError, is_cell_mismatch_error
 from varar_core.diagnostics import drift_detected
 from varar_core.drift import prune_baselines, reconcile_drift
@@ -48,7 +48,7 @@ def generate_tests(namespace: dict[str, Any], root: str | Path | None = None) ->
     if root is None:
         root = Path(namespace["__file__"]).parent
     root = Path(os.path.abspath(root))
-    cfg = read_varar_config(root)
+    cfg = read_config(root)
     loaded = load_steps(cfg.steps, root)
     store = create_file_baseline_store(root)
     module_name = namespace.get("__name__")
@@ -103,7 +103,7 @@ def _oath_test_case(
     # (VARAR_UPDATE=1 accepts and re-records instead).
     update = os.environ.get("VARAR_UPDATE") in ("1", "true")
     drifts = reconcile_drift(
-        store, rel, source, execution_plan.var_doc, execution_plan, update=update
+        store, rel, source, execution_plan.doc, execution_plan, update=update
     )
     for d in drifts:
         methods[f"test_var_drift_{d.line}"] = _make_drift_method(

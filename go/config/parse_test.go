@@ -8,13 +8,13 @@ import (
 	"testing"
 )
 
-// ReadVarConfig is the filesystem edge over ParseVarConfig (issue #11). These
+// ReadConfig is the filesystem edge over ParseConfig (issue #11). These
 // pin the pure half directly: a caller holding the text — an editor buffer, the
 // LSP, an in-memory fixture — must be able to validate it without inventing a
 // file. Byte-for-byte behaviour of both is gated by conformance_test.go.
 
 func TestParseReadsEveryKeyWithoutTouchingTheFilesystem(t *testing.T) {
-	cfg, err := ParseVarConfig([]byte(`{"docs": {"include": ["a/**/*.md"], "exclude": ["a/wip/**"]},
+	cfg, err := ParseConfig([]byte(`{"docs": {"include": ["a/**/*.md"], "exclude": ["a/wip/**"]},
 		"steps": ["*.steps.go"], "snippets": {"go": "G"}}`), "<memory>")
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -34,14 +34,14 @@ func TestParseReadsEveryKeyWithoutTouchingTheFilesystem(t *testing.T) {
 }
 
 func TestParseLabelsErrorsWithTheGivenSource(t *testing.T) {
-	_, err := ParseVarConfig([]byte("{oops"), "buffer://untitled")
+	_, err := ParseConfig([]byte("{oops"), "buffer://untitled")
 	if err == nil || !strings.HasPrefix(err.Error(), "buffer://untitled:") {
 		t.Errorf("unexpected error: %v", err)
 	}
 }
 
 func TestReadReturnsTheEmptyConfigWhenThereIsNoFile(t *testing.T) {
-	cfg, err := ReadVarConfig(t.TempDir())
+	cfg, err := ReadConfig(t.TempDir())
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -56,7 +56,7 @@ func TestReadDelegatesToParseAndLabelsErrorsWithThePath(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	_, err := ReadVarConfig(root)
+	_, err := ReadConfig(root)
 	if err == nil || !strings.Contains(err.Error(), "varar.config.json") {
 		t.Errorf("unexpected error: %v", err)
 	}

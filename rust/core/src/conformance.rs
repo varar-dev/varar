@@ -3,8 +3,8 @@
 //! Covers all four projections (var-doc, registry, plan, trace).
 
 use crate::ast::{
-    Block, Blockquote, Example, Fence, Heading, ListItem, Paragraph, Row, SegmentOffset, Table,
-    TableOrFence, ThematicBreak, VarDoc,
+    Block, Blockquote, Doc, Example, Fence, Heading, ListItem, Paragraph, Row, SegmentOffset,
+    Table, TableOrFence, ThematicBreak,
 };
 use crate::diagnostics::{Diagnostic, DiagnosticCode, Severity};
 use crate::error::{StepError, StepFailure};
@@ -23,7 +23,7 @@ pub use crate::expression::parameter_type_names;
 
 /// All four projected wire artifacts for one bundle.
 pub struct BundleArtifacts {
-    pub var_doc: Value,
+    pub doc: Value,
     pub registry: Value,
     pub plan: Value,
     pub trace: Value,
@@ -45,8 +45,8 @@ fn vint(n: usize) -> Value {
 // var-doc projection
 // -----------------------------------------------------------------------------
 
-/// Projects a parsed [`VarDoc`] to the var-doc wire artifact.
-pub fn to_var_doc_artifact(doc: &VarDoc) -> Value {
+/// Projects a parsed [`Doc`] to the var-doc wire artifact.
+pub fn to_doc_artifact(doc: &Doc) -> Value {
     obj(vec![
         ("path", Value::from(doc.path.as_str())),
         ("examples", Value::List(doc.examples.iter().map(example).collect())),
@@ -233,7 +233,7 @@ pub fn to_registry_artifact(registry: &Registry) -> Value {
 
 /// Projects an [`ExecutionPlan`] to the plan wire artifact.
 pub fn to_plan_artifact(plan: &ExecutionPlan) -> Value {
-    let source = &plan.var_doc.source;
+    let source = &plan.doc.source;
     obj(vec![
         (
             "examples",
@@ -407,7 +407,7 @@ fn file_stem(path: &str) -> String {
 /// Runs one bundle end-to-end: plan, execute (recording observations), and
 /// project all four wire artifacts. Port of `runConformance`.
 pub fn run_conformance(
-    doc: &VarDoc,
+    doc: &Doc,
     registry: &Registry,
     context_factory: &dyn Fn() -> Rc<dyn Any>,
 ) -> BundleArtifacts {
@@ -490,7 +490,7 @@ pub fn run_conformance(
     let trace = obj(vec![("examples", Value::List(trace_examples))]);
 
     BundleArtifacts {
-        var_doc: to_var_doc_artifact(doc),
+        doc: to_doc_artifact(doc),
         registry: to_registry_artifact(registry),
         plan: to_plan_artifact(&execution),
         trace,

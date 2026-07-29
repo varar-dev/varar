@@ -89,8 +89,8 @@ func ExecutePlan(plan ExecutionPlan, ports ExecutePorts) *StepFailure {
 }
 
 func runExample(plan ExecutionPlan, ex PlannedExample, exampleIndex int, ports ExecutePorts) *StepFailure {
-	path := plan.VarDoc.Path
-	source := plan.VarDoc.Source
+	path := plan.Doc.Path
+	source := plan.Doc.Source
 	steps := ex.Steps
 
 	stateByFile := map[string]any{}

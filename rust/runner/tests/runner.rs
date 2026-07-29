@@ -2,7 +2,7 @@
 //! filesystem baseline store driving drift reconciliation.
 
 use std::path::PathBuf;
-use varar_config::VarConfig;
+use varar_config::Config;
 use varar_core::drift::{BaselineStore, reconcile_drift};
 use varar_core::handler::Handler;
 use varar_core::parse::parse;
@@ -13,7 +13,7 @@ use varar_runner::discovery::glob_to_regex;
 use varar_runner::{FileBaselineStore, find_oaths};
 
 fn tmp(name: &str) -> PathBuf {
-    let dir = std::env::temp_dir().join(format!("var-runner-{}-{name}", std::process::id()));
+    let dir = std::env::temp_dir().join(format!("varar-runner-{}-{name}", std::process::id()));
     let _ = std::fs::remove_dir_all(&dir);
     std::fs::create_dir_all(&dir).unwrap();
     dir
@@ -51,7 +51,7 @@ fn find_oaths_honours_include_and_exclude() {
     std::fs::create_dir_all(root.join("sub")).unwrap();
     std::fs::write(root.join("sub/b.md"), "x").unwrap();
 
-    let flat = VarConfig {
+    let flat = Config {
         docs_include: vec!["*.md".to_string()],
         docs_exclude: vec!["README.md".to_string()],
         ..Default::default()
@@ -62,7 +62,7 @@ fn find_oaths_honours_include_and_exclude() {
         .collect();
     assert_eq!(names, vec!["a.md"]);
 
-    let recursive = VarConfig {
+    let recursive = Config {
         docs_include: vec!["**/*.md".to_string()],
         docs_exclude: vec!["README.md".to_string()],
         ..Default::default()

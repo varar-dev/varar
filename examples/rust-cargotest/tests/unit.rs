@@ -5,7 +5,7 @@
 use example::varar::{build_registry, context_value};
 use std::path::Path;
 use varar_cargotest::run_one;
-use varar_config::read_var_config;
+use varar_config::read_config;
 use varar_runner::find_oaths;
 
 fn root() -> &'static Path {
@@ -14,7 +14,7 @@ fn root() -> &'static Path {
 
 #[test]
 fn discovery_matches_config() {
-    let config = read_var_config(root()).unwrap();
+    let config = read_config(root()).unwrap();
     let mut names: Vec<String> = find_oaths(&config, root())
         .iter()
         .map(|p| p.file_name().unwrap().to_string_lossy().into_owned())

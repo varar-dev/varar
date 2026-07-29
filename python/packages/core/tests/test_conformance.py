@@ -13,7 +13,7 @@ from varar_core.conformance import (
     to_failure_artifact,
     to_plan_artifact,
     to_registry_artifact,
-    to_var_doc_artifact,
+    to_doc_artifact,
 )
 from varar_core.doc_string_diff import compare_doc_string
 from varar_core.execute import UnexpectedPassError
@@ -223,12 +223,12 @@ def test_to_plan_artifact_projects_diagnostics_without_message_or_path():
 
 
 # ---------------------------------------------------------------------------
-# to_var_doc_artifact
+# to_doc_artifact
 # ---------------------------------------------------------------------------
 
 
-def test_to_var_doc_artifact_keeps_path_examples_and_orphan_attachments():
-    art = to_var_doc_artifact(parse("e.md", "# A\n\nI have 5 cukes."))
+def test_to_doc_artifact_keeps_path_examples_and_orphan_attachments():
+    art = to_doc_artifact(parse("e.md", "# A\n\nI have 5 cukes."))
     assert art["path"] == "e.md"
     assert isinstance(art["examples"], list)
 

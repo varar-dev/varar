@@ -27,7 +27,7 @@ function capturingReporter(): {
 }
 
 function fakeCtx() {
-  const meta: { varResult?: { name: string; status: string; lines: ReadonlyArray<number> } } = {}
+  const meta: { vararResult?: { name: string; status: string; lines: ReadonlyArray<number> } } = {}
   return { ctx: { task: { meta } }, meta }
 }
 
@@ -89,16 +89,16 @@ test('VARAR_UPDATE skips the drift gate', () => {
   expect(diags).toEqual([])
 })
 
-test('vararTestBody runs the example and attaches a passed varResult to the task meta', async () => {
+test('vararTestBody runs the example and attaches a passed vararResult to the task meta', async () => {
   const { stimulus } = steps(() => ({}))
   stimulus('I pass', () => {})
   const examples = collectVararExamples('ok.md', 'I pass.', { reporter: { diagnostic: () => {} } })
   const { ctx, meta } = fakeCtx()
   await vararTestBody(examples, 0, 'I pass', 'ok.md')(ctx)
-  expect(meta.varResult).toMatchObject({ name: 'I pass', status: 'passed', lines: [1] })
+  expect(meta.vararResult).toMatchObject({ name: 'I pass', status: 'passed', lines: [1] })
 })
 
-test('vararTestBody attaches a failed varResult and rethrows when the example fails', async () => {
+test('vararTestBody attaches a failed vararResult and rethrows when the example fails', async () => {
   const { stimulus } = steps(() => ({}))
   stimulus('I fail', () => {
     throw new Error('boom')
@@ -106,7 +106,7 @@ test('vararTestBody attaches a failed varResult and rethrows when the example fa
   const examples = collectVararExamples('bad.md', 'I fail.', { reporter: { diagnostic: () => {} } })
   const { ctx, meta } = fakeCtx()
   await expect(vararTestBody(examples, 0, 'I fail', 'bad.md')(ctx)).rejects.toThrow('boom')
-  expect(meta.varResult).toMatchObject({ name: 'I fail', status: 'failed', lines: [1] })
+  expect(meta.vararResult).toMatchObject({ name: 'I fail', status: 'failed', lines: [1] })
 })
 
 test('vararTestBody fails loudly when the transform is stale (name or index mismatch)', async () => {

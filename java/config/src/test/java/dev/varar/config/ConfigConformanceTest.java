@@ -40,10 +40,10 @@ class ConfigConformanceTest {
     @MethodSource("cases")
     void caseMatchesContract(Path caseDir) throws IOException {
         if (Files.exists(caseDir.resolve("expect-error.txt"))) {
-            assertThrows(IllegalArgumentException.class, () -> VarConfig.load(caseDir));
+            assertThrows(IllegalArgumentException.class, () -> Config.load(caseDir));
             return;
         }
-        VarConfig config = VarConfig.load(caseDir);
+        Config config = Config.load(caseDir);
         Map<String, Object> docs = new LinkedHashMap<>();
         docs.put("include", config.docsInclude());
         docs.put("exclude", config.docsExclude());

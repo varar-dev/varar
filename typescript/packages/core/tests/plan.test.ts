@@ -35,8 +35,8 @@ test('plan produces a PlannedExample with steps in document order', () => {
   // a `describe` scope.
   const source =
     '# Withdrawing\n\nGiven I have 100 in my account. When I withdraw 40. Then I should have 60 left.'
-  const varDoc = parse('w.md', source)
-  const result = plan(varDoc, reg())
+  const doc = parse('w.md', source)
+  const result = plan(doc, reg())
   expect(result.diagnostics).toHaveLength(0)
   expect(result.examples).toHaveLength(1)
   const ex = result.examples[0]
@@ -83,8 +83,8 @@ test('plan emits an ambiguous-match diagnostic and produces no runnable example'
     kind: 'stimulus',
     handler: () => {},
   })
-  const varDoc = parse('e.md', '# Ambig\n\nGiven I have 5 cukes')
-  const result = plan(varDoc, r)
+  const doc = parse('e.md', '# Ambig\n\nGiven I have 5 cukes')
+  const result = plan(doc, r)
   expect(result.diagnostics).toHaveLength(1)
   expect(result.diagnostics[0]?.code).toBe('ambiguous-match')
   // An ambiguous candidate has no runnable step, so it is prose (a delimiter),
@@ -94,8 +94,8 @@ test('plan emits an ambiguous-match diagnostic and produces no runnable example'
 
 test('plan skips an example heading whose body has no matches and no keyword-led sentences', () => {
   const source = '# Just docs\n\nSome prose with no matches and no keywords.'
-  const varDoc = parse('d.md', source)
-  const result = plan(varDoc, reg())
+  const doc = parse('d.md', source)
+  const result = plan(doc, reg())
   expect(result.examples).toHaveLength(0)
   expect(result.diagnostics).toHaveLength(0)
 })
@@ -224,15 +224,15 @@ test('a keyword-led sentence with no match does NOT produce a diagnostic (no Giv
   // Step-def generation is selection-driven only; we never infer that a
   // keyword-led sentence "should" have matched a step definition.
   const r = createRegistry()
-  const varDoc = parse('m.md', '# Empty\n\nGiven I have 5 cukes in my belly.')
-  const result = plan(varDoc, r)
+  const doc = parse('m.md', '# Empty\n\nGiven I have 5 cukes in my belly.')
+  const result = plan(doc, r)
   expect(result.diagnostics).toHaveLength(0)
 })
 
 test('an unmatched sentence without a keyword is also silently treated as prose', () => {
   const r = createRegistry()
-  const varDoc = parse('p.md', '# Prose\n\nI have 5 cukes in my belly.')
-  const result = plan(varDoc, r)
+  const doc = parse('p.md', '# Prose\n\nI have 5 cukes in my belly.')
+  const result = plan(doc, r)
   expect(result.diagnostics).toHaveLength(0)
 })
 
@@ -391,8 +391,8 @@ test('plan carries paramInnerSpans (value only) alongside paramSpans (full notat
     handler: () => {},
   })
   const source = '# Greeting\n\nGiven I greet "world" warmly.'
-  const varDoc = parse('g.md', source)
-  const result = plan(varDoc, r)
+  const doc = parse('g.md', source)
+  const result = plan(doc, r)
   const step = result.examples[0]?.steps[0]
   if (!step) throw new Error('no planned step')
   const outer = step.paramSpans[0]

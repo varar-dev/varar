@@ -7,7 +7,7 @@ import type { Reporter, TestModule } from 'vitest/node'
 // `meta()` is typed `unknown` so both vitest's real `TestModule` (whose
 // `meta()` returns the augmentation-free `TaskMeta`) and the plain test fakes
 // satisfy it without a module augmentation — the plugin stashes each example's
-// result on `ctx.task.meta.varResult`, which we narrow when reading.
+// result on `ctx.task.meta.vararResult`, which we narrow when reading.
 type TestCaseNode = {
   meta(): unknown
 }
@@ -16,7 +16,7 @@ type TestModuleNode = {
   readonly children: { allTests(): Iterable<TestCaseNode> }
 }
 
-// Group every test's meta.varResult by its owning oath module, in declaration
+// Group every test's meta.vararResult by its owning oath module, in declaration
 // order. Modules that produced no var results (e.g. only var:diagnostic tasks)
 // are skipped.
 export function collectFromModules(
@@ -26,8 +26,9 @@ export function collectFromModules(
   for (const m of testModules) {
     const examples: ExampleResult[] = []
     for (const tc of m.children.allTests()) {
-      const varResult = (tc.meta() as { varResult?: ExampleResult } | null | undefined)?.varResult
-      if (varResult) examples.push(varResult)
+      const vararResult = (tc.meta() as { vararResult?: ExampleResult } | null | undefined)
+        ?.vararResult
+      if (vararResult) examples.push(vararResult)
     }
     if (examples.length > 0) byFile.set(m.moduleId, examples)
   }
@@ -40,9 +41,9 @@ export function toOathPath(filepath: string, cwd: string): string {
   return rel.split(sep).join('/')
 }
 
-// Oath path → its result file under .var/.
+// Oath path → its result file under .varar/.
 export function resultFilePath(oathPath: string, cwd: string): string {
-  return join(cwd, '.var', `${oathPath}.json`)
+  return join(cwd, '.varar', `${oathPath}.json`)
 }
 
 export function buildOathResults(
@@ -56,7 +57,7 @@ export function buildOathResults(
 export type VararResultsReporterOptions = { readonly cwd?: string }
 
 // Vitest reporter (the only side-effecting piece). Reads each oath's source,
-// hashes it, and writes .var/<oath>.json. Registry-free: every ExampleResult
+// hashes it, and writes .varar/<oath>.json. Registry-free: every ExampleResult
 // arrives prebuilt on task.meta from the worker.
 export class VararResultsReporter implements Reporter {
   private readonly cwd: string

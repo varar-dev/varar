@@ -51,7 +51,7 @@ def test_a_paragraph_that_stopped_matching_drifts_and_fails(pytester):
     before = (pytester.path / "varar.lock.json").read_text(encoding="utf-8")
     result = pytester.runpytest("-v")
     result.assert_outcomes(failed=1)
-    result.stdout.fnmatch_lines(["*var:drift*"])
+    result.stdout.fnmatch_lines(["*varar:drift*"])
     # Unacknowledged drift leaves the baseline untouched.
     assert (pytester.path / "varar.lock.json").read_text(encoding="utf-8") == before
 

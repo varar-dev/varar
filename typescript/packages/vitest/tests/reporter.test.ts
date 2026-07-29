@@ -35,9 +35,9 @@ describe('collectFromModules', () => {
         moduleId: '/cwd/docs/a.md',
         children: {
           allTests: () => [
-            { meta: () => ({ varResult: passed }) },
-            { meta: () => ({ varResult: failed }) },
-            { meta: () => ({}) }, // var:diagnostic-style test, no varResult
+            { meta: () => ({ vararResult: passed }) },
+            { meta: () => ({ vararResult: failed }) },
+            { meta: () => ({}) }, // var:diagnostic-style test, no vararResult
           ],
         },
       },
@@ -57,7 +57,7 @@ describe('path helpers', () => {
     const abs = join('/cwd', 'docs', 'a.md')
     expect(toOathPath(abs, '/cwd')).toBe('docs/a.md')
   })
-  test('resultFilePath mirrors the oath path under .var/', () => {
-    expect(resultFilePath('docs/a.md', '/cwd')).toBe(join('/cwd', '.var', 'docs/a.md.json'))
+  test('resultFilePath mirrors the oath path under .varar/', () => {
+    expect(resultFilePath('docs/a.md', '/cwd')).toBe(join('/cwd', '.varar', 'docs/a.md.json'))
   })
 })

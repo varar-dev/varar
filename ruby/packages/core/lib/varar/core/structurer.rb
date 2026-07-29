@@ -66,7 +66,7 @@ module Varar
           end
         end
 
-        VarDoc.new(
+        Doc.new(
           path: path,
           source: source,
           examples: examples,

@@ -42,7 +42,7 @@ module Varar
       def execute_plan(plan, sink:, create_context:, observer: nil, reporter: nil)
         plan.diagnostics.each { |d| reporter.call(d) } if reporter
         create_ctx = create_context || ->(_file) { {} }
-        var_path = plan.var_doc.path
+        var_path = plan.doc.path
 
         plan.examples.each_with_index do |ex, example_index|
           seen_lines = {}
@@ -177,7 +177,7 @@ module Varar
 
         inline_returned = slots[0...step.args.length]
         source_texts = step.param_spans.map do |s|
-          Offsets.utf16_slice(plan.var_doc.source, s.start_offset, s.end_offset)
+          Offsets.utf16_slice(plan.doc.source, s.start_offset, s.end_offset)
         end
         param_diffs = ParamDiff.compare_params(inline_returned, step.args, step.param_spans, source_texts,
                                                step.formats).reject(&:ok)

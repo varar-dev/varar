@@ -19,7 +19,7 @@ module Varar
     def generate_tests(namespace = Object, root: nil)
       root ||= File.dirname(caller_locations(1, 1).first.path)
       root = File.expand_path(root)
-      cfg = Config.read_var_config(root)
+      cfg = Config.read_config(root)
       loaded = Runner.load_steps(cfg.steps, root)
       store = Runner.create_file_baseline_store(root)
       update = %w[1 true].include?(ENV.fetch('VARAR_UPDATE', nil))
@@ -62,7 +62,7 @@ module Varar
         end
       end
 
-      Core::Drifts.reconcile_drift(store, rel, source, plan.var_doc, plan, update: update).each do |drift|
+      Core::Drifts.reconcile_drift(store, rel, source, plan.doc, plan, update: update).each do |drift|
         message = Core::Diagnostics.drift_detected(drift.name, drift.span).message
         klass.define_method("test_var_drift_#{drift.line}") { raise ::Minitest::Assertion, message }
       end

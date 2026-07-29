@@ -11,7 +11,7 @@ import type { Range, StepDef } from './step-defs.ts'
 
 export type WorkspaceInput = {
   readonly stepFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>
-  readonly varFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>
+  readonly oathFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>
   // The step-def scanner. Always the tree-sitter scanner
   // (createTreeSitterScanner); callers build it at their async shell edge with
   // an environment-specific GrammarLoader and pass the resolved instance here.
@@ -102,9 +102,9 @@ export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
   const matches: MatchRef[] = []
   const diagnostics: DiagnosticRef[] = []
 
-  for (const file of input.varFiles) {
-    const varDoc = parse(file.path, file.source)
-    const result = plan(varDoc, registry)
+  for (const file of input.oathFiles) {
+    const doc = parse(file.path, file.source)
+    const result = plan(doc, registry)
     // Header-bound tables expand to one example per row, all sharing the same
     // binding paragraph. For highlighting we want the paragraph (with its
     // header-cell words as parameters) once — not the per-row table lines the

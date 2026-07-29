@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "oathPath": "examples/typescript-vitest/varar/return-sensor.md",
+  "sourceHash": "fnv1a:4fdae02d",
+  "examples": [
+    {
+      "name": "I should have 3 cukes in my big belly",
+      "status": "passed",
+      "lines": [
+        3
+      ]
+    }
+  ]
+}

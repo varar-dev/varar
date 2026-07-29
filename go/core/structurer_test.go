@@ -9,9 +9,9 @@ import (
 
 func TestPrecededByDelimiterMarksCandidatesAfterHeadingOrThematicBreak(t *testing.T) {
 	source := "First para.\n\nSecond para.\n\n---\n\nThird para.\n\n## H\n\nFourth para."
-	varDoc := structure("d.md", source, scan(source))
-	got := make([]bool, len(varDoc.Examples))
-	for i, e := range varDoc.Examples {
+	doc := structure("d.md", source, scan(source))
+	got := make([]bool, len(doc.Examples))
+	for i, e := range doc.Examples {
 		got[i] = e.PrecededByDelimiter
 	}
 	want := []bool{

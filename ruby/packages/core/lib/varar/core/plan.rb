@@ -29,9 +29,9 @@ module Varar
       end
     end
 
-    ExecutionPlan = Data.define(:var_doc, :examples, :diagnostics)
+    ExecutionPlan = Data.define(:doc, :examples, :diagnostics)
 
-    # Produce an ExecutionPlan from a VarDoc + Registry: match step expressions
+    # Produce an ExecutionPlan from a Doc + Registry: match step expressions
     # against every text block, attach trailing tables/fences, detect
     # header-bound tables, and collect diagnostics. Port of plan.ts.
     module Plan
@@ -52,11 +52,11 @@ module Varar
 
       module_function
 
-      def plan(var_doc, registry)
+      def plan(doc, registry)
         diagnostics = []
 
         # Phase 1: plan each candidate paragraph independently into a "unit".
-        units = var_doc.examples.map { |ex| plan_candidate(ex, var_doc, registry, diagnostics) }
+        units = doc.examples.map { |ex| plan_candidate(ex, doc, registry, diagnostics) }
 
         # Phase 2: group adjacent candidates into examples. A matching candidate
         # continues the open example when no delimiter (heading / `---`) precedes
@@ -66,7 +66,7 @@ module Varar
         examples = []
         open = nil
         flush = lambda do
-          examples << finish_merged(open, var_doc.source) if open
+          examples << finish_merged(open, doc.source) if open
           open = nil
         end
         units.each do |unit|
@@ -89,7 +89,7 @@ module Varar
         end
         flush.call
 
-        ExecutionPlan.new(var_doc: var_doc, examples: examples, diagnostics: diagnostics)
+        ExecutionPlan.new(doc: doc, examples: examples, diagnostics: diagnostics)
       end
 
       def start_merged(unit)
@@ -124,7 +124,7 @@ module Varar
 
       # Plan a single candidate paragraph (plus attached tables/fences) in
       # isolation. Emits ambiguity / error-fence diagnostics into +diagnostics+.
-      def plan_candidate(ex, var_doc, registry, diagnostics)
+      def plan_candidate(ex, doc, registry, diagnostics)
         had_ambiguous = false
         steps_by_block = {}
 
@@ -135,7 +135,7 @@ module Varar
           result = plan_block(block.text, registry)
 
           result.ambiguities.each do |collision|
-            span = lift_span(var_doc.source, block, collision.match_start, collision.match_end)
+            span = lift_span(doc.source, block, collision.match_start, collision.match_end)
             cp_start = Offsets.cp_index_for_utf16(block.text, collision.match_start)
             cp_end = Offsets.cp_index_for_utf16(block.text, collision.match_end)
             diagnostics << Diagnostics.ambiguous_match(
@@ -159,8 +159,8 @@ module Varar
           steps_by_block[idx] = result.steps.map do |hit|
             PlannedStep.new(
               text: Offsets.utf16_slice(block.text, hit.match_start, hit.match_end),
-              match_span: lift_span(var_doc.source, block, hit.match_start, hit.match_end),
-              param_spans: hit.param_spans.map { |p| lift_span(var_doc.source, block, p.start, p.end) },
+              match_span: lift_span(doc.source, block, hit.match_start, hit.match_end),
+              param_spans: hit.param_spans.map { |p| lift_span(doc.source, block, p.start, p.end) },
               step_def: hit.step_def,
               args: hit.args,
               formats: hit.formats
@@ -169,7 +169,7 @@ module Varar
         end
 
         # Header-bound table detection.
-        bound = had_ambiguous ? nil : detect_header_bound(ex, steps_by_block, var_doc.source)
+        bound = had_ambiguous ? nil : detect_header_bound(ex, steps_by_block, doc.source)
         if bound
           table, binding_step, header_spans = bound
           header_binding = HeaderBinding.new(

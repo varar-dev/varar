@@ -19,12 +19,12 @@ import org.junit.jupiter.params.provider.MethodSource;
 /**
  * The Milestone 1 conformance gate: for every bundle under the shared, language-neutral
  * {@code conformance/bundles/} corpus, parses {@code example.md}, projects it via {@link
- * Conformance#toVarDocArtifact(Ast.VarDoc)}, serializes with {@link
+ * Conformance#toDocArtifact(Ast.Doc)}, serializes with {@link
  * CanonicalJson#canonicalStringify(Object)}, and asserts byte-for-byte equality with the
- * committed {@code golden/var-doc.json}.
+ * committed {@code golden/doc.json}.
  *
  * <p>Port of the var-doc stage of {@code typescript/packages/varar/tests/conformance.test.ts}
- * and {@code python/packages/varar/tests/test_conformance.py::test_var_doc_matches_golden}.
+ * and {@code python/packages/varar/tests/test_conformance.py::test_doc_matches_golden}.
  * Plan/trace stages are later tasks (Milestones 3-4) — this class's golden-driven harness
  * only exercises var-doc; it also carries unit-level (non-golden) coverage of {@link
  * Conformance#toRegistryArtifact}/{@link Conformance#parameterTypeNames}, ported from
@@ -64,13 +64,13 @@ class ConformanceTest {
 
     @ParameterizedTest(name = "{0}")
     @MethodSource("bundleDirs")
-    void varDocMatchesGolden(Path bundle) throws IOException {
+    void docMatchesGolden(Path bundle) throws IOException {
         String source = Files.readString(bundle.resolve("example.md"), StandardCharsets.UTF_8);
-        Ast.VarDoc doc = Parse.parse("example.md", source);
-        var artifact = Conformance.toVarDocArtifact(doc);
+        Ast.Doc doc = Parse.parse("example.md", source);
+        var artifact = Conformance.toDocArtifact(doc);
         String actual = CanonicalJson.canonicalStringify(artifact);
-        String expected = Files.readString(bundle.resolve("golden").resolve("var-doc.json"), StandardCharsets.UTF_8);
-        assertEquals(expected, actual, () -> bundle.getFileName() + "/var-doc.json mismatch");
+        String expected = Files.readString(bundle.resolve("golden").resolve("doc.json"), StandardCharsets.UTF_8);
+        assertEquals(expected, actual, () -> bundle.getFileName() + "/doc.json mismatch");
     }
 
     private static final Object NOOP_HANDLER = (Runnable) () -> {};

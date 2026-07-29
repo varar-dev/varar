@@ -140,7 +140,7 @@ class ExecuteTest {
         assertEquals(1, ex.cells().size());
         assertEquals("42", ex.cells().get(0).expected());
         assertEquals("41", ex.cells().get(0).actual());
-        String source = p.varDoc().source();
+        String source = p.doc().source();
         Span span = ex.cells().get(0).span();
         assertEquals("42", source.substring(span.startOffset(), span.endOffset()));
     }
@@ -419,7 +419,7 @@ class ExecuteTest {
         assertEquals("score", cell.column());
         assertEquals("50", cell.expected());
         assertEquals("999", cell.actual());
-        String source = p.varDoc().source();
+        String source = p.doc().source();
         assertEquals(
                 "50", source.substring(cell.span().startOffset(), cell.span().endOffset()));
     }
@@ -586,7 +586,7 @@ class ExecuteTest {
                 () -> Execute.collectExamples(p, silentPorts()).get(0).run().run());
         assertEquals("expected 42 but was 41", caught.getMessage());
         // Stack injection still applies to an Error, not just a RuntimeException.
-        Result.ExampleFailure failure = Failure.toFailure(caught, p.varDoc().path(), -1);
+        Result.ExampleFailure failure = Failure.toFailure(caught, p.doc().path(), -1);
         assertEquals(step.matchSpan().startLine(), failure.line());
     }
 
@@ -684,7 +684,7 @@ class ExecuteTest {
                 RuntimeException.class,
                 () -> Execute.collectExamples(p, silentPorts()).get(0).run().run());
         assertEquals("boom", caught.getMessage());
-        Result.ExampleFailure failure = Failure.toFailure(caught, p.varDoc().path(), -1);
+        Result.ExampleFailure failure = Failure.toFailure(caught, p.doc().path(), -1);
         assertEquals(step.matchSpan().startLine(), failure.line());
         assertEquals("boom", failure.message());
     }

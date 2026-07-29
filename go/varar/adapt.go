@@ -40,19 +40,19 @@ import (
 // parameter type's parse produces a Value; implementing this says how to read
 // that Value back into your own type — the json.Unmarshaler of this API.
 //
-//	func (d *Date) DecodeVarValue(v varar.Value) error { … }
+//	func (d *Date) DecodeValue(v varar.Value) error { … }
 //
 //	s.Stimulus("borrowed {title}, due back on {date}",
 //	    func(state varar.Value, title string, due Date) (varar.Value, error) { … })
 type ValueDecoder interface {
-	DecodeVarValue(v Value) error
+	DecodeValue(v Value) error
 }
 
 // ValueEncoder is the inverse, needed when a domain type is a SENSOR slot: the
 // core compares the returned value against the captured one, so it must be able
 // to go back to a Value. Use a value receiver.
 type ValueEncoder interface {
-	EncodeVarValue() Value
+	EncodeValue() Value
 }
 
 var (
@@ -299,7 +299,7 @@ func toGo(v Value, t reflect.Type, slot int) (reflect.Value, error) {
 	// A domain type says how to read itself (the json.Unmarshaler analogue).
 	if reflect.PointerTo(t).Implements(decoderType) {
 		ptr := reflect.New(t)
-		if err := ptr.Interface().(ValueDecoder).DecodeVarValue(v); err != nil {
+		if err := ptr.Interface().(ValueDecoder).DecodeValue(v); err != nil {
 			return reflect.Value{}, fmt.Errorf("var: slot %d: %w", slot+1, err)
 		}
 		return ptr.Elem(), nil
@@ -408,7 +408,7 @@ func toGo(v Value, t reflect.Type, slot int) (reflect.Value, error) {
 // fromGo converts a handler's returned value back to a Value for comparison.
 func fromGo(rv reflect.Value) Value {
 	if enc, ok := rv.Interface().(ValueEncoder); ok {
-		return enc.EncodeVarValue()
+		return enc.EncodeValue()
 	}
 	// The inverse of the TextUnmarshaler path in toGo: a type that speaks
 	// encoding.TextMarshaler round-trips through a string Value. This is the

@@ -16,7 +16,7 @@
  * in dev; production ships the defaults (Jord, STIX, JetBrains Mono). The
  * language selector is functional and renders everywhere.
  *
- * Each choice persists in localStorage (`var-lang` / `var-palette` /
+ * Each choice persists in localStorage (`varar-lang` / `varar-palette` /
  * `var-font-prose` / `var-font-code`); an inline head script (the
  * var-restore-prefs integration in astro.config.mjs) re-applies them before
  * first paint. The font attributes drive --sl-font / --sl-font-mono via the
@@ -29,13 +29,13 @@ import LangSelect from './LangSelect.astro'
 const dev = import.meta.env.DEV
 ---
 
-<var-lang-select>
+<varar-lang-select>
   <LangSelect />
-</var-lang-select>
+</varar-lang-select>
 {
   dev && (
     <>
-      <var-palette-select>
+      <varar-palette-select>
         <Select
           icon="pencil"
           label="Select palette"
@@ -47,7 +47,7 @@ const dev = import.meta.env.DEV
           ]}
           width="6.25em"
         />
-      </var-palette-select>
+      </varar-palette-select>
       <var-font-select data-font-kind="prose">
         <Select
           icon="open-book"
@@ -109,7 +109,7 @@ const dev = import.meta.env.DEV
 
   /** Keep every language select and every synced lang tab group showing `lang`. */
   function syncLangUi(lang: SiteLang): void {
-    document.querySelectorAll<HTMLSelectElement>('var-lang-select select').forEach((select) => {
+    document.querySelectorAll<HTMLSelectElement>('varar-lang-select select').forEach((select) => {
       select.value = lang
     })
     for (const group of document.querySelectorAll(LANG_TAB_GROUP)) {
@@ -157,7 +157,7 @@ const dev = import.meta.env.DEV
       })
     }
   }
-  customElements.define('var-lang-select', VarLangSelect)
+  customElements.define('varar-lang-select', VarLangSelect)
 
   type Palette = 'jord' | 'fjord' | 'ild' | 'fjeld'
 
@@ -176,7 +176,7 @@ const dev = import.meta.env.DEV
   // The palette/font selects render only in dev; Vite strips this whole block
   // from production bundles.
   if (import.meta.env.DEV) {
-    const storageKey = 'var-palette'
+    const storageKey = 'varar-palette'
 
     const parsePalette = (value: unknown): Palette =>
       value === 'fjord' || value === 'ild' || value === 'fjeld' ? value : 'jord'
@@ -194,7 +194,7 @@ const dev = import.meta.env.DEV
     function applyPalette(palette: Palette): void {
       document.documentElement.dataset.palette = palette
       document
-        .querySelectorAll<HTMLSelectElement>('var-palette-select select')
+        .querySelectorAll<HTMLSelectElement>('varar-palette-select select')
         .forEach((select) => {
           select.value = palette
         })
@@ -213,7 +213,7 @@ const dev = import.meta.env.DEV
         })
       }
     }
-    customElements.define('var-palette-select', VarPaletteSelect)
+    customElements.define('varar-palette-select', VarPaletteSelect)
 
     const FONTS: Record<FontKind, FontConfig> = {
       prose: { storageKey: 'var-font-prose', attr: 'fontProse', alt: 'atkinson', fallback: 'stix' },

@@ -1,11 +1,11 @@
-import type { VarGlobs } from '@varar/config'
+import type { Globs } from '@varar/config'
 
 export interface FileSystem {
-  list(globs: VarGlobs): Promise<string[]>
+  list(globs: Globs): Promise<string[]>
   read(path: string): Promise<string>
   write(path: string, content: string): Promise<void>
   // Whether a path matches the given globs (include minus exclude). Used to
   // recognise oath docs that may not be on disk yet (unsaved editor buffers),
   // which `list` — being disk-backed — cannot see.
-  matches(path: string, globs: VarGlobs): boolean
+  matches(path: string, globs: Globs): boolean
 }

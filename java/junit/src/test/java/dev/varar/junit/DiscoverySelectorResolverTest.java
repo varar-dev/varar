@@ -16,10 +16,10 @@ import org.junit.platform.launcher.LauncherDiscoveryRequest;
 import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
 
 /**
- * Proves {@link DiscoverySelectorResolver} (wired via {@link VarTestEngine#discover}) resolves a
+ * Proves {@link DiscoverySelectorResolver} (wired via {@link OathTestEngine#discover}) resolves a
  * {@code PackageSelector} — which expands to a {@code ClasspathResourceSelector} per resource,
  * via {@code junit-platform-engine}'s own {@code addResourceContainerSelectorResolver} — into
- * exactly one {@link VarFileDescriptor} container per {@code .md} resource matching {@code
+ * exactly one {@link OathFileDescriptor} container per {@code .md} resource matching {@code
  * docsInclude} minus {@code docsExclude}, not one for every {@code .md} resource on
  * the classpath.
  *
@@ -27,19 +27,19 @@ import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
  * .../excluded.md} — both match {@code docs.include=["discoveryfixture/**\/*.md"]}, but only
  * {@code included.md} survives {@code docs.exclude=["**\/excluded.md"]}.
  *
- * <p><strong>Why this calls {@link VarTestEngine#discover} directly instead of going through
+ * <p><strong>Why this calls {@link OathTestEngine#discover} directly instead of going through
  * {@code EngineTestKit.engine("varar")...discover()}/{@code .execute()}:</strong> both of those
  * convenience entry points route through {@code
  * org.junit.platform.launcher.core.EngineDiscoveryOrchestrator}, which — confirmed by reading its
  * source and {@code TestDescriptor#prune()}'s default implementation
  * (({@code if (!isRoot() && !containsTests(this)) removeFromHierarchy();})) — <em>prunes every
- * non-root container with no test descendants</em> after discovery. A {@link VarFileDescriptor}
+ * non-root container with no test descendants</em> after discovery. A {@link OathFileDescriptor}
  * has {@code Type.CONTAINER} and, in this task, deliberately no children yet (leaf {@code
- * VarExampleDescriptor}s are the next task), so it is exactly the kind of node the Launcher
+ * ExampleDescriptor}s are the next task), so it is exactly the kind of node the Launcher
  * prunes — an {@code EngineTestKit}-routed assertion would see zero children regardless of
  * whether this resolver worked correctly (verified empirically: it does, in isolation, produce
  * the container; only the Launcher's own pruning removes it). Calling {@link
- * VarTestEngine#discover} directly with a real {@link LauncherDiscoveryRequest} (which IS an
+ * OathTestEngine#discover} directly with a real {@link LauncherDiscoveryRequest} (which IS an
  * {@code EngineDiscoveryRequest} — {@code LauncherDiscoveryRequest extends
  * EngineDiscoveryRequest}) exercises the exact same production code this task is responsible
  * for, without the orthogonal, unrelated Launcher-level pruning concern the next task resolves by
@@ -57,7 +57,7 @@ class DiscoverySelectorResolverTest {
                 .configurationParameter(ConfigBridge.CONFIG_ROOT_KEY, workspace.toString())
                 .build();
 
-        TestDescriptor engineDescriptor = new VarTestEngine().discover(request, UniqueId.forEngine("varar"));
+        TestDescriptor engineDescriptor = new OathTestEngine().discover(request, UniqueId.forEngine("varar"));
         List<? extends TestDescriptor> children = List.copyOf(engineDescriptor.getChildren());
 
         assertEquals(1, children.size(), "expected exactly one container for the included oath");
@@ -79,7 +79,7 @@ class DiscoverySelectorResolverTest {
                 .selectors(selectPackage("discoveryfixture"))
                 .build();
 
-        TestDescriptor engineDescriptor = new VarTestEngine().discover(request, UniqueId.forEngine("varar"));
+        TestDescriptor engineDescriptor = new OathTestEngine().discover(request, UniqueId.forEngine("varar"));
 
         assertTrue(
                 engineDescriptor.getChildren().isEmpty(),

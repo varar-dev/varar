@@ -20,8 +20,8 @@ def _reg():
 
 def test_plan_produces_a_planned_example_with_steps_in_document_order() -> None:
     source = "# Withdrawing\n\nGiven I have 100 in my account. When I withdraw 40. Then I should have 60 left."
-    var_doc = parse("w.md", source)
-    result = plan(var_doc, _reg())
+    doc = parse("w.md", source)
+    result = plan(doc, _reg())
     assert result.diagnostics == ()
     assert len(result.examples) == 1
     ex = result.examples[0]
@@ -39,8 +39,8 @@ def test_plan_emits_ambiguous_match_diagnostic_and_produces_no_example() -> None
     r = create_registry()
     r = add_step(r, expression="I have {int} cukes", expression_source_file="a.ts", expression_source_line=3, handler=_noop, kind="stimulus")
     r = add_step(r, expression="I have {int} {word}", expression_source_file="a.ts", expression_source_line=8, handler=_noop, kind="stimulus")
-    var_doc = parse("e.md", "# Ambig\n\nGiven I have 5 cukes")
-    result = plan(var_doc, r)
+    doc = parse("e.md", "# Ambig\n\nGiven I have 5 cukes")
+    result = plan(doc, r)
     assert len(result.diagnostics) == 1
     assert result.diagnostics[0].code == "ambiguous-match"
     # An ambiguous candidate has no runnable step, so it is prose (a delimiter),
@@ -50,8 +50,8 @@ def test_plan_emits_ambiguous_match_diagnostic_and_produces_no_example() -> None
 
 def test_plan_skips_example_with_no_matches() -> None:
     source = "# Just docs\n\nSome prose with no matches and no keywords."
-    var_doc = parse("d.md", source)
-    result = plan(var_doc, _reg())
+    doc = parse("d.md", source)
+    result = plan(doc, _reg())
     assert result.examples == ()
     assert result.diagnostics == ()
 
@@ -119,15 +119,15 @@ def test_step_with_no_following_fence_has_no_doc_string() -> None:
 
 def test_keyword_led_sentence_with_no_match_produces_no_diagnostic() -> None:
     r = create_registry()
-    var_doc = parse("m.md", "# Empty\n\nGiven I have 5 cukes in my belly.")
-    result = plan(var_doc, r)
+    doc = parse("m.md", "# Empty\n\nGiven I have 5 cukes in my belly.")
+    result = plan(doc, r)
     assert result.diagnostics == ()
 
 
 def test_unmatched_sentence_without_keyword_is_silently_prose() -> None:
     r = create_registry()
-    var_doc = parse("p.md", "# Prose\n\nI have 5 cukes in my belly.")
-    result = plan(var_doc, r)
+    doc = parse("p.md", "# Prose\n\nI have 5 cukes in my belly.")
+    result = plan(doc, r)
     assert result.diagnostics == ()
 
 

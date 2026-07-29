@@ -33,8 +33,8 @@ export async function runRegisteredOath(
   options: RunOathOptions = {},
 ): Promise<RunOutcome> {
   const registry = buildRegistry()
-  const varDoc = parse(varPath, varSource, [])
-  const full = plan(varDoc, registry)
+  const doc = parse(varPath, varSource, [])
+  const full = plan(doc, registry)
   const { exampleIndex } = options
   const examples =
     exampleIndex == null ? full.examples : full.examples.filter((_, i) => i === exampleIndex)
@@ -85,7 +85,7 @@ export async function runRegisteredOath(
           store: options.baselineStore,
           oathPath: varPath,
           source: varSource,
-          varDoc,
+          doc,
           plan: full,
           update: options.update,
         })

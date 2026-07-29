@@ -15,8 +15,8 @@ import java.util.function.Supplier;
  * conformance corpus's deterministic JSON artifacts.
  *
  * <p>Port of the var-doc and registry portions of {@code var-core/src/conformance.ts}'s
- * {@code toVarDocArtifact}/{@code toRegistryArtifact} (and the equivalent
- * {@code to_var_doc_artifact}/{@code to_registry_artifact} in the Python port). Field
+ * {@code toDocArtifact}/{@code toRegistryArtifact} (and the equivalent
+ * {@code to_doc_artifact}/{@code to_registry_artifact} in the Python port). Field
  * names are camelCase and must match {@code conformance/bundles/*}/golden/*.json}
  * exactly; key ordering doesn't matter here ({@link LinkedHashMap} is used purely for
  * readability while debugging) because {@link CanonicalJson} recursively sorts keys
@@ -25,7 +25,7 @@ import java.util.function.Supplier;
  * <p>This class covers all four conformance projections: var-doc, registry, plan (Tasks
  * 10/13/16), and — added here — the trace projection ({@link #toFailureArtifact}/{@link
  * #runConformance}, Task 19), closing the loop so every bundle can be checked against
- * all four goldens ({@code var-doc.json}, {@code registry.json}, {@code plan.json},
+ * all four goldens ({@code doc.json}, {@code registry.json}, {@code plan.json},
  * {@code trace.json}) byte-for-byte.
  */
 public final class Conformance {
@@ -33,10 +33,10 @@ public final class Conformance {
     private Conformance() {}
 
     /**
-     * Projects a parsed {@link Ast.VarDoc} to the var-doc wire artifact: {@code
+     * Projects a parsed {@link Ast.Doc} to the var-doc wire artifact: {@code
      * {path, examples, orphanAttachments}}.
      */
-    public static Map<String, Object> toVarDocArtifact(Ast.VarDoc doc) {
+    public static Map<String, Object> toDocArtifact(Ast.Doc doc) {
         Map<String, Object> out = new LinkedHashMap<>();
         out.put("path", doc.path());
         out.put("examples", doc.examples().stream().map(Conformance::example).toList());
@@ -96,7 +96,7 @@ public final class Conformance {
      * #table(Ast.Table)} directly.
      */
     public static Map<String, Object> toPlanArtifact(Plan.ExecutionPlan plan) {
-        String source = plan.varDoc().source();
+        String source = plan.doc().source();
         Map<String, Object> out = new LinkedHashMap<>();
         out.put(
                 "examples",
@@ -115,7 +115,7 @@ public final class Conformance {
      * available from the start.
      */
     public record BundleArtifacts(
-            Map<String, Object> varDoc,
+            Map<String, Object> doc,
             Map<String, Object> registry,
             Map<String, Object> plan,
             Map<String, Object> trace) {}
@@ -214,7 +214,7 @@ public final class Conformance {
      * of its steps is individually traced as {@code "fail"}; see {@code
      * conformance/bundles/03-expected-failure/golden/trace.json}).
      */
-    public static BundleArtifacts runConformance(Ast.VarDoc doc, Registry registry, Supplier<?> contextFactory) {
+    public static BundleArtifacts runConformance(Ast.Doc doc, Registry registry, Supplier<?> contextFactory) {
         Plan.ExecutionPlan execution = Plan.plan(doc, registry);
 
         Map<Integer, List<Execute.StepObservation>> observed = new HashMap<>();
@@ -282,8 +282,7 @@ public final class Conformance {
         Map<String, Object> trace = new LinkedHashMap<>();
         trace.put("examples", traceExamples);
 
-        return new BundleArtifacts(
-                toVarDocArtifact(doc), toRegistryArtifact(registry), toPlanArtifact(execution), trace);
+        return new BundleArtifacts(toDocArtifact(doc), toRegistryArtifact(registry), toPlanArtifact(execution), trace);
     }
 
     /**

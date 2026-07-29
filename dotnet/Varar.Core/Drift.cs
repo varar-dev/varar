@@ -12,7 +12,7 @@ public sealed record BaselineExample(string Name, int Line);
 public sealed record OathBaseline(string SourceHash, ImmutableArray<BaselineExample> Examples);
 
 /// <summary>The whole <c>varar.lock.json</c>: every oath keyed by its POSIX path.</summary>
-public sealed record VarLock(int Version, ImmutableDictionary<string, OathBaseline> Oaths);
+public sealed record LockFile(int Version, ImmutableDictionary<string, OathBaseline> Oaths);
 
 /// <summary>A paragraph the baseline says was an example and now matches zero steps.</summary>
 public sealed record Drift(string Name, int Line, Span Span);
@@ -27,10 +27,10 @@ public static class DriftDetection
     public const double DriftSimilarityThreshold = 0.5;
 
     /// <summary>The current example-producing paragraphs, in document order (the new baseline).</summary>
-    public static ImmutableArray<BaselineExample> LiveExamples(VarDoc varDoc, ExecutionPlan plan)
+    public static ImmutableArray<BaselineExample> LiveExamples(Doc doc, ExecutionPlan plan)
     {
         var outp = ImmutableArray.CreateBuilder<BaselineExample>();
-        foreach (var candidate in varDoc.Examples)
+        foreach (var candidate in doc.Examples)
         {
             if (IsLive(candidate.Span, plan))
             {
@@ -42,22 +42,22 @@ public static class DriftDetection
     }
 
     /// <summary>The full baseline record for an oath: its source fingerprint plus its live examples.</summary>
-    public static OathBaseline DeriveOathBaseline(string source, VarDoc varDoc, ExecutionPlan plan) =>
-        new(Hash.HashSource(source), LiveExamples(varDoc, plan));
+    public static OathBaseline DeriveOathBaseline(string source, Doc doc, ExecutionPlan plan) =>
+        new(Hash.HashSource(source), LiveExamples(doc, plan));
 
     /// <summary>
     /// Detect drift for one oath: paragraphs the baseline recorded as examples that now match zero
     /// steps. Each baseline example is re-identified by the most word-similar current paragraph at or
     /// above the threshold (ties broken toward the nearest recorded line).
     /// </summary>
-    public static ImmutableArray<Drift> DetectDrift(OathBaseline? baseline, VarDoc varDoc, ExecutionPlan plan)
+    public static ImmutableArray<Drift> DetectDrift(OathBaseline? baseline, Doc doc, ExecutionPlan plan)
     {
         if (baseline is null)
         {
             return [];
         }
 
-        var candidates = varDoc.Examples;
+        var candidates = doc.Examples;
         var tokens = candidates.Select(c => Tokenize(Plan.DeriveExampleName(c.Body))).ToArray();
         var live = candidates.Select(c => IsLive(c.Span, plan)).ToArray();
 
@@ -107,20 +107,20 @@ public static class DriftDetection
         IBaselineStore store,
         string oathPath,
         string source,
-        VarDoc varDoc,
+        Doc doc,
         ExecutionPlan plan,
         bool update = false)
     {
         var text = store.Read();
-        var lockFile = text is not null ? ParseVarLock(text) : null;
+        var lockFile = text is not null ? ParseLockFile(text) : null;
         var baseline = lockFile is not null && lockFile.Oaths.TryGetValue(oathPath, out var b) ? b : null;
 
-        var drifts = update ? [] : DetectDrift(baseline, varDoc, plan);
+        var drifts = update ? [] : DetectDrift(baseline, doc, plan);
         if (update || drifts.Length == 0)
         {
-            var nextOath = DeriveOathBaseline(source, varDoc, plan);
+            var nextOath = DeriveOathBaseline(source, doc, plan);
             var existing = lockFile?.Oaths ?? ImmutableDictionary<string, OathBaseline>.Empty;
-            store.Write(StringifyVarLock(new VarLock(2, existing.SetItem(oathPath, nextOath))));
+            store.Write(StringifyLockFile(new LockFile(2, existing.SetItem(oathPath, nextOath))));
         }
 
         return drifts;
@@ -128,13 +128,13 @@ public static class DriftDetection
 
     /// <summary>
     /// Drops every baseline whose oath path is not in <paramref name="keepPaths"/> — the entries
-    /// left behind when an oath is deleted or moved. Pure counterpart of <see cref="ParseVarLock"/>
-    /// / <see cref="StringifyVarLock"/>; the caller decides what "still exists" means.
+    /// left behind when an oath is deleted or moved. Pure counterpart of <see cref="ParseLockFile"/>
+    /// / <see cref="StringifyLockFile"/>; the caller decides what "still exists" means.
     /// </summary>
-    public static VarLock PruneVarLock(VarLock lockFile, IReadOnlyCollection<string> keepPaths)
+    public static LockFile PruneLockFile(LockFile lockFile, IReadOnlyCollection<string> keepPaths)
     {
         var keep = new HashSet<string>(keepPaths, StringComparer.Ordinal);
-        return new VarLock(
+        return new LockFile(
             2,
             lockFile.Oaths.Where(entry => keep.Contains(entry.Key)).ToImmutableDictionary(StringComparer.Ordinal));
     }
@@ -158,7 +158,7 @@ public static class DriftDetection
         bool update = false)
     {
         var text = store.Read();
-        var lockFile = text is not null ? ParseVarLock(text) : null;
+        var lockFile = text is not null ? ParseLockFile(text) : null;
         if (lockFile is null)
         {
             return [];
@@ -171,14 +171,14 @@ public static class DriftDetection
             .ToImmutableArray();
         if (update && stale.Length > 0)
         {
-            store.Write(StringifyVarLock(PruneVarLock(lockFile, keepPaths)));
+            store.Write(StringifyLockFile(PruneLockFile(lockFile, keepPaths)));
         }
 
         return stale;
     }
 
     /// <summary>Parse <c>varar.lock.json</c>; null on malformed input (treated as "no baseline yet").</summary>
-    public static VarLock? ParseVarLock(string text)
+    public static LockFile? ParseLockFile(string text)
     {
         JsonDocument doc;
         try
@@ -222,7 +222,7 @@ public static class DriftDetection
                 oaths[prop.Name] = oath;
             }
 
-            return new VarLock(2, oaths.ToImmutable());
+            return new LockFile(2, oaths.ToImmutable());
         }
     }
 
@@ -231,7 +231,7 @@ public static class DriftDetection
     /// order, 2-space indent, trailing newline — <c>JSON.stringify({version,oaths}, null, 2) + "\n"</c>
     /// with insertion-order keys (its own serializer, not the recursive-sort canonical JSON).
     /// </summary>
-    public static string StringifyVarLock(VarLock lockFile)
+    public static string StringifyLockFile(LockFile lockFile)
     {
         var sb = new StringBuilder();
         sb.Append("{\n");

@@ -33,14 +33,14 @@ public class ConfigConformanceTests
         if (File.Exists(Path.Combine(caseDir, "expect-error.txt")))
         {
             // Must fail to load (the marker text itself is human-only, not asserted).
-            Assert.Throws<VarConfigException>(() => VarConfig.Parse(File.ReadAllText(configPath), configPath));
+            Assert.Throws<ConfigException>(() => ConfigFile.Parse(File.ReadAllText(configPath), configPath));
             return;
         }
 
         var parsed = File.Exists(configPath)
-            ? VarConfig.Parse(File.ReadAllText(configPath), configPath)
-            : VarConfig.Empty;
-        var actual = CanonicalJson.Stringify(VarConfig.ToArtifact(parsed));
+            ? ConfigFile.Parse(File.ReadAllText(configPath), configPath)
+            : ConfigFile.Empty;
+        var actual = CanonicalJson.Stringify(ConfigFile.ToArtifact(parsed));
 
         var expected = File.ReadAllText(Path.Combine(caseDir, "golden.json"));
         Assert.Equal(expected, actual);

@@ -3,7 +3,7 @@
 //! table/fence nodes, handles the ```` ```error ```` fence, expands header-bound
 //! tables into one example per row, and collects diagnostics.
 
-use crate::ast::{Block, Fence, Row, SegmentOffset, Table, VarDoc};
+use crate::ast::{Block, Doc, Fence, Row, SegmentOffset, Table};
 use crate::cell_diff::RowCheck;
 use crate::diagnostics::{Diagnostic, ambiguous_match, error_fence_without_step};
 use crate::matcher::{Hit, ParamSpan, ResolvedSteps, find_hits, resolve_hits};
@@ -17,9 +17,9 @@ use std::collections::BTreeMap;
 use std::rc::Rc;
 use std::sync::LazyLock;
 
-/// The result of planning a whole [`VarDoc`].
+/// The result of planning a whole [`Doc`].
 pub struct ExecutionPlan {
-    pub var_doc: VarDoc,
+    pub doc: Doc,
     pub examples: Vec<PlannedExample>,
     pub diagnostics: Vec<Diagnostic>,
 }
@@ -61,7 +61,7 @@ static WHITESPACE_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\s+").unwr
 static WORD_CHAR_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[\p{L}\p{N}_]$").unwrap());
 
 /// Plans `doc` against `registry`. Port of `plan()`.
-pub fn plan(doc: &VarDoc, registry: &Registry) -> ExecutionPlan {
+pub fn plan(doc: &Doc, registry: &Registry) -> ExecutionPlan {
     let source = &doc.source;
     let mut diagnostics = Vec::new();
 
@@ -115,7 +115,7 @@ pub fn plan(doc: &VarDoc, registry: &Registry) -> ExecutionPlan {
     // not a mistake — it produces no diagnostic.
 
     ExecutionPlan {
-        var_doc: doc.clone(),
+        doc: doc.clone(),
         examples,
         diagnostics,
     }
@@ -193,7 +193,7 @@ fn finish_merged(open: MergedExample, source: &str) -> PlannedExample {
 /// isolation. Emits ambiguity / error-fence diagnostics into `diagnostics`.
 fn plan_candidate(
     ex: &crate::ast::Example,
-    doc: &VarDoc,
+    doc: &Doc,
     registry: &Registry,
     diagnostics: &mut Vec<Diagnostic>,
 ) -> CandidateUnit {

@@ -1,4 +1,4 @@
-"""test_failures.py — pytester-based tests for VarItem.repr_failure.
+"""test_failures.py — pytester-based tests for OathItem.repr_failure.
 
 Tests:
 - Cell-mismatch failure renders line number + expected/actual diff.

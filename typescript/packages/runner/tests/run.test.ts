@@ -54,7 +54,7 @@ test('planOath returns an ExecutionPlan with examples and steps', () => {
 test('planOath parses and plans an oath', () => {
   const source = '# Simple\n\nI have 5 cucumbers.\n'
   const result = planOath('oath.md', source, makeRegistry())
-  expect(result.varDoc.source).toBe(source)
+  expect(result.doc.source).toBe(source)
   expect(result.examples).toHaveLength(1)
 })
 

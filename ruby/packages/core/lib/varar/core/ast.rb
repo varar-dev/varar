@@ -46,6 +46,6 @@ module Varar
     # one example. See ADR 0012.
     Example = Data.define(:scope_stack, :span, :body, :preceded_by_delimiter)
 
-    VarDoc = Data.define(:path, :source, :examples, :orphan_attachments)
+    Doc = Data.define(:path, :source, :examples, :orphan_attachments)
   end
 end

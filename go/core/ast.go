@@ -99,9 +99,9 @@ type Example struct {
 	PrecededByDelimiter bool
 }
 
-// VarDoc is a parsed source file: its matched examples plus unattached
+// Doc is a parsed source file: its matched examples plus unattached
 // table/fence blocks (each of which is a Table or Fence).
-type VarDoc struct {
+type Doc struct {
 	Path              string
 	Source            string
 	Examples          []Example

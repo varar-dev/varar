@@ -4,8 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import dev.varar.core.Ast.Doc;
 import dev.varar.core.Ast.Example;
-import dev.varar.core.Ast.VarDoc;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -19,100 +19,100 @@ class StructurerTest {
     void everyParagraphBecomesACandidateExampleScopedByTheHeadingsAboveIt() {
         String source =
                 "# Withdrawing cash\n\nGiven I have $100 in my account\n\n# Overdraft\n\nGiven I have $10 in my account";
-        VarDoc varDoc = Structurer.structure("test.md", source, Scanner.scan(source));
-        assertEquals(2, varDoc.examples().size());
-        assertEquals(List.of("Withdrawing cash"), varDoc.examples().get(0).scopeStack());
-        assertEquals(List.of("Overdraft"), varDoc.examples().get(1).scopeStack());
+        Doc doc = Structurer.structure("test.md", source, Scanner.scan(source));
+        assertEquals(2, doc.examples().size());
+        assertEquals(List.of("Withdrawing cash"), doc.examples().get(0).scopeStack());
+        assertEquals(List.of("Overdraft"), doc.examples().get(1).scopeStack());
     }
 
     @Test
     void twoParagraphsUnderTheSameHeadingEachBecomeASeparateExample() {
         String source = "## Example\n\nFirst paragraph.\n\nSecond paragraph.";
-        VarDoc varDoc = Structurer.structure("test.md", source, Scanner.scan(source));
-        assertEquals(2, varDoc.examples().size());
-        assertTrue(varDoc.examples().get(0).body().get(0) instanceof Ast.Paragraph);
-        assertTrue(varDoc.examples().get(1).body().get(0) instanceof Ast.Paragraph);
-        assertEquals(List.of("Example"), varDoc.examples().get(0).scopeStack());
-        assertEquals(List.of("Example"), varDoc.examples().get(1).scopeStack());
+        Doc doc = Structurer.structure("test.md", source, Scanner.scan(source));
+        assertEquals(2, doc.examples().size());
+        assertTrue(doc.examples().get(0).body().get(0) instanceof Ast.Paragraph);
+        assertTrue(doc.examples().get(1).body().get(0) instanceof Ast.Paragraph);
+        assertEquals(List.of("Example"), doc.examples().get(0).scopeStack());
+        assertEquals(List.of("Example"), doc.examples().get(1).scopeStack());
     }
 
     @Test
     void nestedHeadingsStackIntoAnOuterToInnerScopeStack() {
         String source = "## Outer\n\nbody one\n\n### Inner\n\nbody two";
-        VarDoc varDoc = Structurer.structure("test.md", source, Scanner.scan(source));
-        assertEquals(2, varDoc.examples().size());
-        assertEquals(List.of("Outer"), varDoc.examples().get(0).scopeStack());
-        assertEquals(List.of("Outer", "Inner"), varDoc.examples().get(1).scopeStack());
+        Doc doc = Structurer.structure("test.md", source, Scanner.scan(source));
+        assertEquals(2, doc.examples().size());
+        assertEquals(List.of("Outer"), doc.examples().get(0).scopeStack());
+        assertEquals(List.of("Outer", "Inner"), doc.examples().get(1).scopeStack());
     }
 
     @Test
     void aHeadingAtTheSameLevelPopsThePreviousSiblingOffTheScopeStack() {
         String source = "## A\n\nbody A\n\n## B\n\nbody B";
-        VarDoc varDoc = Structurer.structure("test.md", source, Scanner.scan(source));
-        assertEquals(2, varDoc.examples().size());
-        assertEquals(List.of("A"), varDoc.examples().get(0).scopeStack());
-        assertEquals(List.of("B"), varDoc.examples().get(1).scopeStack());
+        Doc doc = Structurer.structure("test.md", source, Scanner.scan(source));
+        assertEquals(2, doc.examples().size());
+        assertEquals(List.of("A"), doc.examples().get(0).scopeStack());
+        assertEquals(List.of("B"), doc.examples().get(1).scopeStack());
     }
 
     @Test
     void aParagraphWithNoEnclosingHeadingHasAnEmptyScopeStack() {
         String source = "standalone paragraph";
-        VarDoc varDoc = Structurer.structure("p.md", source, Scanner.scan(source));
-        assertEquals(1, varDoc.examples().size());
-        assertEquals(List.of(), varDoc.examples().get(0).scopeStack());
+        Doc doc = Structurer.structure("p.md", source, Scanner.scan(source));
+        assertEquals(1, doc.examples().size());
+        assertEquals(List.of(), doc.examples().get(0).scopeStack());
     }
 
     @Test
     void headingsOnTheirOwnProduceNoExamples() {
         String source = "# Title only\n\n## Sub-title\n\n### Another";
-        VarDoc varDoc = Structurer.structure("h.md", source, Scanner.scan(source));
-        assertEquals(0, varDoc.examples().size());
+        Doc doc = Structurer.structure("h.md", source, Scanner.scan(source));
+        assertEquals(0, doc.examples().size());
     }
 
     @Test
     void structurePreservesTheSourceStringVerbatim() {
         String source = "# Hi\n\nbody";
-        VarDoc varDoc = Structurer.structure("p.md", source, Scanner.scan(source));
-        assertEquals(source, varDoc.source());
-        assertEquals("p.md", varDoc.path());
+        Doc doc = Structurer.structure("p.md", source, Scanner.scan(source));
+        assertEquals(source, doc.source());
+        assertEquals("p.md", doc.path());
     }
 
     @Test
-    void orphanTablesAndFencesAreRecordedOnTheVarDoc() {
+    void orphanTablesAndFencesAreRecordedOnTheDoc() {
         String source = "| name | age |\n|------|-----|\n| Bob  | 30  |";
-        VarDoc varDoc = Structurer.structure("o.md", source, Scanner.scan(source));
-        assertEquals(1, varDoc.orphanAttachments().size());
-        assertTrue(varDoc.orphanAttachments().get(0) instanceof Ast.Table);
+        Doc doc = Structurer.structure("o.md", source, Scanner.scan(source));
+        assertEquals(1, doc.orphanAttachments().size());
+        assertTrue(doc.orphanAttachments().get(0) instanceof Ast.Table);
     }
 
     @Test
     void aTableRightAfterAParagraphAttachesToThatParagraphNotOrphan() {
         String source = "## Example\n\nGiven these users:\n\n| name | age |\n|------|-----|\n| Bob  | 30  |";
-        VarDoc varDoc = Structurer.structure("o.md", source, Scanner.scan(source));
-        assertEquals(0, varDoc.orphanAttachments().size());
-        Example example = varDoc.examples().get(0);
+        Doc doc = Structurer.structure("o.md", source, Scanner.scan(source));
+        assertEquals(0, doc.orphanAttachments().size());
+        Example example = doc.examples().get(0);
         assertTrue(example.body().stream().anyMatch(b -> b instanceof Ast.Table));
     }
 
     @Test
     void aHeadingBetweenAParagraphAndAFenceMakesTheFenceAnOrphan() {
         String source = "## A\n\npara\n\n## B\n\n```\nfenced body\n```\n";
-        VarDoc varDoc = Structurer.structure("h.md", source, Scanner.scan(source));
-        assertEquals(1, varDoc.orphanAttachments().size());
-        Example example = varDoc.examples().get(0);
+        Doc doc = Structurer.structure("h.md", source, Scanner.scan(source));
+        assertEquals(1, doc.orphanAttachments().size());
+        Example example = doc.examples().get(0);
         assertFalse(example.body().stream().anyMatch(b -> b instanceof Ast.Fence));
     }
 
     @Test
     void precededByDelimiterMarksCandidatesAfterAHeadingOrThematicBreak() {
         String source = "First para.\n\nSecond para.\n\n---\n\nThird para.\n\n## H\n\nFourth para.";
-        VarDoc varDoc = Structurer.structure("d.md", source, Scanner.scan(source));
+        Doc doc = Structurer.structure("d.md", source, Scanner.scan(source));
         assertEquals(
                 List.of(
                         true, // first candidate in the file
                         false, // adjacent paragraph, no delimiter between
                         true, // after `---`
                         true), // after a heading
-                varDoc.examples().stream().map(Example::precededByDelimiter).toList());
+                doc.examples().stream().map(Example::precededByDelimiter).toList());
     }
 }

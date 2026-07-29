@@ -41,7 +41,7 @@ export async function discoverStaticExamples(
   const scanner = await stepDefScanner()
   const { registry } = buildWorkspaceIndex({
     stepFiles: input.stepFiles,
-    varFiles: [],
+    oathFiles: [],
     scanner,
   })
   const p = planOath(input.varPath, input.source, registry)

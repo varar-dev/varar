@@ -30,8 +30,8 @@ type OathBaseline struct {
 	Examples   []BaselineExample
 }
 
-// VarLock is the whole varar.lock.json: every oath keyed by its POSIX path.
-type VarLock struct {
+// LockFile is the whole varar.lock.json: every oath keyed by its POSIX path.
+type LockFile struct {
 	Version int
 	Oaths   map[string]OathBaseline
 }
@@ -101,9 +101,9 @@ func similarity(a, b map[string]struct{}) float64 {
 }
 
 // LiveExamples returns the current example-producing paragraphs, in document order.
-func LiveExamples(varDoc VarDoc, plan ExecutionPlan) []BaselineExample {
+func LiveExamples(doc Doc, plan ExecutionPlan) []BaselineExample {
 	var out []BaselineExample
-	for _, c := range varDoc.Examples {
+	for _, c := range doc.Examples {
 		if isLive(c.Span, plan) {
 			out = append(out, BaselineExample{Name: deriveExampleName(c.Body), Line: c.Span.StartLine})
 		}
@@ -113,17 +113,17 @@ func LiveExamples(varDoc VarDoc, plan ExecutionPlan) []BaselineExample {
 
 // DeriveOathBaseline is the full baseline record for an oath: fingerprint plus
 // live examples.
-func DeriveOathBaseline(source string, varDoc VarDoc, plan ExecutionPlan) OathBaseline {
-	return OathBaseline{SourceHash: HashSource(source), Examples: LiveExamples(varDoc, plan)}
+func DeriveOathBaseline(source string, doc Doc, plan ExecutionPlan) OathBaseline {
+	return OathBaseline{SourceHash: HashSource(source), Examples: LiveExamples(doc, plan)}
 }
 
 // DetectDrift returns paragraphs the baseline recorded as examples that now
 // match zero steps.
-func DetectDrift(baseline *OathBaseline, varDoc VarDoc, plan ExecutionPlan) []Drifted {
+func DetectDrift(baseline *OathBaseline, doc Doc, plan ExecutionPlan) []Drifted {
 	if baseline == nil {
 		return nil
 	}
-	candidates := varDoc.Examples
+	candidates := doc.Examples
 	n := len(candidates)
 	tokens := make([]map[string]struct{}, n)
 	live := make([]bool, n)
@@ -177,10 +177,10 @@ func DriftMessage(drifted Drifted) string {
 	)
 }
 
-// PruneVarLock drops every baseline whose oath path is not in keepPaths — the
+// PruneLockFile drops every baseline whose oath path is not in keepPaths — the
 // entries left behind when an oath is deleted or moved. Pure counterpart of
-// ParseVarLock/StringifyVarLock; the caller decides what "still exists" means.
-func PruneVarLock(lock VarLock, keepPaths []string) VarLock {
+// ParseLockFile/StringifyLockFile; the caller decides what "still exists" means.
+func PruneLockFile(lock LockFile, keepPaths []string) LockFile {
 	keep := make(map[string]struct{}, len(keepPaths))
 	for _, path := range keepPaths {
 		keep[path] = struct{}{}
@@ -191,7 +191,7 @@ func PruneVarLock(lock VarLock, keepPaths []string) VarLock {
 			oaths[path] = baseline
 		}
 	}
-	return VarLock{Version: 2, Oaths: oaths}
+	return LockFile{Version: 2, Oaths: oaths}
 }
 
 // PruneBaselines is the whole-lock counterpart of ReconcileDrift, run ONCE per
@@ -212,7 +212,7 @@ func PruneBaselines(store BaselineStore, keepPaths []string, update bool) []stri
 	if !ok {
 		return nil
 	}
-	lock := ParseVarLock(contents)
+	lock := ParseLockFile(contents)
 	if lock == nil {
 		return nil
 	}
@@ -228,7 +228,7 @@ func PruneBaselines(store BaselineStore, keepPaths []string, update bool) []stri
 	}
 	sort.Strings(stale)
 	if update && len(stale) > 0 {
-		store.Write(StringifyVarLock(PruneVarLock(*lock, keepPaths)))
+		store.Write(StringifyLockFile(PruneLockFile(*lock, keepPaths)))
 	}
 	return stale
 }
@@ -236,10 +236,10 @@ func PruneBaselines(store BaselineStore, keepPaths []string, update bool) []stri
 // ReconcileDrift is one oath's baseline reconciliation against a BaselineStore.
 // update accepts all drift; otherwise detect drift and rewrite the baseline only
 // on a clean run.
-func ReconcileDrift(store BaselineStore, oathPath, source string, varDoc VarDoc, plan ExecutionPlan, update bool) []Drifted {
-	var lock *VarLock
+func ReconcileDrift(store BaselineStore, oathPath, source string, doc Doc, plan ExecutionPlan, update bool) []Drifted {
+	var lock *LockFile
 	if contents, ok := store.Read(); ok {
-		lock = ParseVarLock(contents)
+		lock = ParseLockFile(contents)
 	}
 	var drifts []Drifted
 	if !update {
@@ -249,24 +249,24 @@ func ReconcileDrift(store BaselineStore, oathPath, source string, varDoc VarDoc,
 				baseline = &b
 			}
 		}
-		drifts = DetectDrift(baseline, varDoc, plan)
+		drifts = DetectDrift(baseline, doc, plan)
 	}
 	if update || len(drifts) == 0 {
-		next := DeriveOathBaseline(source, varDoc, plan)
+		next := DeriveOathBaseline(source, doc, plan)
 		oaths := map[string]OathBaseline{}
 		if lock != nil {
 			oaths = lock.Oaths
 		}
 		oaths[oathPath] = next
-		store.Write(StringifyVarLock(VarLock{Version: 2, Oaths: oaths}))
+		store.Write(StringifyLockFile(LockFile{Version: 2, Oaths: oaths}))
 	}
 	return drifts
 }
 
-// StringifyVarLock serializes varar.lock.json deterministically (fixed field
+// StringifyLockFile serializes varar.lock.json deterministically (fixed field
 // order, sorted oath paths, two-space indent, trailing newline) — NOT the
 // recursive canonical JSON.
-func StringifyVarLock(lock VarLock) string {
+func StringifyLockFile(lock LockFile) string {
 	var sb strings.Builder
 	sb.WriteString("{\n  \"version\": 2,\n  \"oaths\": ")
 	if len(lock.Oaths) == 0 {
@@ -314,9 +314,9 @@ func StringifyVarLock(lock VarLock) string {
 	return sb.String()
 }
 
-// ParseVarLock parses varar.lock.json; nil on malformed input (treated as no
+// ParseLockFile parses varar.lock.json; nil on malformed input (treated as no
 // baseline).
-func ParseVarLock(text string) *VarLock {
+func ParseLockFile(text string) *LockFile {
 	type jsonExample struct {
 		Name *string `json:"name"`
 		Line *int    `json:"line"`
@@ -350,5 +350,5 @@ func ParseVarLock(text string) *VarLock {
 		}
 		oaths[k] = OathBaseline{SourceHash: *v.SourceHash, Examples: examples}
 	}
-	return &VarLock{Version: 2, Oaths: oaths}
+	return &LockFile{Version: 2, Oaths: oaths}
 }

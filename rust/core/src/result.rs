@@ -1,5 +1,5 @@
 //! Immutable run-result records — port of `result.ts` / `Result.java`. The
-//! persisted `.var/<oath>.json` file is a serialized [`OathResults`].
+//! persisted `.varar/<oath>.json` file is a serialized [`OathResults`].
 
 /// One mismatched CELL as a source-offset range plus the runtime value.
 /// `from`/`to` are absolute UTF-16 source offsets; `to` is exclusive.

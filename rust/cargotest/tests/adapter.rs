@@ -99,7 +99,7 @@ mod drift_gate {
         trials
             .iter()
             .map(|t| t.name())
-            .filter(|n| n.contains("var:drift"))
+            .filter(|n| n.contains("varar:drift"))
             .collect()
     }
 

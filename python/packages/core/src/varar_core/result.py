@@ -43,7 +43,7 @@ class ExampleResult:
 
 @dataclass(frozen=True, slots=True)
 class OathResults:
-    """The persisted run result for one oath file (.var/<oath>.json)."""
+    """The persisted run result for one oath file (.varar/<oath>.json)."""
 
     version: int  # always 1
     oath_path: str  # POSIX separators, relative to cwd

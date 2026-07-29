@@ -12,9 +12,9 @@
 
   <artifactId>kotest</artifactId>
   <packaging>jar</packaging>
-  <name>var (Kotlin) — Kotest adapter</name>
+  <name>varar (Kotlin) — Kotest adapter</name>
   <description>
-    Runs var oaths as Kotest tests: subclass VarSpec, one Kotest test per
+    Runs var oaths as Kotest tests: subclass OathSpec, one Kotest test per
     planned example. Delegates discovery/loading/planning wholesale to
     var-runner; no pipeline logic here.
   </description>
@@ -47,14 +47,14 @@
       <artifactId>kotlin-stdlib</artifactId>
       <version>${kotlin.version}</version>
     </dependency>
-    <!-- Compile scope, not test: VarSpec extends FunSpec, so the adapter's
+    <!-- Compile scope, not test: OathSpec extends FunSpec, so the adapter's
          whole public surface is Kotest types. -->
     <dependency>
       <groupId>io.kotest</groupId>
       <artifactId>kotest-runner-junit5-jvm</artifactId>
       <version>${kotest.version}</version>
     </dependency>
-    <!-- Drives the Kotest engine programmatically in VarSpecFailureTest (the
+    <!-- Drives the Kotest engine programmatically in OathSpecFailureTest (the
          failing-example path must be asserted, not just observed via a green
          build). Version from the parent's junit-bom. -->
     <dependency>

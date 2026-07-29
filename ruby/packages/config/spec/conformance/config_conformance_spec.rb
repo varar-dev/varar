@@ -31,11 +31,11 @@ module Varar
 
       if File.exist?(File.join(case_dir, 'expect-error.txt'))
         it "#{name} — loading fails" do
-          expect { Config.read_var_config(case_dir) }.to raise_error(StandardError)
+          expect { Config.read_config(case_dir) }.to raise_error(StandardError)
         end
       else
         it "#{name} — matches golden" do
-          actual = Core::CanonicalJson.canonical_stringify(self.class.artifact(Config.read_var_config(case_dir)))
+          actual = Core::CanonicalJson.canonical_stringify(self.class.artifact(Config.read_config(case_dir)))
           expect(actual).to eq(File.read(File.join(case_dir, 'golden.json'), encoding: 'UTF-8'))
         end
       end

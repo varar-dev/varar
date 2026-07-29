@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 /**
  * The planner — port of {@code var-core/src/plan.ts}. For each {@link Ast.Example} in a {@link
- * Ast.VarDoc}, plans every text-bearing block via {@link Matcher}, lifts block-relative match
+ * Ast.Doc}, plans every text-bearing block via {@link Matcher}, lifts block-relative match
  * offsets to absolute source {@link Span}s, attaches trailing {@link Ast.Table}/{@link Ast.Fence}
  * nodes to the last step (data table / doc string), handles the {@code ```error} fence
  * convention, detects header-bound tables (expanding them into one example per row), and collects
@@ -28,9 +28,8 @@ public final class Plan {
     // Public types
     // -----------------------------------------------------------------------------------------
 
-    /** The result of planning a whole {@link Ast.VarDoc}. */
-    public record ExecutionPlan(
-            Ast.VarDoc varDoc, List<PlannedExample> examples, List<Diagnostics.Diagnostic> diagnostics) {
+    /** The result of planning a whole {@link Ast.Doc}. */
+    public record ExecutionPlan(Ast.Doc doc, List<PlannedExample> examples, List<Diagnostics.Diagnostic> diagnostics) {
         public ExecutionPlan {
             examples = List.copyOf(examples);
             diagnostics = List.copyOf(diagnostics);
@@ -105,7 +104,7 @@ public final class Plan {
     // -----------------------------------------------------------------------------------------
 
     /** Plans {@code doc} against {@code registry}: mirrors {@code plan()} in plan.ts exactly. */
-    public static ExecutionPlan plan(Ast.VarDoc doc, Registry registry) {
+    public static ExecutionPlan plan(Ast.Doc doc, Registry registry) {
         List<Diagnostics.Diagnostic> diagnostics = new ArrayList<>();
 
         // Phase 1: plan each candidate paragraph independently into a "unit".
@@ -235,7 +234,7 @@ public final class Plan {
      * logic the old single-pass planner ran per example; grouping is Phase 2's job.
      */
     private static CandidateUnit planCandidate(
-            Ast.Example ex, Ast.VarDoc doc, Registry registry, List<Diagnostics.Diagnostic> diagnostics) {
+            Ast.Example ex, Ast.Doc doc, Registry registry, List<Diagnostics.Diagnostic> diagnostics) {
         boolean hadAmbiguous = false;
         List<Ast.Block> body = ex.body();
 

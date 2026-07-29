@@ -14,34 +14,34 @@ const KNOWN_DOCS_KEYS: &[&str] = &["include", "exclude"];
 
 /// The parsed configuration. All fields default to empty.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub struct VarConfig {
+pub struct Config {
     pub docs_include: Vec<String>,
     pub docs_exclude: Vec<String>,
     pub steps: Vec<String>,
     pub snippets: BTreeMap<String, String>,
 }
 
-/// Read `<root>/varar.config.json`. The filesystem edge over [`parse_var_config`];
+/// Read `<root>/varar.config.json`. The filesystem edge over [`parse_config`];
 /// a missing file yields the empty config (tools no-op, as in every port).
-pub fn read_var_config(root: &Path) -> Result<VarConfig, String> {
+pub fn read_config(root: &Path) -> Result<Config, String> {
     let path = root.join("varar.config.json");
     if !path.is_file() {
-        return Ok(VarConfig::default());
+        return Ok(Config::default());
     }
     let loc = path.display().to_string();
     let text = std::fs::read_to_string(&path).map_err(|e| format!("{loc}: {e}"))?;
-    parse_var_config(&text, &loc)
+    parse_config(&text, &loc)
 }
 
 /// Parse `varar.config.json` TEXT. Pure — no filesystem.
 ///
 /// `source` only labels errors (a path, a URL, `"<memory>"`); nothing is read from
-/// it. Splitting this out from [`read_var_config`] is what lets a caller with the
+/// it. Splitting this out from [`read_config`] is what lets a caller with the
 /// text already in hand — an editor buffer, an in-memory fixture, the LSP —
-/// validate it without inventing a file, and mirrors TypeScript's `parseVarConfig`
-/// / Java's `VarConfig.parse`. Any malformed input → `Err(message)` beginning with
+/// validate it without inventing a file, and mirrors TypeScript's `parseConfig`
+/// / Java's `Config.parse`. Any malformed input → `Err(message)` beginning with
 /// `source`.
-pub fn parse_var_config(text: &str, source: &str) -> Result<VarConfig, String> {
+pub fn parse_config(text: &str, source: &str) -> Result<Config, String> {
     let loc = source;
     let data: serde_json::Value =
         serde_json::from_str(text).map_err(|e| format!("{loc}: invalid JSON: {e}"))?;
@@ -79,7 +79,7 @@ pub fn parse_var_config(text: &str, source: &str) -> Result<VarConfig, String> {
         )
     };
 
-    Ok(VarConfig {
+    Ok(Config {
         docs_include,
         docs_exclude,
         steps: string_array(obj.get("steps"), "steps", &loc)?,

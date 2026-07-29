@@ -29,7 +29,7 @@ import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
  * <p>This test empirically confirms the two tiers actually controllable in-process, without
  * forking a JVM: a JVM system property vs. a real {@code junit-platform.properties} classpath
  * file ({@code src/test/resources/junit-platform.properties}, scoped to a key —
- * {@code var.junit.configPrecedenceTest} — that no production code reads, so the file cannot
+ * {@code varar.junit.configPrecedenceTest} — that no production code reads, so the file cannot
  * affect this module's own real {@code mvn test} run of the "varar" engine, nor any other {@code
  * EngineTestKit}-based test in this module: {@code EngineTestKit}'s builder disables implicit
  * configuration parameters — system properties and this file — by default, per its own javadoc).
@@ -40,7 +40,7 @@ import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
  */
 class ConfigPrecedenceTest {
 
-    private static final String KEY = "var.junit.configPrecedenceTest";
+    private static final String KEY = "varar.junit.configPrecedenceTest";
 
     @AfterEach
     void clearSystemProperty() {

@@ -112,7 +112,7 @@ func walk(dir string, out *[]string) {
 
 // FindOaths returns files under root matching any docs.include glob and no
 // docs.exclude glob, sorted.
-func FindOaths(cfg config.VarConfig, root string) []string {
+func FindOaths(cfg config.Config, root string) []string {
 	var files []string
 	walk(root, &files)
 	var kept []string

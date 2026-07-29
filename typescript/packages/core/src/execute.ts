@@ -60,7 +60,7 @@ export function collectExamples(
 export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
   for (const d of plan.diagnostics) ports.reporter.diagnostic(d)
   const createContext = ports.createContext ?? (() => ({}))
-  const path = plan.varDoc.path
+  const path = plan.doc.path
   plan.examples.forEach((ex, exampleIndex) => {
     ports.sink.example(
       ex.name,
@@ -164,7 +164,7 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
                   // Inline parameters: slots[0..args.length) vs captured args.
                   const inlineReturned = slots.slice(0, step.args.length)
                   const sourceTexts = step.paramSpans.map((s) =>
-                    plan.varDoc.source.slice(s.startOffset, s.endOffset),
+                    plan.doc.source.slice(s.startOffset, s.endOffset),
                   )
                   const paramDiffs = compareParams(
                     inlineReturned,

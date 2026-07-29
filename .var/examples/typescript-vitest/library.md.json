@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "oathPath": "examples/typescript-vitest/library.md",
+  "sourceHash": "fnv1a:1622dfca",
+  "examples": [
+    {
+      "name": "Maya borrowed *Emma*, due back on June 1, 2026. She returns it on June 6, 2026 and owes a £2.50 late fee — 50p for each day overdue",
+      "status": "passed",
+      "lines": [
+        3,
+        4
+      ]
+    },
+    {
+      "name": "Noor borrowed *Kindred*, due back on June 1, 2026. When she asks to borrow *Beloved* on June 10, 2026, the library refuses: an overdue book blocks new loans",
+      "status": "passed",
+      "lines": [
+        8,
+        9
+      ]
+    },
+    {
+      "name": "Ben borrowed *Dune*, due back on June 12, 2026. When he asks to borrow *Hyperion* on June 10, 2026, the library agrees",
+      "status": "passed",
+      "lines": [
+        13,
+        14
+      ]
+    }
+  ]
+}

@@ -63,9 +63,9 @@ describe('createStore over a FileSystem', () => {
     await store.reindex()
     // A saved oath and an unsaved buffer that matches `docs` are both var docs;
     // a `.steps.ts` is not (it doesn't match the `**/*.md` docs glob).
-    expect(store.isVarDoc('/hello.md')).toBe(true)
-    expect(store.isVarDoc('/never/written/draft.md')).toBe(true)
-    expect(store.isVarDoc('/s.steps.ts')).toBe(false)
+    expect(store.isDoc('/hello.md')).toBe(true)
+    expect(store.isDoc('/never/written/draft.md')).toBe(true)
+    expect(store.isDoc('/s.steps.ts')).toBe(false)
   })
 
   it('surfaces a drift warning for a baseline example that no longer matches', async () => {

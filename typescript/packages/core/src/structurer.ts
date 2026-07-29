@@ -1,4 +1,4 @@
-import type { Block, Example, Fence, Table, VarDoc } from './ast.ts'
+import type { Block, Doc, Example, Fence, Table } from './ast.ts'
 import { spanFromOffsets } from './span.ts'
 
 // Every paragraph / list item / blockquote becomes a candidate example. The
@@ -15,7 +15,7 @@ import { spanFromOffsets } from './span.ts'
 // `---` sits before it), and the planner groups adjacent matching candidates
 // into examples using that flag plus which candidates match a step. See ADR
 // 0012.
-export function structure(path: string, source: string, blocks: ReadonlyArray<Block>): VarDoc {
+export function structure(path: string, source: string, blocks: ReadonlyArray<Block>): Doc {
   const examples: Example[] = []
   const orphanAttachments: (Table | Fence)[] = []
   const scopeStack: { level: number; text: string }[] = []

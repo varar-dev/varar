@@ -125,7 +125,7 @@ type celsius int64
 // stamp exercises a struct domain type, the LocalDate-style case.
 type stamp struct{ Year, Day int64 }
 
-func (s *stamp) DecodeVarValue(v Value) error {
+func (s *stamp) DecodeValue(v Value) error {
 	m, ok := v.AsMap()
 	if !ok {
 		return errNotAStamp
@@ -134,7 +134,7 @@ func (s *stamp) DecodeVarValue(v Value) error {
 	return nil
 }
 
-func (s stamp) EncodeVarValue() Value {
+func (s stamp) EncodeValue() Value {
 	return core.MapValue(map[string]Value{
 		"year": core.IntValue(s.Year), "day": core.IntValue(s.Day),
 	})
@@ -147,7 +147,7 @@ type errStr string
 func (e errStr) Error() string { return string(e) }
 
 func TestDomainTypeSlotRoundTrips(t *testing.T) {
-	encoded := stamp{Year: 2026, Day: 12}.EncodeVarValue()
+	encoded := stamp{Year: 2026, Day: 12}.EncodeValue()
 	got, err := toGo(encoded, reflect.TypeOf(stamp{}), 0)
 	if err != nil {
 		t.Fatalf("decode: %v", err)
@@ -173,7 +173,7 @@ func TestNamedPrimitiveSlotConverts(t *testing.T) {
 func TestDomainTypeIsAcceptedAtRegistration(t *testing.T) {
 	s := NewSteps[Value]()
 	s.Param("date", `[A-Z][a-z]+ \d{1,2}, \d{4}`, func(g []string) Value {
-		return stamp{Year: 2026, Day: 12}.EncodeVarValue()
+		return stamp{Year: 2026, Day: 12}.EncodeValue()
 	}, nil)
 	// A decoder-only type is fine as a stimulus slot...
 	s.Stimulus("due on {date}", func(state Value, d stamp) (Value, error) { return state, nil })

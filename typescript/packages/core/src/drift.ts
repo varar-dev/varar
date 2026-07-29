@@ -1,4 +1,4 @@
-import type { VarDoc } from './ast.ts'
+import type { Doc } from './ast.ts'
 import { type Diagnostic, driftDetected } from './diagnostics.ts'
 import { hashSource } from './hash.ts'
 import { deriveExampleName, type ExecutionPlan } from './plan.ts'
@@ -32,7 +32,7 @@ export type OathBaseline = {
 
 // The whole `varar.lock.json`: every oath keyed by its POSIX path relative to the
 // project root.
-export type VarLock = {
+export type LockFile = {
   readonly version: 2
   readonly oaths: Readonly<Record<string, OathBaseline>>
 }
@@ -83,9 +83,9 @@ function similarity(a: ReadonlySet<string>, b: ReadonlySet<string>): number {
 
 // The current example-producing paragraphs, in document order — what a clean
 // run records as the new baseline for an oath.
-export function liveExamples(varDoc: VarDoc, plan: ExecutionPlan): ReadonlyArray<BaselineExample> {
+export function liveExamples(doc: Doc, plan: ExecutionPlan): ReadonlyArray<BaselineExample> {
   const out: BaselineExample[] = []
-  for (const candidate of varDoc.examples) {
+  for (const candidate of doc.examples) {
     if (isLive(candidate.span, plan)) {
       out.push({ name: deriveExampleName(candidate.body), line: candidate.span.startLine })
     }
@@ -95,12 +95,8 @@ export function liveExamples(varDoc: VarDoc, plan: ExecutionPlan): ReadonlyArray
 
 // The full baseline record for an oath: its source fingerprint plus its live
 // examples.
-export function deriveOathBaseline(
-  source: string,
-  varDoc: VarDoc,
-  plan: ExecutionPlan,
-): OathBaseline {
-  return { sourceHash: hashSource(source), examples: liveExamples(varDoc, plan) }
+export function deriveOathBaseline(source: string, doc: Doc, plan: ExecutionPlan): OathBaseline {
+  return { sourceHash: hashSource(source), examples: liveExamples(doc, plan) }
 }
 
 // Detect drift for one oath: paragraphs the baseline recorded as examples that
@@ -114,11 +110,11 @@ export function deriveOathBaseline(
 //   matched & live → not drift · matched & dead → DRIFT · no match → remove+add
 export function detectDrift(
   baseline: OathBaseline | undefined,
-  varDoc: VarDoc,
+  doc: Doc,
   plan: ExecutionPlan,
 ): ReadonlyArray<Drift> {
   if (!baseline) return [] // no baseline yet (first run) — nothing to compare
-  const candidates = varDoc.examples
+  const candidates = doc.examples
   const names = candidates.map((c) => deriveExampleName(c.body))
   const tokens = names.map(tokenize)
   const live = candidates.map((c) => isLive(c.span, plan))
@@ -168,29 +164,29 @@ export async function reconcileDrift(opts: {
   readonly store: BaselineStore
   readonly oathPath: string
   readonly source: string
-  readonly varDoc: VarDoc
+  readonly doc: Doc
   readonly plan: ExecutionPlan
   readonly update?: boolean
 }): Promise<ReadonlyArray<Drift>> {
   const text = await opts.store.read()
-  const lock = text ? parseVarLock(text) : null
+  const lock = text ? parseLockFile(text) : null
   const baseline = lock?.oaths[opts.oathPath]
-  const drifts = opts.update ? [] : detectDrift(baseline, opts.varDoc, opts.plan)
+  const drifts = opts.update ? [] : detectDrift(baseline, opts.doc, opts.plan)
   if (opts.update || drifts.length === 0) {
-    const nextOath = deriveOathBaseline(opts.source, opts.varDoc, opts.plan)
-    const nextLock: VarLock = {
+    const nextOath = deriveOathBaseline(opts.source, opts.doc, opts.plan)
+    const nextLock: LockFile = {
       version: 2,
       oaths: { ...(lock?.oaths ?? {}), [opts.oathPath]: nextOath },
     }
-    await opts.store.write(stringifyVarLock(nextLock))
+    await opts.store.write(stringifyLockFile(nextLock))
   }
   return drifts
 }
 
 // Drop every baseline whose oath path is not in `keepPaths` — the entries left
-// behind when an oath is deleted or moved. Pure counterpart of parseVarLock /
-// stringifyVarLock; the caller decides what "still exists" means.
-export function pruneVarLock(lock: VarLock, keepPaths: ReadonlyArray<string>): VarLock {
+// behind when an oath is deleted or moved. Pure counterpart of parseLockFile /
+// stringifyLockFile; the caller decides what "still exists" means.
+export function pruneLockFile(lock: LockFile, keepPaths: ReadonlyArray<string>): LockFile {
   const keep = new Set(keepPaths)
   const oaths: Record<string, OathBaseline> = {}
   for (const [path, baseline] of Object.entries(lock.oaths)) {
@@ -219,12 +215,12 @@ export async function pruneBaselines(opts: {
   readonly update?: boolean
 }): Promise<ReadonlyArray<string>> {
   const text = await opts.store.read()
-  const lock = text ? parseVarLock(text) : null
+  const lock = text ? parseLockFile(text) : null
   if (!lock) return []
   const keep = new Set(opts.keepPaths)
   const stale = Object.keys(lock.oaths).filter((path) => !keep.has(path))
   if (opts.update && stale.length > 0) {
-    await opts.store.write(stringifyVarLock(pruneVarLock(lock, opts.keepPaths)))
+    await opts.store.write(stringifyLockFile(pruneLockFile(lock, opts.keepPaths)))
   }
   return stale
 }
@@ -247,7 +243,7 @@ function isOathBaseline(v: unknown): v is OathBaseline {
 
 // Parse `varar.lock.json`. Returns null on malformed input (treated as "no
 // baseline yet"), mirroring the LSP's tolerant result ingestion.
-export function parseVarLock(text: string): VarLock | null {
+export function parseLockFile(text: string): LockFile | null {
   let parsed: unknown
   try {
     parsed = JSON.parse(text)
@@ -268,7 +264,7 @@ export function parseVarLock(text: string): VarLock | null {
 // Serialize a `varar.lock.json` deterministically: oath paths sorted, examples in
 // document order, two-space indent, trailing newline. Byte-stable across runs
 // so a clean re-run produces no git diff.
-export function stringifyVarLock(lock: VarLock): string {
+export function stringifyLockFile(lock: LockFile): string {
   const oaths: Record<string, OathBaseline> = {}
   for (const path of Object.keys(lock.oaths).sort()) {
     const b = lock.oaths[path]

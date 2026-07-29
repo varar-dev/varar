@@ -13,7 +13,7 @@ module Varar
     # The committed baseline for one oath file.
     OathBaseline = Data.define(:source_hash, :examples)
     # The whole varar.lock.json: every oath keyed by its POSIX path.
-    VarLock = Data.define(:version, :oaths)
+    LockFile = Data.define(:version, :oaths)
     # A paragraph the baseline says was an example and now matches no step.
     Drift = Data.define(:name, :line, :span)
 
@@ -62,25 +62,25 @@ module Varar
       end
 
       # The current example-producing paragraphs, in document order.
-      def live_examples(var_doc, plan)
-        var_doc.examples.filter_map do |candidate|
+      def live_examples(doc, plan)
+        doc.examples.filter_map do |candidate|
           next unless live?(candidate.span, plan)
 
           BaselineExample.new(name: Plan.derive_example_name(candidate.body), line: candidate.span.start_line)
         end
       end
 
-      def derive_oath_baseline(source, var_doc, plan)
-        OathBaseline.new(source_hash: Hash32.hash_source(source), examples: live_examples(var_doc, plan))
+      def derive_oath_baseline(source, doc, plan)
+        OathBaseline.new(source_hash: Hash32.hash_source(source), examples: live_examples(doc, plan))
       end
 
       # Paragraphs the baseline recorded as examples that now match zero steps.
       # Each re-identified by the most word-similar current paragraph at/above
       # the threshold (exact name scores 1; ties break toward the nearest line).
-      def detect_drift(baseline, var_doc, plan)
+      def detect_drift(baseline, doc, plan)
         return [] if baseline.nil?
 
-        candidates = var_doc.examples
+        candidates = doc.examples
         tokens = candidates.map { |c| tokenize(Plan.derive_example_name(c.body)) }
         live = candidates.map { |c| live?(c.span, plan) }
 
@@ -115,26 +115,26 @@ module Varar
       # mode, accept all drift (re-record, report nothing); otherwise detect
       # drift and rewrite the baseline only on a clean run, so an unacknowledged
       # drift keeps its old entry (and stays red).
-      def reconcile_drift(store, oath_path, source, var_doc, plan, update: false)
+      def reconcile_drift(store, oath_path, source, doc, plan, update: false)
         text = store.read
-        lock = text ? parse_var_lock(text) : nil
+        lock = text ? parse_lock_file(text) : nil
         baseline = lock ? lock.oaths[oath_path] : nil
-        drifts = update ? [] : detect_drift(baseline, var_doc, plan)
+        drifts = update ? [] : detect_drift(baseline, doc, plan)
         if update || drifts.empty?
           oaths = lock ? lock.oaths.dup : {}
-          oaths[oath_path] = derive_oath_baseline(source, var_doc, plan)
-          store.write(stringify_var_lock(VarLock.new(version: 2, oaths: oaths)))
+          oaths[oath_path] = derive_oath_baseline(source, doc, plan)
+          store.write(stringify_lock_file(LockFile.new(version: 2, oaths: oaths)))
         end
         drifts
       end
 
       # Drop every baseline whose oath path is not in +keep_paths+ — the entries
       # left behind when an oath is deleted or moved. Pure counterpart of
-      # parse_var_lock / stringify_var_lock; the caller decides what "still
+      # parse_lock_file / stringify_lock_file; the caller decides what "still
       # exists" means.
-      def prune_var_lock(lock, keep_paths)
+      def prune_lock_file(lock, keep_paths)
         keep = keep_paths.to_a
-        VarLock.new(version: 2, oaths: lock.oaths.slice(*keep))
+        LockFile.new(version: 2, oaths: lock.oaths.slice(*keep))
       end
 
       # The whole-lock counterpart of reconcile_drift, run ONCE per run rather
@@ -152,16 +152,16 @@ module Varar
       # +update+, the ones that would be).
       def prune_baselines(store, keep_paths, update: false)
         text = store.read
-        lock = text ? parse_var_lock(text) : nil
+        lock = text ? parse_lock_file(text) : nil
         return [] unless lock
 
         keep = keep_paths.to_a
         stale = lock.oaths.keys.reject { |path| keep.include?(path) }
-        store.write(stringify_var_lock(prune_var_lock(lock, keep))) if update && !stale.empty?
+        store.write(stringify_lock_file(prune_lock_file(lock, keep))) if update && !stale.empty?
         stale
       end
 
-      def parse_var_lock(text)
+      def parse_lock_file(text)
         parsed = JSON.parse(text)
         return nil unless parsed.is_a?(::Hash) && parsed['version'] == 2
 
@@ -175,7 +175,7 @@ module Varar
 
           oaths[path] = baseline
         end
-        VarLock.new(version: 2, oaths: oaths)
+        LockFile.new(version: 2, oaths: oaths)
       rescue JSON::ParserError, TypeError
         nil
       end
@@ -210,7 +210,7 @@ module Varar
       # Serialize varar.lock.json deterministically: oath paths sorted, examples
       # in document order, insertion-order keys otherwise (version, oaths;
       # sourceHash, examples; name, line) — NOT canonical JSON's key sort.
-      def stringify_var_lock(lock)
+      def stringify_lock_file(lock)
         oaths = {}
         lock.oaths.keys.sort.each do |path|
           baseline = lock.oaths[path]

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from varar_config import read_varar_config
+from varar_config import read_config
 from varar_core.diagnostics import drift_detected
 from varar_core.drift import prune_baselines, reconcile_drift
 from varar_runner.baseline_store import create_file_baseline_store
@@ -15,7 +15,7 @@ from varar_runner.run import RecordingReporter, examples_with_runs, plan_oath
 from varar_runner.steps import load_steps
 from varar_pytest.fixtures import _active_request, get_active_request, wrap_registry_for_fixtures
 
-_STASH: dict = {}  # keyed by config id → (VarConfig, LoadedSteps, root, store)
+_STASH: dict = {}  # keyed by config id → (Config, LoadedSteps, root, store)
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -35,7 +35,7 @@ def _update_mode(config: pytest.Config) -> bool:
 
 def pytest_configure(config: pytest.Config) -> None:
     root = Path(config.rootpath)
-    cfg = read_varar_config(root)
+    cfg = read_config(root)
     loaded = load_steps(cfg.steps, root)
     wrapped_registry = wrap_registry_for_fixtures(loaded.registry, get_active_request)
     loaded = dataclasses.replace(loaded, registry=wrapped_registry)
@@ -45,7 +45,7 @@ def pytest_configure(config: pytest.Config) -> None:
     # Drop baselines for oaths the config no longer discovers. Reconciliation is
     # per-oath and never sees a path that has gone, so the lock would otherwise
     # accumulate dead entries forever (#70). Once per run, here rather than in
-    # VarFile.collect, and keyed off the config globs — NOT the files pytest
+    # OathFile.collect, and keyed off the config globs — NOT the files pytest
     # happened to collect, since `pytest tests/one_dir/` is a filtered view and
     # pruning against it would delete live baselines.
     prune_baselines(
@@ -65,10 +65,10 @@ def pytest_collect_file(file_path: Path, parent: pytest.Collector):
     cfg, _loaded, root, _store = _STASH[id(parent.config)]
     if not match_oath(file_path, cfg.docs_include, cfg.docs_exclude, root):
         return None
-    return VarFile.from_parent(parent, path=file_path)
+    return OathFile.from_parent(parent, path=file_path)
 
 
-class VarFile(pytest.File):
+class OathFile(pytest.File):
     def collect(self):
         _cfg, loaded, root, store = _STASH[id(self.config)]
         source = self.path.read_text(encoding="utf-8")
@@ -83,7 +83,7 @@ class VarFile(pytest.File):
             idx = seen.get(base, 0)
             seen[base] = idx + 1
             name = base if idx == 0 else f"{base}[{idx}]"
-            yield VarItem.from_parent(self, name=name, example=example, run=run, source=source)
+            yield OathItem.from_parent(self, name=name, example=example, run=run, source=source)
 
         # Reconcile drift against varar.lock.json: a clean run records/updates the
         # baseline; a paragraph that was an example and no longer matches any
@@ -96,20 +96,20 @@ class VarFile(pytest.File):
             store,
             oath_path,
             source,
-            execution_plan.var_doc,
+            execution_plan.doc,
             execution_plan,
             update=_update_mode(self.config),
         )
         for d in drifts:
-            yield VarDriftItem.from_parent(
+            yield DriftItem.from_parent(
                 self,
-                name=f"var:drift:{d.line}",
+                name=f"varar:drift:{d.line}",
                 message=drift_detected(d.name, d.span).message,
                 line=d.line,
             )
 
 
-class VarDriftItem(pytest.Item):
+class DriftItem(pytest.Item):
     """A failing item for a drifted paragraph — the pytest surface of the
     drift gate. Accept it with --varar-update / VARAR_UPDATE=1."""
 
@@ -128,7 +128,7 @@ class VarDriftItem(pytest.Item):
         return self.path, self._line - 1, self.name
 
 
-class VarItem(pytest.Item):
+class OathItem(pytest.Item):
     def __init__(self, *, example, run, source, **kw):
         super().__init__(**kw)
         self._example = example

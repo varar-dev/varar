@@ -1,5 +1,5 @@
 import { type CucumberExpression, type Node, NodeType } from '@cucumber/cucumber-expressions'
-import type { Fence, Table, VarDoc } from './ast.ts'
+import type { Doc, Fence, Table } from './ast.ts'
 import { isCellMismatchError, ReturnShapeError } from './cell-diff.ts'
 import type { DiagnosticCode, Severity } from './diagnostics.ts'
 import { collectExamples, isUnexpectedPassError, type StepObservation } from './execute.ts'
@@ -10,9 +10,9 @@ import type { Span } from './span.ts'
 
 // ---- Artifact types (the serialized contract) -----------------------------
 
-export type VarDocArtifact = {
+export type DocArtifact = {
   readonly path: string
-  readonly examples: VarDoc['examples']
+  readonly examples: Doc['examples']
   readonly orphanAttachments: ReadonlyArray<Table | Fence>
 }
 
@@ -105,7 +105,7 @@ export type TraceArtifact = {
 }
 
 export type BundleArtifacts = {
-  readonly varDoc: VarDocArtifact
+  readonly doc: DocArtifact
   readonly registry: RegistryArtifact
   readonly plan: PlanArtifact
   readonly trace: TraceArtifact
@@ -157,7 +157,7 @@ function parameterTypeNames(compiled: CucumberExpression): ReadonlyArray<string>
   return names
 }
 
-export function toVarDocArtifact(doc: VarDoc): VarDocArtifact {
+export function toDocArtifact(doc: Doc): DocArtifact {
   return { path: doc.path, examples: doc.examples, orphanAttachments: doc.orphanAttachments }
 }
 
@@ -190,7 +190,7 @@ export function toPlanArtifact(plan: ExecutionPlan): PlanArtifact {
           paramSpans: step.paramSpans,
           matchedExpression: step.stepDef.expression,
           args: step.paramSpans.map((span, i) => ({
-            value: plan.varDoc.source.slice(span.startOffset, span.endOffset),
+            value: plan.doc.source.slice(span.startOffset, span.endOffset),
             parameterType: stepNames[i] ?? null,
           })),
           ...(step.dataTable ? { dataTable: step.dataTable } : {}),
@@ -242,12 +242,12 @@ export function toFailureArtifact(error: unknown, matchSpan: Span): FailureArtif
 }
 
 export async function runConformance(
-  varDoc: VarDoc,
+  doc: Doc,
   registry: Registry,
   createContext: (stepFile: string) => unknown | Promise<unknown>,
   parameterTypes: ReadonlyArray<{ name: string; regexp: string }> = [],
 ): Promise<BundleArtifacts> {
-  const execution = buildPlan(varDoc, registry)
+  const execution = buildPlan(doc, registry)
 
   const observed = new Map<number, StepObservation[]>()
   const queue = collectExamples(execution, {
@@ -291,7 +291,7 @@ export async function runConformance(
   }
 
   return {
-    varDoc: toVarDocArtifact(varDoc),
+    doc: toDocArtifact(doc),
     registry: toRegistryArtifact(registry, parameterTypes),
     plan: toPlanArtifact(execution),
     trace: { examples: traceExamples },

@@ -46,7 +46,7 @@ type Case struct {
 // Drift is reconciled here: a clean run rewrites the baseline; when update is
 // false each drifted paragraph becomes a failing Case.
 func Collect(root string, build BuildRegistry, ctx ContextFactory, update bool) ([]Case, error) {
-	cfg, err := config.ReadVarConfig(root)
+	cfg, err := config.ReadConfig(root)
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func Collect(root string, build BuildRegistry, ctx ContextFactory, update bool) 
 		doc := core.Parse(oathFile, source)
 		for _, drifted := range core.ReconcileDrift(store, rel, source, doc, plan, update) {
 			cases = append(cases, Case{
-				Name:         rel + "::var:drift:" + strconv.Itoa(drifted.Line),
+				Name:         rel + "::varar:drift:" + strconv.Itoa(drifted.Line),
 				Source:       source,
 				Rel:          rel,
 				DriftMessage: core.DriftMessage(drifted),

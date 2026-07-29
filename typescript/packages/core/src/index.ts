@@ -3,6 +3,7 @@ export const VERSION = '0.7.0'
 export type {
   Block,
   Blockquote,
+  Doc,
   Example,
   Fence,
   Heading,
@@ -12,7 +13,6 @@ export type {
   SegmentOffset,
   Table,
   ThematicBreak,
-  VarDoc,
 } from './ast.ts'
 export type { CellDiff, RowCheck } from './cell-diff.ts'
 export {
@@ -24,20 +24,20 @@ export {
 } from './cell-diff.ts'
 export type {
   BundleArtifacts,
+  DocArtifact,
   FailureArtifact,
   PlanArtifact,
   RegistryArtifact,
   StepTrace,
   TraceArtifact,
-  VarDocArtifact,
 } from './conformance.ts'
 export {
   canonicalStringify,
   runConformance,
+  toDocArtifact,
   toFailureArtifact,
   toPlanArtifact,
   toRegistryArtifact,
-  toVarDocArtifact,
 } from './conformance.ts'
 export { deepEqual } from './deep-equal.ts'
 export type {
@@ -49,17 +49,17 @@ export type {
 } from './diagnostics.ts'
 export { ambiguousMatch, driftDetected } from './diagnostics.ts'
 export { compareDocString, DOC_STRING_COLUMN } from './doc-string-diff.ts'
-export type { BaselineExample, Drift, OathBaseline, VarLock } from './drift.ts'
+export type { BaselineExample, Drift, LockFile, OathBaseline } from './drift.ts'
 export {
   deriveOathBaseline,
   detectDrift,
   driftDiagnostics,
   liveExamples,
-  parseVarLock,
+  parseLockFile,
   pruneBaselines,
-  pruneVarLock,
+  pruneLockFile,
   reconcileDrift,
-  stringifyVarLock,
+  stringifyLockFile,
 } from './drift.ts'
 export type { ExecutePorts, ExecutionObserver, QueuedExample, StepObservation } from './execute.ts'
 export {

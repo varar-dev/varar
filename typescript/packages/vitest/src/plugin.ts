@@ -1,7 +1,7 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { relative, resolve, sep } from 'node:path'
-import { findFiles, loadVarConfig } from '@varar/config'
-import { type OathBaseline, parseVarLock } from '@varar/core'
+import { findFiles, loadConfig } from '@varar/config'
+import { type OathBaseline, parseLockFile } from '@varar/core'
 import type { Plugin } from 'vite'
 import { configDefaults } from 'vitest/config'
 import { discoverStaticExamples, type StaticExample } from './static-examples.ts'
@@ -39,7 +39,7 @@ export function vararVitestPlugin(options: VararVitestPluginOptions = {}): Plugi
       // made absolute against `cwd`; setting `test.exclude` *replaces* vitest's
       // defaults, so re-add `configDefaults.exclude` to keep `node_modules` &c.
       // out.
-      const cfg = await loadVarConfig(cwd)
+      const cfg = await loadConfig(cwd)
       const abs = (g: string) => resolve(cwd, g)
       return {
         // Force a single @varar/varar (and @varar/core) module instance.
@@ -56,7 +56,7 @@ export function vararVitestPlugin(options: VararVitestPluginOptions = {}): Plugi
       }
     },
     async configResolved() {
-      const cfg = await loadVarConfig(cwd)
+      const cfg = await loadConfig(cwd)
       stepFiles = findFiles(cwd, cfg.steps)
       oathFiles = new Set(findFiles(cwd, cfg.docs.include, cfg.docs.exclude))
       const abs = resolve(cwd, 'varar.config.json')
@@ -81,7 +81,7 @@ export function vararVitestPlugin(options: VararVitestPluginOptions = {}): Plugi
       // This oath's baseline entry from varar.lock.json (POSIX path, relative to
       // cwd), injected so the runtime can run the read-only drift gate.
       const oathPath = relative(cwd, varPath).split(sep).join('/')
-      const lock = existsSync(lockPath) ? parseVarLock(readFileSync(lockPath, 'utf8')) : null
+      const lock = existsSync(lockPath) ? parseLockFile(readFileSync(lockPath, 'utf8')) : null
       const baseline = lock?.oaths[oathPath] ?? null
       return generateVirtualModule({
         varPath,

@@ -10,7 +10,7 @@ module Varar
     VERSION = '0.7.0'
 
     # The parsed config. All fields default to empty.
-    VarConfig = Data.define(:docs_include, :docs_exclude, :steps, :snippets) do
+    Config = Data.define(:docs_include, :docs_exclude, :steps, :snippets) do
       def initialize(docs_include: [], docs_exclude: [], steps: [], snippets: {})
         super
       end
@@ -21,23 +21,23 @@ module Varar
 
     module_function
 
-    # Read <root>/varar.config.json. The filesystem edge over #parse_var_config;
+    # Read <root>/varar.config.json. The filesystem edge over #parse_config;
     # a missing file yields the empty config (tools no-op, as in every port).
-    def read_var_config(root)
+    def read_config(root)
       path = File.join(root.to_s, 'varar.config.json')
-      return VarConfig.new unless File.file?(path)
+      return Config.new unless File.file?(path)
 
-      parse_var_config(File.read(path, encoding: 'UTF-8'), path)
+      parse_config(File.read(path, encoding: 'UTF-8'), path)
     end
 
     # Parse varar.config.json TEXT. Pure — no filesystem.
     #
     # +source+ only labels errors (a path, a URL, '<memory>'); nothing is read
-    # from it. Splitting this out from #read_var_config is what lets a caller
+    # from it. Splitting this out from #read_config is what lets a caller
     # with the text already in hand — an editor buffer, an in-memory fixture,
     # the LSP — validate it without inventing a file, and mirrors TypeScript's
-    # parseVarConfig / Java's VarConfig.parse.
-    def parse_var_config(text, source)
+    # parseConfig / Java's Config.parse.
+    def parse_config(text, source)
       path = source
       data = begin
         JSON.parse(text)
@@ -60,7 +60,7 @@ module Varar
         raise ArgumentError, "#{path}: 'snippets' must be an object of strings"
       end
 
-      VarConfig.new(
+      Config.new(
         docs_include: string_array(docs['include'], 'docs.include', path),
         docs_exclude: string_array(docs['exclude'], 'docs.exclude', path),
         steps: string_array(data['steps'], 'steps', path),

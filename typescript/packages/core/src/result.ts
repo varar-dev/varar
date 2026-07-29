@@ -21,7 +21,7 @@ export type ExampleResult = {
   }
 }
 
-// The persisted run result for one oath file. The `.var/<oath>.json` file IS a
+// The persisted run result for one oath file. The `.varar/<oath>.json` file IS a
 // serialized OathResults.
 export type OathResults = {
   readonly version: 1

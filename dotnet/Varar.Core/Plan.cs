@@ -33,19 +33,19 @@ public sealed record PlannedExample(
     string? ExpectedErrorMessage = null);
 
 public sealed record ExecutionPlan(
-    VarDoc VarDoc,
+    Doc Doc,
     ImmutableArray<PlannedExample> Examples,
     ImmutableArray<Diagnostic> Diagnostics);
 
 /// <summary>Matching + planning. Port of <c>plan.ts</c>.</summary>
 public static class Plan
 {
-    public static ExecutionPlan Run(VarDoc varDoc, Registry registry)
+    public static ExecutionPlan Run(Doc doc, Registry registry)
     {
         var diagnostics = ImmutableArray.CreateBuilder<Diagnostic>();
 
         // Phase 1: plan each candidate paragraph independently into a "unit".
-        var units = varDoc.Examples.Select(ex => PlanCandidate(ex, varDoc, registry, diagnostics)).ToList();
+        var units = doc.Examples.Select(ex => PlanCandidate(ex, doc, registry, diagnostics)).ToList();
 
         // Phase 2: group adjacent candidates into examples. A matching candidate continues the open
         // example when no delimiter (heading / `---`) precedes it; otherwise it starts a new one. A
@@ -59,7 +59,7 @@ public static class Plan
         {
             if (open is not null)
             {
-                examples.Add(FinishMerged(open, varDoc.Source));
+                examples.Add(FinishMerged(open, doc.Source));
             }
 
             open = null;
@@ -94,7 +94,7 @@ public static class Plan
 
         // A table or fence that doesn't attach to a step is just Markdown content, not a mistake —
         // it produces no diagnostic.
-        return new ExecutionPlan(varDoc, examples.ToImmutable(), diagnostics.ToImmutable());
+        return new ExecutionPlan(doc, examples.ToImmutable(), diagnostics.ToImmutable());
     }
 
     // A step-bearing candidate accumulating into one example while adjacent matching candidates
@@ -171,7 +171,7 @@ public static class Plan
     // ambiguity / error-fence diagnostics into <paramref name="diagnostics"/>.
     private static CandidateUnit PlanCandidate(
         Example ex,
-        VarDoc varDoc,
+        Doc doc,
         Registry registry,
         ImmutableArray<Diagnostic>.Builder diagnostics)
     {
@@ -191,7 +191,7 @@ public static class Plan
             var result = PlanBlock(blockText, registry);
             foreach (var collision in result.Ambiguities)
             {
-                var span = LiftSpan(varDoc.Source, block, collision.MatchStart, collision.MatchEnd);
+                var span = LiftSpan(doc.Source, block, collision.MatchStart, collision.MatchEnd);
                 diagnostics.Add(Varar.Core.Diagnostics.AmbiguousMatch(
                     Scanner.Slice(blockText, collision.MatchStart, collision.MatchEnd),
                     span,
@@ -204,8 +204,8 @@ public static class Plan
             {
                 stepsByBlock[idx] = result.Steps.Select(hit => new PlannedStep(
                     Scanner.Slice(blockText, hit.MatchStart, hit.MatchEnd),
-                    LiftSpan(varDoc.Source, block, hit.MatchStart, hit.MatchEnd),
-                    [.. hit.ParamSpans.Select(p => LiftSpan(varDoc.Source, block, p.Start, p.End))],
+                    LiftSpan(doc.Source, block, hit.MatchStart, hit.MatchEnd),
+                    [.. hit.ParamSpans.Select(p => LiftSpan(doc.Source, block, p.Start, p.End))],
                     hit.StepDef,
                     hit.Args,
                     hit.Formats)).ToList();
@@ -214,7 +214,7 @@ public static class Plan
 
         // Header-bound table: a table whose every header cell is named in the paragraph above it
         // iterates row by row, each row its own example.
-        var bound = !hadAmbiguous ? DetectHeaderBound(ex, stepsByBlock, varDoc.Source) : null;
+        var bound = !hadAmbiguous ? DetectHeaderBound(ex, stepsByBlock, doc.Source) : null;
         if (bound is not null)
         {
             var headerBinding = new HeaderBinding(

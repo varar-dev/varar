@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "oathPath": "examples/typescript-vitest/hello-var.md",
+  "sourceHash": "fnv1a:8eb1207a",
+  "examples": [
+    {
+      "name": "First I greet \"world\" okay? I think the greeting should be \"Hello, world!\"",
+      "status": "passed",
+      "lines": [
+        5
+      ]
+    },
+    {
+      "name": "The expression `1+1` should evaluate to `2`",
+      "status": "passed",
+      "lines": [
+        11
+      ]
+    }
+  ]
+}

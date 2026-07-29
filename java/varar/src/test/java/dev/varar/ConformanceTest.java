@@ -145,7 +145,7 @@ class ConformanceTest {
         Registry registry = bound.registry();
 
         String source = Files.readString(bundle.resolve("example.md"), StandardCharsets.UTF_8);
-        Ast.VarDoc doc = Parse.parse("example.md", source);
+        Ast.Doc doc = Parse.parse("example.md", source);
         Plan.ExecutionPlan plan = Plan.plan(doc, registry);
 
         var artifact = Conformance.toPlanArtifact(plan);
@@ -181,7 +181,7 @@ class ConformanceTest {
         Supplier<? extends State> contextFactory = bound.stateFactory();
 
         String source = Files.readString(bundle.resolve("example.md"), StandardCharsets.UTF_8);
-        Ast.VarDoc doc = Parse.parse("example.md", source);
+        Ast.Doc doc = Parse.parse("example.md", source);
 
         Conformance.BundleArtifacts artifacts = Conformance.runConformance(doc, registry, contextFactory);
 

@@ -24,16 +24,16 @@ _active_request: ContextVar[Any] = ContextVar("_active_request")
 
 
 def get_active_request() -> Any:
-    """Return the FixtureRequest for the currently-running VarItem.
+    """Return the FixtureRequest for the currently-running OathItem.
 
-    Raises RuntimeError if called outside a VarItem runtest.
+    Raises RuntimeError if called outside a OathItem runtest.
     """
     try:
         return _active_request.get()
     except LookupError as exc:
         raise RuntimeError(
             "No active pytest fixture request — "
-            "are you calling a fixture-using step outside a VarItem.runtest?"
+            "are you calling a fixture-using step outside a OathItem.runtest?"
         ) from exc
 
 

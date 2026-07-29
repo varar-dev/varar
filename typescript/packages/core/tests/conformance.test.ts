@@ -3,10 +3,10 @@ import { CellMismatchError } from '../src/cell-diff.ts'
 import {
   canonicalStringify,
   runConformance,
+  toDocArtifact,
   toFailureArtifact,
   toPlanArtifact,
   toRegistryArtifact,
-  toVarDocArtifact,
 } from '../src/conformance.ts'
 import { compareDocString } from '../src/doc-string-diff.ts'
 import { UnexpectedPassError } from '../src/execute.ts'
@@ -135,8 +135,8 @@ test('toPlanArtifact projects examples, expectedOutcome and stringified args', (
   expect(art.examples[0]?.steps[0]?.args).toEqual([{ value: '5', parameterType: 'int' }])
 })
 
-test('toVarDocArtifact keeps path, examples and orphanAttachments', () => {
-  const art = toVarDocArtifact(parse('e.md', '# A\n\nI have 5 cukes.'))
+test('toDocArtifact keeps path, examples and orphanAttachments', () => {
+  const art = toDocArtifact(parse('e.md', '# A\n\nI have 5 cukes.'))
   expect(art.path).toBe('e.md')
   expect(Array.isArray(art.examples)).toBe(true)
 })

@@ -41,49 +41,49 @@ module Varar
       end
 
       def plan_for(source, registry)
-        var_doc = Parse.parse('w.md', source)
-        [var_doc, Plan.plan(var_doc, registry)]
+        doc = Parse.parse('w.md', source)
+        [doc, Plan.plan(doc, registry)]
       end
 
       def bare(drifts) = drifts.map { |d| [d.name, d.line] }
 
       it 'records one entry per example-producing paragraph' do
-        var_doc, plan = plan_for('I withdraw 40.', reg)
-        expect(described_class.live_examples(var_doc,
+        doc, plan = plan_for('I withdraw 40.', reg)
+        expect(described_class.live_examples(doc,
                                              plan)).to eq([BaselineExample.new(name: 'I withdraw 40', line: 1)])
       end
 
       it 'does not record a never-matched paragraph' do
-        var_doc, plan = plan_for('Just some prose.', reg)
-        expect(described_class.live_examples(var_doc, plan)).to eq([])
+        doc, plan = plan_for('Just some prose.', reg)
+        expect(described_class.live_examples(doc, plan)).to eq([])
       end
 
       it 'derive_oath_baseline carries the source fingerprint' do
         source = 'I withdraw 40.'
-        var_doc, plan = plan_for(source, reg)
-        baseline = described_class.derive_oath_baseline(source, var_doc, plan)
+        doc, plan = plan_for(source, reg)
+        baseline = described_class.derive_oath_baseline(source, doc, plan)
         expect(baseline.source_hash).to eq(Hash32.hash_source(source))
         expect(baseline.examples).to eq([BaselineExample.new(name: 'I withdraw 40', line: 1)])
       end
 
       it 'no baseline means no drift' do
-        var_doc, plan = plan_for('I withdraw 40.', reg)
-        expect(described_class.detect_drift(nil, var_doc, plan)).to eq([])
+        doc, plan = plan_for('I withdraw 40.', reg)
+        expect(described_class.detect_drift(nil, doc, plan)).to eq([])
       end
 
       it 'an unchanged oath and steps have no drift' do
         source = 'I withdraw 40.'
-        var_doc, plan = plan_for(source, reg)
-        baseline = described_class.derive_oath_baseline(source, var_doc, plan)
-        expect(described_class.detect_drift(baseline, var_doc, plan)).to eq([])
+        doc, plan = plan_for(source, reg)
+        baseline = described_class.derive_oath_baseline(source, doc, plan)
+        expect(described_class.detect_drift(baseline, doc, plan)).to eq([])
       end
 
       it 'a renamed step drifts (matched by name)' do
         source = 'I withdraw 40.'
-        var_doc, plan_with = plan_for(source, reg)
-        baseline = described_class.derive_oath_baseline(source, var_doc, plan_with)
+        doc, plan_with = plan_for(source, reg)
+        baseline = described_class.derive_oath_baseline(source, doc, plan_with)
         _doc, plan_without = plan_for(source, reg(with_step: false))
-        expect(bare(described_class.detect_drift(baseline, var_doc, plan_without))).to eq([['I withdraw 40', 1]])
+        expect(bare(described_class.detect_drift(baseline, doc, plan_without))).to eq([['I withdraw 40', 1]])
       end
 
       it 'an in-place typo drifts (matched by line)' do
@@ -126,16 +126,16 @@ module Varar
               "| decimal | roman |\n| ------: | :---- |\n| 3 | III |\n| 9 | IX |\n"
 
       it 'header-bound table records its binding paragraph once' do
-        var_doc, plan = plan_for(roman, roman_reg)
-        expect(described_class.live_examples(var_doc, plan))
+        doc, plan = plan_for(roman, roman_reg)
+        expect(described_class.live_examples(doc, plan))
           .to eq([BaselineExample.new(name: 'Each row gives a decimal and a roman number:', line: 1)])
       end
 
       it 'a header-bound binding paragraph that stops matching drifts' do
-        var_doc, plan_with = plan_for(roman, roman_reg)
-        baseline = described_class.derive_oath_baseline(roman, var_doc, plan_with)
+        doc, plan_with = plan_for(roman, roman_reg)
+        baseline = described_class.derive_oath_baseline(roman, doc, plan_with)
         _doc, plan_without = plan_for(roman, roman_reg(with_step: false))
-        expect(bare(described_class.detect_drift(baseline, var_doc, plan_without)))
+        expect(bare(described_class.detect_drift(baseline, doc, plan_without)))
           .to eq([['Each row gives a decimal and a roman number:', 1]])
       end
 
@@ -153,32 +153,32 @@ module Varar
 
       it 'two paragraphs that merge into one example are each recorded as a live baseline entry' do
         source = "I deposit 100.\n\nI withdraw 40."
-        var_doc, plan = plan_for(source, deposit_withdraw_reg)
+        doc, plan = plan_for(source, deposit_withdraw_reg)
         # One planned example (the two paragraphs merged), but two live entries.
         expect(plan.examples.length).to eq(1)
-        expect(described_class.live_examples(var_doc, plan)).to eq([
-                                                                     BaselineExample.new(name: 'I deposit 100',
-                                                                                         line: 1),
-                                                                     BaselineExample.new(name: 'I withdraw 40', line: 3)
-                                                                   ])
+        expect(described_class.live_examples(doc, plan)).to eq([
+                                                                 BaselineExample.new(name: 'I deposit 100',
+                                                                                     line: 1),
+                                                                 BaselineExample.new(name: 'I withdraw 40', line: 3)
+                                                               ])
       end
 
       it 'deleting one step def of a merged example drifts only the now-prose paragraph' do
         source = "I deposit 100.\n\nI withdraw 40."
-        var_doc, plan_with = plan_for(source, deposit_withdraw_reg(with_deposit: true))
-        baseline = described_class.derive_oath_baseline(source, var_doc, plan_with)
+        doc, plan_with = plan_for(source, deposit_withdraw_reg(with_deposit: true))
+        baseline = described_class.derive_oath_baseline(source, doc, plan_with)
         # The deposit step is gone: its paragraph becomes prose, splitting the
         # example. The withdraw paragraph stays live; the deposit one drifts.
         _doc, plan_without = plan_for(source, deposit_withdraw_reg(with_deposit: false))
-        expect(bare(described_class.detect_drift(baseline, var_doc, plan_without))).to eq([['I deposit 100', 1]])
+        expect(bare(described_class.detect_drift(baseline, doc, plan_without))).to eq([['I deposit 100', 1]])
       end
 
       it 'drift diagnostics are error severity' do
         source = 'I withdraw 40.'
-        var_doc, plan_with = plan_for(source, reg)
-        baseline = described_class.derive_oath_baseline(source, var_doc, plan_with)
+        doc, plan_with = plan_for(source, reg)
+        baseline = described_class.derive_oath_baseline(source, doc, plan_with)
         _doc, plan_without = plan_for(source, reg(with_step: false))
-        diags = described_class.drift_diagnostics(described_class.detect_drift(baseline, var_doc, plan_without))
+        diags = described_class.drift_diagnostics(described_class.detect_drift(baseline, doc, plan_without))
         expect(diags.length).to eq(1)
         expect(diags[0].severity).to eq('error')
         expect(diags[0].code).to eq('drift')
@@ -187,25 +187,25 @@ module Varar
 
       it 'reconcile records on first run, then reports and preserves on drift' do
         source = 'I withdraw 40.'
-        var_doc, plan_with = plan_for(source, reg)
+        doc, plan_with = plan_for(source, reg)
         store = MemoryStore.new
-        expect(described_class.reconcile_drift(store, 'w.md', source, var_doc, plan_with)).to eq([])
+        expect(described_class.reconcile_drift(store, 'w.md', source, doc, plan_with)).to eq([])
         before = store.contents
         _doc, plan_without = plan_for(source, reg(with_step: false))
-        drift = described_class.reconcile_drift(store, 'w.md', source, var_doc, plan_without)
+        drift = described_class.reconcile_drift(store, 'w.md', source, doc, plan_without)
         expect(bare(drift)).to eq([['I withdraw 40', 1]])
         expect(store.contents).to eq(before)
       end
 
       it 'reconcile update mode accepts drift' do
         source = 'I withdraw 40.'
-        var_doc, plan_with = plan_for(source, reg)
+        doc, plan_with = plan_for(source, reg)
         store = MemoryStore.new
-        described_class.reconcile_drift(store, 'w.md', source, var_doc, plan_with)
+        described_class.reconcile_drift(store, 'w.md', source, doc, plan_with)
         _doc, plan_without = plan_for(source, reg(with_step: false))
-        drift = described_class.reconcile_drift(store, 'w.md', source, var_doc, plan_without, update: true)
+        drift = described_class.reconcile_drift(store, 'w.md', source, doc, plan_without, update: true)
         expect(drift).to eq([])
-        lock = described_class.parse_var_lock(store.contents)
+        lock = described_class.parse_lock_file(store.contents)
         expect(lock.oaths['w.md'].examples).to eq([])
       end
 
@@ -227,42 +227,42 @@ module Varar
       JSON
 
       it 'stringify matches the TypeScript serializer byte-for-byte' do
-        lock = VarLock.new(
+        lock = LockFile.new(
           version: 2,
           oaths: { 'library.md' => OathBaseline.new(source_hash: 'fnv1a:1a2b3c4d',
                                                     examples: [BaselineExample.new(name: 'I check out', line: 7)]) }
         )
-        expect(described_class.stringify_var_lock(lock)).to eq(expected_lock)
+        expect(described_class.stringify_lock_file(lock)).to eq(expected_lock)
       end
 
       it 'parse round-trips a valid lock' do
-        lock = VarLock.new(
+        lock = LockFile.new(
           version: 2,
           oaths: { 'library.md' => OathBaseline.new(source_hash: 'fnv1a:1a2b3c4d',
                                                     examples: [BaselineExample.new(name: 'I check out', line: 7)]) }
         )
-        expect(described_class.parse_var_lock(described_class.stringify_var_lock(lock))).to eq(lock)
+        expect(described_class.parse_lock_file(described_class.stringify_lock_file(lock))).to eq(lock)
       end
 
       it 'stringify sorts oath paths' do
-        lock = VarLock.new(
+        lock = LockFile.new(
           version: 2,
           oaths: {
             'zebra.md' => OathBaseline.new(source_hash: 'fnv1a:00000001', examples: []),
             'alpha.md' => OathBaseline.new(source_hash: 'fnv1a:00000002', examples: [])
           }
         )
-        text = described_class.stringify_var_lock(lock)
+        text = described_class.stringify_lock_file(lock)
         expect(text.index('alpha.md')).to be < text.index('zebra.md')
         expect(text).to end_with("}\n")
       end
 
       it 'parse rejects malformed input' do
-        expect(described_class.parse_var_lock('not json')).to be_nil
-        expect(described_class.parse_var_lock('{}')).to be_nil
-        expect(described_class.parse_var_lock('{"version":1,"oaths":{}}')).to be_nil
-        expect(described_class.parse_var_lock('{"version":2,"specs":{}}')).to be_nil
-        expect(described_class.parse_var_lock('{"version":2,"oaths":{"a.md":{"examples":[]}}}')).to be_nil
+        expect(described_class.parse_lock_file('not json')).to be_nil
+        expect(described_class.parse_lock_file('{}')).to be_nil
+        expect(described_class.parse_lock_file('{"version":1,"oaths":{}}')).to be_nil
+        expect(described_class.parse_lock_file('{"version":2,"specs":{}}')).to be_nil
+        expect(described_class.parse_lock_file('{"version":2,"oaths":{"a.md":{"examples":[]}}}')).to be_nil
       end
 
       # ---- Pruning baselines for oaths that no longer exist (#70) ----
@@ -271,21 +271,21 @@ module Varar
       # the state a deleted or moved .md leaves behind.
       def lock_with_stale_path
         source = 'I withdraw 40.'
-        var_doc, plan = plan_for(source, reg)
-        baseline = described_class.derive_oath_baseline(source, var_doc, plan)
-        described_class.stringify_var_lock(
-          VarLock.new(version: 2, oaths: { 'varar/w.md' => baseline, 'w.md' => baseline })
+        doc, plan = plan_for(source, reg)
+        baseline = described_class.derive_oath_baseline(source, doc, plan)
+        described_class.stringify_lock_file(
+          LockFile.new(version: 2, oaths: { 'varar/w.md' => baseline, 'w.md' => baseline })
         )
       end
 
-      it 'prune_var_lock keeps only the paths it is given' do
-        lock = described_class.parse_var_lock(lock_with_stale_path)
-        expect(described_class.prune_var_lock(lock, ['varar/w.md']).oaths.keys).to eq(['varar/w.md'])
+      it 'prune_lock_file keeps only the paths it is given' do
+        lock = described_class.parse_lock_file(lock_with_stale_path)
+        expect(described_class.prune_lock_file(lock, ['varar/w.md']).oaths.keys).to eq(['varar/w.md'])
       end
 
-      it 'prune_var_lock is a no-op when every path is still live' do
-        lock = described_class.parse_var_lock(lock_with_stale_path)
-        expect(described_class.prune_var_lock(lock, ['varar/w.md', 'w.md'])).to eq(lock)
+      it 'prune_lock_file is a no-op when every path is still live' do
+        lock = described_class.parse_lock_file(lock_with_stale_path)
+        expect(described_class.prune_lock_file(lock, ['varar/w.md', 'w.md'])).to eq(lock)
       end
 
       it 'prune reports stale paths without update, and does not write' do
@@ -299,7 +299,7 @@ module Varar
       it 'prune drops stale paths under update' do
         store = MemoryStore.new(lock_with_stale_path)
         expect(described_class.prune_baselines(store, ['varar/w.md'], update: true)).to eq(['w.md'])
-        expect(described_class.parse_var_lock(store.contents).oaths.keys).to eq(['varar/w.md'])
+        expect(described_class.parse_lock_file(store.contents).oaths.keys).to eq(['varar/w.md'])
       end
 
       it 'prune leaves a lock with no stale paths untouched' do

@@ -49,8 +49,8 @@ fn step_texts(ex: &varar_core::plan::PlannedExample) -> Vec<String> {
 #[test]
 fn plan_produces_a_planned_example_with_steps_in_document_order() {
     let source = "# Withdrawing\n\nGiven I have 100 in my account. When I withdraw 40. Then I should have 60 left.";
-    let var_doc = parse("w.md", source);
-    let result = plan(&var_doc, &reg());
+    let doc = parse("w.md", source);
+    let result = plan(&doc, &reg());
     assert_eq!(0, result.diagnostics.len());
     assert_eq!(1, result.examples.len());
     let ex = &result.examples[0];
@@ -75,8 +75,8 @@ fn plan_emits_an_ambiguous_match_diagnostic_and_produces_no_runnable_example() {
     let r = create_registry();
     let r = step(&r, "I have {int} cukes", "a.ts", 3);
     let r = step(&r, "I have {int} {word}", "a.ts", 8);
-    let var_doc = parse("e.md", "# Ambig\n\nGiven I have 5 cukes");
-    let result = plan(&var_doc, &r);
+    let doc = parse("e.md", "# Ambig\n\nGiven I have 5 cukes");
+    let result = plan(&doc, &r);
     assert_eq!(1, result.diagnostics.len());
     assert_eq!(DiagnosticCode::AmbiguousMatch, result.diagnostics[0].code);
     // An ambiguous candidate has no runnable step, so it is prose (a delimiter),

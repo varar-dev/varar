@@ -1,15 +1,15 @@
-import type { VarConfig } from '@varar/config'
+import type { Config } from '@varar/config'
 import {
   createRegistry,
   deriveOathBaseline,
   detectDrift,
   driftDetected,
+  type LockFile,
   parse,
-  parseVarLock,
+  parseLockFile,
   plan,
   type Registry,
-  stringifyVarLock,
-  type VarLock,
+  stringifyLockFile,
 } from '@varar/core'
 import {
   buildWorkspaceIndex,
@@ -26,7 +26,7 @@ export type { FileSystem } from './file-system.ts'
 
 export type StoreDeps = {
   readonly fs: FileSystem
-  readonly config: VarConfig
+  readonly config: Config
   // Supplies tree-sitter grammar bytes for step-def extraction. Every
   // environment provides one — Node resolves the `.wasm` from node_modules,
   // the browser worker fetches bundled URLs — so extraction goes through the
@@ -45,7 +45,7 @@ export type Store = {
   stepPaths(): ReadonlyArray<string>
   // Whether a file is a var oath — i.e. it was discovered by the `docs` globs.
   // There is no `.md` extension to key off of; the config defines oaths.
-  isVarDoc(path: string): boolean
+  isDoc(path: string): boolean
   // Accept drift for one oath: re-record its varar.lock.json baseline to the
   // current live examples, so a now-prose paragraph is no longer flagged. The
   // caller reindexes afterwards to clear the squiggle.
@@ -59,7 +59,7 @@ export type Store = {
 // no varar.lock.json — drift there is shown via the run pipeline, not the LSP).
 async function driftDiagnosticRefs(
   fs: FileSystem,
-  varFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>,
+  oathFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>,
   registry: Registry,
 ): Promise<DiagnosticRef[]> {
   const [lockAbs] = await fs.list({ include: ['varar.lock.json'], exclude: [] })
@@ -70,19 +70,19 @@ async function driftDiagnosticRefs(
   } catch {
     return []
   }
-  const lock = parseVarLock(lockText)
+  const lock = parseLockFile(lockText)
   if (!lock) return []
   // varar.lock.json sits at the workspace root; trim it to get the root prefix
   // (string-only, so this stays free of node:path for the browser build).
   const root = lockAbs.slice(0, lockAbs.length - 'varar.lock.json'.length).replace(/[/\\]+$/, '')
   const refs: DiagnosticRef[] = []
-  for (const vf of varFiles) {
+  for (const vf of oathFiles) {
     const oathPath = toOathPath(root, vf.path)
     const baseline = lock.oaths[oathPath]
     if (!baseline) continue
-    const varDoc = parse(vf.path, vf.source)
-    const executionPlan = plan(varDoc, registry)
-    for (const drift of detectDrift(baseline, varDoc, executionPlan)) {
+    const doc = parse(vf.path, vf.source)
+    const executionPlan = plan(doc, registry)
+    for (const drift of detectDrift(baseline, doc, executionPlan)) {
       const diag = driftDetected({ name: drift.name, span: drift.span })
       refs.push({
         varPath: vf.path,
@@ -150,19 +150,19 @@ export function createStore(deps: StoreDeps): Store {
       const stepFiles = await Promise.all(
         stepPaths.map(async (path) => ({ path, source: await fs.read(path) })),
       )
-      const varFiles = await Promise.all(
+      const oathFiles = await Promise.all(
         varPaths.map(async (path) => ({ path, source: await fs.read(path) })),
       )
       current = buildWorkspaceIndex({
         stepFiles,
-        varFiles,
+        oathFiles,
         scanner,
       })
       // Drift is a run-result concern, but the LSP surfaces it live: a
       // paragraph the committed varar.lock.json recorded as an example that now
       // matches no step gets a warning squiggle. Additive to the index's own
       // parse/plan diagnostics.
-      const drift = await driftDiagnosticRefs(fs, varFiles, current.registry)
+      const drift = await driftDiagnosticRefs(fs, oathFiles, current.registry)
       if (drift.length > 0)
         current = { ...current, diagnostics: [...current.diagnostics, ...drift] }
     },
@@ -173,24 +173,24 @@ export function createStore(deps: StoreDeps): Store {
     stepPaths: () => currentStepPaths,
     // Delegates to the filesystem port so unsaved editor buffers (which the
     // disk-backed index can't see) are still recognised as oath docs.
-    isVarDoc: (path) => fs.matches(path, config.docs),
+    isDoc: (path) => fs.matches(path, config.docs),
     async acceptDrift(varPath) {
       const [lockAbs] = await fs.list({ include: ['varar.lock.json'], exclude: [] })
       // No baseline file yet → nothing has been recorded, so nothing to accept.
       if (!lockAbs) return
-      const existing = parseVarLock(await fs.read(lockAbs).catch(() => ''))
+      const existing = parseLockFile(await fs.read(lockAbs).catch(() => ''))
       const root = lockAbs
         .slice(0, lockAbs.length - 'varar.lock.json'.length)
         .replace(/[/\\]+$/, '')
       const oathPath = toOathPath(root, varPath)
       const source = await fs.read(varPath)
-      const varDoc = parse(varPath, source)
-      const baseline = deriveOathBaseline(source, varDoc, plan(varDoc, current.registry))
-      const next: VarLock = {
+      const doc = parse(varPath, source)
+      const baseline = deriveOathBaseline(source, doc, plan(doc, current.registry))
+      const next: LockFile = {
         version: 2,
         oaths: { ...(existing?.oaths ?? {}), [oathPath]: baseline },
       }
-      await fs.write(lockAbs, stringifyVarLock(next))
+      await fs.write(lockAbs, stringifyLockFile(next))
     },
     fs: () => fs,
   }

@@ -45,12 +45,12 @@ export function registerHandlers(
     handlers = buildHandlers(store)
     await store.reindex()
     runResults = createRunResultsStore(root ?? '')
-    const varJsonPaths = await store.fs().list({ include: ['**/.var/**/*.json'], exclude: [] })
+    const varJsonPaths = await store.fs().list({ include: ['**/.varar/**/*.json'], exclude: [] })
     for (const p of varJsonPaths) {
       try {
         runResults.ingest(p, await store.fs().read(p))
       } catch {
-        // a .var file that vanished between list and read — ignore
+        // a .varar file that vanished between list and read — ignore
       }
     }
     afterReindex()
@@ -64,7 +64,7 @@ export function registerHandlers(
         completionProvider: { resolveProvider: false },
         // "Accept as prose" on a drift diagnostic, executed via a server command.
         codeActionProvider: { codeActionKinds: [CodeActionKind.QuickFix] },
-        executeCommandProvider: { commands: ['var.acceptDrift'] },
+        executeCommandProvider: { commands: ['varar.acceptDrift'] },
         semanticTokensProvider: {
           legend: {
             tokenTypes: [...SEMANTIC_LEGEND.tokenTypes],
@@ -89,7 +89,7 @@ export function registerHandlers(
     if (!runResults) return
     for (const change of params.changes) {
       const path = uriToPath(change.uri)
-      if (!path.includes('/.var/') || !path.endsWith('.json')) continue
+      if (!path.includes('/.varar/') || !path.endsWith('.json')) continue
       // FileChangeType: 1 Created, 2 Changed, 3 Deleted
       const oathUri = change.type === 3 ? runResults.remove(path) : await ingestWatched(path)
       if (oathUri) await publishFor(oathUri)
@@ -166,7 +166,7 @@ export function registerHandlers(
       diagnostics: drifted,
       command: {
         title: 'Accept as prose',
-        command: 'var.acceptDrift',
+        command: 'varar.acceptDrift',
         arguments: [params.textDocument.uri],
       },
     }
@@ -174,7 +174,7 @@ export function registerHandlers(
   })
 
   connection.onExecuteCommand(async (params) => {
-    if (params.command !== 'var.acceptDrift' || !store) return
+    if (params.command !== 'varar.acceptDrift' || !store) return
     const uri = params.arguments?.[0] as string | undefined
     if (!uri) return
     await store.acceptDrift(uriToPath(uri))

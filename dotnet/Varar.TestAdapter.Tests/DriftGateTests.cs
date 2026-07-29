@@ -136,7 +136,7 @@ public class DriftGateTests
                 Path.Combine(_root, "varar.config.json"),
                 """{ "docs": { "include": ["varar/**/*.md"], "exclude": [] } }""");
             File.WriteAllText(Path.Combine(_root, OathPath), Oath);
-            Workspace = new VararAdapter.Workspace(_root, VarConfig.Load(_root), BuildRegistry());
+            Workspace = new VararAdapter.Workspace(_root, ConfigFile.Load(_root), BuildRegistry());
         }
 
         public VararAdapter.Workspace Workspace { get; }
@@ -154,7 +154,7 @@ public class DriftGateTests
         /// </summary>
         public void BaselineAlsoClaims(string paragraph)
         {
-            var lockFile = DriftDetection.ParseVarLock(ReadLock())
+            var lockFile = DriftDetection.ParseLockFile(ReadLock())
                 ?? throw new InvalidOperationException("baseline not recorded");
             var oath = lockFile.Oaths[OathPath];
             var claimed = oath with
@@ -163,7 +163,7 @@ public class DriftGateTests
             };
             File.WriteAllText(
                 LockPath,
-                DriftDetection.StringifyVarLock(new VarLock(2, lockFile.Oaths.SetItem(OathPath, claimed))));
+                DriftDetection.StringifyLockFile(new LockFile(2, lockFile.Oaths.SetItem(OathPath, claimed))));
         }
 
         public void Dispose() => Directory.Delete(_root, recursive: true);

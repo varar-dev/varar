@@ -80,7 +80,7 @@ public static class Discovery
         include.Any(g => GlobToRegex(g).IsMatch(relPosix)) && !exclude.Any(g => GlobToRegex(g).IsMatch(relPosix));
 
     /// <summary>Files under <paramref name="root"/> matching <c>docs.include</c> and no <c>docs.exclude</c>, sorted.</summary>
-    public static ImmutableArray<string> FindOaths(ParsedVarConfig config, string root)
+    public static ImmutableArray<string> FindOaths(ParsedConfig config, string root)
     {
         if (!Directory.Exists(root))
         {

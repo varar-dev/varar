@@ -76,7 +76,7 @@ export function activate(context: ExtensionContext): void {
       { scheme: 'file', pattern: '**/*Steps.java' },
     ],
     synchronize: {
-      fileEvents: workspace.createFileSystemWatcher('**/.var/**/*.json'),
+      fileEvents: workspace.createFileSystemWatcher('**/.varar/**/*.json'),
     },
   }
   client = new LanguageClient('varar', 'Varar', serverOptions, clientOptions)

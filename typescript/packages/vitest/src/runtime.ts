@@ -24,7 +24,7 @@ export type CollectPorts = {
   readonly expectedCount?: number
   // This oath's committed drift baseline (from varar.lock.json), injected by the
   // plugin. When present, drift is detected and reported as a diagnostic (a
-  // failing `var:diagnostic:drift` test) — a read-only gate. The baseline is
+  // failing `varar:diagnostic:drift` test) — a read-only gate. The baseline is
   // written only by `varar run`; VARAR_UPDATE=1 skips the gate so you can
   // re-record it there without vitest going red first.
   readonly baseline?: OathBaseline | null
@@ -49,7 +49,7 @@ export function collectVararExamples(
 ): ReadonlyArray<CollectedExample> {
   const reporter: Reporter = ports.reporter ?? {
     diagnostic: (d) =>
-      test(`var:diagnostic:${d.code}`, () => {
+      test(`varar:diagnostic:${d.code}`, () => {
         throw new Error(d.message)
       }),
   }
@@ -61,7 +61,7 @@ export function collectVararExamples(
   if (ports.baseline) {
     const update = process.env.VARAR_UPDATE === '1' || process.env.VARAR_UPDATE === 'true'
     if (!update) {
-      for (const d of driftDiagnostics(detectDrift(ports.baseline, p.varDoc, p))) {
+      for (const d of driftDiagnostics(detectDrift(ports.baseline, p.doc, p))) {
         reporter.diagnostic(d)
       }
     }
@@ -72,7 +72,7 @@ export function collectVararExamples(
     run,
   }))
   if (ports.expectedCount !== undefined && examples.length !== ports.expectedCount) {
-    test('var:stale-oath-transform', () => {
+    test('varar:stale-oath-transform', () => {
       throw new Error(
         `expected ${ports.expectedCount} example(s) in ${path} but the runtime planned ` +
           `${examples.length} — the step definitions changed after this oath was transformed; re-run the suite`,
@@ -82,9 +82,9 @@ export function collectVararExamples(
   return examples
 }
 
-// Structural slice of vitest's TestContext — enough to attach varResult
+// Structural slice of vitest's TestContext — enough to attach vararResult
 // without importing vitest types into the runtime.
-type TaskContext = { readonly task: { readonly meta: { varResult?: unknown } } }
+type TaskContext = { readonly task: { readonly meta: { vararResult?: unknown } } }
 
 // A single failing cell diffs as its bare value ("JMK" vs "JFK"); several diff
 // as a value list in document order (`["LGR", "JMK"]` vs `["LHR", "JFK"]`).
@@ -147,9 +147,9 @@ export function vararTestBody(
     const lines = ex.lines
     try {
       await ex.run()
-      ctx.task.meta.varResult = { name, status: 'passed', lines }
+      ctx.task.meta.vararResult = { name, status: 'passed', lines }
     } catch (error) {
-      ctx.task.meta.varResult = {
+      ctx.task.meta.vararResult = {
         name,
         status: 'failed',
         lines,

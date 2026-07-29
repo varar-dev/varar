@@ -16,8 +16,8 @@ import org.junit.platform.testkit.engine.EngineTestKit
  */
 class JUnitEngineSmokeTest {
 
-    // VarFileSelectorResolver relativizes a FileSelector's path against the config root
-    // (var.config.root) before testing it against docsInclude, so an oath written INTO the
+    // OathFileSelectorResolver relativizes a FileSelector's path against the config root
+    // (varar.config.root) before testing it against docsInclude, so an oath written INTO the
     // workspace just needs the bare filename as its include. On macOS
     // DiscoverySelectors.selectFile(File) canonicalizes (resolving @TempDir's
     // /var -> /private/var symlink), so the root must be canonicalized the same way or the

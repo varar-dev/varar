@@ -35,9 +35,9 @@ describe('runLspDiagnostics', () => {
 })
 
 describe('RunResultsStore', () => {
-  it('ingests a valid .var json and keys it by the oath file URI', () => {
+  it('ingests a valid .varar json and keys it by the oath file URI', () => {
     const store = createRunResultsStore('file:///root')
-    const uri = store.ingest('/root/.var/docs/a.md.json', JSON.stringify(OATH))
+    const uri = store.ingest('/root/.varar/docs/a.md.json', JSON.stringify(OATH))
     expect(uri).toBe('file:///root/docs/a.md')
     expect(store.get('file:///root/docs/a.md')).toEqual(OATH)
     expect(store.oathUris()).toEqual(['file:///root/docs/a.md'])
@@ -45,10 +45,10 @@ describe('RunResultsStore', () => {
 
   it('rejects malformed JSON and a wrong version (stores nothing)', () => {
     const store = createRunResultsStore('file:///root')
-    expect(store.ingest('/root/.var/x.json', 'not json')).toBeNull()
+    expect(store.ingest('/root/.varar/x.json', 'not json')).toBeNull()
     expect(
       store.ingest(
-        '/root/.var/x.json',
+        '/root/.varar/x.json',
         JSON.stringify({ version: 2, oathPath: 'x', sourceHash: 'h', examples: [] }),
       ),
     ).toBeNull()
@@ -57,8 +57,8 @@ describe('RunResultsStore', () => {
 
   it('remove() drops the entry and returns its oath URI', () => {
     const store = createRunResultsStore('file:///root')
-    store.ingest('/root/.var/docs/a.md.json', JSON.stringify(OATH))
-    expect(store.remove('/root/.var/docs/a.md.json')).toBe('file:///root/docs/a.md')
+    store.ingest('/root/.varar/docs/a.md.json', JSON.stringify(OATH))
+    expect(store.remove('/root/.varar/docs/a.md.json')).toBe('file:///root/docs/a.md')
     expect(store.get('file:///root/docs/a.md')).toBeUndefined()
   })
 })

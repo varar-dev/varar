@@ -5,8 +5,8 @@
 //! are dropped: the Rust enums *are* the compiler-enforced closed sets.
 
 use varar_core::ast::{
-    Block, Blockquote, Example, Fence, Heading, ListItem, Paragraph, Row, SegmentOffset, Table,
-    TableOrFence, ThematicBreak, VarDoc,
+    Block, Blockquote, Doc, Example, Fence, Heading, ListItem, Paragraph, Row, SegmentOffset,
+    Table, TableOrFence, ThematicBreak,
 };
 use varar_core::span::Span;
 
@@ -168,7 +168,7 @@ fn example_exposes_fields() {
 }
 
 #[test]
-fn var_doc_exposes_fields() {
+fn doc_exposes_fields() {
     let example = Example {
         scope_stack: vec![],
         span: SPAN,
@@ -181,7 +181,7 @@ fn var_doc_exposes_fields() {
         body: String::new(),
         body_span: SPAN,
     });
-    let doc = VarDoc {
+    let doc = Doc {
         path: "oath.md".to_string(),
         source: "# Title".to_string(),
         examples: vec![example],

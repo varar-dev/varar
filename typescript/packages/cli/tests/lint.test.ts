@@ -5,7 +5,7 @@ import { expect, test } from 'vitest'
 import { runLint } from '../src/lint.ts'
 
 test('exit code 0 when no diagnostics found', async () => {
-  const dir = mkdtempSync(join(tmpdir(), 'var-lint-clean-'))
+  const dir = mkdtempSync(join(tmpdir(), 'varar-lint-clean-'))
   try {
     writeFileSync(join(dir, 'docs.md'), '# Just docs\n\nSome prose with no keyword-led sentences.')
     const result = await runLint({
@@ -23,7 +23,7 @@ test('exit code 0 when no diagnostics found', async () => {
 test('a standalone table or fenced code block is not a lint error', async () => {
   // Tables and fenced code blocks that do not attach to a step are valid
   // Markdown content, not mistakes — `varar lint` stays quiet about them.
-  const dir = mkdtempSync(join(tmpdir(), 'var-lint-text-'))
+  const dir = mkdtempSync(join(tmpdir(), 'varar-lint-text-'))
   try {
     writeFileSync(join(dir, 'a.md'), '# A\n\n```js\nx=1\n```\n\n| a | b |\n|---|---|\n| 1 | 2 |\n')
     const captured: string[] = []

@@ -108,7 +108,7 @@ pub fn trials(root: &Path, build_registry: BuildRegistry, context: ContextFactor
         let doc = parse(&oath_file, &source);
         for drifted in reconcile_drift(&mut store, &rel, &source, &doc, &execution, update) {
             let message = drift::message(&drifted);
-            trials.push(Trial::test(format!("{rel}::var:drift:{}", drifted.line), move || {
+            trials.push(Trial::test(format!("{rel}::varar:drift:{}", drifted.line), move || {
                 Err(Failed::from(message))
             }));
         }
@@ -123,6 +123,6 @@ pub fn run(root: &Path, build_registry: BuildRegistry, context: ContextFactory) 
     libtest_mimic::run(&args, trials(root, build_registry, context)).exit();
 }
 
-fn read_config(root: &Path) -> varar_config::VarConfig {
-    varar_config::read_var_config(root).unwrap_or_else(|e| panic!("{e}"))
+fn read_config(root: &Path) -> varar_config::Config {
+    varar_config::read_config(root).unwrap_or_else(|e| panic!("{e}"))
 }

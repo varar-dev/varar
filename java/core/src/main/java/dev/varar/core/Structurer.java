@@ -14,7 +14,7 @@ import java.util.List;
  *
  * <p>Tables and fences immediately following a candidate (with no intervening heading or thematic
  * break) attach to that candidate's body so the planner can hand them to the last matched step.
- * Otherwise they're orphans, collected into {@link Ast.VarDoc#orphanAttachments}.
+ * Otherwise they're orphans, collected into {@link Ast.Doc#orphanAttachments}.
  *
  * <p>This is pure syntax — it does NOT decide where one example ends and the next begins. Instead
  * each candidate records {@link Ast.Example#precededByDelimiter} (a heading or {@code ---} sits
@@ -28,8 +28,8 @@ public final class Structurer {
     /** One entry of the heading scope stack: a heading's level plus its text. */
     private record ScopeEntry(int level, String text) {}
 
-    /** Groups {@code blocks} (as scanned from {@code source}) into a {@link Ast.VarDoc}. */
-    public static Ast.VarDoc structure(String path, String source, List<Ast.Block> blocks) {
+    /** Groups {@code blocks} (as scanned from {@code source}) into a {@link Ast.Doc}. */
+    public static Ast.Doc structure(String path, String source, List<Ast.Block> blocks) {
         List<Ast.Example> examples = new ArrayList<>();
         List<Ast.TableOrFence> orphanAttachments = new ArrayList<>();
         List<ScopeEntry> scopeStack = new ArrayList<>();
@@ -76,7 +76,7 @@ public final class Structurer {
             }
         }
 
-        return new Ast.VarDoc(path, source, examples, orphanAttachments);
+        return new Ast.Doc(path, source, examples, orphanAttachments);
     }
 
     private static List<String> scopeTexts(List<ScopeEntry> scopeStack) {

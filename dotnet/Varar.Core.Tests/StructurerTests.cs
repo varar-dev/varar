@@ -11,7 +11,7 @@ public class StructurerTests
     public void PrecededByDelimiterMarksCandidatesAfterAHeadingOrThematicBreak()
     {
         const string source = "First para.\n\nSecond para.\n\n---\n\nThird para.\n\n## H\n\nFourth para.";
-        var varDoc = Structurer.Structure("d.md", source, Scanner.Scan(source));
+        var doc = Structurer.Structure("d.md", source, Scanner.Scan(source));
         Assert.Equal(
             new[]
             {
@@ -20,6 +20,6 @@ public class StructurerTests
                 true,  // after `---`
                 true,  // after a heading
             },
-            varDoc.Examples.Select(e => e.PrecededByDelimiter).ToArray());
+            doc.Examples.Select(e => e.PrecededByDelimiter).ToArray());
     }
 }

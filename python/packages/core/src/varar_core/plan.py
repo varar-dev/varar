@@ -1,6 +1,6 @@
 """plan.py — port of var-core/src/plan.ts.
 
-Produces an ExecutionPlan from a VarDoc + Registry by matching step
+Produces an ExecutionPlan from a Doc + Registry by matching step
 expressions against every text-bearing block in each example, attaching
 trailing tables / fenced code blocks, detecting header-bound tables, and
 collecting diagnostics.
@@ -11,7 +11,7 @@ import re
 from dataclasses import dataclass
 from typing import Literal
 
-from varar_core.ast import Block, Example, Fence, SegmentOffset, Table, VarDoc
+from varar_core.ast import Block, Example, Fence, SegmentOffset, Table, Doc
 from varar_core.cell_diff import RowCheck
 from varar_core.diagnostics import (
     AmbiguousInput,
@@ -79,7 +79,7 @@ class PlannedExample:
 
 @dataclass(frozen=True, slots=True)
 class ExecutionPlan:
-    var_doc: VarDoc
+    doc: Doc
     examples: tuple[PlannedExample, ...]
     diagnostics: tuple[Diagnostic, ...]
 
@@ -358,7 +358,7 @@ def _finish_merged(open_ex: _MergedExample, source: str) -> PlannedExample:
     )
 
 
-def plan(var_doc: VarDoc, registry: Registry) -> ExecutionPlan:
+def plan(doc: Doc, registry: Registry) -> ExecutionPlan:
     """Mirror plan() from plan.ts.
 
     Phase 1 plans each candidate paragraph independently into a "unit"; phase 2
@@ -368,7 +368,7 @@ def plan(var_doc: VarDoc, registry: Registry) -> ExecutionPlan:
     diagnostics: list[Diagnostic] = []
 
     # Phase 1: plan each candidate paragraph independently into a "unit".
-    units = [_plan_candidate(ex, var_doc, registry, diagnostics) for ex in var_doc.examples]
+    units = [_plan_candidate(ex, doc, registry, diagnostics) for ex in doc.examples]
 
     # Phase 2: group adjacent candidates into examples. A matching candidate
     # continues the open example when no delimiter (heading / `---`) precedes it;
@@ -381,7 +381,7 @@ def plan(var_doc: VarDoc, registry: Registry) -> ExecutionPlan:
     def flush() -> None:
         nonlocal open_ex
         if open_ex is not None:
-            examples.append(_finish_merged(open_ex, var_doc.source))
+            examples.append(_finish_merged(open_ex, doc.source))
         open_ex = None
 
     for unit in units:
@@ -404,7 +404,7 @@ def plan(var_doc: VarDoc, registry: Registry) -> ExecutionPlan:
     # not a mistake — it produces no diagnostic.
 
     return ExecutionPlan(
-        var_doc=var_doc,
+        doc=doc,
         examples=tuple(examples),
         diagnostics=tuple(diagnostics),
     )
@@ -412,7 +412,7 @@ def plan(var_doc: VarDoc, registry: Registry) -> ExecutionPlan:
 
 def _plan_candidate(
     ex: Example,
-    var_doc: VarDoc,
+    doc: Doc,
     registry: Registry,
     diagnostics: list[Diagnostic],
 ) -> _CandidateUnit:
@@ -432,7 +432,7 @@ def _plan_candidate(
 
         for collision in result.ambiguities:
             span = _lift_span(
-                var_doc.source,
+                doc.source,
                 block,
                 collision.match_start,
                 collision.match_end,
@@ -466,10 +466,10 @@ def _plan_candidate(
                 PlannedStep(
                     text=_utf16_slice(block.text, hit.match_start, hit.match_end),  # type: ignore[union-attr]
                     match_span=_lift_span(
-                        var_doc.source, block, hit.match_start, hit.match_end
+                        doc.source, block, hit.match_start, hit.match_end
                     ),
                     param_spans=tuple(
-                        _lift_span(var_doc.source, block, p.start, p.end)
+                        _lift_span(doc.source, block, p.start, p.end)
                         for p in hit.param_spans
                     ),
                     step_def=hit.step_def,
@@ -483,7 +483,7 @@ def _plan_candidate(
     # ------------------------------------------------------------------
     # Header-bound table detection
     # ------------------------------------------------------------------
-    bound = _detect_header_bound(ex, steps_by_block, var_doc.source) if not had_ambiguous else None
+    bound = _detect_header_bound(ex, steps_by_block, doc.source) if not had_ambiguous else None
 
     if bound is not None:
         table, binding_step, header_spans = bound

@@ -28,8 +28,8 @@ module Varar
         load steps_rb
         registry = RegistryGlue.build_registry
         source = File.read(File.join(corpus, bundle, 'example.md'), encoding: 'UTF-8')
-        var_doc = Core::Parse.parse('example.md', source)
-        plan = Core::Plan.plan(var_doc, registry)
+        doc = Core::Parse.parse('example.md', source)
+        plan = Core::Plan.plan(doc, registry)
         actual = Core::CanonicalJson.canonical_stringify(Core::Conformance.to_plan_artifact(plan))
         expect(actual).to eq(File.read(golden, encoding: 'UTF-8'))
       end

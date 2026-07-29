@@ -87,7 +87,7 @@ export type Example = {
   readonly precededByDelimiter: boolean
 }
 
-export type VarDoc = {
+export type Doc = {
   readonly path: string
   readonly source: string
   readonly examples: ReadonlyArray<Example>

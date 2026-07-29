@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
  * Oath drift detection — port of {@code var-core/src/drift.ts}.
  *
  * <p>A paragraph the committed {@code varar.lock.json} baseline recorded as an example that now
- * matches no step. Pure over the existing {@link Ast.VarDoc} + {@link Plan.ExecutionPlan}, and
+ * matches no step. Pure over the existing {@link Ast.Doc} + {@link Plan.ExecutionPlan}, and
  * byte-identical to the TypeScript and Python ports so a baseline written by one runs green under
  * the others: the same FNV-1a fingerprint ({@link Hash}), the same {@code varar.lock.json} bytes
  * (insertion-ordered keys, sorted oath paths, raw non-ASCII), and the same similarity semantics.
@@ -45,8 +45,8 @@ public final class Drift {
     }
 
     /** The whole {@code varar.lock.json}: every oath keyed by its POSIX path. */
-    public record VarLock(int version, Map<String, OathBaseline> oaths) {
-        public VarLock {
+    public record LockFile(int version, Map<String, OathBaseline> oaths) {
+        public LockFile {
             oaths = Collections.unmodifiableMap(new LinkedHashMap<>(oaths));
         }
     }
@@ -105,9 +105,9 @@ public final class Drift {
     }
 
     /** The current example-producing paragraphs, in document order. */
-    public static List<BaselineExample> liveExamples(Ast.VarDoc varDoc, Plan.ExecutionPlan plan) {
+    public static List<BaselineExample> liveExamples(Ast.Doc doc, Plan.ExecutionPlan plan) {
         List<BaselineExample> out = new ArrayList<>();
-        for (Ast.Example c : varDoc.examples()) {
+        for (Ast.Example c : doc.examples()) {
             if (isLive(c.span(), plan)) {
                 out.add(new BaselineExample(
                         Plan.deriveExampleName(c.body()), c.span().startLine()));
@@ -117,8 +117,8 @@ public final class Drift {
     }
 
     /** The full baseline record for an oath: fingerprint plus live examples. */
-    public static OathBaseline deriveOathBaseline(String source, Ast.VarDoc varDoc, Plan.ExecutionPlan plan) {
-        return new OathBaseline(Hash.hashSource(source), liveExamples(varDoc, plan));
+    public static OathBaseline deriveOathBaseline(String source, Ast.Doc doc, Plan.ExecutionPlan plan) {
+        return new OathBaseline(Hash.hashSource(source), liveExamples(doc, plan));
     }
 
     /**
@@ -127,10 +127,10 @@ public final class Drift {
      * name scores 1; ties break toward the nearest line). No sourceHash short-circuit — a step
      * rename leaves the hash untouched.
      */
-    public static List<Drifted> detectDrift(OathBaseline baseline, Ast.VarDoc varDoc, Plan.ExecutionPlan plan) {
+    public static List<Drifted> detectDrift(OathBaseline baseline, Ast.Doc doc, Plan.ExecutionPlan plan) {
         List<Drifted> drifts = new ArrayList<>();
         if (baseline == null) return drifts;
-        List<Ast.Example> candidates = varDoc.examples();
+        List<Ast.Example> candidates = doc.examples();
         int n = candidates.size();
         List<Set<String>> tokens = new ArrayList<>(n);
         boolean[] live = new boolean[n];
@@ -174,38 +174,33 @@ public final class Drift {
      * clean run so an unacknowledged drift keeps its old entry (and stays red).
      */
     public static List<Drifted> reconcileDrift(
-            BaselineStore store,
-            String oathPath,
-            String source,
-            Ast.VarDoc varDoc,
-            Plan.ExecutionPlan plan,
-            boolean update) {
+            BaselineStore store, String oathPath, String source, Ast.Doc doc, Plan.ExecutionPlan plan, boolean update) {
         String text = store.read();
-        VarLock lock = text != null ? parseVarLock(text) : null;
+        LockFile lock = text != null ? parseLockFile(text) : null;
         OathBaseline baseline = lock != null ? lock.oaths().get(oathPath) : null;
-        List<Drifted> drifts = update ? new ArrayList<>() : detectDrift(baseline, varDoc, plan);
+        List<Drifted> drifts = update ? new ArrayList<>() : detectDrift(baseline, doc, plan);
         if (update || drifts.isEmpty()) {
-            OathBaseline next = deriveOathBaseline(source, varDoc, plan);
+            OathBaseline next = deriveOathBaseline(source, doc, plan);
             Map<String, OathBaseline> oaths = new LinkedHashMap<>();
             if (lock != null) oaths.putAll(lock.oaths());
             oaths.put(oathPath, next);
-            store.write(stringifyVarLock(new VarLock(2, oaths)));
+            store.write(stringifyLockFile(new LockFile(2, oaths)));
         }
         return drifts;
     }
 
     /**
      * Drops every baseline whose oath path is not in {@code keepPaths} — the entries left behind
-     * when an oath is deleted or moved. Pure counterpart of {@link #parseVarLock} / {@link
-     * #stringifyVarLock}; the caller decides what "still exists" means.
+     * when an oath is deleted or moved. Pure counterpart of {@link #parseLockFile} / {@link
+     * #stringifyLockFile}; the caller decides what "still exists" means.
      */
-    public static VarLock pruneVarLock(VarLock lock, Collection<String> keepPaths) {
+    public static LockFile pruneLockFile(LockFile lock, Collection<String> keepPaths) {
         Set<String> keep = new LinkedHashSet<>(keepPaths);
         Map<String, OathBaseline> oaths = new LinkedHashMap<>();
         for (Map.Entry<String, OathBaseline> entry : lock.oaths().entrySet()) {
             if (keep.contains(entry.getKey())) oaths.put(entry.getKey(), entry.getValue());
         }
-        return new VarLock(2, oaths);
+        return new LockFile(2, oaths);
     }
 
     /**
@@ -224,7 +219,7 @@ public final class Drift {
      */
     public static List<String> pruneBaselines(BaselineStore store, Collection<String> keepPaths, boolean update) {
         String text = store.read();
-        VarLock lock = text != null ? parseVarLock(text) : null;
+        LockFile lock = text != null ? parseLockFile(text) : null;
         if (lock == null) return new ArrayList<>();
         Set<String> keep = new LinkedHashSet<>(keepPaths);
         List<String> stale = new ArrayList<>();
@@ -233,7 +228,7 @@ public final class Drift {
         }
         Collections.sort(stale);
         if (update && !stale.isEmpty()) {
-            store.write(stringifyVarLock(pruneVarLock(lock, keepPaths)));
+            store.write(stringifyLockFile(pruneLockFile(lock, keepPaths)));
         }
         return stale;
     }
@@ -245,7 +240,7 @@ public final class Drift {
      * paths sorted), examples in document order, two-space indent, trailing newline, non-ASCII
      * raw. NOT {@link CanonicalJson} (which sorts every key) — the lockfile keeps insertion order.
      */
-    public static String stringifyVarLock(VarLock lock) {
+    public static String stringifyLockFile(LockFile lock) {
         List<String> paths = new ArrayList<>(lock.oaths().keySet());
         Collections.sort(paths);
         StringBuilder sb = new StringBuilder();
@@ -315,7 +310,7 @@ public final class Drift {
     // ---- parse (a minimal JSON reader; no library in the project) ----------
 
     /** Parses {@code varar.lock.json}; {@code null} on malformed input (treated as no baseline). */
-    public static VarLock parseVarLock(String text) {
+    public static LockFile parseLockFile(String text) {
         Object parsed;
         try {
             parsed = new JsonReader(text).parseWhole();
@@ -331,7 +326,7 @@ public final class Drift {
             if (b == null) return null;
             oaths.put((String) entry.getKey(), b);
         }
-        return new VarLock(2, oaths);
+        return new LockFile(2, oaths);
     }
 
     private static OathBaseline parseOathBaseline(Object value) {

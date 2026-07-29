@@ -87,13 +87,13 @@ internal static class VararAdapter
         {
             var relName = Discovery.RelPosix(oath, workspace.Root);
             string text;
-            VarDoc varDoc;
+            Doc doc;
             ExecutionPlan plan;
             try
             {
                 text = File.ReadAllText(oath);
-                varDoc = Parse.Run(relName, text);
-                plan = Plan.Run(varDoc, workspace.Registry);
+                doc = Parse.Run(relName, text);
+                plan = Plan.Run(doc, workspace.Registry);
             }
             catch (Exception e)
             {
@@ -118,7 +118,7 @@ internal static class VararAdapter
             ImmutableArray<Drift> drifts;
             try
             {
-                drifts = DriftDetection.ReconcileDrift(baselineStore, relName, text, varDoc, plan, update);
+                drifts = DriftDetection.ReconcileDrift(baselineStore, relName, text, doc, plan, update);
             }
             catch (Exception e)
             {
@@ -128,7 +128,7 @@ internal static class VararAdapter
 
             foreach (var drift in drifts)
             {
-                var testCase = new TestCase($"{relName}::var:drift:{drift.Line}", new Uri(ExecutorUri), source)
+                var testCase = new TestCase($"{relName}::varar:drift:{drift.Line}", new Uri(ExecutorUri), source)
                 {
                     DisplayName = $"drift: {drift.Name}",
                     CodeFilePath = oath,
@@ -248,7 +248,7 @@ internal static class VararAdapter
     /// <summary>The built test assembly plus its workspace root (nearest <c>varar.config.json</c>) and registry.</summary>
     internal sealed class Workspace
     {
-        internal Workspace(string root, ParsedVarConfig config, Registry registry)
+        internal Workspace(string root, ParsedConfig config, Registry registry)
         {
             Root = root;
             Config = config;
@@ -257,7 +257,7 @@ internal static class VararAdapter
 
         public string Root { get; }
 
-        public ParsedVarConfig Config { get; }
+        public ParsedConfig Config { get; }
 
         public Registry Registry { get; }
 
@@ -270,7 +270,7 @@ internal static class VararAdapter
             }
 
             var assembly = Assembly.LoadFrom(source);
-            return new Workspace(root, VarConfig.Load(root), RunnerApi.LoadSteps(assembly));
+            return new Workspace(root, ConfigFile.Load(root), RunnerApi.LoadSteps(assembly));
         }
 
         private static string? FindRoot(string? start)

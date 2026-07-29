@@ -57,9 +57,9 @@ public class RunnerTests
             File.WriteAllText(Path.Combine(root, "oaths", "wip", "draft.md"), "x");
             File.WriteAllText(Path.Combine(root, "oaths", "notes.txt"), "x");
 
-            var config = VarConfig.Empty with
+            var config = ConfigFile.Empty with
             {
-                Docs = new VarGlobs(ImmutableArray.Create("oaths/**/*.md"), ImmutableArray.Create("oaths/wip/**")),
+                Docs = new Globs(ImmutableArray.Create("oaths/**/*.md"), ImmutableArray.Create("oaths/wip/**")),
             };
             var oaths = Discovery.FindOaths(config, root)
                 .Select(p => Discovery.RelPosix(p, root))

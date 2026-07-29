@@ -25,7 +25,7 @@ func strList(ss []string) core.Value {
 	return core.ListOf(vs)
 }
 
-func toConfigArtifact(cfg config.VarConfig) core.Value {
+func toConfigArtifact(cfg config.Config) core.Value {
 	snippets := map[string]core.Value{}
 	for k, v := range cfg.Snippets {
 		snippets[k] = core.StrValue(v)
@@ -58,7 +58,7 @@ func TestConfigConformance(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			dir := filepath.Join(casesDir(), name)
 			if _, err := os.Stat(filepath.Join(dir, "expect-error.txt")); err == nil {
-				if _, err := config.ReadVarConfig(dir); err == nil {
+				if _, err := config.ReadConfig(dir); err == nil {
 					t.Errorf("%s: expected an error, got none", name)
 				}
 				return
@@ -67,7 +67,7 @@ func TestConfigConformance(t *testing.T) {
 			if err != nil {
 				t.Fatalf("%s: no golden.json and no expect-error.txt", name)
 			}
-			cfg, err := config.ReadVarConfig(dir)
+			cfg, err := config.ReadConfig(dir)
 			if err != nil {
 				t.Fatalf("%s: unexpected error: %v", name, err)
 			}

@@ -70,7 +70,7 @@ func TestCollectReportsDriftWhenStepRemoved(t *testing.T) {
 	if drift == nil {
 		t.Fatalf("expected a drift case, got %+v", cases)
 	}
-	if !strings.Contains(drift.Name, "var:drift:") {
+	if !strings.Contains(drift.Name, "varar:drift:") {
 		t.Errorf("drift case name: %s", drift.Name)
 	}
 }

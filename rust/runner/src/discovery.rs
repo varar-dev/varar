@@ -3,7 +3,7 @@
 
 use regex::Regex;
 use std::path::{Path, PathBuf};
-use varar_config::VarConfig;
+use varar_config::Config;
 
 /// Translate a glob (`/**/`, `/**`, `**/`, `**`, `*`, `?`) to an anchored regex.
 /// Port of `varar_runner.discovery._glob_to_regex`.
@@ -82,7 +82,7 @@ pub fn match_oath(path: &Path, include: &[String], exclude: &[String], root: &Pa
 
 /// Files under `root` matching any `docs.include` glob and no `docs.exclude`,
 /// sorted.
-pub fn find_oaths(config: &VarConfig, root: &Path) -> Vec<PathBuf> {
+pub fn find_oaths(config: &Config, root: &Path) -> Vec<PathBuf> {
     let mut files = Vec::new();
     walk(root, &mut files);
     let mut kept: Vec<PathBuf> = files

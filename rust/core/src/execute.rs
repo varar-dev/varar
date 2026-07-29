@@ -142,8 +142,8 @@ fn run_example(
     example_index: usize,
     ports: &ExecutePorts,
 ) -> Result<(), StepFailure> {
-    let path = &plan.var_doc.path;
-    let source = &plan.var_doc.source;
+    let path = &plan.doc.path;
+    let source = &plan.doc.source;
     let steps = &ex.steps;
 
     let mut state_by_file: HashMap<String, Rc<dyn Any>> = HashMap::new();

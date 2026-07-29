@@ -16,8 +16,8 @@ func kv(k string, v Value) [2]any { return [2]any{k, v} }
 
 func vint(n int) Value { return IntValue(int64(n)) }
 
-// ToVarDocArtifact projects a parsed VarDoc to the var-doc wire artifact.
-func ToVarDocArtifact(doc VarDoc) Value {
+// ToDocArtifact projects a parsed Doc to the var-doc wire artifact.
+func ToDocArtifact(doc Doc) Value {
 	examples := make([]Value, len(doc.Examples))
 	for i := range doc.Examples {
 		examples[i] = exampleValue(doc.Examples[i])
@@ -175,7 +175,7 @@ func tableOrFenceValue(b Block) Value {
 
 // BundleArtifacts are all four projected wire artifacts for one bundle.
 type BundleArtifacts struct {
-	VarDoc   Value
+	Doc      Value
 	Registry Value
 	Plan     Value
 	Trace    Value
@@ -272,7 +272,7 @@ func fileStem(path string) string {
 
 // RunConformance runs one bundle end-to-end: plan, execute (recording
 // observations), and project all four wire artifacts. Port of runConformance.
-func RunConformance(doc VarDoc, registry Registry, stateFactory func() any) BundleArtifacts {
+func RunConformance(doc Doc, registry Registry, stateFactory func() any) BundleArtifacts {
 	execution := Plan(doc, registry)
 
 	observed := map[int][]StepObservation{}
@@ -347,7 +347,7 @@ func RunConformance(doc VarDoc, registry Registry, stateFactory func() any) Bund
 	trace := obj(kv("examples", ListOf(traceExamples)))
 
 	return BundleArtifacts{
-		VarDoc:   ToVarDocArtifact(doc),
+		Doc:      ToDocArtifact(doc),
 		Registry: ToRegistryArtifact(registry),
 		Plan:     ToPlanArtifact(execution),
 		Trace:    trace,
@@ -383,7 +383,7 @@ func ToRegistryArtifact(registry Registry) Value {
 
 // ToPlanArtifact projects an ExecutionPlan to the plan wire artifact.
 func ToPlanArtifact(plan ExecutionPlan) Value {
-	source := plan.VarDoc.Source
+	source := plan.Doc.Source
 	examples := make([]Value, len(plan.Examples))
 	for i := range plan.Examples {
 		examples[i] = plannedExampleValue(source, plan.Examples[i])

@@ -52,13 +52,13 @@ func TestFindOathsHonoursIncludeAndExclude(t *testing.T) {
 	os.MkdirAll(filepath.Join(root, "sub"), 0o755)
 	os.WriteFile(filepath.Join(root, "sub", "b.md"), []byte("x"), 0o644)
 
-	flat := config.VarConfig{DocsInclude: []string{"*.md"}, DocsExclude: []string{"README.md"}}
+	flat := config.Config{DocsInclude: []string{"*.md"}, DocsExclude: []string{"README.md"}}
 	oaths := runner.FindOaths(flat, root)
 	if len(oaths) != 1 || filepath.Base(oaths[0]) != "a.md" {
 		t.Errorf("flat: got %v", oaths)
 	}
 
-	recursive := config.VarConfig{DocsInclude: []string{"**/*.md"}, DocsExclude: []string{"README.md"}}
+	recursive := config.Config{DocsInclude: []string{"**/*.md"}, DocsExclude: []string{"README.md"}}
 	if got := runner.FindOaths(recursive, root); len(got) != 2 {
 		t.Errorf("recursive: got %v", got)
 	}

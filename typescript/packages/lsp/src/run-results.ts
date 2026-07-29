@@ -39,10 +39,10 @@ function isOathResults(v: unknown): v is OathResults {
 }
 
 export type RunResultsStore = {
-  // Parse a .var/<oath>.json and key it by its oath's file:// URI. Returns that
+  // Parse a .varar/<oath>.json and key it by its oath's file:// URI. Returns that
   // URI, or null if the content is unparseable / the wrong version.
   ingest(varJsonPath: string, content: string): string | null
-  // Forget a .var json (on delete). Returns the oath URI it had mapped, or null.
+  // Forget a .varar json (on delete). Returns the oath URI it had mapped, or null.
   remove(varJsonPath: string): string | null
   get(oathUri: string): OathResults | undefined
   oathUris(): ReadonlyArray<string>

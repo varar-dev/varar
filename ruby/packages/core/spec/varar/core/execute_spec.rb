@@ -13,8 +13,8 @@ module Varar
       # Runs the single example in `source` and returns [caught_error, seen_state].
       def run(source, register, create_context)
         registry = register.call(Registries.create_registry)
-        var_doc = Parse.parse('example.md', source)
-        execution = Plan.plan(var_doc, registry)
+        doc = Parse.parse('example.md', source)
+        execution = Plan.plan(doc, registry)
         caught = nil
         queued = Execute.collect_examples(execution, create_context: create_context)
         queued.each do |q|

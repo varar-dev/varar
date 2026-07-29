@@ -31,7 +31,7 @@ public static class Execute
         Func<string, Value> createContext,
         List<StepObservation> observations)
     {
-        var source = plan.VarDoc.Source;
+        var source = plan.Doc.Source;
         var steps = ex.Steps;
         var stateByFile = new Dictionary<string, Value>(StringComparer.Ordinal);
         Value? lastReturn = null;

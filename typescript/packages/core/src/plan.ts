@@ -1,4 +1,4 @@
-import type { Block, Fence, SegmentOffset, Table, VarDoc } from './ast.ts'
+import type { Block, Doc, Fence, SegmentOffset, Table } from './ast.ts'
 import type { RowCheck } from './cell-diff.ts'
 import { ambiguousMatch, type Diagnostic, errorFenceWithoutStep } from './diagnostics.ts'
 import { findHits, type Hit, resolveHits } from './matcher.ts'
@@ -7,7 +7,7 @@ import { splitSentences } from './sentences.ts'
 import { type Span, spanFromOffsets } from './span.ts'
 
 export type ExecutionPlan = {
-  readonly varDoc: VarDoc
+  readonly doc: Doc
   readonly examples: ReadonlyArray<PlannedExample>
   readonly diagnostics: ReadonlyArray<Diagnostic>
 }
@@ -68,11 +68,11 @@ export type PlannedStep = {
   }
 }
 
-export function plan(varDoc: VarDoc, registry: Registry): ExecutionPlan {
+export function plan(doc: Doc, registry: Registry): ExecutionPlan {
   const diagnostics: Diagnostic[] = []
 
   // Phase 1: plan each candidate paragraph independently into a "unit".
-  const units = varDoc.examples.map((ex) => planCandidate(ex, varDoc, registry, diagnostics))
+  const units = doc.examples.map((ex) => planCandidate(ex, doc, registry, diagnostics))
 
   // Phase 2: group adjacent candidates into examples. A matching candidate
   // continues the open example when no delimiter (heading / `---`) precedes it;
@@ -82,7 +82,7 @@ export function plan(varDoc: VarDoc, registry: Registry): ExecutionPlan {
   const examples: PlannedExample[] = []
   let open: MergedExample | undefined
   const flush = () => {
-    if (open) examples.push(finishMerged(open, varDoc.source))
+    if (open) examples.push(finishMerged(open, doc.source))
     open = undefined
   }
   for (const unit of units) {
@@ -108,7 +108,7 @@ export function plan(varDoc: VarDoc, registry: Registry): ExecutionPlan {
   // A table or fence that doesn't attach to a step is just Markdown content,
   // not a mistake — it produces no diagnostic.
 
-  return { varDoc, examples, diagnostics }
+  return { doc, examples, diagnostics }
 }
 
 // A step-bearing candidate accumulating into one example while adjacent matching
@@ -178,8 +178,8 @@ function finishMerged(open: MergedExample, source: string): PlannedExample {
 // Plan a single candidate paragraph (plus its attached tables/fences) in
 // isolation. Emits ambiguity / error-fence diagnostics into `diagnostics`.
 function planCandidate(
-  ex: VarDoc['examples'][number],
-  varDoc: VarDoc,
+  ex: Doc['examples'][number],
+  doc: Doc,
   registry: Registry,
   diagnostics: Diagnostic[],
 ): CandidateUnit {
@@ -192,7 +192,7 @@ function planCandidate(
       return
     const result = planBlock(block.text, registry)
     for (const collision of result.ambiguities) {
-      const span = liftSpan(varDoc.source, block, collision.matchStart, collision.matchEnd)
+      const span = liftSpan(doc.source, block, collision.matchStart, collision.matchEnd)
       diagnostics.push(
         ambiguousMatch({
           text: block.text.slice(collision.matchStart, collision.matchEnd),
@@ -209,10 +209,10 @@ function planCandidate(
     if (!hadAmbiguous && result.steps.length > 0) {
       const blockSteps: PlannedStep[] = result.steps.map((hit) => ({
         text: block.text.slice(hit.matchStart, hit.matchEnd),
-        matchSpan: liftSpan(varDoc.source, block, hit.matchStart, hit.matchEnd),
-        paramSpans: hit.paramSpans.map((p) => liftSpan(varDoc.source, block, p.start, p.end)),
+        matchSpan: liftSpan(doc.source, block, hit.matchStart, hit.matchEnd),
+        paramSpans: hit.paramSpans.map((p) => liftSpan(doc.source, block, p.start, p.end)),
         paramInnerSpans: hit.paramInnerSpans.map((p) =>
-          liftSpan(varDoc.source, block, p.start, p.end),
+          liftSpan(doc.source, block, p.start, p.end),
         ),
         stepDef: hit.stepDef,
         args: hit.args,
@@ -226,7 +226,7 @@ function planCandidate(
   // case-sensitive) in the matched paragraph above it iterates row by row. The
   // matched step runs once per data row, receiving the row as an object keyed by
   // header cell, and each row becomes its own example.
-  const bound = !hadAmbiguous ? detectHeaderBound(ex, stepsByBlock, varDoc.source) : null
+  const bound = !hadAmbiguous ? detectHeaderBound(ex, stepsByBlock, doc.source) : null
   if (bound) {
     const headerBinding: HeaderBinding = {
       matchSpan: bound.step.matchSpan,

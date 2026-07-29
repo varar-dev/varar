@@ -4,13 +4,13 @@ import {
   deriveOathBaseline,
   detectDrift,
   driftDiagnostics,
+  type LockFile,
   liveExamples,
-  parseVarLock,
+  parseLockFile,
   pruneBaselines,
-  pruneVarLock,
+  pruneLockFile,
   reconcileDrift,
-  stringifyVarLock,
-  type VarLock,
+  stringifyLockFile,
 } from '../src/drift.ts'
 import { hashSource } from '../src/hash.ts'
 import { parse } from '../src/parse.ts'
@@ -70,44 +70,44 @@ function romanReg(withStep = true): Registry {
 
 test('liveExamples records one entry per example-producing paragraph', () => {
   const source = 'I withdraw 40.'
-  const varDoc = parse('w.md', source)
-  const examples = liveExamples(varDoc, plan(varDoc, reg()))
+  const doc = parse('w.md', source)
+  const examples = liveExamples(doc, plan(doc, reg()))
   expect(examples).toEqual([{ name: 'I withdraw 40', line: 1 }])
 })
 
 test('a never-matched paragraph is not recorded as a live example', () => {
   const source = 'Just some prose.'
-  const varDoc = parse('w.md', source)
-  expect(liveExamples(varDoc, plan(varDoc, reg()))).toEqual([])
+  const doc = parse('w.md', source)
+  expect(liveExamples(doc, plan(doc, reg()))).toEqual([])
 })
 
 test('deriveOathBaseline carries the source fingerprint', () => {
   const source = 'I withdraw 40.'
-  const varDoc = parse('w.md', source)
-  const baseline = deriveOathBaseline(source, varDoc, plan(varDoc, reg()))
+  const doc = parse('w.md', source)
+  const baseline = deriveOathBaseline(source, doc, plan(doc, reg()))
   expect(baseline.sourceHash).toBe(hashSource(source))
   expect(baseline.examples).toEqual([{ name: 'I withdraw 40', line: 1 }])
 })
 
 test('no baseline (first run) means no drift', () => {
   const source = 'I withdraw 40.'
-  const varDoc = parse('w.md', source)
-  expect(detectDrift(undefined, varDoc, plan(varDoc, reg()))).toEqual([])
+  const doc = parse('w.md', source)
+  expect(detectDrift(undefined, doc, plan(doc, reg()))).toEqual([])
 })
 
 test('an unchanged oath run against unchanged steps has no drift', () => {
   const source = 'I withdraw 40.'
-  const varDoc = parse('w.md', source)
-  const baseline = deriveOathBaseline(source, varDoc, plan(varDoc, reg()))
-  expect(detectDrift(baseline, varDoc, plan(varDoc, reg()))).toEqual([])
+  const doc = parse('w.md', source)
+  const baseline = deriveOathBaseline(source, doc, plan(doc, reg()))
+  expect(detectDrift(baseline, doc, plan(doc, reg()))).toEqual([])
 })
 
 test('a renamed/deleted step definition drifts (Markdown unchanged, matched by name)', () => {
   const source = 'I withdraw 40.'
-  const varDoc = parse('w.md', source)
-  const baseline = deriveOathBaseline(source, varDoc, plan(varDoc, reg(true)))
+  const doc = parse('w.md', source)
+  const baseline = deriveOathBaseline(source, doc, plan(doc, reg(true)))
   // Same source, but the step is gone now.
-  const drift = detectDrift(baseline, varDoc, plan(varDoc, reg(false)))
+  const drift = detectDrift(baseline, doc, plan(doc, reg(false)))
   expect(bare(drift)).toEqual([{ name: 'I withdraw 40', line: 1 }])
 })
 
@@ -186,8 +186,8 @@ test('a paragraph rewritten past recognition is a remove+add, not drift', () => 
 test('a header-bound table records its binding paragraph once', () => {
   const source =
     'Each row gives a decimal and a roman number:\n\n| decimal | roman |\n| ------: | :---- |\n| 3 | III |\n| 9 | IX |\n'
-  const varDoc = parse('r.md', source)
-  const examples = liveExamples(varDoc, plan(varDoc, romanReg()))
+  const doc = parse('r.md', source)
+  const examples = liveExamples(doc, plan(doc, romanReg()))
   // Two rows run, but the baseline records the single binding paragraph.
   expect(examples).toEqual([{ name: 'Each row gives a decimal and a roman number:', line: 1 }])
 })
@@ -195,17 +195,17 @@ test('a header-bound table records its binding paragraph once', () => {
 test('a header-bound binding paragraph that stops matching drifts', () => {
   const source =
     'Each row gives a decimal and a roman number:\n\n| decimal | roman |\n| ------: | :---- |\n| 3 | III |\n| 9 | IX |\n'
-  const varDoc = parse('r.md', source)
-  const baseline = deriveOathBaseline(source, varDoc, plan(varDoc, romanReg(true)))
-  const drift = detectDrift(baseline, varDoc, plan(varDoc, romanReg(false)))
+  const doc = parse('r.md', source)
+  const baseline = deriveOathBaseline(source, doc, plan(doc, romanReg(true)))
+  const drift = detectDrift(baseline, doc, plan(doc, romanReg(false)))
   expect(bare(drift)).toEqual([{ name: 'Each row gives a decimal and a roman number:', line: 1 }])
 })
 
 test('a drift carries the drifted paragraph span', () => {
   const source = 'Some prose first.\n\nI withdraw 40.'
-  const varDoc = parse('w.md', source)
-  const baseline = deriveOathBaseline(source, varDoc, plan(varDoc, reg(true)))
-  const [drift] = detectDrift(baseline, varDoc, plan(varDoc, reg(false)))
+  const doc = parse('w.md', source)
+  const baseline = deriveOathBaseline(source, doc, plan(doc, reg(true)))
+  const [drift] = detectDrift(baseline, doc, plan(doc, reg(false)))
   if (!drift) throw new Error('expected a drift')
   // The example is on line 3; the span covers that paragraph, not line 1's prose.
   expect(drift.line).toBe(3)
@@ -215,9 +215,9 @@ test('a drift carries the drifted paragraph span', () => {
 
 test('driftDiagnostics projects drift onto error-severity diagnostics', () => {
   const source = 'I withdraw 40.'
-  const varDoc = parse('w.md', source)
-  const baseline = deriveOathBaseline(source, varDoc, plan(varDoc, reg(true)))
-  const drifts = detectDrift(baseline, varDoc, plan(varDoc, reg(false)))
+  const doc = parse('w.md', source)
+  const baseline = deriveOathBaseline(source, doc, plan(doc, reg(true)))
+  const drifts = detectDrift(baseline, doc, plan(doc, reg(false)))
   const diags = driftDiagnostics(drifts)
   expect(diags).toHaveLength(1)
   expect(diags[0]?.severity).toBe('error')
@@ -228,33 +228,33 @@ test('driftDiagnostics projects drift onto error-severity diagnostics', () => {
 
 test('reconcileDrift records a baseline on the first run and reports no drift', async () => {
   const source = 'I withdraw 40.'
-  const varDoc = parse('w.md', source)
+  const doc = parse('w.md', source)
   const store = memoryStore()
   const drifts = await reconcileDrift({
     store,
     oathPath: 'w.md',
     source,
-    varDoc,
-    plan: plan(varDoc, reg()),
+    doc,
+    plan: plan(doc, reg()),
   })
   expect(drifts).toEqual([])
-  const lock = parseVarLock(store.contents ?? '')
+  const lock = parseLockFile(store.contents ?? '')
   expect(lock?.oaths['w.md']?.examples).toEqual([{ name: 'I withdraw 40', line: 1 }])
 })
 
 test('reconcileDrift reports drift and preserves the baseline (stays red)', async () => {
   const source = 'I withdraw 40.'
-  const varDoc = parse('w.md', source)
+  const doc = parse('w.md', source)
   const store = memoryStore()
-  await reconcileDrift({ store, oathPath: 'w.md', source, varDoc, plan: plan(varDoc, reg(true)) })
+  await reconcileDrift({ store, oathPath: 'w.md', source, doc, plan: plan(doc, reg(true)) })
   const before = store.contents
   // The step is gone now — same source no longer matches.
   const drifts = await reconcileDrift({
     store,
     oathPath: 'w.md',
     source,
-    varDoc,
-    plan: plan(varDoc, reg(false)),
+    doc,
+    plan: plan(doc, reg(false)),
   })
   expect(bare(drifts)).toEqual([{ name: 'I withdraw 40', line: 1 }])
   expect(store.contents).toBe(before) // baseline untouched while drift is unacknowledged
@@ -262,51 +262,51 @@ test('reconcileDrift reports drift and preserves the baseline (stays red)', asyn
 
 test('reconcileDrift in update mode accepts drift and re-records the baseline', async () => {
   const source = 'I withdraw 40.'
-  const varDoc = parse('w.md', source)
+  const doc = parse('w.md', source)
   const store = memoryStore()
-  await reconcileDrift({ store, oathPath: 'w.md', source, varDoc, plan: plan(varDoc, reg(true)) })
+  await reconcileDrift({ store, oathPath: 'w.md', source, doc, plan: plan(doc, reg(true)) })
   // Accept: the paragraph is now intentionally prose.
   const drifts = await reconcileDrift({
     store,
     oathPath: 'w.md',
     source,
-    varDoc,
-    plan: plan(varDoc, reg(false)),
+    doc,
+    plan: plan(doc, reg(false)),
     update: true,
   })
   expect(drifts).toEqual([])
   // Baseline no longer lists the accepted example.
-  expect(parseVarLock(store.contents ?? '')?.oaths['w.md']?.examples).toEqual([])
+  expect(parseLockFile(store.contents ?? '')?.oaths['w.md']?.examples).toEqual([])
 })
 
-test('parseVarLock round-trips a valid lock', () => {
-  const lock: VarLock = {
+test('parseLockFile round-trips a valid lock', () => {
+  const lock: LockFile = {
     version: 2,
     oaths: {
       'library.md': { sourceHash: 'fnv1a:1a2b3c4d', examples: [{ name: 'I check out', line: 7 }] },
     },
   }
-  expect(parseVarLock(stringifyVarLock(lock))).toEqual(lock)
+  expect(parseLockFile(stringifyLockFile(lock))).toEqual(lock)
 })
 
-test('stringifyVarLock sorts oath paths for a stable diff', () => {
-  const lock: VarLock = {
+test('stringifyLockFile sorts oath paths for a stable diff', () => {
+  const lock: LockFile = {
     version: 2,
     oaths: {
       'zebra.md': { sourceHash: 'fnv1a:00000001', examples: [] },
       'alpha.md': { sourceHash: 'fnv1a:00000002', examples: [] },
     },
   }
-  const text = stringifyVarLock(lock)
+  const text = stringifyLockFile(lock)
   expect(text.indexOf('alpha.md')).toBeLessThan(text.indexOf('zebra.md'))
   expect(text.endsWith('}\n')).toBe(true)
 })
 
-test('parseVarLock rejects malformed input', () => {
-  expect(parseVarLock('not json')).toBeNull()
-  expect(parseVarLock('{}')).toBeNull() // missing version/oaths
-  expect(parseVarLock('{"version":1,"specs":{}}')).toBeNull() // old version-1 format
-  expect(parseVarLock('{"version":2,"oaths":{"a.md":{"examples":[]}}}')).toBeNull() // no sourceHash
+test('parseLockFile rejects malformed input', () => {
+  expect(parseLockFile('not json')).toBeNull()
+  expect(parseLockFile('{}')).toBeNull() // missing version/oaths
+  expect(parseLockFile('{"version":1,"specs":{}}')).toBeNull() // old version-1 format
+  expect(parseLockFile('{"version":2,"oaths":{"a.md":{"examples":[]}}}')).toBeNull() // no sourceHash
 })
 
 // ---- Merged examples keep per-paragraph drift granularity (ADR 0012) -------
@@ -334,11 +334,11 @@ function depositWithdrawReg(withDeposit = true): Registry {
 
 test('two paragraphs that merge into one example are each recorded as a live baseline entry', () => {
   const source = 'I deposit 100.\n\nI withdraw 40.'
-  const varDoc = parse('w.md', source)
-  const plan1 = plan(varDoc, depositWithdrawReg())
+  const doc = parse('w.md', source)
+  const plan1 = plan(doc, depositWithdrawReg())
   // One planned example (the two paragraphs merged), but two live entries.
   expect(plan1.examples).toHaveLength(1)
-  expect(liveExamples(varDoc, plan1)).toEqual([
+  expect(liveExamples(doc, plan1)).toEqual([
     { name: 'I deposit 100', line: 1 },
     { name: 'I withdraw 40', line: 3 },
   ])
@@ -346,11 +346,11 @@ test('two paragraphs that merge into one example are each recorded as a live bas
 
 test('deleting one step def of a merged example drifts only the now-prose paragraph', () => {
   const source = 'I deposit 100.\n\nI withdraw 40.'
-  const varDoc = parse('w.md', source)
-  const baseline = deriveOathBaseline(source, varDoc, plan(varDoc, depositWithdrawReg(true)))
+  const doc = parse('w.md', source)
+  const baseline = deriveOathBaseline(source, doc, plan(doc, depositWithdrawReg(true)))
   // The deposit step is gone: its paragraph becomes prose, splitting the
   // example. The withdraw paragraph is still live; the deposit one drifts.
-  const drift = detectDrift(baseline, varDoc, plan(varDoc, depositWithdrawReg(false)))
+  const drift = detectDrift(baseline, doc, plan(doc, depositWithdrawReg(false)))
   expect(bare(drift)).toEqual([{ name: 'I deposit 100', line: 1 }])
 })
 
@@ -358,22 +358,22 @@ test('deleting one step def of a merged example drifts only the now-prose paragr
 // state a deleted or moved .md leaves behind (#70).
 function lockWithStalePath(): string {
   const source = 'I withdraw 40.'
-  const varDoc = parse('w.md', source)
-  const baseline = deriveOathBaseline(source, varDoc, plan(varDoc, depositWithdrawReg()))
-  return stringifyVarLock({
+  const doc = parse('w.md', source)
+  const baseline = deriveOathBaseline(source, doc, plan(doc, depositWithdrawReg()))
+  return stringifyLockFile({
     version: 2,
     oaths: { 'varar/w.md': baseline, 'w.md': baseline },
   })
 }
 
-test('pruneVarLock keeps only the paths it is given', () => {
-  const lock = parseVarLock(lockWithStalePath()) as VarLock
-  expect(Object.keys(pruneVarLock(lock, ['varar/w.md']).oaths)).toEqual(['varar/w.md'])
+test('pruneLockFile keeps only the paths it is given', () => {
+  const lock = parseLockFile(lockWithStalePath()) as LockFile
+  expect(Object.keys(pruneLockFile(lock, ['varar/w.md']).oaths)).toEqual(['varar/w.md'])
 })
 
-test('pruneVarLock is a no-op when every path is still live', () => {
-  const lock = parseVarLock(lockWithStalePath()) as VarLock
-  expect(pruneVarLock(lock, ['varar/w.md', 'w.md'])).toEqual(lock)
+test('pruneLockFile is a no-op when every path is still live', () => {
+  const lock = parseLockFile(lockWithStalePath()) as LockFile
+  expect(pruneLockFile(lock, ['varar/w.md', 'w.md'])).toEqual(lock)
 })
 
 test('pruneBaselines reports stale paths without update, and does not write', async () => {
@@ -389,7 +389,9 @@ test('pruneBaselines drops stale paths under update', async () => {
   const store = memoryStore(lockWithStalePath())
 
   expect(await pruneBaselines({ store, keepPaths: ['varar/w.md'], update: true })).toEqual(['w.md'])
-  expect(Object.keys((parseVarLock(store.contents ?? '') as VarLock).oaths)).toEqual(['varar/w.md'])
+  expect(Object.keys((parseLockFile(store.contents ?? '') as LockFile).oaths)).toEqual([
+    'varar/w.md',
+  ])
 })
 
 test('pruneBaselines leaves a lock with no stale paths untouched', async () => {

@@ -158,7 +158,7 @@ gated milestone:
    `Drift.java`/`Hash.java`).
 
 The first three stages each have a named projection function
-(`toVarDocArtifact`, `toRegistryArtifact`, `toPlanArtifact`) in
+(`toDocArtifact`, `toRegistryArtifact`, `toPlanArtifact`) in
 `typescript/packages/core/src/conformance.ts` — port each exactly; it
 defines the wire shape the goldens were generated from. The trace stage has
 no separate `toTraceArtifact`; it's built inline inside `runConformance` in
@@ -363,7 +363,7 @@ TestEngine (JUnit), a `pytest_collect_file` hook (pytest), a generated
   is unregistered, so a forgotten port breaks the *first* port's smoke run.
 - **Pruning the baseline**: `reconcileDrift` is per-oath and never visits a path
   that has gone, so the lock hoards entries for deleted or moved oaths forever
-  ([#70][i70]). Port `pruneVarLock` (pure) and `pruneBaselines` (store-facing)
+  ([#70][i70]). Port `pruneLock` (pure) and `pruneBaselines` (store-facing)
   alongside them, and call the latter **once per run** from the adapter. Two
   rules, both load-bearing — the smoke contract's `baseline-pruned` check gates
   that you did it, but not that you did it safely:
@@ -515,11 +515,11 @@ one function — and three ports shipped exactly that before anyone noticed
 
 | | pure | filesystem edge |
 |---|---|---|
-| TypeScript | `parseVarConfig(jsonText, sourcePath)` | `loadVarConfig(cwd)` |
-| Java / C# | `VarConfig.parse(text, source)` | `VarConfig.load(root)` |
-| Python | `parse_varar_config(text, source)` | `read_varar_config(root)` |
-| Ruby / Rust | `parse_var_config(text, source)` | `read_var_config(root)` |
-| Go | `ParseVarConfig(text, source)` | `ReadVarConfig(root)` |
+| TypeScript | `parseConfig(jsonText, sourcePath)` | `loadConfig(cwd)` |
+| Java / C# | `Config.parse(text, source)` | `Config.load(root)` |
+| Python | `parse_config(text, source)` | `read_config(root)` |
+| Ruby / Rust | `parse_config(text, source)` | `read_config(root)` |
+| Go | `ParseConfig(text, source)` | `ReadConfig(root)` |
 
 `source` only *labels errors* — a path, a URL, `"<memory>"` — and nothing is read
 from it. Without the split, a caller holding config text (an editor buffer, the

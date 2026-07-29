@@ -10,7 +10,7 @@ _KNOWN_DOCS_KEYS = {"include", "exclude"}
 
 
 @dataclass(frozen=True, slots=True)
-class VarConfig:
+class Config:
     docs_include: tuple[str, ...] = ()
     docs_exclude: tuple[str, ...] = ()
     steps: tuple[str, ...] = ()
@@ -25,14 +25,14 @@ def _string_tuple(value: object, key: str, source: str) -> tuple[str, ...]:
     return tuple(value)
 
 
-def parse_varar_config(text: str, source: str) -> VarConfig:
+def parse_config(text: str, source: str) -> Config:
     """Parse ``varar.config.json`` TEXT. Pure — no filesystem.
 
     ``source`` only labels errors (a path, a URL, ``"<memory>"``); nothing is
-    read from it. Splitting this out from :func:`read_varar_config` is what lets
+    read from it. Splitting this out from :func:`read_config` is what lets
     a caller with the text already in hand — an editor buffer, an in-memory
     fixture, the LSP — validate it without inventing a file, and mirrors
-    TypeScript's ``parseVarConfig`` / Java's ``VarConfig.parse``.
+    TypeScript's ``parseConfig`` / Java's ``Config.parse``.
 
     Malformed JSON, wrong types, or unknown keys -> ``ValueError`` starting with
     ``source`` — a typo'd config must fail loudly, never silently discover
@@ -66,7 +66,7 @@ def parse_varar_config(text: str, source: str) -> VarConfig:
         isinstance(k, str) and isinstance(v, str) for k, v in snippets.items()
     ):
         raise ValueError(f"{path}: 'snippets' must be an object of strings")
-    return VarConfig(
+    return Config(
         docs_include=_string_tuple(docs.get("include"), "docs.include", path),
         docs_exclude=_string_tuple(docs.get("exclude"), "docs.exclude", path),
         steps=_string_tuple(data.get("steps"), "steps", path),
@@ -74,12 +74,12 @@ def parse_varar_config(text: str, source: str) -> VarConfig:
     )
 
 
-def read_varar_config(root: str | Path) -> VarConfig:
-    """Read ``<root>/varar.config.json``. The filesystem edge over :func:`parse_varar_config`.
+def read_config(root: str | Path) -> Config:
+    """Read ``<root>/varar.config.json``. The filesystem edge over :func:`parse_config`.
 
     Missing file -> empty config (tools no-op; matches every other port).
     """
     path = Path(root) / "varar.config.json"
     if not path.is_file():
-        return VarConfig()
-    return parse_varar_config(path.read_text(encoding="utf-8"), str(path))
+        return Config()
+    return parse_config(path.read_text(encoding="utf-8"), str(path))

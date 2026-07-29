@@ -19,7 +19,7 @@ import org.junit.platform.testkit.engine.EngineTestKit;
 
 /**
  * Task 14 (Milestone 2's capstone): runs all 13 bundles under the shared, language-neutral
- * {@code conformance/bundles/} corpus through the REAL {@link VarTestEngine} via {@link
+ * {@code conformance/bundles/} corpus through the REAL {@link OathTestEngine} via {@link
  * EngineTestKit} — the sub-project-2 analogue of the core plan's Task 19 conformance gate
  * ({@code var}'s {@code ConformanceTest}), but proving the test-runner ADAPTER end to end
  * (discovery + execution reported through JUnit Platform events) rather than diffing wire-format
@@ -41,7 +41,7 @@ import org.junit.platform.testkit.engine.EngineTestKit;
  * <p><b>Discovery mechanism:</b> each bundle's {@code example.md} lives on the filesystem (a
  * sibling of {@code java/}, outside any classpath root), so discovery uses a real {@code
  * FileSelector} ({@link org.junit.platform.engine.discovery.DiscoverySelectors#selectFile}), not
- * a classpath-resource selector — resolved by {@link VarFileSelectorResolver#resolve(
+ * a classpath-resource selector — resolved by {@link OathFileSelectorResolver#resolve(
  * org.junit.platform.engine.discovery.FileSelector, org.junit.platform.engine.support.discovery.
  * SelectorResolver.Context)}, which relativizes the selected file against the config root
  * ({@link ConfigBridge#CONFIG_ROOT_KEY}, here the per-case {@code @TempDir} workspace) to test
@@ -52,7 +52,7 @@ import org.junit.platform.testkit.engine.EngineTestKit;
  * that workspace's varar.config.json, so no OTHER bundle's {@code example.md} can accidentally
  * satisfy this request. The config's {@code steps}
  * names the one fixture class {@link StepLoader} should load, exactly as {@link
- * VarEngineBehaviorTest} already proves end to end for classpath-resource oaths — this task is
+ * OathEngineBehaviorTest} already proves end to end for classpath-resource oaths — this task is
  * the same mechanism for a real-file oath.
  *
  * <p><b>What's asserted:</b> not a JSON diff (that's {@code var}'s job) but the per-example
@@ -131,7 +131,7 @@ class ConformanceDogfoodTest {
                         // sole paragraph matches no step, so the "error" fence has nothing to
                         // run against ("error-fence-without-step" diagnostic, golden/plan.json)
                         // and the example is dropped entirely at the plan stage. A childless
-                        // VarFileDescriptor is itself pruned by the Launcher (see
+                        // OathFileDescriptor is itself pruned by the Launcher (see
                         // DiscoverySelectorResolverTest's javadoc), so this bundle reports zero
                         // test events, not zero-of-something.
                         new BundleCase(

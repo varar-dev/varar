@@ -29,8 +29,8 @@ class PlanTest {
         // only parts of it match steps. The heading becomes a `describe` scope.
         String source =
                 "# Withdrawing\n\nGiven I have 100 in my account. When I withdraw 40. Then I should" + " have 60 left.";
-        Ast.VarDoc varDoc = Parse.parse("w.md", source);
-        Plan.ExecutionPlan result = Plan.plan(varDoc, reg());
+        Ast.Doc doc = Parse.parse("w.md", source);
+        Plan.ExecutionPlan result = Plan.plan(doc, reg());
         assertEquals(0, result.diagnostics().size());
         assertEquals(1, result.examples().size());
         Plan.PlannedExample ex = result.examples().get(0);
@@ -47,8 +47,8 @@ class PlanTest {
         Registry r = Registry.createRegistry();
         r = Registry.addStep(r, "I have {int} cukes", "a.ts", 3, NOOP_HANDLER, StepKind.STIMULUS);
         r = Registry.addStep(r, "I have {int} {word}", "a.ts", 8, NOOP_HANDLER, StepKind.STIMULUS);
-        Ast.VarDoc varDoc = Parse.parse("e.md", "# Ambig\n\nGiven I have 5 cukes");
-        Plan.ExecutionPlan result = Plan.plan(varDoc, r);
+        Ast.Doc doc = Parse.parse("e.md", "# Ambig\n\nGiven I have 5 cukes");
+        Plan.ExecutionPlan result = Plan.plan(doc, r);
         assertEquals(1, result.diagnostics().size());
         assertEquals(
                 Diagnostics.DiagnosticCode.AMBIGUOUS_MATCH,
@@ -61,8 +61,8 @@ class PlanTest {
     @Test
     void planSkipsAnExampleHeadingWhoseBodyHasNoMatchesAndNoKeywordLedSentences() {
         String source = "# Just docs\n\nSome prose with no matches and no keywords.";
-        Ast.VarDoc varDoc = Parse.parse("d.md", source);
-        Plan.ExecutionPlan result = Plan.plan(varDoc, reg());
+        Ast.Doc doc = Parse.parse("d.md", source);
+        Plan.ExecutionPlan result = Plan.plan(doc, reg());
         assertEquals(0, result.examples().size());
         assertEquals(0, result.diagnostics().size());
     }
@@ -160,16 +160,16 @@ class PlanTest {
         // Step-def generation is selection-driven only; we never infer that a keyword-led
         // sentence "should" have matched a step definition.
         Registry r = Registry.createRegistry();
-        Ast.VarDoc varDoc = Parse.parse("m.md", "# Empty\n\nGiven I have 5 cukes in my belly.");
-        Plan.ExecutionPlan result = Plan.plan(varDoc, r);
+        Ast.Doc doc = Parse.parse("m.md", "# Empty\n\nGiven I have 5 cukes in my belly.");
+        Plan.ExecutionPlan result = Plan.plan(doc, r);
         assertEquals(0, result.diagnostics().size());
     }
 
     @Test
     void anUnmatchedSentenceWithoutAKeywordIsAlsoSilentlyTreatedAsProse() {
         Registry r = Registry.createRegistry();
-        Ast.VarDoc varDoc = Parse.parse("p.md", "# Prose\n\nI have 5 cukes in my belly.");
-        Plan.ExecutionPlan result = Plan.plan(varDoc, r);
+        Ast.Doc doc = Parse.parse("p.md", "# Prose\n\nI have 5 cukes in my belly.");
+        Plan.ExecutionPlan result = Plan.plan(doc, r);
         assertEquals(0, result.diagnostics().size());
     }
 

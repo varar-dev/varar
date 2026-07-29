@@ -7,7 +7,7 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 use varar_core::canonical_json::canonical_stringify;
-use varar_core::conformance::{parameter_type_names, to_registry_artifact, to_var_doc_artifact};
+use varar_core::conformance::{parameter_type_names, to_doc_artifact, to_registry_artifact};
 use varar_core::handler::Handler;
 use varar_core::parse::parse;
 use varar_core::registry::{add_step, create_registry, define_parameter_type};
@@ -31,19 +31,19 @@ fn bundle_dirs() -> Vec<PathBuf> {
 }
 
 #[test]
-fn var_doc_matches_golden() {
+fn doc_matches_golden() {
     let mut failures = Vec::new();
     for bundle in bundle_dirs() {
         let name = bundle.file_name().unwrap().to_string_lossy().to_string();
         let source = fs::read_to_string(bundle.join("example.md")).unwrap();
         let doc = parse("example.md", &source);
-        let actual = canonical_stringify(&to_var_doc_artifact(&doc));
-        let expected = fs::read_to_string(bundle.join("golden").join("var-doc.json")).unwrap();
+        let actual = canonical_stringify(&to_doc_artifact(&doc));
+        let expected = fs::read_to_string(bundle.join("golden").join("doc.json")).unwrap();
         if actual != expected {
             failures.push(name);
         }
     }
-    assert!(failures.is_empty(), "var-doc.json mismatch in bundles: {failures:?}");
+    assert!(failures.is_empty(), "doc.json mismatch in bundles: {failures:?}");
 }
 
 #[test]

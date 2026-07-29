@@ -15,12 +15,12 @@ from varar_core.ast import (
     Example,
     Fence,
     Table,
-    VarDoc,
+    Doc,
 )
 from varar_core.span import span_from_offsets
 
 
-def structure(path: str, source: str, blocks: tuple[Block, ...]) -> VarDoc:
+def structure(path: str, source: str, blocks: tuple[Block, ...]) -> Doc:
     """Group *blocks* into Examples, scoped by headings, with orphan attachments."""
     examples: list[Example] = []
     orphan_attachments: list[Table | Fence] = []
@@ -77,7 +77,7 @@ def structure(path: str, source: str, blocks: tuple[Block, ...]) -> VarDoc:
             attachment_open = False
             delimiter_pending = True
 
-    return VarDoc(
+    return Doc(
         path=path,
         source=source,
         examples=tuple(examples),

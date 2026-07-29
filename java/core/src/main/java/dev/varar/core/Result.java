@@ -6,7 +6,7 @@ import java.util.List;
  * Immutable run-result records — port of {@code var-core/src/result.ts}.
  *
  * <p>{@code OathResults} is the persisted run result for one oath file: the {@code
- * .var/<oath>.json} file IS a serialized {@code OathResults}.
+ * .varar/<oath>.json} file IS a serialized {@code OathResults}.
  */
 public final class Result {
 

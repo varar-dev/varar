@@ -13,8 +13,8 @@ type scopeEntry struct {
 	text  string
 }
 
-// structure groups blocks (scanned from source) into a VarDoc.
-func structure(path, source string, blocks []Block) VarDoc {
+// structure groups blocks (scanned from source) into a Doc.
+func structure(path, source string, blocks []Block) Doc {
 	var examples []Example
 	orphanAttachments := []Block{}
 	var scopeStack []scopeEntry
@@ -67,7 +67,7 @@ func structure(path, source string, blocks []Block) VarDoc {
 	if examples == nil {
 		examples = []Example{}
 	}
-	return VarDoc{
+	return Doc{
 		Path:              path,
 		Source:            source,
 		Examples:          examples,

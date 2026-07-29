@@ -2,7 +2,7 @@ package dev.varar.junit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import dev.varar.config.VarConfig;
+import dev.varar.config.Config;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,13 +16,13 @@ import org.junit.platform.engine.ConfigurationParameters;
 
 /**
  * Verifies {@link ConfigBridge#fromConfigurationParameters} is a faithful adapter from a real
- * {@link ConfigurationParameters} instance to {@link VarConfig#load} — no parsing logic of its
+ * {@link ConfigurationParameters} instance to {@link Config#load} — no parsing logic of its
  * own (that stays in {@code var-config}, tested independently there).
  */
 class ConfigBridgeTest {
 
     @Test
-    void configRootKeyPointsAtTheWorkspaceHoldingVarConfigJson(@TempDir Path workspace) throws Exception {
+    void configRootKeyPointsAtTheWorkspaceHoldingConfigJson(@TempDir Path workspace) throws Exception {
         Files.writeString(workspace.resolve("varar.config.json"), """
                 {
                   "docs": {
@@ -33,12 +33,12 @@ class ConfigBridgeTest {
                 }
                 """, StandardCharsets.UTF_8);
         ConfigurationParameters params =
-                new FakeConfigurationParameters(Map.of("var.config.root", workspace.toString()));
+                new FakeConfigurationParameters(Map.of("varar.config.root", workspace.toString()));
 
-        VarConfig config = ConfigBridge.fromConfigurationParameters(params);
+        Config config = ConfigBridge.fromConfigurationParameters(params);
 
         assertEquals(
-                new VarConfig(
+                new Config(
                         List.of("features/**/*.md", "more/**/*.md"),
                         List.of("features/wip/**/*.md"),
                         List.of("steps/**/*.steps.ts"),
@@ -47,15 +47,15 @@ class ConfigBridgeTest {
     }
 
     @Test
-    void missingConfigRootKeyDefaultsToTheEmptyConfigWhenTheWorkingDirectoryHasNoVarConfigJson() {
-        // No var.config.root parameter is set, so ConfigBridge falls back to the JVM working
+    void missingConfigRootKeyDefaultsToTheEmptyConfigWhenTheWorkingDirectoryHasNoConfigJson() {
+        // No varar.config.root parameter is set, so ConfigBridge falls back to the JVM working
         // directory (java/junit under this module's own `mvn test`) -- which has no
-        // varar.config.json -- so VarConfig.load resolves to the empty config.
+        // varar.config.json -- so Config.load resolves to the empty config.
         ConfigurationParameters params = new FakeConfigurationParameters(Map.of());
 
-        VarConfig config = ConfigBridge.fromConfigurationParameters(params);
+        Config config = ConfigBridge.fromConfigurationParameters(params);
 
-        assertEquals(VarConfig.empty(), config);
+        assertEquals(Config.empty(), config);
     }
 
     /**

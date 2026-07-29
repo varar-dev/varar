@@ -30,7 +30,7 @@ Each example in the Markdown oaths becomes one Kotest test.
   sample's domain code (the system under test) — ordinary classes the steps
   call, kept in the production source set (`src/main`) separate from the test
   steps, just like your production code.
-- **`ExamplesSpec.kt`** extends `VarSpec`, a Kotest `FunSpec` that loads
+- **`ExamplesSpec.kt`** extends `OathSpec`, a Kotest `FunSpec` that loads
   `varar.config.json` (from the test working directory by default) and registers
   one test per planned example. Because it's an ordinary Kotest spec class, no
   discovery workarounds are needed.

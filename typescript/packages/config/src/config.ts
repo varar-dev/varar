@@ -1,10 +1,10 @@
 import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import type { ParsedVarConfig, VarConfig, VarGlobs } from './config-types.ts'
+import type { Config, Globs, ParsedConfig } from './config-types.ts'
 
-export type { ParsedVarConfig, VarConfig, VarGlobs } from './config-types.ts'
+export type { Config, Globs, ParsedConfig } from './config-types.ts'
 
-const EMPTY_PARSED: ParsedVarConfig = {
+const EMPTY_PARSED: ParsedConfig = {
   // No default docs OR steps globs: a repo must declare both explicitly.
   // (The old TS-only `**/*.steps.ts` steps default died with the TS-only
   // format — varar.config.json is shared with the Python/Java/Kotlin ports.)
@@ -29,10 +29,10 @@ function stringArray(value: unknown, key: string, sourcePath: string): ReadonlyA
 }
 
 // Pure. Parses the varar.config.json TEXT (no filesystem) so the conformance
-// harness and loadVarConfig share one implementation. Fails loudly — a
+// harness and loadConfig share one implementation. Fails loudly — a
 // typo'd config that silently discovers nothing is the failure mode this
 // refuses (see the design spec's error-handling section).
-export function parseVarConfig(jsonText: string, sourcePath: string): ParsedVarConfig {
+export function parseConfig(jsonText: string, sourcePath: string): ParsedConfig {
   let data: unknown
   try {
     data = JSON.parse(jsonText)
@@ -45,7 +45,7 @@ export function parseVarConfig(jsonText: string, sourcePath: string): ParsedVarC
       throw new Error(`${sourcePath}: unknown key "${key}" (known keys: docs, steps, snippets)`)
     }
   }
-  let docs: VarGlobs = EMPTY_PARSED.docs
+  let docs: Globs = EMPTY_PARSED.docs
   if (data.docs !== undefined && data.docs !== null) {
     if (!isRecord(data.docs)) throw new Error(`${sourcePath}: "docs" must be an object`)
     for (const key of Object.keys(data.docs)) {
@@ -75,9 +75,9 @@ export function parseVarConfig(jsonText: string, sourcePath: string): ParsedVarC
   }
 }
 
-export async function loadVarConfig(cwd: string): Promise<VarConfig> {
+export async function loadConfig(cwd: string): Promise<Config> {
   const path = resolve(cwd, 'varar.config.json')
-  const parsed = existsSync(path) ? parseVarConfig(readFileSync(path, 'utf8'), path) : EMPTY_PARSED
+  const parsed = existsSync(path) ? parseConfig(readFileSync(path, 'utf8'), path) : EMPTY_PARSED
   return {
     docs: parsed.docs,
     steps: parsed.steps,

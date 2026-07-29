@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { relative, sep } from 'node:path'
-import { findFiles, loadVarConfig } from '@varar/config'
+import { findFiles, loadConfig } from '@varar/config'
 import { type Diagnostic, driftDiagnostics, pruneBaselines, reconcileDrift } from '@varar/core'
 import { createFileBaselineStore, examplesWithRuns, loadSteps, planOath } from '@varar/runner'
 
@@ -17,11 +17,11 @@ export type RunOptions = {
 export type RunResult = { readonly exitCode: number }
 
 export async function runRun(opts: RunOptions): Promise<RunResult> {
-  const cfg = await loadVarConfig(opts.cwd)
+  const cfg = await loadConfig(opts.cwd)
   // A CLI `--globs` override is include-only; excludes live in varar.config.json.
-  const varGlobs =
+  const globs =
     opts.globs && opts.globs.length > 0 ? { include: opts.globs, exclude: [] } : cfg.docs
-  const varFiles = findFiles(opts.cwd, varGlobs.include, varGlobs.exclude)
+  const oathFiles = findFiles(opts.cwd, globs.include, globs.exclude)
 
   const { registry, createContext } = await loadSteps(cfg.steps, opts.cwd)
   const baselineStore = createFileBaselineStore(opts.cwd)
@@ -32,7 +32,7 @@ export async function runRun(opts: RunOptions): Promise<RunResult> {
   let failed = 0
   let errorDiagnostics = 0
 
-  for (const path of varFiles) {
+  for (const path of oathFiles) {
     const source = readFileSync(path, 'utf8')
     const execution = planOath(path, source, registry)
 
@@ -69,7 +69,7 @@ export async function runRun(opts: RunOptions): Promise<RunResult> {
       store: baselineStore,
       oathPath,
       source,
-      varDoc: execution.varDoc,
+      doc: execution.doc,
       plan: execution,
       update,
     })
@@ -78,7 +78,7 @@ export async function runRun(opts: RunOptions): Promise<RunResult> {
 
   // Drop baselines for oaths the config no longer discovers — reconciliation is
   // per-oath and cannot see a path that has gone (#70). Keyed off cfg.docs, NOT
-  // varFiles: a `--globs` run is a filtered view, and pruning against it would
+  // oathFiles: a `--globs` run is a filtered view, and pruning against it would
   // delete live baselines. Only `--update` writes; a plain run just reports.
   const configured = findFiles(opts.cwd, cfg.docs.include, cfg.docs.exclude).map((p) =>
     (relative(opts.cwd, p) || p).split(sep).join('/'),

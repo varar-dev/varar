@@ -14,7 +14,7 @@ repositories {
 
 dependencies {
     testImplementation("dev.varar:kotlin:$varVersion")
-    // Brings the Kotest JUnit Platform runner transitively (VarSpec extends FunSpec).
+    // Brings the Kotest JUnit Platform runner transitively (OathSpec extends FunSpec).
     testImplementation("dev.varar:kotest:$varVersion")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher:6.1.2")
 }

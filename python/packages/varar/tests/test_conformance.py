@@ -2,7 +2,7 @@
 
 For each bundle under conformance/bundles/, parses example.md, projects it
 to the var-doc artifact, and asserts byte-for-byte equality with the
-committed golden/var-doc.json.
+committed golden/doc.json.
 
 The registry stage imports each bundle's steps.py (after resetting the builder),
 builds the registry, projects it, and asserts byte-for-byte equality with
@@ -22,7 +22,7 @@ from pathlib import Path
 import pytest
 
 from varar_core.canonical_json import canonical_stringify
-from varar_core.conformance import run_conformance, to_plan_artifact, to_registry_artifact, to_var_doc_artifact
+from varar_core.conformance import run_conformance, to_plan_artifact, to_registry_artifact, to_doc_artifact
 from varar.registry import _custom_parameter_types, _reset_builder, build_registry, context_factory
 from varar_core.parse import parse
 from varar_core.plan import plan as build_plan
@@ -33,12 +33,12 @@ BUNDLES = sorted(p for p in BUNDLES_DIR.iterdir() if p.is_dir())
 
 
 @pytest.mark.parametrize("bundle", BUNDLES, ids=lambda b: b.name)
-def test_var_doc_matches_golden(bundle: Path) -> None:
+def test_doc_matches_golden(bundle: Path) -> None:
     source = (bundle / "example.md").read_text(encoding="utf-8")
     doc = parse("example.md", source)
-    artifact = to_var_doc_artifact(doc)
+    artifact = to_doc_artifact(doc)
     actual = canonical_stringify(artifact)
-    expected = (bundle / "golden" / "var-doc.json").read_text(encoding="utf-8")
+    expected = (bundle / "golden" / "doc.json").read_text(encoding="utf-8")
     assert actual == expected
 
 

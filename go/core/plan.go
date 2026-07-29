@@ -12,9 +12,9 @@ import (
 // nodes, handles the ```error``` fence, expands header-bound tables into one
 // example per row, and collects diagnostics.
 
-// ExecutionPlan is the result of planning a whole VarDoc.
+// ExecutionPlan is the result of planning a whole Doc.
 type ExecutionPlan struct {
-	VarDoc      VarDoc
+	Doc         Doc
 	Examples    []PlannedExample
 	Diagnostics []Diagnostic
 }
@@ -64,7 +64,7 @@ var (
 // example; a matching candidate after a delimiter (or the first) starts a new
 // one; a non-matching candidate (prose) is a delimiter that closes the open
 // example and is dropped; a header-bound candidate stays standalone.
-func Plan(doc VarDoc, registry Registry) ExecutionPlan {
+func Plan(doc Doc, registry Registry) ExecutionPlan {
 	source := doc.Source
 	diagnostics := []Diagnostic{}
 
@@ -107,7 +107,7 @@ func Plan(doc VarDoc, registry Registry) ExecutionPlan {
 	// not a mistake — it produces no diagnostic.
 
 	return ExecutionPlan{
-		VarDoc:      doc,
+		Doc:         doc,
 		Examples:    examples,
 		Diagnostics: diagnostics,
 	}
@@ -189,7 +189,7 @@ func finishMerged(open *mergedExample, source string) PlannedExample {
 
 // planCandidate plans a single candidate paragraph (plus its attached
 // tables/fences) in isolation, appending any ambiguity / error-fence diagnostics.
-func planCandidate(ex Example, doc VarDoc, registry Registry, diagnostics *[]Diagnostic) candidateUnit {
+func planCandidate(ex Example, doc Doc, registry Registry, diagnostics *[]Diagnostic) candidateUnit {
 	source := doc.Source
 	hadAmbiguous := false
 	body := ex.Body
