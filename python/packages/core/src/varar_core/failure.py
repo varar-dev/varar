@@ -9,7 +9,8 @@ import re
 from typing import Any
 
 from varar_core.cell_diff import is_cell_mismatch_error
-from varar_core.result import CellFailure, ExampleFailure
+from varar_core.failure_anchor import read_failure_anchor
+from varar_core.result import AnchorRange, CellFailure, ExampleFailure
 
 
 def _failing_line(stack: str, oath_path: str) -> int | None:
@@ -55,9 +56,19 @@ def to_failure(
 
     line = _failing_line(stack, oath_path) if stack else None
 
+    # execute_plan attached the anchor when it caught the error, so this is the
+    # failing step's span (or the first mismatched cell's). Absent only when the
+    # error never passed through a step — then ``line`` is all a renderer gets.
+    anchor = read_failure_anchor(error)
+
     return ExampleFailure(
         line=line if line is not None else fallback_line,
         message=message,
         stack=stack,
         cells=cells,
+        anchor=(
+            None
+            if anchor is None
+            else AnchorRange(from_=anchor.start_offset, to=anchor.end_offset)
+        ),
     )

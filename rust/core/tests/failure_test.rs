@@ -7,7 +7,7 @@ use varar_core::cell_diff::CellDiff;
 use varar_core::doc_string_diff::compare_doc_string;
 use varar_core::error::{FailureLocation, HandlerError, StepError, StepFailure};
 use varar_core::failure::to_failure;
-use varar_core::result::CellFailure;
+use varar_core::result::{AnchorRange, CellFailure};
 use varar_core::span::Span;
 
 fn located(error: StepError, path: &str, line: usize) -> StepFailure {
@@ -17,6 +17,7 @@ fn located(error: StepError, path: &str, line: usize) -> StepFailure {
             label: String::new(),
             path: path.to_string(),
             line,
+            anchor: AnchorRange { from: 0, to: 1 },
         }),
     }
 }

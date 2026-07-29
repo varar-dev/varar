@@ -22,7 +22,7 @@ from varar_core.cell_diff import (
     compare_table,
 )
 from varar_core.doc_string_diff import compare_doc_string
-from varar_core.failure_anchor import failure_anchor
+from varar_core.failure_anchor import attach_failure_anchor, failure_anchor
 from varar_core.param_diff import compare_params
 from varar_core.plan import ExecutionPlan, PlannedStep
 from varar_core.span import utf16_slice
@@ -393,13 +393,16 @@ def _augment_stack(err: Exception, step: PlannedStep, var_path: str) -> Exceptio
 
         at <step text> (<path>:<line>:<col>)
     """
+    # Editors resolve the failure's location from this note; failure_anchor
+    # decides where it points, and the conformance trace pins that same rule
+    # across ports. The note can only carry the anchor's START, so the anchor
+    # rides along on the error as well — that's what lets a renderer underline
+    # the failing step rather than its whole line.
+    anchor = failure_anchor(err, step.match_span)
+    attach_failure_anchor(err, anchor)
     if not isinstance(err, Exception):
         return err  # type: ignore[return-value]
     label = step.text[:60] + "…" if len(step.text) > 60 else step.text
-    # Editors resolve the failure's location from this note; failure_anchor
-    # decides where it points, and the conformance trace pins that same rule
-    # across ports.
-    anchor = failure_anchor(err, step.match_span)
     frame = f"    at {label} ({var_path}:{anchor.start_line}:{anchor.start_col})"
     err.add_note(frame)
     return err

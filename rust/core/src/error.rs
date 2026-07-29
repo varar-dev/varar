@@ -4,6 +4,7 @@
 //! `Result`/panic-catch replace throw; `instanceof` dispatch becomes `match`.
 
 use crate::cell_diff::CellDiff;
+use crate::result::AnchorRange;
 use std::any::Any;
 
 /// A handler-signalled failure (author `Err(...)` or a caught panic) — the
@@ -74,12 +75,15 @@ impl StepError {
 }
 
 /// Where a failure points in the `.md` — the structural replacement for Java's
-/// synthetic `StackTraceElement` injection.
+/// synthetic `StackTraceElement` injection. `line` is the anchor's start line
+/// (all a rendered stack frame can show); `anchor` is its full offset range, so
+/// a renderer can underline the failing step instead of its whole line.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct FailureLocation {
     pub label: String,
     pub path: String,
     pub line: usize,
+    pub anchor: AnchorRange,
 }
 
 /// A caught step failure plus its (optional) source location.

@@ -18,3 +18,27 @@ def failure_anchor(error: object, fallback: Span) -> Span:
     if is_cell_mismatch_error(error):
         return next((c.span for c in error.cells if not c.ok), fallback)
     return fallback
+
+
+# The anchor travels with the raised error, from the executor (which knows the
+# step) to whoever builds the ExampleFailure payload (which only sees the
+# error) — mirroring the TS port, where it rides on the Error under
+# Symbol.for('varar.failureAnchor'). Without it a renderer only has the line
+# number, so it underlines the whole line instead of the step that failed.
+_ANCHOR_ATTR = "__varar_failure_anchor__"
+
+
+def attach_failure_anchor(error: object, anchor: Span) -> None:
+    """Record on the error itself where the failure points."""
+    try:
+        setattr(error, _ANCHOR_ATTR, anchor)
+    except (AttributeError, TypeError):
+        # Something raised without a writable __dict__ carries no anchor; the
+        # renderer then falls back to the failing line, as it always did.
+        pass
+
+
+def read_failure_anchor(error: object) -> Span | None:
+    """The anchor the executor attached, or None if there is none."""
+    anchor = getattr(error, _ANCHOR_ATTR, None)
+    return anchor if isinstance(anchor, Span) else None

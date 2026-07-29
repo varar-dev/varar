@@ -27,14 +27,28 @@ pub enum Status {
     Failed,
 }
 
+/// Where a failure points in the source: an offset range, `to` exclusive. The
+/// failing step's match span, or the first mismatched cell's span (the
+/// [`crate::failure_anchor`] rule). This is what lets a renderer underline the
+/// step that failed rather than the whole line it sits on.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct AnchorRange {
+    pub from: usize,
+    pub to: usize,
+}
+
 /// The failure payload of a failed [`ExampleResult`]. `cells` is `None`
 /// when not applicable. `line` may be a caller-supplied fallback (`-1`).
+/// `anchor` is `None` when the failure carries no location for this oath —
+/// optional for the same reason `cells` is, and a renderer then falls back to
+/// `line`.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ExampleFailure {
     pub line: i64,
     pub message: String,
     pub stack: String,
     pub cells: Option<Vec<CellFailure>>,
+    pub anchor: Option<AnchorRange>,
 }
 
 /// The run result for one BDD example.

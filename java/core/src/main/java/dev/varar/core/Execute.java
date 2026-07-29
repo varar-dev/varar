@@ -491,8 +491,11 @@ public final class Execute {
         String text = step.text();
         String label = text.length() > 60 ? text.substring(0, 60) + "…" : text;
         // Editors resolve the failure's location from this frame; FailureAnchor decides where
-        // it points, and the conformance trace pins that same rule across ports.
+        // it points, and the conformance trace pins that same rule across ports. A frame carries
+        // only the anchor's START line, so the anchor is attached to the exception as well —
+        // that's what lets a renderer underline the failing step, not its whole line.
         Span anchor = FailureAnchor.anchor(err, step.matchSpan());
+        FailureAnchor.attach(err, anchor);
         StackTraceElement synthetic = new StackTraceElement("Step", label, varPath, anchor.startLine());
         StackTraceElement[] original = err.getStackTrace();
         StackTraceElement[] augmented = new StackTraceElement[original.length + 1];

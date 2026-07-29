@@ -22,6 +22,20 @@ class CellFailure:
 
 
 @dataclass(frozen=True, slots=True)
+class AnchorRange:
+    """Where a failure points in the source: an offset range, ``to`` exclusive.
+
+    The failing step's match span, or the first mismatched cell's span (the
+    failure_anchor rule). This is what lets a renderer underline the step that
+    failed rather than the whole line it sits on. ``from_`` maps to ``from`` in
+    the wire format, as in CellFailure.
+    """
+
+    from_: int
+    to: int
+
+
+@dataclass(frozen=True, slots=True)
 class ExampleFailure:
     """The failure payload inside an ExampleResult."""
 
@@ -29,6 +43,9 @@ class ExampleFailure:
     message: str
     stack: str
     cells: tuple[CellFailure, ...] | None = None
+    # Optional for the same reason ``cells`` is: a result written by a port (or
+    # a release) that doesn't record it still reads, and falls back to ``line``.
+    anchor: AnchorRange | None = None
 
 
 @dataclass(frozen=True, slots=True)

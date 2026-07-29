@@ -13,6 +13,7 @@ use crate::handler::{Handler, StepOutput, StepReturn};
 use crate::offsets::{utf16_len, utf16_slice};
 use crate::param_diff::compare_params_with_formats;
 use crate::plan::{ExecutionPlan, PlannedExample, PlannedStep};
+use crate::result::AnchorRange;
 use crate::step_kind::StepKind;
 use crate::value::Value;
 use std::any::Any;
@@ -324,6 +325,10 @@ fn attach_location(error: StepError, step: &PlannedStep, var_path: &str) -> Step
             label,
             path: var_path.to_string(),
             line: anchor.start_line,
+            anchor: AnchorRange {
+                from: anchor.start_offset,
+                to: anchor.end_offset,
+            },
         }),
     }
 }

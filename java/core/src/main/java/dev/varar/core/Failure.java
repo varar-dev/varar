@@ -53,7 +53,13 @@ public final class Failure {
         }
 
         Integer line = failingLine(stack, oathPath);
-        return new Result.ExampleFailure(line != null ? line : fallbackLine, message, stack, cells);
+        // The executor attached the anchor when it caught the exception, so this is the failing
+        // step's span (or the first mismatched cell's). Null only when the exception never passed
+        // through a step — then the line is all a renderer gets.
+        Span anchor = FailureAnchor.attached(error);
+        Result.AnchorRange range =
+                anchor == null ? null : new Result.AnchorRange(anchor.startOffset(), anchor.endOffset());
+        return new Result.ExampleFailure(line != null ? line : fallbackLine, message, stack, cells, range);
     }
 
     /** Recovers the 1-based failing line from an injected {@code "<oathPath>:<line>)"} frame. */
