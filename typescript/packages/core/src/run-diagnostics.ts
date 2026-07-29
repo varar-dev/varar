@@ -45,7 +45,15 @@ export function runResultDiagnostics(
           message: `expected ${source.slice(c.from, c.to)} but was ${c.actual}`,
         })
       }
+    } else if (f.anchor && f.anchor.to > f.anchor.from && f.anchor.to <= source.length) {
+      // A thrown step: underline the step itself, not the line it shares with
+      // its neighbours. The bounds check keeps a stale anchor (a result written
+      // against a source the hash check somehow let through) from pointing past
+      // the end of the document.
+      out.push({ from: f.anchor.from, to: f.anchor.to, message: f.message })
     } else {
+      // No anchor recorded (an older result, or a port that doesn't emit one):
+      // the failing line is the most precise range available.
       const { from, to } = lineRange(source, f.line)
       out.push({ from, to, message: f.message })
     }

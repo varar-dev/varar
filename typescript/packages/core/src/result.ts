@@ -18,6 +18,13 @@ export type ExampleResult = {
     readonly stack: string
     // every mismatched cell: table, header-bound row, inline capture or doc string
     readonly cells?: ReadonlyArray<CellFailure>
+    // Where the failure points in the source (the failureAnchor rule): the
+    // failing step's match span, or the first mismatched cell's span. This is
+    // what lets a renderer underline the step that failed rather than the whole
+    // line it sits on. Offsets, `to` exclusive, like CellFailure. Optional for
+    // the same reason `cells` is: a result written by a port (or a release) that
+    // doesn't record it still reads, and falls back to `line`.
+    readonly anchor?: { readonly from: number; readonly to: number }
   }
 }
 

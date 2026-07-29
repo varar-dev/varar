@@ -1,6 +1,6 @@
 import { CellMismatchError, compareRow, compareTable, ReturnShapeError } from './cell-diff.ts'
 import { compareDocString } from './doc-string-diff.ts'
-import { failureAnchor } from './failure-anchor.ts'
+import { attachFailureAnchor, failureAnchor } from './failure-anchor.ts'
 import { compareParams } from './param-diff.ts'
 import type { ExecutionPlan, PlannedStep } from './plan.ts'
 import type { Reporter, TestSink } from './ports.ts'
@@ -267,12 +267,16 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
 // for the topmost frame, so the `.ts` source stays as the main error location
 // and the .md becomes a clickable link directly under it.
 function augmentStack(err: unknown, step: PlannedStep, varPath: string): unknown {
+  // Editors resolve the failure's location from the frame below (the VS Code
+  // vitest extension underlines the word at line:col); failureAnchor decides
+  // where it points, and the conformance trace pins that same rule across
+  // ports. The stack frame can only carry the anchor's START, so the anchor
+  // rides along on the error as well — that's what lets a renderer underline
+  // the failing step rather than its whole line.
+  const anchor = failureAnchor(err, step.matchSpan)
+  attachFailureAnchor(err, anchor)
   if (!(err instanceof Error) || typeof err.stack !== 'string') return err
   const label = step.text.length > 60 ? `${step.text.slice(0, 60)}…` : step.text
-  // Editors resolve the failure's location from this frame (the VS Code vitest
-  // extension underlines the word at line:col); failureAnchor decides where it
-  // points, and the conformance trace pins that same rule across ports.
-  const anchor = failureAnchor(err, step.matchSpan)
   const frame = `    at ${label} (${varPath}:${anchor.startLine}:${anchor.startCol})`
   const lines = err.stack.split('\n')
   // Find the first existing stack frame (the handler's `.ts` line) and insert
