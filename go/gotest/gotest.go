@@ -39,6 +39,10 @@ type Case struct {
 	run          func() *core.StepFailure
 	index        int
 	DriftMessage string
+	// The example's identity in the run-result payload (ADR 0014): its name and
+	// the 1-based source lines of its steps. Empty for a drift case.
+	ExampleName string
+	Lines       []int
 }
 
 // Collect enumerates every example (and any drift) matched by varar.config.json
@@ -84,12 +88,21 @@ func Collect(root string, build BuildRegistry, ctx ContextFactory, update bool) 
 			src := source
 			r := rel
 			p := plan
+			example := p.Examples[index]
+			var lines []int
+			for _, step := range example.Steps {
+				if len(lines) == 0 || lines[len(lines)-1] != step.MatchSpan.StartLine {
+					lines = append(lines, step.MatchSpan.StartLine)
+				}
+			}
 			cases = append(cases, Case{
-				Name:   r + "::" + display,
-				Source: src,
-				Rel:    r,
-				index:  index,
-				run:    func() *core.StepFailure { return runner.RunExample(p, ctx, index) },
+				Name:        r + "::" + display,
+				Source:      src,
+				Rel:         r,
+				index:       index,
+				run:         func() *core.StepFailure { return runner.RunExample(p, ctx, index) },
+				ExampleName: example.Name,
+				Lines:       lines,
 			})
 		}
 
@@ -118,6 +131,10 @@ func Run(t *testing.T, root string, build BuildRegistry, ctx ContextFactory) {
 	if err != nil {
 		t.Fatalf("var: %v", err)
 	}
+	// Run results for the language server (ADR 0014). `go test` has no end-of-run
+	// hook, so the collector is flushed once every subtest has finished — t.Run
+	// with a non-parallel subtest returns only after it completes.
+	results := runner.NewResults()
 	for _, c := range cases {
 		c := c
 		t.Run(c.Name, func(t *testing.T) {
@@ -125,12 +142,32 @@ func Run(t *testing.T, root string, build BuildRegistry, ctx ContextFactory) {
 				t.Error(c.DriftMessage)
 				return
 			}
-			if failure := c.run(); failure != nil {
-				t.Error(runner.RenderFailure(*failure, c.Source, c.Rel))
+			failure := c.run()
+			if failure == nil {
+				results.Record(c.Rel, c.Source, core.ExampleResult{
+					Name: c.ExampleName, Status: core.StatusPassed, Lines: c.Lines,
+				})
+				return
 			}
+			// Recorded from the failure itself: ToFailure reads the anchor the
+			// executor attached to it, so an editor underlines the failing step.
+			line := 0
+			if len(c.Lines) > 0 {
+				line = c.Lines[0]
+			}
+			results.Record(c.Rel, c.Source, core.ExampleResult{
+				Name:    c.ExampleName,
+				Status:  core.StatusFailed,
+				Lines:   c.Lines,
+				Failure: ptr(core.ToFailure(*failure, c.Rel, line)),
+			})
+			t.Error(runner.RenderFailure(*failure, c.Source, c.Rel))
 		})
 	}
+	results.FlushAll(root)
 }
+
+func ptr[T any](value T) *T { return &value }
 
 func isUpdate() bool {
 	switch os.Getenv("VARAR_UPDATE") {

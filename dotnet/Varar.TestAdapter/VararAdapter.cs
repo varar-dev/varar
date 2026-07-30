@@ -184,6 +184,11 @@ internal static class VararAdapter
 
             var registry = workspace.Registry;
             var planCache = new Dictionary<string, ExecutionPlan>(StringComparer.Ordinal);
+            // Run results for the language server (ADR 0014). VSTest reports test by test with no
+            // end-of-run hook, so results accumulate here and are written once this source's
+            // test cases are done.
+            var results = new Results();
+            var sourceCache = new Dictionary<string, string>(StringComparer.Ordinal);
             Value CreateContext(string file) =>
                 registry.ContextFactories.TryGetValue(file, out var factory) ? factory() : Value.Null;
 
@@ -222,15 +227,32 @@ internal static class VararAdapter
                         planCache[oathPath] = plan;
                     }
 
+                    var example = plan.Examples[index];
+                    var lines = example.Steps.Select(step => step.MatchSpan.StartLine).Distinct().ToImmutableArray();
+                    var source = sourceCache.TryGetValue(oathPath, out var cached)
+                        ? cached
+                        : sourceCache[oathPath] = File.ReadAllText(Path.Combine(workspace.Root, oathPath));
+
                     var failure = RunnerApi.RunExample(plan, CreateContext, index);
                     if (failure is null)
                     {
                         result.Outcome = TestOutcome.Passed;
+                        results.Record(oathPath, source, new ExampleResult(example.Name, ExampleStatus.Passed, lines));
                     }
                     else
                     {
                         result.Outcome = TestOutcome.Failed;
                         result.ErrorMessage = RunnerApi.RenderFailure(failure, oathPath);
+                        // Recorded from the exception itself: Failures.ToFailure reads the anchor
+                        // the executor attached to it, so an editor underlines the failing step.
+                        results.Record(
+                            oathPath,
+                            source,
+                            new ExampleResult(
+                                example.Name,
+                                ExampleStatus.Failed,
+                                lines,
+                                Failures.ToFailure(failure, oathPath, lines.Length > 0 ? lines[0] : 0)));
                     }
                 }
                 catch (Exception e)
@@ -242,6 +264,8 @@ internal static class VararAdapter
                 reporter.RecordResult(result);
                 reporter.RecordEnd(testCase, result.Outcome);
             }
+
+            results.FlushAll(workspace.Root);
         }
     }
 
