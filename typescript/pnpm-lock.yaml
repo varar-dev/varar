@@ -93,9 +93,6 @@ importers:
       '@varar/core':
         specifier: workspace:*
         version: link:../core
-      typescript:
-        specifier: ^7.0.2
-        version: 7.0.2
       web-tree-sitter:
         specifier: ^0.26.10
         version: 0.26.11
@@ -124,6 +121,9 @@ importers:
       tree-sitter-typescript:
         specifier: ^0.23.2
         version: 0.23.2
+      typescript:
+        specifier: ^7.0.2
+        version: 7.0.2
 
   packages/lsp:
     dependencies:
