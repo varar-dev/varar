@@ -25,6 +25,11 @@ module Varar
       update = %w[1 true].include?(ENV.fetch('VARAR_UPDATE', nil))
 
       oaths = Runner.find_oaths(cfg.docs_include, cfg.docs_exclude, root)
+      # Run results for the language server (ADR 0014). Minitest.after_run, not
+      # at_exit: at_exit handlers run last-registered-first, so ours would fire
+      # before Minitest's own — i.e. before a single test had run.
+      results = Runner::Results.new
+      ::Minitest.after_run { results.flush_all(root) }
 
       # Drop baselines for oaths the config no longer discovers. Reconciliation is
       # per-oath and never sees a path that has gone, so the lock would otherwise
@@ -34,12 +39,12 @@ module Varar
       Core::Drifts.prune_baselines(store, oaths.map { |p| Runner.rel_posix(p, root) }, update: update)
 
       oaths.each do |oath_path|
-        klass = build_test_case(oath_path, root, loaded, store, update)
+        klass = build_test_case(oath_path, root, loaded, store, update, results)
         namespace.const_set("Var_#{identifier(Runner.rel_posix(oath_path, root))}", klass)
       end
     end
 
-    def build_test_case(oath_path, root, loaded, store, update)
+    def build_test_case(oath_path, root, loaded, store, update, results)
       rel = Runner.rel_posix(oath_path, root)
       source = File.read(oath_path, encoding: 'UTF-8')
       plan = Runner.plan_oath(File.basename(oath_path), source, loaded.registry)
@@ -53,12 +58,23 @@ module Varar
         idx = seen[stem]
         seen[stem] += 1
         method_name = idx.zero? ? "test_#{stem}" : "test_#{stem}_#{idx}"
+        lines = example.steps.map { |step| step.match_span.start_line }.uniq
         klass.define_method(method_name) do
           run.call
         rescue StandardError => e
+          # Recorded here, where the error object is still in hand: to_failure
+          # reads the anchor the executor attached to it.
+          results.record(rel, source, Core::ExampleResult.new(
+                                        name: example.name, status: 'failed', lines: lines,
+                                        failure: Core::Failures.to_failure(e, rel, lines.first || 0)
+                                      ))
           raise ::Minitest::Assertion, Runner.render_failure(e, source, rel) if Minitest.var_diff_error?(e)
 
           raise
+        else
+          results.record(rel, source, Core::ExampleResult.new(
+                                        name: example.name, status: 'passed', lines: lines, failure: nil
+                                      ))
         end
       end
 

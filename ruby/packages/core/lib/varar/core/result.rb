@@ -40,5 +40,39 @@ module Varar
     # Hashing.hash_source over the oath as it was run, so a reader can tell
     # whether the offsets still apply to the buffer in front of it.
     OathResults = Data.define(:version, :oath_path, :source_hash, :examples)
+
+    # Projection of OathResults onto the JSON shape of .varar/<oath_path>.json.
+    #
+    # The wire format is the TypeScript one (ADR 0014): camelCase names,
+    # declaration order, and the optional members absent rather than null so a
+    # reader that predates them still parses the file. Pure — writing the file
+    # is the shell's job.
+    module Results
+      module_function
+
+      def to_wire(results)
+        {
+          'version' => results.version,
+          'oathPath' => results.oath_path,
+          'sourceHash' => results.source_hash,
+          'examples' => results.examples.map { |e| example_to_wire(e) }
+        }
+      end
+
+      def example_to_wire(example)
+        out = { 'name' => example.name, 'status' => example.status, 'lines' => example.lines.to_a }
+        out['failure'] = failure_to_wire(example.failure) if example.failure
+        out
+      end
+
+      def failure_to_wire(failure)
+        out = { 'line' => failure.line, 'message' => failure.message, 'stack' => failure.stack }
+        if failure.cells && !failure.cells.empty?
+          out['cells'] = failure.cells.map { |c| { 'from' => c.from, 'to' => c.to, 'actual' => c.actual } }
+        end
+        out['anchor'] = { 'from' => failure.anchor.from, 'to' => failure.anchor.to } if failure.anchor
+        out
+      end
+    end
   end
 end
