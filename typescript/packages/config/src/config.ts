@@ -2,8 +2,6 @@ import { existsSync, readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import type { Config, Globs, ParsedConfig } from './config-types.ts'
 
-export type { Config, Globs, ParsedConfig } from './config-types.ts'
-
 const EMPTY_PARSED: ParsedConfig = {
   // No default docs OR steps globs: a repo must declare both explicitly.
   // (The old TS-only `**/*.steps.ts` steps default died with the TS-only

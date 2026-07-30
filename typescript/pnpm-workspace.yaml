@@ -2,6 +2,22 @@ packages:
   - packages/*
   - ../examples/typescript-vitest
 
+# `pnpm update --latest` ignores the semver ranges in package.json, so nothing
+# written in a manifest can stop it walking packages/website from typescript 6
+# to 7 — which silently breaks the example editors, since 7 is the native Go
+# compiler with no in-process API to type-check or transpile with in a browser
+# (see the Stack section of CLAUDE.md). This list is the only thing that holds
+# it: `pnpm.updateConfig` in a workspace member's own package.json is read by
+# nothing, and only the entry here takes effect.
+#
+# It is name-based and workspace-wide, so it also parks the ROOT's typescript at
+# the next release — `pnpm up -rL` will not move it to 7.1 on its own. That is
+# deliberate: a compiler upgrade is a decision, not a drive-by. Naming the
+# package explicitly (`pnpm up -L typescript`) overrides this list.
+updateConfig:
+  ignoreDependencies:
+    - typescript
+
 # Dependencies allowed to run install scripts. pnpm blocks them by default as a
 # supply-chain measure and fails the install (exit 1, in CI as much as
 # interactively) until each one is decided either way.

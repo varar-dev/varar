@@ -75,6 +75,26 @@
       commitMessagePrefix: "chore(ts):",
     },
     {
+      // The website type-checks and transpiles the example editors IN THE
+      // BROWSER (packages/website/src/lib/{ts-diagnostics,run-worker}.ts).
+      // TypeScript 7 is the native Go compiler: `import * as ts from
+      // 'typescript'` resolves to a module exporting a version string and
+      // nothing else, and the real API spawns a binary over a pipe. There is no
+      // WASM build of tsgo yet (microsoft/typescript-go#3478, #4633) — the
+      // official Playground is itself still on 6.x. @astrojs/check pins to
+      // ^5 || ^6 besides, so a 7 bump here fails the build outright.
+      //
+      // Renovate groups all npm into one PR, so without this the website rides
+      // along on any TypeScript bump aimed at the rest of the workspace, which
+      // is on 7 deliberately. `typescript/pnpm-workspace.yaml`'s
+      // updateConfig.ignoreDependencies is the same guard for local
+      // `pnpm update --latest` runs. Drop both when tsgo runs in a browser.
+      matchManagers: ["npm"],
+      matchFileNames: ["typescript/packages/website/package.json"],
+      matchPackageNames: ["typescript"],
+      allowedVersions: "<7",
+    },
+    {
       matchManagers: ["pep621", "pip_requirements", "pip-compile"],
       groupName: "python dependencies",
       commitMessagePrefix: "chore(py):",
