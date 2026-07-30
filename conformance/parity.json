@@ -4,9 +4,9 @@
     "Checked by release/check-parity.sh, which fails when a required capability has no file.",
     "",
     "This is a DECLARATION, not a derivation: 'whatever TypeScript has' is the wrong rule.",
-    "Ports legitimately differ in shape — canonical_json exists in six ports and not in",
-    "TypeScript (whose JSON.stringify IS the reference), and Rust and Go split value/handler/",
-    "offsets out of modules TypeScript keeps whole. What must not differ is capability.",
+    "Ports legitimately differ in shape \u2014 Rust and Go split value/handler/offsets out of",
+    "modules TypeScript keeps whole, and a port whose stdlib already parses JSON needs no",
+    "module of its own for it. What must not differ is capability.",
     "",
     "An intentionally single-port capability carries a `why`. Anything undeclared is drift.",
     "Adding a port means adding it to `ports` and giving every required capability a path."
@@ -20,11 +20,11 @@
     "dotnet": "dotnet/Varar.Core",
     "go": "go/core"
   },
-  "$comment_kotlin": "Kotlin has no core of its own — java/kotlin and java/kotest sit on the Java core.",
+  "$comment_kotlin": "Kotlin has no core of its own \u2014 java/kotlin and java/kotest sit on the Java core.",
   "capabilities": [
     {
       "name": "parse",
-      "what": "Markdown → the immutable AST",
+      "what": "Markdown \u2192 the immutable AST",
       "files": {
         "typescript": "parse.ts",
         "python": "parse.py",
@@ -37,7 +37,7 @@
     },
     {
       "name": "plan",
-      "what": "AST + registry → the execution plan",
+      "what": "AST + registry \u2192 the execution plan",
       "files": {
         "typescript": "plan.ts",
         "python": "plan.py",
@@ -102,7 +102,7 @@
     },
     {
       "name": "failure-producer",
-      "what": "a caught step failure → the run-result failure payload",
+      "what": "a caught step failure \u2192 the run-result failure payload",
       "files": {
         "typescript": "failure.ts",
         "python": "failure.py",
@@ -128,24 +128,22 @@
     },
     {
       "name": "run-diagnostics",
-      "what": "run results → editor diagnostics",
+      "what": "run results \u2192 editor diagnostics",
       "why": "TypeScript only, on purpose: one language server serves every language, and it is written in TypeScript. The other ports produce run results (see run-result-payload); only this port renders them.",
       "files": {
         "typescript": "run-diagnostics.ts"
       }
     },
     {
-      "name": "canonical-json",
-      "what": "key-sorted JSON, byte-identical to JSON.stringify(sortKeys(v), null, 2)",
-      "why": "Absent from TypeScript on purpose: its JSON.stringify IS the reference the other six reproduce.",
+      "name": "json-reader",
+      "what": "JSON text \u2192 the port's value model, so a conformance gate can compare an artifact against a golden by content",
       "files": {
-        "python": "canonical_json.py",
-        "java": "CanonicalJson.java",
-        "ruby": "canonical_json.rb",
-        "rust": "canonical_json.rs",
-        "dotnet": "CanonicalJson.cs",
-        "go": "canonical_json.go"
-      }
+        "java": "JsonValue.java",
+        "rust": "json_value.rs",
+        "dotnet": "JsonValue.cs",
+        "go": "json_value.go"
+      },
+      "why": "TypeScript, Python and Ruby need no module: their artifacts are already native trees, so the stdlib parser (JSON.parse / json.loads / JSON.parse) compares directly. A module is required where the port has no stdlib JSON at all (Java, Rust) or where the artifact is a Value tree the parsed JSON has to be lifted into (.NET, Go)."
     }
   ]
 }

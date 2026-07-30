@@ -6,7 +6,6 @@ create_registry()+add_step() — no facade dependency.
 """
 from __future__ import annotations
 
-from varar_core.canonical_json import canonical_stringify
 from varar_core.cell_diff import CellDiff, CellMismatchError, ReturnShapeError
 from varar_core.conformance import (
     run_conformance,
@@ -21,20 +20,6 @@ from varar_core.parse import parse
 from varar_core.plan import plan
 from varar_core.registry import add_step, create_registry, define_parameter_type
 from varar_core.span import Span
-
-
-# ---------------------------------------------------------------------------
-# canonical_stringify
-# ---------------------------------------------------------------------------
-
-
-def test_canonical_stringify_sorts_keys_recursively_and_ends_with_newline():
-    out = canonical_stringify({"b": 1, "a": {"d": 2, "c": 3}})
-    assert out == '{\n  "a": {\n    "c": 3,\n    "d": 2\n  },\n  "b": 1\n}\n'
-
-
-def test_canonical_stringify_preserves_array_order():
-    assert canonical_stringify([3, 1, 2]) == "[\n  3,\n  1,\n  2\n]\n"
 
 
 # ---------------------------------------------------------------------------

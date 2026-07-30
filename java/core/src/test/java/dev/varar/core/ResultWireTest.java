@@ -18,7 +18,7 @@ class ResultWireTest {
 
     @Test
     void aPassingExampleOmitsTheFailureKeyEntirely() {
-        String json = CanonicalJson.stringifyInOrder(Result.toWire(
+        String json = JsonWriter.stringifyInOrder(Result.toWire(
                 results(new Result.ExampleResult("Maya borrows", Result.Status.PASSED, List.of(3, 4), null))));
         assertEquals("""
                 {
@@ -46,7 +46,7 @@ class ResultWireTest {
                 "<runtime stack>",
                 List.of(new Result.CellFailure(71, 77, "50")),
                 new Result.AnchorRange(71, 77));
-        String json = CanonicalJson.stringifyInOrder(Result.toWire(
+        String json = JsonWriter.stringifyInOrder(Result.toWire(
                 results(new Result.ExampleResult("Ben borrows", Result.Status.FAILED, List.of(13), failure))));
         assertEquals("""
                 {
@@ -84,7 +84,7 @@ class ResultWireTest {
     @Test
     void aFailureWithNeitherCellsNorAnchorOmitsBoth() {
         var failure = new Result.ExampleFailure(9, "boom", "<runtime stack>", null);
-        String json = CanonicalJson.stringifyInOrder(Result.toWire(
+        String json = JsonWriter.stringifyInOrder(Result.toWire(
                 results(new Result.ExampleResult("Noor borrows", Result.Status.FAILED, List.of(9), failure))));
         assertEquals("""
                 {
@@ -109,17 +109,12 @@ class ResultWireTest {
     }
 
     @Test
-    void canonicalStringifyStillSortsKeysForTheConformanceGoldens() {
-        // The two writers must stay distinct: goldens are byte-compared across ports (sorted),
-        // run results mirror the reference implementation's declaration order.
-        assertEquals("{\n  \"a\": 1,\n  \"b\": 2\n}\n", CanonicalJson.canonicalStringify(orderedBthenA()));
-        assertEquals("{\n  \"b\": 2,\n  \"a\": 1\n}", CanonicalJson.stringifyInOrder(orderedBthenA()));
-    }
-
-    private static java.util.Map<String, Object> orderedBthenA() {
+    void keysComeOutInTheOrderTheMapYieldsThem() {
+        // Declaration order is the format: the reference implementation writes the payload with
+        // JSON.stringify, which never reorders.
         var m = new java.util.LinkedHashMap<String, Object>();
         m.put("b", 2);
         m.put("a", 1);
-        return m;
+        assertEquals("{\n  \"b\": 2,\n  \"a\": 1\n}", JsonWriter.stringifyInOrder(m));
     }
 }

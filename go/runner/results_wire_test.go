@@ -9,7 +9,7 @@ import (
 )
 
 // The cross-port wire format of .varar/<oathPath>.json (ADR 0014). Every port
-// builds this same value and must serialize it byte-for-byte identically — see
+// builds this same value; the parsed result must match — see
 // conformance/run-results/README.md for what that pins, and why the bundle
 // goldens don't cover it.
 
@@ -63,7 +63,17 @@ func TestWireFormatMatchesTheCrossPortFixture(t *testing.T) {
 	if err != nil {
 		t.Fatalf("read fixture: %v", err)
 	}
-	if string(written) != string(expected) {
+	// By CONTENT: the file has to SAY the same thing in every port — field names,
+	// the shapes, and an optional member absent rather than null.
+	got, err := core.ParseJSONValue(string(written))
+	if err != nil {
+		t.Fatalf("written file is not valid JSON: %v", err)
+	}
+	want, err := core.ParseJSONValue(string(expected))
+	if err != nil {
+		t.Fatalf("fixture is not valid JSON: %v", err)
+	}
+	if !core.ValueEqual(got, want) {
 		t.Errorf("wire format differs from the fixture\n--- got ---\n%s\n--- want ---\n%s", written, expected)
 	}
 }

@@ -1,8 +1,9 @@
 //! The cross-port wire format of `.varar/<oath_path>.json` (ADR 0014). Every port
-//! builds this same value and must serialize it byte-for-byte identically — see
+//! builds this same value; the parsed result must match — see
 //! `conformance/run-results/README.md` for what that pins, and why the bundle
 //! goldens don't cover it.
 
+use varar_core::json_value::parse_json_value;
 use varar_core::result::{
     AnchorRange, CellFailure, ExampleFailure, ExampleResult, OathResults, Status, to_wire_json,
 };
@@ -49,10 +50,12 @@ fn results() -> OathResults {
 
 #[test]
 fn the_wire_format_matches_the_cross_port_fixture() {
+    // By CONTENT: the file has to SAY the same thing in every port — field names,
+    // the shapes, and an optional member absent rather than null.
     let expected = std::fs::read_to_string(
         std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
             .join("../../conformance/run-results/expected.json"),
     )
     .expect("the cross-port fixture is readable");
-    assert_eq!(expected, format!("{}\n", to_wire_json(&results())));
+    assert_eq!(parse_json_value(&expected), parse_json_value(&to_wire_json(&results())));
 }

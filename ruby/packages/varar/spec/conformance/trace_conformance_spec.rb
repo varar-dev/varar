@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'json'
+
 require 'spec_helper'
 require 'varar'
 require 'varar/registry'
@@ -33,8 +35,8 @@ module Varar
         artifacts = Core::Conformance.run_conformance(
           doc, registry, create_context, RegistryGlue.custom_parameter_types
         )
-        actual = Core::CanonicalJson.canonical_stringify(artifacts[:trace])
-        expect(actual).to eq(File.read(golden, encoding: 'UTF-8'))
+        actual = artifacts[:trace]
+        expect(actual).to eq(JSON.parse(File.read(golden, encoding: 'UTF-8')))
       end
     end
   end

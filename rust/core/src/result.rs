@@ -1,7 +1,7 @@
 //! Immutable run-result records — port of `result.ts` / `Result.java`. The
 //! persisted `.varar/<oath>.json` file is a serialized [`OathResults`].
 
-use crate::canonical_json;
+use crate::json_escape;
 use std::fmt::Write;
 
 /// One mismatched CELL as a source-offset range plus the runtime value.
@@ -76,8 +76,7 @@ pub struct OathResults {
 /// the TypeScript field names, declaration order, 2-space indent, optional
 /// members absent rather than null. No trailing newline — the writer adds it.
 ///
-/// Written by hand rather than through [`crate::canonical_json`], whose
-/// `BTreeMap` sorts keys: the reference implementation writes the payload in
+/// Written by hand because the reference implementation writes the payload in
 /// declaration order, and this file is read by humans diffing it as much as by
 /// the language server.
 pub fn to_wire_json(results: &OathResults) -> String {
@@ -202,7 +201,7 @@ fn field(out: &mut String, depth: usize, key: &str, raw_value: &str, comma: bool
 fn string_field(out: &mut String, depth: usize, key: &str, value: &str, comma: bool) {
     indent(out, depth);
     let _ = write!(out, "\"{key}\": ");
-    canonical_json::write_string(out, value);
+    json_escape::write_string(out, value);
     out.push_str(if comma { ",\n" } else { "\n" });
 }
 

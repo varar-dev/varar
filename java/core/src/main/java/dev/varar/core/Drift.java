@@ -238,7 +238,7 @@ public final class Drift {
     /**
      * Serializes {@code varar.lock.json} deterministically: {@code version} then {@code oaths} (oath
      * paths sorted), examples in document order, two-space indent, trailing newline, non-ASCII
-     * raw. NOT {@link CanonicalJson} (which sorts every key) — the lockfile keeps insertion order.
+     * raw. The lock file keeps insertion order — it is committed and shared between ports.
      */
     public static String stringifyLockFile(LockFile lock) {
         List<String> paths = new ArrayList<>(lock.oaths().keySet());
@@ -281,7 +281,7 @@ public final class Drift {
         return sb.toString();
     }
 
-    // Same escaping as CanonicalJson.writeString: standard JSON escapes, control chars as \\uXXXX,
+    // Same escaping as JsonWriter: standard JSON escapes, control chars as \\uXXXX,
     // everything else (including non-ASCII) raw.
     private static void writeString(StringBuilder sb, String s) {
         sb.append('"');
@@ -313,7 +313,7 @@ public final class Drift {
     public static LockFile parseLockFile(String text) {
         Object parsed;
         try {
-            parsed = new JsonReader(text).parseWhole();
+            parsed = JsonValue.parse(text);
         } catch (RuntimeException e) {
             return null;
         }
@@ -345,152 +345,4 @@ public final class Drift {
     }
 
     /** A tiny recursive-descent JSON reader — enough for varar.lock.json, throws on malformed. */
-    private static final class JsonReader {
-        private final String s;
-        private int i;
-
-        JsonReader(String s) {
-            this.s = s;
-        }
-
-        Object parseWhole() {
-            Object v = value();
-            skipWs();
-            if (i != s.length()) throw new IllegalStateException("trailing input");
-            return v;
-        }
-
-        private Object value() {
-            skipWs();
-            char c = peek();
-            return switch (c) {
-                case '{' -> object();
-                case '[' -> array();
-                case '"' -> string();
-                case 't', 'f' -> bool();
-                case 'n' -> nul();
-                default -> number();
-            };
-        }
-
-        private Map<String, Object> object() {
-            expect('{');
-            Map<String, Object> map = new LinkedHashMap<>();
-            skipWs();
-            if (peek() == '}') {
-                i++;
-                return map;
-            }
-            while (true) {
-                skipWs();
-                String key = string();
-                skipWs();
-                expect(':');
-                map.put(key, value());
-                skipWs();
-                char c = next();
-                if (c == '}') return map;
-                if (c != ',') throw new IllegalStateException("expected , or }");
-            }
-        }
-
-        private List<Object> array() {
-            expect('[');
-            List<Object> list = new ArrayList<>();
-            skipWs();
-            if (peek() == ']') {
-                i++;
-                return list;
-            }
-            while (true) {
-                list.add(value());
-                skipWs();
-                char c = next();
-                if (c == ']') return list;
-                if (c != ',') throw new IllegalStateException("expected , or ]");
-            }
-        }
-
-        private String string() {
-            expect('"');
-            StringBuilder sb = new StringBuilder();
-            while (true) {
-                char c = next();
-                if (c == '"') return sb.toString();
-                if (c == '\\') {
-                    char e = next();
-                    switch (e) {
-                        case '"' -> sb.append('"');
-                        case '\\' -> sb.append('\\');
-                        case '/' -> sb.append('/');
-                        case 'n' -> sb.append('\n');
-                        case 'r' -> sb.append('\r');
-                        case 't' -> sb.append('\t');
-                        case 'b' -> sb.append('\b');
-                        case 'f' -> sb.append('\f');
-                        case 'u' -> {
-                            sb.append((char) Integer.parseInt(s.substring(i, i + 4), 16));
-                            i += 4;
-                        }
-                        default -> throw new IllegalStateException("bad escape");
-                    }
-                } else {
-                    sb.append(c);
-                }
-            }
-        }
-
-        private Object number() {
-            int start = i;
-            while (i < s.length() && "-+.eE0123456789".indexOf(s.charAt(i)) >= 0) i++;
-            String num = s.substring(start, i);
-            if (num.isEmpty()) throw new IllegalStateException("expected value");
-            if (num.indexOf('.') >= 0 || num.indexOf('e') >= 0 || num.indexOf('E') >= 0) {
-                return Double.parseDouble(num);
-            }
-            return Long.parseLong(num);
-        }
-
-        private Boolean bool() {
-            if (s.startsWith("true", i)) {
-                i += 4;
-                return Boolean.TRUE;
-            }
-            if (s.startsWith("false", i)) {
-                i += 5;
-                return Boolean.FALSE;
-            }
-            throw new IllegalStateException("bad literal");
-        }
-
-        private Object nul() {
-            if (s.startsWith("null", i)) {
-                i += 4;
-                return null;
-            }
-            throw new IllegalStateException("bad literal");
-        }
-
-        private void skipWs() {
-            while (i < s.length()) {
-                char c = s.charAt(i);
-                if (c == ' ' || c == '\n' || c == '\r' || c == '\t') i++;
-                else break;
-            }
-        }
-
-        private char peek() {
-            if (i >= s.length()) throw new IllegalStateException("unexpected end");
-            return s.charAt(i);
-        }
-
-        private char next() {
-            if (i >= s.length()) throw new IllegalStateException("unexpected end");
-            return s.charAt(i++);
-        }
-
-        private void expect(char c) {
-            if (next() != c) throw new IllegalStateException("expected " + c);
-        }
-    }
 }

@@ -7,7 +7,7 @@ namespace Varar.Core.Tests;
 
 /// <summary>
 /// The cross-port wire format of <c>.varar/&lt;oathPath&gt;.json</c> (ADR 0014). Every port builds
-/// this same value and must serialize it byte-for-byte identically — see
+/// this same value; the parsed result must match — see
 /// <c>conformance/run-results/README.md</c> for what that pins, and why the bundle goldens don't
 /// cover it.
 /// </summary>
@@ -54,7 +54,9 @@ public class RunResultsWireTests
     [Fact]
     public void TheWireFormatMatchesTheCrossPortFixture()
     {
-        var written = ResultJson.ToWireJson(Results()) + "\n";
-        Assert.Equal(File.ReadAllText(ExpectedPath()), written);
+        // By CONTENT: the file has to SAY the same thing in every port — field names, the
+        // shapes, and an optional member absent rather than null.
+        var written = ResultJson.ToWireJson(Results());
+        Assert.Equal(JsonValue.Parse(File.ReadAllText(ExpectedPath())), JsonValue.Parse(written));
     }
 }

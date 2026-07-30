@@ -84,7 +84,7 @@ public final class Result {
      * Projects {@link OathResults} onto the JSON shape of {@code .varar/<oathPath>.json} (ADR
      * 0014): the TypeScript field names, in declaration order, with the optional members absent
      * rather than null so a reader that predates them still parses the file. Pure — writing the
-     * file is the shell's job. Pair with {@link CanonicalJson#stringifyInOrder}.
+     * file is the shell's job. Pair with {@link JsonWriter#stringifyInOrder}.
      */
     public static Map<String, Object> toWire(OathResults results) {
         Map<String, Object> out = new LinkedHashMap<>();

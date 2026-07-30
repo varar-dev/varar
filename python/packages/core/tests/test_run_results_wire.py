@@ -1,7 +1,7 @@
 """The cross-port wire format of .varar/<oath_path>.json (ADR 0014).
 
-Every port builds this same value and must serialize it byte-for-byte
-identically — see conformance/run-results/README.md for what that pins, and why
+Every port builds this same value; the parsed result must match — see
+conformance/run-results/README.md for what that pins, and why
 the bundle goldens don't cover it.
 """
 from __future__ import annotations
@@ -55,7 +55,7 @@ RESULTS = OathResults(
 
 
 def test_the_wire_format_matches_the_cross_port_fixture() -> None:
-    # ensure_ascii=False is the point: JSON.stringify leaves £ raw, and a port
-    # that escapes it writes a file no one can diff against another port's.
+    # By CONTENT: the file has to SAY the same thing in every port — field names,
+    # the shapes, and an optional member absent rather than null.
     written = json.dumps(to_wire(RESULTS), indent=2, ensure_ascii=False) + "\n"
-    assert written == EXPECTED.read_text(encoding="utf-8")
+    assert json.loads(written) == json.loads(EXPECTED.read_text(encoding="utf-8"))

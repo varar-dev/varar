@@ -17,8 +17,8 @@ use std::any::Any;
 use std::rc::Rc;
 
 use varar::{Registry, Steps};
-use varar_core::canonical_json::canonical_stringify;
 use varar_core::conformance::{run_conformance, to_plan_artifact, to_registry_artifact};
+use varar_core::json_value::parse_json_value;
 use varar_core::parse::parse;
 use varar_core::plan::plan;
 
@@ -132,8 +132,10 @@ fn registry_matches_golden() {
     for dir in bundle_dirs() {
         let name = name_of(&dir);
         let (registry, _) = fixture(&name);
-        let actual = canonical_stringify(&to_registry_artifact(&registry));
-        if actual != golden(&dir, "registry.json") {
+        // By CONTENT, not bytes — see the note in core's doc gate.
+        let expected =
+            parse_json_value(&golden(&dir, "registry.json")).expect("golden is valid JSON");
+        if to_registry_artifact(&registry) != expected {
             fails.push(name);
         }
     }
@@ -149,8 +151,9 @@ fn plan_matches_golden() {
         let source = fs::read_to_string(dir.join("example.md")).unwrap();
         let doc = parse("example.md", &source);
         let execution = plan(&doc, &registry);
-        let actual = canonical_stringify(&to_plan_artifact(&execution));
-        if actual != golden(&dir, "plan.json") {
+        // By CONTENT, not bytes — see the note in core's doc gate.
+        let expected = parse_json_value(&golden(&dir, "plan.json")).expect("golden is valid JSON");
+        if to_plan_artifact(&execution) != expected {
             fails.push(name);
         }
     }
@@ -166,8 +169,9 @@ fn trace_matches_golden() {
         let source = fs::read_to_string(dir.join("example.md")).unwrap();
         let doc = parse("example.md", &source);
         let artifacts = run_conformance(&doc, &registry, &|| state());
-        let actual = canonical_stringify(&artifacts.trace);
-        if actual != golden(&dir, "trace.json") {
+        // By CONTENT, not bytes — see the note in core's doc gate.
+        let expected = parse_json_value(&golden(&dir, "trace.json")).expect("golden is valid JSON");
+        if artifacts.trace != expected {
             fails.push(name);
         }
     }

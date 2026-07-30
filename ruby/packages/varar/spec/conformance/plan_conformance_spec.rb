@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'json'
+
 require 'spec_helper'
 require 'varar'
 require 'varar/registry'
@@ -30,8 +32,8 @@ module Varar
         source = File.read(File.join(corpus, bundle, 'example.md'), encoding: 'UTF-8')
         doc = Core::Parse.parse('example.md', source)
         plan = Core::Plan.plan(doc, registry)
-        actual = Core::CanonicalJson.canonical_stringify(Core::Conformance.to_plan_artifact(plan))
-        expect(actual).to eq(File.read(golden, encoding: 'UTF-8'))
+        actual = Core::Conformance.to_plan_artifact(plan)
+        expect(actual).to eq(JSON.parse(File.read(golden, encoding: 'UTF-8')))
       end
     end
   end

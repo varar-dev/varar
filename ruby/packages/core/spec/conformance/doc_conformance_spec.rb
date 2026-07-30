@@ -23,8 +23,7 @@ module Varar
         it "#{bundle} — doc.json matches golden" do
           source = File.read(File.join(corpus, bundle, 'example.md'), encoding: 'UTF-8')
           doc = Parse.parse('example.md', source)
-          actual = CanonicalJson.canonical_stringify(Conformance.to_doc_artifact(doc))
-          expect(actual).to eq(File.read(golden, encoding: 'UTF-8'))
+          expect(Conformance.to_doc_artifact(doc)).to eq(JSON.parse(File.read(golden, encoding: 'UTF-8')))
         end
       end
     end

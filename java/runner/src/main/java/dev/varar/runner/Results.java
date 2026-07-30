@@ -1,7 +1,7 @@
 package dev.varar.runner;
 
-import dev.varar.core.CanonicalJson;
 import dev.varar.core.Hash;
+import dev.varar.core.JsonWriter;
 import dev.varar.core.Result;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -39,8 +39,7 @@ public final class Results {
         Path out = resultFilePath(root, results.oathPath());
         try {
             Files.createDirectories(out.getParent());
-            Files.writeString(
-                    out, CanonicalJson.stringifyInOrder(Result.toWire(results)) + "\n", StandardCharsets.UTF_8);
+            Files.writeString(out, JsonWriter.stringifyInOrder(Result.toWire(results)) + "\n", StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new UncheckedIOException("cannot write run results to " + out, e);
         }

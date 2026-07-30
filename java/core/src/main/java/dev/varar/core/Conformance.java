@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 
 /**
  * Serializes {@link Ast} nodes into the plain {@code Map}/{@code List} wire-format
- * structures that {@link CanonicalJson#canonicalStringify(Object)} turns into the
+ * structures each conformance gate compares against a golden by content (see {@link JsonValue}) —
  * conformance corpus's deterministic JSON artifacts.
  *
  * <p>Port of the var-doc and registry portions of {@code var-core/src/conformance.ts}'s
@@ -19,7 +19,7 @@ import java.util.function.Supplier;
  * {@code to_doc_artifact}/{@code to_registry_artifact} in the Python port). Field
  * names are camelCase and must match {@code conformance/bundles/*}/golden/*.json}
  * exactly; key ordering doesn't matter here ({@link LinkedHashMap} is used purely for
- * readability while debugging) because {@link CanonicalJson} recursively sorts keys
+ * readability while debugging); key order carries no meaning in the comparison
  * itself.
  *
  * <p>This class covers all four conformance projections: var-doc, registry, plan (Tasks

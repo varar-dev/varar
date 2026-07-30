@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'json'
+
 require 'spec_helper'
 require 'varar/config'
 require 'varar/core' # for CanonicalJson (test-only)
@@ -35,8 +37,9 @@ module Varar
         end
       else
         it "#{name} — matches golden" do
-          actual = Core::CanonicalJson.canonical_stringify(self.class.artifact(Config.read_config(case_dir)))
-          expect(actual).to eq(File.read(File.join(case_dir, 'golden.json'), encoding: 'UTF-8'))
+          actual = self.class.artifact(Config.read_config(case_dir))
+          golden = JSON.parse(File.read(File.join(case_dir, 'golden.json'), encoding: 'UTF-8'))
+          expect(actual).to eq(golden)
         end
       end
     end

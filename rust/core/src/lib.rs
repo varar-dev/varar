@@ -21,7 +21,6 @@
 // (the AssertionError parity channel). See its doc comment for the guarantees.
 
 pub mod ast;
-pub mod canonical_json;
 pub mod cell_diff;
 pub mod conformance;
 pub mod diagnostics;
@@ -34,6 +33,8 @@ pub mod failure;
 mod failure_anchor;
 pub mod handler;
 pub mod hash;
+pub mod json_escape;
+pub mod json_value;
 pub mod matcher;
 pub mod offsets;
 pub mod param_diff;

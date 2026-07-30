@@ -4,7 +4,7 @@ import type { OathResults } from '@varar/core'
 import { expect, test } from 'vitest'
 
 // The cross-port wire format of .varar/<oathPath>.json (ADR 0014). Every port
-// builds this same value and must serialize it byte-for-byte identically — see
+// builds this same value; the parsed result must match — see
 // conformance/run-results/README.md for what that pins and why the bundle
 // goldens don't cover it.
 const EXPECTED = resolve(import.meta.dirname, '../../../../conformance/run-results/expected.json')
@@ -37,7 +37,10 @@ const results: OathResults = {
 }
 
 test('the run-result wire format matches the cross-port fixture', () => {
-  // Exactly what the reporter writes — this port IS the reference, so the
-  // fixture is regenerated from here when the format changes deliberately.
-  expect(`${JSON.stringify(results, null, 2)}\n`).toBe(readFileSync(EXPECTED, 'utf8'))
+  // What the reporter writes, compared by CONTENT: the file has to SAY the same
+  // thing in every port — field names, the shapes, and an optional member absent
+  // rather than null. How a port's writer spaces or escapes it is its own affair.
+  expect(JSON.parse(JSON.stringify(results, null, 2))).toEqual(
+    JSON.parse(readFileSync(EXPECTED, 'utf8')),
+  )
 })

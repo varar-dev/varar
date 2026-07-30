@@ -4,8 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.varar.core.Ast;
-import dev.varar.core.CanonicalJson;
 import dev.varar.core.Conformance;
+import dev.varar.core.JsonValue;
 import dev.varar.core.Parse;
 import dev.varar.core.Plan;
 import dev.varar.core.Registry;
@@ -25,8 +25,8 @@ import org.junit.jupiter.params.provider.MethodSource;
  * {@code conformance/bundles/} corpus, loads that bundle's Java step-definition fixture
  * (see {@link #loadFixture}), registers it against a fresh {@link Steps},
  * projects the resulting {@link Registry} via {@link Conformance#toRegistryArtifact},
- * serializes with {@link CanonicalJson#canonicalStringify(Object)}, and asserts
- * byte-for-byte equality with the committed {@code golden/registry.json}.
+ * normalizes with {@link JsonValue#normalize(Object)}, and asserts deep equality with the parsed
+ * {@code golden/registry.json}.
  *
  * <p>Port of the registry stage of {@code typescript/packages/varar/tests/
  * conformance.test.ts} and {@code python/packages/varar/tests/
@@ -121,8 +121,9 @@ class ConformanceTest {
         Registry registry = bound.registry();
 
         var artifact = Conformance.toRegistryArtifact(registry);
-        String actual = CanonicalJson.canonicalStringify(artifact);
-        String expected = Files.readString(bundle.resolve("golden").resolve("registry.json"), StandardCharsets.UTF_8);
+        Object actual = JsonValue.normalize(artifact);
+        Object expected = JsonValue.normalize(JsonValue.parse(
+                Files.readString(bundle.resolve("golden").resolve("registry.json"), StandardCharsets.UTF_8)));
         assertEquals(expected, actual, () -> bundle.getFileName() + "/registry.json mismatch");
     }
 
@@ -149,8 +150,9 @@ class ConformanceTest {
         Plan.ExecutionPlan plan = Plan.plan(doc, registry);
 
         var artifact = Conformance.toPlanArtifact(plan);
-        String actual = CanonicalJson.canonicalStringify(artifact);
-        String expected = Files.readString(bundle.resolve("golden").resolve("plan.json"), StandardCharsets.UTF_8);
+        Object actual = JsonValue.normalize(artifact);
+        Object expected = JsonValue.normalize(JsonValue.parse(
+                Files.readString(bundle.resolve("golden").resolve("plan.json"), StandardCharsets.UTF_8)));
         assertEquals(expected, actual, () -> bundle.getFileName() + "/plan.json mismatch");
     }
 
@@ -185,8 +187,9 @@ class ConformanceTest {
 
         Conformance.BundleArtifacts artifacts = Conformance.runConformance(doc, registry, contextFactory);
 
-        String actual = CanonicalJson.canonicalStringify(artifacts.trace());
-        String expected = Files.readString(bundle.resolve("golden").resolve("trace.json"), StandardCharsets.UTF_8);
+        Object actual = JsonValue.normalize(artifacts.trace());
+        Object expected = JsonValue.normalize(JsonValue.parse(
+                Files.readString(bundle.resolve("golden").resolve("trace.json"), StandardCharsets.UTF_8)));
         assertEquals(expected, actual, () -> bundle.getFileName() + "/trace.json mismatch");
     }
 }

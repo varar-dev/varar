@@ -7,7 +7,7 @@ import java.util.Map;
 
 /**
  * Minimal recursive-descent JSON parser: the reading twin of var-core's
- * hand-rolled {@code CanonicalJson} writer. The repo deliberately has zero
+ * hand-rolled {@code JsonWriter}. The repo deliberately has zero
  * JSON library dependencies; varar.config.json files are tiny, so a ~150-line
  * strict parser (objects, arrays, strings with escapes, numbers, booleans,
  * null — no extensions, no comments, duplicate keys rejected) beats pulling

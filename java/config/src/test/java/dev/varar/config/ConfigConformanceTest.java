@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import dev.varar.core.CanonicalJson;
+import dev.varar.core.JsonValue;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -51,8 +51,9 @@ class ConfigConformanceTest {
         artifact.put("docs", docs);
         artifact.put("steps", config.steps());
         artifact.put("snippets", config.snippets());
-        String actual = CanonicalJson.canonicalStringify(artifact);
-        String expected = Files.readString(caseDir.resolve("golden.json"), StandardCharsets.UTF_8);
+        Object actual = JsonValue.normalize(artifact);
+        Object expected = JsonValue.normalize(
+                JsonValue.parse(Files.readString(caseDir.resolve("golden.json"), StandardCharsets.UTF_8)));
         assertEquals(expected, actual, () -> caseDir.getFileName() + " mismatch");
     }
 }

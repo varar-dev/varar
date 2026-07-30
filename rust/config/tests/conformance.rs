@@ -6,7 +6,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use varar_config::{Config, read_config};
-use varar_core::canonical_json::canonical_stringify;
+use varar_core::json_value::parse_json_value;
 use varar_core::value::Value;
 
 fn cases_dir() -> PathBuf {
@@ -59,9 +59,11 @@ fn config_cases_match_golden() {
         match result {
             Err(e) => fails.push(format!("{name}: unexpected error: {e}")),
             Ok(config) => {
-                let actual = canonical_stringify(&artifact(&config));
-                let expected = fs::read_to_string(dir.join("golden.json")).unwrap();
-                if actual != expected {
+                // By CONTENT, not bytes — see the note in core's doc gate.
+                let expected =
+                    parse_json_value(&fs::read_to_string(dir.join("golden.json")).unwrap())
+                        .expect("golden.json is valid JSON");
+                if artifact(&config) != expected {
                     fails.push(format!("{name}: golden mismatch"));
                 }
             }

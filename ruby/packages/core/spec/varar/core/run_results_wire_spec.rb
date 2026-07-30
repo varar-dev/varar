@@ -7,7 +7,7 @@ require 'varar/core'
 module Varar
   module Core
     # The cross-port wire format of .varar/<oath_path>.json (ADR 0014). Every port
-    # builds this same value and must serialize it byte-for-byte identically — see
+    # builds this same value; the parsed result must match — see
     # conformance/run-results/README.md for what that pins, and why the bundle
     # goldens don't cover it.
     ::RSpec.describe Results do
@@ -47,9 +47,11 @@ module Varar
         )
       end
 
-      it 'matches the cross-port fixture byte for byte' do
+      it 'matches the cross-port fixture' do
+        # By CONTENT: the file has to SAY the same thing in every port — field
+        # names, the shapes, and an optional member absent rather than null.
         written = "#{JSON.pretty_generate(described_class.to_wire(results))}\n"
-        expect(written).to eq(File.read(expected_path, encoding: 'UTF-8'))
+        expect(JSON.parse(written)).to eq(JSON.parse(File.read(expected_path, encoding: 'UTF-8')))
       end
     end
   end

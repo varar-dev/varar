@@ -20,7 +20,7 @@ import org.junit.jupiter.params.provider.MethodSource;
  * The Milestone 1 conformance gate: for every bundle under the shared, language-neutral
  * {@code conformance/bundles/} corpus, parses {@code example.md}, projects it via {@link
  * Conformance#toDocArtifact(Ast.Doc)}, serializes with {@link
- * CanonicalJson#canonicalStringify(Object)}, and asserts byte-for-byte equality with the
+ * JsonValue#normalize(Object)}, and asserts deep equality with the parsed
  * committed {@code golden/doc.json}.
  *
  * <p>Port of the var-doc stage of {@code typescript/packages/varar/tests/conformance.test.ts}
@@ -68,8 +68,9 @@ class ConformanceTest {
         String source = Files.readString(bundle.resolve("example.md"), StandardCharsets.UTF_8);
         Ast.Doc doc = Parse.parse("example.md", source);
         var artifact = Conformance.toDocArtifact(doc);
-        String actual = CanonicalJson.canonicalStringify(artifact);
-        String expected = Files.readString(bundle.resolve("golden").resolve("doc.json"), StandardCharsets.UTF_8);
+        Object actual = JsonValue.normalize(artifact);
+        Object expected = JsonValue.normalize(JsonValue.parse(
+                Files.readString(bundle.resolve("golden").resolve("doc.json"), StandardCharsets.UTF_8)));
         assertEquals(expected, actual, () -> bundle.getFileName() + "/doc.json mismatch");
     }
 

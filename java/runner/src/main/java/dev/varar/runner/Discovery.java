@@ -15,7 +15,7 @@ import java.util.stream.Stream;
  * <p>{@link #matchOath} and {@link #findOaths} share a single glob-to-regex compiler
  * ({@link #globToRegex}) so the two never independently reimplement (and silently drift from
  * each other on) the same matching rules — same discipline as {@link
- * dev.varar.core.CanonicalJson CanonicalJson}'s
+ * dev.varar.core.JsonWriter JsonWriter}'s
  * hand-rolled-not-library decision: Java has no {@code Path.full_match}
  * (Python 3.13's {@code pathlib.Path.full_match}/PEP 428) and {@code
  * FileSystem.getPathMatcher("glob:...")}'s {@code **} semantics differ from this project's

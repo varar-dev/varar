@@ -21,7 +21,7 @@ import java.util.Map;
  * {@link Map} (keyed by column name); a returned "table" as a {@link List} of {@link List}
  * (positional) or a {@link List} of {@link Map} (keyed by header cell) — mirroring the {@code
  * Map<String, Object>} convention already used for JSON-object-shaped values elsewhere in this
- * port (see {@code CanonicalJson}).
+ * port (see {@code JsonWriter}).
  */
 public record CellDiff(
         String column,

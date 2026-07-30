@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 
 /**
  * The cross-port wire format of {@code .varar/<oathPath>.json} (ADR 0014). Every port builds this
- * same value and must serialize it byte-for-byte identically — see
+ * same value; the parsed result must match — see
  * {@code conformance/run-results/README.md} for what that pins, and why the bundle goldens don't
  * cover it.
  */
@@ -48,7 +48,11 @@ class RunResultsWireTest {
 
     @Test
     void theWireFormatMatchesTheCrossPortFixture() throws Exception {
-        String written = CanonicalJson.stringifyInOrder(Result.toWire(results())) + "\n";
-        assertEquals(Files.readString(EXPECTED, StandardCharsets.UTF_8), written);
+        // By CONTENT: the file has to SAY the same thing in every port — field names, the shapes,
+        // and an optional member absent rather than null.
+        String written = JsonWriter.stringifyInOrder(Result.toWire(results()));
+        assertEquals(
+                JsonValue.normalize(JsonValue.parse(Files.readString(EXPECTED, StandardCharsets.UTF_8))),
+                JsonValue.normalize(JsonValue.parse(written)));
     }
 }

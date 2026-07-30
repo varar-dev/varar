@@ -5,6 +5,7 @@
 
 use crate::ast::Doc;
 use crate::hash::hash_source;
+use crate::json_value::parse_json_value;
 use crate::plan::{ExecutionPlan, derive_example_name};
 use crate::span::Span;
 use crate::value::Value;
@@ -316,7 +317,7 @@ fn write_json_string(sb: &mut String, s: &str) {
 
 /// Parses `varar.lock.json`; `None` on malformed input (treated as no baseline).
 pub fn parse_lock_file(text: &str) -> Option<LockFile> {
-    let parsed = JsonReader::new(text).parse_whole()?;
+    let parsed = parse_json_value(text)?;
     let Value::Map(obj) = parsed else { return None };
     if !matches!(obj.get("version"), Some(Value::Int(2))) {
         return None;
@@ -357,180 +358,4 @@ fn parse_oath_baseline(value: &Value) -> Option<OathBaseline> {
         source_hash: source_hash.clone(),
         examples,
     })
-}
-
-/// A tiny recursive-descent JSON reader — enough for `varar.lock.json`, returning
-/// `None` on malformed input (Java's caught-exception → null).
-struct JsonReader {
-    chars: Vec<char>,
-    i: usize,
-}
-
-impl JsonReader {
-    fn new(text: &str) -> JsonReader {
-        JsonReader {
-            chars: text.chars().collect(),
-            i: 0,
-        }
-    }
-
-    fn parse_whole(&mut self) -> Option<Value> {
-        let v = self.value()?;
-        self.skip_ws();
-        if self.i != self.chars.len() {
-            return None;
-        }
-        Some(v)
-    }
-
-    fn value(&mut self) -> Option<Value> {
-        self.skip_ws();
-        match self.peek()? {
-            '{' => self.object(),
-            '[' => self.array(),
-            '"' => self.string().map(Value::String),
-            't' | 'f' => self.boolean(),
-            'n' => self.null(),
-            _ => self.number(),
-        }
-    }
-
-    fn object(&mut self) -> Option<Value> {
-        self.expect('{')?;
-        let mut map = BTreeMap::new();
-        self.skip_ws();
-        if self.peek()? == '}' {
-            self.i += 1;
-            return Some(Value::Map(map));
-        }
-        loop {
-            self.skip_ws();
-            let key = self.string()?;
-            self.skip_ws();
-            self.expect(':')?;
-            map.insert(key, self.value()?);
-            self.skip_ws();
-            match self.next()? {
-                '}' => return Some(Value::Map(map)),
-                ',' => {}
-                _ => return None,
-            }
-        }
-    }
-
-    fn array(&mut self) -> Option<Value> {
-        self.expect('[')?;
-        let mut list = Vec::new();
-        self.skip_ws();
-        if self.peek()? == ']' {
-            self.i += 1;
-            return Some(Value::List(list));
-        }
-        loop {
-            list.push(self.value()?);
-            self.skip_ws();
-            match self.next()? {
-                ']' => return Some(Value::List(list)),
-                ',' => {}
-                _ => return None,
-            }
-        }
-    }
-
-    fn string(&mut self) -> Option<String> {
-        self.expect('"')?;
-        let mut out = String::new();
-        loop {
-            match self.next()? {
-                '"' => return Some(out),
-                '\\' => match self.next()? {
-                    '"' => out.push('"'),
-                    '\\' => out.push('\\'),
-                    '/' => out.push('/'),
-                    'n' => out.push('\n'),
-                    'r' => out.push('\r'),
-                    't' => out.push('\t'),
-                    'b' => out.push('\u{0008}'),
-                    'f' => out.push('\u{000c}'),
-                    'u' => {
-                        let code = self.hex4()?;
-                        out.push(char::from_u32(code)?);
-                    }
-                    _ => return None,
-                },
-                c => out.push(c),
-            }
-        }
-    }
-
-    fn hex4(&mut self) -> Option<u32> {
-        if self.i + 4 > self.chars.len() {
-            return None;
-        }
-        let slice: String = self.chars[self.i..self.i + 4].iter().collect();
-        self.i += 4;
-        u32::from_str_radix(&slice, 16).ok()
-    }
-
-    fn number(&mut self) -> Option<Value> {
-        let start = self.i;
-        while self.i < self.chars.len() && "-+.eE0123456789".contains(self.chars[self.i]) {
-            self.i += 1;
-        }
-        if self.i == start {
-            return None;
-        }
-        let num: String = self.chars[start..self.i].iter().collect();
-        if num.contains(['.', 'e', 'E']) {
-            num.parse::<f64>().ok().map(Value::Float)
-        } else {
-            num.parse::<i64>().ok().map(Value::Int)
-        }
-    }
-
-    fn boolean(&mut self) -> Option<Value> {
-        if self.starts_with("true") {
-            self.i += 4;
-            Some(Value::Bool(true))
-        } else if self.starts_with("false") {
-            self.i += 5;
-            Some(Value::Bool(false))
-        } else {
-            None
-        }
-    }
-
-    fn null(&mut self) -> Option<Value> {
-        if self.starts_with("null") {
-            self.i += 4;
-            Some(Value::Null)
-        } else {
-            None
-        }
-    }
-
-    fn starts_with(&self, lit: &str) -> bool {
-        let lit: Vec<char> = lit.chars().collect();
-        self.i + lit.len() <= self.chars.len() && self.chars[self.i..self.i + lit.len()] == lit[..]
-    }
-
-    fn skip_ws(&mut self) {
-        while self.i < self.chars.len() && matches!(self.chars[self.i], ' ' | '\n' | '\r' | '\t') {
-            self.i += 1;
-        }
-    }
-
-    fn peek(&self) -> Option<char> {
-        self.chars.get(self.i).copied()
-    }
-
-    fn next(&mut self) -> Option<char> {
-        let c = self.chars.get(self.i).copied()?;
-        self.i += 1;
-        Some(c)
-    }
-
-    fn expect(&mut self, c: char) -> Option<()> {
-        if self.next()? == c { Some(()) } else { None }
-    }
 }

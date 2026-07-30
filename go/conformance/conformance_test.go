@@ -116,10 +116,7 @@ func TestRegistryMatchesGolden(t *testing.T) {
 	for _, name := range bundleNames(t) {
 		t.Run(name, func(t *testing.T) {
 			reg := registryFor(t, name)
-			actual := core.CanonicalStringify(core.ToRegistryArtifact(reg))
-			if want := golden(t, name, "registry.json"); actual != want {
-				t.Errorf("registry.json mismatch for %s\n--- got ---\n%s\n--- want ---\n%s", name, actual, want)
-			}
+			assertMatchesGolden(t, name, "registry.json", core.ToRegistryArtifact(reg), golden(t, name, "registry.json"))
 		})
 	}
 }
@@ -130,10 +127,7 @@ func TestPlanMatchesGolden(t *testing.T) {
 			reg := registryFor(t, name)
 			doc := core.Parse("example.md", sourceOf(t, name))
 			plan := core.Plan(doc, reg)
-			actual := core.CanonicalStringify(core.ToPlanArtifact(plan))
-			if want := golden(t, name, "plan.json"); actual != want {
-				t.Errorf("plan.json mismatch for %s\n--- got ---\n%s\n--- want ---\n%s", name, actual, want)
-			}
+			assertMatchesGolden(t, name, "plan.json", core.ToPlanArtifact(plan), golden(t, name, "plan.json"))
 		})
 	}
 }
@@ -146,10 +140,20 @@ func TestTraceMatchesGolden(t *testing.T) {
 			f.register(s)
 			doc := core.Parse("example.md", sourceOf(t, name))
 			artifacts := core.RunConformance(doc, s.Registry(), func() any { return f.state() })
-			actual := core.CanonicalStringify(artifacts.Trace)
-			if want := golden(t, name, "trace.json"); actual != want {
-				t.Errorf("trace.json mismatch for %s\n--- got ---\n%s\n--- want ---\n%s", name, actual, want)
-			}
+			assertMatchesGolden(t, name, "trace.json", artifacts.Trace, golden(t, name, "trace.json"))
 		})
+	}
+}
+
+// assertMatchesGolden compares an artifact with a golden by CONTENT — see the
+// note on the same helper in core's doc gate.
+func assertMatchesGolden(t *testing.T, bundle, artifactName string, actual core.Value, goldenText string) {
+	t.Helper()
+	want, err := core.ParseJSONValue(goldenText)
+	if err != nil {
+		t.Fatalf("%s/%s is not valid JSON: %v", bundle, artifactName, err)
+	}
+	if !core.ValueEqual(actual, want) {
+		t.Errorf("%s mismatch for %s\n--- got ---\n%#v\n--- want ---\n%#v", artifactName, bundle, actual, want)
 	}
 }
