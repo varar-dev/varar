@@ -80,6 +80,19 @@ If a function in `packages/varar/src/` needs to read a file, it doesn't — it t
 
 pnpm workspace · biome · vitest (for the core's own tests) · knip · jscpd · TypeScript (ESM-only, `node:` imports, Node ≥ 22 LTS).
 
+**TypeScript 7 everywhere except the website.** 7 is the native Go compiler:
+`tsc` is a binary and the only programmatic API (`typescript/unstable/*`) spawns
+it and talks over a pipe — `import * as ts from 'typescript'` no longer returns
+a compiler. `packages/website` therefore stays pinned to `typescript@6`, the
+last JS-implemented release, because its example editors type-check and
+transpile *in the browser* (`src/lib/ts-diagnostics.ts`, `src/lib/run-worker.ts`)
+and `@astrojs/check` peer-depends on `^5 || ^6` besides. There is no WASM build
+of tsgo yet — Microsoft has committed to one for the playground and vscode.dev
+but published nothing (microsoft/typescript-go#3478, #4633), and the official
+Playground and Monaco are still on the JS compiler too. Revisit when a
+browser-instantiable tsgo ships. pnpm keeps the two versions apart per package,
+so this costs nothing but the pin.
+
 ## Workflow
 
 - **Root gate.** `make check` (or plain `make`) at the repo root builds and tests

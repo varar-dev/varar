@@ -2,6 +2,8 @@ import * as varCore from '@varar/core'
 import { type Drift, hashSource, type OathResults } from '@varar/core'
 import * as varRuntime from '@varar/varar'
 import { _resetBuilder } from '@varar/varar/registry'
+// typescript 6, not the workspace's 7 — `transpileModule` runs in-process in
+// the browser and TypeScript 7 has no such API. See ts-diagnostics.ts.
 import * as ts from 'typescript'
 import { createMemoryBaselineStore } from './memory-baseline-store.ts'
 import { resolveRelative } from './module-resolution.ts'
