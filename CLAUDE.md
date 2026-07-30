@@ -109,6 +109,17 @@ on everything since the last release tag):
   Work that ships nothing to a consumer — website, CI, tooling — is a
   `chore(website): …` or similar, never a `feat`: it would bump the version
   while appearing in no changelog section.
+- **`spec` means every port, and it's checked.** `release/lint-commits.sh`
+  fails a `(spec)` commit whose diff misses a port directory (`typescript`,
+  `python`, `java` — Kotlin lives there too — `ruby`, `rust`, `dotnet`, `go`).
+  A change that genuinely can't land everywhere at once says so in the commit
+  body, and the deferral becomes greppable
+  (`git log --grep=Ports-deferred`) instead of invisible:
+
+      Ports-deferred: ruby, dotnet, go — no run-result payload in those ports yet
+
+  Landing one port at a time is fine — scope those commits per port
+  (`feat(py/core): …`), not `spec`.
 - **The subject is the changelog line, verbatim.** Write it for the consumer
   reading release notes, not the reviewer reading the diff: what changed for
   *them*, not how. "generated modules import runtime helpers from
