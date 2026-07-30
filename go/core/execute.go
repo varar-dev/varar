@@ -236,9 +236,10 @@ func attachLocation(error StepError, step PlannedStep, varPath string) StepFailu
 	return StepFailure{
 		Error: error,
 		Location: &FailureLocation{
-			Label: truncateLabel(step.Text),
-			Path:  varPath,
-			Line:  a.StartLine,
+			Label:  truncateLabel(step.Text),
+			Path:   varPath,
+			Line:   a.StartLine,
+			Anchor: AnchorRange{From: a.StartOffset, To: a.EndOffset},
 		},
 	}
 }

@@ -65,11 +65,14 @@ func handlerStepError(he HandlerError) StepError {
 	return StepError{Kind: SEHandler, Handler: he}
 }
 
-// FailureLocation is where a failure points in the .md.
+// FailureLocation is where a failure points in the .md. Line is the anchor's
+// start line (all a rendered frame can show); Anchor is its full offset range,
+// so a renderer can underline the failing step instead of its whole line.
 type FailureLocation struct {
-	Label string
-	Path  string
-	Line  int
+	Label  string
+	Path   string
+	Line   int
+	Anchor AnchorRange
 }
 
 // StepFailure is a caught step failure plus its (optional) source location.
@@ -81,6 +84,50 @@ type StepFailure struct {
 // bareFailure is a failure with no attached location (fallback-line path).
 func bareFailure(error StepError) StepFailure {
 	return StepFailure{Error: error}
+}
+
+// ToFailure turns a caught step failure into the ExampleResult.failure payload
+// — port of failure.ts / failure.rs. fallbackLine is used when the failure
+// carries no location for oathPath, i.e. it never passed through one of that
+// oath's steps.
+func ToFailure(failure StepFailure, oathPath string, fallbackLine int) ExampleFailure {
+	line := fallbackLine
+	var anchor *AnchorRange
+	if here := failure.Location; here != nil && here.Path == oathPath {
+		line = here.Line
+		// The executor recorded the anchor with the location, so this is the
+		// failing step's span (or the first mismatched cell's) — what a renderer
+		// underlines instead of the whole line.
+		a := here.Anchor
+		anchor = &a
+	}
+
+	var cells []CellFailure
+	if failure.Error.Kind == SECellMismatch {
+		for _, c := range failure.Error.Cells {
+			if !c.Ok {
+				cells = append(cells, CellFailure{From: c.Span.StartOffset, To: c.Span.EndOffset, Actual: c.Actual})
+			}
+		}
+	}
+
+	return ExampleFailure{
+		Line:    line,
+		Message: failure.Error.Message(),
+		Stack:   renderStack(failure),
+		Cells:   cells,
+		Anchor:  anchor,
+	}
+}
+
+// renderStack is display-only: Go has no exception stack to scrape, so the
+// location is rendered from structural data the way the Rust port does.
+func renderStack(failure StepFailure) string {
+	msg := failure.Error.Message()
+	if l := failure.Location; l != nil {
+		return fmt.Sprintf("%s\n    at %s (%s:%d)", msg, l.Label, l.Path, l.Line)
+	}
+	return msg
 }
 
 // quote mirrors JSON.stringify's quoting of the doc-string error message closely

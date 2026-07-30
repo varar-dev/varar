@@ -199,9 +199,12 @@ module Varar
       end
 
       # In TS this injects a synthetic `at <text> (path:line:col)` frame for
-      # editor navigation; the conformance trace derives the anchor separately
-      # via failure_anchor, so here it is a no-op that returns the error.
-      def augment_stack(error, _step, _var_path)
+      # editor navigation. Ruby has no writable stack text to splice into, so
+      # it records the anchor structurally instead — the failing step's span
+      # (or the first mismatched cell's), which Failures.to_failure reads back
+      # so a renderer underlines the step and not its whole line.
+      def augment_stack(error, step, _var_path)
+        FailureAnchor.attach_anchor(error, FailureAnchor.failure_anchor(error, step.match_span))
         error
       end
     end
