@@ -328,7 +328,7 @@ final class OathFileSelectorResolver implements SelectorResolver {
         String content = readContent(source);
         Plan.ExecutionPlan plan = Run.planOath(oathPath, content, loadedSteps.registry());
         OathFileDescriptor fileDescriptor =
-                new OathFileDescriptor(uniqueId, oathPath, source, content, loadedSteps, plan);
+                new OathFileDescriptor(uniqueId, oathPath, source, content, loadedSteps, plan, root);
         mergeChildren(fileDescriptor, source, onlyLine);
         // Reconcile drift once per oath (only on a full-file discovery — never a single-example
         // re-run, where onlyLine is set): a clean run records/updates varar.lock.json; a paragraph

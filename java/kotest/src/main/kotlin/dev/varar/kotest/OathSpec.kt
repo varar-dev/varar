@@ -2,9 +2,12 @@ package dev.varar.kotest
 
 import dev.varar.config.Config
 import dev.varar.core.Drift
+import dev.varar.core.Failure
+import dev.varar.core.Result
 import dev.varar.runner.BaselineStores
 import dev.varar.runner.Discovery
 import dev.varar.runner.Render
+import dev.varar.runner.Results
 import dev.varar.runner.Run
 import dev.varar.runner.StepLoader
 import io.kotest.core.spec.style.FunSpec
@@ -51,6 +54,11 @@ abstract class OathSpec(root: Path = Path.of(".")) : FunSpec() {
         // set, since findOaths ignores whatever test filter Kotest was given.
         Drift.pruneBaselines(baselineStore, oaths.map(::relOf), update)
 
+        // Run results for the language server (ADR 0014). Kotest has no per-file completion
+        // hook here, so the collector flushes when the spec's last oath has been declared and
+        // run — see the finalizer below.
+        val results = Results()
+
         for (oathPath in oaths) {
             val rel = relOf(oathPath)
             val source = Files.readString(oathPath)
@@ -61,10 +69,25 @@ abstract class OathSpec(root: Path = Path.of(".")) : FunSpec() {
             val drifts = Drift.reconcileDrift(baselineStore, rel, source, plan.doc(), plan, update)
             context(rel) {
                 for (exampleRun in runs) {
-                    test(exampleRun.example().name()) {
+                    val example = exampleRun.example()
+                    val lines = example.steps().map { it.matchSpan().startLine() }.distinct()
+                    test(example.name()) {
                         try {
                             exampleRun.run().run()
                         } catch (failure: Throwable) {
+                            // Recorded here, where the Throwable is still in hand:
+                            // Failure.toFailure
+                            // reads the anchor the executor attached to it.
+                            results.record(
+                                rel,
+                                source,
+                                Result.ExampleResult(
+                                    example.name(),
+                                    Result.Status.FAILED,
+                                    lines,
+                                    Failure.toFailure(failure, rel, lines.firstOrNull() ?: 0),
+                                ),
+                            )
                             // Reuse the runner's span-anchored rendering — never
                             // re-derive failure text in an adapter.
                             throw AssertionError(
@@ -72,6 +95,11 @@ abstract class OathSpec(root: Path = Path.of(".")) : FunSpec() {
                                 failure,
                             )
                         }
+                        results.record(
+                            rel,
+                            source,
+                            Result.ExampleResult(example.name(), Result.Status.PASSED, lines, null),
+                        )
                     }
                 }
                 for (drift in drifts) {
@@ -79,5 +107,10 @@ abstract class OathSpec(root: Path = Path.of(".")) : FunSpec() {
                 }
             }
         }
+
+        // Every example of every oath has run by the time the spec finalizes — the first moment
+        // the results are complete. Passing oaths are written too: a stale file would keep a
+        // diagnostic on screen that this run has just cleared.
+        afterSpec { results.flushAll(root) }
     }
 }

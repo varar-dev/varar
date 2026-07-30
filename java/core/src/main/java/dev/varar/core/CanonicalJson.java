@@ -1,5 +1,6 @@
 package dev.varar.core;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -42,18 +43,33 @@ public final class CanonicalJson {
     /** Serializes {@code value} to canonical JSON, with a trailing {@code "\n"}. */
     public static String canonicalStringify(Object value) {
         StringBuilder sb = new StringBuilder();
-        write(sb, value, 0);
+        write(sb, value, 0, true);
         sb.append('\n');
         return sb.toString();
     }
 
-    private static void write(StringBuilder sb, Object value, int depth) {
+    /**
+     * Serializes {@code value} the way {@code JSON.stringify(value, null, 2)} does in the
+     * TypeScript port: the same 2-space indent and escaping, but keys in the order the map yields
+     * them rather than sorted, and no trailing newline of its own.
+     *
+     * <p>Run results (ADR 0014) use this rather than {@link #canonicalStringify} — the reference
+     * implementation writes the payload in declaration order, and that file is read by humans
+     * diffing it as much as by the language server.
+     */
+    public static String stringifyInOrder(Object value) {
+        StringBuilder sb = new StringBuilder();
+        write(sb, value, 0, false);
+        return sb.toString();
+    }
+
+    private static void write(StringBuilder sb, Object value, int depth, boolean sortKeys) {
         if (value == null) {
             sb.append("null");
         } else if (value instanceof Map<?, ?> map) {
-            writeObject(sb, map, depth);
+            writeObject(sb, map, depth, sortKeys);
         } else if (value instanceof List<?> list) {
-            writeArray(sb, list, depth);
+            writeArray(sb, list, depth, sortKeys);
         } else if (value instanceof String s) {
             writeString(sb, s);
         } else if (value instanceof Boolean b) {
@@ -65,25 +81,28 @@ public final class CanonicalJson {
         }
     }
 
-    private static void writeObject(StringBuilder sb, Map<?, ?> map, int depth) {
+    private static void writeObject(StringBuilder sb, Map<?, ?> map, int depth, boolean sortKeys) {
         if (map.isEmpty()) {
             sb.append("{}");
             return;
         }
         // Map.of(...)'s iteration order is unspecified — sort the key set ourselves rather
-        // than trust the input map's own order.
-        var sorted = new TreeMap<String, Object>();
-        for (var entry : map.entrySet()) {
-            sorted.put((String) entry.getKey(), entry.getValue());
+        // than trust the input map's own order. A caller that DOES care about order (run
+        // results) passes an ordered map and sortKeys=false.
+        Map<String, Object> entries = new LinkedHashMap<>();
+        if (sortKeys) {
+            entries.putAll(new TreeMap<>(cast(map)));
+        } else {
+            entries.putAll(cast(map));
         }
         sb.append("{\n");
         int i = 0;
-        int n = sorted.size();
-        for (var entry : sorted.entrySet()) {
+        int n = entries.size();
+        for (var entry : entries.entrySet()) {
             indent(sb, depth + 1);
             writeString(sb, entry.getKey());
             sb.append(": ");
-            write(sb, entry.getValue(), depth + 1);
+            write(sb, entry.getValue(), depth + 1, sortKeys);
             if (++i < n) sb.append(',');
             sb.append('\n');
         }
@@ -91,7 +110,12 @@ public final class CanonicalJson {
         sb.append('}');
     }
 
-    private static void writeArray(StringBuilder sb, List<?> list, int depth) {
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> cast(Map<?, ?> map) {
+        return (Map<String, Object>) map;
+    }
+
+    private static void writeArray(StringBuilder sb, List<?> list, int depth, boolean sortKeys) {
         if (list.isEmpty()) {
             sb.append("[]");
             return;
@@ -100,7 +124,7 @@ public final class CanonicalJson {
         int n = list.size();
         for (int i = 0; i < n; i++) {
             indent(sb, depth + 1);
-            write(sb, list.get(i), depth + 1);
+            write(sb, list.get(i), depth + 1, sortKeys);
             if (i + 1 < n) sb.append(',');
             sb.append('\n');
         }

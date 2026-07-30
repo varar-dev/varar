@@ -1,6 +1,8 @@
 package dev.varar.core;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Immutable run-result records — port of {@code var-core/src/result.ts}.
@@ -76,5 +78,65 @@ public final class Result {
         public OathResults {
             examples = List.copyOf(examples);
         }
+    }
+
+    /**
+     * Projects {@link OathResults} onto the JSON shape of {@code .varar/<oathPath>.json} (ADR
+     * 0014): the TypeScript field names, in declaration order, with the optional members absent
+     * rather than null so a reader that predates them still parses the file. Pure — writing the
+     * file is the shell's job. Pair with {@link CanonicalJson#stringifyInOrder}.
+     */
+    public static Map<String, Object> toWire(OathResults results) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("version", results.version());
+        out.put("oathPath", results.oathPath());
+        out.put("sourceHash", results.sourceHash());
+        out.put(
+                "examples",
+                results.examples().stream().map(Result::exampleToWire).toList());
+        return out;
+    }
+
+    private static Map<String, Object> exampleToWire(ExampleResult example) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("name", example.name());
+        out.put("status", example.status() == Status.PASSED ? "passed" : "failed");
+        out.put("lines", List.copyOf(example.lines()));
+        if (example.failure() != null) {
+            out.put("failure", failureToWire(example.failure()));
+        }
+        return out;
+    }
+
+    private static Map<String, Object> failureToWire(ExampleFailure failure) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        out.put("line", failure.line());
+        out.put("message", failure.message());
+        out.put("stack", failure.stack());
+        if (failure.cells() != null && !failure.cells().isEmpty()) {
+            out.put(
+                    "cells",
+                    failure.cells().stream()
+                            .map(c -> (Object) orderedMap("from", c.from(), "to", c.to(), "actual", c.actual()))
+                            .toList());
+        }
+        if (failure.anchor() != null) {
+            out.put(
+                    "anchor",
+                    orderedMap(
+                            "from",
+                            failure.anchor().from(),
+                            "to",
+                            failure.anchor().to()));
+        }
+        return out;
+    }
+
+    private static Map<String, Object> orderedMap(Object... pairs) {
+        Map<String, Object> out = new LinkedHashMap<>();
+        for (int i = 0; i < pairs.length; i += 2) {
+            out.put((String) pairs[i], pairs[i + 1]);
+        }
+        return out;
     }
 }

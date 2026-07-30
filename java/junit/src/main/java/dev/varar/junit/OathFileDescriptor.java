@@ -2,8 +2,11 @@ package dev.varar.junit;
 
 import dev.varar.core.Diagnostics;
 import dev.varar.core.Plan;
+import dev.varar.core.Result;
+import dev.varar.runner.Results;
 import dev.varar.runner.Run;
 import dev.varar.runner.StepLoader;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import org.junit.platform.engine.TestSource;
@@ -48,6 +51,10 @@ final class OathFileDescriptor extends AbstractTestDescriptor implements Node<Oa
     private final String content;
     private final StepLoader.LoadedSteps loadedSteps;
     private final Plan.ExecutionPlan plan;
+    /** Where this oath's run results are written when its examples are done (ADR 0014). */
+    private final Path root;
+
+    private final Results results = new Results();
 
     /** Populated once by {@link #before}, before any child's {@code execute()} runs. */
     private List<Run.ExampleRun> exampleRuns;
@@ -58,12 +65,19 @@ final class OathFileDescriptor extends AbstractTestDescriptor implements Node<Oa
             TestSource source,
             String content,
             StepLoader.LoadedSteps loadedSteps,
-            Plan.ExecutionPlan plan) {
+            Plan.ExecutionPlan plan,
+            Path root) {
         super(uniqueId, oathPath, source);
         this.oathPath = oathPath;
         this.content = content;
         this.loadedSteps = loadedSteps;
         this.plan = plan;
+        this.root = root;
+    }
+
+    /** Records one example's outcome, for {@link #after} to persist. */
+    void recordResult(Result.ExampleResult result) {
+        results.record(oathPath, content, result);
     }
 
     @Override
@@ -124,6 +138,16 @@ final class OathFileDescriptor extends AbstractTestDescriptor implements Node<Oa
         exampleRuns = Run.examplesWithRuns(plan, loadedSteps.createContext(), reporter);
         publishDiagnostics(context, reporter.diagnostics());
         return context;
+    }
+
+    /**
+     * Every example in this oath has run, which is the first moment its results are complete —
+     * write them for the language server (ADR 0014). A passing oath is written too: a stale file
+     * would keep a diagnostic on screen that this run has just cleared.
+     */
+    @Override
+    public void after(OathEngineExecutionContext context) {
+        results.flush(root, oathPath);
     }
 
     /**

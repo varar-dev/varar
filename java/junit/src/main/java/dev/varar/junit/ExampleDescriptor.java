@@ -1,7 +1,10 @@
 package dev.varar.junit;
 
+import dev.varar.core.Failure;
 import dev.varar.core.Plan;
+import dev.varar.core.Result;
 import dev.varar.runner.Render;
+import java.util.List;
 import org.junit.platform.engine.TestSource;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.support.descriptor.AbstractTestDescriptor;
@@ -70,12 +73,25 @@ final class ExampleDescriptor extends AbstractTestDescriptor implements Node<Oat
             OathEngineExecutionContext context, DynamicTestExecutor dynamicTestExecutor) throws Exception {
         OathFileDescriptor fileDescriptor = fileDescriptor();
         Runnable run = fileDescriptor.runFor(example);
+        List<Integer> lines = example.steps().stream()
+                .map(step -> step.matchSpan().startLine())
+                .distinct()
+                .toList();
         try {
             run.run();
         } catch (Throwable error) {
+            // Recorded here, where the Throwable itself is in hand: Failure.toFailure reads the
+            // anchor the executor attached to it, which is what lets an editor underline the
+            // failing step rather than its whole line.
+            fileDescriptor.recordResult(new Result.ExampleResult(
+                    example.name(),
+                    Result.Status.FAILED,
+                    lines,
+                    Failure.toFailure(error, fileDescriptor.oathPath(), lines.isEmpty() ? 0 : lines.get(0))));
             String rendered = Render.renderFailure(error, fileDescriptor.content(), fileDescriptor.oathPath());
             throw new RenderedFailure(rendered, error);
         }
+        fileDescriptor.recordResult(new Result.ExampleResult(example.name(), Result.Status.PASSED, lines, null));
         return context;
     }
 
