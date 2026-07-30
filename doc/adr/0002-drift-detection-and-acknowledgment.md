@@ -1,4 +1,4 @@
-# ADR 0002 — Spec drift detection and explicit acknowledgment
+# ADR 0002 — Oath drift detection and explicit acknowledgment
 
 - **Status:** Accepted — **implemented** across all ports (2026-07-07)
 - **Date:** 2026-07-01
@@ -21,9 +21,9 @@
 
 `var` deliberately treats a Markdown paragraph as an **example** only if at least
 one of its sentences matches a step definition. A paragraph that matches nothing
-is **prose** — documentation, silently ignored by the runner. This is what lets a
-spec file freely mix narrative with executable examples (see
-[Examples and drift](../../typescript/packages/website/src/content/docs/reference/examples-and-drift.mdx)).
+is **prose** — documentation, silently ignored by the runner. This is what lets an
+oath file freely mix narrative with executable examples (see
+[Examples](../../typescript/packages/website/src/content/docs/reference/examples.mdx)).
 
 That rule has a dangerous edge. A paragraph that **was** an example can stop
 matching — a step definition is renamed or deleted, or a typo creeps into the
@@ -39,8 +39,8 @@ only for a narrower purpose:
 - `hashSource` — an FNV-1a (32-bit, over UTF-16 code units, `fnv1a:` prefix)
   change-detector in `typescript/packages/var-core/src/hash.ts`. Tiny,
   dependency-free, trivially re-implementable in any language.
-- `SpecResults` (`typescript/packages/var-core/src/result.ts`) — the persisted
-  per-spec run record (`.var/<spec>.json`) carrying `sourceHash` and the list of
+- `OathResults` (`typescript/packages/var-core/src/result.ts`) — the persisted
+  per-oath run record (`.var/<oath>.json`) carrying `sourceHash` and the list of
   examples that ran.
 - `runResultDiagnostics` (`.../run-diagnostics.ts`) — projects a recorded result
   onto the *current* source and, if `hashSource(source) !== results.sourceHash`,
@@ -61,10 +61,10 @@ acknowledge** it. Drift is never resolved silently: neither silently dropped
 
 Mechanism (specified enough to build; details refined at implementation):
 
-1. **Baseline.** Persist, per spec file, the set of examples that ran last time
+1. **Baseline.** Persist, per oath file, the set of examples that ran last time
    (each example's name + source anchor) alongside the source fingerprint
-   `sourceHash`. Reuse/extend the existing run-result record (`SpecResults` /
-   `.var/<spec>.json`) rather than inventing a parallel store.
+   `sourceHash`. Reuse/extend the existing run-result record (`OathResults` /
+   `.var/<oath>.json`) rather than inventing a parallel store.
 2. **Detect.** On each run:
    - if `hashSource(currentSource) === baseline.sourceHash`, the file is
      unchanged — no drift possible;
@@ -96,12 +96,28 @@ The distinction the decision turns on:
 - Drift is a **runtime / run-result** concern, so it lives in the shared shell
   (`var-runner`) and the runner adapters, layered on the pure core's
   parse/match (which already knows which paragraphs are examples). It is *not*
-  runtime-collection behaviour and *not* part of the conformance corpus.
+  runtime-collection behaviour and *not* part of the golden conformance corpus.
+
+  **Amendment (2026-07-28).** "Not part of the conformance corpus" turned out to
+  be the loophole. Because no corpus covered the adapters, the .NET VSTest
+  adapter shipped with `FileBaselineStore` and `ReconcileDrift` present and
+  unit-tested, and called neither from Discover/Run — every gate green, the drift
+  gate absent, and `examples/csharp-vstest` with no baseline at all
+  ([#69](https://github.com/varar-dev/varar/issues/69)). The same hole had a
+  second instance: `examples/typescript-vitest` shipped no baseline either, and
+  the vitest gate is armed by data, so it never fired in the dogfood project.
+
+  Drift's *algorithm* remains unit-gated per port (no golden), but its *wiring*
+  is now gated by a third corpus, `conformance/adapter/` — which runs each sample
+  project's real test command against a deliberately drifted baseline and
+  requires it to go red, then requires `VARAR_UPDATE=1` to accept and re-record.
+  Every port's `make` target and CI workflow runs it. See
+  `conformance/adapter/README.md`.
 - **It must slot into the normal runner run to be useful** — surfaced through a
   regular `pytest` / `vitest` / `var run`, in **both** implementations — not as a
   separate tool.
-- Implementation order (each its own spec → plan): port `hash.ts` + the
-  `SpecResults` run-result format + baseline persistence to Python; then add
+- Implementation order (each its own design spec → plan): port `hash.ts` + the
+  `OathResults` run-result format + baseline persistence to Python; then add
   drift detection + the acknowledgment affordance to **both** `var-runner`s and
   surface it through the adapters. The cross-implementation consistency rules
   apply: same fingerprint, same record shape, same drift semantics, same
@@ -121,12 +137,35 @@ The distinction the decision turns on:
 
 ### Negative / risks
 
-- Requires persisting a per-spec **baseline** (state on disk, under `.var/`), and
+- Requires persisting a per-oath **baseline** (state on disk, under `.var/`), and
   that baseline must be committed / shared for the gate to hold in CI.
 - Introduces an approval workflow (some ceremony, like snapshot tests) — the cost
   of not being silent.
-- Whole-file deletion or rename is a *different* signal (the spec is gone, not
+- Whole-file deletion or rename is a *different* signal (the oath is gone, not
   drifted) and is out of scope here.
+
+  **Amendment (2026-07-28).** Out of scope for *gating* — but the baseline still
+  had to stop hoarding the entries. Reconciliation is per-oath, so a path that no
+  longer exists is never visited and its entry survived forever: moving the sample
+  projects' oaths into `varar/` left every port's lock carrying both the old
+  root-level keys and the new ones, curable only by deleting the file
+  ([#70](https://github.com/varar-dev/varar/issues/70)). The lock stopped being a
+  faithful inventory, and a file later re-introduced at an old path would have
+  been reconciled against a years-stale baseline.
+
+  `pruneBaselines` (all seven cores) now drops those entries, under the same
+  explicit acknowledgment as accepting drift. Two properties keep it honest:
+
+  - **The predicate is the `docs` globs, not the set the run executed.** Runs are
+    routinely filtered — `varar run --globs`, a pytest path argument, an IDE's
+    single-example re-run — and pruning against a filtered view would delete live
+    baselines. Every adapter passes the full configured set.
+  - **It only writes under `update`.** A plain run reports (the CLI prints which
+    paths are stale and how to prune them) and changes nothing. Removal stays as
+    deliberate as accepting drift; this is not silent garbage collection.
+
+  Removal is still not gated. Deleting an oath remains a decision the tool does
+  not second-guess — it just no longer preserves the corpse.
 
 ## Alternatives considered
 
@@ -134,7 +173,7 @@ The distinction the decision turns on:
   but is exactly the footgun — a typo'd or renamed step silently stops testing.
   Rejected.
 - **Any zero-match sentence is an error.** Rejected earlier during the pytest
-  plugin work: legitimate prose in a spec would spuriously fail, and there is no
+  plugin work: legitimate prose in an oath would spuriously fail, and there is no
   way to distinguish a typo from intended prose *without history*.
 - **Editor / LSP "missing step" diagnostic only.** Helpful for authoring, but it
   does not gate the runner or CI — a developer who never opens the editor never
@@ -145,7 +184,7 @@ The distinction the decision turns on:
 
 ## References
 
-- [Examples and drift](../../typescript/packages/website/src/content/docs/reference/examples-and-drift.mdx) — the user-facing statement of these semantics.
+- [Examples](../../typescript/packages/website/src/content/docs/reference/examples.mdx) — the user-facing statement of these semantics (the [Drift detection](../../typescript/packages/website/src/content/docs/reference/examples.mdx#drift-detection) section).
 - `typescript/packages/var-core/src/{hash,result,run-diagnostics}.ts` — the existing TS substrate (fingerprint + run-result + staleness).
 - [Run-result format design](../superpowers/specs/2026-06-28-run-result-format-design.md), [Run-result diagnostics design](../superpowers/specs/2026-06-28-run-result-diagnostics-design.md).
 - [ADR 0001 — Python as the second supported language](0001-second-language-python.md).

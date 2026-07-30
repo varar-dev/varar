@@ -1,7 +1,7 @@
 //! `varar-config` — the strict, fail-loud reader for `varar.config.json`.
 //!
 //! Port of `@varar/config` / Python `var_config`. The canonical shape is
-//! `{ docs: { include, exclude }, steps, snippets, scannerPlugins }`; every key
+//! `{ docs: { include, exclude }, steps, snippets }`; every key
 //! is optional and defaults to empty. A missing file yields the empty config
 //! (tools no-op); malformed JSON, wrong types, or unknown keys fail loudly with
 //! the file path. Proven by the shared corpus at `conformance/config/cases/`.
@@ -9,30 +9,42 @@
 use std::collections::BTreeMap;
 use std::path::Path;
 
-const KNOWN_KEYS: &[&str] = &["$schema", "docs", "steps", "snippets", "scannerPlugins"];
+const KNOWN_KEYS: &[&str] = &["$schema", "docs", "steps", "snippets"];
 const KNOWN_DOCS_KEYS: &[&str] = &["include", "exclude"];
 
 /// The parsed configuration. All fields default to empty.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
-pub struct VarConfig {
+pub struct Config {
     pub docs_include: Vec<String>,
     pub docs_exclude: Vec<String>,
     pub steps: Vec<String>,
     pub snippets: BTreeMap<String, String>,
-    pub scanner_plugins: Vec<String>,
 }
 
-/// Read `<root>/varar.config.json`. Missing file → empty config. Any malformed
-/// input → `Err(message)` beginning with the file path.
-pub fn read_var_config(root: &Path) -> Result<VarConfig, String> {
+/// Read `<root>/varar.config.json`. The filesystem edge over [`parse_config`];
+/// a missing file yields the empty config (tools no-op, as in every port).
+pub fn read_config(root: &Path) -> Result<Config, String> {
     let path = root.join("varar.config.json");
-    let loc = path.display();
     if !path.is_file() {
-        return Ok(VarConfig::default());
+        return Ok(Config::default());
     }
+    let loc = path.display().to_string();
     let text = std::fs::read_to_string(&path).map_err(|e| format!("{loc}: {e}"))?;
+    parse_config(&text, &loc)
+}
+
+/// Parse `varar.config.json` TEXT. Pure — no filesystem.
+///
+/// `source` only labels errors (a path, a URL, `"<memory>"`); nothing is read from
+/// it. Splitting this out from [`read_config`] is what lets a caller with the
+/// text already in hand — an editor buffer, an in-memory fixture, the LSP —
+/// validate it without inventing a file, and mirrors TypeScript's `parseConfig`
+/// / Java's `Config.parse`. Any malformed input → `Err(message)` beginning with
+/// `source`.
+pub fn parse_config(text: &str, source: &str) -> Result<Config, String> {
+    let loc = source;
     let data: serde_json::Value =
-        serde_json::from_str(&text).map_err(|e| format!("{loc}: invalid JSON: {e}"))?;
+        serde_json::from_str(text).map_err(|e| format!("{loc}: invalid JSON: {e}"))?;
     let obj = data
         .as_object()
         .ok_or_else(|| format!("{loc}: top level must be an object"))?;
@@ -67,12 +79,11 @@ pub fn read_var_config(root: &Path) -> Result<VarConfig, String> {
         )
     };
 
-    Ok(VarConfig {
+    Ok(Config {
         docs_include,
         docs_exclude,
         steps: string_array(obj.get("steps"), "steps", &loc)?,
         snippets: string_map(obj.get("snippets"), &loc)?,
-        scanner_plugins: string_array(obj.get("scannerPlugins"), "scannerPlugins", &loc)?,
     })
 }
 

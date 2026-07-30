@@ -15,6 +15,7 @@ const FRIENDLY_NAMES: Record<string, string> = {
   int: 'count',
   float: 'price',
   string: 'user',
+  emph: 'text',
 }
 
 export function generateSnippet(

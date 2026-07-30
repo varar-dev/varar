@@ -1,9 +1,11 @@
 package dev.varar.core;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -12,13 +14,13 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Spec drift detection — port of {@code var-core/src/drift.ts}.
+ * Oath drift detection — port of {@code var-core/src/drift.ts}.
  *
  * <p>A paragraph the committed {@code varar.lock.json} baseline recorded as an example that now
- * matches no step. Pure over the existing {@link Ast.VarDoc} + {@link Plan.ExecutionPlan}, and
+ * matches no step. Pure over the existing {@link Ast.Doc} + {@link Plan.ExecutionPlan}, and
  * byte-identical to the TypeScript and Python ports so a baseline written by one runs green under
  * the others: the same FNV-1a fingerprint ({@link Hash}), the same {@code varar.lock.json} bytes
- * (insertion-ordered keys, sorted spec paths, raw non-ASCII), and the same similarity semantics.
+ * (insertion-ordered keys, sorted oath paths, raw non-ASCII), and the same similarity semantics.
  */
 public final class Drift {
 
@@ -35,17 +37,17 @@ public final class Drift {
     /** One example-producing paragraph, as recorded in the baseline. */
     public record BaselineExample(String name, int line) {}
 
-    /** The committed baseline for one spec file. */
-    public record SpecBaseline(String sourceHash, List<BaselineExample> examples) {
-        public SpecBaseline {
+    /** The committed baseline for one oath file. */
+    public record OathBaseline(String sourceHash, List<BaselineExample> examples) {
+        public OathBaseline {
             examples = List.copyOf(examples);
         }
     }
 
-    /** The whole {@code varar.lock.json}: every spec keyed by its POSIX path. */
-    public record VarLock(int version, Map<String, SpecBaseline> specs) {
-        public VarLock {
-            specs = Collections.unmodifiableMap(new LinkedHashMap<>(specs));
+    /** The whole {@code varar.lock.json}: every oath keyed by its POSIX path. */
+    public record LockFile(int version, Map<String, OathBaseline> oaths) {
+        public LockFile {
+            oaths = Collections.unmodifiableMap(new LinkedHashMap<>(oaths));
         }
     }
 
@@ -67,13 +69,20 @@ public final class Drift {
 
     private static final Pattern TOKEN = Pattern.compile("[\\p{L}\\p{N}]+");
 
-    private static boolean within(Span inner, Span outer) {
-        return inner.startOffset() >= outer.startOffset() && inner.endOffset() <= outer.endOffset();
+    // Do the two spans overlap at all (offset ranges intersect)? A candidate paragraph relates to
+    // its planned example either way round: a header-bound row sits *inside* its binding paragraph,
+    // while a merged example's span *covers* each of the candidates it absorbed (ADR 0012). Overlap
+    // catches both.
+    private static boolean overlaps(Span a, Span b) {
+        return a.startOffset() < b.endOffset() && b.startOffset() < a.endOffset();
     }
 
+    // A candidate paragraph is "live" (still an example) if it overlaps at least one planned
+    // example. A now-prose paragraph — one whose step def was renamed or deleted — overlaps none (it
+    // became a delimiter, splitting any example it was part of), so drift catches it.
     private static boolean isLive(Span candidateSpan, Plan.ExecutionPlan plan) {
         for (Plan.PlannedExample pe : plan.examples()) {
-            if (within(pe.span(), candidateSpan)) return true;
+            if (overlaps(pe.span(), candidateSpan)) return true;
         }
         return false;
     }
@@ -96,9 +105,9 @@ public final class Drift {
     }
 
     /** The current example-producing paragraphs, in document order. */
-    public static List<BaselineExample> liveExamples(Ast.VarDoc varDoc, Plan.ExecutionPlan plan) {
+    public static List<BaselineExample> liveExamples(Ast.Doc doc, Plan.ExecutionPlan plan) {
         List<BaselineExample> out = new ArrayList<>();
-        for (Ast.Example c : varDoc.examples()) {
+        for (Ast.Example c : doc.examples()) {
             if (isLive(c.span(), plan)) {
                 out.add(new BaselineExample(
                         Plan.deriveExampleName(c.body()), c.span().startLine()));
@@ -107,9 +116,9 @@ public final class Drift {
         return out;
     }
 
-    /** The full baseline record for a spec: fingerprint plus live examples. */
-    public static SpecBaseline deriveSpecBaseline(String source, Ast.VarDoc varDoc, Plan.ExecutionPlan plan) {
-        return new SpecBaseline(Hash.hashSource(source), liveExamples(varDoc, plan));
+    /** The full baseline record for an oath: fingerprint plus live examples. */
+    public static OathBaseline deriveOathBaseline(String source, Ast.Doc doc, Plan.ExecutionPlan plan) {
+        return new OathBaseline(Hash.hashSource(source), liveExamples(doc, plan));
     }
 
     /**
@@ -118,10 +127,10 @@ public final class Drift {
      * name scores 1; ties break toward the nearest line). No sourceHash short-circuit — a step
      * rename leaves the hash untouched.
      */
-    public static List<Drifted> detectDrift(SpecBaseline baseline, Ast.VarDoc varDoc, Plan.ExecutionPlan plan) {
+    public static List<Drifted> detectDrift(OathBaseline baseline, Ast.Doc doc, Plan.ExecutionPlan plan) {
         List<Drifted> drifts = new ArrayList<>();
         if (baseline == null) return drifts;
-        List<Ast.Example> candidates = varDoc.examples();
+        List<Ast.Example> candidates = doc.examples();
         int n = candidates.size();
         List<Set<String>> tokens = new ArrayList<>(n);
         boolean[] live = new boolean[n];
@@ -160,50 +169,89 @@ public final class Drift {
     }
 
     /**
-     * One spec's baseline reconciliation against a {@link BaselineStore}. {@code update} accepts
+     * One oath's baseline reconciliation against a {@link BaselineStore}. {@code update} accepts
      * all drift (re-record, report nothing). Otherwise detect drift; rewrite the baseline only on a
      * clean run so an unacknowledged drift keeps its old entry (and stays red).
      */
     public static List<Drifted> reconcileDrift(
-            BaselineStore store,
-            String specPath,
-            String source,
-            Ast.VarDoc varDoc,
-            Plan.ExecutionPlan plan,
-            boolean update) {
+            BaselineStore store, String oathPath, String source, Ast.Doc doc, Plan.ExecutionPlan plan, boolean update) {
         String text = store.read();
-        VarLock lock = text != null ? parseVarLock(text) : null;
-        SpecBaseline baseline = lock != null ? lock.specs().get(specPath) : null;
-        List<Drifted> drifts = update ? new ArrayList<>() : detectDrift(baseline, varDoc, plan);
+        LockFile lock = text != null ? parseLockFile(text) : null;
+        OathBaseline baseline = lock != null ? lock.oaths().get(oathPath) : null;
+        List<Drifted> drifts = update ? new ArrayList<>() : detectDrift(baseline, doc, plan);
         if (update || drifts.isEmpty()) {
-            SpecBaseline next = deriveSpecBaseline(source, varDoc, plan);
-            Map<String, SpecBaseline> specs = new LinkedHashMap<>();
-            if (lock != null) specs.putAll(lock.specs());
-            specs.put(specPath, next);
-            store.write(stringifyVarLock(new VarLock(1, specs)));
+            OathBaseline next = deriveOathBaseline(source, doc, plan);
+            Map<String, OathBaseline> oaths = new LinkedHashMap<>();
+            if (lock != null) oaths.putAll(lock.oaths());
+            oaths.put(oathPath, next);
+            store.write(stringifyLockFile(new LockFile(2, oaths)));
         }
         return drifts;
+    }
+
+    /**
+     * Drops every baseline whose oath path is not in {@code keepPaths} — the entries left behind
+     * when an oath is deleted or moved. Pure counterpart of {@link #parseLockFile} / {@link
+     * #stringifyLockFile}; the caller decides what "still exists" means.
+     */
+    public static LockFile pruneLockFile(LockFile lock, Collection<String> keepPaths) {
+        Set<String> keep = new LinkedHashSet<>(keepPaths);
+        Map<String, OathBaseline> oaths = new LinkedHashMap<>();
+        for (Map.Entry<String, OathBaseline> entry : lock.oaths().entrySet()) {
+            if (keep.contains(entry.getKey())) oaths.put(entry.getKey(), entry.getValue());
+        }
+        return new LockFile(2, oaths);
+    }
+
+    /**
+     * The whole-lock counterpart of {@link #reconcileDrift}, run ONCE per run rather than per oath:
+     * reconciliation cannot see paths that no longer exist, so without this the lock silently
+     * accumulates dead entries and stops being a faithful inventory of the oath set (issue #70).
+     *
+     * <p>{@code keepPaths} MUST be everything the {@code docs} globs currently match — never the set
+     * the run happened to execute. Runs are routinely filtered (an IDE's single-example re-run), and
+     * pruning against a filtered set would delete live baselines.
+     *
+     * <p>Removal is still not <em>gated</em>: a deleted oath is a different signal from drift and
+     * stays ungated (ADR 0002). This only stops preserving dead state, and only under {@code update}.
+     *
+     * @return the paths removed, sorted (or, without {@code update}, the ones that would be)
+     */
+    public static List<String> pruneBaselines(BaselineStore store, Collection<String> keepPaths, boolean update) {
+        String text = store.read();
+        LockFile lock = text != null ? parseLockFile(text) : null;
+        if (lock == null) return new ArrayList<>();
+        Set<String> keep = new LinkedHashSet<>(keepPaths);
+        List<String> stale = new ArrayList<>();
+        for (String path : lock.oaths().keySet()) {
+            if (!keep.contains(path)) stale.add(path);
+        }
+        Collections.sort(stale);
+        if (update && !stale.isEmpty()) {
+            store.write(stringifyLockFile(pruneLockFile(lock, keepPaths)));
+        }
+        return stale;
     }
 
     // ---- serialize (byte-identical to JSON.stringify(...,null,2)+"\n") ------
 
     /**
-     * Serializes {@code varar.lock.json} deterministically: {@code version} then {@code specs} (spec
+     * Serializes {@code varar.lock.json} deterministically: {@code version} then {@code oaths} (oath
      * paths sorted), examples in document order, two-space indent, trailing newline, non-ASCII
-     * raw. NOT {@link CanonicalJson} (which sorts every key) — the lockfile keeps insertion order.
+     * raw. The lock file keeps insertion order — it is committed and shared between ports.
      */
-    public static String stringifyVarLock(VarLock lock) {
-        List<String> paths = new ArrayList<>(lock.specs().keySet());
+    public static String stringifyLockFile(LockFile lock) {
+        List<String> paths = new ArrayList<>(lock.oaths().keySet());
         Collections.sort(paths);
         StringBuilder sb = new StringBuilder();
-        sb.append("{\n  \"version\": 1,\n  \"specs\": ");
+        sb.append("{\n  \"version\": 2,\n  \"oaths\": ");
         if (paths.isEmpty()) {
             sb.append("{}");
         } else {
             sb.append("{\n");
             for (int p = 0; p < paths.size(); p++) {
                 String path = paths.get(p);
-                SpecBaseline b = lock.specs().get(path);
+                OathBaseline b = lock.oaths().get(path);
                 sb.append("    ");
                 writeString(sb, path);
                 sb.append(": {\n      \"sourceHash\": ");
@@ -233,7 +281,7 @@ public final class Drift {
         return sb.toString();
     }
 
-    // Same escaping as CanonicalJson.writeString: standard JSON escapes, control chars as \\uXXXX,
+    // Same escaping as JsonWriter: standard JSON escapes, control chars as \\uXXXX,
     // everything else (including non-ASCII) raw.
     private static void writeString(StringBuilder sb, String s) {
         sb.append('"');
@@ -262,26 +310,26 @@ public final class Drift {
     // ---- parse (a minimal JSON reader; no library in the project) ----------
 
     /** Parses {@code varar.lock.json}; {@code null} on malformed input (treated as no baseline). */
-    public static VarLock parseVarLock(String text) {
+    public static LockFile parseLockFile(String text) {
         Object parsed;
         try {
-            parsed = new JsonReader(text).parseWhole();
+            parsed = JsonValue.parse(text);
         } catch (RuntimeException e) {
             return null;
         }
         if (!(parsed instanceof Map<?, ?> obj)) return null;
-        if (!(obj.get("version") instanceof Number version) || version.intValue() != 1) return null;
-        if (!(obj.get("specs") instanceof Map<?, ?> specsRaw)) return null;
-        Map<String, SpecBaseline> specs = new LinkedHashMap<>();
-        for (Map.Entry<?, ?> entry : specsRaw.entrySet()) {
-            SpecBaseline b = parseSpecBaseline(entry.getValue());
+        if (!(obj.get("version") instanceof Number version) || version.intValue() != 2) return null;
+        if (!(obj.get("oaths") instanceof Map<?, ?> oathsRaw)) return null;
+        Map<String, OathBaseline> oaths = new LinkedHashMap<>();
+        for (Map.Entry<?, ?> entry : oathsRaw.entrySet()) {
+            OathBaseline b = parseOathBaseline(entry.getValue());
             if (b == null) return null;
-            specs.put((String) entry.getKey(), b);
+            oaths.put((String) entry.getKey(), b);
         }
-        return new VarLock(1, specs);
+        return new LockFile(2, oaths);
     }
 
-    private static SpecBaseline parseSpecBaseline(Object value) {
+    private static OathBaseline parseOathBaseline(Object value) {
         if (!(value instanceof Map<?, ?> map)) return null;
         if (!(map.get("sourceHash") instanceof String sourceHash)) return null;
         if (!(map.get("examples") instanceof List<?> examplesRaw)) return null;
@@ -293,156 +341,8 @@ public final class Drift {
             }
             examples.add(new BaselineExample(name, line.intValue()));
         }
-        return new SpecBaseline(sourceHash, examples);
+        return new OathBaseline(sourceHash, examples);
     }
 
     /** A tiny recursive-descent JSON reader — enough for varar.lock.json, throws on malformed. */
-    private static final class JsonReader {
-        private final String s;
-        private int i;
-
-        JsonReader(String s) {
-            this.s = s;
-        }
-
-        Object parseWhole() {
-            Object v = value();
-            skipWs();
-            if (i != s.length()) throw new IllegalStateException("trailing input");
-            return v;
-        }
-
-        private Object value() {
-            skipWs();
-            char c = peek();
-            return switch (c) {
-                case '{' -> object();
-                case '[' -> array();
-                case '"' -> string();
-                case 't', 'f' -> bool();
-                case 'n' -> nul();
-                default -> number();
-            };
-        }
-
-        private Map<String, Object> object() {
-            expect('{');
-            Map<String, Object> map = new LinkedHashMap<>();
-            skipWs();
-            if (peek() == '}') {
-                i++;
-                return map;
-            }
-            while (true) {
-                skipWs();
-                String key = string();
-                skipWs();
-                expect(':');
-                map.put(key, value());
-                skipWs();
-                char c = next();
-                if (c == '}') return map;
-                if (c != ',') throw new IllegalStateException("expected , or }");
-            }
-        }
-
-        private List<Object> array() {
-            expect('[');
-            List<Object> list = new ArrayList<>();
-            skipWs();
-            if (peek() == ']') {
-                i++;
-                return list;
-            }
-            while (true) {
-                list.add(value());
-                skipWs();
-                char c = next();
-                if (c == ']') return list;
-                if (c != ',') throw new IllegalStateException("expected , or ]");
-            }
-        }
-
-        private String string() {
-            expect('"');
-            StringBuilder sb = new StringBuilder();
-            while (true) {
-                char c = next();
-                if (c == '"') return sb.toString();
-                if (c == '\\') {
-                    char e = next();
-                    switch (e) {
-                        case '"' -> sb.append('"');
-                        case '\\' -> sb.append('\\');
-                        case '/' -> sb.append('/');
-                        case 'n' -> sb.append('\n');
-                        case 'r' -> sb.append('\r');
-                        case 't' -> sb.append('\t');
-                        case 'b' -> sb.append('\b');
-                        case 'f' -> sb.append('\f');
-                        case 'u' -> {
-                            sb.append((char) Integer.parseInt(s.substring(i, i + 4), 16));
-                            i += 4;
-                        }
-                        default -> throw new IllegalStateException("bad escape");
-                    }
-                } else {
-                    sb.append(c);
-                }
-            }
-        }
-
-        private Object number() {
-            int start = i;
-            while (i < s.length() && "-+.eE0123456789".indexOf(s.charAt(i)) >= 0) i++;
-            String num = s.substring(start, i);
-            if (num.isEmpty()) throw new IllegalStateException("expected value");
-            if (num.indexOf('.') >= 0 || num.indexOf('e') >= 0 || num.indexOf('E') >= 0) {
-                return Double.parseDouble(num);
-            }
-            return Long.parseLong(num);
-        }
-
-        private Boolean bool() {
-            if (s.startsWith("true", i)) {
-                i += 4;
-                return Boolean.TRUE;
-            }
-            if (s.startsWith("false", i)) {
-                i += 5;
-                return Boolean.FALSE;
-            }
-            throw new IllegalStateException("bad literal");
-        }
-
-        private Object nul() {
-            if (s.startsWith("null", i)) {
-                i += 4;
-                return null;
-            }
-            throw new IllegalStateException("bad literal");
-        }
-
-        private void skipWs() {
-            while (i < s.length()) {
-                char c = s.charAt(i);
-                if (c == ' ' || c == '\n' || c == '\r' || c == '\t') i++;
-                else break;
-            }
-        }
-
-        private char peek() {
-            if (i >= s.length()) throw new IllegalStateException("unexpected end");
-            return s.charAt(i);
-        }
-
-        private char next() {
-            if (i >= s.length()) throw new IllegalStateException("unexpected end");
-            return s.charAt(i++);
-        }
-
-        private void expect(char c) {
-            if (next() != c) throw new IllegalStateException("expected " + c);
-        }
-    }
 }

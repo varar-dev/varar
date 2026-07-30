@@ -1,0 +1,11 @@
+{
+  "parameterTypes": [],
+  "steps": [
+    {
+      "expression": "I mention {emph}",
+      "parameterTypeNames": [
+        "emph"
+      ]
+    }
+  ]
+}

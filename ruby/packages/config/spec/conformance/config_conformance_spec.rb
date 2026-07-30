@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'json'
+
 require 'spec_helper'
 require 'varar/config'
 require 'varar/core' # for CanonicalJson (test-only)
@@ -19,8 +21,7 @@ module Varar
       {
         'docs' => { 'include' => cfg.docs_include, 'exclude' => cfg.docs_exclude },
         'steps' => cfg.steps,
-        'snippets' => cfg.snippets,
-        'scannerPlugins' => cfg.scanner_plugins
+        'snippets' => cfg.snippets
       }
     end
 
@@ -32,12 +33,13 @@ module Varar
 
       if File.exist?(File.join(case_dir, 'expect-error.txt'))
         it "#{name} — loading fails" do
-          expect { Config.read_var_config(case_dir) }.to raise_error(StandardError)
+          expect { Config.read_config(case_dir) }.to raise_error(StandardError)
         end
       else
         it "#{name} — matches golden" do
-          actual = Core::CanonicalJson.canonical_stringify(self.class.artifact(Config.read_var_config(case_dir)))
-          expect(actual).to eq(File.read(File.join(case_dir, 'golden.json'), encoding: 'UTF-8'))
+          actual = self.class.artifact(Config.read_config(case_dir))
+          golden = JSON.parse(File.read(File.join(case_dir, 'golden.json'), encoding: 'UTF-8'))
+          expect(actual).to eq(golden)
         end
       end
     end

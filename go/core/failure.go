@@ -13,10 +13,9 @@ import (
 type StepErrorKind int
 
 const (
-	// SECellMismatch is a table / header-bound row mismatch (only failing cells).
+	// SECellMismatch is one or more differing cells — an inline capture, a table
+	// cell, a header-bound row's cell, or a doc string (only failing cells).
 	SECellMismatch StepErrorKind = iota
-	// SEDocStringMismatch is a doc-string body mismatch.
-	SEDocStringMismatch
 	// SEReturnShape is a wrong return type/shape — an author mistake.
 	SEReturnShape
 	// SEUnexpectedPass is an error-fenced example that ran without failing.
@@ -29,10 +28,9 @@ const (
 // exception hierarchy.
 type StepError struct {
 	Kind           StepErrorKind
-	Cells          []CellDiff    // SECellMismatch
-	DocDiff        DocStringDiff // SEDocStringMismatch
-	ReturnShapeMsg string        // SEReturnShape
-	Handler        HandlerError  // SEHandler
+	Cells          []CellDiff   // SECellMismatch
+	ReturnShapeMsg string       // SEReturnShape
+	Handler        HandlerError // SEHandler
 }
 
 // Message is the human-readable message (getMessage parity).
@@ -44,8 +42,6 @@ func (e StepError) Message() string {
 			parts[i] = fmt.Sprintf("%s: expected %s but was %s", c.Column, c.Expected, c.Actual)
 		}
 		return strings.Join(parts, "; ")
-	case SEDocStringMismatch:
-		return fmt.Sprintf("doc string: expected %s but was %s", quote(e.DocDiff.Expected), quote(e.DocDiff.Actual))
 	case SEReturnShape:
 		return e.ReturnShapeMsg
 	case SEUnexpectedPass:
@@ -61,10 +57,6 @@ func cellMismatchError(cells []CellDiff) StepError {
 	return StepError{Kind: SECellMismatch, Cells: cells}
 }
 
-func docStringMismatchError(diff DocStringDiff) StepError {
-	return StepError{Kind: SEDocStringMismatch, DocDiff: diff}
-}
-
 func returnShapeError(msg string) StepError {
 	return StepError{Kind: SEReturnShape, ReturnShapeMsg: msg}
 }
@@ -73,11 +65,14 @@ func handlerStepError(he HandlerError) StepError {
 	return StepError{Kind: SEHandler, Handler: he}
 }
 
-// FailureLocation is where a failure points in the .md.
+// FailureLocation is where a failure points in the .md. Line is the anchor's
+// start line (all a rendered frame can show); Anchor is its full offset range,
+// so a renderer can underline the failing step instead of its whole line.
 type FailureLocation struct {
-	Label string
-	Path  string
-	Line  int
+	Label  string
+	Path   string
+	Line   int
+	Anchor AnchorRange
 }
 
 // StepFailure is a caught step failure plus its (optional) source location.
@@ -91,13 +86,57 @@ func bareFailure(error StepError) StepFailure {
 	return StepFailure{Error: error}
 }
 
+// ToFailure turns a caught step failure into the ExampleResult.failure payload
+// — port of failure.ts / failure.rs. fallbackLine is used when the failure
+// carries no location for oathPath, i.e. it never passed through one of that
+// oath's steps.
+func ToFailure(failure StepFailure, oathPath string, fallbackLine int) ExampleFailure {
+	line := fallbackLine
+	var anchor *AnchorRange
+	if here := failure.Location; here != nil && here.Path == oathPath {
+		line = here.Line
+		// The executor recorded the anchor with the location, so this is the
+		// failing step's span (or the first mismatched cell's) — what a renderer
+		// underlines instead of the whole line.
+		a := here.Anchor
+		anchor = &a
+	}
+
+	var cells []CellFailure
+	if failure.Error.Kind == SECellMismatch {
+		for _, c := range failure.Error.Cells {
+			if !c.Ok {
+				cells = append(cells, CellFailure{From: c.Span.StartOffset, To: c.Span.EndOffset, Actual: c.Actual})
+			}
+		}
+	}
+
+	return ExampleFailure{
+		Line:    line,
+		Message: failure.Error.Message(),
+		Stack:   renderStack(failure),
+		Cells:   cells,
+		Anchor:  anchor,
+	}
+}
+
+// renderStack is display-only: Go has no exception stack to scrape, so the
+// location is rendered from structural data the way the Rust port does.
+func renderStack(failure StepFailure) string {
+	msg := failure.Error.Message()
+	if l := failure.Location; l != nil {
+		return fmt.Sprintf("%s\n    at %s (%s:%d)", msg, l.Label, l.Path, l.Line)
+	}
+	return msg
+}
+
 // quote mirrors JSON.stringify's quoting of the doc-string error message closely
 // enough for a human-readable message (never parsed back).
 // quote renders s the way JSON.stringify does in the TypeScript port.
 //
 // Every port quotes doc-string mismatch messages identically because the text is
 // matched by substring in an `error` fence — a port that quotes differently fails a
-// spec its siblings pass. Escaping only \\, " and \n is not enough: doc strings
+// oath its siblings pass. Escaping only \\, " and \n is not enough: doc strings
 // routinely carry tab-indented code. encoding/json is not usable here because it
 // also escapes <, > and & by default.
 func quote(s string) string {

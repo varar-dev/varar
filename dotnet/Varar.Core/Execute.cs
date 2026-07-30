@@ -31,7 +31,7 @@ public static class Execute
         Func<string, Value> createContext,
         List<StepObservation> observations)
     {
-        var source = plan.VarDoc.Source;
+        var source = plan.Doc.Source;
         var steps = ex.Steps;
         var stateByFile = new Dictionary<string, Value>(StringComparer.Ordinal);
         Value? lastReturn = null;
@@ -87,6 +87,10 @@ public static class Execute
             }
             catch (Exception err)
             {
+                // Record where the failure points before the exception leaves the step: the
+                // failing step's span (or the first mismatched cell's), which Failures.ToFailure
+                // reads back so a renderer underlines the step and not its whole line.
+                FailureAnchor.Attach(err, FailureAnchor.Anchor(err, step.MatchSpan));
                 observations.Add(new StepObservation(i + 1, "fail", err));
                 thrown = err;
                 break;
@@ -97,9 +101,15 @@ public static class Execute
         if (thrown is null && !ex.RowChecks.IsDefaultOrEmpty)
         {
             var bad = CellDiffs.CompareRow(lastReturn, ex.RowChecks).Where(d => !d.Ok).ToImmutableArray();
-            if (bad.Length > 0)
+            // Like a slotted sensor, a header-bound row step must answer the row it is bound to:
+            // no return means nothing was compared.
+            Exception? rowError = lastReturn is null
+                ? new ReturnShapeError("a header-bound row step must return a row object with one value per bound cell, got nothing")
+                : null;
+            if (rowError is not null || bad.Length > 0)
             {
-                var err = new CellMismatchError(bad);
+                var err = rowError ?? new CellMismatchError(bad);
+                FailureAnchor.Attach(err, FailureAnchor.Anchor(err, steps[^1].MatchSpan));
                 observations.Add(new StepObservation(steps.Length, "fail", err));
                 thrown = err;
             }
@@ -127,18 +137,27 @@ public static class Execute
 
     private static void CheckSensorReturn(string source, PlannedStep step, Value? returned)
     {
-        if (returned is null)
-        {
-            return;
-        }
-
         int extraCount = step.DataTable is not null || step.DocString is not null ? 1 : 0;
         int slotCount = step.Args.Length + extraCount;
         if (slotCount == 0)
         {
+            // Nothing to compare against: returning nothing is the pass, a value is a mistake.
+            if (returned is null)
+            {
+                return;
+            }
+
             throw new ReturnShapeError(
                 "this sensor has no parameters, data table or doc string — nothing to compare a return value against " +
                 "(throw to fail, return nothing to pass)");
+        }
+
+        // With one or more slots the return is REQUIRED: returning nothing used to skip the
+        // comparison silently, so a typo in a property access turned an assertion into a no-op.
+        if (returned is null)
+        {
+            throw new ReturnShapeError(
+                $"a sensor with {slotCount} slot(s) must return one value per slot, got nothing");
         }
 
         ImmutableArray<Value> slots;
@@ -158,7 +177,7 @@ public static class Execute
         else
         {
             throw new ReturnShapeError(
-                $"a sensor with {slotCount} parameters must return a List of {slotCount} values, got {returned.TypeName}");
+                $"a sensor with {slotCount} slots must return a List of {slotCount} values, got {returned.TypeName}");
         }
 
         int argCount = step.Args.Length;
@@ -187,7 +206,7 @@ public static class Execute
             var diff = DocStringDiffs.CompareDocString(slots[argCount], step.DocString.Content, step.DocString.Span);
             if (diff is not null)
             {
-                throw new DocStringMismatchError(diff);
+                throw new CellMismatchError([diff]);
             }
         }
     }

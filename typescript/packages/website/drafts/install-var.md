@@ -30,20 +30,20 @@ This creates a config file and a first example, side by side:
 
 ```
 created varar.config.json
-created varar-examples/hello-var/hello-var.md
-created varar-examples/hello-var/hello-var.steps.ts
+created varar/hello-varar.md
+created src/varar/hello-varar.steps.ts
 ```
 
-`varar.config.json` says which files are specs and which files bind their steps:
+`varar.config.json` says which files are oaths and which files bind their steps:
 
 ```json
 {
-  "docs": { "include": ["varar-examples/**/*.md"], "exclude": [] },
-  "steps": ["varar-examples/**/*.steps.ts"]
+  "docs": { "include": ["varar/**/*.md"], "exclude": [] },
+  "steps": ["src/varar/**/*.steps.ts"]
 }
 ```
 
-And `hello-var.md` is the spec itself — plain prose with one concrete example:
+And `hello-varar.md` is the oath itself — plain prose with one concrete example:
 
 ```markdown
 # Hello, Varar
@@ -60,7 +60,7 @@ pnpm exec varar run
 The freshly scaffolded example passes:
 
 ```
-varar-examples/hello-var/hello-var.md
+varar/hello-varar.md
   ✓ Hello, Varar
 
 1 example, 1 passed
@@ -70,7 +70,7 @@ varar-examples/hello-var/hello-var.md
 
 [Never trust a test you haven't seen fail.](/var/docs/concepts/the-oaths-of-var/)
 A passing example you've never seen go red might be testing nothing at all.
-Open `varar-examples/hello-var/hello-var.steps.ts` and change the greeting it
+Open `src/varar/hello-varar.steps.ts` and change the greeting it
 produces:
 
 ```ts
@@ -83,11 +83,11 @@ Run var again:
 pnpm exec varar run
 ```
 
-Now the oath is *broken* — the spec still says `"Hello, world!"`, but the step
+Now the oath is *broken* — the oath still says `"Hello, world!"`, but the step
 produces something else:
 
 ```
-varar-examples/hello-var/hello-var.md
+varar/hello-varar.md
   ✗ Hello, Varar
       expected "Hello, world!", actual "Hi, world!"
 
@@ -102,5 +102,5 @@ Revert the change and run once more. The oath is *kept* again:
 
 ## Next
 
-- [Hello Varar: your first spec](/var/docs/start-here/hello-var-your-first-spec/) walks through writing a spec from a blank file.
-- [Wire Varar into your AI agent's instructions](/var/docs/guides/wire-var-into-agent-instructions/) so an agent writes specs first.
+- [Hello Varar: your first oath](/var/docs/start-here/hello-varar-your-first-oath/) walks through writing an oath from a blank file.
+- [Wire Varar into your AI agent's instructions](/var/docs/guides/wire-var-into-agent-instructions/) so an agent writes oaths first.

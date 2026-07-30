@@ -1,8 +1,8 @@
 """conformance.py — var-doc, registry, plan, and trace artifact projections.
 
-Port of toVarDocArtifact, toRegistryArtifact, toPlanArtifact, toFailureArtifact,
+Port of toDocArtifact, toRegistryArtifact, toPlanArtifact, toFailureArtifact,
 and runConformance from typescript/packages/core/src/conformance.ts.
-Serializes a VarDoc AST / Registry / ExecutionPlan / trace to the camelCase wire
+Serializes a Doc AST / Registry / ExecutionPlan / trace to the camelCase wire
 dicts expected by the conformance golden files.
 """
 
@@ -25,10 +25,9 @@ from varar_core.ast import (
     SegmentOffset,
     Table,
     ThematicBreak,
-    VarDoc,
+    Doc,
 )
 from varar_core.cell_diff import ReturnShapeError, is_cell_mismatch_error
-from varar_core.doc_string_diff import is_doc_string_mismatch_error
 from varar_core.execute import CollectPorts, StepObservation, collect_examples, is_unexpected_pass_error
 from varar_core.failure_anchor import failure_anchor
 from varar_core.plan import ExecutionPlan
@@ -41,7 +40,7 @@ from varar_core.span import Span, utf16_slice
 class BundleArtifacts:
     """Typed container for the four-artifact conformance bundle."""
 
-    var_doc: dict[str, Any]
+    doc: dict[str, Any]
     registry: dict[str, Any]
     plan: dict[str, Any]
     trace: dict[str, Any]
@@ -173,11 +172,12 @@ def _example(ex: Example) -> dict[str, Any]:
         "scopeStack": list(ex.scope_stack),
         "span": _span(ex.span),  # type: ignore[arg-type]
         "body": [_block(b) for b in ex.body],
+        "precededByDelimiter": ex.preceded_by_delimiter,
     }
 
 
-def to_var_doc_artifact(doc: VarDoc) -> dict[str, Any]:
-    """Project a VarDoc to the camelCase wire dict for the var-doc artifact."""
+def to_doc_artifact(doc: Doc) -> dict[str, Any]:
+    """Project a Doc to the camelCase wire dict for the var-doc artifact."""
     return {
         "path": doc.path,
         "examples": [_example(ex) for ex in doc.examples],
@@ -203,7 +203,7 @@ def to_plan_artifact(plan: ExecutionPlan) -> dict[str, Any]:
 
     Port of ``toPlanArtifact`` from conformance.ts.
     """
-    source = plan.var_doc.source
+    source = plan.doc.source
 
     def _step(step: Any) -> dict[str, Any]:
         step_names = parameter_type_names(step.step_def.compiled)
@@ -298,18 +298,6 @@ def to_failure_artifact(error: object, match_span: Span) -> dict[str, Any]:
                 if not c.ok
             ],
         }
-    if is_doc_string_mismatch_error(error):
-        return {
-            "kind": "doc-string-mismatch",
-            "line": line,
-            "anchor": anchor,
-            "message": str(error),
-            "diff": {
-                "expected": error.diff.expected,
-                "actual": error.diff.actual,
-                "span": _span(error.diff.span),
-            },
-        }
     if isinstance(error, ReturnShapeError):
         return {"kind": "return-shape", "line": line, "anchor": anchor, "message": str(error)}
     if is_unexpected_pass_error(error):
@@ -318,7 +306,7 @@ def to_failure_artifact(error: object, match_span: Span) -> dict[str, Any]:
 
 
 def run_conformance(
-    var_doc: VarDoc,
+    doc: Doc,
     registry: Registry,
     create_context: Callable[[str], Any],
     parameter_types: tuple[dict[str, str], ...] = (),
@@ -327,7 +315,7 @@ def run_conformance(
 
     Port of ``runConformance`` from conformance.ts.
     """
-    execution = build_plan(var_doc, registry)
+    execution = build_plan(doc, registry)
 
     # Accumulate step observations keyed by example index.
     observed: dict[int, list[StepObservation]] = {}
@@ -392,7 +380,7 @@ def run_conformance(
         trace_examples.append({"name": queued.name, "outcome": outcome, "steps": steps})
 
     return BundleArtifacts(
-        var_doc=to_var_doc_artifact(var_doc),
+        doc=to_doc_artifact(doc),
         registry=to_registry_artifact(registry, list(parameter_types)),
         plan=to_plan_artifact(execution),
         trace={"examples": trace_examples},

@@ -1,24 +1,40 @@
 import { expect, test } from 'vitest'
+import libraryLogic from '../../../../examples/typescript-vitest/src/library.ts?raw'
 // The real dogfood sample the front-page editor shows — if the editor's
 // virtual module drifts from the actual @varar/varar API, this file stops
 // type-checking cleanly and the first test fails, exactly like the front
 // page would.
-import librarySteps from '../../../../examples/typescript-vitest/steps/library.steps.ts?raw'
+import librarySteps from '../../../../examples/typescript-vitest/src/varar/library.steps.ts?raw'
 import { createTsDiagnostics } from '../src/lib/ts-diagnostics.ts'
 
-// The sample imports its domain module ('../src/library'); the in-browser
+// The sample imports its domain module ('../library.ts'); the in-browser
 // service has no filesystem, so mirror what the editor does for unresolvable
 // local imports: nothing. Those imports type as `any`, which must not produce
 // diagnostics with the service's lenient options — assert only on messages
-// that are NOT unresolved-module noise for the domain module.
+// that are NOT unresolved-module noise for the domain module. Matched without
+// the extension: the sample carries an explicit `.ts` (Node's ESM resolver
+// needs it, so `varar run` can load the steps), but the filter should not
+// depend on that.
 function realProblems(tsd: ReturnType<typeof createTsDiagnostics>, name: string, source: string) {
   tsd.updateDoc(name, source)
-  return tsd.diagnostics(name).filter((d) => !d.message.includes("/library'"))
+  return tsd.diagnostics(name).filter((d) => !d.message.includes('/library'))
 }
 
 test('the front-page library sample type-checks against the real @varar/varar types', () => {
   const problems = realProblems(createTsDiagnostics(), 'library_steps.ts', librarySteps)
   expect(problems).toEqual([])
+})
+
+// The uris here are the ones LibraryEditor.astro mounts, and they mirror the
+// example project's own layout — steps in src/varar/, the domain module in
+// src/. Mount them anywhere else and the sample's '../library.ts' misses,
+// which the editor shows as a red squiggle on an otherwise correct file.
+test('a steps tab resolves the domain module tab mounted beside it', () => {
+  const tsd = createTsDiagnostics()
+  const stepsUri = 'file:///src/varar/library.steps.ts'
+  tsd.updateDoc('file:///src/library.ts', libraryLogic)
+  tsd.updateDoc(stepsUri, librarySteps)
+  expect(tsd.diagnostics(stepsUri)).toEqual([])
 })
 
 test('stimulus and sensor are the destructurable names steps returns', () => {

@@ -30,8 +30,21 @@ sensor … end`); Ruby, Rust, and C# all shipped with their tree-sitter
 dialect wired from the start (see the repo-integration checklist). Every port follows the
 same package shape and is proven correct by reproducing the shared
 `conformance/bundles/*/golden/*.json` byte-for-byte — never by writing fresh
-tests against a new spec (the one carve-out is **drift**, which is unit-gated —
-see its stage below).
+tests against a new spec (the one carve-out is **drift**, whose *algorithm* is
+unit-gated — see its stage below; its *wiring* is gated by the adapter smoke
+contract, `conformance/adapter/`).
+
+There are three conformance corpora, and they gate different things. Passing all
+of the first two and still shipping a broken port is possible — that is exactly
+what happened in [#69][i69-intro]:
+
+| Corpus | Gates | Shape |
+|---|---|---|
+| `conformance/bundles/` | the pure core: var-doc, registry, plan, trace | golden JSON, byte-for-byte |
+| `conformance/config/` | the `varar.config.json` reader | golden JSON / expect-error |
+| `conformance/adapter/` | **that the adapter is wired** — discovery, the drift gate, `VARAR_UPDATE` | runs the sample project's real test command |
+
+[i69-intro]: https://github.com/varar-dev/varar/issues/69
 
 Two docs are the primary source for this skill and are worth reading in full
 before starting a new port, not just skimming this summary:
@@ -66,8 +79,8 @@ not four:
 |---|---|---|---|
 | `<lang>-core` (e.g. `var-core` / `var_core`) | nothing runtime-ish | pure pipeline: parse → match → plan → execute, diffs, drift, conformance projections | filesystem, network, globals, time, test-framework types |
 | `<lang>` facade (e.g. `@varar/varar` / `var`) | `<lang>-core` | author API only: `steps(factory)` / `Steps.state(factory)` (stimulus/sensor), `registry` glue subpath | pipeline internals directly (goes through core) |
-| `<lang>-config` (e.g. `@varar/config` / `var_config`) | nothing (pure) | the `varar.config.json` reader — strict, fail-loud; its own conformance corpus | filesystem beyond reading the one config file |
-| `<lang>-runner` (e.g. `var-runner`) | facade + config + core | imperative shell: spec/step discovery (globs), `load_steps`, `run_spec`/`plan_spec`, failure rendering, the filesystem `BaselineStore` (drift) | any one test framework's types |
+| `<lang>-config` (e.g. `@varar/config` / `var_config`) | nothing (pure) | the `varar.config.json` reader — strict, fail-loud; a pure `parse(text, source)` plus the thin `read(root)` over it; its own conformance corpus | filesystem beyond reading the one config file |
+| `<lang>-runner` (e.g. `var-runner`) | facade + config + core | imperative shell: oath/step discovery (globs), `load_steps`, `run_oath`/`plan_oath`, failure rendering, the filesystem `BaselineStore` (drift) | any one test framework's types |
 | `<lang>-<framework>` (e.g. `var-vitest`, `var-pytest`) | `<lang>-runner` | one test-framework binding: collection (one test item per example), fixture/DI bridging, reporting, the drift gate | pipeline logic (delegates to runner/core) |
 
 `var-config` is a **distinct shared package**, not folded into the runner — it
@@ -137,15 +150,15 @@ gated milestone:
    is the one core feature proven by **translating the unit tests**
    (`hash.test.ts`, `drift.test.ts`) rather than reproducing goldens. Note
    `varar.lock.json` uses its *own* serializer — `JSON.stringify(_, null, 2) +
-   "\n"` with spec paths sorted but **insertion-order keys otherwise**
-   (`version, specs`; per spec `sourceHash, examples`; per example `name,
+   "\n"` with oath paths sorted but **insertion-order keys otherwise**
+   (`version, oaths`; per oath `sourceHash, examples`; per example `name,
    line`) — NOT the recursive alphabetical key-sort of `canonical_json`. Drift
    is already ported to TS, Python, and the JVM; follow the closest precedent
    (`python/packages/core/src/varar_core/{hash,drift}.py`, Java
    `Drift.java`/`Hash.java`).
 
 The first three stages each have a named projection function
-(`toVarDocArtifact`, `toRegistryArtifact`, `toPlanArtifact`) in
+(`toDocArtifact`, `toRegistryArtifact`, `toPlanArtifact`) in
 `typescript/packages/core/src/conformance.ts` — port each exactly; it
 defines the wire shape the goldens were generated from. The trace stage has
 no separate `toTraceArtifact`; it's built inline inside `runConformance` in
@@ -204,7 +217,7 @@ translated them to snake_case 1:1 — use whatever the target language's
 convention is, but keep names *parallel* for reviewability):
 
 `span, ast, inline, table_cells, sentences, scanner, structurer, parse,
-step_role, registry, matcher, plan, diagnostics, execute, deep_freeze,
+step_role, registry, matcher, plan, diagnostics, execute,
 cell_diff, doc_string_diff, param_diff, failure, result, canonical_json,
 conformance, hash, drift` — plus the `BaselineStore` port interface and the
 facade module (`internal`/`state`) holding the state factory and the
@@ -289,14 +302,14 @@ integration-mechanism decision recorded as an ADR** (the precedent is
 *one independently selectable/reportable test per Markdown example, failures
 anchored to the `.md` span* — but the mechanism differs per framework: a custom
 TestEngine (JUnit), a `pytest_collect_file` hook (pytest), a generated
-`TestCase` subclass per spec (unittest), a `FunSpec` subclass (Kotest), etc.
+`TestCase` subclass per oath (unittest), a `FunSpec` subclass (Kotest), etc.
 
 - **Collection**: one test item per *example* (not per file), independently
   selectable/reportable, with the item's location pointing at the `.md`
   source line, not adapter internals.
 - **Discovery/config**: one `varar.config.json` per workspace root, shared
   verbatim across every port — canonical keys `docs: {include, exclude}`
-  (globs; no special file extension, a file is a spec iff its path matches
+  (globs; no special file extension, a file is an oath iff its path matches
   the `docs` globs), `steps` (a glob array), `snippets`, and `scannerPlugins`
   (plugin name strings, resolved to functions per-language via a name
   registry). The schema lives at `conformance/config/varar.config.schema.json`.
@@ -319,14 +332,55 @@ TestEngine (JUnit), a `pytest_collect_file` hook (pytest), a generated
   re-derive failure text from scratch in the adapter.
 - **Async**: if the language has an async/coroutine convention, the executor
   should drive it transparently; the adapter needs no special casing.
-- **Drift gate**: each adapter reconciles every spec against `varar.lock.json`
+- **Drift gate**: each adapter reconciles every oath against `varar.lock.json`
   via the runner's filesystem `BaselineStore` + `reconcileDrift`, surfaces a
   `drift` diagnostic on the same Diagnostic rail as `ambiguous-match` (a drifted
   example fails the suite), writes the baseline on a clean run, and honours an
   `--update`/acknowledgment path (ADR 0002 — never silently accept drift). Add
   a per-adapter drift test with a `varar.lock.json` fixture (precedent:
   `var-pytest`/`var-unittest` `tests/test_drift.py`, `var-kotest`'s
-  `kotest-drift/` resources).
+  `kotest-drift/` resources, `Varar.TestAdapter.Tests/DriftGateTests.cs`).
+
+  **This bullet used to be prose, and prose was not enough** — the .NET adapter
+  had every drift function present and unit-tested and called none of them from
+  Discover/Run, while every conformance gate stayed green ([#69][i69]). It is now
+  machine-enforced by the **adapter smoke contract**
+  (`conformance/adapter/README.md`), a third corpus alongside `bundles/` and
+  `config/`. Where those gate pure functions, it gates *wiring*: it runs your
+  sample project's real test command against a deliberately drifted baseline and
+  requires it to go red, then requires `VARAR_UPDATE=1` to accept.
+
+  A new port must therefore:
+  1. commit a `varar.lock.json` in its `examples/<lang>-<framework>/` project —
+     the gate is armed by data, and a project with no baseline gates nothing;
+  2. register that project in `conformance/adapter/projects.json`, whose
+     `command` **must defeat the build tool's result cache** (the smoke run
+     changes only the lock file — see `-count=1` for go, `cleanTest` for gradle);
+  3. call `conformance/adapter/smoke.sh examples/<project>` at the end of the
+     port's `make` target and CI workflow.
+
+  Step 2 is self-enforcing: `smoke.sh` fails if any directory under `examples/`
+  is unregistered, so a forgotten port breaks the *first* port's smoke run.
+- **Pruning the baseline**: `reconcileDrift` is per-oath and never visits a path
+  that has gone, so the lock hoards entries for deleted or moved oaths forever
+  ([#70][i70]). Port `pruneLock` (pure) and `pruneBaselines` (store-facing)
+  alongside them, and call the latter **once per run** from the adapter. Two
+  rules, both load-bearing — the smoke contract's `baseline-pruned` check gates
+  that you did it, but not that you did it safely:
+  1. **`keepPaths` is everything the `docs` globs match, never the set the run
+     executed.** Filtered runs are normal; pruning against one deletes live
+     baselines. The TS CLI test `--globs does not prune the baselines it
+     filtered out` is the shape of the regression test to translate.
+  2. **Only `update` writes.** A plain run reports and changes nothing.
+
+  If your adapter can discover oaths by more than one mechanism, the filesystem
+  glob walk alone may be an incomplete view — `var-junit` also resolves oaths as
+  classpath resources, so it prunes against the *union* of the walk and the oaths
+  actually resolved, and bails out entirely when the walk finds nothing.
+
+[i70]: https://github.com/varar-dev/varar/issues/70
+
+[i69]: https://github.com/varar-dev/varar/issues/69
 
 ## Repo integration checklist
 
@@ -363,10 +417,13 @@ suite:
 - **Standalone `examples/<lang>-<framework>/` consumer projects** — one per
   adapter, **not** workspace members: they depend on the released (or
   locally-installed) artifacts exactly like a user's project, carry their own
-  `varar.config.json`, and implement the feature-covering subset (`hello-var`,
-  `deep-thought`, `tables-and-docstrings`, `yahtzee`, `roman-numerals`). Their
-  `.md` specs are symlinks to the `typescript-vitest` originals (the release
-  sync dereferences them). Add rows to `examples/README.md` **and a `<Card>` to
+  `varar.config.json`, and implement the feature-covering subset (`hello-varar`,
+  `deep-thought`, `tables-and-docstrings`, `yahtzee`, `roman-numerals`). **Most**
+  of their `.md` oaths are symlinks to the `typescript-vitest` originals (the release
+  sync dereferences them) — but `hello-varar.md` and `tables-and-docstrings.md`
+  are **real files in every project**, because their text differs per language.
+  Don't assume a rename touching those two is a single edit: it is twelve.
+  Add rows to `examples/README.md` **and a `<Card>` to
   the website's example-projects page** (see the next bullet).
 - **Website example-projects page**: add a `<Card title="<Language> +
   <framework>" icon="<seti icon>">` to the `<CardGrid>` in
@@ -453,6 +510,40 @@ your `canonical_json`, byte-compare) or an `expect-error.txt` marker (loading
 must **raise** — the txt is human-only, not asserted). Reproduce all cases
 (currently 8: `empty-object, full, invalid-json, minimal, no-config-file,
 null-values, unknown-key, wrong-type`) before the config reader is "done".
+
+**Split the reader in two, and expose both.** The corpus only ever loads from a
+directory, so it will happily pass a reader that fuses reading and parsing into
+one function — and three ports shipped exactly that before anyone noticed
+([#11][i11]):
+
+| | pure | filesystem edge |
+|---|---|---|
+| TypeScript | `parseConfig(jsonText, sourcePath)` | `loadConfig(cwd)` |
+| Java / C# | `Config.parse(text, source)` | `Config.load(root)` |
+| Python | `parse_config(text, source)` | `read_config(root)` |
+| Ruby / Rust | `parse_config(text, source)` | `read_config(root)` |
+| Go | `ParseConfig(text, source)` | `ReadConfig(root)` |
+
+`source` only *labels errors* — a path, a URL, `"<memory>"` — and nothing is read
+from it. Without the split, a caller holding config text (an editor buffer, the
+LSP, an in-memory fixture) has to invent a temp file to validate it, and the
+package stops being pure in the sense the hexagonal table claims.
+
+[i11]: https://github.com/varar-dev/varar/issues/11
+
+## Adapter smoke contract (the gate on wiring, not on functions)
+
+`conformance/adapter/` is the third corpus — read its `README.md`. Unlike the
+other two it runs your sample project's real test command
+(`go test` / `mvn test` / `dotnet test` / …) and asserts things no golden can
+see: that `varar.lock.json` is committed and covers every oath, that a drifted
+baseline makes the suite exit non-zero naming the drift, and that
+`VARAR_UPDATE=1` accepts and re-records it.
+
+It exists because the goldens only ever exercise the pure core. An adapter that
+discovers zero oaths — or that never calls `reconcileDrift` — is 100%
+conformance-green and reports a passing suite. Wire it as described in the drift
+gate bullet above.
 
 ## What's shared — don't reimplement per language
 

@@ -3,6 +3,7 @@ package core
 import (
 	"fmt"
 	"reflect"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -60,25 +61,25 @@ func (m *memoryStore) Read() (string, bool) {
 }
 func (m *memoryStore) Write(c string) { s := c; m.contents = &s }
 
-func libraryLock() VarLock {
-	return VarLock{Version: 1, Specs: map[string]SpecBaseline{
+func libraryLock() LockFile {
+	return LockFile{Version: 2, Oaths: map[string]OathBaseline{
 		"library.md": {SourceHash: "fnv1a:1a2b3c4d", Examples: []BaselineExample{{Name: "I check out", Line: 7}}},
 	}}
 }
 
 func TestLiveExamplesRecordsOnePerParagraph(t *testing.T) {
-	varDoc := Parse("w.md", "I withdraw 40.")
-	got := LiveExamples(varDoc, planOf("I withdraw 40.", reg(true)))
+	doc := Parse("w.md", "I withdraw 40.")
+	got := LiveExamples(doc, planOf("I withdraw 40.", reg(true)))
 	want := []BaselineExample{{Name: "I withdraw 40", Line: 1}}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %v, want %v", got, want)
 	}
 }
 
-func TestDeriveSpecBaselineCarriesFingerprint(t *testing.T) {
+func TestDeriveOathBaselineCarriesFingerprint(t *testing.T) {
 	source := "I withdraw 40."
-	varDoc := Parse("w.md", source)
-	baseline := DeriveSpecBaseline(source, varDoc, planOf(source, reg(true)))
+	doc := Parse("w.md", source)
+	baseline := DeriveOathBaseline(source, doc, planOf(source, reg(true)))
 	if baseline.SourceHash != HashSource(source) {
 		t.Errorf("hash mismatch")
 	}
@@ -89,17 +90,17 @@ func TestDeriveSpecBaselineCarriesFingerprint(t *testing.T) {
 }
 
 func TestNoBaselineMeansNoDrift(t *testing.T) {
-	varDoc := Parse("w.md", "I withdraw 40.")
-	if d := DetectDrift(nil, varDoc, planOf("I withdraw 40.", reg(true))); len(d) != 0 {
+	doc := Parse("w.md", "I withdraw 40.")
+	if d := DetectDrift(nil, doc, planOf("I withdraw 40.", reg(true))); len(d) != 0 {
 		t.Errorf("expected no drift, got %v", bare(d))
 	}
 }
 
 func TestRenamedStepDrifts(t *testing.T) {
 	source := "I withdraw 40."
-	varDoc := Parse("w.md", source)
-	baseline := DeriveSpecBaseline(source, varDoc, planOf(source, reg(true)))
-	got := bare(DetectDrift(&baseline, varDoc, planOf(source, reg(false))))
+	doc := Parse("w.md", source)
+	baseline := DeriveOathBaseline(source, doc, planOf(source, reg(true)))
+	got := bare(DetectDrift(&baseline, doc, planOf(source, reg(false))))
 	if !reflect.DeepEqual(got, []string{"I withdraw 40@1"}) {
 		t.Errorf("got %v", got)
 	}
@@ -107,7 +108,7 @@ func TestRenamedStepDrifts(t *testing.T) {
 
 func TestInPlaceTypoDrifts(t *testing.T) {
 	before := "I withdraw 40."
-	baseline := DeriveSpecBaseline(before, Parse("w.md", before), planOf(before, reg(true)))
+	baseline := DeriveOathBaseline(before, Parse("w.md", before), planOf(before, reg(true)))
 	after := "I withdrraw 40."
 	afterDoc := Parse("w.md", after)
 	got := bare(DetectDrift(&baseline, afterDoc, planOf(after, reg(true))))
@@ -118,7 +119,7 @@ func TestInPlaceTypoDrifts(t *testing.T) {
 
 func TestDeletedParagraphIsNotDrift(t *testing.T) {
 	before := "I withdraw 40."
-	baseline := DeriveSpecBaseline(before, Parse("w.md", before), planOf(before, reg(true)))
+	baseline := DeriveOathBaseline(before, Parse("w.md", before), planOf(before, reg(true)))
 	afterDoc := Parse("w.md", "")
 	if d := DetectDrift(&baseline, afterDoc, planOf("", reg(true))); len(d) != 0 {
 		t.Errorf("expected no drift, got %v", bare(d))
@@ -127,7 +128,7 @@ func TestDeletedParagraphIsNotDrift(t *testing.T) {
 
 func TestMovingAndRewordingStillMatchingDoesNotDrift(t *testing.T) {
 	before := "I withdraw 40.\n\nI withdraw 10."
-	baseline := DeriveSpecBaseline(before, Parse("w.md", before), planOf(before, reg(true)))
+	baseline := DeriveOathBaseline(before, Parse("w.md", before), planOf(before, reg(true)))
 	after := "I withdraw 11.\n\nI withdraw 40."
 	if d := DetectDrift(&baseline, Parse("w.md", after), planOf(after, reg(true))); len(d) != 0 {
 		t.Errorf("expected no drift, got %v", bare(d))
@@ -136,7 +137,7 @@ func TestMovingAndRewordingStillMatchingDoesNotDrift(t *testing.T) {
 
 func TestMoveRewordProseOnOldLineNoFalsePositive(t *testing.T) {
 	before := "I withdraw 40."
-	baseline := DeriveSpecBaseline(before, Parse("w.md", before), planOf(before, reg(true)))
+	baseline := DeriveOathBaseline(before, Parse("w.md", before), planOf(before, reg(true)))
 	after := "Just some notes.\n\nI withdraw 41."
 	if d := DetectDrift(&baseline, Parse("w.md", after), planOf(after, reg(true))); len(d) != 0 {
 		t.Errorf("expected no drift, got %v", bare(d))
@@ -145,18 +146,65 @@ func TestMoveRewordProseOnOldLineNoFalsePositive(t *testing.T) {
 
 func TestRewrittenPastRecognitionIsNotDrift(t *testing.T) {
 	before := "I withdraw 40."
-	baseline := DeriveSpecBaseline(before, Parse("w.md", before), planOf(before, reg(true)))
+	baseline := DeriveOathBaseline(before, Parse("w.md", before), planOf(before, reg(true)))
 	after := "The branch closed years ago."
 	if d := DetectDrift(&baseline, Parse("w.md", after), planOf(after, reg(true))); len(d) != 0 {
 		t.Errorf("expected no drift, got %v", bare(d))
 	}
 }
 
+// depositWithdrawReg registers I withdraw, plus I deposit when withDeposit.
+func depositWithdrawReg(t *testing.T, withDeposit bool) Registry {
+	t.Helper()
+	r := CreateRegistry()
+	if withDeposit {
+		next, err := AddStep(r, "I deposit {int}", "steps.ts", 1, NoopHandler(), stimulusKind())
+		if err != nil {
+			t.Fatal(err)
+		}
+		r = next
+	}
+	next, err := AddStep(r, "I withdraw {int}", "steps.ts", 2, NoopHandler(), stimulusKind())
+	if err != nil {
+		t.Fatal(err)
+	}
+	return next
+}
+
+// Two paragraphs that merge into one example are each a live baseline entry, and
+// deleting one step def drifts only the now-prose paragraph (ADR 0012).
+func TestMergedExampleParagraphsAreEachLive(t *testing.T) {
+	source := "I deposit 100.\n\nI withdraw 40."
+	doc := Parse("w.md", source)
+	plan := Plan(doc, depositWithdrawReg(t, true))
+	// One planned example (the two paragraphs merged), but two live entries.
+	if len(plan.Examples) != 1 {
+		t.Fatalf("expected 1 planned example, got %d", len(plan.Examples))
+	}
+	got := LiveExamples(doc, plan)
+	want := []BaselineExample{{Name: "I deposit 100", Line: 1}, {Name: "I withdraw 40", Line: 3}}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("live got %v, want %v", got, want)
+	}
+}
+
+func TestDeletingOneStepOfMergedExampleDriftsOnlyNowProseParagraph(t *testing.T) {
+	source := "I deposit 100.\n\nI withdraw 40."
+	doc := Parse("w.md", source)
+	baseline := DeriveOathBaseline(source, doc, Plan(doc, depositWithdrawReg(t, true)))
+	// The deposit step is gone: its paragraph becomes prose, splitting the
+	// example. The withdraw paragraph is still live; the deposit one drifts.
+	got := bare(DetectDrift(&baseline, doc, Plan(doc, depositWithdrawReg(t, false))))
+	if !reflect.DeepEqual(got, []string{"I deposit 100@1"}) {
+		t.Errorf("got %v", got)
+	}
+}
+
 const roman = "Each row gives a decimal and a roman number:\n\n| decimal | roman |\n| ------: | :---- |\n| 3 | III |\n| 9 | IX |\n"
 
 func TestHeaderBoundRecordsBindingOnce(t *testing.T) {
-	varDoc := Parse("r.md", roman)
-	got := LiveExamples(varDoc, Plan(varDoc, romanReg(true)))
+	doc := Parse("r.md", roman)
+	got := LiveExamples(doc, Plan(doc, romanReg(true)))
 	want := []BaselineExample{{Name: "Each row gives a decimal and a roman number:", Line: 1}}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %v, want %v", got, want)
@@ -164,9 +212,9 @@ func TestHeaderBoundRecordsBindingOnce(t *testing.T) {
 }
 
 func TestHeaderBoundBindingThatStopsMatchingDrifts(t *testing.T) {
-	varDoc := Parse("r.md", roman)
-	baseline := DeriveSpecBaseline(roman, varDoc, Plan(varDoc, romanReg(true)))
-	got := bare(DetectDrift(&baseline, varDoc, Plan(varDoc, romanReg(false))))
+	doc := Parse("r.md", roman)
+	baseline := DeriveOathBaseline(roman, doc, Plan(doc, romanReg(true)))
+	got := bare(DetectDrift(&baseline, doc, Plan(doc, romanReg(false))))
 	if !reflect.DeepEqual(got, []string{"Each row gives a decimal and a roman number:@1"}) {
 		t.Errorf("got %v", got)
 	}
@@ -174,13 +222,13 @@ func TestHeaderBoundBindingThatStopsMatchingDrifts(t *testing.T) {
 
 func TestReconcileRecordsThenReportsAndPreservesOnDrift(t *testing.T) {
 	source := "I withdraw 40."
-	varDoc := Parse("w.md", source)
+	doc := Parse("w.md", source)
 	store := &memoryStore{}
-	if d := ReconcileDrift(store, "w.md", source, varDoc, planOf(source, reg(true)), false); len(d) != 0 {
+	if d := ReconcileDrift(store, "w.md", source, doc, planOf(source, reg(true)), false); len(d) != 0 {
 		t.Fatalf("expected clean first run, got %v", bare(d))
 	}
 	beforeLock := *store.contents
-	drifts := ReconcileDrift(store, "w.md", source, varDoc, planOf(source, reg(false)), false)
+	drifts := ReconcileDrift(store, "w.md", source, doc, planOf(source, reg(false)), false)
 	if !reflect.DeepEqual(bare(drifts), []string{"I withdraw 40@1"}) {
 		t.Errorf("got %v", bare(drifts))
 	}
@@ -191,37 +239,37 @@ func TestReconcileRecordsThenReportsAndPreservesOnDrift(t *testing.T) {
 
 func TestReconcileUpdateModeAcceptsDrift(t *testing.T) {
 	source := "I withdraw 40."
-	varDoc := Parse("w.md", source)
+	doc := Parse("w.md", source)
 	store := &memoryStore{}
-	ReconcileDrift(store, "w.md", source, varDoc, planOf(source, reg(true)), false)
-	if d := ReconcileDrift(store, "w.md", source, varDoc, planOf(source, reg(false)), true); len(d) != 0 {
+	ReconcileDrift(store, "w.md", source, doc, planOf(source, reg(true)), false)
+	if d := ReconcileDrift(store, "w.md", source, doc, planOf(source, reg(false)), true); len(d) != 0 {
 		t.Errorf("update mode should accept drift, got %v", bare(d))
 	}
-	lock := ParseVarLock(*store.contents)
-	if lock == nil || len(lock.Specs["w.md"].Examples) != 0 {
+	lock := ParseLockFile(*store.contents)
+	if lock == nil || len(lock.Oaths["w.md"].Examples) != 0 {
 		t.Errorf("expected empty examples after update-mode reconcile")
 	}
 }
 
-const expectedLock = "{\n  \"version\": 1,\n  \"specs\": {\n    \"library.md\": {\n      \"sourceHash\": \"fnv1a:1a2b3c4d\",\n      \"examples\": [\n        {\n          \"name\": \"I check out\",\n          \"line\": 7\n        }\n      ]\n    }\n  }\n}\n"
+const expectedLock = "{\n  \"version\": 2,\n  \"oaths\": {\n    \"library.md\": {\n      \"sourceHash\": \"fnv1a:1a2b3c4d\",\n      \"examples\": [\n        {\n          \"name\": \"I check out\",\n          \"line\": 7\n        }\n      ]\n    }\n  }\n}\n"
 
 func TestStringifyMatchesSerializerByteForByte(t *testing.T) {
-	if got := StringifyVarLock(libraryLock()); got != expectedLock {
+	if got := StringifyLockFile(libraryLock()); got != expectedLock {
 		t.Errorf("got:\n%s\nwant:\n%s", got, expectedLock)
 	}
 }
 
 func TestParseRoundTripsValidLock(t *testing.T) {
-	parsed := ParseVarLock(StringifyVarLock(libraryLock()))
+	parsed := ParseLockFile(StringifyLockFile(libraryLock()))
 	if parsed == nil {
 		t.Fatal("nil parse")
 	}
-	spec := parsed.Specs["library.md"]
-	if spec.SourceHash != "fnv1a:1a2b3c4d" {
-		t.Errorf("hash %q", spec.SourceHash)
+	oath := parsed.Oaths["library.md"]
+	if oath.SourceHash != "fnv1a:1a2b3c4d" {
+		t.Errorf("hash %q", oath.SourceHash)
 	}
-	if !reflect.DeepEqual(spec.Examples, []BaselineExample{{Name: "I check out", Line: 7}}) {
-		t.Errorf("examples %v", spec.Examples)
+	if !reflect.DeepEqual(oath.Examples, []BaselineExample{{Name: "I check out", Line: 7}}) {
+		t.Errorf("examples %v", oath.Examples)
 	}
 }
 
@@ -229,11 +277,11 @@ func TestParseRejectsMalformedInput(t *testing.T) {
 	bad := []string{
 		"not json",
 		"{}",
-		`{"version":2,"specs":{}}`,
-		`{"version":1,"specs":{"a.md":{"examples":[]}}}`,
+		`{"version":1,"oaths":{}}`,
+		`{"version":2,"oaths":{"a.md":{"examples":[]}}}`,
 	}
 	for _, s := range bad {
-		if ParseVarLock(s) != nil {
+		if ParseLockFile(s) != nil {
 			t.Errorf("expected nil for %q", s)
 		}
 	}
@@ -247,5 +295,92 @@ func TestDriftMessageNamesTheParagraph(t *testing.T) {
 	}
 	if strings.TrimSpace(msg) == "" {
 		t.Errorf("empty message")
+	}
+}
+
+// ---- Pruning baselines for oaths that no longer exist (#70) ----
+
+// A lock carrying two oaths, one of which the docs globs no longer match — the
+// state a deleted or moved .md leaves behind.
+func lockWithStalePath() string {
+	source := "I withdraw 40."
+	doc := Parse("w.md", source)
+	baseline := DeriveOathBaseline(source, doc, Plan(doc, reg(true)))
+	return StringifyLockFile(LockFile{
+		Version: 2,
+		Oaths:   map[string]OathBaseline{"varar/w.md": baseline, "w.md": baseline},
+	})
+}
+
+func lockPaths(t *testing.T, contents string) []string {
+	t.Helper()
+	lock := ParseLockFile(contents)
+	if lock == nil {
+		t.Fatalf("could not parse lock: %q", contents)
+	}
+	var paths []string
+	for path := range lock.Oaths {
+		paths = append(paths, path)
+	}
+	sort.Strings(paths)
+	return paths
+}
+
+func TestPruneLockFileKeepsOnlyThePathsItIsGiven(t *testing.T) {
+	lock := ParseLockFile(lockWithStalePath())
+	pruned := PruneLockFile(*lock, []string{"varar/w.md"})
+	if got := lockPaths(t, StringifyLockFile(pruned)); !reflect.DeepEqual(got, []string{"varar/w.md"}) {
+		t.Errorf("got %v", got)
+	}
+}
+
+func TestPruneReportsStalePathsWithoutUpdateAndDoesNotWrite(t *testing.T) {
+	contents := lockWithStalePath()
+	store := &memoryStore{contents: &contents}
+	before := *store.contents
+
+	if got := PruneBaselines(store, []string{"varar/w.md"}, false); !reflect.DeepEqual(got, []string{"w.md"}) {
+		t.Errorf("got %v", got)
+	}
+	// Reporting is not deleting: nothing is removed behind the author's back.
+	if *store.contents != before {
+		t.Errorf("store was written")
+	}
+}
+
+func TestPruneDropsStalePathsUnderUpdate(t *testing.T) {
+	contents := lockWithStalePath()
+	store := &memoryStore{contents: &contents}
+
+	if got := PruneBaselines(store, []string{"varar/w.md"}, true); !reflect.DeepEqual(got, []string{"w.md"}) {
+		t.Errorf("got %v", got)
+	}
+	if got := lockPaths(t, *store.contents); !reflect.DeepEqual(got, []string{"varar/w.md"}) {
+		t.Errorf("got %v", got)
+	}
+}
+
+func TestPruneLeavesALockWithNoStalePathsUntouched(t *testing.T) {
+	contents := lockWithStalePath()
+	store := &memoryStore{contents: &contents}
+	before := *store.contents
+
+	if got := PruneBaselines(store, []string{"varar/w.md", "w.md"}, true); len(got) != 0 {
+		t.Errorf("got %v", got)
+	}
+	// Byte-identical, not merely equivalent — an unnecessary rewrite would show
+	// up as a spurious diff in every consumer's working tree.
+	if *store.contents != before {
+		t.Errorf("store was rewritten")
+	}
+}
+
+func TestPruneIsANoOpWhenThereIsNoBaselineYet(t *testing.T) {
+	store := &memoryStore{}
+	if got := PruneBaselines(store, []string{"varar/w.md"}, true); len(got) != 0 {
+		t.Errorf("got %v", got)
+	}
+	if store.contents != nil {
+		t.Errorf("store was written")
 	}
 }

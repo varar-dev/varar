@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from varar_core.cell_diff import CellDiff, CellMismatchError, ReturnShapeError
-from varar_core.doc_string_diff import DocStringDiff, DocStringMismatchError
+from varar_core.doc_string_diff import compare_doc_string
 from varar_core.failure import to_failure
 from varar_core.result import CellFailure
 from varar_core.span import span_from_offsets
@@ -13,27 +13,25 @@ def test_to_failure_extracts_cells_from_cell_mismatch_error() -> None:
     err = CellMismatchError(
         [CellDiff(column="n", span=span_from_offsets(source, 4, 5), expected="5", actual="4", ok=False)]
     )
-    f = to_failure(err, "spec.md", 3)
+    f = to_failure(err, "oath.md", 3)
     assert f.cells == (CellFailure(from_=4, to=5, actual="4"),)
-    assert f.doc is None
     assert isinstance(f.message, str)
     assert isinstance(f.stack, str)
 
 
-def test_to_failure_extracts_doc_from_doc_string_mismatch_error() -> None:
+def test_to_failure_extracts_a_doc_string_mismatch_as_a_cell() -> None:
     source = "Hello!\n"
-    err = DocStringMismatchError(
-        DocStringDiff(span=span_from_offsets(source, 0, 7), expected="Hello!\n", actual="Goodbye!\n")
-    )
-    f = to_failure(err, "spec.md", 3)
-    assert f.doc == CellFailure(from_=0, to=7, actual="Goodbye!\n")
-    assert f.cells is None
+    diff = compare_doc_string("Goodbye!\n", "Hello!\n", span_from_offsets(source, 0, 7))
+    assert diff is not None
+    f = to_failure(CellMismatchError([diff]), "oath.md", 3)
+    assert f.cells is not None
+    assert [(c.from_, c.to, c.actual) for c in f.cells] == [(0, 7, '"Goodbye!\\n"')]
 
 
-def test_to_failure_leaves_cells_doc_undefined_for_plain_error_or_return_shape_error() -> None:
-    assert to_failure(Exception("nope"), "spec.md", 3).cells is None
-    assert to_failure(Exception("nope"), "spec.md", 3).doc is None
-    assert to_failure(ReturnShapeError("bad"), "spec.md", 3).cells is None
+
+def test_to_failure_leaves_cells_undefined_for_plain_error_or_return_shape_error() -> None:
+    assert to_failure(Exception("nope"), "oath.md", 3).cells is None
+    assert to_failure(ReturnShapeError("bad"), "oath.md", 3).cells is None
 
 
 def test_to_failure_reads_failing_line_from_stack_else_falls_back() -> None:
@@ -46,10 +44,10 @@ def test_to_failure_reads_failing_line_from_stack_else_falls_back() -> None:
     assert to_failure(no_frame, "docs/a.md", 99).line == 99
 
 
-def test_to_failure_regex_escapes_spec_path() -> None:
-    # 'X' stands in for the dot: if the spec path's '.' were treated as a
+def test_to_failure_regex_escapes_oath_path() -> None:
+    # 'X' stands in for the dot: if the oath path's '.' were treated as a
     # regex wildcard it would match this frame; escaped, it must not.
     err = Exception("boom")
     err.stack = "Error: boom\n    at step (aXmd:7:1)"  # type: ignore[attr-defined]
-    # specPath "a.md" must NOT match "aXmd"
+    # oathPath "a.md" must NOT match "aXmd"
     assert to_failure(err, "a.md", 42).line == 42

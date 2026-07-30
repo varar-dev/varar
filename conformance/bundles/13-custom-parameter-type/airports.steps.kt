@@ -19,11 +19,6 @@ val steps = steps(::Ctx) {
     stimulus("I fly to {airport}") { dest: String ->
         copy(dest = dest)
     }
-    sensor("The destination code is {word}") { expected: String ->
-        // {word} greedily captures the sentence-ending period (same cleanup as
-        // bundle 01) — strip it before comparing.
-        val cleaned = expected.replace(Regex("[.!?]$"), "")
-        if (cleaned != dest) throw AssertionError("expected $cleaned but got $dest")
-        null
-    }
+    // The trailing "." is matched literally, so {word} captures just the code.
+    sensor("The destination code is {word}.") { _: String -> dest }
 }

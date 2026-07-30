@@ -125,7 +125,7 @@ type celsius int64
 // stamp exercises a struct domain type, the LocalDate-style case.
 type stamp struct{ Year, Day int64 }
 
-func (s *stamp) DecodeVarValue(v Value) error {
+func (s *stamp) DecodeValue(v Value) error {
 	m, ok := v.AsMap()
 	if !ok {
 		return errNotAStamp
@@ -134,7 +134,7 @@ func (s *stamp) DecodeVarValue(v Value) error {
 	return nil
 }
 
-func (s stamp) EncodeVarValue() Value {
+func (s stamp) EncodeValue() Value {
 	return core.MapValue(map[string]Value{
 		"year": core.IntValue(s.Year), "day": core.IntValue(s.Day),
 	})
@@ -147,7 +147,7 @@ type errStr string
 func (e errStr) Error() string { return string(e) }
 
 func TestDomainTypeSlotRoundTrips(t *testing.T) {
-	encoded := stamp{Year: 2026, Day: 12}.EncodeVarValue()
+	encoded := stamp{Year: 2026, Day: 12}.EncodeValue()
 	got, err := toGo(encoded, reflect.TypeOf(stamp{}), 0)
 	if err != nil {
 		t.Fatalf("decode: %v", err)
@@ -173,7 +173,7 @@ func TestNamedPrimitiveSlotConverts(t *testing.T) {
 func TestDomainTypeIsAcceptedAtRegistration(t *testing.T) {
 	s := NewSteps[Value]()
 	s.Param("date", `[A-Z][a-z]+ \d{1,2}, \d{4}`, func(g []string) Value {
-		return stamp{Year: 2026, Day: 12}.EncodeVarValue()
+		return stamp{Year: 2026, Day: 12}.EncodeValue()
 	}, nil)
 	// A decoder-only type is fine as a stimulus slot...
 	s.Stimulus("due on {date}", func(state Value, d stamp) (Value, error) { return state, nil })
@@ -233,4 +233,40 @@ func TestFieldlessStructRejectedAtRegistration(t *testing.T) {
 	mustPanic(t, "cannot be read from a slot", func() {
 		adapt[Value](func(state Value, o opaque) (Value, error) { return state, nil }, core.Stimulus, "expr")
 	})
+}
+
+// A sensor with slots must answer them. Returning nothing used to skip the
+// comparison silently, so a typo turned an assertion into a no-op.
+func TestSlottedSensorReturningNothingFailsTheStep(t *testing.T) {
+	s := NewSteps[Value]()
+	s.Sensor("the name is {string}", func(state Value, args []Value) (*Value, error) {
+		return nil, nil
+	})
+	plan := core.Plan(core.Parse("t.md", `the name is "Ada".`), s.Registry())
+	failure := core.ExecutePlan(plan, core.ExecutePorts{})
+	if failure == nil {
+		t.Fatal("expected the step to fail with a missing return")
+	}
+	want := "a sensor with 1 slot(s) must return one value per slot, got nothing"
+	if msg := failure.Error.Message(); msg != want {
+		t.Errorf("message %q should be %q", msg, want)
+	}
+}
+
+func TestHeaderBoundRowReturningNothingFailsTheStep(t *testing.T) {
+	s := NewSteps[Value]()
+	s.Sensor("I report the score and grade", func(state Value, args []Value) (*Value, error) {
+		return nil, nil
+	})
+	source := "I report the score and grade.\n\n" +
+		"| score | grade |\n| ----- | ----- |\n| 10    | A     |\n"
+	plan := core.Plan(core.Parse("t.md", source), s.Registry())
+	failure := core.ExecutePlan(plan, core.ExecutePorts{})
+	if failure == nil {
+		t.Fatal("expected the row step to fail with a missing return")
+	}
+	want := "a header-bound row step must return a row object with one value per bound cell, got nothing"
+	if msg := failure.Error.Message(); msg != want {
+		t.Errorf("message %q should be %q", msg, want)
+	}
 }

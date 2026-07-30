@@ -93,12 +93,13 @@ module Varar
         {
           'scopeStack' => example.scope_stack,
           'span' => span_hash(example.span),
-          'body' => example.body.map { |b| block_hash(b) }
+          'body' => example.body.map { |b| block_hash(b) },
+          'precededByDelimiter' => example.preceded_by_delimiter
         }
       end
 
-      # Project a VarDoc to the wire dict for the var-doc artifact.
-      def to_var_doc_artifact(doc)
+      # Project a Doc to the wire dict for the var-doc artifact.
+      def to_doc_artifact(doc)
         {
           'path' => doc.path,
           'examples' => doc.examples.map { |ex| example_hash(ex) },
@@ -136,7 +137,7 @@ module Varar
 
       # Project an ExecutionPlan to the wire dict for the plan artifact.
       def to_plan_artifact(plan)
-        source = plan.var_doc.source
+        source = plan.doc.source
         {
           'examples' => plan.examples.map { |ex| planned_example_hash(ex, source) },
           'diagnostics' => plan.diagnostics.map do |d|
@@ -195,16 +196,6 @@ module Varar
               { 'column' => c.column, 'expected' => c.expected, 'actual' => c.actual, 'span' => span_hash(c.span) }
             end
           }
-        when DocStringMismatchError
-          {
-            'kind' => 'doc-string-mismatch', 'line' => line, 'anchor' => anchor,
-            'message' => error.message,
-            'diff' => {
-              'expected' => error.diff.expected,
-              'actual' => error.diff.actual,
-              'span' => span_hash(error.diff.span)
-            }
-          }
         when ReturnShapeError
           { 'kind' => 'return-shape', 'line' => line, 'anchor' => anchor, 'message' => error.message }
         when UnexpectedPassError
@@ -215,8 +206,8 @@ module Varar
       end
 
       # Run all examples and return the four-artifact bundle. Port of runConformance.
-      def run_conformance(var_doc, registry, create_context, parameter_types = [])
-        execution = Plan.plan(var_doc, registry)
+      def run_conformance(doc, registry, create_context, parameter_types = [])
+        execution = Plan.plan(doc, registry)
         observed = Hash.new { |h, k| h[k] = [] }
         observer = ->(o) { observed[o.example_index] << o }
         queue = Execute.collect_examples(execution, create_context: create_context, observer: observer)
@@ -253,7 +244,7 @@ module Varar
         end
 
         {
-          var_doc: to_var_doc_artifact(var_doc),
+          doc: to_doc_artifact(doc),
           registry: to_registry_artifact(registry, parameter_types),
           plan: to_plan_artifact(execution),
           trace: { 'examples' => trace_examples }

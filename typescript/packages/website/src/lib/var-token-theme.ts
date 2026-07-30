@@ -1,12 +1,12 @@
 import { EditorView } from '@codemirror/view'
 
 // A matched step reads as bold ink — no fill — with each captured parameter
-// drawn as a single rounded chip. Chip colour by state:
-//   - default/passing: the step teal darkened a touch, so the chip stands out
-//     against the pass wash, with the step's contrast text colour.
-//   - failing line: chips go quiet along with everything else, and only the
-//     mismatched value (wrapped by the lint range) gets the brightened
-//     vermillion fail chip.
+// drawn as a single rounded chip. A chip means "this text was captured by a
+// step", which stays true whether the example passed or failed, so a failing
+// example keeps every chip at its normal colour: only the mismatched value
+// (wrapped by the lint range) turns vermillion. The line wash already says
+// the example failed; muting the correct parameters as well only hid
+// information that is still accurate.
 
 // @codemirror/lint draws its squiggle as a background-image on the wrapping
 // span.cm-lintRange — an opaque chip INSIDE that wrapper paints right over
@@ -31,23 +31,19 @@ export const varTokenTheme = EditorView.baseTheme({
     padding: '1px 0',
     fontWeight: '600',
   },
-  // Failing line: chips go quiet so all emphasis lands on the mismatched
-  // value below. Bold weight is kept, so the step still reads as "matched".
-  '.cm-run-fail .cm-token-parameter': {
-    background: 'transparent',
-    color: 'inherit',
-  },
   // The mismatched value itself: a lightened vermillion chip (--ed-fail-mark
   // is the Okabe–Ito colorblind-safe fail colour in both themes; the 25%
   // white mix lifts text contrast) with dark ink and the red squiggle
-  // layered above its fill. Scoped to .cm-run-fail so it out-specifies the
-  // quiet rule above by class count, not by rule order.
-  '.cm-run-fail .cm-lintRange-error .cm-token-function, .cm-run-fail .cm-lintRange-error .cm-token-parameter':
-    {
-      background: 'color-mix(in srgb, var(--ed-fail-mark) 65%, white)',
-      color: '#17120d',
-      backgroundImage: errorSquiggle,
-      backgroundRepeat: 'repeat-x',
-      backgroundPosition: 'left bottom',
-    },
+  // layered above its fill. Two classes deep, so it out-specifies the plain
+  // chip above by class count, not by rule order. No .cm-run-fail scope: an
+  // error squiggle sitting on a *matched* token is a run's cell mismatch by
+  // construction (drift is a warning, and a parse error means the step never
+  // matched, so there's no token under it).
+  '.cm-lintRange-error .cm-token-function, .cm-lintRange-error .cm-token-parameter': {
+    background: 'color-mix(in srgb, var(--ed-fail-mark) 65%, white)',
+    color: '#17120d',
+    backgroundImage: errorSquiggle,
+    backgroundRepeat: 'repeat-x',
+    backgroundPosition: 'left bottom',
+  },
 })

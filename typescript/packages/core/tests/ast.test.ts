@@ -1,5 +1,5 @@
 import { expectTypeOf, test } from 'vitest'
-import type { Block, Example, Heading, Paragraph, VarDoc } from '../src/ast.ts'
+import type { Block, Doc, Example, Heading, Paragraph } from '../src/ast.ts'
 
 test('Heading and Paragraph are members of the Block union', () => {
   expectTypeOf<Heading>().toMatchTypeOf<Block>()
@@ -14,6 +14,6 @@ test('Heading carries level and text', () => {
   }>()
 })
 
-test('VarDoc has readonly examples array', () => {
-  expectTypeOf<VarDoc['examples']>().toEqualTypeOf<ReadonlyArray<Example>>()
+test('Doc has readonly examples array', () => {
+  expectTypeOf<Doc['examples']>().toEqualTypeOf<ReadonlyArray<Example>>()
 })

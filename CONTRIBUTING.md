@@ -59,7 +59,7 @@ PR passes through all of these:
   enforced by a lint in Python and Ruby.
 - **Coverage** — `make coverage` reports for all seven ports; TypeScript and
   Python enforce ratcheting floors (raise, never lower).
-- **Dogfooding** — the tool's own specs (the `.md` files in `examples/`,
+- **Dogfooding** — the tool's own oaths (the `.md` files in `examples/`,
   run by each language's sample project) run in the test suite, so
   regressions in the product break the build.
 - **Architecture rules** — immutable data, pure functional core, hexagonal

@@ -10,17 +10,9 @@ public static class CounterSteps
     {
         s.Stimulus("I increment", state => Value.Map([new("count", Value.Of(CountOf(state) + 1))]));
 
-        s.Sensor("The count is {int}", (state, n) =>
-        {
-            var count = CountOf(state);
-            var expected = n is VInt i ? i.Int : 0;
-            if (count != expected)
-            {
-                throw new HandlerException($"expected {expected} but got {count}");
-            }
-
-            return null;
-        });
+        // One slot ({int}): return the observed count and let the core compare it against the
+        // number in the document.
+        s.Sensor("The count is {int}", (state, n) => Value.Of(CountOf(state)));
     }
 
     public static Value State() => Value.Map([new("count", Value.Of(0))]);

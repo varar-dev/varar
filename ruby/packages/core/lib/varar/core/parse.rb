@@ -5,7 +5,7 @@ require 'varar/core/structurer'
 
 module Varar
   module Core
-    # Parse +source+ into a VarDoc: scan blocks, then group into Examples.
+    # Parse +source+ into a Doc: scan blocks, then group into Examples.
     # Port of parse.ts.
     module Parse
       module_function

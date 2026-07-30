@@ -8,14 +8,14 @@ from pathlib import Path
 
 def _abs_no_deref(path: Path) -> Path:
     # os.path.abspath normalizes (cwd-joins, collapses ..) WITHOUT dereferencing
-    # symlinks — a symlinked spec must match the docs globs by its apparent path,
+    # symlinks — a symlinked oath must match the docs globs by its apparent path,
     # not its target's (mirrors Java's toAbsolutePath().normalize()).
     return Path(os.path.abspath(path))
 
 
 def _rel_posix(path: Path, root: Path) -> str:
     # walk_up=True (Python 3.12+) yields a ``../`` prefix when *path* is outside
-    # *root*, so specs can live outside the config root (e.g. a shared corpus in a
+    # *root*, so oaths can live outside the config root (e.g. a shared corpus in a
     # sibling directory) and still match a ``../sibling/**`` glob.
     return _abs_no_deref(path).relative_to(_abs_no_deref(root), walk_up=True).as_posix()
 
@@ -75,7 +75,7 @@ def _matches_any(rel: str, globs: Sequence[str]) -> bool:
     return any(_glob_to_regex(g).fullmatch(rel) is not None for g in globs)
 
 
-def match_spec(
+def match_oath(
     path: Path,
     include: Sequence[str],
     exclude: Sequence[str],
@@ -86,7 +86,7 @@ def match_spec(
     return _matches_any(rel, include) and not _matches_any(rel, exclude)
 
 
-def find_specs(
+def find_oaths(
     include: Sequence[str],
     exclude: Sequence[str],
     root: Path,

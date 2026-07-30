@@ -20,8 +20,8 @@ def _reg():
 
 def test_plan_produces_a_planned_example_with_steps_in_document_order() -> None:
     source = "# Withdrawing\n\nGiven I have 100 in my account. When I withdraw 40. Then I should have 60 left."
-    var_doc = parse("w.md", source)
-    result = plan(var_doc, _reg())
+    doc = parse("w.md", source)
+    result = plan(doc, _reg())
     assert result.diagnostics == ()
     assert len(result.examples) == 1
     ex = result.examples[0]
@@ -35,35 +35,39 @@ def test_plan_produces_a_planned_example_with_steps_in_document_order() -> None:
     assert ex.steps[0].args == (100,)
 
 
-def test_plan_emits_ambiguous_match_diagnostic_and_no_steps() -> None:
+def test_plan_emits_ambiguous_match_diagnostic_and_produces_no_example() -> None:
     r = create_registry()
     r = add_step(r, expression="I have {int} cukes", expression_source_file="a.ts", expression_source_line=3, handler=_noop, kind="stimulus")
     r = add_step(r, expression="I have {int} {word}", expression_source_file="a.ts", expression_source_line=8, handler=_noop, kind="stimulus")
-    var_doc = parse("e.md", "# Ambig\n\nGiven I have 5 cukes")
-    result = plan(var_doc, r)
+    doc = parse("e.md", "# Ambig\n\nGiven I have 5 cukes")
+    result = plan(doc, r)
     assert len(result.diagnostics) == 1
     assert result.diagnostics[0].code == "ambiguous-match"
-    assert result.examples[0].steps == ()
+    # An ambiguous candidate has no runnable step, so it is prose (a delimiter),
+    # not an example — the diagnostic is the signal. See ADR 0012.
+    assert result.examples == ()
 
 
 def test_plan_skips_example_with_no_matches() -> None:
     source = "# Just docs\n\nSome prose with no matches and no keywords."
-    var_doc = parse("d.md", source)
-    result = plan(var_doc, _reg())
+    doc = parse("d.md", source)
+    result = plan(doc, _reg())
     assert result.examples == ()
     assert result.diagnostics == ()
 
 
-def test_plan_turns_each_list_item_into_its_own_example() -> None:
+def test_plan_merges_consecutive_list_items_into_one_example() -> None:
     r = create_registry()
     r = add_step(r, expression="I have {int} in my account", expression_source_file="s.ts", expression_source_line=1, handler=_noop, kind="stimulus")
     r = add_step(r, expression="I withdraw {int}", expression_source_file="s.ts", expression_source_line=2, handler=_noop, kind="stimulus")
+    # Two list items, no delimiter between them → one example, shared state (ADR
+    # 0012). A bulleted scenario reads as Given/When/Then bullets.
     source = "# Bullets\n\n- Given I have 100 in my account\n- When I withdraw 40"
     result = plan(parse("b.md", source), r)
-    assert len(result.examples) == 2
-    assert [[s.text for s in e.steps] for e in result.examples] == [
-        ["I have 100 in my account"],
-        ["I withdraw 40"],
+    assert len(result.examples) == 1
+    assert [s.text for s in result.examples[0].steps] == [
+        "I have 100 in my account",
+        "I withdraw 40",
     ]
 
 
@@ -115,15 +119,15 @@ def test_step_with_no_following_fence_has_no_doc_string() -> None:
 
 def test_keyword_led_sentence_with_no_match_produces_no_diagnostic() -> None:
     r = create_registry()
-    var_doc = parse("m.md", "# Empty\n\nGiven I have 5 cukes in my belly.")
-    result = plan(var_doc, r)
+    doc = parse("m.md", "# Empty\n\nGiven I have 5 cukes in my belly.")
+    result = plan(doc, r)
     assert result.diagnostics == ()
 
 
 def test_unmatched_sentence_without_keyword_is_silently_prose() -> None:
     r = create_registry()
-    var_doc = parse("p.md", "# Prose\n\nI have 5 cukes in my belly.")
-    result = plan(var_doc, r)
+    doc = parse("p.md", "# Prose\n\nI have 5 cukes in my belly.")
+    result = plan(doc, r)
     assert result.diagnostics == ()
 
 
@@ -311,3 +315,73 @@ def test_doc_string_step_carries_fence_body_span() -> None:
     assert ds.content == '{ "ok": true }\n'
     # The span slices back to the exact body content (trailing newline included).
     assert source[ds.span.start_offset:ds.span.end_offset] == '{ "ok": true }\n'
+
+
+# ---- Example delimiters (ADR 0012) ----------------------------------------
+
+
+def test_consecutive_matching_paragraphs_with_no_delimiter_merge_into_one_example() -> None:
+    source = "I have 100 in my account.\n\nI withdraw 40.\n\nI should have 60 left."
+    result = plan(parse("m.md", source), _reg())
+    assert len(result.examples) == 1
+    assert [s.text for s in result.examples[0].steps] == [
+        "I have 100 in my account",
+        "I withdraw 40",
+        "I should have 60 left",
+    ]
+    # The name is the first matching paragraph's text.
+    assert result.examples[0].name == "I have 100 in my account"
+
+
+def test_thematic_break_between_matching_paragraphs_splits_them() -> None:
+    source = "I have 100 in my account.\n\n---\n\nI withdraw 40."
+    result = plan(parse("h.md", source), _reg())
+    assert len(result.examples) == 2
+    assert [[s.text for s in e.steps] for e in result.examples] == [
+        ["I have 100 in my account"],
+        ["I withdraw 40"],
+    ]
+
+
+def test_heading_between_matching_paragraphs_splits_them() -> None:
+    source = "I have 100 in my account.\n\n## Next\n\nI withdraw 40."
+    result = plan(parse("hd.md", source), _reg())
+    assert len(result.examples) == 2
+    assert result.examples[1].scope_stack == ("Next",)
+
+
+def test_prose_paragraph_between_matching_paragraphs_splits_the_example() -> None:
+    source = "I have 100 in my account.\n\nJust explaining what happens next.\n\nI withdraw 40."
+    result = plan(parse("p.md", source), _reg())
+    assert len(result.examples) == 2
+    assert [[s.text for s in e.steps] for e in result.examples] == [
+        ["I have 100 in my account"],
+        ["I withdraw 40"],
+    ]
+
+
+def test_leading_and_trailing_prose_does_not_merge_into_an_example() -> None:
+    source = "A preamble that matches nothing.\n\nI withdraw 40.\n\nA closing remark."
+    result = plan(parse("pp.md", source), _reg())
+    assert len(result.examples) == 1
+    assert [s.text for s in result.examples[0].steps] == ["I withdraw 40"]
+
+
+def test_multi_table_shape_two_tables_in_one_example_survive_blank_lines() -> None:
+    r = create_registry()
+    r = add_step(r, expression="the following users have been imported", expression_source_file="s.ts", expression_source_line=1, handler=_noop, kind="stimulus")
+    r = add_step(r, expression="the following assets have been imported", expression_source_file="s.ts", expression_source_line=2, handler=_noop, kind="stimulus")
+    source = (
+        "Given the following users have been imported:\n\n"
+        "| email | name |\n| ----- | ---- |\n| a@b.c | Ada  |\n\n"
+        "And the following assets have been imported:\n\n"
+        "| name  |\n| ----- |\n| Moose |"
+    )
+    result = plan(parse("basket.md", source), r)
+    assert len(result.examples) == 1
+    ex = result.examples[0]
+    assert len(ex.steps) == 2
+    assert ex.steps[0].data_table is not None
+    assert len(ex.steps[0].data_table.rows) == 1
+    assert ex.steps[1].data_table is not None
+    assert len(ex.steps[1].data_table.rows) == 1

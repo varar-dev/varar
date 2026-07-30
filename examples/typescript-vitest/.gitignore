@@ -1,8 +1,13 @@
 node_modules/
-.var/
-# Artifacts of a standalone `pnpm install` in the varar-examples repo (in the
+.varar/
+# Artifact of a standalone `pnpm install` in the varar-examples repo (in the
 # varar monorepo this project is a workspace member and the lockfile
 # lives at typescript/pnpm-lock.yaml). In your own project, DO commit your
 # lockfile.
+#
+# pnpm-workspace.yaml is deliberately NOT ignored: it is checked-in monorepo
+# plumbing, not an install artifact — see the comment inside it. Ignoring it
+# meant `pnpm test` worked here and nowhere else, which CI found the hard way.
+# It is kept out of varar-examples by an explicit rsync --exclude in
+# release/targets/72-varar-examples.sh, not by this file.
 pnpm-lock.yaml
-pnpm-workspace.yaml

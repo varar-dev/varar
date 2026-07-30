@@ -70,7 +70,7 @@ classes: {
   }
 }
 
-developer: "Spec author / developer\n[Person]\n\nWrites *.md specs and\n*.steps.ts step definitions" {
+developer: "Oath author / developer\n[Person]\n\nWrites *.md oaths and\n*.steps.ts step definitions" {
   class: person
 }
 
@@ -93,7 +93,7 @@ core: "Functional core — pure functions over immutable data, no I/O" {
     class: ported
   }
 
-  var-config: "@varar/config\n[Component: npm package]\n\nvar.config.ts schema and\nspec-glob resolution" {
+  var-config: "@varar/config\n[Component: npm package]\n\nvar.config.ts schema and\noath-glob resolution" {
     class: ported
   }
 }
@@ -109,7 +109,7 @@ analysis: "Static analysis — pure given sources and an injected grammar loader
 shell: "Imperative shell — adapters, the only place side effects live" {
   class: boundary
 
-  var-runner: "@varar/runner\n[Component: npm package]\n\nRunner shell: loads spec and step files,\nexecutes plans" {
+  var-runner: "@varar/runner\n[Component: npm package]\n\nRunner shell: loads oath and step files,\nexecutes plans" {
     class: ported
   }
 
@@ -148,8 +148,8 @@ legend: "Legend" {
 
 # --- People and external systems ---
 
-developer -> core.var: authors specs and steps with
-developer -> tooling.var-vscode: edits specs in
+developer -> core.var: authors oaths and steps with
+developer -> tooling.var-vscode: edits oaths in
 
 shell.var-vitest -> vitest: plugs into
 tooling.var-vscode -> vscode: installs into

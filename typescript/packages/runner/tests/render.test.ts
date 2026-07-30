@@ -1,10 +1,10 @@
-import type { CellDiff, DocStringDiff } from '@varar/core'
-import { CellMismatchError, DocStringMismatchError, ReturnShapeError } from '@varar/core'
+import type { CellDiff } from '@varar/core'
+import { CellMismatchError, compareDocString, ReturnShapeError } from '@varar/core'
 import { expect, test } from 'vitest'
 import { renderFailure } from '../src/render.ts'
 
-const PATH = 'spec.md'
-const SOURCE = '# Spec\n\nSome step.\n'
+const PATH = 'oath.md'
+const SOURCE = '# Oath\n\nSome step.\n'
 
 function makeSpan(startLine: number) {
   return {
@@ -26,7 +26,7 @@ test('renderFailure: CellMismatchError → contains expected/actual and .md line
   expect(result).toContain('CellMismatchError')
   expect(result).toContain('"100"')
   expect(result).toContain('"99"')
-  expect(result).toContain('spec.md:5')
+  expect(result).toContain('oath.md:5')
   expect(result).toContain('"amount"')
 })
 
@@ -37,8 +37,8 @@ test('renderFailure: CellMismatchError with multiple failing cells', () => {
   ]
   const err = new CellMismatchError(cells)
   const result = renderFailure(err, SOURCE, PATH)
-  expect(result).toContain('spec.md:3')
-  expect(result).toContain('spec.md:4')
+  expect(result).toContain('oath.md:3')
+  expect(result).toContain('oath.md:4')
   expect(result).toContain('"a"')
   expect(result).toContain('"b"')
 })
@@ -55,18 +55,14 @@ test('renderFailure: CellMismatchError ignores passing cells', () => {
   expect(result).not.toContain('"x"')
 })
 
-test('renderFailure: DocStringMismatchError → contains expected/actual and .md line', () => {
-  const diff: DocStringDiff = {
-    span: makeSpan(7),
-    expected: 'Hello world\n',
-    actual: 'Hello earth\n',
-  }
-  const err = new DocStringMismatchError(diff)
-  const result = renderFailure(err, SOURCE, PATH)
-  expect(result).toContain('DocStringMismatchError')
-  expect(result).toContain('spec.md:7')
-  expect(result).toContain('"Hello world\\n"')
-  expect(result).toContain('"Hello earth\\n"')
+test('renderFailure: a doc-string cell → contains expected/actual and .md line', () => {
+  const diff = compareDocString('Hello earth\n', 'Hello world\n', makeSpan(7))
+  const result = renderFailure(new CellMismatchError([diff!]), SOURCE, PATH)
+  expect(result).toContain('CellMismatchError')
+  expect(result).toContain('oath.md:7')
+  expect(result).toContain('doc string')
+  expect(result).toContain('Hello world')
+  expect(result).toContain('Hello earth')
 })
 
 test('renderFailure: ReturnShapeError → contains the message', () => {

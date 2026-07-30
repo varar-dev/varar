@@ -1,0 +1,40 @@
+{
+  "examples": [
+    {
+      "body": [
+        {
+          "kind": "paragraph",
+          "segmentMap": [
+            {
+              "sourceOffset": 9,
+              "textOffset": 0
+            }
+          ],
+          "span": {
+            "endCol": 16,
+            "endLine": 3,
+            "endOffset": 24,
+            "startCol": 1,
+            "startLine": 3,
+            "startOffset": 9
+          },
+          "text": "I have 5 cukes."
+        }
+      ],
+      "precededByDelimiter": true,
+      "scopeStack": [
+        "Cukes"
+      ],
+      "span": {
+        "endCol": 16,
+        "endLine": 3,
+        "endOffset": 24,
+        "startCol": 1,
+        "startLine": 3,
+        "startOffset": 9
+      }
+    }
+  ],
+  "orphanAttachments": [],
+  "path": "example.md"
+}

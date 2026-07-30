@@ -13,6 +13,7 @@
 #   make rust       # cargo fmt/clippy/test (var-core) + examples/rust-cargotest
 #   make dotnet     # dotnet format --verify-no-changes + build + test (net10.0)
 #   make go         # gofmt + go vet + go test (go/ module) + examples/go-gotest
+#   make parity     # every core capability exists in every port that needs it
 #   make coverage   # test with coverage in all seven ports (reports below)
 #   make install-tools # add missing asdf plugins + install every toolchain the
 #                   # root .tool-versions pins (JDK, .NET, Ruby, adr-tools)
@@ -20,10 +21,17 @@
 #                   # controlled per-language PRs — see renovate.json5)
 #
 # Each target runs the same gate as that port's CI workflow in .github/workflows/.
+#
+# Every port target ends with conformance/adapter/smoke.sh over its sample
+# project(s) — the adapter smoke contract (conformance/adapter/README.md). The
+# golden corpora only see the pure core, so an adapter can be conformance-green
+# and still tests nothing; the smoke contract runs the sample's real test command
+# against a deliberately drifted baseline and requires it to go red. It runs
+# after the port's own sample run, which leaves the project built and warm.
 
-.PHONY: check commits typescript python java ruby rust dotnet go coverage changelog prepare release update-deps install-tools
+.PHONY: check commits parity typescript python java ruby rust dotnet go coverage changelog prepare release update-deps install-tools
 
-check: commits typescript python java ruby rust dotnet go
+check: commits parity typescript python java ruby rust dotnet go
 
 # One-shot local toolchain bootstrap: add any missing asdf plugin, then install
 # every version pinned in the root .tool-versions (including the JDK 21 / Ruby
@@ -37,8 +45,15 @@ install-tools:
 commits:
 	release/lint-commits.sh
 
+# Every capability conformance/parity.json declares exists in every port it
+# names. The corpora catch a port that behaves differently; this catches one
+# that never implemented something at all (see ADR 0014).
+parity:
+	release/check-parity.sh
+
 typescript:
 	cd typescript && pnpm install && pnpm build && pnpm check && pnpm --filter @varar/website... build
+	conformance/adapter/smoke.sh examples/typescript-vitest
 
 python:
 	# Drop any .venv left pointing at an old checkout path (e.g. after a repo
@@ -49,6 +64,7 @@ python:
 	cd python && uv run ruff check ../examples/python-pytest ../examples/python-unittest
 	cd examples/python-pytest && uv run pytest
 	cd examples/python-unittest && uv run python -m unittest
+	conformance/adapter/smoke.sh examples/python-pytest examples/python-unittest
 
 # spotless:apply first, so a local run prettifies instead of failing the bound
 # spotless:check (CI runs plain `mvn install`, where drift fails the build).
@@ -65,6 +81,7 @@ java:
 	cd examples/java-junit-gradle && ./gradlew --console=plain test
 	cd examples/kotlin-junit && ./gradlew --console=plain test
 	cd examples/kotlin-kotest && ./gradlew --console=plain test
+	conformance/adapter/smoke.sh examples/java-junit-maven examples/java-junit-gradle examples/kotlin-junit examples/kotlin-kotest
 
 ruby:
 	cd ruby && bundle install && bundle exec rake
@@ -73,12 +90,14 @@ ruby:
 	cd ruby && bundle exec rubocop ../examples/ruby-rspec ../examples/ruby-minitest
 	cd examples/ruby-rspec && bundle install && bundle exec rspec
 	cd examples/ruby-minitest && bundle install && bundle exec rake test
+	conformance/adapter/smoke.sh examples/ruby-rspec examples/ruby-minitest
 
 # Rust port: pure cargo (var-core), then the standalone sample project (which
 # depends on var-core by path and runs the Markdown specs via `cargo test`).
 rust:
 	cd rust && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
 	cd examples/rust-cargotest && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
+	conformance/adapter/smoke.sh examples/rust-cargotest
 
 # .NET port: the dotnet/ solution (net10.0), formatted with dotnet format,
 # built and tested (four conformance artifacts x 15 bundles + config corpus +
@@ -86,6 +105,7 @@ rust:
 dotnet:
 	cd dotnet && dotnet format --verify-no-changes && dotnet test
 	cd examples/csharp-vstest && dotnet format --verify-no-changes && dotnet test
+	conformance/adapter/smoke.sh examples/csharp-vstest
 
 # Go port: the go/ module (gofmt + vet + config corpus + drift + runner + the
 # go test adapter), then the conformance harness — a SEPARATE nested module
@@ -97,6 +117,7 @@ go:
 	cd go && test -z "$$(gofmt -l .)" && go vet ./... && go test ./...
 	cd go/conformance && test -z "$$(gofmt -l .)" && go vet ./... && go test ./...
 	cd examples/go-gotest && test -z "$$(gofmt -l .)" && go vet ./... && go test ./...
+	conformance/adapter/smoke.sh examples/go-gotest
 
 # Coverage reports: typescript/coverage/index.html, python/htmlcov/index.html,
 # java/<module>/target/site/jacoco/index.html (jacoco runs on every verify),

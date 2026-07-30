@@ -93,7 +93,7 @@ Large language models change that economics completely. A model can generate sce
 That suggests a different shape than 2010s Cucumber ever had:
 
 ```
-conversation → examples → executable spec → tests → documentation
+conversation → examples → executable oath → tests → documentation
 ```
 
-with the agent doing the binding, and the natural-language spec serving as the *input* to implementation rather than a reporting veneer bolted onto Selenium. That's a meaningfully different value proposition. It's also [why Varar exists](/var/docs/concepts/the-oaths-of-var/).
+with the agent doing the binding, and the natural-language oath serving as the *input* to implementation rather than a reporting veneer bolted onto Selenium. That's a meaningfully different value proposition. It's also [why Varar exists](/var/docs/concepts/the-oaths-of-var/).

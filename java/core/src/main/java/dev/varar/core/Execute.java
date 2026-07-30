@@ -15,30 +15,23 @@ import java.util.function.Function;
  * The executor — port of {@code var-core/src/execute.ts}, adapted to Task 11's
  * full-replacement immutable-record state model.
  *
- * <h2>DeepFreeze decision (Task 18)</h2>
+ * <h2>No mutation guard, in any port</h2>
  *
- * <p>TS/Python port {@code deep-freeze.ts}/{@code deep_freeze.py}: a runtime guard that
- * recursively {@code Object.freeze}s the partially-merged plain-object state so a step
- * handler that tries to mutate it in place throws at runtime (see {@code
- * execute-state.test.ts}'s {@code "mutating the frozen state throws at runtime"}). That
- * guard exists only because TS/Python's state model is a plain mutable object/dict that
- * gets shallow-merged with each {@code stimulus} return — mutation is
- * otherwise silently possible and needs to be defended against at runtime.
+ * <p>No port polices what an author does with their own state. Varar hands the value the
+ * factory (or the previous {@code stimulus}) produced to the next handler untouched, and
+ * that is the whole contract. TS/Python/Ruby once deep-froze the plain-object state so an
+ * in-place mutation threw at runtime; that guard was removed as overreach. It never
+ * enforced much — it descended plain objects/dicts/hashes only, leaving every class
+ * instance live, so the invariant it claimed held for some of the state and not the rest.
+ * It also froze values the author still held references to elsewhere, and its type-level
+ * mirror recursed into class instances and stripped their private brands, so a state
+ * holding a DB client stopped being assignable to its own declared type.
  *
- * <p><b>Java needs no equivalent and none is ported here.</b> Task 11 committed to a
- * full-replacement {@code record}-based state model ({@code dev.varar.State}):
- * authors declare {@code record Ctx(...) implements State}, and every {@code
- * stimulus} handler returns a brand new, complete {@code Ctx} value —
- * there is no partial merge and no in-place mutation path to guard against. A Java
- * {@code record} is immutable by construction (all fields {@code final}, no setters);
- * the only way to violate that is reflection, which is not a runtime concern this port
- * defends against (TS/Python don't defend against {@code unsafe}/native mutation either
- * — the guard is scoped to the ordinary, easy-to-reach mutation an author's own code
- * could otherwise perform, and Java's type system already forecloses that path). Adding
- * a {@code DeepFreeze.java} that recursively "freezes" already-immutable records would
- * be pure ceremony with nothing to protect against — see the design doc's own note that
- * records need "no deep-freeze runtime guard ... for the AST layer itself," which
- * applies equally to the state layer given Task 11's choice.
+ * <p>Java therefore needs no equivalent, and never had one: {@code dev.varar.State} is a
+ * full-replacement {@code record} model. Authors declare {@code record Ctx(...) implements
+ * State} and every {@code stimulus} returns a brand new, complete {@code Ctx}. A record is
+ * immutable by construction (all fields {@code final}, no setters), so the language gives
+ * for free what the dynamic ports now leave to the author's own type declaration.
  *
  * <h2>Sensor return-comparison contract (the shared slot model)</h2>
  *
@@ -94,7 +87,7 @@ import java.util.function.Function;
  *
  * <p>Mirrors {@code execute.ts}'s {@code augmentStack}: when a step throws, a synthetic
  * {@link StackTraceElement} whose {@code fileName}/{@code lineNumber} are the {@code
- * .md} spec path/line is prepended to the thrown exception's stack trace via {@link
+ * .md} oath path/line is prepended to the thrown exception's stack trace via {@link
  * Throwable#setStackTrace}. {@link Failure#toFailure} (Task 17, unchanged) later reads
  * this back via its {@code failingLine} regex against the printed stack trace text —
  * this executor doesn't call {@code Failure.toFailure} itself; it just makes sure
@@ -204,8 +197,8 @@ public final class Execute {
             Plan.ExecutionPlan plan, Plan.PlannedExample ex, int exampleIndex, ExecutePorts ports) {
         Function<String, Object> createContext =
                 ports.createContext() != null ? ports.createContext() : DEFAULT_CONTEXT;
-        String path = plan.varDoc().path();
-        String source = plan.varDoc().source();
+        String path = plan.doc().path();
+        String source = plan.doc().source();
         List<Plan.PlannedStep> steps = ex.steps();
 
         // Cache one state value per stepfile within this example. Lazy creation keeps the
@@ -288,9 +281,17 @@ public final class Execute {
             List<CellDiff> bad = CellDiff.compareRow(lastReturn, checks).stream()
                     .filter(d -> !d.ok())
                     .toList();
-            if (!bad.isEmpty()) {
+            // Like a slotted sensor, a header-bound row step must answer the row it is bound
+            // to: no return means nothing was compared.
+            RuntimeException rowError = lastReturn == null
+                    ? new CellDiff.ReturnShapeException(
+                            "a header-bound row step must return a row object with one value per"
+                                    + " bound cell, got nothing")
+                    : null;
+            if (rowError != null || !bad.isEmpty()) {
                 Plan.PlannedStep lastStep = steps.get(steps.size() - 1);
-                Throwable augmented = augmentStack(new CellDiff.CellMismatchException(bad), lastStep, path);
+                Throwable augmented = augmentStack(
+                        rowError != null ? rowError : new CellDiff.CellMismatchException(bad), lastStep, path);
                 if (ports.observer() != null) {
                     ports.observer().step(new StepObservation(exampleIndex, steps.size(), "fail", augmented));
                 }
@@ -337,13 +338,20 @@ public final class Execute {
     // -----------------------------------------------------------------------------------------
 
     private static void checkSensorReturn(String source, Plan.PlannedStep step, Object returned) {
-        if (returned == null) return;
         int extraCount = (step.dataTable() != null || step.docString() != null) ? 1 : 0;
         int slotCount = step.args().size() + extraCount;
         if (slotCount == 0) {
+            // Nothing to compare against: returning nothing is the pass, a value is a mistake.
+            if (returned == null) return;
             throw new CellDiff.ReturnShapeException(
                     "this sensor has no parameters, data table or doc string — nothing to compare"
                             + " a return value against (throw to fail, return nothing to pass)");
+        }
+        // With one or more slots the return is REQUIRED: returning nothing used to skip the
+        // comparison silently, so a typo in a field access turned an assertion into a no-op.
+        if (returned == null) {
+            throw new CellDiff.ReturnShapeException(
+                    "a sensor with " + slotCount + " slot(s) must return one value per slot," + " got nothing");
         }
         List<Object> slots;
         if (slotCount == 1) {
@@ -352,10 +360,9 @@ public final class Execute {
             slots = List.of(returned);
         } else {
             if (!(returned instanceof List<?> list)) {
-                throw new CellDiff.ReturnShapeException(
-                        "a sensor with " + slotCount + " parameters must return a List of "
-                                + slotCount + " values, got "
-                                + returned.getClass().getSimpleName());
+                throw new CellDiff.ReturnShapeException("a sensor with " + slotCount + " slots must return a List of "
+                        + slotCount + " values, got "
+                        + returned.getClass().getSimpleName());
             }
             if (list.size() != slotCount) {
                 throw new CellDiff.ReturnShapeException(
@@ -380,11 +387,11 @@ public final class Execute {
                     .toList();
             if (!bad.isEmpty()) throw new CellDiff.CellMismatchException(bad);
         } else if (step.docString() != null) {
-            DocStringDiff diff = DocStringDiff.compareDocString(
+            CellDiff diff = DocStringDiff.compareDocString(
                     slots.get(argCount),
                     step.docString().body(),
                     step.docString().bodySpan());
-            if (diff != null) throw new DocStringDiff.DocStringMismatchException(diff);
+            if (diff != null) throw new CellDiff.CellMismatchException(java.util.List.of(diff));
         }
     }
 
@@ -484,8 +491,11 @@ public final class Execute {
         String text = step.text();
         String label = text.length() > 60 ? text.substring(0, 60) + "…" : text;
         // Editors resolve the failure's location from this frame; FailureAnchor decides where
-        // it points, and the conformance trace pins that same rule across ports.
+        // it points, and the conformance trace pins that same rule across ports. A frame carries
+        // only the anchor's START line, so the anchor is attached to the exception as well —
+        // that's what lets a renderer underline the failing step, not its whole line.
         Span anchor = FailureAnchor.anchor(err, step.matchSpan());
+        FailureAnchor.attach(err, anchor);
         StackTraceElement synthetic = new StackTraceElement("Step", label, varPath, anchor.startLine());
         StackTraceElement[] original = err.getStackTrace();
         StackTraceElement[] augmented = new StackTraceElement[original.length + 1];

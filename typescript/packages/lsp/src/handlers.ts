@@ -287,10 +287,10 @@ export function buildHandlers(store: Store): Handlers {
       }
     },
     completions({ uri, position, linePrefix }) {
-      // Only offer completions in var spec docs (those matched by the `vars`
+      // Only offer completions in var oath docs (those matched by the `vars`
       // globs). .steps.ts gets its own TS completions from the TypeScript
       // service, and ordinary markdown is left alone.
-      if (!store.isVarDoc(uriToPath(uri))) return []
+      if (!store.isDoc(uriToPath(uri))) return []
 
       // Compute the replace range: from the first non-whitespace character of
       // the current line to the cursor. No Given/When/Then heuristics — if
@@ -468,9 +468,9 @@ function prepareRename(
   const stepAt = resolveStepAt(store, uri, position)
   if (!stepAt) return { ok: false, error: 'No step under cursor.' }
 
-  const isVarDoc = store.isVarDoc(uriToPath(uri))
+  const isDoc = store.isDoc(uriToPath(uri))
   let newExpression: string
-  if (isVarDoc) {
+  if (isDoc) {
     try {
       // Only `.expression` is used here (the template shapes fullCode, which
       // this call discards) — the language doesn't matter for deriving the
@@ -519,6 +519,7 @@ const FRIENDLY_NAMES: Record<string, string> = {
   int: 'count',
   float: 'price',
   string: 'user',
+  emph: 'text',
 }
 
 // Default placeholder values for the built-in parameter types. Strings get
@@ -527,6 +528,7 @@ const BUILTIN_PLACEHOLDERS: Record<string, string> = {
   int: '0',
   float: '0.0',
   string: '"value"',
+  emph: '*value*',
 }
 
 function buildSnippet(

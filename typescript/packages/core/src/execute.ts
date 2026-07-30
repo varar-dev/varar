@@ -1,7 +1,6 @@
 import { CellMismatchError, compareRow, compareTable, ReturnShapeError } from './cell-diff.ts'
-import { deepFreeze } from './deep-freeze.ts'
-import { compareDocString, DocStringMismatchError } from './doc-string-diff.ts'
-import { failureAnchor } from './failure-anchor.ts'
+import { compareDocString } from './doc-string-diff.ts'
+import { attachFailureAnchor, failureAnchor } from './failure-anchor.ts'
 import { compareParams } from './param-diff.ts'
 import type { ExecutionPlan, PlannedStep } from './plan.ts'
 import type { Reporter, TestSink } from './ports.ts'
@@ -61,7 +60,7 @@ export function collectExamples(
 export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
   for (const d of plan.diagnostics) ports.reporter.diagnostic(d)
   const createContext = ports.createContext ?? (() => ({}))
-  const path = plan.varDoc.path
+  const path = plan.doc.path
   plan.examples.forEach((ex, exampleIndex) => {
     ports.sink.example(
       ex.name,
@@ -76,7 +75,7 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
           const file = step.stepDef.expressionSourceFile
           let state = stateByFile.get(file)
           if (!stateByFile.has(file)) {
-            state = deepFreeze(await createContext(file))
+            state = await createContext(file)
             stateByFile.set(file, state)
           }
           // A trailing data table or doc string is passed as the LAST handler
@@ -101,23 +100,26 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
             const kind = step.stepDef.kind
             if (kind === 'stimulus') {
               // A stimulus REPLACES state: the returned object IS the next state
-              // (re-frozen, then threaded to later steps in this stepfile). There
-              // is no merge — a return with fewer keys shrinks the state. Returning
-              // nothing leaves state unchanged. Any non-object return is a
-              // contract violation.
+              // (threaded to later steps in this stepfile). There is no merge — a
+              // return with fewer keys shrinks the state. Returning nothing leaves
+              // state unchanged. Any non-object return is a contract violation.
+              //
+              // The state is the author's own value, handed back untouched: we do
+              // not freeze it. Whether it is immutable is the author's call, made
+              // in their own state type.
               if (returned !== undefined && returned !== null) {
                 if (typeof returned !== 'object') {
                   throw new ReturnShapeError(
                     'a stimulus must return the complete next state, or nothing to leave it unchanged',
                   )
                 }
-                state = deepFreeze(returned)
+                state = returned
                 stateByFile.set(file, state)
               }
             } else if (kind === 'sensor') {
               // Header-bound rows are compared after the loop via ex.rowChecks;
               // skip the slot contract for them (they return a row object).
-              if (!ex.rowChecks && returned !== undefined) {
+              if (!ex.rowChecks) {
                 // A sensor's comparison slots are its expression parameters
                 // followed by the trailing data table or doc string, if any.
                 // Zero slots: nothing to compare against — a returned value
@@ -125,53 +127,67 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
                 // One slot: the return IS that slot's value (never a tuple,
                 // so a parameter type transforming to an array is compared
                 // as-is). Two or more: a positional array, one per slot.
+                //
+                // With one or more slots the return is REQUIRED. Returning
+                // nothing used to skip the comparison silently, so a typo in a
+                // property access turned an assertion into a no-op and the
+                // document kept claiming something nobody checked. Assert by
+                // throwing if you don't want the core's comparison.
                 const slotCount = step.args.length + extra.length
-                let slots: ReadonlyArray<unknown>
                 if (slotCount === 0) {
+                  if (returned !== undefined) {
+                    throw new ReturnShapeError(
+                      'this sensor has no parameters, data table or doc string — nothing to compare a return value against (throw to fail, return nothing to pass)',
+                    )
+                  }
+                } else if (returned === undefined) {
                   throw new ReturnShapeError(
-                    'this sensor has no parameters, data table or doc string — nothing to compare a return value against (throw to fail, return nothing to pass)',
+                    `a sensor with ${slotCount} slot(s) must return one value per slot, got nothing`,
                   )
-                } else if (slotCount === 1) {
-                  slots = [returned]
                 } else {
-                  if (!Array.isArray(returned)) {
-                    throw new ReturnShapeError(
-                      `a sensor with ${slotCount} parameters must return an array of ${slotCount} values, got ${typeof returned}`,
-                    )
+                  let slots: ReadonlyArray<unknown>
+                  if (slotCount === 1) {
+                    slots = [returned]
+                  } else {
+                    if (!Array.isArray(returned)) {
+                      throw new ReturnShapeError(
+                        `a sensor with ${slotCount} slots must return an array of ${slotCount} values, got ${typeof returned}`,
+                      )
+                    }
+                    if (returned.length !== slotCount) {
+                      throw new ReturnShapeError(
+                        `sensor return must have ${slotCount} element(s), got ${returned.length}`,
+                      )
+                    }
+                    slots = returned
                   }
-                  if (returned.length !== slotCount) {
-                    throw new ReturnShapeError(
-                      `sensor return must have ${slotCount} element(s), got ${returned.length}`,
+                  // Inline parameters: slots[0..args.length) vs captured args.
+                  const inlineReturned = slots.slice(0, step.args.length)
+                  const sourceTexts = step.paramSpans.map((s) =>
+                    plan.doc.source.slice(s.startOffset, s.endOffset),
+                  )
+                  const paramDiffs = compareParams(
+                    inlineReturned,
+                    step.args,
+                    step.paramSpans,
+                    sourceTexts,
+                    step.formats,
+                  ).filter((d) => !d.ok)
+                  if (paramDiffs.length > 0) throw new CellMismatchError(paramDiffs)
+                  // Trailing table / doc string occupies the last slot.
+                  if (step.dataTable) {
+                    const bad = compareTable(slots[step.args.length], step.dataTable).filter(
+                      (d) => !d.ok,
                     )
+                    if (bad.length > 0) throw new CellMismatchError(bad)
+                  } else if (step.docString) {
+                    const diff = compareDocString(
+                      slots[step.args.length],
+                      step.docString.content,
+                      step.docString.span,
+                    )
+                    if (diff) throw new CellMismatchError([diff])
                   }
-                  slots = returned
-                }
-                // Inline parameters: slots[0..args.length) vs captured args.
-                const inlineReturned = slots.slice(0, step.args.length)
-                const sourceTexts = step.paramSpans.map((s) =>
-                  plan.varDoc.source.slice(s.startOffset, s.endOffset),
-                )
-                const paramDiffs = compareParams(
-                  inlineReturned,
-                  step.args,
-                  step.paramSpans,
-                  sourceTexts,
-                  step.formats,
-                ).filter((d) => !d.ok)
-                if (paramDiffs.length > 0) throw new CellMismatchError(paramDiffs)
-                // Trailing table / doc string occupies the last slot.
-                if (step.dataTable) {
-                  const bad = compareTable(slots[step.args.length], step.dataTable).filter(
-                    (d) => !d.ok,
-                  )
-                  if (bad.length > 0) throw new CellMismatchError(bad)
-                } else if (step.docString) {
-                  const diff = compareDocString(
-                    slots[step.args.length],
-                    step.docString.content,
-                    step.docString.span,
-                  )
-                  if (diff) throw new DocStringMismatchError(diff)
                 }
               }
             } else {
@@ -199,10 +215,19 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
           })
         }
         if (thrown === undefined && ex.rowChecks && ex.rowChecks.length > 0) {
+          // Like a slotted sensor, a header-bound row step must answer the row
+          // it is bound to: no return means nothing was compared, which would
+          // pass while checking none of the row's cells.
+          const rowError =
+            lastReturn === undefined
+              ? new ReturnShapeError(
+                  'a header-bound row step must return a row object with one value per bound cell, got nothing',
+                )
+              : undefined
           const bad = compareRow(lastReturn, ex.rowChecks).filter((d) => !d.ok)
-          if (bad.length > 0) {
+          if (rowError || bad.length > 0) {
             const lastStep = ex.steps[ex.steps.length - 1] as PlannedStep
-            const augmented = augmentStack(new CellMismatchError(bad), lastStep, path)
+            const augmented = augmentStack(rowError ?? new CellMismatchError(bad), lastStep, path)
             ports.observer?.step({
               exampleName: ex.name,
               exampleIndex,
@@ -242,12 +267,16 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
 // for the topmost frame, so the `.ts` source stays as the main error location
 // and the .md becomes a clickable link directly under it.
 function augmentStack(err: unknown, step: PlannedStep, varPath: string): unknown {
+  // Editors resolve the failure's location from the frame below (the VS Code
+  // vitest extension underlines the word at line:col); failureAnchor decides
+  // where it points, and the conformance trace pins that same rule across
+  // ports. The stack frame can only carry the anchor's START, so the anchor
+  // rides along on the error as well — that's what lets a renderer underline
+  // the failing step rather than its whole line.
+  const anchor = failureAnchor(err, step.matchSpan)
+  attachFailureAnchor(err, anchor)
   if (!(err instanceof Error) || typeof err.stack !== 'string') return err
   const label = step.text.length > 60 ? `${step.text.slice(0, 60)}…` : step.text
-  // Editors resolve the failure's location from this frame (the VS Code vitest
-  // extension underlines the word at line:col); failureAnchor decides where it
-  // points, and the conformance trace pins that same rule across ports.
-  const anchor = failureAnchor(err, step.matchSpan)
   const frame = `    at ${label} (${varPath}:${anchor.startLine}:${anchor.startCol})`
   const lines = err.stack.split('\n')
   // Find the first existing stack frame (the handler's `.ts` line) and insert

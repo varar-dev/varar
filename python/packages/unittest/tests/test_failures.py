@@ -13,7 +13,7 @@ VAR_CONFIG = """\
 """
 
 # Mirrors conformance bundle 07-row-check-mismatch.
-CELL_MISMATCH_SPEC = """\
+CELL_MISMATCH_OATH = """\
 # Scoring
 
 ## A wrong score is caught
@@ -34,7 +34,7 @@ def _(state, row=None):
     return {"score": "99", "grade": "A"}
 """
 
-PROSE_ONLY_SPEC = """\
+PROSE_ONLY_OATH = """\
 # My Feature
 
 ## Prose paragraph
@@ -47,7 +47,7 @@ from varar import steps
 param, stimulus, sensor = steps(lambda: {})
 """
 
-RAISING_SPEC = """\
+RAISING_OATH = """\
 # Boom
 
 ## the step blows up
@@ -67,8 +67,8 @@ def _(state):
 
 def test_cell_mismatch_is_a_failure_with_rendered_diff(harness):
     harness.write("varar.config.json", VAR_CONFIG)
-    harness.write("steps/spec.steps.py", CELL_MISMATCH_STEPS)
-    harness.write("features/spec.md", CELL_MISMATCH_SPEC)
+    harness.write("steps/oath.steps.py", CELL_MISMATCH_STEPS)
+    harness.write("features/oath.md", CELL_MISMATCH_OATH)
     result, _output = harness.generate_and_run()
     assert result.testsRun == 1
     assert len(result.failures) == 1
@@ -83,8 +83,8 @@ def test_cell_mismatch_is_a_failure_with_rendered_diff(harness):
 
 def test_step_exception_is_an_error_not_a_failure(harness):
     harness.write("varar.config.json", VAR_CONFIG)
-    harness.write("steps/spec.steps.py", RAISING_STEPS)
-    harness.write("features/spec.md", RAISING_SPEC)
+    harness.write("steps/oath.steps.py", RAISING_STEPS)
+    harness.write("features/oath.md", RAISING_OATH)
     result, _output = harness.generate_and_run()
     assert result.testsRun == 1
     assert not result.failures
@@ -92,12 +92,12 @@ def test_step_exception_is_an_error_not_a_failure(harness):
     (_test, message) = result.errors[0]
     assert "kaboom" in message
     # The core's add_note anchor points at the failing step in the .md.
-    assert "spec.md" in message
+    assert "oath.md" in message
 
 
 def test_prose_paragraph_with_no_matching_steps_is_silently_ignored(harness):
     harness.write("varar.config.json", VAR_CONFIG)
-    harness.write("steps/spec.steps.py", EMPTY_STEPS)
-    harness.write("features/spec.md", PROSE_ONLY_SPEC)
+    harness.write("steps/oath.steps.py", EMPTY_STEPS)
+    harness.write("features/oath.md", PROSE_ONLY_OATH)
     result, _output = harness.generate_and_run()
     assert result.testsRun == 0

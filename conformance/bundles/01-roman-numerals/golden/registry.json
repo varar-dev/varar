@@ -8,7 +8,7 @@
       ]
     },
     {
-      "expression": "The result is {word}",
+      "expression": "The result is {word}.",
       "parameterTypeNames": [
         "word"
       ]

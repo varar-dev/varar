@@ -1,11 +1,11 @@
 # Varar examples
 
-Small, standalone sample projects that run Markdown specs as tests with
+Small, standalone sample projects that run Markdown oaths as tests with
 [Varar](https://varar.dev) — one project per language/test-framework
 combination. Each is a complete project you can copy as the starting point
 for your own.
 
-The `.md` files at each project's root are the specs — plain Markdown prose
+The `.md` files in each project's `varar/` directory are the oaths — plain Markdown prose
 that runs as tests. They are first-class: readable by anyone, owned by the
 whole team, and checked against the code on every test run.
 
@@ -25,8 +25,8 @@ whole team, and checked against the code on every test run.
 | [`go-gotest`](go-gotest) | Go + go test | `go test` | [![go-gotest](https://github.com/varar-dev/varar-examples/actions/workflows/go-gotest.yml/badge.svg)](https://github.com/varar-dev/varar-examples/actions/workflows/go-gotest.yml) |
 
 `typescript-vitest` implements the full example set; the other projects
-implement a feature-covering subset — `hello-var` (basic steps),
-`deep-thought` (a one-sensor spec), `tables-and-docstrings` (whole tables +
+implement a feature-covering subset — `hello-varar` (basic steps),
+`deep-thought` (a one-sensor oath), `tables-and-docstrings` (whole tables +
 doc strings), `yahtzee` and `roman-numerals` (header-bound table rows), and
 `library` (custom parameter types that pair `parse` with `format`, so a
 mismatch renders in the document's own notation — money, dates, and an
@@ -36,8 +36,8 @@ emphasised title where the markup *is* the parameter).
 
 The source of truth is the [`varar-dev/varar`](https://github.com/varar-dev/varar)
 monorepo's `examples/` directory, where the projects run against the local
-build on every push (in there, the subset projects' `.md` files are symlinks
-to the `typescript-vitest` originals). On every release they are synced —
+build on every push (in there, the subset projects' `varar/*.md` files are
+symlinks to the `typescript-vitest` originals). On every release they are synced —
 symlinks resolved, versions pinned to the release — to
 [`varar-dev/varar-examples`](https://github.com/varar-dev/varar-examples). Send
 changes to `varar-dev/varar`.

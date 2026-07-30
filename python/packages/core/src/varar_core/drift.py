@@ -1,7 +1,7 @@
 """drift.py — port of typescript/packages/core/src/drift.ts.
 
-Spec drift detection: a paragraph the committed varar.lock.json baseline recorded
-as an example that now matches no step. Pure over the existing VarDoc +
+Oath drift detection: a paragraph the committed varar.lock.json baseline recorded
+as an example that now matches no step. Pure over the existing Doc +
 ExecutionPlan, byte-identical to the TypeScript port so varar.lock.json is shared
 across languages.
 """
@@ -9,10 +9,11 @@ from __future__ import annotations
 
 import json
 import re
+from collections.abc import Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
-from varar_core.ast import VarDoc
+from varar_core.ast import Doc
 from varar_core.diagnostics import Diagnostic, drift_detected
 from varar_core.hash import hash_source
 from varar_core.plan import ExecutionPlan, derive_example_name
@@ -35,19 +36,19 @@ class BaselineExample:
 
 
 @dataclass(frozen=True, slots=True)
-class SpecBaseline:
-    """The committed baseline for one spec file."""
+class OathBaseline:
+    """The committed baseline for one oath file."""
 
     source_hash: str
     examples: tuple[BaselineExample, ...]
 
 
 @dataclass(frozen=True, slots=True)
-class VarLock:
-    """The whole varar.lock.json: every spec keyed by its POSIX path."""
+class LockFile:
+    """The whole varar.lock.json: every oath keyed by its POSIX path."""
 
-    version: int  # always 1
-    specs: dict[str, SpecBaseline]
+    version: int  # always 2
+    oaths: dict[str, OathBaseline]
 
 
 @dataclass(frozen=True, slots=True)
@@ -68,12 +69,20 @@ class BaselineStore(Protocol):
     def write(self, contents: str) -> None: ...
 
 
-def _within(inner: Span, outer: Span) -> bool:
-    return inner.start_offset >= outer.start_offset and inner.end_offset <= outer.end_offset
+# Do the two spans overlap at all (offset ranges intersect)? A candidate
+# paragraph relates to its planned example either way round: a header-bound row
+# sits *inside* its binding paragraph, while a merged example's span *covers*
+# each of the candidates it absorbed (ADR 0012). Overlap catches both.
+def _overlaps(a: Span, b: Span) -> bool:
+    return a.start_offset < b.end_offset and b.start_offset < a.end_offset
 
 
+# A candidate paragraph is "live" (still an example) if it overlaps at least one
+# planned example. A now-prose paragraph — one whose step def was renamed or
+# deleted — overlaps none (it became a delimiter, splitting any example it was
+# part of), so drift catches it.
 def _is_live(candidate_span: Span, plan: ExecutionPlan) -> bool:
-    return any(_within(pe.span, candidate_span) for pe in plan.examples)
+    return any(_overlaps(pe.span, candidate_span) for pe in plan.examples)
 
 
 _TOKEN_RE = re.compile(r"[^\W_]+")
@@ -93,10 +102,10 @@ def _similarity(a: frozenset[str], b: frozenset[str]) -> float:
     return 0.0 if union == 0 else intersection / union
 
 
-def live_examples(var_doc: VarDoc, plan: ExecutionPlan) -> tuple[BaselineExample, ...]:
+def live_examples(doc: Doc, plan: ExecutionPlan) -> tuple[BaselineExample, ...]:
     """The current example-producing paragraphs, in document order."""
     out: list[BaselineExample] = []
-    for candidate in var_doc.examples:
+    for candidate in doc.examples:
         if _is_live(candidate.span, plan):
             out.append(
                 BaselineExample(
@@ -107,14 +116,14 @@ def live_examples(var_doc: VarDoc, plan: ExecutionPlan) -> tuple[BaselineExample
     return tuple(out)
 
 
-def derive_spec_baseline(source: str, var_doc: VarDoc, plan: ExecutionPlan) -> SpecBaseline:
-    """The full baseline record for a spec: fingerprint plus live examples."""
-    return SpecBaseline(source_hash=hash_source(source), examples=live_examples(var_doc, plan))
+def derive_oath_baseline(source: str, doc: Doc, plan: ExecutionPlan) -> OathBaseline:
+    """The full baseline record for an oath: fingerprint plus live examples."""
+    return OathBaseline(source_hash=hash_source(source), examples=live_examples(doc, plan))
 
 
 def detect_drift(
-    baseline: SpecBaseline | None,
-    var_doc: VarDoc,
+    baseline: OathBaseline | None,
+    doc: Doc,
     plan: ExecutionPlan,
 ) -> tuple[Drift, ...]:
     """Paragraphs the baseline recorded as examples that now match zero steps.
@@ -126,7 +135,7 @@ def detect_drift(
     """
     if baseline is None:
         return ()
-    candidates = var_doc.examples
+    candidates = doc.examples
     tokens = [_tokenize(derive_example_name(c.body)) for c in candidates]
     live = [_is_live(c.span, plan) for c in candidates]
 
@@ -164,28 +173,73 @@ def drift_diagnostics(drifts: tuple[Drift, ...]) -> tuple[Diagnostic, ...]:
 
 def reconcile_drift(
     store: BaselineStore,
-    spec_path: str,
+    oath_path: str,
     source: str,
-    var_doc: VarDoc,
+    doc: Doc,
     plan: ExecutionPlan,
     update: bool = False,
 ) -> tuple[Drift, ...]:
-    """One spec's baseline reconciliation against a BaselineStore.
+    """One oath's baseline reconciliation against a BaselineStore.
 
     ``update`` accepts all drift (re-record, report nothing). Otherwise detect
     drift; rewrite the baseline only on a clean run so an unacknowledged drift
     keeps its old entry (and stays red).
     """
     text = store.read()
-    lock = parse_var_lock(text) if text else None
-    baseline = lock.specs.get(spec_path) if lock else None
-    drifts = () if update else detect_drift(baseline, var_doc, plan)
+    lock = parse_lock_file(text) if text else None
+    baseline = lock.oaths.get(oath_path) if lock else None
+    drifts = () if update else detect_drift(baseline, doc, plan)
     if update or len(drifts) == 0:
-        next_spec = derive_spec_baseline(source, var_doc, plan)
-        specs = dict(lock.specs) if lock else {}
-        specs[spec_path] = next_spec
-        store.write(stringify_var_lock(VarLock(version=1, specs=specs)))
+        next_oath = derive_oath_baseline(source, doc, plan)
+        oaths = dict(lock.oaths) if lock else {}
+        oaths[oath_path] = next_oath
+        store.write(stringify_lock_file(LockFile(version=2, oaths=oaths)))
     return drifts
+
+
+def prune_lock_file(lock: LockFile, keep_paths: Sequence[str]) -> LockFile:
+    """Drop every baseline whose oath path is not in ``keep_paths``.
+
+    The entries left behind when an oath is deleted or moved. Pure counterpart of
+    parse_lock_file / stringify_lock_file; the caller decides what "still exists" means.
+    """
+    keep = set(keep_paths)
+    return LockFile(
+        version=2,
+        oaths={path: baseline for path, baseline in lock.oaths.items() if path in keep},
+    )
+
+
+def prune_baselines(
+    store: BaselineStore,
+    keep_paths: Sequence[str],
+    update: bool = False,
+) -> tuple[str, ...]:
+    """The whole-lock counterpart of reconcile_drift, run ONCE per run.
+
+    Reconciliation is per-oath and cannot see a path that no longer exists, so
+    without this the lock silently accumulates dead entries and stops being a
+    faithful inventory of the oath set (#70).
+
+    ``keep_paths`` MUST be everything the ``docs`` globs currently match — never the
+    set the run happened to execute. Runs are routinely filtered (a pytest path
+    argument, a ``--globs`` override), and pruning against a filtered set would
+    delete live baselines.
+
+    Removal is still not *gated*: a deleted oath is a different signal from drift
+    and stays ungated (ADR 0002). This only stops preserving dead state, and only
+    under ``update``. Returns the paths removed (or, without ``update``, the ones
+    that would be).
+    """
+    text = store.read()
+    lock = parse_lock_file(text) if text else None
+    if lock is None:
+        return ()
+    keep = set(keep_paths)
+    stale = tuple(path for path in lock.oaths if path not in keep)
+    if update and stale:
+        store.write(stringify_lock_file(prune_lock_file(lock, keep_paths)))
+    return stale
 
 
 def _parse_baseline_example(value: object) -> BaselineExample | None:
@@ -199,7 +253,7 @@ def _parse_baseline_example(value: object) -> BaselineExample | None:
     return None
 
 
-def _parse_spec_baseline(value: object) -> SpecBaseline | None:
+def _parse_oath_baseline(value: object) -> OathBaseline | None:
     if not isinstance(value, dict):
         return None
     source_hash = value.get("sourceHash")
@@ -212,39 +266,39 @@ def _parse_spec_baseline(value: object) -> SpecBaseline | None:
         if parsed is None:
             return None
         examples.append(parsed)
-    return SpecBaseline(source_hash=source_hash, examples=tuple(examples))
+    return OathBaseline(source_hash=source_hash, examples=tuple(examples))
 
 
-def parse_var_lock(text: str) -> VarLock | None:
+def parse_lock_file(text: str) -> LockFile | None:
     """Parse varar.lock.json; None on malformed input (treated as no baseline)."""
     try:
         parsed = json.loads(text)
     except (ValueError, TypeError):
         return None
-    if not isinstance(parsed, dict) or parsed.get("version") != 1:
+    if not isinstance(parsed, dict) or parsed.get("version") != 2:
         return None
-    specs_raw = parsed.get("specs")
-    if not isinstance(specs_raw, dict):
+    oaths_raw = parsed.get("oaths")
+    if not isinstance(oaths_raw, dict):
         return None
-    specs: dict[str, SpecBaseline] = {}
-    for path, value in specs_raw.items():
-        baseline = _parse_spec_baseline(value)
+    oaths: dict[str, OathBaseline] = {}
+    for path, value in oaths_raw.items():
+        baseline = _parse_oath_baseline(value)
         if baseline is None:
             return None
-        specs[path] = baseline
-    return VarLock(version=1, specs=specs)
+        oaths[path] = baseline
+    return LockFile(version=2, oaths=oaths)
 
 
-def stringify_var_lock(lock: VarLock) -> str:
-    """Serialize varar.lock.json deterministically: spec paths sorted, examples in
+def stringify_lock_file(lock: LockFile) -> str:
+    """Serialize varar.lock.json deterministically: oath paths sorted, examples in
     document order, two-space indent, trailing newline. Byte-identical to the
     TypeScript serializer (camelCase keys, non-ASCII kept raw)."""
-    specs = {
+    oaths = {
         path: {
-            "sourceHash": lock.specs[path].source_hash,
-            "examples": [{"name": e.name, "line": e.line} for e in lock.specs[path].examples],
+            "sourceHash": lock.oaths[path].source_hash,
+            "examples": [{"name": e.name, "line": e.line} for e in lock.oaths[path].examples],
         }
-        for path in sorted(lock.specs)
+        for path in sorted(lock.oaths)
     }
-    obj = {"version": 1, "specs": specs}
+    obj = {"version": 2, "oaths": oaths}
     return json.dumps(obj, indent=2, ensure_ascii=False) + "\n"

@@ -1,0 +1,41 @@
+{
+  "examples": [
+    {
+      "body": [
+        {
+          "kind": "paragraph",
+          "segmentMap": [
+            {
+              "sourceOffset": 43,
+              "textOffset": 0
+            }
+          ],
+          "span": {
+            "endCol": 49,
+            "endLine": 5,
+            "endOffset": 91,
+            "startCol": 1,
+            "startLine": 5,
+            "startOffset": 43
+          },
+          "text": "I warm up my mental math. The square of 7 is 49."
+        }
+      ],
+      "precededByDelimiter": true,
+      "scopeStack": [
+        "Stateless steps",
+        "Squaring in my head"
+      ],
+      "span": {
+        "endCol": 49,
+        "endLine": 5,
+        "endOffset": 91,
+        "startCol": 1,
+        "startLine": 5,
+        "startOffset": 43
+      }
+    }
+  ],
+  "orphanAttachments": [],
+  "path": "example.md"
+}

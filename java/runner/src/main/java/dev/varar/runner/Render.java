@@ -32,9 +32,9 @@ public final class Render {
      * source} at {@code path}) into a human-readable failure message.
      *
      * @param error the caught step exception.
-     * @param source the spec's full markdown text, used to slice the expected value for
+     * @param source the oath's full markdown text, used to slice the expected value for
      *     a cell/doc-string mismatch (the payload stores only source offsets).
-     * @param path the spec's path, as it would appear in an injected stack frame — passed
+     * @param path the oath's path, as it would appear in an injected stack frame — passed
      *     through to {@link Failure#toFailure} to resolve the failing line.
      */
     public static String renderFailure(Throwable error, String source, String path) {
@@ -45,13 +45,10 @@ public final class Render {
                     .map(cell -> renderCellFailure(failure.line(), source, cell))
                     .collect(Collectors.joining("\n"));
         }
-        if (failure.doc() != null) {
-            return renderCellFailure(failure.line(), source, failure.doc());
-        }
         return "line " + failure.line() + ": " + failure.message();
     }
 
-    /** Renders one cell/doc-string mismatch, slicing {@code source} for the expected value. */
+    /** Renders one mismatched cell, slicing {@code source} for the expected value. */
     private static String renderCellFailure(int line, String source, Result.CellFailure cell) {
         String expected = source.substring(cell.from(), cell.to());
         return "line " + line + ": expected \"" + expected + "\", got \"" + cell.actual() + "\"";

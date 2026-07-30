@@ -12,10 +12,10 @@
       "span": {
         "endCol": 4,
         "endLine": 13,
-        "endOffset": 292,
+        "endOffset": 293,
         "startCol": 1,
         "startLine": 9,
-        "startOffset": 253
+        "startOffset": 254
       },
       "steps": [
         {
@@ -23,10 +23,10 @@
           "matchSpan": {
             "endCol": 20,
             "endLine": 9,
-            "endOffset": 272,
+            "endOffset": 273,
             "startCol": 1,
             "startLine": 9,
-            "startOffset": 253
+            "startOffset": 254
           },
           "matchedExpression": "I do nothing at all",
           "paramSpans": [],

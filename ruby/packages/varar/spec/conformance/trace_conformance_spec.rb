@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'json'
+
 require 'spec_helper'
 require 'varar'
 require 'varar/registry'
@@ -29,12 +31,12 @@ module Varar
         registry = RegistryGlue.build_registry
         create_context = RegistryGlue.context_factory
         source = File.read(File.join(corpus, bundle, 'example.md'), encoding: 'UTF-8')
-        var_doc = Core::Parse.parse('example.md', source)
+        doc = Core::Parse.parse('example.md', source)
         artifacts = Core::Conformance.run_conformance(
-          var_doc, registry, create_context, RegistryGlue.custom_parameter_types
+          doc, registry, create_context, RegistryGlue.custom_parameter_types
         )
-        actual = Core::CanonicalJson.canonical_stringify(artifacts[:trace])
-        expect(actual).to eq(File.read(golden, encoding: 'UTF-8'))
+        actual = artifacts[:trace]
+        expect(actual).to eq(JSON.parse(File.read(golden, encoding: 'UTF-8')))
       end
     end
   end

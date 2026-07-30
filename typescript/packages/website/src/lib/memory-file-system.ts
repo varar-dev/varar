@@ -19,7 +19,7 @@ export function createMemoryFileSystem(seed: Record<string, string> = {}): FileS
       files.set(path, content)
     },
     matches(path, globs) {
-      // Mirror `list`'s crude extension matcher: in the browser, specs are
+      // Mirror `list`'s crude extension matcher: in the browser, oaths are
       // distinguished from `.steps.ts` by extension, which is enough here.
       const exts = globs.include.map((g) => g.slice(g.lastIndexOf('.')))
       return exts.some((e) => path.endsWith(e))

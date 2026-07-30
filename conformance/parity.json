@@ -1,0 +1,149 @@
+{
+  "$comment": [
+    "Which core capabilities must exist in which ports, and where each port keeps them.",
+    "Checked by release/check-parity.sh, which fails when a required capability has no file.",
+    "",
+    "This is a DECLARATION, not a derivation: 'whatever TypeScript has' is the wrong rule.",
+    "Ports legitimately differ in shape \u2014 Rust and Go split value/handler/offsets out of",
+    "modules TypeScript keeps whole, and a port whose stdlib already parses JSON needs no",
+    "module of its own for it. What must not differ is capability.",
+    "",
+    "An intentionally single-port capability carries a `why`. Anything undeclared is drift.",
+    "Adding a port means adding it to `ports` and giving every required capability a path."
+  ],
+  "ports": {
+    "typescript": "typescript/packages/core/src",
+    "python": "python/packages/core/src/varar_core",
+    "java": "java/core/src/main/java/dev/varar/core",
+    "ruby": "ruby/packages/core/lib/varar/core",
+    "rust": "rust/core/src",
+    "dotnet": "dotnet/Varar.Core",
+    "go": "go/core"
+  },
+  "$comment_kotlin": "Kotlin has no core of its own \u2014 java/kotlin and java/kotest sit on the Java core.",
+  "capabilities": [
+    {
+      "name": "parse",
+      "what": "Markdown \u2192 the immutable AST",
+      "files": {
+        "typescript": "parse.ts",
+        "python": "parse.py",
+        "java": "Parse.java",
+        "ruby": "parse.rb",
+        "rust": "parse.rs",
+        "dotnet": "Parse.cs",
+        "go": "parse.go"
+      }
+    },
+    {
+      "name": "plan",
+      "what": "AST + registry \u2192 the execution plan",
+      "files": {
+        "typescript": "plan.ts",
+        "python": "plan.py",
+        "java": "Plan.java",
+        "ruby": "plan.rb",
+        "rust": "plan.rs",
+        "dotnet": "Plan.cs",
+        "go": "plan.go"
+      }
+    },
+    {
+      "name": "execute",
+      "what": "runs a planned example and compares sensor returns",
+      "files": {
+        "typescript": "execute.ts",
+        "python": "execute.py",
+        "java": "Execute.java",
+        "ruby": "execute.rb",
+        "rust": "execute.rs",
+        "dotnet": "Execute.cs",
+        "go": "execute.go"
+      }
+    },
+    {
+      "name": "drift",
+      "what": "baseline reconciliation against varar.lock.json",
+      "files": {
+        "typescript": "drift.ts",
+        "python": "drift.py",
+        "java": "Drift.java",
+        "ruby": "drift.rb",
+        "rust": "drift.rs",
+        "dotnet": "Drift.cs",
+        "go": "drift.go"
+      }
+    },
+    {
+      "name": "failure-anchor",
+      "what": "where a failure points: the failing cell's span, else the step's",
+      "files": {
+        "typescript": "failure-anchor.ts",
+        "python": "failure_anchor.py",
+        "java": "FailureAnchor.java",
+        "ruby": "failure_anchor.rb",
+        "rust": "failure_anchor.rs",
+        "dotnet": "FailureAnchor.cs",
+        "go": "failure_anchor.go"
+      }
+    },
+    {
+      "name": "run-result-payload",
+      "what": "the .varar/<oath>.json types and their wire projection (ADR 0014)",
+      "files": {
+        "typescript": "result.ts",
+        "python": "result.py",
+        "java": "Result.java",
+        "ruby": "result.rb",
+        "rust": "result.rs",
+        "dotnet": "Result.cs",
+        "go": "result.go"
+      }
+    },
+    {
+      "name": "failure-producer",
+      "what": "a caught step failure \u2192 the run-result failure payload",
+      "files": {
+        "typescript": "failure.ts",
+        "python": "failure.py",
+        "java": "Failure.java",
+        "ruby": "failure.rb",
+        "rust": "failure.rs",
+        "dotnet": "Failure.cs",
+        "go": "failure.go"
+      }
+    },
+    {
+      "name": "conformance-artifacts",
+      "what": "the doc/registry/plan/trace projections the corpus compares",
+      "files": {
+        "typescript": "conformance.ts",
+        "python": "conformance.py",
+        "java": "Conformance.java",
+        "ruby": "conformance.rb",
+        "rust": "conformance.rs",
+        "dotnet": "Conformance.cs",
+        "go": "conformance.go"
+      }
+    },
+    {
+      "name": "run-diagnostics",
+      "what": "run results \u2192 editor diagnostics",
+      "why": "TypeScript only, on purpose: one language server serves every language, and it is written in TypeScript. The other ports produce run results (see run-result-payload); only this port renders them.",
+      "files": {
+        "typescript": "run-diagnostics.ts"
+      }
+    },
+    {
+      "name": "json-reader",
+      "what": "JSON text \u2192 the port's value model, so a conformance gate can compare an artifact against a golden by content",
+      "files": {
+        "java": "JsonValue.java",
+        "rust": "json_value.rs",
+        "dotnet": "JsonValue.cs",
+        "go": "json_value.go"
+      },
+      "why": "TypeScript, Python and Ruby need no module: their artifacts are already native trees, so the stdlib parser (JSON.parse / json.loads / JSON.parse) compares directly. A module is required where the port has no stdlib JSON at all (Java, Rust) or where the artifact is a Value tree the parsed JSON has to be lifted into (.NET, Go)."
+    }
+  ]
+}

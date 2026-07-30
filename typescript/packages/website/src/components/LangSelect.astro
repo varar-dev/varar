@@ -22,9 +22,9 @@ type IconName = Parameters<typeof Icon>[0]['name']
 // both `data-lang="ts"` and no attribute at all.
 const shows = (lang: string): string =>
   lang === 'ts'
-    ? `:root[data-lang='ts'] .var-lang-icon-ts, :root:not([data-lang]) .var-lang-icon-ts`
-    : `:root[data-lang='${lang}'] .var-lang-icon-${lang}`
-const iconCss = `.var-lang-icon{display:none}${SITE_LANGS.map(
+    ? `:root[data-lang='ts'] .varar-lang-icon-ts, :root:not([data-lang]) .varar-lang-icon-ts`
+    : `:root[data-lang='${lang}'] .varar-lang-icon-${lang}`
+const iconCss = `.varar-lang-icon{display:none}${SITE_LANGS.map(
   (lang) => `${shows(lang)}{display:block}`,
 ).join('')}`
 ---
@@ -35,7 +35,7 @@ const iconCss = `.var-lang-icon{display:none}${SITE_LANGS.map(
     SITE_LANGS.map((lang) => (
       <Icon
         name={LANG_ICONS[lang] as IconName}
-        class={`icon label-icon var-lang-icon var-lang-icon-${lang}`}
+        class={`icon label-icon varar-lang-icon varar-lang-icon-${lang}`}
       />
     ))
   }

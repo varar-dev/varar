@@ -21,9 +21,9 @@ import org.junit.jupiter.api.Test;
  * <p>Several TS cases are intentionally NOT translated 1:1 — see the Task 18 report:
  *
  * <ul>
- *   <li>{@code deep-freeze.test.ts} in full, and {@code execute-state.test.ts}'s "mutating the
- *       (post-merge) frozen state throws" cases — Task 11's record state model needs no runtime
- *       mutation guard (see {@link Execute}'s DeepFreeze-decision javadoc).
+ *   <li>{@code execute-state.test.ts}'s "state reaches the handler unfrozen" cases — no port
+ *       guards state mutation any more, and Java's record state model could never be mutated in
+ *       the first place (see {@link Execute}'s no-mutation-guard javadoc).
  *   <li>{@code execute-roles.test.ts}'s "an action/context/sensor that returns a value throws
  *       ReturnShapeError" — Java's typed {@code Context0/1/2} always returns a full state by
  *       construction, so there's no runtime shape to violate.
@@ -140,7 +140,7 @@ class ExecuteTest {
         assertEquals(1, ex.cells().size());
         assertEquals("42", ex.cells().get(0).expected());
         assertEquals("41", ex.cells().get(0).actual());
-        String source = p.varDoc().source();
+        String source = p.doc().source();
         Span span = ex.cells().get(0).span();
         assertEquals("42", source.substring(span.startOffset(), span.endOffset()));
     }
@@ -212,6 +212,32 @@ class ExecuteTest {
         Plan.ExecutionPlan p = planOf("# X\n\nthe alarm fired", r);
         assertDoesNotThrow(
                 () -> Execute.collectExamples(p, silentPorts()).get(0).run().run());
+    }
+
+    @Test
+    void aSlottedSensorReturningNullThrowsReturnShapeException() {
+        // The silent-pass hole: nothing is compared, yet the document keeps claiming
+        // something nobody checked.
+        Registry r = reg("the name is {string}", "s.ts", 1, (Fn1) (state, name) -> null, StepKind.SENSOR);
+        Plan.ExecutionPlan p = planOf("# X\n\nthe name is \"Ada\"", r);
+        CellDiff.ReturnShapeException e = assertThrows(
+                CellDiff.ReturnShapeException.class,
+                () -> Execute.collectExamples(p, silentPorts()).get(0).run().run());
+        assertEquals("a sensor with 1 slot(s) must return one value per slot, got nothing", e.getMessage());
+    }
+
+    @Test
+    void aHeaderBoundRowStepReturningNullThrowsReturnShapeException() {
+        Registry r = reg("I report the score and grade", "s.ts", 1, (Fn1) (state, row) -> null, StepKind.SENSOR);
+        String source = "# X\n\nI report the score and grade.\n\n"
+                + "| score | grade |\n| ----- | ----- |\n| 10    | A     |\n";
+        Plan.ExecutionPlan p = planOf(source, r);
+        CellDiff.ReturnShapeException e = assertThrows(
+                CellDiff.ReturnShapeException.class,
+                () -> Execute.collectExamples(p, silentPorts()).get(0).run().run());
+        assertEquals(
+                "a header-bound row step must return a row object with one value per bound cell, got nothing",
+                e.getMessage());
     }
 
     // -----------------------------------------------------------------------------------------
@@ -393,7 +419,7 @@ class ExecuteTest {
         assertEquals("score", cell.column());
         assertEquals("50", cell.expected());
         assertEquals("999", cell.actual());
-        String source = p.varDoc().source();
+        String source = p.doc().source();
         assertEquals(
                 "50", source.substring(cell.span().startOffset(), cell.span().endOffset()));
     }
@@ -466,14 +492,17 @@ class ExecuteTest {
             ```""";
 
     @Test
-    void aDocStringSensorReturningADifferentStringThrowsDocStringMismatchExceptionAtTheBodySpan() {
+    void aDocStringSensorReturningADifferentStringThrowsCellMismatchExceptionAtTheBodySpan() {
         Registry r = reg("the greeting is", "s.ts", 1, (Fn1) (state, body) -> "Goodbye!\n", StepKind.SENSOR);
         Plan.ExecutionPlan p = planOf(GREETING_DOC, r);
-        DocStringDiff.DocStringMismatchException ex = assertThrows(
-                DocStringDiff.DocStringMismatchException.class,
+        CellDiff.CellMismatchException ex = assertThrows(
+                CellDiff.CellMismatchException.class,
                 () -> Execute.collectExamples(p, silentPorts()).get(0).run().run());
-        assertEquals("Hello, world!\n", ex.diff().expected());
-        assertEquals("Goodbye!\n", ex.diff().actual());
+        CellDiff diff = ex.cells().get(0);
+        assertEquals("doc string", diff.column());
+        // Quoted, so a whitespace-only difference stays visible.
+        assertEquals("\"Hello, world!\\n\"", diff.expected());
+        assertEquals("\"Goodbye!\\n\"", diff.actual());
     }
 
     @Test
@@ -557,7 +586,7 @@ class ExecuteTest {
                 () -> Execute.collectExamples(p, silentPorts()).get(0).run().run());
         assertEquals("expected 42 but was 41", caught.getMessage());
         // Stack injection still applies to an Error, not just a RuntimeException.
-        Result.ExampleFailure failure = Failure.toFailure(caught, p.varDoc().path(), -1);
+        Result.ExampleFailure failure = Failure.toFailure(caught, p.doc().path(), -1);
         assertEquals(step.matchSpan().startLine(), failure.line());
     }
 
@@ -655,7 +684,7 @@ class ExecuteTest {
                 RuntimeException.class,
                 () -> Execute.collectExamples(p, silentPorts()).get(0).run().run());
         assertEquals("boom", caught.getMessage());
-        Result.ExampleFailure failure = Failure.toFailure(caught, p.varDoc().path(), -1);
+        Result.ExampleFailure failure = Failure.toFailure(caught, p.doc().path(), -1);
         assertEquals(step.matchSpan().startLine(), failure.line());
         assertEquals("boom", failure.message());
     }

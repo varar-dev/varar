@@ -49,7 +49,7 @@
           "args": [
             {
               "parameterType": "word",
-              "value": "lhr."
+              "value": "lhr"
             }
           ],
           "matchSpan": {
@@ -60,12 +60,12 @@
             "startLine": 5,
             "startOffset": 61
           },
-          "matchedExpression": "The destination code is {word}",
+          "matchedExpression": "The destination code is {word}.",
           "paramSpans": [
             {
-              "endCol": 43,
+              "endCol": 42,
               "endLine": 5,
-              "endOffset": 89,
+              "endOffset": 88,
               "startCol": 39,
               "startLine": 5,
               "startOffset": 85

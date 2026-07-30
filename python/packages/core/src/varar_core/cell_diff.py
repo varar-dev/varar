@@ -23,7 +23,12 @@ class RowCheck:
 
 @dataclass(frozen=True, slots=True)
 class CellDiff:
-    """The verdict for one checked column after comparing against the table."""
+    """The verdict for one comparison of one CELL — the atomic value a sensor
+    checks against the document. A cell is a table cell, a header-bound row's
+    cell, or a value captured from a paragraph by an expression parameter; all
+    three land here. ``column`` labels the cell (a header cell's text, or
+    ``arg N`` for an inline capture).
+    """
 
     column: str
     span: Span
@@ -86,7 +91,8 @@ def compare_row(
 
 
 class CellMismatchError(Exception):
-    """Raised when a header-bound row's returned columns don't all match.
+    """Raised when one or more compared CELLS differ — an inline capture, a table
+    cell, or a header-bound row's cell.
 
     Carries the mismatched cells so adapters can render/record them.
     """

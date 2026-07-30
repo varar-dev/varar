@@ -4,93 +4,152 @@
     "label": "TypeScript",
     "icon": "seti:typescript",
     "ext": ".ts",
-    "stepsGlob": "varar-examples/**/*.steps.ts",
+    "stepsGlob": "src/varar/**/*.steps.ts",
+    "stepsPath": "src/varar/deep-thought.steps.ts",
     "hasCli": true,
-    "install": { "lang": "bash", "code": "pnpm add -D @varar/varar @varar/cli" },
-    "scaffold": { "lang": "bash", "code": "pnpm exec varar init" },
-    "run": { "lang": "bash", "code": "pnpm exec varar run" }
+    "install": {
+      "lang": "bash",
+      "code": "pnpm add -D @varar/varar @varar/cli"
+    },
+    "scaffold": {
+      "lang": "bash",
+      "code": "pnpm exec varar init"
+    },
+    "run": {
+      "lang": "bash",
+      "code": "pnpm exec varar run"
+    }
   },
   {
     "id": "java",
     "label": "Java",
     "icon": "seti:java",
     "ext": ".java",
-    "stepsGlob": "varar-examples/**/*Steps.java",
+    "stepsGlob": "varar.*",
+    "stepsPath": "src/test/java/varar/DeepThoughtSteps.java",
     "hasCli": false,
     "install": {
       "lang": "xml",
       "code": "<!-- pom.xml — use the latest release from Maven Central -->\n<dependency>\n  <groupId>dev.varar</groupId>\n  <artifactId>junit</artifactId>\n  <version>{{version}}</version>\n  <scope>test</scope>\n</dependency>"
     },
     "scaffold": null,
-    "run": { "lang": "bash", "code": "mvn test" }
+    "run": {
+      "lang": "bash",
+      "code": "mvn test"
+    }
   },
   {
     "id": "kotlin",
     "label": "Kotlin",
     "icon": "seti:kotlin",
     "ext": ".kt",
-    "stepsGlob": "varar-examples/**/*.steps.kt",
+    "stepsGlob": "varar.*",
+    "stepsPath": "src/test/kotlin/varar/deep-thought.steps.kt",
     "hasCli": false,
     "install": {
       "lang": "kotlin",
       "code": "// build.gradle.kts — use the latest release from Maven Central\ntestImplementation(\"dev.varar:kotlin:{{version}}\")\ntestImplementation(\"dev.varar:junit:{{version}}\")"
     },
     "scaffold": null,
-    "run": { "lang": "bash", "code": "./gradlew test" }
+    "run": {
+      "lang": "bash",
+      "code": "./gradlew test"
+    }
   },
   {
     "id": "python",
     "label": "Python",
     "icon": "seti:python",
     "ext": ".py",
-    "stepsGlob": "varar-examples/**/*.steps.py",
+    "stepsGlob": "tests/varar/**/*.steps.py",
+    "stepsPath": "tests/varar/deep_thought.steps.py",
     "hasCli": true,
-    "install": { "lang": "bash", "code": "uv add --dev pytest-varar" },
-    "scaffold": { "lang": "bash", "code": "uv run varar init" },
-    "run": { "lang": "bash", "code": "uv run pytest" }
+    "install": {
+      "lang": "bash",
+      "code": "uv add --dev pytest-varar"
+    },
+    "scaffold": {
+      "lang": "bash",
+      "code": "uv run varar init"
+    },
+    "run": {
+      "lang": "bash",
+      "code": "uv run pytest"
+    }
   },
   {
     "id": "ruby",
     "label": "Ruby",
     "icon": "seti:ruby",
     "ext": ".rb",
-    "stepsGlob": "varar-examples/**/*.steps.rb",
+    "stepsGlob": "spec/varar/**/*.steps.rb",
+    "stepsPath": "spec/varar/deep_thought.steps.rb",
     "hasCli": true,
-    "install": { "lang": "bash", "code": "bundle add varar-rspec" },
-    "scaffold": { "lang": "bash", "code": "bundle exec varar init" },
-    "run": { "lang": "bash", "code": "bundle exec rspec" }
+    "install": {
+      "lang": "bash",
+      "code": "bundle add varar-rspec"
+    },
+    "scaffold": {
+      "lang": "bash",
+      "code": "bundle exec varar init"
+    },
+    "run": {
+      "lang": "bash",
+      "code": "bundle exec rspec"
+    }
   },
   {
     "id": "rust",
     "label": "Rust",
     "icon": "seti:rust",
     "ext": ".rs",
-    "stepsGlob": "varar-examples/**/*.steps.rs",
+    "stepsGlob": "src/varar/*.steps.rs",
+    "stepsPath": "src/varar/deep_thought.steps.rs",
     "hasCli": false,
-    "install": { "lang": "bash", "code": "cargo add varar-cargotest --dev" },
+    "install": {
+      "lang": "bash",
+      "code": "cargo add varar-cargotest --dev"
+    },
     "scaffold": null,
-    "run": { "lang": "bash", "code": "cargo test" }
+    "run": {
+      "lang": "bash",
+      "code": "cargo test"
+    }
   },
   {
     "id": "csharp",
     "label": "C#",
     "icon": "seti:c-sharp",
     "ext": ".cs",
-    "stepsGlob": "varar-examples/**/*.steps.cs",
+    "stepsGlob": "steps/*.steps.cs",
+    "stepsPath": "steps/deep-thought.steps.cs",
     "hasCli": false,
-    "install": { "lang": "bash", "code": "dotnet add package Varar.TestAdapter" },
+    "install": {
+      "lang": "bash",
+      "code": "dotnet add package Varar.TestAdapter"
+    },
     "scaffold": null,
-    "run": { "lang": "bash", "code": "dotnet test" }
+    "run": {
+      "lang": "bash",
+      "code": "dotnet test"
+    }
   },
   {
     "id": "go",
     "label": "Go",
     "icon": "seti:go2",
     "ext": ".go",
-    "stepsGlob": "varar-examples/**/*.steps.go",
+    "stepsGlob": "*.steps.go",
+    "stepsPath": "deep_thought.steps.go",
     "hasCli": false,
-    "install": { "lang": "bash", "code": "go get github.com/varar-dev/varar/go" },
+    "install": {
+      "lang": "bash",
+      "code": "go get github.com/varar-dev/varar/go"
+    },
     "scaffold": null,
-    "run": { "lang": "bash", "code": "go test" }
+    "run": {
+      "lang": "bash",
+      "code": "go test"
+    }
   }
 ]

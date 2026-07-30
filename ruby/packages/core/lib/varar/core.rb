@@ -4,7 +4,7 @@ module Varar
   # The pure functional core: parse, match, plan, execute, diffs, drift, and
   # the conformance projections. No filesystem, network, globals, or time.
   module Core
-    VERSION = '0.6.1'
+    VERSION = '0.7.0'
   end
 end
 
@@ -21,10 +21,11 @@ require 'varar/core/diagnostics'
 require 'varar/core/cell_diff'
 require 'varar/core/matcher'
 require 'varar/core/plan'
-require 'varar/core/deep_freeze'
 require 'varar/core/doc_string_diff'
 require 'varar/core/param_diff'
 require 'varar/core/failure_anchor'
+require 'varar/core/result'
+require 'varar/core/failure'
 require 'varar/core/execute'
 require 'varar/core/hash'
 require 'varar/core/drift'

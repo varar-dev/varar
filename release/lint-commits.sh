@@ -54,6 +54,32 @@ EXEMPT=(
   f587abf0471f4819d4db44d4b32da456bdb369fc # Rename secrets (non-CC, already on main)
 )
 
+# The `spec` scope claims "this changed for every port", so it is the one scope
+# whose truth is checkable from the diff. A spec commit that lands in some ports
+# and not others is how the ports drift apart without anyone noticing — the
+# ported change looks finished in the log. Either touch every port, or say which
+# ones you deferred and why:
+#
+#   Ports-deferred: ruby, dotnet, go — no run-result payload in those ports yet
+#
+# The trailer is the point: it makes divergence a decision on the record rather
+# than an omission, and `git log --grep=Ports-deferred` lists the debt.
+PORT_DIRS=(typescript python java ruby rust dotnet go)
+# Kotlin lives in the java/ tree (java/kotlin, java/kotest) and needs no entry.
+
+# Pushed (spec) commits that predate this rule and can't be reworded now.
+PORTS_EXEMPT=(
+  1afdf5cc01184f7fecda989e035fa90100474903 # anchor ports — its TypeScript half is f015d61b, the commit before
+)
+
+ports_touched() {
+  local sha="$1" dir touched=()
+  for dir in "${PORT_DIRS[@]}"; do
+    git diff-tree --no-commit-id --name-only -r "$sha" -- "$dir" | grep -q . && touched+=("$dir")
+  done
+  echo "${touched[*]}"
+}
+
 fail=0
 complain() { warn "$1  ($2: $3)"; fail=1; }
 
@@ -72,6 +98,17 @@ while IFS=$'\t' read -r sha subject; do
   if [[ "$type" =~ ^(feat|fix|perf)$ || -n "$breaking" ]]; then
     [[ "$scope" =~ $CONSUMER_SCOPE ]] ||
       complain "changelog-visible commit needs a consumer scope (ts|py|java|ruby|vscode|spec, e.g. ts/var-vitest) — or use chore:/docs: if nothing shipped changes" "$short" "$subject"
+  fi
+  if [[ "$scope" == "spec" && " ${PORTS_EXEMPT[*]} " != *" $sha "* ]]; then
+    touched="$(ports_touched "$sha")"
+    missing=()
+    for dir in "${PORT_DIRS[@]}"; do
+      [[ " $touched " == *" $dir "* ]] || missing+=("$dir")
+    done
+    if [[ ${#missing[@]} -gt 0 ]] &&
+      ! git log -1 --format=%b "$sha" | grep -qi '^Ports-deferred:'; then
+      complain "(spec) claims every port but touched ${touched:-none} — port the rest, or add a 'Ports-deferred: ${missing[*]} — <why>' trailer" "$short" "$subject"
+    fi
   fi
 done < <(git log --no-merges --format=$'%H\t%s' "$RANGE")
 

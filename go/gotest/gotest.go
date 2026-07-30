@@ -3,12 +3,12 @@
 // Run turns every Markdown example matched by varar.config.json into one Go
 // subtest (t.Run), reported/filtered/listed by `go test` like a native subtest,
 // with failures rendered anchored to the .md source. Drift is reconciled on the
-// main goroutine: a clean run rewrites varar.lock.json; VAR_UPDATE=1 accepts
+// main goroutine: a clean run rewrites varar.lock.json; VARAR_UPDATE=1 accepts
 // drift instead of failing.
 //
-// Usage from a consumer's specs_test.go:
+// Usage from a consumer's oaths_test.go:
 //
-//	func TestSpecs(t *testing.T) {
+//	func TestOaths(t *testing.T) {
 //	    gotest.Run(t, ".", mysteps.BuildRegistry, mysteps.Context)
 //	}
 package gotest
@@ -39,6 +39,10 @@ type Case struct {
 	run          func() *core.StepFailure
 	index        int
 	DriftMessage string
+	// The example's identity in the run-result payload (ADR 0014): its name and
+	// the 1-based source lines of its steps. Empty for a drift case.
+	ExampleName string
+	Lines       []int
 }
 
 // Collect enumerates every example (and any drift) matched by varar.config.json
@@ -46,43 +50,69 @@ type Case struct {
 // Drift is reconciled here: a clean run rewrites the baseline; when update is
 // false each drifted paragraph becomes a failing Case.
 func Collect(root string, build BuildRegistry, ctx ContextFactory, update bool) ([]Case, error) {
-	cfg, err := config.ReadVarConfig(root)
+	cfg, err := config.ReadConfig(root)
 	if err != nil {
 		return nil, err
 	}
 	var cases []Case
-	for _, specPath := range runner.FindSpecs(cfg, root) {
-		sourceBytes, _ := os.ReadFile(specPath)
-		source := string(sourceBytes)
-		specFile := filepath.Base(specPath)
-		rel, relErr := filepath.Rel(root, specPath)
+	oaths := runner.FindOaths(cfg, root)
+
+	// Drop baselines for oaths the config no longer discovers. Reconciliation is
+	// per-oath and never sees a path that has gone, so the lock would otherwise
+	// accumulate dead entries forever (#70). Once per run, keyed off the config
+	// globs — which here IS the full set, since Collect always discovers
+	// everything (`go test -run` filters the subtests, not the discovery).
+	keep := make([]string, 0, len(oaths))
+	for _, oathPath := range oaths {
+		rel, relErr := filepath.Rel(root, oathPath)
 		if relErr != nil {
-			rel = specFile
+			rel = filepath.Base(oathPath)
+		}
+		keep = append(keep, filepath.ToSlash(rel))
+	}
+	core.PruneBaselines(runner.NewFileBaselineStore(root), keep, update)
+
+	for _, oathPath := range oaths {
+		sourceBytes, _ := os.ReadFile(oathPath)
+		source := string(sourceBytes)
+		oathFile := filepath.Base(oathPath)
+		rel, relErr := filepath.Rel(root, oathPath)
+		if relErr != nil {
+			rel = oathFile
 		}
 		rel = filepath.ToSlash(rel)
 
-		plan := runner.PlanSpec(specFile, source, build())
+		plan := runner.PlanOath(oathFile, source, build())
 		for i, display := range runner.ExampleNames(plan) {
 			index := i
 			src := source
 			r := rel
 			p := plan
+			example := p.Examples[index]
+			var lines []int
+			for _, step := range example.Steps {
+				if len(lines) == 0 || lines[len(lines)-1] != step.MatchSpan.StartLine {
+					lines = append(lines, step.MatchSpan.StartLine)
+				}
+			}
 			cases = append(cases, Case{
-				Name:   r + "::" + display,
-				Source: src,
-				Rel:    r,
-				index:  index,
-				run:    func() *core.StepFailure { return runner.RunExample(p, ctx, index) },
+				Name:        r + "::" + display,
+				Source:      src,
+				Rel:         r,
+				index:       index,
+				run:         func() *core.StepFailure { return runner.RunExample(p, ctx, index) },
+				ExampleName: example.Name,
+				Lines:       lines,
 			})
 		}
 
 		// Drift reconciliation: rewrites the baseline on a clean run; each
 		// drifted paragraph becomes a failing case (ADR 0002).
 		store := runner.NewFileBaselineStore(root)
-		doc := core.Parse(specFile, source)
+		doc := core.Parse(oathFile, source)
 		for _, drifted := range core.ReconcileDrift(store, rel, source, doc, plan, update) {
 			cases = append(cases, Case{
-				Name:         rel + "::var:drift:" + strconv.Itoa(drifted.Line),
+				Name:         rel + "::varar:drift:" + strconv.Itoa(drifted.Line),
 				Source:       source,
 				Rel:          rel,
 				DriftMessage: core.DriftMessage(drifted),
@@ -92,8 +122,8 @@ func Collect(root string, build BuildRegistry, ctx ContextFactory, update bool) 
 	return cases, nil
 }
 
-// Run enumerates the specs under root and reports one Go subtest per example
-// (and per drift finding). VAR_UPDATE=1/true accepts drift instead of failing.
+// Run enumerates the oaths under root and reports one Go subtest per example
+// (and per drift finding). VARAR_UPDATE=1/true accepts drift instead of failing.
 func Run(t *testing.T, root string, build BuildRegistry, ctx ContextFactory) {
 	t.Helper()
 	update := isUpdate()
@@ -101,6 +131,10 @@ func Run(t *testing.T, root string, build BuildRegistry, ctx ContextFactory) {
 	if err != nil {
 		t.Fatalf("var: %v", err)
 	}
+	// Run results for the language server (ADR 0014). `go test` has no end-of-run
+	// hook, so the collector is flushed once every subtest has finished — t.Run
+	// with a non-parallel subtest returns only after it completes.
+	results := runner.NewResults()
 	for _, c := range cases {
 		c := c
 		t.Run(c.Name, func(t *testing.T) {
@@ -108,15 +142,35 @@ func Run(t *testing.T, root string, build BuildRegistry, ctx ContextFactory) {
 				t.Error(c.DriftMessage)
 				return
 			}
-			if failure := c.run(); failure != nil {
-				t.Error(runner.RenderFailure(*failure, c.Source, c.Rel))
+			failure := c.run()
+			if failure == nil {
+				results.Record(c.Rel, c.Source, core.ExampleResult{
+					Name: c.ExampleName, Status: core.StatusPassed, Lines: c.Lines,
+				})
+				return
 			}
+			// Recorded from the failure itself: ToFailure reads the anchor the
+			// executor attached to it, so an editor underlines the failing step.
+			line := 0
+			if len(c.Lines) > 0 {
+				line = c.Lines[0]
+			}
+			results.Record(c.Rel, c.Source, core.ExampleResult{
+				Name:    c.ExampleName,
+				Status:  core.StatusFailed,
+				Lines:   c.Lines,
+				Failure: ptr(core.ToFailure(*failure, c.Rel, line)),
+			})
+			t.Error(runner.RenderFailure(*failure, c.Source, c.Rel))
 		})
 	}
+	results.FlushAll(root)
 }
 
+func ptr[T any](value T) *T { return &value }
+
 func isUpdate() bool {
-	switch os.Getenv("VAR_UPDATE") {
+	switch os.Getenv("VARAR_UPDATE") {
 	case "1", "true":
 		return true
 	}

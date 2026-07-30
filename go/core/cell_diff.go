@@ -7,7 +7,9 @@ import (
 
 // Table row/cell comparison — port of cell-diff.ts / cell_diff.rs.
 
-// CellDiff is the verdict for one checked column: expected vs actual, plus raw
+// CellDiff is the verdict for one comparison of one CELL — the atomic value a
+// sensor checks against the document (a table cell, a header-bound row's cell,
+// or a value captured from a paragraph). Expected vs actual, plus raw
 // values and whether a parameter-type format produced actual.
 type CellDiff struct {
 	Column        string

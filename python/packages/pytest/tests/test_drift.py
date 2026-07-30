@@ -24,8 +24,8 @@ def _project(pytester):
 
 def _write_baseline(pytester, examples):
     lock = {
-        "version": 1,
-        "specs": {"features/vault.md": {"sourceHash": "fnv1a:0", "examples": examples}},
+        "version": 2,
+        "oaths": {"features/vault.md": {"sourceHash": "fnv1a:0", "examples": examples}},
     }
     (pytester.path / "varar.lock.json").write_text(json.dumps(lock), encoding="utf-8")
 
@@ -40,7 +40,7 @@ def test_first_run_records_the_baseline_and_passes(pytester):
     result = pytester.runpytest("-v")
     result.assert_outcomes(passed=1)
     lock = _lock(pytester)
-    assert lock["specs"]["features/calc.md"]["examples"] == [{"name": "I add 2", "line": 1}]
+    assert lock["oaths"]["features/calc.md"]["examples"] == [{"name": "I add 2", "line": 1}]
 
 
 def test_a_paragraph_that_stopped_matching_drifts_and_fails(pytester):
@@ -51,7 +51,7 @@ def test_a_paragraph_that_stopped_matching_drifts_and_fails(pytester):
     before = (pytester.path / "varar.lock.json").read_text(encoding="utf-8")
     result = pytester.runpytest("-v")
     result.assert_outcomes(failed=1)
-    result.stdout.fnmatch_lines(["*var:drift*"])
+    result.stdout.fnmatch_lines(["*varar:drift*"])
     # Unacknowledged drift leaves the baseline untouched.
     assert (pytester.path / "varar.lock.json").read_text(encoding="utf-8") == before
 
@@ -60,6 +60,50 @@ def test_var_update_accepts_drift(pytester):
     _project(pytester)
     (pytester.path / "features/vault.md").write_text("The vault is sealed.\n", encoding="utf-8")
     _write_baseline(pytester, [{"name": "The vault is sealed", "line": 1}])
-    result = pytester.runpytest("--var-update")
+    result = pytester.runpytest("--varar-update")
     result.assert_outcomes()
-    assert _lock(pytester)["specs"]["features/vault.md"]["examples"] == []
+    assert _lock(pytester)["oaths"]["features/vault.md"]["examples"] == []
+
+
+def _write_baseline_with_stale_path(pytester):
+    """A baseline naming an oath the docs globs no longer match (#70)."""
+    entry = {"sourceHash": "fnv1a:0", "examples": []}
+    lock = {"version": 2, "oaths": {"features/calc.md": entry, "moved-away.md": entry}}
+    (pytester.path / "varar.lock.json").write_text(json.dumps(lock), encoding="utf-8")
+
+
+def test_a_plain_run_keeps_a_stale_baseline_path(pytester):
+    _project(pytester)
+    (pytester.path / "features/calc.md").write_text("I add 2\n", encoding="utf-8")
+    _write_baseline_with_stale_path(pytester)
+
+    pytester.runpytest("-v").assert_outcomes(passed=1)
+
+    # Removal stays an explicit act — nothing is deleted behind the author's back.
+    assert sorted(_lock(pytester)["oaths"]) == ["features/calc.md", "moved-away.md"]
+
+
+def test_varar_update_prunes_a_baseline_path_the_globs_no_longer_match(pytester, monkeypatch):
+    _project(pytester)
+    (pytester.path / "features/calc.md").write_text("I add 2\n", encoding="utf-8")
+    _write_baseline_with_stale_path(pytester)
+    monkeypatch.setenv("VARAR_UPDATE", "1")
+
+    pytester.runpytest("-v").assert_outcomes(passed=1)
+
+    assert list(_lock(pytester)["oaths"]) == ["features/calc.md"]
+
+
+def test_a_filtered_run_does_not_prune_the_oaths_it_filtered_out(pytester, monkeypatch):
+    _project(pytester)
+    (pytester.path / "features/calc.md").write_text("I add 2\n", encoding="utf-8")
+    (pytester.path / "features/other.md").write_text("I add 3\n", encoding="utf-8")
+    monkeypatch.setenv("VARAR_UPDATE", "1")
+    pytester.runpytest("-v")
+    assert sorted(_lock(pytester)["oaths"]) == ["features/calc.md", "features/other.md"]
+
+    # Collecting one file is a partial view of the oath set. Pruning against it
+    # would delete a live baseline, so the predicate is the config globs.
+    pytester.runpytest("-v", "features/calc.md").assert_outcomes(passed=1)
+
+    assert sorted(_lock(pytester)["oaths"]) == ["features/calc.md", "features/other.md"]

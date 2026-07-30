@@ -28,7 +28,7 @@ func setup(t *testing.T) string {
 	t.Helper()
 	root := t.TempDir()
 	os.WriteFile(filepath.Join(root, "varar.config.json"), []byte(`{"docs":{"include":["*.md"]}}`), 0o644)
-	os.WriteFile(filepath.Join(root, "spec.md"), []byte("I greet \"world\"."), 0o644)
+	os.WriteFile(filepath.Join(root, "oath.md"), []byte("I greet \"world\"."), 0o644)
 	return root
 }
 
@@ -70,7 +70,7 @@ func TestCollectReportsDriftWhenStepRemoved(t *testing.T) {
 	if drift == nil {
 		t.Fatalf("expected a drift case, got %+v", cases)
 	}
-	if !strings.Contains(drift.Name, "var:drift:") {
+	if !strings.Contains(drift.Name, "varar:drift:") {
 		t.Errorf("drift case name: %s", drift.Name)
 	}
 }

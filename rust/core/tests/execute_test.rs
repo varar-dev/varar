@@ -176,7 +176,7 @@ fn an_inline_sensor_mismatch_throws_cell_mismatch_at_its_param_span() {
     assert_eq!(1, cells.len());
     assert_eq!("42", cells[0].expected);
     assert_eq!("41", cells[0].actual);
-    let source = &p.var_doc.source;
+    let source = &p.doc.source;
     assert_eq!("42", utf16_slice(source, cells[0].span.start_offset, cells[0].span.end_offset));
 }
 
@@ -269,6 +269,55 @@ fn a_zero_slot_sensor_returning_null_passes() {
     let p = plan_of("# X\n\nthe alarm fired", &r);
     let ports = ExecutePorts::silent();
     assert!(collect_examples(&p, &ports)[0].run().is_ok());
+}
+
+#[test]
+fn a_slotted_sensor_returning_nothing_throws_return_shape() {
+    // The silent-pass hole: nothing is compared, yet the document keeps
+    // claiming something nobody checked.
+    let r = reg(
+        "the name is {string}",
+        "s.ts",
+        1,
+        Handler::sync1(|_s, _name| Ok(None)),
+        Some(StepKind::Sensor),
+    );
+    let p = plan_of("# X\n\nthe name is \"Ada\"", &r);
+    let ports = ExecutePorts::silent();
+    let err = collect_examples(&p, &ports)[0].run().unwrap_err().error;
+    match err {
+        StepError::ReturnShape(m) => {
+            assert_eq!(m, "a sensor with 1 slot(s) must return one value per slot, got nothing");
+        }
+        other => panic!("expected ReturnShape, got {other:?}"),
+    }
+}
+
+#[test]
+fn a_header_bound_row_returning_nothing_throws_return_shape() {
+    let r = reg(
+        "I report the score and grade",
+        "s.ts",
+        1,
+        Handler::sync1(|_s, _row| Ok(None)),
+        Some(StepKind::Sensor),
+    );
+    let source = "# X\n\nI report the score and grade.\n\n\
+                  | score | grade |\n\
+                  | ----- | ----- |\n\
+                  | 10    | A     |\n";
+    let p = plan_of(source, &r);
+    let ports = ExecutePorts::silent();
+    let err = collect_examples(&p, &ports)[0].run().unwrap_err().error;
+    match err {
+        StepError::ReturnShape(m) => {
+            assert_eq!(
+                m,
+                "a header-bound row step must return a row object with one value per bound cell, got nothing"
+            );
+        }
+        other => panic!("expected ReturnShape, got {other:?}"),
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -497,7 +546,7 @@ fn a_mismatching_header_bound_row_throws_cell_mismatch_at_the_cell_span() {
     assert_eq!("score", cells[0].column);
     assert_eq!("50", cells[0].expected);
     assert_eq!("999", cells[0].actual);
-    let source = &p.var_doc.source;
+    let source = &p.doc.source;
     assert_eq!("50", utf16_slice(source, cells[0].span.start_offset, cells[0].span.end_offset));
 }
 
@@ -581,7 +630,7 @@ fn a_whole_table_sensor_returning_the_wrong_type_throws_return_shape() {
 const GREETING_DOC: &str = "# T\n\nthe greeting is:\n\n```text\nHello, world!\n```";
 
 #[test]
-fn a_doc_string_sensor_returning_a_different_string_throws_doc_string_mismatch_at_the_body_span() {
+fn a_doc_string_sensor_returning_a_different_string_throws_cell_mismatch_at_the_body_span() {
     let r = reg(
         "the greeting is",
         "s.ts",
@@ -592,11 +641,14 @@ fn a_doc_string_sensor_returning_a_different_string_throws_doc_string_mismatch_a
     let p = plan_of(GREETING_DOC, &r);
     let ports = ExecutePorts::silent();
     let err = collect_examples(&p, &ports)[0].run().unwrap_err();
-    let StepError::DocStringMismatch(diff) = &err.error else {
-        panic!("expected doc string mismatch")
+    let StepError::CellMismatch(cells) = &err.error else {
+        panic!("expected a cell mismatch")
     };
-    assert_eq!("Hello, world!\n", diff.expected);
-    assert_eq!("Goodbye!\n", diff.actual);
+    let diff = &cells[0];
+    assert_eq!("doc string", diff.column);
+    // Quoted, so a whitespace-only difference stays visible.
+    assert_eq!("\"Hello, world!\\n\"", diff.expected);
+    assert_eq!("\"Goodbye!\\n\"", diff.actual);
 }
 
 #[test]
@@ -692,7 +744,7 @@ fn a_sensor_that_panics_instead_of_returning_a_mismatch_gets_a_located_failure()
     let ports = ExecutePorts::silent();
     let caught = collect_examples(&p, &ports)[0].run().unwrap_err();
     assert_eq!("expected 42 but was 41", caught.error.message());
-    let failure = to_failure(&caught, &p.var_doc.path, -1);
+    let failure = to_failure(&caught, &p.doc.path, -1);
     assert_eq!(step_line as i64, failure.line);
 }
 
@@ -810,7 +862,7 @@ fn a_thrown_step_gets_a_located_failure_that_failure_to_failure_resolves_to_the_
     let ports = ExecutePorts::silent();
     let caught = collect_examples(&p, &ports)[0].run().unwrap_err();
     assert_eq!("boom", caught.error.message());
-    let failure = to_failure(&caught, &p.var_doc.path, -1);
+    let failure = to_failure(&caught, &p.doc.path, -1);
     assert_eq!(step_line as i64, failure.line);
     assert_eq!("boom", failure.message);
 }

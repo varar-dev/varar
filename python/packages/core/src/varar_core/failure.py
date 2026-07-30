@@ -9,30 +9,30 @@ import re
 from typing import Any
 
 from varar_core.cell_diff import is_cell_mismatch_error
-from varar_core.doc_string_diff import is_doc_string_mismatch_error
-from varar_core.result import CellFailure, ExampleFailure
+from varar_core.failure_anchor import read_failure_anchor
+from varar_core.result import AnchorRange, CellFailure, ExampleFailure
 
 
-def _failing_line(stack: str, spec_path: str) -> int | None:
-    """Recover the 1-based failing line from a ``<specPath>:line:col`` frame."""
-    escaped = re.escape(spec_path)
+def _failing_line(stack: str, oath_path: str) -> int | None:
+    """Recover the 1-based failing line from a ``<oathPath>:line:col`` frame."""
+    escaped = re.escape(oath_path)
     m = re.search(rf"{escaped}:(\d+):\d+", stack)
     return int(m.group(1)) if m else None
 
 
 def to_failure(
     error: Any,
-    spec_path: str,
+    oath_path: str,
     fallback_line: int,
 ) -> ExampleFailure:
     """Convert a thrown step error to an ExampleFailure.
 
-    Checks for ``CellMismatchError`` and ``DocStringMismatchError`` first to
+    Checks for ``CellMismatchError`` first to
     populate structured ``cells``/``doc`` payloads; falls back to a plain
     message + stack for any other exception.
 
     ``error.stack`` (if present as a string attribute) is used verbatim — this
-    matches the TypeScript port where execute.ts injects a ``<specPath>:line:col``
+    matches the TypeScript port where execute.ts injects a ``<oathPath>:line:col``
     frame that ``_failing_line`` then extracts.
     """
     # Prefer a manually-set .stack attribute (mirrors TS Error.stack behaviour).
@@ -54,20 +54,21 @@ def to_failure(
         if failing:
             cells = failing
 
-    doc: CellFailure | None = None
-    if is_doc_string_mismatch_error(error):
-        doc = CellFailure(
-            from_=error.diff.span.start_offset,
-            to=error.diff.span.end_offset,
-            actual=error.diff.actual,
-        )
+    line = _failing_line(stack, oath_path) if stack else None
 
-    line = _failing_line(stack, spec_path) if stack else None
+    # execute_plan attached the anchor when it caught the error, so this is the
+    # failing step's span (or the first mismatched cell's). Absent only when the
+    # error never passed through a step — then ``line`` is all a renderer gets.
+    anchor = read_failure_anchor(error)
 
     return ExampleFailure(
         line=line if line is not None else fallback_line,
         message=message,
         stack=stack,
         cells=cells,
-        doc=doc,
+        anchor=(
+            None
+            if anchor is None
+            else AnchorRange(from_=anchor.start_offset, to=anchor.end_offset)
+        ),
     )

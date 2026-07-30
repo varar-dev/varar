@@ -1,7 +1,7 @@
 {
-  "version": 1,
-  "specs": {
-    "specs/sealed.md": {
+  "version": 2,
+  "oaths": {
+    "oaths/sealed.md": {
       "sourceHash": "fnv1a:0",
       "examples": [
         {

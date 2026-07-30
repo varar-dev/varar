@@ -4,11 +4,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-final class Yahtzee {
+public final class Yahtzee {
 
     private Yahtzee() {}
 
-    static int score(List<Integer> dice, String category) {
+    public static int score(List<Integer> dice, String category) {
         Map<Integer, Integer> counts = new HashMap<>();
         for (int d : dice) counts.merge(d, 1, Integer::sum);
         int sum = dice.stream().mapToInt(Integer::intValue).sum();

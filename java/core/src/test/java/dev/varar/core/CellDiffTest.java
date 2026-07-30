@@ -63,7 +63,7 @@ class CellDiffTest {
     private record ParsedTable(Ast.Table table, String source) {}
 
     private static ParsedTable tableOf(String source) {
-        Ast.VarDoc doc = Parse.parse("t.md", source);
+        Ast.Doc doc = Parse.parse("t.md", source);
         Ast.Table table = doc.examples().get(0).body().stream()
                 .filter(b -> b instanceof Ast.Table)
                 .map(b -> (Ast.Table) b)

@@ -1,0 +1,31 @@
+# frozen_string_literal: true
+
+require 'spec_helper'
+require 'varar/core'
+
+module Varar
+  module Core
+    # Reproduces the shared conformance corpus' doc.json goldens
+    # byte-for-byte (parse stage). Mirrors var/tests/conformance.test.ts.
+    ::RSpec.describe 'doc conformance' do
+      def self.corpus_dir
+        dir = __dir__
+        dir = File.dirname(dir) until File.directory?(File.join(dir, 'conformance', 'bundles')) || dir == '/'
+        File.join(dir, 'conformance', 'bundles')
+      end
+
+      corpus = corpus_dir
+
+      Dir.children(corpus).sort.each do |bundle|
+        golden = File.join(corpus, bundle, 'golden', 'doc.json')
+        next unless File.exist?(golden)
+
+        it "#{bundle} — doc.json matches golden" do
+          source = File.read(File.join(corpus, bundle, 'example.md'), encoding: 'UTF-8')
+          doc = Parse.parse('example.md', source)
+          expect(Conformance.to_doc_artifact(doc)).to eq(JSON.parse(File.read(golden, encoding: 'UTF-8')))
+        end
+      end
+    end
+  end
+end

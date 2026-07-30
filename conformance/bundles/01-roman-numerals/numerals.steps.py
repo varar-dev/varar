@@ -10,9 +10,8 @@ def _(state, n):
     return {"result": ROMAN.get(n)}
 
 
-@sensor("The result is {word}")
+# The trailing "." is matched literally, so {word} captures just the numeral and
+# the sensor can return the observed value for the core to compare.
+@sensor("The result is {word}.")
 def _(state, expected):
-    # Strip sentence-ending punctuation captured by {word} when it appears last.
-    cleaned = expected.rstrip(".!?")
-    if state.get("result") != cleaned:
-        raise AssertionError(f"expected {cleaned} but got {state.get('result')}")
+    return state.get("result")

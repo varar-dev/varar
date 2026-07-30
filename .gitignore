@@ -5,7 +5,7 @@ dist
 coverage
 *.timestamp-*
 .superpowers
-.var/
+.varar/
 
 # varar.lock.json baselines written by var-cli integration tests (temp fixtures)
 typescript/packages/cli/tests/fixtures/run-basic/varar.lock.json

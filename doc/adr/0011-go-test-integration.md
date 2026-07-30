@@ -23,16 +23,16 @@ closure. So the Rust `Send`/thread-local re-derivation dance is unnecessary here
 
 ### Options considered
 
-**A. `go generate` code generation.** Parse every spec at generate time and emit
+**A. `go generate` code generation.** Parse every oath at generate time and emit
 one `func TestX(t *testing.T)` per example. Gives real top-level tests, but adds a
-generate step that must be re-run on every spec edit and duplicates the parse.
+generate step that must be re-run on every oath edit and duplicates the parse.
 Rejected — the `t.Run` mechanism makes it unnecessary.
 
 **B. A single entry-point test that fans out with `t.Run` (chosen).** The
-consumer writes one ordinary `func TestSpecs(t *testing.T)` that calls
-`vargotest.Run(t, root, buildRegistry, context)`. The adapter discovers specs via
+consumer writes one ordinary `func TestOaths(t *testing.T)` that calls
+`vargotest.Run(t, root, buildRegistry, context)`. The adapter discovers oaths via
 `varar.config.json`, plans each, and calls `t.Run` once per example (and once per
-drift finding). `go test -run 'TestSpecs/spec.md::Example'` selects a single
+drift finding). `go test -run 'TestOaths/oath.md::Example'` selects a single
 example; `go test -v` lists them; failures are reported with `t.Error` carrying
 the core's rendered, `.md`-anchored diff. This is the idiomatic Go table-driven
 pattern applied to data discovered at runtime.
@@ -51,7 +51,7 @@ unit-testable; `Run` is the thin `testing` wrapper over it.
   every port.
 - **Failure rendering:** reuses the core diff payloads via the runner's
   `RenderFailure`, anchored to the `.md`.
-- **Drift gate:** each spec is reconciled against `varar.lock.json` via the
+- **Drift gate:** each oath is reconciled against `varar.lock.json` via the
   filesystem `BaselineStore`; a clean run rewrites the baseline, each drifted
   paragraph becomes a failing subtest, and `VAR_UPDATE=1` (or `true`) accepts
   drift instead of failing (ADR 0002 — never silently accept). A per-adapter
@@ -65,5 +65,5 @@ unit-testable; `Run` is the thin `testing` wrapper over it.
 - Consumers get native `go test` selection, listing, filtering, verbose output,
   and exit codes for free — no custom harness.
 - The adapter contains no pipeline logic; it composes `varrunner` + `varcore`.
-- No compile-time code generation and no build step: adding or editing a spec
+- No compile-time code generation and no build step: adding or editing an oath
   changes the subtest set on the next `go test` run with nothing to regenerate.

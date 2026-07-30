@@ -46,6 +46,12 @@ export type Language = {
   readonly ext: string
   /** Glob a scaffolded project uses to discover this language's steps. */
   readonly stepsGlob: string
+  /**
+   * Project-relative path of the steps file `varar init` scaffolds (or the
+   * conventional location on ports without a CLI), e.g.
+   * `src/varar/deep-thought.steps.ts`.
+   */
+  readonly stepsPath: string
   /** Whether the port ships a `var` CLI (TS/Python/Ruby) or is copy-paste (JVM). */
   readonly hasCli: boolean
   readonly install: CommandBlock
@@ -84,9 +90,9 @@ export const LANG_ICONS: Readonly<Record<SiteLang, string>> = Object.fromEntries
 // Step-file extension → language, for the interactive editor tabs.
 const LANG_BY_EXT: ReadonlyMap<string, SiteLang> = new Map(LANGUAGES.map((l) => [l.ext, l.id]))
 
-export const LANG_CHANGE_EVENT = 'var-lang-change'
+export const LANG_CHANGE_EVENT = 'varar-lang-change'
 
-const storageKey = 'var-lang'
+const storageKey = 'varar-lang'
 
 // Every language except the attribute-less TypeScript default.
 const NON_DEFAULT_LANGS: ReadonlyArray<SiteLang> = SITE_LANGS.filter((l) => l !== 'ts')
@@ -98,7 +104,7 @@ export const langOfLabel = (label: string): SiteLang | undefined =>
   SITE_LANGS.find((lang) => LANG_LABELS[lang] === label)
 
 // Maps a code file extension to its language; undefined for language-neutral
-// files (the .md spec) that are shown regardless of the site language.
+// files (the .md oath) that are shown regardless of the site language.
 export function langOfPath(path: string): SiteLang | undefined {
   for (const [ext, lang] of LANG_BY_EXT) {
     if (path.endsWith(ext)) return lang

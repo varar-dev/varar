@@ -7,7 +7,7 @@ import dev.varar.Steps;
 /**
  * A {@code state} fixture whose {@code action} step is ADDITIVE (unlike {@link
  * WidgetSteps}' absolute-set {@code context} step) — used by {@code
- * VarExampleDescriptorExecutionTest} to prove state does NOT leak between two examples in
+ * ExampleDescriptorExecutionTest} to prove state does NOT leak between two examples in
  * the same file: if a second example's initial state were anything other than the fresh
  * {@code Ctx(0)} {@link Steps#defineState} produces, its counter would come out wrong,
  * not merely "still correct by coincidence" (the risk an absolute-set step like {@code

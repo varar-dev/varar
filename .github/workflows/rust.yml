@@ -35,3 +35,9 @@ jobs:
       # Markdown specs through var-core via `cargo test`.
       - run: cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
         working-directory: examples/rust-cargotest
+
+      # The adapter smoke contract: the golden corpora only see the pure core, so an
+      # adapter can be conformance-green and still test nothing. This runs the sample's
+      # real test command against a deliberately drifted baseline and requires it to go
+      # red. See conformance/adapter/README.md.
+      - run: conformance/adapter/smoke.sh examples/rust-cargotest

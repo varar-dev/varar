@@ -18,6 +18,20 @@ fn find_hits_returns_no_hits_when_nothing_matches() {
 }
 
 #[test]
+fn emph_builtin_matches_single_and_double_asterisks_and_strips_the_delimiters() {
+    let r = create_registry();
+    let r = add_step(&r, "I mention {emph}", "steps.ts", 1, Handler::noop(), None).unwrap();
+
+    let single = find_hits("I mention *Emma*.", &r);
+    assert_eq!(1, single.len());
+    assert_eq!(vec![Value::String("Emma".to_string())], single[0].args);
+
+    let double = find_hits("I mention **Emma**.", &r);
+    assert_eq!(1, double.len());
+    assert_eq!(vec![Value::String("Emma".to_string())], double[0].args);
+}
+
+#[test]
 fn find_hits_returns_one_hit_per_step_expression_that_matches() {
     let hits = find_hits("Given I have 5 cukes in my belly", &reg());
     assert_eq!(1, hits.len());

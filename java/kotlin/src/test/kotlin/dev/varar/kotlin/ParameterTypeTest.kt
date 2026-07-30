@@ -41,4 +41,23 @@ class ParameterTypeTest {
             Steps.bind(definitions)
         }
     }
+
+    @Test
+    fun `the built-in emph parameter type strips emphasis delimiters`() {
+        val bound = Steps.bind(steps(::Ctx) { stimulus("I mention {emph}") { _: String -> this } })
+
+        val italic =
+            Plan.plan(
+                Parse.parse("m.md", "# M\n\n## One\n\nI mention *Emma*.\n"),
+                bound.registry(),
+            )
+        assertEquals(listOf<Any>("Emma"), italic.examples()[0].steps()[0].args())
+
+        val bold =
+            Plan.plan(
+                Parse.parse("m.md", "# M\n\n## Two\n\nI mention **Emma**.\n"),
+                bound.registry(),
+            )
+        assertEquals(listOf<Any>("Emma"), bold.examples()[0].steps()[0].args())
+    }
 }

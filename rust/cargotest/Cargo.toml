@@ -2,7 +2,7 @@
 name = "varar-cargotest"
 version.workspace = true
 edition.workspace = true
-description = "Markdown-native BDD — run Markdown specs as cargo test tests"
+description = "Markdown-native BDD — run Markdown oaths as cargo test tests"
 license.workspace = true
 authors.workspace = true
 homepage.workspace = true

@@ -5,7 +5,7 @@ plugins {
 // On trunk this is the SNAPSHOT that `mvn install` (run from java/) puts into
 // mavenLocal, so the sample always tests the code in this repo. In your own
 // project: pin the latest release and drop the mavenLocal() repository.
-val varVersion = "0.6.2-SNAPSHOT"
+val varVersion = "0.7.1-SNAPSHOT"
 
 repositories {
     mavenLocal()
@@ -16,7 +16,7 @@ dependencies {
     testImplementation("dev.varar:junit:$varVersion")
     testImplementation(platform("org.junit:junit-bom:6.1.2"))
     // Gradle only discovers class-based tests, so the sample uses a JUnit
-    // @Suite (see RunVarSpecsTest) to hand the spec corpus to the "var" engine.
+    // @Suite (see RunOathSpecsTest) to hand the spec corpus to the "var" engine.
     testImplementation("org.junit.platform:junit-platform-suite")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }

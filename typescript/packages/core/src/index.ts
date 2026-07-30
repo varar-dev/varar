@@ -1,8 +1,9 @@
-export const VERSION = '0.0.0'
+export const VERSION = '0.7.0'
 
 export type {
   Block,
   Blockquote,
+  Doc,
   Example,
   Fence,
   Heading,
@@ -12,7 +13,6 @@ export type {
   SegmentOffset,
   Table,
   ThematicBreak,
-  VarDoc,
 } from './ast.ts'
 export type { CellDiff, RowCheck } from './cell-diff.ts'
 export {
@@ -24,20 +24,20 @@ export {
 } from './cell-diff.ts'
 export type {
   BundleArtifacts,
+  DocArtifact,
   FailureArtifact,
   PlanArtifact,
   RegistryArtifact,
   StepTrace,
   TraceArtifact,
-  VarDocArtifact,
 } from './conformance.ts'
 export {
   canonicalStringify,
   runConformance,
+  toDocArtifact,
   toFailureArtifact,
   toPlanArtifact,
   toRegistryArtifact,
-  toVarDocArtifact,
 } from './conformance.ts'
 export { deepEqual } from './deep-equal.ts'
 export type {
@@ -48,21 +48,18 @@ export type {
   Severity,
 } from './diagnostics.ts'
 export { ambiguousMatch, driftDetected } from './diagnostics.ts'
-export type { DocStringDiff } from './doc-string-diff.ts'
+export { compareDocString, DOC_STRING_COLUMN } from './doc-string-diff.ts'
+export type { BaselineExample, Drift, LockFile, OathBaseline } from './drift.ts'
 export {
-  compareDocString,
-  DocStringMismatchError,
-  isDocStringMismatchError,
-} from './doc-string-diff.ts'
-export type { BaselineExample, Drift, SpecBaseline, VarLock } from './drift.ts'
-export {
-  deriveSpecBaseline,
+  deriveOathBaseline,
   detectDrift,
   driftDiagnostics,
   liveExamples,
-  parseVarLock,
+  parseLockFile,
+  pruneBaselines,
+  pruneLockFile,
   reconcileDrift,
-  stringifyVarLock,
+  stringifyLockFile,
 } from './drift.ts'
 export type { ExecutePorts, ExecutionObserver, QueuedExample, StepObservation } from './execute.ts'
 export {
@@ -81,8 +78,6 @@ export { compareParams } from './param-diff.ts'
 export { parse } from './parse.ts'
 export type { ExecutionPlan, PlannedExample, PlannedStep } from './plan.ts'
 export { plan } from './plan.ts'
-export { gherkinDocStrings, gherkinTables } from './plugins/gherkin/index.ts'
-export { resolveScannerPlugins } from './plugins/registry.ts'
 export type { BaselineStore, Reporter, TestSink } from './ports.ts'
 export type {
   ParameterTypeInput,
@@ -92,10 +87,9 @@ export type {
   StepRegistration,
 } from './registry.ts'
 export { addStep, createRegistry, defineParameterType } from './registry.ts'
-export type { CellFailure, ExampleResult, SpecResults } from './result.ts'
+export type { CellFailure, ExampleResult, OathResults } from './result.ts'
 export type { RunDiagnostic } from './run-diagnostics.ts'
 export { runResultDiagnostics } from './run-diagnostics.ts'
-export type { RawLine, ScannerPlugin } from './scanner.ts'
 export { scan } from './scanner.ts'
 export type { Sentence } from './sentences.ts'
 export { splitSentences } from './sentences.ts'

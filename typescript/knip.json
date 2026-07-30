@@ -1,7 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
   "ignoreExportsUsedInFile": true,
-  "ignoreWorkspaces": ["packages/cucumber"],
   "workspaces": {
     "packages/config": {
       "project": ["src/**/*.ts", "tests/**/*.ts"]
@@ -54,7 +53,7 @@
       "project": ["src/**/*.ts"]
     },
     "../examples/typescript-vitest": {
-      "entry": ["steps/*.steps.ts"],
+      "entry": ["src/varar/*.steps.ts"],
       "project": ["**/*.ts"],
       "ignoreDependencies": ["@varar/core"]
     }

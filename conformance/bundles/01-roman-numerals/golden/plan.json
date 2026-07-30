@@ -49,7 +49,7 @@
           "args": [
             {
               "parameterType": "word",
-              "value": "I."
+              "value": "I"
             }
           ],
           "matchSpan": {
@@ -60,12 +60,12 @@
             "startLine": 5,
             "startOffset": 66
           },
-          "matchedExpression": "The result is {word}",
+          "matchedExpression": "The result is {word}.",
           "paramSpans": [
             {
-              "endCol": 48,
+              "endCol": 47,
               "endLine": 5,
-              "endOffset": 82,
+              "endOffset": 81,
               "startCol": 46,
               "startLine": 5,
               "startOffset": 80

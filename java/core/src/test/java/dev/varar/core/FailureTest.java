@@ -19,28 +19,25 @@ class FailureTest {
         String source = "a | 5 |";
         CellDiff.CellMismatchException err = new CellDiff.CellMismatchException(
                 List.of(new CellDiff("n", Span.spanFromOffsets(source, 4, 5), "5", "4", false)));
-        Result.ExampleFailure f = Failure.toFailure(err, "spec.md", 3);
+        Result.ExampleFailure f = Failure.toFailure(err, "oath.md", 3);
         assertEquals(List.of(new Result.CellFailure(4, 5, "4")), f.cells());
-        assertNull(f.doc());
         assertEquals(String.class, f.message().getClass());
         assertEquals(String.class, f.stack().getClass());
     }
 
     @Test
-    void toFailureExtractsDocFromADocStringMismatchException() {
+    void toFailureExtractsADocStringMismatchAsACell() {
         String source = "Hello!\n";
-        DocStringDiff.DocStringMismatchException err = new DocStringDiff.DocStringMismatchException(
-                new DocStringDiff(Span.spanFromOffsets(source, 0, 7), "Hello!\n", "Goodbye!\n"));
-        Result.ExampleFailure f = Failure.toFailure(err, "spec.md", 3);
-        assertEquals(new Result.CellFailure(0, 7, "Goodbye!\n"), f.doc());
-        assertNull(f.cells());
+        CellDiff diff = DocStringDiff.compareDocString("Goodbye!\n", "Hello!\n", Span.spanFromOffsets(source, 0, 7));
+        Result.ExampleFailure f =
+                Failure.toFailure(new CellDiff.CellMismatchException(java.util.List.of(diff)), "oath.md", 3);
+        assertEquals(java.util.List.of(new Result.CellFailure(0, 7, "\"Goodbye!\\n\"")), f.cells());
     }
 
     @Test
-    void toFailureLeavesCellsDocNullForAPlainExceptionOrReturnShapeException() {
-        assertNull(Failure.toFailure(new RuntimeException("nope"), "spec.md", 3).cells());
-        assertNull(Failure.toFailure(new RuntimeException("nope"), "spec.md", 3).doc());
-        assertNull(Failure.toFailure(new CellDiff.ReturnShapeException("bad"), "spec.md", 3)
+    void toFailureLeavesCellsNullForAPlainExceptionOrReturnShapeException() {
+        assertNull(Failure.toFailure(new RuntimeException("nope"), "oath.md", 3).cells());
+        assertNull(Failure.toFailure(new CellDiff.ReturnShapeException("bad"), "oath.md", 3)
                 .cells());
     }
 
@@ -59,12 +56,12 @@ class FailureTest {
     }
 
     @Test
-    void toFailureRegexEscapesTheSpecPathADotIsLiteral() {
+    void toFailureRegexEscapesTheOathPathADotIsLiteral() {
         RuntimeException err = new RuntimeException("boom");
-        // 'X' stands in for the dot: if the spec path's `.` were treated as a regex wildcard it
+        // 'X' stands in for the dot: if the oath path's `.` were treated as a regex wildcard it
         // would match this frame; escaped, it must not.
         err.setStackTrace(new StackTraceElement[] {new StackTraceElement("Step", "run", "aXmd", 7)});
-        // specPath "a.md" must NOT match "aXmd".
+        // oathPath "a.md" must NOT match "aXmd".
         assertEquals(42, Failure.toFailure(err, "a.md", 42).line());
     }
 }

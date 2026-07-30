@@ -13,7 +13,7 @@ export interface Reporter {
 }
 
 // Persistence port for the drift baseline (`varar.lock.json`). The core owns the
-// format (parseVarLock / stringifyVarLock) and reads/writes raw text through
+// format (parseLockFile / stringifyLockFile) and reads/writes raw text through
 // this port, so adapters stay dumb I/O: a filesystem store on Node (CLI,
 // vitest), an in-memory store in the browser. `read` returns the whole
 // lockfile's contents, or null when there is no baseline yet.

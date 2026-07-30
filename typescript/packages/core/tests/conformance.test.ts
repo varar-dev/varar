@@ -3,12 +3,12 @@ import { CellMismatchError } from '../src/cell-diff.ts'
 import {
   canonicalStringify,
   runConformance,
+  toDocArtifact,
   toFailureArtifact,
   toPlanArtifact,
   toRegistryArtifact,
-  toVarDocArtifact,
 } from '../src/conformance.ts'
-import { DocStringMismatchError } from '../src/doc-string-diff.ts'
+import { compareDocString } from '../src/doc-string-diff.ts'
 import { UnexpectedPassError } from '../src/execute.ts'
 import { parse } from '../src/parse.ts'
 import { plan } from '../src/plan.ts'
@@ -46,14 +46,14 @@ test('toFailureArtifact projects a CellMismatchError, anchored at the first fail
   })
 })
 
-test('toFailureArtifact projects a DocStringMismatchError, anchored at the fence body', () => {
-  const err = new DocStringMismatchError({ span: cellSpan, expected: 'a', actual: 'b' })
-  expect(toFailureArtifact(err, matchSpan)).toEqual({
-    kind: 'doc-string-mismatch',
+test('toFailureArtifact projects a doc-string cell as a cell mismatch', () => {
+  const diff = compareDocString('b', 'a', cellSpan)
+  expect(toFailureArtifact(new CellMismatchError([diff!]), matchSpan)).toEqual({
+    kind: 'cell-mismatch',
     line: 7,
     anchor: cellSpan,
     message: 'doc string: expected "a" but was "b"',
-    diff: { expected: 'a', actual: 'b', span: cellSpan },
+    cells: [{ column: 'doc string', expected: '"a"', actual: '"b"', span: cellSpan }],
   })
 })
 
@@ -135,8 +135,8 @@ test('toPlanArtifact projects examples, expectedOutcome and stringified args', (
   expect(art.examples[0]?.steps[0]?.args).toEqual([{ value: '5', parameterType: 'int' }])
 })
 
-test('toVarDocArtifact keeps path, examples and orphanAttachments', () => {
-  const art = toVarDocArtifact(parse('e.md', '# A\n\nI have 5 cukes.'))
+test('toDocArtifact keeps path, examples and orphanAttachments', () => {
+  const art = toDocArtifact(parse('e.md', '# A\n\nI have 5 cukes.'))
   expect(art.path).toBe('e.md')
   expect(Array.isArray(art.examples)).toBe(true)
 })

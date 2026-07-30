@@ -8,8 +8,6 @@ steps do
 
   stimulus("I fly to {airport}") { |_state, dest| { dest: dest } }
 
-  sensor("The destination code is {word}") do |state, expected|
-    cleaned = expected.sub(/[.!?]$/, "")
-    raise "expected #{cleaned} but got #{state[:dest]}" if state[:dest] != cleaned
-  end
+  # The trailing "." is matched literally, so {word} captures just the code.
+  sensor("The destination code is {word}.") { |state, _expected| state[:dest] }
 end

@@ -7,12 +7,12 @@
   <parent>
     <groupId>dev.varar</groupId>
     <artifactId>parent</artifactId>
-    <version>0.6.2-SNAPSHOT</version>
+    <version>0.7.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>runner</artifactId>
   <packaging>jar</packaging>
-  <name>var-runner (Java) — shared imperative shell</name>
+  <name>varar-runner (Java) — shared imperative shell</name>
   <description>
     Config, discovery, step loading, run orchestration, and failure rendering for
     var test-runner adapters. Depends only on var (no JUnit-Platform types — that

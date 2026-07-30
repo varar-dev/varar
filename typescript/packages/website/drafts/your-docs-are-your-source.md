@@ -33,7 +33,7 @@ Sensors are often implemented as automated tests, which is great.
 
 ### Sensoring guides
 
-What happens to the spec after the agent has finished, rolled over to the side and taken the whole blanket?
+What happens to the oath after the agent has finished, rolled over to the side and taken the whole blanket?
 
 Why keep it? It's just dead weight now. Let's extract relevant parts to an ADR and be done with it.
 
@@ -54,12 +54,12 @@ Varar ensures you have no drift. She is a norse goddess of oaths and agreements.
 
 You get the picture. You don't want her knocking on your door, trust me.
 
-### Refactoring the spec
+### Refactoring the oath
 
 You can get an agent to do this. Tell it something along the lines of:
 
 > You are going to update our executable documentation based on the work you just completed.
-> Identify relevant parts of the spec, the plan, the code and the unit tests you wrote.
+> Identify relevant parts of the oath, the plan, the code and the unit tests you wrote.
 > 
 > If you have an example map, use that too. It deeply influences how the documentation is *formulated*.
 > If not, imagine one from everything else.

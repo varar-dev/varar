@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Varar.Core;
 
-/// <summary>One header-bound column check: the executor compares a step's returned column against it.</summary>
+/// <summary>One header-bound cell check: the executor compares a step's returned cell against it.</summary>
 public sealed record RowCheck(string Column, string Value, Span Span);
 
 /// <summary>The verdict for one compared cell. Only Column/Span/Expected/Actual/Ok are serialized.</summary>
@@ -18,7 +18,7 @@ public sealed record CellDiff(
     Value? ActualValue = null,
     bool Formatted = false);
 
-/// <summary>Thrown when a header-bound row's / whole-table's returned columns don't all match.</summary>
+/// <summary>Thrown when one or more compared cells differ — an inline capture, a table cell, or a header-bound row's cell.</summary>
 public sealed class CellMismatchError(ImmutableArray<CellDiff> cells)
     : Exception(string.Join("; ", cells.Select(c => $"{c.Column}: expected {c.Expected} but was {c.Actual}")))
 {

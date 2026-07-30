@@ -5,8 +5,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
-use varar_config::{VarConfig, read_var_config};
-use varar_core::canonical_json::canonical_stringify;
+use varar_config::{Config, read_config};
+use varar_core::json_value::parse_json_value;
 use varar_core::value::Value;
 
 fn cases_dir() -> PathBuf {
@@ -17,8 +17,8 @@ fn list(strings: &[String]) -> Value {
     Value::List(strings.iter().map(|s| Value::from(s.as_str())).collect())
 }
 
-/// Project to `{ docs: { include, exclude }, steps, snippets, scannerPlugins }`.
-fn artifact(config: &VarConfig) -> Value {
+/// Project to `{ docs: { include, exclude }, steps, snippets }`.
+fn artifact(config: &Config) -> Value {
     let docs = Value::map(vec![
         ("include".to_string(), list(&config.docs_include)),
         ("exclude".to_string(), list(&config.docs_exclude)),
@@ -33,7 +33,6 @@ fn artifact(config: &VarConfig) -> Value {
         ("docs".to_string(), docs),
         ("steps".to_string(), list(&config.steps)),
         ("snippets".to_string(), snippets),
-        ("scannerPlugins".to_string(), list(&config.scanner_plugins)),
     ])
 }
 
@@ -50,7 +49,7 @@ fn config_cases_match_golden() {
     let mut fails = Vec::new();
     for dir in dirs {
         let name = dir.file_name().unwrap().to_string_lossy().into_owned();
-        let result = read_var_config(&dir);
+        let result = read_config(&dir);
         if dir.join("expect-error.txt").is_file() {
             if result.is_ok() {
                 fails.push(format!("{name}: expected an error, got Ok"));
@@ -60,9 +59,11 @@ fn config_cases_match_golden() {
         match result {
             Err(e) => fails.push(format!("{name}: unexpected error: {e}")),
             Ok(config) => {
-                let actual = canonical_stringify(&artifact(&config));
-                let expected = fs::read_to_string(dir.join("golden.json")).unwrap();
-                if actual != expected {
+                // By CONTENT, not bytes — see the note in core's doc gate.
+                let expected =
+                    parse_json_value(&fs::read_to_string(dir.join("golden.json")).unwrap())
+                        .expect("golden.json is valid JSON");
+                if artifact(&config) != expected {
                     fails.push(format!("{name}: golden mismatch"));
                 }
             }

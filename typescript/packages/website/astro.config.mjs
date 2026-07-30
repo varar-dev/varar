@@ -8,7 +8,7 @@ import { defineConfig } from 'astro/config'
 import starlightLlmsTxt from 'starlight-llms-txt'
 import languages from '../../../languages.json' with { type: 'json' }
 
-// The repo root: pages ?raw-import the language-neutral example specs from
+// The repo root: pages ?raw-import the language-neutral example oaths from
 // doc/examples/, which sits above the typescript/ workspace (Vite's default
 // fs.allow boundary), so the dev server must be allowed to read it.
 const repoRoot = fileURLToPath(new URL('../../..', import.meta.url))
@@ -43,6 +43,14 @@ const restorePrefs = () => ({
 // https://astro.build/config
 export default defineConfig({
   site: 'https://varar.dev',
+  // The project was renamed var → varar, and "spec" became "oath"; these pages
+  // carried the old names in their URL. Keep the published links working.
+  redirects: {
+    '/tutorials/try-var': '/tutorials/try-varar',
+    '/tutorials/first-spec': '/tutorials/first-oath',
+    '/explanation/var-overview': '/explanation/varar-overview',
+    '/explanation/var-for-cucumber-users': '/explanation/varar-for-cucumber-users',
+  },
   integrations: [
     restorePrefs(),
     sitemap(),
@@ -62,7 +70,7 @@ export default defineConfig({
             'stimulus (arrange/act) and sensor (assert) — never to Given/When/Then ' +
             'keywords. A sensor returns a value and the pure core compares it ' +
             'against what the Markdown says, failing with span-anchored diffs. ' +
-            'One language-neutral spec corpus runs across every port (TypeScript, ' +
+            'One language-neutral oath corpus runs across every port (TypeScript, ' +
             'Python, Java, Kotlin, Ruby, Rust, .NET, Go) via test-framework adapters.',
         }),
       ],
@@ -80,7 +88,7 @@ export default defineConfig({
       sidebar: [
         {
           label: 'Start here',
-          items: ['tutorials/try-var', 'tutorials/get-started', 'tutorials/first-spec'],
+          items: ['tutorials/try-varar', 'tutorials/get-started', 'tutorials/first-oath'],
         },
         {
           label: 'How-to guides',
@@ -95,6 +103,7 @@ export default defineConfig({
           label: 'Reference',
           items: [
             'reference/examples',
+            'reference/configuration',
             'reference/stimuli',
             'reference/sensors',
             'reference/custom-parameters',
@@ -105,11 +114,13 @@ export default defineConfig({
         {
           label: 'Understanding Varar',
           items: [
+            'explanation/varar-overview',
             'explanation/oaths',
             'explanation/test-anatomy',
             'explanation/thin-steps',
             'explanation/markup-is-yours',
-            'explanation/var-for-cucumber-users',
+            'explanation/no-theatre',
+            'explanation/varar-for-cucumber-users',
           ],
         },
       ],

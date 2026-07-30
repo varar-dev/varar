@@ -15,11 +15,10 @@ require 'varar/internal'
 # The initial state is optional — omit it entirely for stateless step files —
 # but when given it MUST be a Proc/lambda, called fresh for every example. A
 # Hash was previously accepted and closed over a single object shared by every
-# example in the file; nested values `deep_freeze` does not recurse into (it
-# only descends Hash and Array) were then mutable and shared. Requiring a
-# factory makes freshness structural rather than something the deep-freeze has
-# to defend. The state is keyed by the calling file so contexts never bleed
-# across step files.
+# example in the file, so one example could see another's mutations. Requiring
+# a factory makes freshness structural — which is the whole guarantee, since
+# Varar hands the state to handlers untouched and never freezes it. The state
+# is keyed by the calling file so contexts never bleed across step files.
 module Kernel
   private
 

@@ -3,7 +3,7 @@ import type { HandlerParams } from '../step-defs.ts'
 import type { LanguageSpec } from './types.ts'
 
 // Verified against tree-sitter-rust 0.24.0 and all 15 conformance bundles
-// (2026-07-12). Rust authors steps through the `var::Steps` builder, so a step
+// (2026-07-12). Rust authors steps through the `varar::Steps` builder, so a step
 // def is a method call `s.stimulus(...)` / `s.sensor(...)` — the method name is
 // the kind, matching every other port. The expression is the FIRST string
 // argument (anchored with `.`), so string literals inside the handler closure

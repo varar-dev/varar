@@ -41,7 +41,7 @@ public class StepsTests
 
     /// <summary>
     /// The overload ladder must reach far enough for the shared "two or more slots" rule. Capped
-    /// at two captures, a spec with three inline parameters plus a trailing table ran in the
+    /// at two captures, an oath with three inline parameters plus a trailing table ran in the
     /// dynamic ports but would not compile here.
     /// </summary>
     [Fact]

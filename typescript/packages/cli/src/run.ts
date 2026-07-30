@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs'
 import { relative, sep } from 'node:path'
-import { findFiles, loadVarConfig } from '@varar/config'
-import { type Diagnostic, driftDiagnostics, reconcileDrift } from '@varar/core'
-import { createFileBaselineStore, examplesWithRuns, loadSteps, planSpec } from '@varar/runner'
+import { findFiles, loadConfig } from '@varar/config'
+import { type Diagnostic, driftDiagnostics, pruneBaselines, reconcileDrift } from '@varar/core'
+import { createFileBaselineStore, examplesWithRuns, loadSteps, planOath } from '@varar/runner'
 
 export type RunOptions = {
   readonly cwd: string
@@ -10,31 +10,31 @@ export type RunOptions = {
   readonly writeStderr: (s: string) => void
   readonly globs?: ReadonlyArray<string> | undefined
   // Accept all current drift and re-record the baseline (snapshot-update
-  // semantics). Also enabled by the VAR_UPDATE environment variable.
+  // semantics). Also enabled by the VARAR_UPDATE environment variable.
   readonly update?: boolean
 }
 
 export type RunResult = { readonly exitCode: number }
 
 export async function runRun(opts: RunOptions): Promise<RunResult> {
-  const cfg = await loadVarConfig(opts.cwd)
+  const cfg = await loadConfig(opts.cwd)
   // A CLI `--globs` override is include-only; excludes live in varar.config.json.
-  const varGlobs =
+  const globs =
     opts.globs && opts.globs.length > 0 ? { include: opts.globs, exclude: [] } : cfg.docs
-  const varFiles = findFiles(opts.cwd, varGlobs.include, varGlobs.exclude)
+  const oathFiles = findFiles(opts.cwd, globs.include, globs.exclude)
 
   const { registry, createContext } = await loadSteps(cfg.steps, opts.cwd)
   const baselineStore = createFileBaselineStore(opts.cwd)
   const update =
-    opts.update === true || process.env.VAR_UPDATE === '1' || process.env.VAR_UPDATE === 'true'
+    opts.update === true || process.env.VARAR_UPDATE === '1' || process.env.VARAR_UPDATE === 'true'
 
   let passed = 0
   let failed = 0
   let errorDiagnostics = 0
 
-  for (const path of varFiles) {
+  for (const path of oathFiles) {
     const source = readFileSync(path, 'utf8')
-    const execution = planSpec(path, source, registry, cfg.scannerPlugins)
+    const execution = planOath(path, source, registry)
 
     const reporter = {
       diagnostic: (d: Diagnostic) => {
@@ -64,16 +64,32 @@ export async function runRun(opts: RunOptions): Promise<RunResult> {
     // Reconcile drift against the committed baseline. On a clean run this
     // records/updates varar.lock.json; an unacknowledged drift is reported as an
     // error diagnostic (non-zero exit) and leaves the baseline untouched.
-    const specPath = rel.split(sep).join('/')
+    const oathPath = rel.split(sep).join('/')
     const drifts = await reconcileDrift({
       store: baselineStore,
-      specPath,
+      oathPath,
       source,
-      varDoc: execution.varDoc,
+      doc: execution.doc,
       plan: execution,
       update,
     })
     for (const d of driftDiagnostics(drifts)) reporter.diagnostic(d)
+  }
+
+  // Drop baselines for oaths the config no longer discovers — reconciliation is
+  // per-oath and cannot see a path that has gone (#70). Keyed off cfg.docs, NOT
+  // oathFiles: a `--globs` run is a filtered view, and pruning against it would
+  // delete live baselines. Only `--update` writes; a plain run just reports.
+  const configured = findFiles(opts.cwd, cfg.docs.include, cfg.docs.exclude).map((p) =>
+    (relative(opts.cwd, p) || p).split(sep).join('/'),
+  )
+  const pruned = await pruneBaselines({ store: baselineStore, keepPaths: configured, update })
+  for (const path of pruned) {
+    opts.writeStderr(
+      update
+        ? `varar: pruned ${path} from varar.lock.json (no longer matched by docs globs)\n`
+        : `varar: varar.lock.json still lists ${path}, which the docs globs no longer match — re-run with --update to prune it\n`,
+    )
   }
 
   const total = passed + failed

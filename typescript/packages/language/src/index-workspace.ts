@@ -5,17 +5,13 @@ import {
   parse,
   plan,
   type Registry,
-  type ScannerPlugin,
 } from '@varar/core'
 import type { StepDefScanner } from './scanner.ts'
 import type { Range, StepDef } from './step-defs.ts'
 
 export type WorkspaceInput = {
   readonly stepFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>
-  readonly varFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>
-  // Optional: opt-in scanner extensions (e.g. Gherkin tables, Gherkin doc
-  // strings) sourced from varar.config.json. Empty/omitted = pure markdown.
-  readonly scannerPlugins?: ReadonlyArray<ScannerPlugin>
+  readonly oathFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>
   // The step-def scanner. Always the tree-sitter scanner
   // (createTreeSitterScanner); callers build it at their async shell edge with
   // an environment-specific GrammarLoader and pass the resolved instance here.
@@ -25,11 +21,15 @@ export type WorkspaceInput = {
 export type MatchRef = {
   readonly varPath: string
   readonly range: Range
+  // The range of the value passed to the handler for each parameter — the
+  // inner capture group, e.g. `world` for `{string}` matching `"world"` (the
+  // quotes are excluded). What editors highlight. Same order as the cucumber
+  // expression's parameter list.
   readonly paramRanges: ReadonlyArray<Range>
-  // The captured value for each parameter, sliced from the .md source at
-  // index time. Same order as `paramRanges` and the cucumber expression's
-  // parameter list. Used by the rename refactor to preserve values across
-  // expressions whose parameter list survives the edit.
+  // The full matched notation for each parameter, incl. delimiters (e.g. the
+  // quotes), sliced from the .md source at index time. Same order as
+  // `paramRanges` but a wider span. Used by the rename refactor to preserve
+  // values verbatim across expressions whose parameter list survives the edit.
   readonly paramValues: ReadonlyArray<string>
   // Present only on header-binding matches: one range per header cell, located
   // in the table's header row. Kept separate from `paramRanges` because that
@@ -102,9 +102,9 @@ export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
   const matches: MatchRef[] = []
   const diagnostics: DiagnosticRef[] = []
 
-  for (const file of input.varFiles) {
-    const varDoc = parse(file.path, file.source, input.scannerPlugins ?? [])
-    const result = plan(varDoc, registry)
+  for (const file of input.oathFiles) {
+    const doc = parse(file.path, file.source)
+    const result = plan(doc, registry)
     // Header-bound tables expand to one example per row, all sharing the same
     // binding paragraph. For highlighting we want the paragraph (with its
     // header-cell words as parameters) once — not the per-row table lines the
@@ -140,7 +140,9 @@ export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
         matches.push({
           varPath: file.path,
           range: toRange(step.matchSpan),
-          paramRanges: step.paramSpans.map(toRange),
+          // Highlight only the value passed to the handler (inner capture
+          // group); paramValues keeps the full notation for rename.
+          paramRanges: step.paramInnerSpans.map(toRange),
           paramValues: step.paramSpans.map((s) => file.source.slice(s.startOffset, s.endOffset)),
           stepDef: def,
         })

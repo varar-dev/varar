@@ -34,24 +34,8 @@ public final class NumeralsSteps implements StepDefinitions<NumeralsSteps.Ctx> {
                 "I convert {int} to roman numerals",
                 (Ctx ctx, Integer n) -> new Ctx(ROMAN.get(n)));
 
-        s.sensor(
-                "The result is {word}",
-                (Ctx ctx, String expected) -> {
-                    // {word} greedily captures trailing sentence punctuation when it's not
-                    // separated by whitespace (the source reads "The result is I." — the
-                    // captured word is "I.", not "I"; confirmed against golden/plan.json's
-                    // args[0].value). Mirrors numerals.steps.ts's identical cleanup, which
-                    // strips it before comparing, then throws directly rather than
-                    // returning a value for the generic "compare against the last captured
-                    // param" convenience to check (that convenience compares the RAW
-                    // captured source text, punctuation and all, which would wrongly fail
-                    // here) — returning null opts out of it, matching TS's sensor, which
-                    // never returns from this handler either.
-                    String cleaned = expected.replaceAll("[.!?]$", "");
-                    if (!cleaned.equals(ctx.result())) {
-                        throw new AssertionError("expected " + cleaned + " but got " + ctx.result());
-                    }
-                    return null;
-                });
+        // The trailing "." is matched literally, so {word} captures just the
+        // numeral and this sensor returns the observed value for the core.
+        s.sensor("The result is {word}.", (Ctx ctx, String expected) -> ctx.result());
     }
 }

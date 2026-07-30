@@ -9,17 +9,17 @@ module Varar
   module Runner
     ::RSpec.describe CLI do
       describe '.run_init' do
-        it 'scaffolds the config, spec, steps and an RSpec bridge' do
+        it 'scaffolds the config, oath, steps and an RSpec bridge' do
           Dir.mktmpdir do |dir|
             out = StringIO.new
             code = described_class.run_init(dir, out, framework: :rspec)
 
             expect(code).to eq(0)
             expect(File.exist?(File.join(dir, 'varar.config.json'))).to be(true)
-            expect(File.exist?(File.join(dir, 'varar-examples/01-hello.md'))).to be(true)
-            steps = File.read(File.join(dir, 'varar-examples/steps/01-hello.steps.rb'))
-            expect(steps).to include("steps(-> { { greeting: '' } }) do", 'stimulus(', 'sensor(')
-            expect(File.read(File.join(dir, 'spec/var_spec.rb'))).to include('Varar::RSpec.generate')
+            expect(File.exist?(File.join(dir, 'varar/deep-thought.md'))).to be(true)
+            steps = File.read(File.join(dir, 'spec/varar/deep_thought.steps.rb'))
+            expect(steps).to include('steps do', 'sensor(')
+            expect(File.read(File.join(dir, 'spec/varar_spec.rb'))).to include('Varar::RSpec.generate')
             expect(out.string).to include('created varar.config.json')
           end
         end
@@ -27,8 +27,9 @@ module Varar
         it 'writes a Minitest bridge when that framework is selected' do
           Dir.mktmpdir do |dir|
             described_class.run_init(dir, StringIO.new, framework: :minitest)
-            expect(File.exist?(File.join(dir, 'test/var_test.rb'))).to be(true)
-            expect(File.exist?(File.join(dir, 'spec/var_spec.rb'))).to be(false)
+            expect(File.exist?(File.join(dir, 'test/varar_test.rb'))).to be(true)
+            expect(File.exist?(File.join(dir, 'test/varar/deep_thought.steps.rb'))).to be(true)
+            expect(File.exist?(File.join(dir, 'spec/varar_spec.rb'))).to be(false)
           end
         end
 

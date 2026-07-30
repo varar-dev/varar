@@ -32,7 +32,7 @@ def _(state, count, db):
     return len(db)
 """
 
-SPEC = """\
+OATH = """\
 # Fixture Bridge
 
 ## saves to db and tmp_path
@@ -42,14 +42,14 @@ I save 2
 db has 2 entries
 """
 
-def _write_fixture(pytester, spec_content: str, steps_content: str) -> None:
+def _write_fixture(pytester, oath_content: str, steps_content: str) -> None:
     (pytester.path / "varar.config.json").write_text(VAR_CONFIG, encoding="utf-8")
     (pytester.path / "steps").mkdir(exist_ok=True)
-    (pytester.path / "steps" / "spec.steps.py").write_text(
+    (pytester.path / "steps" / "oath.steps.py").write_text(
         steps_content.strip(), encoding="utf-8"
     )
     (pytester.path / "features").mkdir(exist_ok=True)
-    (pytester.path / "features" / "spec.md").write_text(spec_content, encoding="utf-8")
+    (pytester.path / "features" / "oath.md").write_text(oath_content, encoding="utf-8")
 
 
 # Also create a conftest with a custom db fixture
@@ -65,7 +65,7 @@ def db():
 def test_fixtures_injected_into_step_handlers(pytester):
     """db and tmp_path fixtures are injected; {int} capture stays positional."""
     pytester.makeconftest(CONFTEST)
-    _write_fixture(pytester, SPEC, STEPS)
+    _write_fixture(pytester, OATH, STEPS)
     result = pytester.runpytest("-v")
     result.assert_outcomes(passed=1)
 
@@ -89,7 +89,7 @@ def _(state, expected, db):
     return expected
 """
 
-CLASSIFICATION_SPEC = """\
+CLASSIFICATION_OATH = """\
 # Classification
 
 ## captured arg and fixture coexist
@@ -102,6 +102,6 @@ db contains 42
 def test_classification_captured_and_fixture(pytester):
     """n is bound from {int} capture; db is injected as fixture — they coexist."""
     pytester.makeconftest(CONFTEST)
-    _write_fixture(pytester, CLASSIFICATION_SPEC, CLASSIFICATION_STEPS)
+    _write_fixture(pytester, CLASSIFICATION_OATH, CLASSIFICATION_STEPS)
     result = pytester.runpytest("-v")
     result.assert_outcomes(passed=1)

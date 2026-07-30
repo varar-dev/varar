@@ -15,7 +15,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * Confirms {@link Run#planSpec} and {@link Run#examplesWithRuns} bridge {@code
+ * Confirms {@link Run#planOath} and {@link Run#examplesWithRuns} bridge {@code
  * Plan.plan}/{@code Execute.collectExamples} into runnable {@link Run.ExampleRun} pairs,
  * using a real {@link WidgetSteps} fixture loaded via {@link StepLoader} — a passing
  * example's {@code run()} completes silently, and a genuinely mismatching example's
@@ -33,10 +33,10 @@ class RunTest {
     }
 
     @Test
-    void planSpecParsesAndPlansInOneStep() {
+    void planOathParsesAndPlansInOneStep() {
         LoadedSteps loaded = loadWidgetSteps();
         String source = "# Widgets\n\nI have 3 widgets. I should have 3 widgets.";
-        Plan.ExecutionPlan plan = Run.planSpec("widgets.md", source, loaded.registry());
+        Plan.ExecutionPlan plan = Run.planOath("widgets.md", source, loaded.registry());
         assertEquals(1, plan.examples().size());
         assertEquals(0, plan.diagnostics().size());
     }
@@ -46,7 +46,7 @@ class RunTest {
         LoadedSteps loaded = loadWidgetSteps();
         String source = "# Widgets\n\nI have 3 widgets. I should have 3 widgets.\n\n"
                 + "# More widgets\n\nI have 9 widgets. I should have 9 widgets.";
-        Plan.ExecutionPlan plan = Run.planSpec("widgets.md", source, loaded.registry());
+        Plan.ExecutionPlan plan = Run.planOath("widgets.md", source, loaded.registry());
 
         Run.RecordingReporter reporter = new Run.RecordingReporter();
         List<Run.ExampleRun> runs = Run.examplesWithRuns(plan, loaded.createContext(), reporter);
@@ -64,10 +64,10 @@ class RunTest {
     @Test
     void examplesWithRunsSurfacesARealCellMismatchExceptionOnAFailingExample() {
         LoadedSteps loaded = loadWidgetSteps();
-        // The sensor reports 3, but the spec asserts 4 — a genuine mismatch the core
+        // The sensor reports 3, but the oath asserts 4 — a genuine mismatch the core
         // pipeline detects itself, not a hand-thrown generic exception.
         String source = "# Widgets\n\nI have 3 widgets. I should have 4 widgets.";
-        Plan.ExecutionPlan plan = Run.planSpec("widgets.md", source, loaded.registry());
+        Plan.ExecutionPlan plan = Run.planOath("widgets.md", source, loaded.registry());
 
         List<Run.ExampleRun> runs = Run.examplesWithRuns(plan, loaded.createContext(), new Run.RecordingReporter());
         assertEquals(1, runs.size());
@@ -87,7 +87,7 @@ class RunTest {
         LoadedSteps loaded = loadWidgetSteps();
         Registry ambiguousRegistry =
                 Registry.addStep(loaded.registry(), "I have 3 widgets", "extra.ts", 1, NOOP_HANDLER, StepKind.STIMULUS);
-        Plan.ExecutionPlan plan = Run.planSpec("widgets.md", "# Widgets\n\nI have 3 widgets.", ambiguousRegistry);
+        Plan.ExecutionPlan plan = Run.planOath("widgets.md", "# Widgets\n\nI have 3 widgets.", ambiguousRegistry);
         assertEquals(1, plan.diagnostics().size());
         assertEquals(
                 Diagnostics.DiagnosticCode.AMBIGUOUS_MATCH,

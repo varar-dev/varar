@@ -4,10 +4,10 @@ The vitest adapter for Varar. Wire the plugin into your `vitest.config.ts` so `.
 files run as tests, and add the results reporter:
 
 ```ts
-import varPlugin from '@varar/vitest'
-import { VarResultsReporter } from '@varar/vitest/reporter'
+import vararPlugin from '@varar/vitest'
+import { VararResultsReporter } from '@varar/vitest/reporter'
 
-export default { plugins: [varPlugin()], test: { reporters: ['default', new VarResultsReporter()] } }
+export default { plugins: [vararPlugin()], test: { reporters: ['default', new VararResultsReporter()] } }
 ```
 
 Write your step definitions against `@varar/varar`, not this package.

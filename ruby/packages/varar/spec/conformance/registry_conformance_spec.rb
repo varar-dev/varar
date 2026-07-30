@@ -1,5 +1,7 @@
 # frozen_string_literal: true
 
+require 'json'
+
 require 'spec_helper'
 require 'varar'
 require 'varar/registry'
@@ -28,10 +30,8 @@ module Varar
         RegistryGlue.reset_builder
         load steps_rb
         registry = RegistryGlue.build_registry
-        actual = Core::CanonicalJson.canonical_stringify(
-          Core::Conformance.to_registry_artifact(registry, RegistryGlue.custom_parameter_types)
-        )
-        expect(actual).to eq(File.read(golden, encoding: 'UTF-8'))
+        actual = Core::Conformance.to_registry_artifact(registry, RegistryGlue.custom_parameter_types)
+        expect(actual).to eq(JSON.parse(File.read(golden, encoding: 'UTF-8')))
       end
     end
   end

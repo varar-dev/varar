@@ -1,0 +1,29 @@
+name: Port parity
+
+# Every capability conformance/parity.json declares must exist in every port it
+# names. The golden corpora catch a port that BEHAVES differently; nothing
+# caught a port that never implemented something at all — `result` and `failure`
+# lived in four of seven ports for months, because no golden mentioned them
+# (ADR 0014). This is the net for that class.
+#
+# Cheap and language-free (jq over one manifest), so it runs on every push and
+# pull request rather than inside a port's own workflow.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: parity-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check port parity
+        run: release/check-parity.sh

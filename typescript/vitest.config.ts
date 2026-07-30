@@ -1,9 +1,9 @@
 import { defineConfig } from 'vitest/config'
-import { VarResultsReporter } from './packages/vitest/src/reporter.js'
+import { VararResultsReporter } from './packages/vitest/src/reporter.js'
 
 // The reporter's cwd is the REPO root (not typescript/): varar.config.json lives
-// there, and spec paths in .var/ results must stay relative to it (no `..`
-// segments) now that the spec corpus is doc/examples/ at the repo root.
+// there, and oath paths in .varar/ results must stay relative to it (no `..`
+// segments) now that the oath corpus is doc/examples/ at the repo root.
 const repoRoot = new URL('..', import.meta.url).pathname
 
 // Vitest 4 replaced `vitest.workspace.ts` + `defineWorkspace` with `test.projects`.
@@ -11,7 +11,7 @@ const repoRoot = new URL('..', import.meta.url).pathname
 export default defineConfig({
   test: {
     projects: ['packages/*/vitest.config.ts', '../examples/typescript-vitest/vitest.config.ts'],
-    reporters: ['default', new VarResultsReporter({ cwd: repoRoot })],
+    reporters: ['default', new VararResultsReporter({ cwd: repoRoot })],
     // Coverage is root-level in vitest 4 workspace mode, like reporters.
     // Opt-in via `pnpm test:coverage`; reports land in coverage/ (text
     // summary + HTML + lcov for editor/CI integrations).

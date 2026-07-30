@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 require 'varar/core/span'
-require 'varar/core/deep_freeze'
 require 'varar/core/cell_diff'
 require 'varar/core/doc_string_diff'
 require 'varar/core/param_diff'
@@ -43,7 +42,7 @@ module Varar
       def execute_plan(plan, sink:, create_context:, observer: nil, reporter: nil)
         plan.diagnostics.each { |d| reporter.call(d) } if reporter
         create_ctx = create_context || ->(_file) { {} }
-        var_path = plan.var_doc.path
+        var_path = plan.doc.path
 
         plan.examples.each_with_index do |ex, example_index|
           seen_lines = {}
@@ -61,7 +60,7 @@ module Varar
 
           ex.steps.each_with_index do |step, i|
             file = step.step_def.expression_source_file
-            state_by_file[file] = DeepFreeze.deep_freeze(create_ctx.call(file)) unless state_by_file.key?(file)
+            state_by_file[file] = create_ctx.call(file) unless state_by_file.key?(file)
             state = state_by_file[file]
 
             extra = []
@@ -76,9 +75,12 @@ module Varar
               last_return = returned
               case step.step_def.kind
               when 'stimulus'
-                # Full replacement: the returned Hash IS the next state (deep-frozen).
-                # There is no merge — a return with fewer keys shrinks the state.
-                # nil is a no-op; any other type is a contract violation.
+                # Full replacement: the returned Hash IS the next state. There is
+                # no merge — a return with fewer keys shrinks the state. nil is a
+                # no-op; any other type is a contract violation.
+                #
+                # The state is the author's own value, handed back untouched: we
+                # do not freeze it. Whether it is immutable is the author's call.
                 unless returned.nil?
                   unless returned.is_a?(Hash)
                     raise ReturnShapeError,
@@ -86,11 +88,11 @@ module Varar
                           'or nothing to leave it unchanged'
                   end
 
-                  state = DeepFreeze.deep_freeze(returned)
+                  state = returned
                   state_by_file[file] = state
                 end
               when 'sensor'
-                compare_sensor_return(plan, ex, step, returned, extra) if ex.row_checks.nil? && !returned.nil?
+                compare_sensor_return(plan, ex, step, returned, extra) if ex.row_checks.nil?
               else
                 raise ReturnShapeError, "unknown step kind: #{step.step_def.kind}"
               end
@@ -106,10 +108,16 @@ module Varar
 
           # Header-bound row checks (after all steps).
           if thrown.nil? && ex.row_checks && !ex.row_checks.empty?
+            # Like a slotted sensor, a header-bound row step must answer the row
+            # it is bound to: no return means nothing was compared.
+            row_error = if last_return.nil?
+                          ReturnShapeError.new('a header-bound row step must return a row object ' \
+                                               'with one value per bound cell, got nothing')
+                        end
             bad = CellDiffs.compare_row(last_return, ex.row_checks).reject(&:ok)
-            unless bad.empty?
+            if row_error || !bad.empty?
               last_step = ex.steps.last
-              augmented = augment_stack(CellMismatchError.new(bad), last_step, var_path)
+              augmented = augment_stack(row_error || CellMismatchError.new(bad), last_step, var_path)
               observer&.call(observation(ex, example_index, ex.steps.length,
                                          last_step.step_def.expression_source_file, 'fail', augmented))
               thrown = augmented
@@ -133,12 +141,22 @@ module Varar
       end
 
       # Sensor slot contract: zero slots + a return is a mistake; one slot IS
-      # the return; two+ is a positional array. Raises the appropriate diff error.
+      # the return; two+ is a positional array. With one or more slots the
+      # return is REQUIRED — returning nothing used to skip the comparison
+      # silently, so a typo turned an assertion into a no-op. Raises the
+      # appropriate diff error.
       def compare_sensor_return(plan, _ex, step, returned, extra)
         slot_count = step.args.length + extra.length
         if slot_count.zero?
+          return if returned.nil?
+
           raise ReturnShapeError, 'this sensor has no parameters, data table or doc string — ' \
                                   'nothing to compare a return value against (raise to fail, return nothing to pass)'
+        end
+
+        if returned.nil?
+          raise ReturnShapeError,
+                "a sensor with #{slot_count} slot(s) must return one value per slot, got nothing"
         end
 
         if slot_count == 1
@@ -146,7 +164,7 @@ module Varar
         else
           unless returned.is_a?(Array)
             raise ReturnShapeError,
-                  "a sensor with #{slot_count} parameters must return a list of " \
+                  "a sensor with #{slot_count} slots must return a list of " \
                   "#{slot_count} values, got #{returned.class}"
           end
           unless returned.length == slot_count
@@ -159,7 +177,7 @@ module Varar
 
         inline_returned = slots[0...step.args.length]
         source_texts = step.param_spans.map do |s|
-          Offsets.utf16_slice(plan.var_doc.source, s.start_offset, s.end_offset)
+          Offsets.utf16_slice(plan.doc.source, s.start_offset, s.end_offset)
         end
         param_diffs = ParamDiff.compare_params(inline_returned, step.args, step.param_spans, source_texts,
                                                step.formats).reject(&:ok)
@@ -171,7 +189,7 @@ module Varar
         elsif step.doc_string
           diff = DocStringDiffs.compare_doc_string(slots[step.args.length], step.doc_string.content,
                                                    step.doc_string.span)
-          raise DocStringMismatchError, diff unless diff.nil?
+          raise CellMismatchError, [diff] unless diff.nil?
         end
       end
 
@@ -181,9 +199,12 @@ module Varar
       end
 
       # In TS this injects a synthetic `at <text> (path:line:col)` frame for
-      # editor navigation; the conformance trace derives the anchor separately
-      # via failure_anchor, so here it is a no-op that returns the error.
-      def augment_stack(error, _step, _var_path)
+      # editor navigation. Ruby has no writable stack text to splice into, so
+      # it records the anchor structurally instead — the failing step's span
+      # (or the first mismatched cell's), which Failures.to_failure reads back
+      # so a renderer underlines the step and not its whole line.
+      def augment_stack(error, step, _var_path)
+        FailureAnchor.attach_anchor(error, FailureAnchor.failure_anchor(error, step.match_span))
         error
       end
     end

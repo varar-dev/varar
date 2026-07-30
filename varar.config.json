@@ -1,8 +1,8 @@
 {
   "$schema": "conformance/config/varar.config.schema.json",
   "docs": {
-    "include": ["examples/typescript-vitest/*.md"],
-    "exclude": ["examples/typescript-vitest/README.md"]
+    "include": ["examples/typescript-vitest/varar/**/*.md"],
+    "exclude": []
   },
-  "steps": ["examples/typescript-vitest/steps/*.steps.ts"]
+  "steps": ["examples/typescript-vitest/src/varar/**/*.steps.ts"]
 }

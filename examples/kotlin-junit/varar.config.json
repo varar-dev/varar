@@ -2,18 +2,11 @@
   "$schema": "../../conformance/config/varar.config.schema.json",
   "docs": {
     "include": [
-      "*.md"
+      "varar/**/*.md"
     ],
-    "exclude": [
-      "README.md"
-    ]
+    "exclude": []
   },
   "steps": [
-    "examples.DeepThoughtSteps",
-    "examples.HelloVarSteps",
-    "examples.LibrarySteps",
-    "examples.RomanNumeralsSteps",
-    "examples.TablesAndDocStringsSteps",
-    "examples.YahtzeeSteps"
+    "varar.*"
   ]
 }

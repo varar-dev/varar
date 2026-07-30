@@ -25,7 +25,7 @@ test('cross-references matched substrings in .md to their step defs', () => {
 `,
       },
     ],
-    varFiles: [
+    oathFiles: [
       {
         path: '/abs/belly.md',
         source: '# Belly\n\nGiven I have 5 cukes',
@@ -44,7 +44,7 @@ test('cross-references matched substrings in .md to their step defs', () => {
 test('an unmatched keyword-led sentence produces NO diagnostic (no Given/When/Then heuristic)', () => {
   const idx = build({
     stepFiles: [],
-    varFiles: [{ path: '/m.md', source: '# M\n\nGiven I have 5 cukes' }],
+    oathFiles: [{ path: '/m.md', source: '# M\n\nGiven I have 5 cukes' }],
   })
   expect(idx.diagnostics).toEqual([])
 })
@@ -59,14 +59,14 @@ stimulus('I have {int} {word}', () => {})
 `,
       },
     ],
-    varFiles: [{ path: '/a.md', source: '# Ambig\n\nGiven I have 5 cukes' }],
+    oathFiles: [{ path: '/a.md', source: '# Ambig\n\nGiven I have 5 cukes' }],
   })
   const codes = idx.diagnostics.map((d) => d.code)
   expect(codes).toContain('ambiguous-match')
 })
 
 test('the index is empty for an empty workspace', () => {
-  const idx = build({ stepFiles: [], varFiles: [] })
+  const idx = build({ stepFiles: [], oathFiles: [] })
   expect(idx.stepDefs).toEqual([])
   expect(idx.matches).toEqual([])
   expect(idx.diagnostics).toEqual([])
@@ -82,7 +82,7 @@ stimulus('I fly to {airport}', (ctx, code) => {})
 `,
       },
     ],
-    varFiles: [{ path: '/t.md', source: '# T\n\nGiven I fly to LHR\n' }],
+    oathFiles: [{ path: '/t.md', source: '# T\n\nGiven I fly to LHR\n' }],
   })
   expect(idx.matches).toHaveLength(1)
   expect(idx.matches[0]?.stepDef.expression).toBe('I fly to {airport}')
@@ -102,7 +102,7 @@ test('a header-bound table highlights the binding paragraph with header words as
         source: `stimulus('each row lists the dice, the category and the score', (ctx, row) => {})\n`,
       },
     ],
-    varFiles: [
+    oathFiles: [
       {
         path: '/yahtzee.md',
         source: `# Yahtzee
@@ -130,12 +130,27 @@ each row lists the dice, the category and the score:
   expect(m.headerCellRanges?.every((r) => r.start.line === 5)).toBe(true)
 })
 
+test('paramRanges highlight the value only, while paramValues keep the full notation', () => {
+  const idx = build({
+    stepFiles: [{ path: '/greet.steps.ts', source: `stimulus('I greet {string}', () => {})\n` }],
+    oathFiles: [{ path: '/g.md', source: '# Greet\n\nGiven I greet "world"' }],
+  })
+  const m = idx.matches[0]
+  if (!m) throw new Error('expected a match')
+  // paramValues still carry the quotes — rename splices them back verbatim.
+  expect(m.paramValues).toEqual(['"world"'])
+  // The highlighted range excludes the quotes: 5 characters for `world`.
+  const range = m.paramRanges[0]
+  if (!range) throw new Error('expected a param range')
+  expect(range.end.character - range.start.character).toBe(5)
+})
+
 test('a plain (non-header-bound) match carries no headerCellRanges', () => {
   const idx = build({
     stepFiles: [
       { path: '/s.steps.ts', source: `stimulus('I have {int} cukes', (ctx, n) => {})\n` },
     ],
-    varFiles: [{ path: '/b.md', source: '# Belly\n\nGiven I have 5 cukes' }],
+    oathFiles: [{ path: '/b.md', source: '# Belly\n\nGiven I have 5 cukes' }],
   })
   expect(idx.matches[0]?.headerCellRanges).toBeUndefined()
 })

@@ -5,7 +5,7 @@ namespace Varar.Core;
 /// <summary>
 /// Projects pipeline output to the shared conformance wire shapes (serialized by
 /// <see cref="CanonicalJson"/>). Port of the projections in <c>conformance.ts</c>. This file grows
-/// one projection per artifact as the pipeline lands; T3 covers <c>var-doc.json</c>.
+/// one projection per artifact as the pipeline lands; T3 covers <c>doc.json</c>.
 /// </summary>
 public static class Conformance
 {
@@ -29,7 +29,7 @@ public static class Conformance
     /// Port of <c>toPlanArtifact</c>.
     /// </summary>
     public static Value ToPlanArtifact(ExecutionPlan plan) => Map(
-        ("examples", Value.List(plan.Examples.Select(ex => PlannedExampleValue(ex, plan.VarDoc.Source)))),
+        ("examples", Value.List(plan.Examples.Select(ex => PlannedExampleValue(ex, plan.Doc.Source)))),
         ("diagnostics", Value.List(plan.Diagnostics.Select(d => Map(
             ("code", Value.Of(d.Code.ToWire())),
             ("severity", Value.Of(d.Severity.ToWire())),
@@ -98,14 +98,6 @@ public static class Conformance
                     ("actual", Value.Of(c.Actual)),
                     ("span", SpanValue(c.Span)))))));
                 break;
-            case DocStringMismatchError dm:
-                entries.Add(new("kind", Value.Of("doc-string-mismatch")));
-                entries.Add(new("message", Value.Of(dm.Message)));
-                entries.Add(new("diff", Map(
-                    ("expected", Value.Of(dm.Diff.Expected)),
-                    ("actual", Value.Of(dm.Diff.Actual)),
-                    ("span", SpanValue(dm.Diff.Span)))));
-                break;
             case ReturnShapeError rs:
                 entries.Add(new("kind", Value.Of("return-shape")));
                 entries.Add(new("message", Value.Of(rs.Message)));
@@ -172,8 +164,8 @@ public static class Conformance
         return Value.Map(entries);
     }
 
-    /// <summary>Projects a <see cref="VarDoc"/> to the <c>var-doc.json</c> shape (<c>source</c> is dropped).</summary>
-    public static Value ToVarDocArtifact(VarDoc doc) => Map(
+    /// <summary>Projects a <see cref="Doc"/> to the <c>doc.json</c> shape (<c>source</c> is dropped).</summary>
+    public static Value ToDocArtifact(Doc doc) => Map(
         ("path", Value.Of(doc.Path)),
         ("examples", List(doc.Examples, ExampleValue)),
         ("orphanAttachments", List(doc.OrphanAttachments, BlockValue)));
@@ -181,6 +173,7 @@ public static class Conformance
     private static Value ExampleValue(Example example) => Map(
         ("scopeStack", Value.List(example.ScopeStack.Select(Value.Of))),
         ("span", SpanValue(example.Span)),
+        ("precededByDelimiter", Value.Of(example.PrecededByDelimiter)),
         ("body", List(example.Body, BlockValue)));
 
     private static Value BlockValue(Block block) => block switch

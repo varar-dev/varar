@@ -14,17 +14,8 @@ public static class AirportsSteps
 
         s.Stimulus("I fly to {airport}", (state, dest) => Value.Map([new("dest", dest)]));
 
-        s.Sensor("The destination code is {word}", (state, expected) =>
-        {
-            var cleaned = expected.AsString().TrimEnd('.', '!', '?');
-            var dest = DestOf(state);
-            if (cleaned != dest)
-            {
-                throw new HandlerException($"expected {cleaned} but got {dest}");
-            }
-
-            return null;
-        });
+        // The trailing "." is matched literally, so {word} captures just the code.
+        s.Sensor("The destination code is {word}.", (state, expected) => Value.Of(DestOf(state)));
     }
 
     public static Value State() => Value.Null;

@@ -11,7 +11,7 @@ import java.util.List;
  * file (its name must match the file name), but every node here needs to be
  * {@code public} — later ports (the {@code var} facade, {@code var-junit},
  * {@code var-runner}) live in other packages and must reference {@link Block},
- * {@link VarDoc}, etc. directly. Nesting them as {@code public static} members of
+ * {@link Doc}, etc. directly. Nesting them as {@code public static} members of
  * {@code Ast} satisfies both constraints in one file, keeps a reviewable
  * module-for-module mapping with {@code ast.ts}, and avoids a dozen near-empty
  * one-record files for what is a pure-data module.
@@ -77,7 +77,7 @@ public final class Ast {
     }
 
     /**
-     * Marker union of the block kinds that may appear as a {@link VarDoc}
+     * Marker union of the block kinds that may appear as a {@link Doc}
      * orphan attachment — mirrors the TS union type {@code Table | Fence}
      * (ast.ts:79-84).
      */
@@ -106,8 +106,14 @@ public final class Ast {
      *     (paragraph / list_item / blockquote). Any trailing tables or fences are
      *     appended by the structurer so the planner can attach them to the last
      *     matched step.
+     * @param precededByDelimiter true when a heading or thematic break ({@code
+     *     ---}) sits between this candidate and the previous one — i.e. a
+     *     syntactic delimiter separates them (also true for the first candidate).
+     *     The planner uses it to decide grouping: a matching candidate with this
+     *     false merges into the open example rather than starting a new one. See
+     *     ADR 0012.
      */
-    public record Example(List<String> scopeStack, Span span, List<Block> body) {
+    public record Example(List<String> scopeStack, Span span, List<Block> body, boolean precededByDelimiter) {
         public Example {
             scopeStack = List.copyOf(scopeStack);
             body = List.copyOf(body);
@@ -115,8 +121,8 @@ public final class Ast {
     }
 
     /** A parsed source file: its matched examples plus any table/fence blocks not attached to one. */
-    public record VarDoc(String path, String source, List<Example> examples, List<TableOrFence> orphanAttachments) {
-        public VarDoc {
+    public record Doc(String path, String source, List<Example> examples, List<TableOrFence> orphanAttachments) {
+        public Doc {
             examples = List.copyOf(examples);
             orphanAttachments = List.copyOf(orphanAttachments);
         }

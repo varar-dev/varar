@@ -4,9 +4,6 @@
 package fixture
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/varar-dev/varar/go/varar"
 )
 
@@ -24,6 +21,17 @@ func roman(n int64) (string, bool) {
 	return "", false
 }
 
+func resultOf(state varar.Value) string {
+	if m, ok := state.AsMap(); ok {
+		if rv, ok := m["result"]; ok {
+			if str, ok := rv.AsString(); ok {
+				return str
+			}
+		}
+	}
+	return ""
+}
+
 func Register(s *varar.Steps[varar.Value]) {
 	s.Stimulus("I convert {int} to roman numerals", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
 		n, _ := args[0].AsInt()
@@ -33,25 +41,10 @@ func Register(s *varar.Steps[varar.Value]) {
 		}
 		return varar.Ptr(varar.MapValue(m)), nil
 	})
-	s.Sensor("The result is {word}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
-		// {word} greedily captures trailing punctuation ("I." not "I"); strip
-		// it, then fail on mismatch rather than returning (which would make the
-		// core compare the RAW captured "I." and wrongly fail). Returning
-		// nothing opts out, matching the .ts/.rs sensors.
-		expected, _ := args[0].AsString()
-		cleaned := strings.TrimRight(expected, ".!?")
-		result := ""
-		if m, ok := state.AsMap(); ok {
-			if rv, ok := m["result"]; ok {
-				if str, ok := rv.AsString(); ok {
-					result = str
-				}
-			}
-		}
-		if cleaned != result {
-			return nil, fmt.Errorf("expected %s but got %s", cleaned, result)
-		}
-		return nil, nil
+	// The trailing "." is matched literally, so {word} captures just the numeral
+	// and this sensor returns the observed value for the core to compare.
+	s.Sensor("The result is {word}.", func(state varar.Value, expected string) (string, error) {
+		return resultOf(state), nil
 	})
 }
 

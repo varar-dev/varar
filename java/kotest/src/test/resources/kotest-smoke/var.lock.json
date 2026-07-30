@@ -1,7 +1,7 @@
 {
-  "version": 1,
-  "specs": {
-    "specs/cukes.md": {
+  "version": 2,
+  "oaths": {
+    "oaths/cukes.md": {
       "sourceHash": "fnv1a:cb4c6390",
       "examples": [
         {

@@ -118,8 +118,8 @@ reader; drift is unit-gated against the shared FNV-1a / lockfile vectors.
   slot, `ValueEncoder`) can be a step parameter directly —
 
   ```go
-  func (d *Date) DecodeVarValue(v varar.Value) error { … }
-  func (d Date) EncodeVarValue() varar.Value         { … }
+  func (d *Date) DecodeValue(v varar.Value) error { … }
+  func (d Date) EncodeValue() varar.Value         { … }
 
   s.Stimulus("borrowed {title}, due back on {date}",
       func(state varar.Value, title string, due Date) (varar.Value, error) { … })

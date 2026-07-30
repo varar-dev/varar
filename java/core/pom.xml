@@ -7,12 +7,12 @@
   <parent>
     <groupId>dev.varar</groupId>
     <artifactId>parent</artifactId>
-    <version>0.6.2-SNAPSHOT</version>
+    <version>0.7.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>core</artifactId>
   <packaging>jar</packaging>
-  <name>var-core (Java) — pure functional core</name>
+  <name>varar-core (Java) — pure functional core</name>
   <description>
     Pure pipeline: parse -&gt; match -&gt; plan -&gt; execute, diffs, conformance
     projections. No filesystem, network, time, or test-framework imports (see

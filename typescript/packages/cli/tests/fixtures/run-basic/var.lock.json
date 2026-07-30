@@ -1,6 +1,6 @@
 {
-  "version": 1,
-  "specs": {
+  "version": 2,
+  "oaths": {
     "hello.md": {
       "sourceHash": "fnv1a:c95384a6",
       "examples": [

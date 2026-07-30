@@ -3,7 +3,7 @@ package examples;
 import java.util.List;
 import java.util.Map;
 
-final class RomanNumerals {
+public final class RomanNumerals {
 
     private RomanNumerals() {}
 
@@ -22,7 +22,7 @@ final class RomanNumerals {
             Map.entry("IV", 4),
             Map.entry("I", 1));
 
-    static String toRoman(int num) {
+    public static String toRoman(int num) {
         StringBuilder result = new StringBuilder();
         for (Map.Entry<String, Integer> numeral : NUMERALS) {
             while (num >= numeral.getValue()) {

@@ -6,7 +6,6 @@ from typing import Any
 import pytest
 
 from varar_core.cell_diff import ReturnShapeError, is_cell_mismatch_error
-from varar_core.doc_string_diff import is_doc_string_mismatch_error
 from varar_core.execute import (
     ExecutePorts,
     StepObservation,
@@ -139,7 +138,7 @@ def test_sink_example_run_callback_executes_step_handlers_in_order() -> None:
         expression_source_file="s.ts",
         expression_source_line=2,
         kind="sensor",
-        handler=lambda _ctx, n: calls.append(f"check:{n}"),
+        handler=lambda _ctx, n: (calls.append(f"check:{n}"), n)[1],
     )
     p = plan(parse("e.md", "# Adding\n\nI add 5. I should have 5."), r)
     run = _capture_run(p)
@@ -266,7 +265,7 @@ def test_execute_plan_runs_header_bound_table_once_per_row() -> None:
         expression_source_file="s.ts",
         expression_source_line=1,
         kind="sensor",
-        handler=lambda _ctx, *args: rows.append(args[-1]),
+        handler=lambda _ctx, *args: (rows.append(args[-1]), args[-1])[1],
     )
     source = (
         "# Yahtzee\n\neach row lists the dice, the category and the score:\n\n"
@@ -298,9 +297,10 @@ def test_execute_plan_runs_header_bound_table_once_per_row() -> None:
 def test_failing_header_bound_row_points_stack_frame_at_row_line() -> None:
     """A failing header-bound row points the location note at that row's line."""
 
-    def _handler(_ctx: Any, row: dict) -> None:
+    def _handler(_ctx: Any, row: dict) -> dict:
         if row["score"] == "50":
             raise RuntimeError("boom")
+        return row
 
     r = add_step(
         create_registry(),
@@ -478,8 +478,8 @@ def test_whole_table_sensor_returning_wrong_type_raises_return_shape_error() -> 
         _runs_for(TABLE_DOC, r)[0]()
 
 
-def test_doc_string_sensor_returning_different_string_raises_doc_string_mismatch_error() -> None:
-    """A doc-string sensor returning a different string throws DocStringMismatchError."""
+def test_doc_string_sensor_returning_different_string_raises_cell_mismatch_error() -> None:
+    """A doc-string sensor returning a different string throws CellMismatchError."""
     r = add_step(
         create_registry(),
         expression="the greeting is",
@@ -493,11 +493,13 @@ def test_doc_string_sensor_returning_different_string_raises_doc_string_mismatch
         _runs_for(DOCSTRING_DOC, r)[0]()
     except Exception as e:
         caught = e
-    assert is_doc_string_mismatch_error(caught)
-    diff = caught.diff
-    assert diff.expected == "Hello, world!\n"
-    assert diff.actual == "Goodbye!\n"
-    assert DOCSTRING_DOC[diff.span.start_offset : diff.span.end_offset] == "Hello, world!\n"
+    assert is_cell_mismatch_error(caught)
+    cell = caught.cells[0]
+    assert cell.column == "doc string"
+    # JSON-quoted, so a whitespace-only difference stays visible.
+    assert cell.expected == '"Hello, world!\\n"'
+    assert cell.actual == '"Goodbye!\\n"'
+    assert DOCSTRING_DOC[cell.span.start_offset : cell.span.end_offset] == "Hello, world!\n"
 
 
 def test_whole_table_action_returning_none_passes() -> None:
@@ -838,31 +840,37 @@ def test_undefined_return_from_context_action_is_no_op() -> None:
     assert seen[0] == {"a": 1}
 
 
-def test_mutating_frozen_state_raises_type_error() -> None:
-    """mutating the frozen state throws at runtime."""
+def test_factory_state_reaches_the_handler_as_the_author_own_dict() -> None:
+    """The factory's dict arrives unfrozen, by identity, still a plain dict."""
+    made: dict[str, Any] = {"a": 1}
+    seen: list[Any] = []
 
-    def _mutate(state: Any) -> None:
-        state["a"] = 2
+    def _observe(state: Any) -> None:
+        seen.append(state)
 
     def register(r: Registry) -> Registry:
         return add_step(
             r,
-            expression="mutate",
+            expression="observe",
             expression_source_file=FILE,
             expression_source_line=1,
-            kind="stimulus",
-            handler=_mutate,
+            kind="sensor",
+            handler=_observe,
         )
 
-    caught = _run_capturing_error("# X\n\nmutate\n", register, lambda _: {"a": 1})
-    assert isinstance(caught[0], TypeError)
+    caught = _run_capturing_error("# X\n\nobserve\n", register, lambda _: made)
+    assert caught[0] is None
+    assert seen[0] is made
+    assert type(seen[0]) is dict
 
 
-def test_mutating_post_merge_refrozen_state_raises_type_error() -> None:
-    """mutating the post-merge (re-frozen) state throws at runtime."""
+def test_state_a_stimulus_returns_is_threaded_on_by_identity() -> None:
+    """A returned dict is threaded on unfrozen, and its lists stay lists."""
+    nxt: dict[str, Any] = {"a": 1, "items": [1, 2]}
+    seen: list[Any] = []
 
-    def _mutate_merged(state: Any) -> None:
-        state["a"] = 99
+    def _observe(state: Any) -> None:
+        seen.append(state)
 
     def register(r: Registry) -> Registry:
         r = add_step(
@@ -871,21 +879,22 @@ def test_mutating_post_merge_refrozen_state_raises_type_error() -> None:
             expression_source_file=FILE,
             expression_source_line=1,
             kind="stimulus",
-            handler=lambda *_: {"a": 1},
+            handler=lambda *_: nxt,
         )
         return add_step(
             r,
-            expression="mutate merged",
+            expression="observe",
             expression_source_file=FILE,
             expression_source_line=2,
-            kind="stimulus",
-            handler=_mutate_merged,
+            kind="sensor",
+            handler=_observe,
         )
 
-    caught = _run_capturing_error(
-        "# X\n\nstep one\nmutate merged\n", register, lambda _: {}
-    )
-    assert isinstance(caught[0], TypeError)
+    caught = _run_capturing_error("# X\n\nstep one\nobserve\n", register, lambda _: {})
+    assert caught[0] is None
+    assert seen[0] is nxt
+    assert type(seen[0]) is dict
+    assert type(seen[0]["items"]) is list
 
 
 # ---------------------------------------------------------------------------
@@ -1049,6 +1058,55 @@ def test_zero_slot_sensor_returning_none_passes() -> None:
     assert caught[0] is None
 
 
+def test_slotted_sensor_returning_none_raises_return_shape_error() -> None:
+    """A sensor with a slot that returns nothing raises ReturnShapeError.
+
+    The silent-pass hole: a typo'd lookup returns None, nothing is compared, and
+    the document keeps claiming something nobody checked.
+    """
+    caught = _run_one(
+        '# X\n\nThe name is "Ada"\n',
+        lambda r: add_step(
+            r,
+            expression="The name is {string}",
+            expression_source_file="s.steps.ts",
+            expression_source_line=1,
+            kind="sensor",
+            handler=lambda *_: None,
+        ),
+    )
+    assert isinstance(caught[0], ReturnShapeError)
+    assert str(caught[0]) == (
+        "a sensor with 1 slot(s) must return one value per slot, got nothing"
+    )
+
+
+def test_header_bound_row_returning_none_raises_return_shape_error() -> None:
+    """A header-bound row step that returns nothing raises ReturnShapeError."""
+    source = (
+        "# X\n\nI report the score and grade.\n\n"
+        "| score | grade |\n"
+        "| ----- | ----- |\n"
+        "| 10    | A     |\n"
+    )
+    caught = _run_one(
+        source,
+        lambda r: add_step(
+            r,
+            expression="I report the score and grade",
+            expression_source_file="s.steps.ts",
+            expression_source_line=1,
+            kind="sensor",
+            handler=lambda *_: None,
+        ),
+    )
+    assert isinstance(caught[0], ReturnShapeError)
+    assert str(caught[0]) == (
+        "a header-bound row step must return a row object with one value per"
+        " bound cell, got nothing"
+    )
+
+
 def test_action_returning_non_dict_raises_return_shape_error() -> None:
     """an action that returns a non-dict value throws ReturnShapeError."""
     caught = _run_one(
@@ -1132,8 +1190,8 @@ def test_sensor_with_trailing_doc_string_returning_exact_content_passes() -> Non
     assert caught[0] is None
 
 
-def test_sensor_with_trailing_doc_string_returning_wrong_text_raises_doc_string_mismatch_error() -> None:
-    """a sensor with a trailing doc string returning the wrong text throws DocStringMismatchError."""
+def test_sensor_with_trailing_doc_string_returning_wrong_text_raises_cell_mismatch_error() -> None:
+    """a sensor with a trailing doc string returning the wrong text throws CellMismatchError."""
     source = "# X\n\nthe greeting is:\n\n```text\nHello, world!\n```\n"
     caught = _run_one(
         source,
@@ -1146,7 +1204,8 @@ def test_sensor_with_trailing_doc_string_returning_wrong_text_raises_doc_string_
             handler=lambda _ctx, _body: "Goodbye!\n",
         ),
     )
-    assert is_doc_string_mismatch_error(caught[0])
+    assert is_cell_mismatch_error(caught[0])
+    assert str(caught[0]) == 'doc string: expected "Hello, world!\\n" but was "Goodbye!\\n"'
 
 
 # ---------------------------------------------------------------------------

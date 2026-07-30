@@ -72,12 +72,6 @@ pub trait IntoSensor<C, Args> {
     fn into_handler(self) -> Handler;
 }
 
-/// Inference-only marker for a sensor that asserts for itself (returns `()`)
-/// instead of returning its slots for the core to compare — the opt-out a
-/// greedy capture sometimes needs, e.g. `{word}` swallowing trailing
-/// punctuation. Never written in author code.
-pub struct Asserted<Args>(std::marker::PhantomData<Args>);
-
 // --- stimuli: (C, slots…) -> Result<C> --------------------------------------
 
 impl<C, F> IntoStimulus<C, ()> for F
@@ -153,39 +147,6 @@ where
             // One slot: the return IS that slot's value, never a list.
             let got = self(state_as::<C>(&state), a)?;
             Ok(StepOutput::Compared(Some(got.to_slot())))
-        })
-    }
-}
-
-impl<C, A, F> IntoSensor<C, Asserted<(A,)>> for F
-where
-    C: Clone + Default + 'static,
-    A: FromSlot,
-    F: Fn(C, A) -> Result<(), HandlerError> + 'static,
-{
-    fn into_handler(self) -> Handler {
-        Handler::new(move |state, args| {
-            arity(&args, 1)?;
-            let a = slot::<A>(&args, 0)?;
-            self(state_as::<C>(&state), a)?;
-            Ok(StepOutput::Compared(None))
-        })
-    }
-}
-
-impl<C, A, B, F> IntoSensor<C, Asserted<(A, B)>> for F
-where
-    C: Clone + Default + 'static,
-    A: FromSlot,
-    B: FromSlot,
-    F: Fn(C, A, B) -> Result<(), HandlerError> + 'static,
-{
-    fn into_handler(self) -> Handler {
-        Handler::new(move |state, args| {
-            arity(&args, 2)?;
-            let (a, b) = (slot::<A>(&args, 0)?, slot::<B>(&args, 1)?);
-            self(state_as::<C>(&state), a, b)?;
-            Ok(StepOutput::Compared(None))
         })
     }
 }

@@ -1,5 +1,5 @@
 import { hashSource } from './hash.ts'
-import type { SpecResults } from './result.ts'
+import type { OathResults } from './result.ts'
 
 // One renderable failure: a source-offset range plus a human message. Offsets
 // are absolute source positions (== CodeMirror positions); `to` is exclusive.
@@ -25,11 +25,11 @@ function lineRange(source: string, line: number): { from: number; to: number } {
   return { from, to: nl === -1 ? source.length : nl }
 }
 
-// Project a SpecResults onto offset-based diagnostics against the CURRENT
+// Project an OathResults onto offset-based diagnostics against the CURRENT
 // source. If the source changed since the run (hash mismatch) the offsets no
 // longer apply, so emit nothing.
 export function runResultDiagnostics(
-  results: SpecResults,
+  results: OathResults,
   source: string,
 ): ReadonlyArray<RunDiagnostic> {
   if (hashSource(source) !== results.sourceHash) return []
@@ -45,13 +45,15 @@ export function runResultDiagnostics(
           message: `expected ${source.slice(c.from, c.to)} but was ${c.actual}`,
         })
       }
-    } else if (f.doc) {
-      out.push({
-        from: f.doc.from,
-        to: f.doc.to,
-        message: `expected ${source.slice(f.doc.from, f.doc.to)} but was ${f.doc.actual}`,
-      })
+    } else if (f.anchor && f.anchor.to > f.anchor.from && f.anchor.to <= source.length) {
+      // A thrown step: underline the step itself, not the line it shares with
+      // its neighbours. The bounds check keeps a stale anchor (a result written
+      // against a source the hash check somehow let through) from pointing past
+      // the end of the document.
+      out.push({ from: f.anchor.from, to: f.anchor.to, message: f.message })
     } else {
+      // No anchor recorded (an older result, or a port that doesn't emit one):
+      // the failing line is the most precise range available.
       const { from, to } = lineRange(source, f.line)
       out.push({ from, to, message: f.message })
     }

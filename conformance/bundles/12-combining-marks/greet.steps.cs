@@ -8,7 +8,9 @@ public static class GreetSteps
 {
     public static void Register(Steps s)
     {
-        s.Sensor("I greet {string}", (state, name) => null);
+        // One slot: echoing the capture back makes the core compare it against the document,
+        // which is what exercises the combining-mark span offsets.
+        s.Sensor("I greet {string}", (state, name) => name);
     }
 
     public static Value State() => Value.Null;

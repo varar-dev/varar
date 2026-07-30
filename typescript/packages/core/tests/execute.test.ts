@@ -1,7 +1,11 @@
 import { expect, test } from 'vitest'
-import { type CellMismatchError, isCellMismatchError, ReturnShapeError } from '../src/cell-diff.ts'
+import {
+  type CellDiff,
+  type CellMismatchError,
+  isCellMismatchError,
+  ReturnShapeError,
+} from '../src/cell-diff.ts'
 import type { Diagnostic } from '../src/diagnostics.ts'
-import { type DocStringMismatchError, isDocStringMismatchError } from '../src/doc-string-diff.ts'
 import { executePlan, isUnexpectedPassError, type StepObservation } from '../src/execute.ts'
 import { parse } from '../src/parse.ts'
 import { plan } from '../src/plan.ts'
@@ -88,6 +92,7 @@ test('the sink.example run callback executes the step handlers in order', async 
       kind: 'sensor',
       handler: (_ctx, n) => {
         calls.push(`check:${n as number}`)
+        return n
       },
     },
   )
@@ -250,7 +255,9 @@ test('executePlan runs a header-bound table once per row, passing the row object
     expressionSourceLine: 1,
     kind: 'sensor',
     handler: (_ctx, ...args) => {
-      rows.push(args[args.length - 1])
+      const row = args[args.length - 1]
+      rows.push(row)
+      return row
     },
   })
   const source = `# Yahtzee
@@ -289,6 +296,7 @@ test('a failing header-bound row points the stack frame at that row line', async
     // production runtime API does (`handler as StepHandler`).
     handler: ((_ctx, row: { score: string }) => {
       if (row.score === '50') throw new Error('boom')
+      return row
     }) as StepHandler,
   })
   // Rows sit on source lines 7 and 8 (header=5, separator=6).
@@ -464,7 +472,7 @@ the greeting is:
 Hello, world!
 \`\`\``
 
-test('a doc-string sensor returning a different string throws DocStringMismatchError at the body span', async () => {
+test('a doc-string sensor returning a different string throws CellMismatchError at the body span', async () => {
   // The doc string is the only slot: returned bare.
   const r = addStep(createRegistry(), {
     expression: 'the greeting is',
@@ -480,11 +488,13 @@ test('a doc-string sensor returning a different string throws DocStringMismatchE
   } catch (e) {
     caught = e
   }
-  expect(isDocStringMismatchError(caught)).toBe(true)
-  const diff = (caught as DocStringMismatchError).diff
-  expect(diff.expected).toBe('Hello, world!\n')
-  expect(diff.actual).toBe('Goodbye!\n')
-  expect(source.slice(diff.span.startOffset, diff.span.endOffset)).toBe('Hello, world!\n')
+  expect(isCellMismatchError(caught)).toBe(true)
+  const cell = (caught as CellMismatchError).cells[0] as CellDiff
+  expect(cell.column).toBe('doc string')
+  // JSON-quoted, so a whitespace-only difference stays visible.
+  expect(cell.expected).toBe('"Hello, world!\\n"')
+  expect(cell.actual).toBe('"Goodbye!\\n"')
+  expect(source.slice(cell.span.startOffset, cell.span.endOffset)).toBe('Hello, world!\n')
 })
 
 test('a whole-table action returning undefined passes (asserted nothing)', async () => {

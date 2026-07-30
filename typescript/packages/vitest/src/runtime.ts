@@ -3,39 +3,31 @@ import {
   detectDrift,
   driftDiagnostics,
   isCellMismatchError,
-  isDocStringMismatchError,
+  type OathBaseline,
   type Reporter,
-  resolveScannerPlugins,
-  type SpecBaseline,
   toFailure,
 } from '@varar/core'
-import { examplesWithRuns, planSpec } from '@varar/runner'
+import { examplesWithRuns, planOath } from '@varar/runner'
 import { buildRegistry, contextFactory } from '@varar/varar/registry'
 import { test } from 'vitest'
 
 export type CollectPorts = {
   // Defaults to registering one failing vitest test per diagnostic. The
   // registration lives HERE (not in the generated module) so editors doing
-  // static AST test discovery on the transformed spec never see a phantom
+  // static AST test discovery on the transformed oath never see a phantom
   // `test(...)` callsite — only the real per-example ones.
   readonly reporter?: Reporter
-  // Opt-in scanner-plugin NAMES (e.g. 'gherkinTables') that the var-vitest
-  // plugin forwards from varar.config.json. Resolved here against var-core's
-  // registry: the generated virtual module resolves in the CONSUMER's
-  // project, where pnpm's strict layout only sees direct dependencies — so
-  // it may import @varar/vitest but never @varar/core.
-  readonly scannerPlugins?: ReadonlyArray<string>
   // The number of examples the build-time static plan produced. When the
   // runtime plan disagrees (a step definition the static scanner could not
   // see appeared or vanished), a failing guard test is registered instead of
   // letting the suites silently diverge.
   readonly expectedCount?: number
-  // This spec's committed drift baseline (from varar.lock.json), injected by the
+  // This oath's committed drift baseline (from varar.lock.json), injected by the
   // plugin. When present, drift is detected and reported as a diagnostic (a
-  // failing `var:diagnostic:drift` test) — a read-only gate. The baseline is
-  // written only by `varar run`; VAR_UPDATE=1 skips the gate so you can
+  // failing `varar:diagnostic:drift` test) — a read-only gate. The baseline is
+  // written only by `varar run`; VARAR_UPDATE=1 skips the gate so you can
   // re-record it there without vitest going red first.
-  readonly baseline?: SpecBaseline | null
+  readonly baseline?: OathBaseline | null
 }
 
 export type CollectedExample = {
@@ -46,35 +38,30 @@ export type CollectedExample = {
 }
 
 // Build the registry from the step modules the virtual module imported, plan
-// the spec, and hand back one lazily-executed closure per example. The
+// the oath, and hand back one lazily-executed closure per example. The
 // virtual module registers one STATIC `test("literal name", ...)` per example
 // — so editors can discover names and locations without running anything —
-// and looks each body up here by index via `varTestBody`.
-export function collectVarExamples(
+// and looks each body up here by index via `vararTestBody`.
+export function collectVararExamples(
   path: string,
   source: string,
   ports: CollectPorts,
 ): ReadonlyArray<CollectedExample> {
   const reporter: Reporter = ports.reporter ?? {
     diagnostic: (d) =>
-      test(`var:diagnostic:${d.code}`, () => {
+      test(`varar:diagnostic:${d.code}`, () => {
         throw new Error(d.message)
       }),
   }
   const registry = buildRegistry()
-  const p = planSpec(
-    path,
-    source,
-    registry,
-    ports.scannerPlugins && resolveScannerPlugins(ports.scannerPlugins),
-  )
+  const p = planOath(path, source, registry)
   // Read-only drift gate: a paragraph the baseline recorded as an example that
   // now matches no step surfaces as a drift diagnostic (a failing test) unless
-  // VAR_UPDATE is set (then re-record via `varar run --update`).
+  // VARAR_UPDATE is set (then re-record via `varar run --update`).
   if (ports.baseline) {
-    const update = process.env.VAR_UPDATE === '1' || process.env.VAR_UPDATE === 'true'
+    const update = process.env.VARAR_UPDATE === '1' || process.env.VARAR_UPDATE === 'true'
     if (!update) {
-      for (const d of driftDiagnostics(detectDrift(ports.baseline, p.varDoc, p))) {
+      for (const d of driftDiagnostics(detectDrift(ports.baseline, p.doc, p))) {
         reporter.diagnostic(d)
       }
     }
@@ -85,19 +72,19 @@ export function collectVarExamples(
     run,
   }))
   if (ports.expectedCount !== undefined && examples.length !== ports.expectedCount) {
-    test('var:stale-spec-transform', () => {
+    test('varar:stale-oath-transform', () => {
       throw new Error(
         `expected ${ports.expectedCount} example(s) in ${path} but the runtime planned ` +
-          `${examples.length} — the step definitions changed after this spec was transformed; re-run the suite`,
+          `${examples.length} — the step definitions changed after this oath was transformed; re-run the suite`,
       )
     })
   }
   return examples
 }
 
-// Structural slice of vitest's TestContext — enough to attach varResult
+// Structural slice of vitest's TestContext — enough to attach vararResult
 // without importing vitest types into the runtime.
-type TaskContext = { readonly task: { readonly meta: { varResult?: unknown } } }
+type TaskContext = { readonly task: { readonly meta: { vararResult?: unknown } } }
 
 // A single failing cell diffs as its bare value ("JMK" vs "JFK"); several diff
 // as a value list in document order (`["LGR", "JMK"]` vs `["LHR", "JFK"]`).
@@ -139,13 +126,10 @@ function attachExpectedActual(error: unknown): void {
     }
     e.expected = renderCells(bad, 'expected')
     e.actual = renderCells(bad, 'actual')
-  } else if (isDocStringMismatchError(error)) {
-    e.expected = error.diff.expected
-    e.actual = error.diff.actual
   }
 }
 
-export function varTestBody(
+export function vararTestBody(
   examples: ReadonlyArray<CollectedExample>,
   index: number,
   name: string,
@@ -155,17 +139,17 @@ export function varTestBody(
     const ex = examples[index]
     if (!ex || ex.name !== name) {
       throw new Error(
-        `stale spec transform: expected example #${index} of ${path} to be named ` +
+        `stale oath transform: expected example #${index} of ${path} to be named ` +
           `${JSON.stringify(name)}${ex ? `, found ${JSON.stringify(ex.name)}` : ', but it no longer exists'}. ` +
-          'The step definitions changed after this spec was transformed — re-run the suite.',
+          'The step definitions changed after this oath was transformed — re-run the suite.',
       )
     }
     const lines = ex.lines
     try {
       await ex.run()
-      ctx.task.meta.varResult = { name, status: 'passed', lines }
+      ctx.task.meta.vararResult = { name, status: 'passed', lines }
     } catch (error) {
-      ctx.task.meta.varResult = {
+      ctx.task.meta.vararResult = {
         name,
         status: 'failed',
         lines,

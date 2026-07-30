@@ -5,8 +5,8 @@
 //! are dropped: the Rust enums *are* the compiler-enforced closed sets.
 
 use varar_core::ast::{
-    Block, Blockquote, Example, Fence, Heading, ListItem, Paragraph, Row, SegmentOffset, Table,
-    TableOrFence, ThematicBreak, VarDoc,
+    Block, Blockquote, Doc, Example, Fence, Heading, ListItem, Paragraph, Row, SegmentOffset,
+    Table, TableOrFence, ThematicBreak,
 };
 use varar_core::span::Span;
 
@@ -159,18 +159,21 @@ fn example_exposes_fields() {
         scope_stack: vec!["Feature".to_string(), "Scenario".to_string()],
         span: SPAN,
         body: vec![Block::ThematicBreak(ThematicBreak { span: SPAN })],
+        preceded_by_delimiter: true,
     };
     assert_eq!(vec!["Feature".to_string(), "Scenario".to_string()], example.scope_stack);
     assert_eq!(SPAN, example.span);
     assert_eq!(1, example.body.len());
+    assert!(example.preceded_by_delimiter);
 }
 
 #[test]
-fn var_doc_exposes_fields() {
+fn doc_exposes_fields() {
     let example = Example {
         scope_stack: vec![],
         span: SPAN,
         body: vec![Block::ThematicBreak(ThematicBreak { span: SPAN })],
+        preceded_by_delimiter: true,
     };
     let orphan = TableOrFence::Fence(Fence {
         span: SPAN,
@@ -178,13 +181,13 @@ fn var_doc_exposes_fields() {
         body: String::new(),
         body_span: SPAN,
     });
-    let doc = VarDoc {
-        path: "spec.md".to_string(),
+    let doc = Doc {
+        path: "oath.md".to_string(),
         source: "# Title".to_string(),
         examples: vec![example],
         orphan_attachments: vec![orphan],
     };
-    assert_eq!("spec.md", doc.path);
+    assert_eq!("oath.md", doc.path);
     assert_eq!("# Title", doc.source);
     assert_eq!(1, doc.examples.len());
     assert_eq!(1, doc.orphan_attachments.len());

@@ -6,10 +6,10 @@
 
   <groupId>dev.varar</groupId>
   <artifactId>parent</artifactId>
-  <version>0.6.2-SNAPSHOT</version>
+  <version>0.7.1-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>var (Java port) — parent</name>
+  <name>varar (Java port) — parent</name>
   <description>
     Java port of var (see doc/adr/0001-second-language-python.md and
     doc/superpowers/specs/2026-07-01-java-core-port-design.md). A peer of var's

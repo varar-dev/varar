@@ -11,11 +11,11 @@ import {
 } from '../src/registry.ts'
 
 const BUNDLES = resolve(import.meta.dirname, '../../../../conformance/bundles')
-const UPDATE = process.env.VAR_UPDATE_GOLDENS === '1'
+const UPDATE = process.env.VARAR_UPDATE_GOLDENS === '1'
 
-// 'var-doc' <-> BundleArtifacts['varDoc']; others map name->key directly.
+// 'doc' <-> BundleArtifacts['doc']; others map name->key directly.
 const ARTIFACTS = [
-  ['var-doc', 'varDoc'],
+  ['doc', 'doc'],
   ['registry', 'registry'],
   ['plan', 'plan'],
   ['trace', 'trace'],
@@ -42,19 +42,14 @@ for (const name of readdirSync(BUNDLES, { withFileTypes: true })
       const registry = buildRegistry()
       const createContext = contextFactory()
       const source = readFileSync(resolve(dir, 'example.md'), 'utf8')
-      const varDoc = parse('example.md', source)
-      const artifacts = await runConformance(
-        varDoc,
-        registry,
-        createContext,
-        _customParameterTypes(),
-      )
+      const doc = parse('example.md', source)
+      const artifacts = await runConformance(doc, registry, createContext, _customParameterTypes())
 
       const goldenDir = resolve(dir, 'golden')
       if (UPDATE && !existsSync(goldenDir)) mkdirSync(goldenDir, { recursive: true })
       if (!UPDATE && !existsSync(goldenDir)) {
         throw new Error(
-          `Missing goldens for bundle "${name}" — generate with VAR_UPDATE_GOLDENS=1: ${goldenDir}`,
+          `Missing goldens for bundle "${name}" — generate with VARAR_UPDATE_GOLDENS=1: ${goldenDir}`,
         )
       }
       for (const [fileName, key] of ARTIFACTS) {

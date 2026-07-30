@@ -26,7 +26,7 @@ CORE_LIB.glob('**/*.rb').each do |file|
 end
 
 unless violations.empty?
-  warn 'var-core must not depend on the facade/config/runner:'
+  warn 'varar-core must not depend on the facade/config/runner:'
   violations.each { |v| warn "  #{v}" }
   exit 1
 end

@@ -114,7 +114,7 @@ impl Block {
     }
 }
 
-/// The block kinds that may appear as a [`VarDoc`] orphan attachment (`Table | Fence`).
+/// The block kinds that may appear as a [`Doc`] orphan attachment (`Table | Fence`).
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum TableOrFence {
     Table(Table),
@@ -128,11 +128,17 @@ pub struct Example {
     pub scope_stack: Vec<String>,
     pub span: Span,
     pub body: Vec<Block>,
+    /// True when a heading or thematic break (`---`) sits between this candidate
+    /// and the previous one — i.e. a syntactic delimiter separates them (also
+    /// true for the first candidate). The planner uses it to decide grouping: a
+    /// matching candidate with this false merges into the open example rather
+    /// than starting a new one. See ADR 0012.
+    pub preceded_by_delimiter: bool,
 }
 
 /// A parsed source file: its matched examples plus unattached table/fence blocks.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct VarDoc {
+pub struct Doc {
     pub path: String,
     pub source: String,
     pub examples: Vec<Example>,

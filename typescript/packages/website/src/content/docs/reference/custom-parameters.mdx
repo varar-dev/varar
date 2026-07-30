@@ -148,19 +148,24 @@ for how a parameter mismatch is rendered. The rules are identical in every port
 
 The pattern that recognizes the parameter inside a sentence.
 
-- **No capture groups.** The whole match is the parameter. Use non-capturing
-  groups — `(?:st|nd|rd|th)` — where you need alternation or repetition.
-- Matching runs against the raw sentence text — markup and all. `*Emma*`
-  reaches your regexp as `*Emma*`, so when the marked-up run *is* your
-  parameter, put the markers in the pattern and strip them in `parse`:
+- **Capture the value.** Wrap the part of the match that is the value in the
+  first capture group — that is what your handler receives and the exact span an
+  editor highlights. With no capture group the whole match is the value (that is
+  when you reach for `parse`). Use non-capturing groups — `(?:st|nd|rd|th)` — for
+  alternation or repetition you don't want captured.
+- Matching runs against the raw sentence text — markup and all. `#urgent`
+  reaches your regexp as `#urgent`, so when a notation run *is* your parameter,
+  put the markers in the pattern and a capture group around the data inside:
 
   ```ts
-  param('title', /\*[^*]+\*/, (raw) => raw.slice(1, -1), (t) => `*${t}*`)
+  param('tag', /#(\w+)/)
   ```
 
-  The same recipe works for any markup — bold (`/\*\*[^*]+\*\*/`), AsciiDoc
-  underscores (`/_[^_]+_/`), quotes. Markup is notation, exactly like
-  `£2.50`.
+  The `#` stays notation; the group `urgent` is the value, no `parse` needed.
+  Markdown emphasis is common enough that it ships built-in as `{emph}` (see
+  [Built-in parameter types](#built-in-parameter-types)) — you don't hand-roll
+  it. The recipe above is for any *other* notation that is really data: a
+  hashtag, a ticket id, a wiki link. Markup is notation, exactly like `£2.50`.
 - The pattern participates in step matching, so keep it anchored to real
   notation. A pattern that matches everywhere makes every sentence a step
   candidate.
@@ -169,9 +174,9 @@ The pattern that recognizes the parameter inside a sentence.
 
 Turns the matched text into the value your step handlers receive — a number, a
 date, a domain object. It is a varargs function over the capture groups. If
-omitted, the parameter is the matched text itself (TypeScript, Python, and
-Java's two-argument `param`; the Kotlin signature always takes a trailing
-`parse` lambda).
+omitted, the value is the first capture group — or the whole matched text when
+the pattern has none (TypeScript, Python, and Java's two-argument `param`; the
+Kotlin signature always takes a trailing `parse` lambda).
 
 In TypeScript, the parse function's return type flows into the handlers: with the
 `money` type above, a handler for `'owes a {money} late fee'` receives a typed
@@ -190,13 +195,13 @@ Without `format`, a failure has to fall back to a generic rendering of your
 domain object:
 
 ```text
-CellMismatchError: arg 1: expected £2.55 but was {"currency":"GBP","value":2.6}
+CellMismatchError: cell 1: expected £2.55 but was {"currency":"GBP","value":2.6}
 ```
 
 With `format`, both sides of the diff speak the document's language:
 
 ```text
-CellMismatchError: arg 1: expected £2.55 but was £2.60
+CellMismatchError: cell 1: expected £2.55 but was £2.60
 ```
 
 `format` never affects whether a comparison passes — the verdict is always
@@ -236,6 +241,13 @@ built-ins are always available and need no declaration: `{int}`, `{float}`,
 in its port (`{int}` is a `number` in TypeScript, an `Integer` in Java, an
 `Int` in Kotlin, an `int` in Python). Their values are primitives or strings,
 so mismatch rendering never needs a `format` for them.
+
+On top of those, Varar adds one built-in of its own: **`{emph}`**, Markdown
+emphasis in any of its uniform forms — `*x*`, `_x_`, `**x**`, `__x__`,
+`***x***`, `___x___`. Only the inner text reaches your handler (`*Emma*` →
+`Emma`; only the outermost delimiter pair is stripped, so `**_Emma_**` →
+`_Emma_`), and editors highlight just that value, not the markers. It carries
+a `format` that renders a mismatch back as `*value*`.
 
 ## Scope
 

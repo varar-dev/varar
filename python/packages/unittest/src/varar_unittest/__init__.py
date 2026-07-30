@@ -1,7 +1,7 @@
 """unittest adapter for var.
 
-One call in a test module turns every spec matched by varar.config.json into
-generated ``unittest.TestCase`` classes — one class per spec file, one test
+One call in a test module turns every oath matched by varar.config.json into
+generated ``unittest.TestCase`` classes — one class per oath file, one test
 method per example::
 
     # test_var.py
@@ -12,65 +12,88 @@ method per example::
 Plain ``python -m unittest`` (or any unittest-compatible runner) then
 discovers and runs them like hand-written tests: ``-v`` shows one line per
 example, ``-k`` selects by name, and dotted ids
-(``test_var.hello_var_md.test_greeting``) address a single example.
+(``test_varar.hello_varar_md.test_greeting``) address a single example.
 """
 from __future__ import annotations
 
+import atexit
 import os
 import re
 import unittest
 from pathlib import Path
 from typing import Any, Callable
 
-from varar_config import read_varar_config
+from varar_config import read_config
 from varar_core.cell_diff import ReturnShapeError, is_cell_mismatch_error
 from varar_core.diagnostics import drift_detected
-from varar_core.doc_string_diff import is_doc_string_mismatch_error
-from varar_core.drift import reconcile_drift
+from varar_core.drift import prune_baselines, reconcile_drift
 from varar_core.execute import is_unexpected_pass_error
+from varar_core.failure import to_failure
+from varar_core.result import ExampleResult
 from varar_runner.baseline_store import create_file_baseline_store
-from varar_runner.discovery import find_specs
+from varar_runner.discovery import find_oaths
 from varar_runner.render import render_failure
-from varar_runner.run import RecordingReporter, examples_with_runs, plan_spec
+from varar_runner.results import ResultsCollector
+from varar_runner.run import RecordingReporter, examples_with_runs, plan_oath
 from varar_runner.steps import LoadedSteps, load_steps
 
 __version__ = "0.0.0"
 
 
 def generate_tests(namespace: dict[str, Any], root: str | Path | None = None) -> None:
-    """Generate unittest test cases for every spec into *namespace*.
+    """Generate unittest test cases for every oath into *namespace*.
 
     Reads ``varar.config.json`` from *root* (default: the directory of the
     module *namespace* belongs to, via its ``__file__``), loads the step
     definition files it globs, and assigns one ``unittest.TestCase`` subclass
-    per matched spec file into *namespace* — one ``test_*`` method per
+    per matched oath file into *namespace* — one ``test_*`` method per
     example.
     """
     if root is None:
         root = Path(namespace["__file__"]).parent
     root = Path(os.path.abspath(root))
-    cfg = read_varar_config(root)
+    cfg = read_config(root)
     loaded = load_steps(cfg.steps, root)
     store = create_file_baseline_store(root)
     module_name = namespace.get("__name__")
-    for spec_path in find_specs(cfg.docs_include, cfg.docs_exclude, root):
-        cls = _spec_test_case(spec_path, root, loaded, module_name, store)
+    oaths = find_oaths(cfg.docs_include, cfg.docs_exclude, root)
+
+    # Drop baselines for oaths the config no longer discovers. Reconciliation is
+    # per-oath and never sees a path that has gone, so the lock would otherwise
+    # accumulate dead entries forever (#70). Once per run, keyed off the config
+    # globs — which here IS the full set, since generate_tests always discovers
+    # everything.
+    prune_baselines(
+        store,
+        [p.relative_to(root).as_posix() for p in oaths],
+        update=os.environ.get("VARAR_UPDATE") in ("1", "true"),
+    )
+
+    # unittest has no end-of-run hook, so the collector flushes at process exit
+    # (ADR 0014). Only the examples that actually ran are written, which is what
+    # a filtered run (`-k`) should leave behind.
+    results = ResultsCollector()
+    atexit.register(results.write_all, root)
+
+    for oath_path in oaths:
+        cls = _oath_test_case(oath_path, root, loaded, module_name, store, results)
         namespace[cls.__name__] = cls
 
 
-def _spec_test_case(
-    spec_path: Path,
+def _oath_test_case(
+    oath_path: Path,
     root: Path,
     loaded: LoadedSteps,
     module_name: str | None,
     store: Any,
+    results: ResultsCollector,
 ) -> type[unittest.TestCase]:
-    """Build one TestCase subclass for *spec_path*, one method per example."""
-    # walk_up: a spec outside the config root (matched via a ../ glob) still
+    """Build one TestCase subclass for *oath_path*, one method per example."""
+    # walk_up: an oath outside the config root (matched via a ../ glob) still
     # gets a stable relative label.
-    rel = Path(os.path.abspath(spec_path)).relative_to(root, walk_up=True).as_posix()
-    source = spec_path.read_text(encoding="utf-8")
-    execution_plan = plan_spec(spec_path.name, source, loaded.registry)
+    rel = Path(os.path.abspath(oath_path)).relative_to(root, walk_up=True).as_posix()
+    source = oath_path.read_text(encoding="utf-8")
+    execution_plan = plan_oath(oath_path.name, source, loaded.registry)
     pairs = examples_with_runs(execution_plan, loaded.create_context, RecordingReporter())
 
     methods: dict[str, Any] = {"__doc__": rel}
@@ -84,14 +107,14 @@ def _spec_test_case(
         seen[stem] = idx + 1
         display = base if idx == 0 else f"{base}[{idx}]"
         method_name = f"test_{stem}" if idx == 0 else f"test_{stem}_{idx}"
-        methods[method_name] = _make_test_method(run, display, source, rel)
+        methods[method_name] = _make_test_method(run, display, source, rel, example, results)
 
     # Reconcile drift: a clean run records/updates the baseline; a paragraph
     # that was an example and no longer matches becomes a failing test method
-    # (VAR_UPDATE=1 accepts and re-records instead).
-    update = os.environ.get("VAR_UPDATE") in ("1", "true")
+    # (VARAR_UPDATE=1 accepts and re-records instead).
+    update = os.environ.get("VARAR_UPDATE") in ("1", "true")
     drifts = reconcile_drift(
-        store, rel, source, execution_plan.var_doc, execution_plan, update=update
+        store, rel, source, execution_plan.doc, execution_plan, update=update
     )
     for d in drifts:
         methods[f"test_var_drift_{d.line}"] = _make_drift_method(
@@ -109,11 +132,25 @@ def _make_test_method(
     display: str,
     source: str,
     rel_path: str,
+    example: Any,
+    results: ResultsCollector,
 ) -> Callable[[Any], None]:
+    lines = tuple(dict.fromkeys(s.match_span.start_line for s in example.steps))
+
+    def record(status: str, failure: Any = None) -> None:
+        results.record(
+            rel_path,
+            source,
+            ExampleResult(name=example.name, status=status, lines=lines, failure=failure),
+        )
+
     def test(self: unittest.TestCase) -> None:
         try:
             run()
         except Exception as err:
+            # Recorded here, where the exception is still in hand: to_failure
+            # reads the anchor the executor attached to it.
+            record("failed", to_failure(err, rel_path, lines[0] if lines else 0))
             if _is_var_diff_error(err):
                 # A markdown/return mismatch is a test *failure* (not an
                 # error): re-raise as failureException with the rendered,
@@ -122,6 +159,7 @@ def _make_test_method(
                 # (<path>:<line>:<col>)" note the core attaches).
                 raise self.failureException(render_failure(err, source, rel_path)) from err
             raise
+        record("passed")
 
     # First docstring line is unittest's shortDescription — verbose output
     # shows the example's real (unsanitized) name next to the method id.
@@ -133,14 +171,13 @@ def _make_drift_method(message: str) -> Callable[[Any], None]:
     def test(self: unittest.TestCase) -> None:
         raise self.failureException(message)
 
-    test.__doc__ = "var drift — accept with VAR_UPDATE=1"
+    test.__doc__ = "var drift — accept with VARAR_UPDATE=1"
     return test
 
 
 def _is_var_diff_error(err: BaseException) -> bool:
     return (
         is_cell_mismatch_error(err)
-        or is_doc_string_mismatch_error(err)
         or isinstance(err, ReturnShapeError)
         or is_unexpected_pass_error(err)
     )

@@ -1,6 +1,6 @@
 {
   "name": "@varar/language",
-  "version": "0.6.1",
+  "version": "0.7.0",
   "type": "module",
   "exports": {
     ".": {
@@ -21,7 +21,6 @@
   "dependencies": {
     "@cucumber/cucumber-expressions": "^20.0.0",
     "@varar/core": "workspace:*",
-    "typescript": "^6.0.3",
     "web-tree-sitter": "^0.26.10"
   },
   "devDependencies": {
@@ -32,7 +31,8 @@
     "tree-sitter-python": "^0.25.0",
     "tree-sitter-ruby": "^0.23.1",
     "tree-sitter-rust": "^0.24.0",
-    "tree-sitter-typescript": "^0.23.2"
+    "tree-sitter-typescript": "^0.23.2",
+    "typescript": "^7.0.2"
   },
   "publishConfig": {
     "exports": {

@@ -20,13 +20,7 @@ val steps = steps(::Ctx) {
     stimulus("I convert {int} to roman numerals") { n: Int ->
         copy(result = ROMAN[n])
     }
-    sensor("The result is {word}") { expected: String ->
-        // {word} greedily captures trailing punctuation ("I."), mirroring the
-        // TS/Java fixtures: strip it, assert directly, and return null to opt
-        // out of the compare-against-last-captured-param convenience (which
-        // would wrongly compare the raw punctuated capture).
-        val cleaned = expected.replace(Regex("[.!?]$"), "")
-        if (cleaned != result) throw AssertionError("expected $cleaned but got $result")
-        null
-    }
+    // The trailing "." is matched literally, so {word} captures just the
+    // numeral and this sensor returns the observed value for the core.
+    sensor("The result is {word}.") { expected: String -> result }
 }

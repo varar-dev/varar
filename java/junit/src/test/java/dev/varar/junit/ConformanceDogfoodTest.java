@@ -19,7 +19,7 @@ import org.junit.platform.testkit.engine.EngineTestKit;
 
 /**
  * Task 14 (Milestone 2's capstone): runs all 13 bundles under the shared, language-neutral
- * {@code conformance/bundles/} corpus through the REAL {@link VarTestEngine} via {@link
+ * {@code conformance/bundles/} corpus through the REAL {@link OathTestEngine} via {@link
  * EngineTestKit} — the sub-project-2 analogue of the core plan's Task 19 conformance gate
  * ({@code var}'s {@code ConformanceTest}), but proving the test-runner ADAPTER end to end
  * (discovery + execution reported through JUnit Platform events) rather than diffing wire-format
@@ -41,7 +41,7 @@ import org.junit.platform.testkit.engine.EngineTestKit;
  * <p><b>Discovery mechanism:</b> each bundle's {@code example.md} lives on the filesystem (a
  * sibling of {@code java/}, outside any classpath root), so discovery uses a real {@code
  * FileSelector} ({@link org.junit.platform.engine.discovery.DiscoverySelectors#selectFile}), not
- * a classpath-resource selector — resolved by {@link VarFileSelectorResolver#resolve(
+ * a classpath-resource selector — resolved by {@link OathFileSelectorResolver#resolve(
  * org.junit.platform.engine.discovery.FileSelector, org.junit.platform.engine.support.discovery.
  * SelectorResolver.Context)}, which relativizes the selected file against the config root
  * ({@link ConfigBridge#CONFIG_ROOT_KEY}, here the per-case {@code @TempDir} workspace) to test
@@ -52,8 +52,8 @@ import org.junit.platform.testkit.engine.EngineTestKit;
  * that workspace's varar.config.json, so no OTHER bundle's {@code example.md} can accidentally
  * satisfy this request. The config's {@code steps}
  * names the one fixture class {@link StepLoader} should load, exactly as {@link
- * VarEngineBehaviorTest} already proves end to end for classpath-resource specs — this task is
- * the same mechanism for a real-file spec.
+ * OathEngineBehaviorTest} already proves end to end for classpath-resource oaths — this task is
+ * the same mechanism for a real-file oath.
  *
  * <p><b>What's asserted:</b> not a JSON diff (that's {@code var}'s job) but the per-example
  * pass/fail OUTCOME the real engine reports, matching each bundle's committed {@code
@@ -107,11 +107,11 @@ class ConformanceDogfoodTest {
                         new BundleCase("03-expected-failure", "dev.varar.conformance.bundle03.DivisionSteps", 1, 0),
                         // 04-tables-and-docstrings/golden/trace.json: one example, "pass".
                         new BundleCase("04-tables-and-docstrings", "dev.varar.conformance.bundle04.EchoSteps", 1, 0),
-                        // 05-ambiguous-match/golden/trace.json: one example, outcome "pass" with
-                        // zero steps -- the plan stage drops the ambiguous sentence's binding
-                        // (an "ambiguous-match" diagnostic, golden/plan.json) but still produces
-                        // one example with no steps to run, which vacuously passes.
-                        new BundleCase("05-ambiguous-match", "dev.varar.conformance.bundle05.CukesSteps", 1, 0),
+                        // 05-ambiguous-match/golden/trace.json: no examples (ADR 0012) -- the
+                        // plan stage emits an "ambiguous-match" diagnostic (golden/plan.json) and,
+                        // since the ambiguous sentence has no runnable step, treats the paragraph
+                        // as prose (a delimiter), producing no example to run at all.
+                        new BundleCase("05-ambiguous-match", "dev.varar.conformance.bundle05.CukesSteps", 0, 0),
                         // 06-doc-string-mismatch/golden/trace.json: one example, outcome "fail"
                         // -- a genuine doc-string mismatch, no error fence involved.
                         new BundleCase("06-doc-string-mismatch", "dev.varar.conformance.bundle06.EchoSteps", 0, 1),
@@ -131,7 +131,7 @@ class ConformanceDogfoodTest {
                         // sole paragraph matches no step, so the "error" fence has nothing to
                         // run against ("error-fence-without-step" diagnostic, golden/plan.json)
                         // and the example is dropped entirely at the plan stage. A childless
-                        // VarFileDescriptor is itself pruned by the Launcher (see
+                        // OathFileDescriptor is itself pruned by the Launcher (see
                         // DiscoverySelectorResolverTest's javadoc), so this bundle reports zero
                         // test events, not zero-of-something.
                         new BundleCase(
@@ -164,10 +164,10 @@ class ConformanceDogfoodTest {
     void bundleOutcomesMatchGoldenTrace(BundleCase bundleCase, @TempDir Path workspace) throws IOException {
         Path bundleDir = BUNDLES_DIR.resolve(bundleCase.bundleName());
         Path exampleMd = bundleDir.resolve("example.md");
-        assertTrue(Files.isRegularFile(exampleMd), () -> "missing bundle spec: " + exampleMd.toAbsolutePath());
+        assertTrue(Files.isRegularFile(exampleMd), () -> "missing bundle oath: " + exampleMd.toAbsolutePath());
 
         // docs globs resolve against the config root (the workspace), not the JVM
-        // working directory — so the include is the spec's workspace-relative path.
+        // working directory — so the include is the oath's workspace-relative path.
         String docsInclude = workspace
                 .toAbsolutePath()
                 .normalize()

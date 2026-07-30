@@ -1,4 +1,4 @@
 {
-  "docs": { "include": ["specs/**/*.md"], "exclude": [] },
+  "docs": { "include": ["oaths/**/*.md"], "exclude": [] },
   "steps": ["dev.varar.kotest.fixtures.SmokeSteps"]
 }

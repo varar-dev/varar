@@ -2,11 +2,21 @@
 package fixture
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/varar-dev/varar/go/varar"
 )
+
+func destOf(state varar.Value) string {
+	if m, ok := state.AsMap(); ok {
+		if dv, ok := m["dest"]; ok {
+			if str, ok := dv.AsString(); ok {
+				return str
+			}
+		}
+	}
+	return ""
+}
 
 func Register(s *varar.Steps[varar.Value]) {
 	// Custom {airport} parameter type: IATA code, lowercased by parse. The
@@ -18,21 +28,9 @@ func Register(s *varar.Steps[varar.Value]) {
 	s.Stimulus("I fly to {airport}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
 		return varar.Ptr(varar.MapValue(map[string]varar.Value{"dest": args[0]})), nil
 	})
-	s.Sensor("The destination code is {word}", func(state varar.Value, args []varar.Value) (*varar.Value, error) {
-		expected, _ := args[0].AsString()
-		cleaned := strings.TrimRight(expected, ".!?")
-		dest := ""
-		if m, ok := state.AsMap(); ok {
-			if dv, ok := m["dest"]; ok {
-				if str, ok := dv.AsString(); ok {
-					dest = str
-				}
-			}
-		}
-		if cleaned != dest {
-			return nil, fmt.Errorf("expected %s but got %s", cleaned, dest)
-		}
-		return nil, nil
+	// The trailing "." is matched literally, so {word} captures just the code.
+	s.Sensor("The destination code is {word}.", func(state varar.Value, expected string) (string, error) {
+		return destOf(state), nil
 	})
 }
 

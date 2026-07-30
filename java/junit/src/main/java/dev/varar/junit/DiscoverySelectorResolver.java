@@ -1,6 +1,6 @@
 package dev.varar.junit;
 
-import dev.varar.config.VarConfig;
+import dev.varar.config.Config;
 import dev.varar.runner.StepLoader;
 import java.nio.file.Path;
 import org.junit.platform.commons.io.ResourceFilter;
@@ -9,8 +9,8 @@ import org.junit.platform.engine.support.discovery.DiscoveryIssueReporter;
 import org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolver;
 
 /**
- * Resolves an {@link EngineDiscoveryRequest}'s selectors into one {@link VarFileDescriptor} per
- * matching {@code .md} spec, added as a child of {@link VarEngineDescriptor}.
+ * Resolves an {@link EngineDiscoveryRequest}'s selectors into one {@link OathFileDescriptor} per
+ * matching {@code .md} oath, added as a child of {@link OathEngineDescriptor}.
  *
  * <p>Built on {@code junit-platform-engine}'s real generic selector-resolution machinery
  * ({@link EngineDiscoveryRequestResolver}/{@code SelectorResolver}) rather than hand-dispatching
@@ -25,7 +25,7 @@ import org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolve
  * Resolution.selectors(...)} — until nothing new resolves. This is why a {@code
  * ClasspathRootSelector}/{@code PackageSelector}/{@code ModuleSelector} and a directly-supplied
  * {@code ClasspathResourceSelector}/{@code FileSelector}/{@code DirectorySelector} all end up
- * producing the same {@link VarFileDescriptor} shape without this class dispatching on selector
+ * producing the same {@link OathFileDescriptor} shape without this class dispatching on selector
  * type itself:
  *
  * <ul>
@@ -35,11 +35,11 @@ import org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolve
  *       addResourceContainerSelectorResolver(ResourceFilter)}, which performs exactly this
  *       expansion generically (classpath/module/package scanning) for any engine; var supplies
  *       only the {@link ResourceFilter} predicate (delegating to {@code
- *       dev.varar.runner.Discovery.matchSpec}).
+ *       dev.varar.runner.Discovery.matchOath}).
  *   <li>{@code ClasspathResourceSelector}/{@code FileSelector}/{@code DirectorySelector} &rarr;
- *       one {@link VarFileDescriptor} (a directory first expands into candidate {@code
+ *       one {@link OathFileDescriptor} (a directory first expands into candidate {@code
  *       FileSelector}s, which the same resolver then re-resolves) &mdash; {@link
- *       VarFileSelectorResolver}.
+ *       OathFileSelectorResolver}.
  * </ul>
  *
  * <p>var's needs are simpler than Cucumber's (no scenario-outline/rule/example nesting), so this
@@ -47,34 +47,34 @@ import org.junit.platform.engine.support.discovery.EngineDiscoveryRequestResolve
  * (one per selector-kind concern) — there is no equivalent of Cucumber's separate {@code
  * FeatureWithLinesFileResolver}/{@code FeatureFileResolver} split to preserve.
  *
- * <p><strong>Task 9/10 split:</strong> {@link VarFileSelectorResolver} now also parses+plans each
+ * <p><strong>Task 9/10 split:</strong> {@link OathFileSelectorResolver} now also parses+plans each
  * resolved file's content (against the {@link StepLoader.LoadedSteps} threaded through this
- * class's constructor, loaded once per discovery pass by {@link VarTestEngine#discover}) and adds
- * one {@link VarExampleDescriptor} leaf per {@code PlannedExample} — closing the Task 9 gap where
- * a childless {@code VarFileDescriptor} container was silently pruned by the Launcher.
+ * class's constructor, loaded once per discovery pass by {@link OathTestEngine#discover}) and adds
+ * one {@link ExampleDescriptor} leaf per {@code PlannedExample} — closing the Task 9 gap where
+ * a childless {@code OathFileDescriptor} container was silently pruned by the Launcher.
  *
  * <p>{@code UniqueIdSelector} (re-running a single file or example by id, standalone — no
  * accompanying file/classpath selector) is handled too, by {@code
- * VarFileSelectorResolver.resolve(UniqueIdSelector, Context)} — see that method's javadoc for the
+ * OathFileSelectorResolver.resolve(UniqueIdSelector, Context)} — see that method's javadoc for the
  * file-vs-example distinction, and Task 17's fix for merging multiple bare {@code
  * UniqueIdSelector}s that target different examples in the same file into one container.
  */
 final class DiscoverySelectorResolver {
 
-    private final EngineDiscoveryRequestResolver<VarEngineDescriptor> resolver;
+    private final EngineDiscoveryRequestResolver<OathEngineDescriptor> resolver;
 
-    DiscoverySelectorResolver(VarConfig config, Path root, StepLoader.LoadedSteps loadedSteps) {
-        VarFileSelectorResolver fileSelectorResolver = new VarFileSelectorResolver(config, root, loadedSteps);
-        this.resolver = EngineDiscoveryRequestResolver.<VarEngineDescriptor>builder()
+    DiscoverySelectorResolver(Config config, Path root, StepLoader.LoadedSteps loadedSteps) {
+        OathFileSelectorResolver fileSelectorResolver = new OathFileSelectorResolver(config, root, loadedSteps);
+        this.resolver = EngineDiscoveryRequestResolver.<OathEngineDescriptor>builder()
                 .addResourceContainerSelectorResolver(
-                        ResourceFilter.of(resource -> fileSelectorResolver.matchesSpec(resource.getName())))
+                        ResourceFilter.of(resource -> fileSelectorResolver.matchesOath(resource.getName())))
                 .addSelectorResolver(fileSelectorResolver)
                 .build();
     }
 
     void resolveSelectors(
             EngineDiscoveryRequest request,
-            VarEngineDescriptor engineDescriptor,
+            OathEngineDescriptor engineDescriptor,
             DiscoveryIssueReporter issueReporter) {
         resolver.resolve(request, engineDescriptor, issueReporter);
     }

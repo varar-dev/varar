@@ -1,10 +1,11 @@
-//! Spec drift detection — port of `drift.ts` / `Drift.java`. A paragraph the
+//! Oath drift detection — port of `drift.ts` / `Drift.java`. A paragraph the
 //! committed `varar.lock.json` baseline recorded as an example that now matches no
 //! step. Byte-identical to the other ports (FNV-1a fingerprint, insertion-ordered
 //! lockfile serializer, Jaccard word-similarity re-identification).
 
-use crate::ast::VarDoc;
+use crate::ast::Doc;
 use crate::hash::hash_source;
+use crate::json_value::parse_json_value;
 use crate::plan::{ExecutionPlan, derive_example_name};
 use crate::span::Span;
 use crate::value::Value;
@@ -22,18 +23,18 @@ pub struct BaselineExample {
     pub line: usize,
 }
 
-/// The committed baseline for one spec file.
+/// The committed baseline for one oath file.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SpecBaseline {
+pub struct OathBaseline {
     pub source_hash: String,
     pub examples: Vec<BaselineExample>,
 }
 
-/// The whole `varar.lock.json`: every spec keyed by its POSIX path.
+/// The whole `varar.lock.json`: every oath keyed by its POSIX path.
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub struct VarLock {
+pub struct LockFile {
     pub version: u32,
-    pub specs: BTreeMap<String, SpecBaseline>,
+    pub oaths: BTreeMap<String, OathBaseline>,
 }
 
 /// A paragraph the baseline says was an example and now matches no step.
@@ -55,14 +56,22 @@ pub trait BaselineStore {
 
 static TOKEN_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"[\p{L}\p{N}]+").unwrap());
 
-fn within(inner: Span, outer: Span) -> bool {
-    inner.start_offset >= outer.start_offset && inner.end_offset <= outer.end_offset
+// Do the two spans overlap at all (offset ranges intersect)? A candidate
+// paragraph relates to its planned example either way round: a header-bound row
+// sits *inside* its binding paragraph, while a merged example's span *covers*
+// each of the candidates it absorbed (ADR 0012). Overlap catches both.
+fn overlaps(a: Span, b: Span) -> bool {
+    a.start_offset < b.end_offset && b.start_offset < a.end_offset
 }
 
+// A candidate paragraph is "live" (still an example) if it overlaps at least one
+// planned example. A now-prose paragraph — one whose step def was renamed or
+// deleted — overlaps none (it became a delimiter, splitting any example it was
+// part of), so drift catches it.
 fn is_live(candidate_span: Span, plan: &ExecutionPlan) -> bool {
     plan.examples
         .iter()
-        .any(|pe| within(pe.span, candidate_span))
+        .any(|pe| overlaps(pe.span, candidate_span))
 }
 
 fn tokenize(text: &str) -> HashSet<String> {
@@ -86,9 +95,8 @@ fn similarity(a: &HashSet<String>, b: &HashSet<String>) -> f64 {
 }
 
 /// The current example-producing paragraphs, in document order.
-pub fn live_examples(var_doc: &VarDoc, plan: &ExecutionPlan) -> Vec<BaselineExample> {
-    var_doc
-        .examples
+pub fn live_examples(doc: &Doc, plan: &ExecutionPlan) -> Vec<BaselineExample> {
+    doc.examples
         .iter()
         .filter(|c| is_live(c.span, plan))
         .map(|c| BaselineExample {
@@ -98,24 +106,24 @@ pub fn live_examples(var_doc: &VarDoc, plan: &ExecutionPlan) -> Vec<BaselineExam
         .collect()
 }
 
-/// The full baseline record for a spec: fingerprint plus live examples.
-pub fn derive_spec_baseline(source: &str, var_doc: &VarDoc, plan: &ExecutionPlan) -> SpecBaseline {
-    SpecBaseline {
+/// The full baseline record for an oath: fingerprint plus live examples.
+pub fn derive_oath_baseline(source: &str, doc: &Doc, plan: &ExecutionPlan) -> OathBaseline {
+    OathBaseline {
         source_hash: hash_source(source),
-        examples: live_examples(var_doc, plan),
+        examples: live_examples(doc, plan),
     }
 }
 
 /// Paragraphs the baseline recorded as examples that now match zero steps.
 pub fn detect_drift(
-    baseline: Option<&SpecBaseline>,
-    var_doc: &VarDoc,
+    baseline: Option<&OathBaseline>,
+    doc: &Doc,
     plan: &ExecutionPlan,
 ) -> Vec<Drifted> {
     let Some(baseline) = baseline else {
         return Vec::new();
     };
-    let candidates = &var_doc.examples;
+    let candidates = &doc.examples;
     let n = candidates.len();
     let tokens: Vec<HashSet<String>> = candidates
         .iter()
@@ -166,44 +174,91 @@ pub fn message(drifted: &Drifted) -> String {
     )
 }
 
-/// One spec's baseline reconciliation against a [`BaselineStore`]. `update`
+/// One oath's baseline reconciliation against a [`BaselineStore`]. `update`
 /// accepts all drift; otherwise detect drift and rewrite the baseline only on a
 /// clean run.
 pub fn reconcile_drift(
     store: &mut dyn BaselineStore,
-    spec_path: &str,
+    oath_path: &str,
     source: &str,
-    var_doc: &VarDoc,
+    doc: &Doc,
     plan: &ExecutionPlan,
     update: bool,
 ) -> Vec<Drifted> {
-    let lock = store.read().as_deref().and_then(parse_var_lock);
+    let lock = store.read().as_deref().and_then(parse_lock_file);
     let drifts = if update {
         Vec::new()
     } else {
-        detect_drift(lock.as_ref().and_then(|l| l.specs.get(spec_path)), var_doc, plan)
+        detect_drift(lock.as_ref().and_then(|l| l.oaths.get(oath_path)), doc, plan)
     };
     if update || drifts.is_empty() {
-        let next = derive_spec_baseline(source, var_doc, plan);
-        let mut specs = lock.map_or_else(BTreeMap::new, |l| l.specs);
-        specs.insert(spec_path.to_string(), next);
-        store.write(&stringify_var_lock(&VarLock { version: 1, specs }));
+        let next = derive_oath_baseline(source, doc, plan);
+        let mut oaths = lock.map_or_else(BTreeMap::new, |l| l.oaths);
+        oaths.insert(oath_path.to_string(), next);
+        store.write(&stringify_lock_file(&LockFile { version: 2, oaths }));
     }
     drifts
 }
 
-/// Serializes `varar.lock.json` deterministically (fixed field order, sorted spec
+/// Drops every baseline whose oath path is not in `keep_paths` — the entries left
+/// behind when an oath is deleted or moved. Pure counterpart of [`parse_lock_file`]
+/// / [`stringify_lock_file`]; the caller decides what "still exists" means.
+pub fn prune_lock_file(lock: &LockFile, keep_paths: &[String]) -> LockFile {
+    LockFile {
+        version: 2,
+        oaths: lock
+            .oaths
+            .iter()
+            .filter(|(path, _)| keep_paths.iter().any(|k| k == *path))
+            .map(|(path, baseline)| (path.clone(), baseline.clone()))
+            .collect(),
+    }
+}
+
+/// The whole-lock counterpart of [`reconcile_drift`], run ONCE per run rather than
+/// per oath: reconciliation cannot see paths that no longer exist, so without this
+/// the lock silently accumulates dead entries and stops being a faithful inventory
+/// of the oath set (#70).
+///
+/// `keep_paths` MUST be everything the `docs` globs currently match — never the set
+/// the run happened to execute. Runs are routinely filtered, and pruning against a
+/// filtered set would delete live baselines.
+///
+/// Removal is still not *gated*: a deleted oath is a different signal from drift and
+/// stays ungated (ADR 0002). This only stops preserving dead state, and only under
+/// `update`. Returns the paths removed (or, without `update`, the ones that would be).
+pub fn prune_baselines(
+    store: &mut dyn BaselineStore,
+    keep_paths: &[String],
+    update: bool,
+) -> Vec<String> {
+    let Some(lock) = store.read().as_deref().and_then(parse_lock_file) else {
+        return Vec::new();
+    };
+    let stale: Vec<String> = lock
+        .oaths
+        .keys()
+        .filter(|path| !keep_paths.iter().any(|k| k == *path))
+        .cloned()
+        .collect();
+    if update && !stale.is_empty() {
+        store.write(&stringify_lock_file(&prune_lock_file(&lock, keep_paths)));
+    }
+    stale
+}
+
+/// Serializes `varar.lock.json` deterministically (fixed field order, sorted oath
 /// paths, two-space indent, trailing newline) — NOT [`crate::canonical_json`].
-pub fn stringify_var_lock(lock: &VarLock) -> String {
+pub fn stringify_lock_file(lock: &LockFile) -> String {
     let mut sb = String::new();
-    sb.push_str("{\n  \"version\": 1,\n  \"specs\": ");
-    if lock.specs.is_empty() {
+    sb.push_str("{\n  \"version\": 2,\n  \"oaths\": ");
+    if lock.oaths.is_empty() {
         sb.push_str("{}");
     } else {
         sb.push_str("{\n");
-        let n = lock.specs.len();
-        // `BTreeMap` iterates spec paths in sorted order.
-        for (p, (path, baseline)) in lock.specs.iter().enumerate() {
+        let n = lock.oaths.len();
+        // `BTreeMap` iterates oath paths in sorted order.
+        for (p, (path, baseline)) in lock.oaths.iter().enumerate() {
             sb.push_str("    ");
             write_json_string(&mut sb, path);
             sb.push_str(": {\n      \"sourceHash\": ");
@@ -261,23 +316,23 @@ fn write_json_string(sb: &mut String, s: &str) {
 }
 
 /// Parses `varar.lock.json`; `None` on malformed input (treated as no baseline).
-pub fn parse_var_lock(text: &str) -> Option<VarLock> {
-    let parsed = JsonReader::new(text).parse_whole()?;
+pub fn parse_lock_file(text: &str) -> Option<LockFile> {
+    let parsed = parse_json_value(text)?;
     let Value::Map(obj) = parsed else { return None };
-    if !matches!(obj.get("version"), Some(Value::Int(1))) {
+    if !matches!(obj.get("version"), Some(Value::Int(2))) {
         return None;
     }
-    let Some(Value::Map(specs_raw)) = obj.get("specs") else {
+    let Some(Value::Map(oaths_raw)) = obj.get("oaths") else {
         return None;
     };
-    let mut specs = BTreeMap::new();
-    for (k, v) in specs_raw {
-        specs.insert(k.clone(), parse_spec_baseline(v)?);
+    let mut oaths = BTreeMap::new();
+    for (k, v) in oaths_raw {
+        oaths.insert(k.clone(), parse_oath_baseline(v)?);
     }
-    Some(VarLock { version: 1, specs })
+    Some(LockFile { version: 2, oaths })
 }
 
-fn parse_spec_baseline(value: &Value) -> Option<SpecBaseline> {
+fn parse_oath_baseline(value: &Value) -> Option<OathBaseline> {
     let Value::Map(map) = value else { return None };
     let Some(Value::String(source_hash)) = map.get("sourceHash") else {
         return None;
@@ -299,184 +354,8 @@ fn parse_spec_baseline(value: &Value) -> Option<SpecBaseline> {
             line: *line as usize,
         });
     }
-    Some(SpecBaseline {
+    Some(OathBaseline {
         source_hash: source_hash.clone(),
         examples,
     })
-}
-
-/// A tiny recursive-descent JSON reader — enough for `varar.lock.json`, returning
-/// `None` on malformed input (Java's caught-exception → null).
-struct JsonReader {
-    chars: Vec<char>,
-    i: usize,
-}
-
-impl JsonReader {
-    fn new(text: &str) -> JsonReader {
-        JsonReader {
-            chars: text.chars().collect(),
-            i: 0,
-        }
-    }
-
-    fn parse_whole(&mut self) -> Option<Value> {
-        let v = self.value()?;
-        self.skip_ws();
-        if self.i != self.chars.len() {
-            return None;
-        }
-        Some(v)
-    }
-
-    fn value(&mut self) -> Option<Value> {
-        self.skip_ws();
-        match self.peek()? {
-            '{' => self.object(),
-            '[' => self.array(),
-            '"' => self.string().map(Value::String),
-            't' | 'f' => self.boolean(),
-            'n' => self.null(),
-            _ => self.number(),
-        }
-    }
-
-    fn object(&mut self) -> Option<Value> {
-        self.expect('{')?;
-        let mut map = BTreeMap::new();
-        self.skip_ws();
-        if self.peek()? == '}' {
-            self.i += 1;
-            return Some(Value::Map(map));
-        }
-        loop {
-            self.skip_ws();
-            let key = self.string()?;
-            self.skip_ws();
-            self.expect(':')?;
-            map.insert(key, self.value()?);
-            self.skip_ws();
-            match self.next()? {
-                '}' => return Some(Value::Map(map)),
-                ',' => {}
-                _ => return None,
-            }
-        }
-    }
-
-    fn array(&mut self) -> Option<Value> {
-        self.expect('[')?;
-        let mut list = Vec::new();
-        self.skip_ws();
-        if self.peek()? == ']' {
-            self.i += 1;
-            return Some(Value::List(list));
-        }
-        loop {
-            list.push(self.value()?);
-            self.skip_ws();
-            match self.next()? {
-                ']' => return Some(Value::List(list)),
-                ',' => {}
-                _ => return None,
-            }
-        }
-    }
-
-    fn string(&mut self) -> Option<String> {
-        self.expect('"')?;
-        let mut out = String::new();
-        loop {
-            match self.next()? {
-                '"' => return Some(out),
-                '\\' => match self.next()? {
-                    '"' => out.push('"'),
-                    '\\' => out.push('\\'),
-                    '/' => out.push('/'),
-                    'n' => out.push('\n'),
-                    'r' => out.push('\r'),
-                    't' => out.push('\t'),
-                    'b' => out.push('\u{0008}'),
-                    'f' => out.push('\u{000c}'),
-                    'u' => {
-                        let code = self.hex4()?;
-                        out.push(char::from_u32(code)?);
-                    }
-                    _ => return None,
-                },
-                c => out.push(c),
-            }
-        }
-    }
-
-    fn hex4(&mut self) -> Option<u32> {
-        if self.i + 4 > self.chars.len() {
-            return None;
-        }
-        let slice: String = self.chars[self.i..self.i + 4].iter().collect();
-        self.i += 4;
-        u32::from_str_radix(&slice, 16).ok()
-    }
-
-    fn number(&mut self) -> Option<Value> {
-        let start = self.i;
-        while self.i < self.chars.len() && "-+.eE0123456789".contains(self.chars[self.i]) {
-            self.i += 1;
-        }
-        if self.i == start {
-            return None;
-        }
-        let num: String = self.chars[start..self.i].iter().collect();
-        if num.contains(['.', 'e', 'E']) {
-            num.parse::<f64>().ok().map(Value::Float)
-        } else {
-            num.parse::<i64>().ok().map(Value::Int)
-        }
-    }
-
-    fn boolean(&mut self) -> Option<Value> {
-        if self.starts_with("true") {
-            self.i += 4;
-            Some(Value::Bool(true))
-        } else if self.starts_with("false") {
-            self.i += 5;
-            Some(Value::Bool(false))
-        } else {
-            None
-        }
-    }
-
-    fn null(&mut self) -> Option<Value> {
-        if self.starts_with("null") {
-            self.i += 4;
-            Some(Value::Null)
-        } else {
-            None
-        }
-    }
-
-    fn starts_with(&self, lit: &str) -> bool {
-        let lit: Vec<char> = lit.chars().collect();
-        self.i + lit.len() <= self.chars.len() && self.chars[self.i..self.i + lit.len()] == lit[..]
-    }
-
-    fn skip_ws(&mut self) {
-        while self.i < self.chars.len() && matches!(self.chars[self.i], ' ' | '\n' | '\r' | '\t') {
-            self.i += 1;
-        }
-    }
-
-    fn peek(&self) -> Option<char> {
-        self.chars.get(self.i).copied()
-    }
-
-    fn next(&mut self) -> Option<char> {
-        let c = self.chars.get(self.i).copied()?;
-        self.i += 1;
-        Some(c)
-    }
-
-    fn expect(&mut self, c: char) -> Option<()> {
-        if self.next()? == c { Some(()) } else { None }
-    }
 }

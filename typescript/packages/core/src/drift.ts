@@ -1,4 +1,4 @@
-import type { VarDoc } from './ast.ts'
+import type { Doc } from './ast.ts'
 import { type Diagnostic, driftDetected } from './diagnostics.ts'
 import { hashSource } from './hash.ts'
 import { deriveExampleName, type ExecutionPlan } from './plan.ts'
@@ -24,17 +24,17 @@ export type BaselineExample = {
   readonly line: number
 }
 
-// The committed baseline for one spec file.
-export type SpecBaseline = {
+// The committed baseline for one oath file.
+export type OathBaseline = {
   readonly sourceHash: string
   readonly examples: ReadonlyArray<BaselineExample>
 }
 
-// The whole `varar.lock.json`: every spec keyed by its POSIX path relative to the
+// The whole `varar.lock.json`: every oath keyed by its POSIX path relative to the
 // project root.
-export type VarLock = {
-  readonly version: 1
-  readonly specs: Readonly<Record<string, SpecBaseline>>
+export type LockFile = {
+  readonly version: 2
+  readonly oaths: Readonly<Record<string, OathBaseline>>
 }
 
 // A paragraph that the baseline says was an example and now matches zero steps.
@@ -46,18 +46,20 @@ export type Drift = {
   readonly span: Span
 }
 
-// Is `inner` positioned within `outer` (offset containment)? A planned
-// example's span sits inside its structural candidate's span — exactly for the
-// 1:1 case, strictly inside for header-bound rows nested in the binding
-// paragraph.
-function within(inner: Span, outer: Span): boolean {
-  return inner.startOffset >= outer.startOffset && inner.endOffset <= outer.endOffset
+// Do the two spans overlap at all (offset ranges intersect)? A candidate
+// paragraph relates to its planned example either way round: a header-bound row
+// sits *inside* its binding paragraph, while a merged example's span *covers*
+// each of the candidates it absorbed (ADR 0012). Overlap catches both.
+function overlaps(a: Span, b: Span): boolean {
+  return a.startOffset < b.endOffset && b.startOffset < a.endOffset
 }
 
-// A candidate paragraph is "live" (still an example) if at least one planned
-// example falls within it.
+// A candidate paragraph is "live" (still an example) if it overlaps at least one
+// planned example. A now-prose paragraph — one whose step def was renamed or
+// deleted — overlaps none (it became a delimiter, splitting any example it was
+// part of), so drift catches it.
 function isLive(candidateSpan: Span, plan: ExecutionPlan): boolean {
-  return plan.examples.some((pe) => within(pe.span, candidateSpan))
+  return plan.examples.some((pe) => overlaps(pe.span, candidateSpan))
 }
 
 // Lower-cased word tokens (Unicode letters/digits) of a paragraph name. The
@@ -80,10 +82,10 @@ function similarity(a: ReadonlySet<string>, b: ReadonlySet<string>): number {
 }
 
 // The current example-producing paragraphs, in document order — what a clean
-// run records as the new baseline for a spec.
-export function liveExamples(varDoc: VarDoc, plan: ExecutionPlan): ReadonlyArray<BaselineExample> {
+// run records as the new baseline for an oath.
+export function liveExamples(doc: Doc, plan: ExecutionPlan): ReadonlyArray<BaselineExample> {
   const out: BaselineExample[] = []
-  for (const candidate of varDoc.examples) {
+  for (const candidate of doc.examples) {
     if (isLive(candidate.span, plan)) {
       out.push({ name: deriveExampleName(candidate.body), line: candidate.span.startLine })
     }
@@ -91,17 +93,13 @@ export function liveExamples(varDoc: VarDoc, plan: ExecutionPlan): ReadonlyArray
   return out
 }
 
-// The full baseline record for a spec: its source fingerprint plus its live
+// The full baseline record for an oath: its source fingerprint plus its live
 // examples.
-export function deriveSpecBaseline(
-  source: string,
-  varDoc: VarDoc,
-  plan: ExecutionPlan,
-): SpecBaseline {
-  return { sourceHash: hashSource(source), examples: liveExamples(varDoc, plan) }
+export function deriveOathBaseline(source: string, doc: Doc, plan: ExecutionPlan): OathBaseline {
+  return { sourceHash: hashSource(source), examples: liveExamples(doc, plan) }
 }
 
-// Detect drift for one spec: paragraphs the baseline recorded as examples that
+// Detect drift for one oath: paragraphs the baseline recorded as examples that
 // now match zero steps. Pure — no `sourceHash` short-circuit, because a step
 // definition can be renamed with the Markdown (and its hash) untouched.
 //
@@ -111,12 +109,12 @@ export function deriveSpecBaseline(
 // looks like drift, and rewording within the threshold keeps its identity.
 //   matched & live → not drift · matched & dead → DRIFT · no match → remove+add
 export function detectDrift(
-  baseline: SpecBaseline | undefined,
-  varDoc: VarDoc,
+  baseline: OathBaseline | undefined,
+  doc: Doc,
   plan: ExecutionPlan,
 ): ReadonlyArray<Drift> {
   if (!baseline) return [] // no baseline yet (first run) — nothing to compare
-  const candidates = varDoc.examples
+  const candidates = doc.examples
   const names = candidates.map((c) => deriveExampleName(c.body))
   const tokens = names.map(tokenize)
   const live = candidates.map((c) => isLive(c.span, plan))
@@ -156,7 +154,7 @@ export function driftDiagnostics(drifts: ReadonlyArray<Drift>): ReadonlyArray<Di
   return drifts.map((d) => driftDetected({ name: d.name, span: d.span }))
 }
 
-// One spec's baseline reconciliation against a BaselineStore — the shared
+// One oath's baseline reconciliation against a BaselineStore — the shared
 // read → detect → write step every runner uses (browser and Node alike; only
 // the store differs). Returns the drifts to report.
 //   - `update` accepts all drift: re-record the baseline, report nothing.
@@ -164,25 +162,67 @@ export function driftDiagnostics(drifts: ReadonlyArray<Drift>): ReadonlyArray<Di
 //     unacknowledged drift keeps its old baseline entry (and stays red).
 export async function reconcileDrift(opts: {
   readonly store: BaselineStore
-  readonly specPath: string
+  readonly oathPath: string
   readonly source: string
-  readonly varDoc: VarDoc
+  readonly doc: Doc
   readonly plan: ExecutionPlan
   readonly update?: boolean
 }): Promise<ReadonlyArray<Drift>> {
   const text = await opts.store.read()
-  const lock = text ? parseVarLock(text) : null
-  const baseline = lock?.specs[opts.specPath]
-  const drifts = opts.update ? [] : detectDrift(baseline, opts.varDoc, opts.plan)
+  const lock = text ? parseLockFile(text) : null
+  const baseline = lock?.oaths[opts.oathPath]
+  const drifts = opts.update ? [] : detectDrift(baseline, opts.doc, opts.plan)
   if (opts.update || drifts.length === 0) {
-    const nextSpec = deriveSpecBaseline(opts.source, opts.varDoc, opts.plan)
-    const nextLock: VarLock = {
-      version: 1,
-      specs: { ...(lock?.specs ?? {}), [opts.specPath]: nextSpec },
+    const nextOath = deriveOathBaseline(opts.source, opts.doc, opts.plan)
+    const nextLock: LockFile = {
+      version: 2,
+      oaths: { ...(lock?.oaths ?? {}), [opts.oathPath]: nextOath },
     }
-    await opts.store.write(stringifyVarLock(nextLock))
+    await opts.store.write(stringifyLockFile(nextLock))
   }
   return drifts
+}
+
+// Drop every baseline whose oath path is not in `keepPaths` — the entries left
+// behind when an oath is deleted or moved. Pure counterpart of parseLockFile /
+// stringifyLockFile; the caller decides what "still exists" means.
+export function pruneLockFile(lock: LockFile, keepPaths: ReadonlyArray<string>): LockFile {
+  const keep = new Set(keepPaths)
+  const oaths: Record<string, OathBaseline> = {}
+  for (const [path, baseline] of Object.entries(lock.oaths)) {
+    if (keep.has(path)) oaths[path] = baseline
+  }
+  return { version: 2, oaths }
+}
+
+// The whole-lock counterpart of reconcileDrift, run ONCE per run rather than per
+// oath: reconciliation cannot see paths that no longer exist, so without this the
+// lock silently accumulates dead entries and stops being a faithful inventory of
+// the oath set (#70).
+//
+// `keepPaths` MUST be everything the `docs` globs currently match — never the set
+// the run happened to execute. Runs are routinely filtered (`varar run --globs`,
+// a pytest path argument, a JUnit method selector), and pruning against a
+// filtered set would delete live baselines.
+//
+// Removal is still not *gated*: a deleted oath is a different signal from drift
+// and stays ungated (ADR 0002). This only stops preserving dead state, and only
+// under `update` — nothing is deleted behind the author's back. Returns the paths
+// removed (or, without `update`, the ones that would be).
+export async function pruneBaselines(opts: {
+  readonly store: BaselineStore
+  readonly keepPaths: ReadonlyArray<string>
+  readonly update?: boolean
+}): Promise<ReadonlyArray<string>> {
+  const text = await opts.store.read()
+  const lock = text ? parseLockFile(text) : null
+  if (!lock) return []
+  const keep = new Set(opts.keepPaths)
+  const stale = Object.keys(lock.oaths).filter((path) => !keep.has(path))
+  if (opts.update && stale.length > 0) {
+    await opts.store.write(stringifyLockFile(pruneLockFile(lock, opts.keepPaths)))
+  }
+  return stale
 }
 
 function isBaselineExample(v: unknown): v is BaselineExample {
@@ -191,7 +231,7 @@ function isBaselineExample(v: unknown): v is BaselineExample {
   return typeof e.name === 'string' && typeof e.line === 'number'
 }
 
-function isSpecBaseline(v: unknown): v is SpecBaseline {
+function isOathBaseline(v: unknown): v is OathBaseline {
   if (typeof v !== 'object' || v === null) return false
   const b = v as Record<string, unknown>
   return (
@@ -203,7 +243,7 @@ function isSpecBaseline(v: unknown): v is SpecBaseline {
 
 // Parse `varar.lock.json`. Returns null on malformed input (treated as "no
 // baseline yet"), mirroring the LSP's tolerant result ingestion.
-export function parseVarLock(text: string): VarLock | null {
+export function parseLockFile(text: string): LockFile | null {
   let parsed: unknown
   try {
     parsed = JSON.parse(text)
@@ -212,23 +252,23 @@ export function parseVarLock(text: string): VarLock | null {
   }
   if (typeof parsed !== 'object' || parsed === null) return null
   const obj = parsed as Record<string, unknown>
-  if (obj.version !== 1 || typeof obj.specs !== 'object' || obj.specs === null) return null
-  const specs: Record<string, SpecBaseline> = {}
-  for (const [path, value] of Object.entries(obj.specs as Record<string, unknown>)) {
-    if (!isSpecBaseline(value)) return null
-    specs[path] = value
+  if (obj.version !== 2 || typeof obj.oaths !== 'object' || obj.oaths === null) return null
+  const oaths: Record<string, OathBaseline> = {}
+  for (const [path, value] of Object.entries(obj.oaths as Record<string, unknown>)) {
+    if (!isOathBaseline(value)) return null
+    oaths[path] = value
   }
-  return { version: 1, specs }
+  return { version: 2, oaths }
 }
 
-// Serialize a `varar.lock.json` deterministically: spec paths sorted, examples in
+// Serialize a `varar.lock.json` deterministically: oath paths sorted, examples in
 // document order, two-space indent, trailing newline. Byte-stable across runs
 // so a clean re-run produces no git diff.
-export function stringifyVarLock(lock: VarLock): string {
-  const specs: Record<string, SpecBaseline> = {}
-  for (const path of Object.keys(lock.specs).sort()) {
-    const b = lock.specs[path]
-    if (b) specs[path] = b
+export function stringifyLockFile(lock: LockFile): string {
+  const oaths: Record<string, OathBaseline> = {}
+  for (const path of Object.keys(lock.oaths).sort()) {
+    const b = lock.oaths[path]
+    if (b) oaths[path] = b
   }
-  return `${JSON.stringify({ version: 1, specs }, null, 2)}\n`
+  return `${JSON.stringify({ version: 2, oaths }, null, 2)}\n`
 }

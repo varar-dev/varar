@@ -7,26 +7,40 @@ module Varar
   # file → empty config; malformed JSON, wrong types, or unknown keys → an
   # error starting with the file path. See conformance/config/README.md.
   module Config
-    VERSION = '0.6.1'
+    VERSION = '0.7.0'
 
     # The parsed config. All fields default to empty.
-    VarConfig = Data.define(:docs_include, :docs_exclude, :steps, :snippets, :scanner_plugins) do
-      def initialize(docs_include: [], docs_exclude: [], steps: [], snippets: {}, scanner_plugins: [])
+    Config = Data.define(:docs_include, :docs_exclude, :steps, :snippets) do
+      def initialize(docs_include: [], docs_exclude: [], steps: [], snippets: {})
         super
       end
     end
 
-    KNOWN_KEYS = %w[$schema docs steps snippets scannerPlugins].freeze
+    KNOWN_KEYS = %w[$schema docs steps snippets].freeze
     KNOWN_DOCS_KEYS = %w[include exclude].freeze
 
     module_function
 
-    def read_var_config(root)
+    # Read <root>/varar.config.json. The filesystem edge over #parse_config;
+    # a missing file yields the empty config (tools no-op, as in every port).
+    def read_config(root)
       path = File.join(root.to_s, 'varar.config.json')
-      return VarConfig.new unless File.file?(path)
+      return Config.new unless File.file?(path)
 
+      parse_config(File.read(path, encoding: 'UTF-8'), path)
+    end
+
+    # Parse varar.config.json TEXT. Pure — no filesystem.
+    #
+    # +source+ only labels errors (a path, a URL, '<memory>'); nothing is read
+    # from it. Splitting this out from #read_config is what lets a caller
+    # with the text already in hand — an editor buffer, an in-memory fixture,
+    # the LSP — validate it without inventing a file, and mirrors TypeScript's
+    # parseConfig / Java's Config.parse.
+    def parse_config(text, source)
+      path = source
       data = begin
-        JSON.parse(File.read(path, encoding: 'UTF-8'))
+        JSON.parse(text)
       rescue JSON::ParserError => e
         raise ArgumentError, "#{path}: invalid JSON: #{e.message}"
       end
@@ -46,12 +60,11 @@ module Varar
         raise ArgumentError, "#{path}: 'snippets' must be an object of strings"
       end
 
-      VarConfig.new(
+      Config.new(
         docs_include: string_array(docs['include'], 'docs.include', path),
         docs_exclude: string_array(docs['exclude'], 'docs.exclude', path),
         steps: string_array(data['steps'], 'steps', path),
-        snippets: snippets,
-        scanner_plugins: string_array(data['scannerPlugins'], 'scannerPlugins', path)
+        snippets: snippets
       )
     end
 

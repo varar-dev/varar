@@ -65,9 +65,28 @@ enum Transform {
 const INT_RE: &str = r"(?:-?\d+)|(?:\d+)";
 const WORD_RE: &str = r"[^\s]+";
 const STRING_RE: &str = r#""[^"\\]*(?:\\.[^"\\]*)*"|'[^'\\]*(?:\\.[^'\\]*)*'"#;
+// Markdown emphasis, the built-in `{emph}` type. Six alternation branches,
+// longest-delimiter-first (so `**x**` isn't half-eaten by the `*` branch); each
+// branch captures the inner text in its own group, so only the outermost
+// delimiter pair is stripped (`**_x_**` → `_x_`). Byte-identical to the TS port's
+// `EMPH_REGEXP`. The transform ([`emph_transform`]) returns the first
+// participating group.
+const EMPH_RE: &str =
+    r"\*\*\*([^*]+)\*\*\*|___([^_]+)___|\*\*([^*]+)\*\*|__([^_]+)__|\*([^*]+)\*|_([^_]+)_";
+
+/// The `{emph}` transform: exactly one of the six branches matches, so the inner
+/// text is the first non-empty capture group. Non-participating groups arrive as
+/// `""` (see [`ParseFn`]).
+fn emph_transform() -> ParseFn {
+    Rc::new(|groups: &[&str]| {
+        let inner = groups.iter().copied().find(|g| !g.is_empty()).unwrap_or("");
+        Value::String(inner.to_string())
+    })
+}
 
 impl ParameterTypeRegistry {
-    /// A fresh registry with the built-in `{int}`, `{word}`, `{string}` types.
+    /// A fresh registry with the built-in `{int}`, `{word}`, `{string}`,
+    /// `{emph}` types.
     pub fn new() -> ParameterTypeRegistry {
         ParameterTypeRegistry {
             types: vec![
@@ -85,6 +104,11 @@ impl ParameterTypeRegistry {
                     name: "string".to_string(),
                     regexp_source: STRING_RE.to_string(),
                     transform: Transform::QuotedString,
+                },
+                ParameterTypeDef {
+                    name: "emph".to_string(),
+                    regexp_source: EMPH_RE.to_string(),
+                    transform: Transform::Custom(emph_transform()),
                 },
             ],
         }

@@ -26,10 +26,10 @@ own thread. A closure that captures a planned example cannot cross that bound.
 
 ### Options considered
 
-**A. `build.rs` code generation.** Parse every spec at build time and emit one
+**A. `build.rs` code generation.** Parse every oath at build time and emit one
 `#[test] fn` per example into `OUT_DIR`. Gives real `#[test]`s and native IDE
 selection, but adds a build-dependency on `var-core` + the facade, regenerates
-on every spec edit, and duplicates the parse (build time *and* run time). Heavy.
+on every oath edit, and duplicates the parse (build time *and* run time). Heavy.
 
 **B. Custom `harness = false` binary with a hand-rolled reporter.** Full control,
 single process, no `Send` needed — but reimplements everything `cargo test`
@@ -43,7 +43,7 @@ single-threaded core, for no user benefit.
 the community crate for exactly this shape — build a `Vec<Trial>` at runtime and
 hand it to a `harness = false` binary; `cargo test` then reports, filters, and
 lists each `Trial` like a native test. The `Send` bound is satisfied by making
-each `Trial` closure capture **only owned `Send` data** — the spec path plus the
+each `Trial` closure capture **only owned `Send` data** — the oath path plus the
 example's index — and **re-derive its single example inside the closure**
 (re-read the file, rebuild the registry, re-parse, re-plan, run just that
 example). No `Rc` value ever crosses the thread boundary, so `var-core` stays
@@ -53,15 +53,15 @@ main thread, where `Rc` is fine.
 ## Decision
 
 Adopt **option D**: the adapter crate (`var-cargotest`) is a `harness = false`
-library that exposes a `main`-style entry the sample's `tests/specs.rs` calls.
+library that exposes a `main`-style entry the sample's `tests/oaths.rs` calls.
 It:
 
-- reads `var.config.json` (via `var-config`) and globs the specs (via
+- reads `var.config.json` (via `var-config`) and globs the oaths (via
   `var-runner`), then parses/plans each once to **enumerate** examples — one
   `Trial` per example, named by the pytest/unittest display rule (innermost
   heading or body-derived name, de-duplicated with `[n]`), located at the `.md`
   line;
-- gives each `Trial` a closure capturing only `(spec_path, example_index)` as
+- gives each `Trial` a closure capturing only `(oath_path, example_index)` as
   owned data; the closure re-derives and runs that one example through
   `var-runner`, mapping a `StepFailure` to `libtest_mimic::Failed` with the
   core's `.md`-anchored render;
@@ -71,7 +71,7 @@ It:
   adapter owns only the libtest binding.
 
 The current `examples/rust-cargotest` uses a stopgap (one plain `#[test]` per
-spec file, printing per-example lines) precisely because it predates this
+oath file, printing per-example lines) precisely because it predates this
 decision and could not satisfy `Send`. Phase 5 of the completion plan refactors
 it onto this adapter.
 

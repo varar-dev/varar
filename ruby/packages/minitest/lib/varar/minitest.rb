@@ -4,36 +4,50 @@ require 'minitest'
 require 'varar/runner'
 
 module Varar
-  # Minitest adapter. One call turns every spec matched by varar.config.json into
-  # a generated Minitest::Test subclass — one class per spec file, one test
+  # Minitest adapter. One call turns every oath matched by varar.config.json into
+  # a generated Minitest::Test subclass — one class per oath file, one test
   # method per example. Mirrors var-unittest.
   #
-  #   # test/var_test.rb
+  #   # test/varar_test.rb
   #   require "varar/minitest"
   #   Varar::Minitest.generate_tests
   module Minitest
-    VERSION = '0.6.1'
+    VERSION = '0.7.0'
 
     module_function
 
     def generate_tests(namespace = Object, root: nil)
       root ||= File.dirname(caller_locations(1, 1).first.path)
       root = File.expand_path(root)
-      cfg = Config.read_var_config(root)
+      cfg = Config.read_config(root)
       loaded = Runner.load_steps(cfg.steps, root)
       store = Runner.create_file_baseline_store(root)
-      update = %w[1 true].include?(ENV.fetch('VAR_UPDATE', nil))
+      update = %w[1 true].include?(ENV.fetch('VARAR_UPDATE', nil))
 
-      Runner.find_specs(cfg.docs_include, cfg.docs_exclude, root).each do |spec_path|
-        klass = build_test_case(spec_path, root, loaded, store, update)
-        namespace.const_set("Var_#{identifier(Runner.rel_posix(spec_path, root))}", klass)
+      oaths = Runner.find_oaths(cfg.docs_include, cfg.docs_exclude, root)
+      # Run results for the language server (ADR 0014). Minitest.after_run, not
+      # at_exit: at_exit handlers run last-registered-first, so ours would fire
+      # before Minitest's own — i.e. before a single test had run.
+      results = Runner::Results.new
+      ::Minitest.after_run { results.flush_all(root) }
+
+      # Drop baselines for oaths the config no longer discovers. Reconciliation is
+      # per-oath and never sees a path that has gone, so the lock would otherwise
+      # accumulate dead entries forever (#70). Once per run, keyed off the config
+      # globs — which here IS the full set, since generate_tests always discovers
+      # everything.
+      Core::Drifts.prune_baselines(store, oaths.map { |p| Runner.rel_posix(p, root) }, update: update)
+
+      oaths.each do |oath_path|
+        klass = build_test_case(oath_path, root, loaded, store, update, results)
+        namespace.const_set("Var_#{identifier(Runner.rel_posix(oath_path, root))}", klass)
       end
     end
 
-    def build_test_case(spec_path, root, loaded, store, update)
-      rel = Runner.rel_posix(spec_path, root)
-      source = File.read(spec_path, encoding: 'UTF-8')
-      plan = Runner.plan_spec(File.basename(spec_path), source, loaded.registry)
+    def build_test_case(oath_path, root, loaded, store, update, results)
+      rel = Runner.rel_posix(oath_path, root)
+      source = File.read(oath_path, encoding: 'UTF-8')
+      plan = Runner.plan_oath(File.basename(oath_path), source, loaded.registry)
       pairs = Runner.examples_with_runs(plan, loaded.create_context, Runner::RecordingReporter.new)
 
       klass = Class.new(::Minitest::Test)
@@ -44,16 +58,27 @@ module Varar
         idx = seen[stem]
         seen[stem] += 1
         method_name = idx.zero? ? "test_#{stem}" : "test_#{stem}_#{idx}"
+        lines = example.steps.map { |step| step.match_span.start_line }.uniq
         klass.define_method(method_name) do
           run.call
         rescue StandardError => e
+          # Recorded here, where the error object is still in hand: to_failure
+          # reads the anchor the executor attached to it.
+          results.record(rel, source, Core::ExampleResult.new(
+                                        name: example.name, status: 'failed', lines: lines,
+                                        failure: Core::Failures.to_failure(e, rel, lines.first || 0)
+                                      ))
           raise ::Minitest::Assertion, Runner.render_failure(e, source, rel) if Minitest.var_diff_error?(e)
 
           raise
+        else
+          results.record(rel, source, Core::ExampleResult.new(
+                                        name: example.name, status: 'passed', lines: lines, failure: nil
+                                      ))
         end
       end
 
-      Core::Drifts.reconcile_drift(store, rel, source, plan.var_doc, plan, update: update).each do |drift|
+      Core::Drifts.reconcile_drift(store, rel, source, plan.doc, plan, update: update).each do |drift|
         message = Core::Diagnostics.drift_detected(drift.name, drift.span).message
         klass.define_method("test_var_drift_#{drift.line}") { raise ::Minitest::Assertion, message }
       end
@@ -64,7 +89,7 @@ module Varar
     # A markdown/return mismatch is a test failure (Minitest::Assertion); any
     # other exception propagates as an error.
     def var_diff_error?(error)
-      error.is_a?(Core::CellMismatchError) || error.is_a?(Core::DocStringMismatchError) ||
+      error.is_a?(Core::CellMismatchError) ||
         error.is_a?(Core::ReturnShapeError) || error.is_a?(Core::UnexpectedPassError)
     end
 

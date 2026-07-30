@@ -1,0 +1,41 @@
+{
+  "examples": [
+    {
+      "body": [
+        {
+          "kind": "blockquote",
+          "segmentMap": [
+            {
+              "sourceOffset": 54,
+              "textOffset": 0
+            }
+          ],
+          "span": {
+            "endCol": 21,
+            "endLine": 5,
+            "endOffset": 72,
+            "startCol": 1,
+            "startLine": 5,
+            "startOffset": 52
+          },
+          "text": "I greet \"éwörld\"."
+        }
+      ],
+      "precededByDelimiter": true,
+      "scopeStack": [
+        "🎉 Café World",
+        "It greets with combining marks"
+      ],
+      "span": {
+        "endCol": 21,
+        "endLine": 5,
+        "endOffset": 72,
+        "startCol": 1,
+        "startLine": 5,
+        "startOffset": 52
+      }
+    }
+  ],
+  "orphanAttachments": [],
+  "path": "example.md"
+}

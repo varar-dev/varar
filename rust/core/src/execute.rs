@@ -13,6 +13,7 @@ use crate::handler::{Handler, StepOutput, StepReturn};
 use crate::offsets::{utf16_len, utf16_slice};
 use crate::param_diff::compare_params_with_formats;
 use crate::plan::{ExecutionPlan, PlannedExample, PlannedStep};
+use crate::result::AnchorRange;
 use crate::step_kind::StepKind;
 use crate::value::Value;
 use std::any::Any;
@@ -142,8 +143,8 @@ fn run_example(
     example_index: usize,
     ports: &ExecutePorts,
 ) -> Result<(), StepFailure> {
-    let path = &plan.var_doc.path;
-    let source = &plan.var_doc.source;
+    let path = &plan.doc.path;
+    let source = &plan.doc.source;
     let steps = &ex.steps;
 
     let mut state_by_file: HashMap<String, Rc<dyn Any>> = HashMap::new();
@@ -239,9 +240,18 @@ fn run_example(
                     .into_iter()
                     .filter(|d| !d.ok)
                     .collect();
-                if !bad.is_empty() {
+                // Like a slotted sensor, a header-bound row step must answer the
+                // row it is bound to: no return means nothing was compared.
+                if last_return.is_none() || !bad.is_empty() {
                     let last_step = steps.last().unwrap();
-                    let failure = attach_location(StepError::CellMismatch(bad), last_step, path);
+                    let err = if last_return.is_none() {
+                        StepError::ReturnShape(
+                            "a header-bound row step must return a row object with one value per bound cell, got nothing".to_string(),
+                        )
+                    } else {
+                        StepError::CellMismatch(bad)
+                    };
+                    let failure = attach_location(err, last_step, path);
                     observe(
                         ports,
                         StepObservation {
@@ -315,6 +325,10 @@ fn attach_location(error: StepError, step: &PlannedStep, var_path: &str) -> Step
             label,
             path: var_path.to_string(),
             line: anchor.start_line,
+            anchor: AnchorRange {
+                from: anchor.start_offset,
+                to: anchor.end_offset,
+            },
         }),
     }
 }
@@ -337,11 +351,20 @@ fn check_sensor_return(
     step: &PlannedStep,
     returned: Option<Value>,
 ) -> Result<(), StepError> {
-    let Some(returned) = returned else {
-        return Ok(());
-    };
     let extra_count = usize::from(step.data_table.is_some() || step.doc_string.is_some());
     let slot_count = step.args.len() + extra_count;
+    // With one or more slots the return is REQUIRED: returning nothing used to
+    // skip the comparison silently, so a typo turned an assertion into a no-op.
+    let returned = match returned {
+        // Nothing to compare against: returning nothing is the pass.
+        None if slot_count == 0 => return Ok(()),
+        None => {
+            return Err(StepError::ReturnShape(format!(
+                "a sensor with {slot_count} slot(s) must return one value per slot, got nothing"
+            )));
+        }
+        Some(v) => v,
+    };
     if slot_count == 0 {
         return Err(StepError::ReturnShape(
             "this sensor has no parameters, data table or doc string — nothing to compare a return value against \
@@ -366,7 +389,7 @@ fn check_sensor_return(
             }
             other => {
                 return Err(StepError::ReturnShape(format!(
-                    "a sensor with {} parameters must return a List of {} values, got {}",
+                    "a sensor with {} slots must return a List of {} values, got {}",
                     slot_count,
                     slot_count,
                     other.type_name()
@@ -409,7 +432,7 @@ fn check_sensor_return(
         if let Some(diff) =
             compare_doc_string(Some(&slots[arg_count]), &fence.body, fence.body_span)?
         {
-            return Err(StepError::DocStringMismatch(diff));
+            return Err(StepError::CellMismatch(vec![diff]));
         }
     }
     Ok(())

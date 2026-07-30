@@ -1,12 +1,12 @@
 import {
-  type ChangeSpec,
+  type ChangeOath,
   EditorSelection,
   type EditorState,
   type Extension,
   Prec,
   StateEffect,
   StateField,
-  type TransactionSpec,
+  type TransactionOath,
 } from '@codemirror/state'
 import {
   Decoration,
@@ -26,7 +26,7 @@ import {
 export function appendStepDef(
   stepsDoc: string,
   fullCode: string,
-): { changes: ChangeSpec; from: number; to: number } {
+): { changes: ChangeOath; from: number; to: number } {
   const block = fullCode.trim()
   const body = stepsDoc.replace(/\s*$/, '') // existing content without trailing whitespace
   if (body.length === 0) {
@@ -49,7 +49,7 @@ export function appendStepDef(
 // driven headlessly (an EditorState plus a capturing dispatch) in node tests.
 export type EditorLike = {
   state: EditorState
-  dispatch: (tr: TransactionSpec) => void
+  dispatch: (tr: TransactionOath) => void
   focus?: () => void
 }
 
@@ -62,16 +62,16 @@ export type GenerateSnippet = (
 export const flashRange = StateEffect.define<{ from: number; to: number } | null>()
 
 export async function runGenerateStepDef(opts: {
-  specView: EditorLike
+  oathView: EditorLike
   stepsView: EditorLike
   generate: GenerateSnippet
 }): Promise<{ from: number; to: number; expression: string } | null> {
-  const sel = opts.specView.state.selection.main
+  const sel = opts.oathView.state.selection.main
   if (sel.empty) return null
-  const text = opts.specView.state.sliceDoc(sel.from, sel.to)
+  const text = opts.oathView.state.sliceDoc(sel.from, sel.to)
   // Derive the 0-based LSP position of the selection start so the server can
   // infer the step role from the surrounding matched steps.
-  const line = opts.specView.state.doc.lineAt(sel.from)
+  const line = opts.oathView.state.doc.lineAt(sel.from)
   const position = { line: line.number - 1, character: sel.from - line.from }
   const { fullCode, expression } = await opts.generate(text, position)
   const { changes, from, to } = appendStepDef(opts.stepsView.state.doc.toString(), fullCode)
@@ -154,7 +154,7 @@ async function confirmAffordance(
   const stepsView = deps.stepsView()
   view.dispatch({ effects: setAffordance.of(null) })
   if (!stepsView) return
-  await runGenerateStepDef({ specView: view, stepsView, generate: deps.generate })
+  await runGenerateStepDef({ oathView: view, stepsView, generate: deps.generate })
 }
 
 const affordanceTheme = EditorView.baseTheme({
@@ -177,7 +177,7 @@ export function stepGenAffordance(deps: {
   generate: GenerateSnippet
   stepsView: () => EditorView | null
 }): Extension {
-  // The tooltip's button needs the spec EditorView to run the command. Resolve
+  // The tooltip's button needs the oath EditorView to run the command. Resolve
   // it via the tooltip create() argument (CodeMirror passes the view).
   const tooltipFromField = showTooltip.compute([affordanceField], (state): Tooltip | null => {
     const range = state.field(affordanceField)

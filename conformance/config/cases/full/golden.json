@@ -1,17 +1,13 @@
 {
   "docs": {
     "exclude": [
-      "specs/wip/**"
+      "oaths/wip/**"
     ],
     "include": [
-      "specs/**/*.md",
+      "oaths/**/*.md",
       "docs/**/*.md"
     ]
   },
-  "scannerPlugins": [
-    "gherkinTables",
-    "gherkinDocStrings"
-  ],
   "snippets": {
     "python": "# {{expression}}",
     "typescript": "// {{expression}}"

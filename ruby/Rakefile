@@ -12,13 +12,13 @@ end
 # lints the example projects' Ruby source with this same config (--config), so
 # no warning or error slips through anywhere in the port. Only the .rb source
 # dirs are added (not the Gemfile/Rakefile — tool-mandated names the FileName
-# cop rejects); the ruby-minitest steps/lib are symlinks into ruby-rspec, so its
-# shared files are covered via ruby-rspec.
+# cop rejects); the ruby-minitest test/varar and lib are symlinks into
+# ruby-rspec, so its shared files are covered via ruby-rspec (spec/ includes
+# the spec/varar steps).
 RuboCop::RakeTask.new do |task|
   task.patterns = [
     '.',
     '../examples/ruby-rspec/lib',
-    '../examples/ruby-rspec/steps',
     '../examples/ruby-rspec/spec',
     '../examples/ruby-minitest/test'
   ]

@@ -7,12 +7,12 @@
   <parent>
     <groupId>dev.varar</groupId>
     <artifactId>parent</artifactId>
-    <version>0.6.2-SNAPSHOT</version>
+    <version>0.7.1-SNAPSHOT</version>
   </parent>
 
   <artifactId>config</artifactId>
   <packaging>jar</packaging>
-  <name>var-config (Java) — varar.config.json reader</name>
+  <name>varar-config (Java) — varar.config.json reader</name>
   <description>
     Reads varar.config.json, the shared config file for all var tools (see
     conformance/config/README.md and

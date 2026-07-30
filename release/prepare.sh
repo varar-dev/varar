@@ -61,6 +61,7 @@ fi
 # ── Commit + push ────────────────────────────────────────────────────────────
 git add CHANGELOG.md \
   typescript/packages/*/package.json \
+  typescript/packages/*/src/index.ts \
   python/packages/*/pyproject.toml python/uv.lock \
   java/pom.xml java/*/pom.xml \
   examples/*/build.gradle.kts examples/java-junit-maven/pom.xml \

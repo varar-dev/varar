@@ -1,7 +1,18 @@
+// This package pins typescript 6 while the rest of the workspace is on 7 (see
+// the version in package.json). TypeScript 7 is the native Go compiler: its
+// only programmatic API spawns the tsgo binary and talks to it over a pipe, so
+// there is no in-process `createLanguageService` and nothing that runs in a
+// browser. Microsoft has committed to a WASM build for the playground and
+// vscode.dev but published none (microsoft/typescript-go#3478, #4633), and the
+// official TypeScript Playground and Monaco are themselves still on the
+// JavaScript compiler. Until a browser-instantiable tsgo exists, in-editor
+// type-checking here stays on 6 — the last JS-implemented release.
 import * as ts from 'typescript'
 
 // Bundled TypeScript lib .d.ts files, keyed by basename (e.g. "lib.es2020.d.ts").
-// Vite/Vitest resolve this glob at build/test time; no CDN.
+// Vite/Vitest resolve this glob at build/test time; no CDN. (Another thing the
+// 6 pin buys: TypeScript 7 moved these out of the `typescript` package into the
+// per-platform binary packages, where this glob would find nothing.)
 const libModules = import.meta.glob('/node_modules/typescript/lib/lib.*.d.ts', {
   query: '?raw',
   eager: true,

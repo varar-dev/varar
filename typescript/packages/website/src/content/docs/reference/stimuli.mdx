@@ -116,14 +116,14 @@ mechanism are decoupled.
 
 ## Evolving state
 
-A stimulus receives the current state as its first argument (deeply readonly)
-followed by the values the expression captured. It evolves state by returning
+A stimulus receives the current state as its first argument, followed by the
+values the expression captured. It evolves state by returning
 the **complete next state** — full replacement, in every port. The value you
 return *is* the new state, so a return that leaves a field out drops it rather
 than preserving it. Spread the current state to keep the rest:
 `(state) => ({ ...state, count: 1 })`.
 
-Returning nothing leaves state unchanged. Never mutate: new value out, always.
+Returning nothing leaves state unchanged. Convention is new value out, always.
 
 <Tabs syncKey="lang">
   <TabItem label="TypeScript">
@@ -237,9 +237,13 @@ Returning nothing leaves state unchanged. Never mutate: new value out, always.
 - **In TypeScript, Python and Ruby, returning anything that isn't an object** (or
   nothing) is a `ReturnShapeError`. A stimulus never returns values for
   comparison — that's the sensor's job.
-- **Mutating `state` is impossible**: it is deep-frozen at runtime (TypeScript,
-  Python) or an immutable record/data class (Java, Kotlin). Evolution happens
-  only by returning.
+- **Mutating `state` is your call, not Varar's.** Varar hands you the value your
+  factory (or your last stimulus) produced, untouched — it is not frozen, copied
+  or retyped. Declare your state `readonly` if you want the compiler to stop you;
+  in Java and Kotlin the record/data class already does. Evolution is meant to
+  happen by returning, and mutating instead will confuse the next reader, but
+  nothing at runtime forbids it — a state that holds a DB client or a page object
+  needs those objects live.
 - There is **no merge**. The returned object replaces state wholesale, so a
   field the return omits is gone. This is the same model the typed ports get
   from their record/data-class state, where a partial return cannot even be
