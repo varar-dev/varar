@@ -79,7 +79,9 @@ fn write_array(out: &mut String, list: &[Value], depth: usize) {
     out.push(']');
 }
 
-fn write_string(out: &mut String, s: &str) {
+/// JSON string escaping, shared with the run-result writer in [`crate::result`]:
+/// both must escape exactly the way `JSON.stringify` does.
+pub(crate) fn write_string(out: &mut String, s: &str) {
     out.push('"');
     for c in s.chars() {
         match c {

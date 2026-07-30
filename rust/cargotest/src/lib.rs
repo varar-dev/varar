@@ -23,13 +23,16 @@
 use std::any::Any;
 use std::path::Path;
 use std::rc::Rc;
+use std::sync::{Arc, Mutex};
 
 use libtest_mimic::{Arguments, Failed, Trial};
 use varar_core::drift::{self, prune_baselines, reconcile_drift};
+use varar_core::failure::to_failure;
 use varar_core::parse::parse;
 use varar_core::registry::Registry;
+use varar_core::result::{ExampleResult, Status};
 use varar_runner::{
-    FileBaselineStore, example_names, find_oaths, plan_oath, render_failure, run_example,
+    FileBaselineStore, Results, example_names, find_oaths, plan_oath, render_failure, run_example,
 };
 
 /// Build a registry (`fn`, not a closure — must be `Send + Copy`).
@@ -47,17 +50,41 @@ pub fn run_one(
     context: ContextFactory,
     index: usize,
 ) -> Result<(), String> {
+    run_one_failure(oath_file, source, build_registry, context, index)
+        .map_err(|failure| render_failure(&failure, source, rel))
+}
+
+/// As [`run_one`], but yielding the structural failure rather than its rendered
+/// text — the run-result payload needs the failure itself, since that is what
+/// carries the anchor the executor attached (ADR 0014).
+fn run_one_failure(
+    oath_file: &str,
+    source: &str,
+    build_registry: BuildRegistry,
+    context: ContextFactory,
+    index: usize,
+) -> Result<(), varar_core::error::StepFailure> {
     let registry = build_registry();
     let execution = plan_oath(oath_file, source, &registry);
     let context_factory = move |file: &str| context(file);
     run_example(&execution, &context_factory, index)
-        .map_err(|failure| render_failure(&failure, source, rel))
 }
 
 /// Enumerate every example (and any drift) as `libtest-mimic` trials. Drift is
 /// reconciled here, on the main thread: a clean run rewrites `varar.lock.json`;
 /// `VARAR_UPDATE=1` accepts drift instead of failing.
 pub fn trials(root: &Path, build_registry: BuildRegistry, context: ContextFactory) -> Vec<Trial> {
+    trials_recording(root, build_registry, context, &Arc::new(Mutex::new(Results::new())))
+}
+
+/// As [`trials`], but recording each example's outcome into `results` so the
+/// harness can persist them once the run is over.
+fn trials_recording(
+    root: &Path,
+    build_registry: BuildRegistry,
+    context: ContextFactory,
+    results: &Arc<Mutex<Results>>,
+) -> Vec<Trial> {
     let config = read_config(root);
     let update = matches!(std::env::var("VARAR_UPDATE").as_deref(), Ok("1") | Ok("true"));
     let mut trials = Vec::new();
@@ -97,8 +124,39 @@ pub fn trials(root: &Path, build_registry: BuildRegistry, context: ContextFactor
 
         for (index, display) in example_names(&execution).into_iter().enumerate() {
             let (sf, src, r) = (oath_file.clone(), source.clone(), rel.clone());
+            let example = &execution.examples[index];
+            let name = example.name.clone();
+            let mut lines: Vec<usize> = example
+                .steps
+                .iter()
+                .map(|s| s.match_span.start_line)
+                .collect();
+            lines.dedup();
+            let recorder = Arc::clone(results);
             trials.push(Trial::test(format!("{rel}::{display}"), move || {
-                run_one(&sf, &src, &r, build_registry, context, index).map_err(Failed::from)
+                let outcome = run_one_failure(&sf, &src, build_registry, context, index);
+                let recorded = match &outcome {
+                    Ok(()) => ExampleResult {
+                        name: name.clone(),
+                        status: Status::Passed,
+                        lines: lines.clone(),
+                        failure: None,
+                    },
+                    Err(failure) => ExampleResult {
+                        name: name.clone(),
+                        status: Status::Failed,
+                        lines: lines.clone(),
+                        failure: Some(to_failure(
+                            failure,
+                            &r,
+                            lines.first().copied().unwrap_or(0) as i64,
+                        )),
+                    },
+                };
+                if let Ok(mut results) = recorder.lock() {
+                    results.record(&r, &src, recorded);
+                }
+                outcome.map_err(|failure| Failed::from(render_failure(&failure, &src, &r)))
             }));
         }
 
@@ -120,7 +178,15 @@ pub fn trials(root: &Path, build_registry: BuildRegistry, context: ContextFactor
 /// run, and exit with the appropriate status. Never returns.
 pub fn run(root: &Path, build_registry: BuildRegistry, context: ContextFactory) {
     let args = Arguments::from_args();
-    libtest_mimic::run(&args, trials(root, build_registry, context)).exit();
+    let results = Arc::new(Mutex::new(Results::new()));
+    let conclusion =
+        libtest_mimic::run(&args, trials_recording(root, build_registry, context, &results));
+    // `cargo test` has no end-of-run hook, so this is the moment: every trial has
+    // finished, and nothing has exited yet (ADR 0014).
+    if let Ok(mut results) = results.lock() {
+        results.flush_all(root);
+    }
+    conclusion.exit();
 }
 
 fn read_config(root: &Path) -> varar_config::Config {

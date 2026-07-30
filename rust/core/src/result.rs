@@ -1,6 +1,9 @@
 //! Immutable run-result records — port of `result.ts` / `Result.java`. The
 //! persisted `.varar/<oath>.json` file is a serialized [`OathResults`].
 
+use crate::canonical_json;
+use std::fmt::Write;
+
 /// One mismatched CELL as a source-offset range plus the runtime value.
 /// `from`/`to` are absolute UTF-16 source offsets; `to` is exclusive.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -67,4 +70,144 @@ pub struct OathResults {
     pub oath_path: String,
     pub source_hash: String,
     pub examples: Vec<ExampleResult>,
+}
+
+/// Projects [`OathResults`] onto the JSON of `.varar/<oath_path>.json` (ADR 0014):
+/// the TypeScript field names, declaration order, 2-space indent, optional
+/// members absent rather than null. No trailing newline — the writer adds it.
+///
+/// Written by hand rather than through [`crate::canonical_json`], whose
+/// `BTreeMap` sorts keys: the reference implementation writes the payload in
+/// declaration order, and this file is read by humans diffing it as much as by
+/// the language server.
+pub fn to_wire_json(results: &OathResults) -> String {
+    let mut out = String::new();
+    out.push_str("{\n");
+    field(&mut out, 1, "version", &results.version.to_string(), true);
+    string_field(&mut out, 1, "oathPath", &results.oath_path, true);
+    string_field(&mut out, 1, "sourceHash", &results.source_hash, true);
+    indent(&mut out, 1);
+    out.push_str("\"examples\": ");
+    write_examples(&mut out, &results.examples, 1);
+    out.push('\n');
+    out.push('}');
+    out
+}
+
+fn write_examples(out: &mut String, examples: &[ExampleResult], depth: usize) {
+    if examples.is_empty() {
+        out.push_str("[]");
+        return;
+    }
+    out.push_str("[\n");
+    for (i, example) in examples.iter().enumerate() {
+        indent(out, depth + 1);
+        out.push_str("{\n");
+        string_field(out, depth + 2, "name", &example.name, true);
+        let status = match example.status {
+            Status::Passed => "passed",
+            Status::Failed => "failed",
+        };
+        string_field(out, depth + 2, "status", status, true);
+        indent(out, depth + 2);
+        out.push_str("\"lines\": ");
+        write_ints(out, &example.lines, depth + 2);
+        match &example.failure {
+            Some(failure) => {
+                out.push_str(",\n");
+                indent(out, depth + 2);
+                out.push_str("\"failure\": ");
+                write_failure(out, failure, depth + 2);
+                out.push('\n');
+            }
+            None => out.push('\n'),
+        }
+        indent(out, depth + 1);
+        out.push('}');
+        if i + 1 < examples.len() {
+            out.push(',');
+        }
+        out.push('\n');
+    }
+    indent(out, depth);
+    out.push(']');
+}
+
+fn write_failure(out: &mut String, failure: &ExampleFailure, depth: usize) {
+    out.push_str("{\n");
+    field(out, depth + 1, "line", &failure.line.to_string(), true);
+    string_field(out, depth + 1, "message", &failure.message, true);
+    let has_more = failure.cells.is_some() || failure.anchor.is_some();
+    string_field(out, depth + 1, "stack", &failure.stack, has_more);
+    if let Some(cells) = &failure.cells {
+        indent(out, depth + 1);
+        out.push_str("\"cells\": [\n");
+        for (i, cell) in cells.iter().enumerate() {
+            indent(out, depth + 2);
+            out.push_str("{\n");
+            field(out, depth + 3, "from", &cell.from.to_string(), true);
+            field(out, depth + 3, "to", &cell.to.to_string(), true);
+            string_field(out, depth + 3, "actual", &cell.actual, false);
+            indent(out, depth + 2);
+            out.push('}');
+            if i + 1 < cells.len() {
+                out.push(',');
+            }
+            out.push('\n');
+        }
+        indent(out, depth + 1);
+        out.push(']');
+        out.push_str(if failure.anchor.is_some() {
+            ",\n"
+        } else {
+            "\n"
+        });
+    }
+    if let Some(anchor) = &failure.anchor {
+        indent(out, depth + 1);
+        out.push_str("\"anchor\": {\n");
+        field(out, depth + 2, "from", &anchor.from.to_string(), true);
+        field(out, depth + 2, "to", &anchor.to.to_string(), false);
+        indent(out, depth + 1);
+        out.push_str("}\n");
+    }
+    indent(out, depth);
+    out.push('}');
+}
+
+fn write_ints(out: &mut String, values: &[usize], depth: usize) {
+    if values.is_empty() {
+        out.push_str("[]");
+        return;
+    }
+    out.push_str("[\n");
+    for (i, value) in values.iter().enumerate() {
+        indent(out, depth + 1);
+        let _ = write!(out, "{value}");
+        if i + 1 < values.len() {
+            out.push(',');
+        }
+        out.push('\n');
+    }
+    indent(out, depth);
+    out.push(']');
+}
+
+fn field(out: &mut String, depth: usize, key: &str, raw_value: &str, comma: bool) {
+    indent(out, depth);
+    let _ = write!(out, "\"{key}\": {raw_value}");
+    out.push_str(if comma { ",\n" } else { "\n" });
+}
+
+fn string_field(out: &mut String, depth: usize, key: &str, value: &str, comma: bool) {
+    indent(out, depth);
+    let _ = write!(out, "\"{key}\": ");
+    canonical_json::write_string(out, value);
+    out.push_str(if comma { ",\n" } else { "\n" });
+}
+
+fn indent(out: &mut String, depth: usize) {
+    for _ in 0..depth {
+        out.push_str("  ");
+    }
 }

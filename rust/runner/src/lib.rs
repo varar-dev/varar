@@ -13,9 +13,11 @@
 pub mod baseline_store;
 pub mod discovery;
 pub mod render;
+pub mod results;
 pub mod run;
 
 pub use baseline_store::FileBaselineStore;
 pub use discovery::{find_oaths, match_oath};
 pub use render::render_failure;
+pub use results::{Results, result_file_path, write_oath_results};
 pub use run::{example_names, plan_oath, run_example};
