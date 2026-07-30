@@ -66,3 +66,37 @@ class OathResults:
     oath_path: str  # POSIX separators, relative to cwd
     source_hash: str  # hashSource(oath source) at run time
     examples: tuple[ExampleResult, ...]
+
+
+def to_wire(results: OathResults) -> dict:
+    """Project OathResults onto the JSON shape of ``.varar/<oath>.json``.
+
+    The wire format is the TypeScript one (ADR 0014): camelCase names, ``from``
+    where Python must say ``from_``, declaration order, and the optional members
+    absent rather than null so a reader that predates them still parses the
+    file. Pure — the writing is the shell's job.
+    """
+
+    def cell(c: CellFailure) -> dict:
+        return {"from": c.from_, "to": c.to, "actual": c.actual}
+
+    def failure(f: ExampleFailure) -> dict:
+        out: dict = {"line": f.line, "message": f.message, "stack": f.stack}
+        if f.cells:
+            out["cells"] = [cell(c) for c in f.cells]
+        if f.anchor is not None:
+            out["anchor"] = {"from": f.anchor.from_, "to": f.anchor.to}
+        return out
+
+    def example(e: ExampleResult) -> dict:
+        out: dict = {"name": e.name, "status": e.status, "lines": list(e.lines)}
+        if e.failure is not None:
+            out["failure"] = failure(e.failure)
+        return out
+
+    return {
+        "version": results.version,
+        "oathPath": results.oath_path,
+        "sourceHash": results.source_hash,
+        "examples": [example(e) for e in results.examples],
+    }

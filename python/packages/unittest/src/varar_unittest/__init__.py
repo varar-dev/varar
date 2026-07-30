@@ -16,6 +16,7 @@ example, ``-k`` selects by name, and dotted ids
 """
 from __future__ import annotations
 
+import atexit
 import os
 import re
 import unittest
@@ -27,9 +28,12 @@ from varar_core.cell_diff import ReturnShapeError, is_cell_mismatch_error
 from varar_core.diagnostics import drift_detected
 from varar_core.drift import prune_baselines, reconcile_drift
 from varar_core.execute import is_unexpected_pass_error
+from varar_core.failure import to_failure
+from varar_core.result import ExampleResult
 from varar_runner.baseline_store import create_file_baseline_store
 from varar_runner.discovery import find_oaths
 from varar_runner.render import render_failure
+from varar_runner.results import ResultsCollector
 from varar_runner.run import RecordingReporter, examples_with_runs, plan_oath
 from varar_runner.steps import LoadedSteps, load_steps
 
@@ -65,8 +69,14 @@ def generate_tests(namespace: dict[str, Any], root: str | Path | None = None) ->
         update=os.environ.get("VARAR_UPDATE") in ("1", "true"),
     )
 
+    # unittest has no end-of-run hook, so the collector flushes at process exit
+    # (ADR 0014). Only the examples that actually ran are written, which is what
+    # a filtered run (`-k`) should leave behind.
+    results = ResultsCollector()
+    atexit.register(results.write_all, root)
+
     for oath_path in oaths:
-        cls = _oath_test_case(oath_path, root, loaded, module_name, store)
+        cls = _oath_test_case(oath_path, root, loaded, module_name, store, results)
         namespace[cls.__name__] = cls
 
 
@@ -76,6 +86,7 @@ def _oath_test_case(
     loaded: LoadedSteps,
     module_name: str | None,
     store: Any,
+    results: ResultsCollector,
 ) -> type[unittest.TestCase]:
     """Build one TestCase subclass for *oath_path*, one method per example."""
     # walk_up: an oath outside the config root (matched via a ../ glob) still
@@ -96,7 +107,7 @@ def _oath_test_case(
         seen[stem] = idx + 1
         display = base if idx == 0 else f"{base}[{idx}]"
         method_name = f"test_{stem}" if idx == 0 else f"test_{stem}_{idx}"
-        methods[method_name] = _make_test_method(run, display, source, rel)
+        methods[method_name] = _make_test_method(run, display, source, rel, example, results)
 
     # Reconcile drift: a clean run records/updates the baseline; a paragraph
     # that was an example and no longer matches becomes a failing test method
@@ -121,11 +132,25 @@ def _make_test_method(
     display: str,
     source: str,
     rel_path: str,
+    example: Any,
+    results: ResultsCollector,
 ) -> Callable[[Any], None]:
+    lines = tuple(dict.fromkeys(s.match_span.start_line for s in example.steps))
+
+    def record(status: str, failure: Any = None) -> None:
+        results.record(
+            rel_path,
+            source,
+            ExampleResult(name=example.name, status=status, lines=lines, failure=failure),
+        )
+
     def test(self: unittest.TestCase) -> None:
         try:
             run()
         except Exception as err:
+            # Recorded here, where the exception is still in hand: to_failure
+            # reads the anchor the executor attached to it.
+            record("failed", to_failure(err, rel_path, lines[0] if lines else 0))
             if _is_var_diff_error(err):
                 # A markdown/return mismatch is a test *failure* (not an
                 # error): re-raise as failureException with the rendered,
@@ -134,6 +159,7 @@ def _make_test_method(
                 # (<path>:<line>:<col>)" note the core attaches).
                 raise self.failureException(render_failure(err, source, rel_path)) from err
             raise
+        record("passed")
 
     # First docstring line is unittest's shortDescription — verbose output
     # shows the example's real (unsanitized) name next to the method id.
