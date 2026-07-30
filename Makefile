@@ -13,6 +13,7 @@
 #   make rust       # cargo fmt/clippy/test (var-core) + examples/rust-cargotest
 #   make dotnet     # dotnet format --verify-no-changes + build + test (net10.0)
 #   make go         # gofmt + go vet + go test (go/ module) + examples/go-gotest
+#   make parity     # every core capability exists in every port that needs it
 #   make coverage   # test with coverage in all seven ports (reports below)
 #   make install-tools # add missing asdf plugins + install every toolchain the
 #                   # root .tool-versions pins (JDK, .NET, Ruby, adr-tools)
@@ -28,9 +29,9 @@
 # against a deliberately drifted baseline and requires it to go red. It runs
 # after the port's own sample run, which leaves the project built and warm.
 
-.PHONY: check commits typescript python java ruby rust dotnet go coverage changelog prepare release update-deps install-tools
+.PHONY: check commits parity typescript python java ruby rust dotnet go coverage changelog prepare release update-deps install-tools
 
-check: commits typescript python java ruby rust dotnet go
+check: commits parity typescript python java ruby rust dotnet go
 
 # One-shot local toolchain bootstrap: add any missing asdf plugin, then install
 # every version pinned in the root .tool-versions (including the JDK 21 / Ruby
@@ -43,6 +44,12 @@ install-tools:
 # changelog and the version bump — see cliff.toml and CLAUDE.md).
 commits:
 	release/lint-commits.sh
+
+# Every capability conformance/parity.json declares exists in every port it
+# names. The corpora catch a port that behaves differently; this catches one
+# that never implemented something at all (see ADR 0014).
+parity:
+	release/check-parity.sh
 
 typescript:
 	cd typescript && pnpm install && pnpm build && pnpm check && pnpm --filter @varar/website... build
