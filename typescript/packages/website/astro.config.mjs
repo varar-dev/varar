@@ -75,6 +75,7 @@ export default defineConfig({
           label: 'Reference',
           items: [
             'reference/examples',
+            'reference/run-results',
             'reference/stimuli',
             'reference/sensors',
             'reference/custom-parameters',

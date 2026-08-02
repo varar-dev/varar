@@ -139,7 +139,7 @@ A sensor may `return` a value; the pure core compares it against what the Markdo
 
 Per slot kind: **inline parameter** — deep-equal against the transformed arg → `CellMismatchError` (`CellDiff[]`, each with a source `span` + `expected` + `actual`); **whole table** — exact string compare per cell → `CellMismatchError`; **doc string** — exact equality including the trailing `\n` → `DocStringMismatchError`. **Header-bound table rows** bypass the slot contract: the step returns its computed columns as a row object, compared cell-by-cell. **Wrong shape** → `ReturnShapeError`; **`undefined` return** → pass (no assertion).
 
-Because the diffs are anchored to source spans (`startOffset`/`endOffset`), editors render them directly (the website CodeMirror reddens the failing source span and shows `actual: …` on hover). These diffs are the basis of the emerging shared run-result format consumed by the editor, the LSP, and future HTML overlays.
+Because the diffs are anchored to source spans (`startOffset`/`endOffset`), editors render them directly (the website CodeMirror reddens the failing source span and shows `actual: …` on hover). These diffs are the basis of the stable run-result format documented at [Run results](https://var.oselvar.com/reference/run-results/), consumed by the editor, the LSP, CI agents, and attestation pipelines.
 
 ## What's intentionally absent
 

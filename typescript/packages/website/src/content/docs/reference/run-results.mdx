@@ -1,0 +1,268 @@
+---
+title: Run results
+description: The machine-readable, span-anchored result format Vár writes after a test run — file layout, record shape, hash fingerprint, drift baseline, and stability policy.
+---
+
+Every test run produces one **run-result file** per spec: a structured, span-anchored
+record of which examples ran, which passed, and exactly where each failure sits in
+the Markdown source. This page is the reference for consuming that format — whether
+from an editor, a CI gate, a supervising agent, or a compliance attestation pipeline.
+
+## File layout
+
+One JSON file per spec, mirroring the spec's path under `.var/`:
+
+```
+specs/withdrawal.md
+  → .var/specs/withdrawal.md.json
+```
+
+- Written by the vitest reporter (`@oselvar/var-vitest/reporter`) after every run.
+- `.var/` is **git-ignored** — these results are ephemeral, regenerated each run.
+- The file path uses POSIX separators on all platforms so a result written on one
+  OS resolves on another.
+
+## Top-level shape
+
+A run-result file is a serialized `SpecResults`:
+
+```ts
+type SpecResults = {
+  readonly version: 1
+  readonly specPath: string   // POSIX path, relative to cwd
+  readonly sourceHash: string // fingerprint of the spec source at run time
+  readonly examples: ReadonlyArray<ExampleResult>
+}
+```
+
+A passing spec with one example:
+
+```json
+{
+  "version": 1,
+  "specPath": "specs/withdrawal.md",
+  "sourceHash": "fnv1a:4a7b1c3e",
+  "examples": [
+    {
+      "name": "I deposit 100. I withdraw 30. The balance is 70.",
+      "status": "passed",
+      "lines": [1]
+    }
+  ]
+}
+```
+
+A failing spec with a cell-level mismatch (the value `30` was wrong, the runner
+saw `40`):
+
+```json
+{
+  "version": 1,
+  "specPath": "specs/withdrawal.md",
+  "sourceHash": "fnv1a:9d2c5a7b",
+  "examples": [
+    {
+      "name": "I deposit 100. I withdraw 30. The balance is 70.",
+      "status": "failed",
+      "lines": [1],
+      "failure": {
+        "line": 1,
+        "message": "the total is 70: cell mismatch",
+        "stack": "CellMismatchError: the total is 70: cell mismatch …",
+        "cells": [
+          { "from": 37, "to": 39, "actual": "40" }
+        ]
+      }
+    }
+  ]
+}
+```
+
+## `ExampleResult`
+
+| Field       | Type                          | Description                                                                 |
+| ----------- | ----------------------------- | --------------------------------------------------------------------------- |
+| `name`      | `string`                      | The example's primary paragraph, with line breaks collapsed and trailing punctuation stripped |
+| `status`    | `'passed' \| 'failed'`        | Whether all steps in the example passed or any failed                       |
+| `lines`     | `ReadonlyArray<number>`        | 1-based source lines of the example's steps (deduplicated, document order)  |
+| `failure?`  | object                        | Present only when `status` is `'failed'`                                    |
+| `failure.line` | `number`                    | The 1-based line in the Markdown where the failure occurred                 |
+| `failure.message` | `string`                 | Human-readable message from the thrown error                                |
+| `failure.stack` | `string`                   | Full stack trace from the thrown error                                      |
+| `failure.cells?` | `ReadonlyArray<CellFailure>` | Table or header-bound row mismatches (omitted when empty or absent)         |
+| `failure.doc?` | `CellFailure`               | Doc-string body mismatch (single span; omitted when absent)                 |
+
+### `CellFailure`
+
+A span-anchored mismatch in a single table cell, header-bound row cell, or doc-string body:
+
+```ts
+type CellFailure = {
+  readonly from: number   // absolute source offset of the expected text
+  readonly to: number     // absolute source offset, exclusive
+  readonly actual: string // the runtime value the step produced
+}
+```
+
+- `from` and `to` are **absolute UTF-16 code-unit offsets** into the Markdown
+  source — the same positions CodeMirror and most editors use. `to` is exclusive,
+  so `source.slice(from, to)` recovers the expected text.
+- The record carries only `actual`; **`expected` is not serialized**. It is
+  recovered by slicing the current source at the recorded offsets. This keeps the
+  file small and anchors the result to the source it was computed against.
+- `cells` appears only when the step threw a `CellMismatchError` with at least
+  one non-`ok` diff. `doc` appears only for a `DocStringMismatchError`.
+- A `ReturnShapeError` or a plain thrown `Error` carries no `cells` or `doc` —
+  only `line`, `message`, and `stack`.
+- All offsets are absolute UTF-16 positions — the same coordinate space used
+  across every Vár implementation and in the [conformance goldens](#cross-language).
+
+## `sourceHash`
+
+The `sourceHash` is a fingerprint of the entire Markdown spec source at run time,
+computed identically in every Vár runtime.
+
+```
+fnv1a:4f9f2cab
+```
+
+- **Algorithm**: FNV-1a, 32-bit, over UTF-16 code units (offset basis `0x811c9dc5`,
+  prime `0x01000193`). Chosen because it is tiny, dependency-free, and trivially
+  re-implementable in any language.
+- **Prefix**: `fnv1a:` namespaces the algorithm so a future format version can
+  change the hash without ambiguity.
+- **Test vectors** (pin the algorithm — verify your reimplementation against these):
+
+| Input       | Hash             |
+| ----------- | ---------------- |
+| `hello`     | `fnv1a:4f9f2cab` |
+| `abc`       | `fnv1a:1a47e90b` |
+| `# Title\n` | `fnv1a:4eace75e` |
+
+### Staleness contract
+
+A consumer compares `SpecResults.sourceHash` against `hashSource(currentSource)`:
+
+- **Match** → offsets in the record are valid against the current source; render.
+- **Mismatch** → the file was edited since the run; the recorded offsets may no
+  longer point to the right text. The consumer **must not** render the result.
+
+This is the persisted equivalent of the editor clearing results on `docChanged`.
+There is no partial remap: a stale record is silent, never wrong.
+
+## Drift baseline (`var.lock.json`)
+
+The run-result format carries a per-run snapshot. To detect **drift** — an example
+that used to match step definitions and no longer does — Vár keeps a separate,
+committed baseline file:
+
+```sh
+var.lock.json     # at the project root, committed
+```
+
+Top-level shape:
+
+```ts
+type VarLock = {
+  readonly version: 1
+  readonly specs: Readonly<Record<string, SpecBaseline>>
+}
+
+type SpecBaseline = {
+  readonly sourceHash: string
+  readonly examples: ReadonlyArray<{
+    readonly name: string   // the example's paragraph text
+    readonly line: number   // 1-based start line
+  }>
+}
+```
+
+- `specs` is keyed by POSIX spec path relative to the project root. Keys are
+  sorted on write so a clean re-run produces no git diff.
+- Serialization is **byte-stable**: two-space indent, trailing newline, sorted
+  keys. Identical in every port.
+- On every run, Vár re-plans the spec and detects paragraphs the baseline recorded
+  as examples that now match zero steps — those are **drift**. The run fails until
+  you explicitly acknowledge the change.
+- **Acknowledgment**: `var run --update` (or `VAR_UPDATE=1`, or the LSP command
+  `var.acceptDrift`) rewrites the baseline and the run goes green.
+- The vitest plugin reads `var.lock.json` as a read-only gate — it reports drift
+  but never writes the baseline.
+
+For the semantics of drift (what triggers it, how re-identification works, the
+acknowledgment workflow), see [Examples](/reference/examples/#drift-detection).
+
+## Stability policy
+
+The run-result format and `var.lock.json` are **versioned by a `version` integer**
+in every record. The current version is `1`.
+
+| Rule                                                 | Applies to                     |
+| ---------------------------------------------------- | ------------------------------ |
+| Breaking change → `version` is bumped.               | SpecResults, VarLock           |
+| Additive optional fields may be added without bump.  | All records                    |
+| Consumers **must** ignore unknown record fields.     | All fields everywhere          |
+| Consumers **must** treat records with an unknown `version` as absent (no error, no render). | SpecResults, VarLock |
+| The hash algorithm is versioned independently via the prefix (`fnv1a:`, …). A format version bump may or may not change the hash, and a hash change may happen within one format version. | `sourceHash`, `SpecBaseline.sourceHash` |
+
+This means tools that process run results or lock files — supervising agents, CI
+gates, attestation pipelines — can safely consume records produced by any Vár
+release that shares the same `version` number. An attestation system that stores
+run records for multi-year compliance evidence can rely on `version: 1` records
+being readable far into the future, even as Vár itself adds optional fields.
+
+## Cross-language
+
+The format is language-neutral: every Vár port must produce records with the same
+field names, the same offset conventions, and the same byte-stable serialization.
+The conformance corpus does **not** include run-result goldens (the run-result
+layer is explicitly not part of the conformance corpus per
+[ADR 0002](https://github.com/varar-dev/varar/blob/main/doc/adr/0002-drift-detection-and-acknowledgment.md)).
+
+### Emitter status
+
+| Port       | `.var/*.json` emitter |
+| ---------- | --------------------- |
+| TypeScript | ✅ (vitest reporter)  |
+| Python     | planned               |
+| Java       | planned               |
+| Ruby       | planned               |
+| Rust       | planned               |
+
+The TypeScript, Python, Java, and Ruby ports also read and write `var.lock.json`
+for drift detection; the Rust port has the lock-file format in its core but no
+filesystem adapter yet.
+
+### Coordinate space
+
+- **Offsets** are absolute UTF-16 code-unit positions. This matches JavaScript's
+  native string indexing, CodeMirror's positions, and every Vár port's internal
+  representation.
+- **`specPath`** uses POSIX separators (`/`) regardless of the OS that produced
+  the record — a result written on Windows resolves correctly on Linux and vice
+  versa.
+- **JSON serialization** is two-space indent with a trailing newline (`\n`).
+  Records produced by different ports must be byte-identical for the same input.
+
+## Consumers
+
+Today the format is consumed by:
+
+- **The website editor** — renders red cells and hover-actual directly via the
+  in-memory `SpecResults` produced by the browser runner.
+- **The LSP** (`@oselvar/var-lsp`) — reads `.var/<spec>.json`, validates
+  `sourceHash` against the current document, and publishes diagnostics with
+  offset-anchored hover messages.
+
+Intended consumers include:
+
+- **Supervising agents** — a CI-side agent reads the run record to answer "which
+  examples passed, which failed, and exactly where?" without scraping test-runner
+  text output.
+- **CI gates** — a policy gating on specific examples can mechanically check
+  their `status` in the record.
+- **Attestation pipelines** (e.g. EU Cyber Resilience Act evidence) — the
+  records tie verification to a spec source fingerprint, so an artifact can carry
+  machine-checkable proof that "these documented behaviours were verified."
+- **HTML overlays** — a statically-hosted page fetches the record and highlights
+  spans so a reviewer sees results directly in the rendered spec.
