@@ -70,6 +70,56 @@ fn find_oaths_honours_include_and_exclude() {
     assert_eq!(find_oaths(&recursive, &root).len(), 2); // a.md + sub/b.md
 }
 
+/// Simulates a project that wants to scan README.md an and a tiny `docs/` tree
+/// but has a huge `target/`.
+#[test]
+fn find_oaths_prunes_dirs_outside_literal_include_prefix() {
+    let root = tmp("prune");
+    std::fs::write(root.join("README.md"), "x").unwrap();
+    std::fs::create_dir_all(root.join("docs")).unwrap();
+    std::fs::write(root.join("docs/loop.md"), "x").unwrap();
+    // A decoy directory that should be pruned: not reachable from either glob.
+    std::fs::create_dir_all(root.join("target/debug")).unwrap();
+    std::fs::write(root.join("target/debug/not_a_doc.md"), "x").unwrap();
+
+    let config = Config {
+        docs_include: vec!["README.md".to_string(), "docs/loop.md".to_string()],
+        docs_exclude: vec![],
+        ..Default::default()
+    };
+    let paths = find_oaths(&config, &root);
+    let names: Vec<String> = paths
+        .iter()
+        .map(|p| {
+            p.strip_prefix(&root)
+                .unwrap()
+                .to_string_lossy()
+                .into_owned()
+        })
+        .collect();
+    // target/ is unreachable from both globs and must not appear.
+    assert_eq!(names, vec!["README.md", "docs/loop.md"]);
+}
+
+#[test]
+fn find_oaths_prunes_dirs_matching_exclude() {
+    let root = tmp("excl-prune");
+    std::fs::write(root.join("good.md"), "x").unwrap();
+    std::fs::create_dir_all(root.join("skip/nested")).unwrap();
+    std::fs::write(root.join("skip/nested/bad.md"), "x").unwrap();
+
+    let config = Config {
+        docs_include: vec!["**/*.md".to_string()],
+        docs_exclude: vec!["skip/**".to_string()],
+        ..Default::default()
+    };
+    let names: Vec<String> = find_oaths(&config, &root)
+        .iter()
+        .map(|p| p.file_name().unwrap().to_string_lossy().into_owned())
+        .collect();
+    assert_eq!(names, vec!["good.md"]);
+}
+
 #[test]
 fn baseline_store_round_trips_and_reconcile_writes_lock() {
     let root = tmp("drift");
