@@ -109,6 +109,7 @@ export default defineConfig({
             'reference/custom-parameters',
             'reference/editor-support',
             'reference/run-results',
+            'reference/lint',
             'reference/example-projects',
           ],
         },
