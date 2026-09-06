@@ -31,7 +31,7 @@ jobs:
           echo "distribution=${v%%-*}" >> "$GITHUB_OUTPUT"
           echo "java=$(echo "${v#*-}" | cut -d. -f1)" >> "$GITHUB_OUTPUT"
 
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: ${{ steps.pin.outputs.distribution }}
           java-version: ${{ steps.pin.outputs.java }}
