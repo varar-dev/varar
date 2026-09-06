@@ -149,25 +149,84 @@ writer. Independently valuable even if the rest of this plan is never done.
   six checks, including `drift-accepted (baseline re-recorded)` — which the
   project has never run before, because it was a gate.
 
-### Phase 2 — decide what `varar init` scaffolds
+### Phase 2 — `varar init` scaffolds the test-runner config
 
-The riskiest change, because it is a UX decision rather than an edit.
+**Decided:** `init` writes `vitest.config.ts` — or edits an existing one — and
+adds `vitest` + `@varar/vitest` to devDependencies, so one command still leaves a
+runnable project. Without this the scaffold **cannot run anything**, and the
+TypeScript tutorial would go from the shortest first five minutes of the seven
+ports to the longest.
 
-`init` currently writes `varar.config.json`, an oath, a steps file, and
-`"type": "module"` — a project that runs immediately with `varar run`. Without
-`run` that scaffold **cannot run anything**. Options:
+The runner is a *choice*, not a constant. Jest is the obvious second, and the
+design must not have to be unpicked when `@varar/jest` ships.
 
-- **B1:** `init` also writes `vitest.config.ts` (plugin + `VararResultsReporter`)
-  and adds `vitest` + `@varar/vitest` to devDependencies. One command still gets
-  a runnable project; `init` grows a dependency on the vitest adapter.
-- **B2:** `init` stays as is and prints the two extra steps. Matches the other
-  ports (`uv add --dev pytest-varar`, then `uv run pytest`), keeps `init`
-  adapter-agnostic — jest and mocha adapters would arrive later — but the
-  tutorial gains two steps.
+#### Choosing the runner
 
-**Recommendation: B1**, because "install, configure, run, watch it fail" is the
-tutorial's promise and B2 makes the TypeScript path the longest of the seven
-rather than the shortest. Revisit if a second TypeScript adapter ever ships.
+```
+varar init                     # auto-detect, default vitest
+varar init --runner vitest     # explicit
+varar init --runner jest       # explicit
+```
+
+Auto-detection, first match wins:
+
+1. an existing runner config in `cwd` — `vitest.config.{ts,js,mts,mjs}`,
+   `jest.config.{ts,js,mjs,cjs}`, or a `jest` key in `package.json`;
+2. `package.json` devDependencies — `vitest`, then `jest`;
+3. the `package.json` `test` script, if it names one;
+4. otherwise **vitest**.
+
+Detection reports what it picked and why (`detected vitest (vitest.config.ts)`),
+because a wrong guess writes files. `--runner` always wins over detection.
+
+Until `@varar/jest` exists, `--runner jest` must fail with "no Jest adapter yet"
+and a link, **not** scaffold something that cannot work. Detecting jest in a
+project with no adapter available is the same message.
+
+#### Shape of the implementation
+
+Table-driven, one entry per runner — config filename, the snippet to write, the
+devDependencies to add, and the "already wired?" probe. Adding jest later is a
+new row plus its adapter package, not a rewrite of `init`. Nothing outside that
+table may name a runner.
+
+#### Editing an existing config
+
+Writing a fresh `vitest.config.ts` is trivial. Editing one is where this gets
+dangerous: it is TypeScript, not JSON, so there is no safe general edit, and
+`init`'s existing contract is *never clobber* (it skips every file that already
+exists, and even declines to touch a `package.json` whose `type` is something
+unexpected).
+
+Rules, in order:
+
+1. **Already wired** — the file mentions `@varar/vitest`: report
+   `skipped vitest.config.ts (already configured)` and do nothing.
+2. **Recognisable and unwired** — a single `defineConfig({ … })` call with no
+   `@varar/vitest` import: insert the import, add the plugin to `plugins`, and
+   add `VararResultsReporter` to `test.reporters` (creating either key if
+   absent). Re-read and parse the result to confirm it still parses; restore the
+   original and fall through to (3) if it does not.
+3. **Anything else** — an exported variable, a conditional config, a merge
+   helper: leave the file alone, print the exact snippet to paste, and say which
+   file to paste it into. Exit 0; this is a scaffold, not a migration tool.
+
+Case (3) is the honest default, and case (2) should stay narrow. A config
+mangled by a clever regex is worse than a printed snippet.
+
+`.gitignore` gets `.varar/` if it exists and lacks it — the run records are
+artifacts, and every sample project already ignores them.
+
+#### Acceptance
+
+- `varar init` in an empty directory, then `pnpm install && pnpm vitest run`,
+  passes with no manual edits (this is the tutorial, verbatim).
+- `varar init` twice in a row is a no-op the second time — every file reports
+  `skipped`.
+- `varar init` in a project with a hand-written `vitest.config.ts` that already
+  has plugins does not corrupt it: either case (2) leaves a file that parses and
+  runs, or case (3) leaves it byte-identical.
+- `--runner jest` exits non-zero with the "no adapter yet" message.
 
 ### Phase 3 — delete the command
 
@@ -230,7 +289,9 @@ page.
    ergonomics differ — worth a line in the vitest how-to.
 3. **The standalone benchmark story** (`TODO.md:100`: the CLI runner at ~2× a
    Cucumber sample). Irrelevant under the new pitch.
-4. **A two-step TypeScript tutorial.** Mitigated by Phase 2 option B1.
+4. **A two-step TypeScript tutorial.** Mitigated by Phase 2: `varar init` leaves
+   a runnable project, so the tutorial keeps its shape — install, configure,
+   run, watch it fail.
 
 ## Risks
 
@@ -247,6 +308,13 @@ page.
 - **Third-party adapters.** Anyone with a jest or mocha adapter loses the CLI
   fallback. No such adapter exists today; note it in the release notes if one
   appears before this lands.
+- **`init` editing a config it did not write.** Phase 2 case (2) is the only
+  place this plan touches a file the user authored. Keep the recognised shape
+  narrow, verify the result parses, and prefer printing a snippet — a corrupted
+  `vitest.config.ts` is a worse first five minutes than a manual paste.
+- **The runner table is the extension point.** If jest support arrives by
+  special-casing inside `init` rather than by adding a row, the door this plan
+  deliberately left open closes again.
 
 ## Verification checklist
 
@@ -260,6 +328,11 @@ page.
 - [ ] `pnpm knip` clean (dead exports chased)
 - [ ] `pnpm check` coverage thresholds still met
 - [ ] `make check` green across all seven ports
-- [ ] `varar init` output runs on a clean machine (Phase 2 acceptance)
+- [ ] `varar init` output runs on a clean machine, unedited (Phase 2 acceptance)
+- [ ] `varar init` is idempotent, and leaves a hand-written `vitest.config.ts`
+      either correctly wired or byte-identical
+- [ ] `varar init --runner jest` fails with the "no adapter yet" message
+- [ ] adding a runner means adding a table row — nothing outside it names a
+      runner
 - [ ] the get-started tutorial's TypeScript tab, followed verbatim, ends with a
       passing oath and then a deliberate failure
