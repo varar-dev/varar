@@ -25,7 +25,7 @@ RuboCop::RakeTask.new do |task|
   task.options = ['--config', '.rubocop.yml']
 end
 
-desc 'Fail if var-core requires the facade/runner (functional-core purity gate)'
+desc 'Fail if varar-core requires the facade/runner (functional-core purity gate)'
 task :lint_no_reexports do
   ruby 'scripts/lint_no_reexports.rb'
 end

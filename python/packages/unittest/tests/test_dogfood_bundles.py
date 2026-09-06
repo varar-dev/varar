@@ -4,7 +4,7 @@ Each test copies a bundle's example.md and <name>.steps.py into the harness
 tree, generates + runs the unittest cases, and asserts the outcome matches
 the bundle's intent as documented by its golden trace.json.
 
-Bundles exercised (same set as var-pytest's dogfood tests):
+Bundles exercised (same set as pytest-varar's dogfood tests):
 - 01-roman-numerals  : happy-path example → passes
 - 03-expected-failure: expected_outcome=fail satisfied → the core inverts the
                        outcome, so unittest reports a pass

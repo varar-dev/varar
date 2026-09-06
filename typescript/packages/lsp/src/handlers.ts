@@ -124,7 +124,7 @@ export function buildHandlers(store: Store): Handlers {
       const path = uriToPath(uri)
       return store
         .index()
-        .diagnostics.filter((d) => d.varPath === path)
+        .diagnostics.filter((d) => d.oathPath === path)
         .map((d) => ({
           code: d.code,
           severity: d.severity,
@@ -368,7 +368,7 @@ function findMatchAt(store: Store, uri: string, position: Position): MatchRef | 
   // LSP positions are 0-based; the workspace index stores 1-based line/col.
   const pos: Position = { line: position.line + 1, character: position.character + 1 }
   return store.index().matches.find((m) => {
-    if (m.varPath !== path) return false
+    if (m.oathPath !== path) return false
     return contains(m.range, pos)
   })
 }
@@ -392,7 +392,7 @@ function neighbourRolesForSelection(
   const pos: Position = { line: position.line + 1, character: position.character + 1 }
   const fileMatches = store
     .index()
-    .matches.filter((m) => m.varPath === path)
+    .matches.filter((m) => m.oathPath === path)
     .slice()
     .sort((a, b) =>
       a.range.start.line !== b.range.start.line
@@ -424,7 +424,7 @@ function resolveStepAt(store: Store, uri: string, position: Position): StepAtRes
   const index = store.index()
   let stepDef = index.stepDefs.find((d) => d.file === path && contains(d.expressionRange, pos))
   if (!stepDef) {
-    const m = index.matches.find((m) => m.varPath === path && contains(m.range, pos))
+    const m = index.matches.find((m) => m.oathPath === path && contains(m.range, pos))
     if (m) stepDef = m.stepDef
   }
   if (!stepDef) return null
@@ -432,7 +432,7 @@ function resolveStepAt(store: Store, uri: string, position: Position): StepAtRes
   const matches: StepAtMatch[] = index.matches
     .filter((m) => m.stepDef.expression === stepDef.expression && m.stepDef.file === stepDef.file)
     .map((m) => ({
-      uri: `file://${m.varPath}`,
+      uri: `file://${m.oathPath}`,
       range: toLspRange(m.range),
       paramRanges: m.paramRanges.map(toLspRange),
       paramValues: m.paramValues,

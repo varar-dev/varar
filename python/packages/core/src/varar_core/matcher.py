@@ -1,4 +1,4 @@
-"""Matcher — port of var-core/src/matcher.ts.
+"""Matcher — port of typescript/packages/core/src/matcher.ts.
 
 Public API
 ----------

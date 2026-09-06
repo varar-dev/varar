@@ -1,4 +1,4 @@
-"""Shared harness for var-unittest tests.
+"""Shared harness for varar-unittest tests.
 
 Builds a throwaway project directory, calls ``generate_tests`` against it the
 way a user's ``test_var.py`` would, and runs the generated cases through a

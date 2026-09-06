@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 
 /**
  * Converts a caught step exception into the structured {@link Result.ExampleFailure} payload —
- * port of {@code var-core/src/failure.ts}. Shared by every producer so failures are
+ * port of {@code typescript/packages/core/src/failure.ts}. Shared by every producer so failures are
  * byte-identical. Called only on the failure path, so it always returns a payload.
  *
  * <p><b>Stack-frame adaptation for Java:</b> TS's {@code error.stack} is a mutable, freely

@@ -7,7 +7,7 @@ require 'varar/core'
 module Varar
   # The imperative shell: discovery, step loading, planning, failure
   # rendering, and the filesystem drift baseline store. Depends on the facade
-  # and config; never on a test framework. Port of var-runner.
+  # and config; never on a test framework. Port of varar-runner.
   module Runner
     VERSION = '0.7.0'
   end

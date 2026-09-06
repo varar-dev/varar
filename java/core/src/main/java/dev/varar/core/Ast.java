@@ -4,13 +4,13 @@ import java.util.List;
 
 /**
  * AST node types produced by the parser/structurer — a direct port of
- * {@code var-core/src/ast.ts} (type definitions only; that file carries no logic).
+ * {@code typescript/packages/core/src/ast.ts} (type definitions only; that file carries no logic).
  *
  * <p>All node types are nested inside this single class rather than declared as
  * top-level types, one per file. Java allows only one public top-level type per
  * file (its name must match the file name), but every node here needs to be
- * {@code public} — later ports (the {@code var} facade, {@code var-junit},
- * {@code var-runner}) live in other packages and must reference {@link Block},
+ * {@code public} — later ports (the {@code var} facade, {@code varar-junit},
+ * {@code varar-runner}) live in other packages and must reference {@link Block},
  * {@link Doc}, etc. directly. Nesting them as {@code public static} members of
  * {@code Ast} satisfies both constraints in one file, keeps a reviewable
  * module-for-module mapping with {@code ast.ts}, and avoids a dozen near-empty
@@ -30,8 +30,7 @@ public final class Ast {
      * Maps a block-text offset to its source offset. Block text is the raw
      * source minus BLOCK markers only (list bullets, blockquote {@code >}
      * prefixes), so a paragraph or list item has a single entry and a
-     * blockquote one entry per quoted line. Inline markup is never stripped —
-     * see {@code doc/superpowers/specs/2026-07-06-explicit-inline-format-plugins-design.md}.
+     * blockquote one entry per quoted line. Inline markup is never stripped.
      */
     public record SegmentOffset(int textOffset, int sourceOffset) {}
 

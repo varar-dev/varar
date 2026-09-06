@@ -1,8 +1,8 @@
 # Varar sample: Kotlin + Kotest + Gradle
 
 A small, standalone sample project that runs Markdown oaths as tests with
-[Varar](https://varar.dev), using the Kotlin DSL (`var-kotlin`) and the
-Kotest adapter (`var-kotest`). Copy it as the starting point for your own
+[Varar](https://varar.dev), using the Kotlin DSL (`varar-kotlin`) and the
+Kotest adapter (`varar-kotest`). Copy it as the starting point for your own
 project.
 
 The `.md` files in the `varar/` directory are the oaths — they run as tests.
@@ -37,7 +37,7 @@ Each example in the Markdown oaths becomes one Kotest test.
 
 ## Versioning note
 
-In the `varar-dev/varar` monorepo `varVersion` is the SNAPSHOT that `mvn install`
+In the `varar-dev/varar` monorepo `vararVersion` is the SNAPSHOT that `mvn install`
 (run from `java/`) puts into the local Maven repository, so the sample gates
 trunk; in `varar-dev/varar-examples` the release sync pins it to the released
 Maven Central artifacts.

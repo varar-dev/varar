@@ -5,7 +5,7 @@ plugins {
 // On trunk this is the SNAPSHOT that `mvn install` (run from java/) puts into
 // mavenLocal, so the sample always tests the code in this repo. In your own
 // project: pin the latest release and drop the mavenLocal() repository.
-val varVersion = "0.7.1-SNAPSHOT"
+val vararVersion = "0.7.1-SNAPSHOT"
 
 repositories {
     mavenLocal()
@@ -13,8 +13,8 @@ repositories {
 }
 
 dependencies {
-    testImplementation("dev.varar:kotlin:$varVersion")
-    testImplementation("dev.varar:junit:$varVersion")
+    testImplementation("dev.varar:kotlin:$vararVersion")
+    testImplementation("dev.varar:junit:$vararVersion")
     testImplementation(platform("org.junit:junit-bom:6.1.2"))
     testImplementation("org.junit.platform:junit-platform-suite")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")

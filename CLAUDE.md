@@ -63,7 +63,7 @@ Decide the quadrant before writing and don't mix them in one page.
 
 - **Immutable types.** All data types are `readonly` — no mutable fields, no in-place mutation. Use `ReadonlyArray<T>` and `ReadonlyMap<K, V>`. Updates produce a new value.
 - **Pure functions everywhere they're possible.** Parsing, matching, planning, snippet generation, diagnostics: all pure. Given the same input, return the same output, with no side effects.
-- **Functional core, imperative shell.** The core (`@varar/varar`) is pure functions over immutable data. The shell — file I/O, module loading, test-runner integration, CLI prompts, terminal output — lives in the adapter packages (`var-vitest`, `var-node`, `var-bun`, `var-cli`) and is the *only* place side effects are allowed.
+- **Functional core, imperative shell.** The core (`@varar/varar`) is pure functions over immutable data. The shell — file I/O, module loading, test-runner integration, CLI prompts, terminal output — lives in the adapter packages (`@varar/vitest`, `@varar/runner`, `@varar/cli`) and is the *only* place side effects are allowed.
 - **Hexagonal architecture.** The core defines ports (interfaces it depends on); adapters implement them. The core never imports from `node:fs`, `vitest`, `bun:test`, etc. — those are wired in at the edges.
 
 Concretely:
@@ -126,7 +126,7 @@ on everything since the last release tag):
   `refactor`, `test`, `build`, `ci`, `style`, `revert` are not.
 - **Scope names the consumer.** `feat`/`fix`/`perf` (and anything breaking)
   must be scoped `ts`, `py`, `java`, `ruby`, `vscode`, or `spec`, optionally
-  `/package`: `feat(ts/var-vitest): …`, `fix(py/var-core): …`,
+  `/package`: `feat(ts/vitest): …`, `fix(py/core): …`,
   `refactor(java/junit)!: …`. The scope decides which changelog section
   the entry lands in (npm / PyPI / Maven Central / RubyGems / VS Code / all ports).
   Work that ships nothing to a consumer — website, CI, tooling — is a
@@ -194,7 +194,7 @@ With one or more slots the return is **required**: `undefined`/`null`/`None` →
 
 Per slot kind: **inline parameter** — deep-equal against the transformed arg → `CellMismatchError` (`CellDiff[]`, each with a source `span` + `expected` + `actual`); **whole table** — exact string compare per cell → `CellMismatchError`; **doc string** — one cell, compared whole: exact equality including the trailing `\n` → `CellMismatchError` (quoted, so a whitespace-only difference stays visible). **Header-bound table rows** bypass the slot contract: the step returns its computed columns as a row object, compared cell-by-cell — returning nothing there is a `ReturnShapeError` too. **Wrong shape** → `ReturnShapeError`; an `undefined` return passes only for a zero-slot sensor.
 
-Because the diffs are anchored to source spans (`startOffset`/`endOffset`), editors render them directly (the website CodeMirror reddens the failing source span and shows `actual: …` on hover). These diffs are the basis of the emerging shared run-result format consumed by the editor, the LSP, and future HTML overlays.
+Because the diffs are anchored to source spans (`startOffset`/`endOffset`), editors render them directly (the website CodeMirror reddens the failing source span and shows `actual: …` on hover). These diffs are the basis of the run-result format — a cross-port contract (ADR 0014), documented at [Run results](https://varar.dev/reference/run-results/) and consumed by the editor, the LSP, CI gates and attestation pipelines.
 
 ## What's intentionally absent
 

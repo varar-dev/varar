@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/** Translated from {@code var-core/tests/param-diff.test.ts}. */
+/** Translated from {@code typescript/packages/core/tests/param-diff.test.ts}. */
 class ParamDiffTest {
 
     private static final String SOURCE = "I should have 3 cukes in my big belly";

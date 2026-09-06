@@ -10,7 +10,7 @@
 #   make ruby       # bundle + rake (rubocop + rspec + purity gate) +
 #                   # examples/ruby-rspec and examples/ruby-minitest (Ruby 3.2,
 #                   # pinned in ruby/.tool-versions)
-#   make rust       # cargo fmt/clippy/test (var-core) + examples/rust-cargotest
+#   make rust       # cargo fmt/clippy/test (varar-core) + examples/rust-cargotest
 #   make dotnet     # dotnet format --verify-no-changes + build + test (net10.0)
 #   make go         # gofmt + go vet + go test (go/ module) + examples/go-gotest
 #   make parity     # every core capability exists in every port that needs it
@@ -92,8 +92,8 @@ ruby:
 	cd examples/ruby-minitest && bundle install && bundle exec rake test
 	conformance/adapter/smoke.sh examples/ruby-rspec examples/ruby-minitest
 
-# Rust port: pure cargo (var-core), then the standalone sample project (which
-# depends on var-core by path and runs the Markdown specs via `cargo test`).
+# Rust port: pure cargo (varar-core), then the standalone sample project (which
+# depends on varar-core by path and runs the oaths via `cargo test`).
 rust:
 	cd rust && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
 	cd examples/rust-cargotest && cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test

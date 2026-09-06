@@ -10,7 +10,7 @@ import java.util.regex.Pattern;
 
 /**
  * Matches a sentence against a {@link Registry}'s compiled step expressions — port of {@code
- * var-core/src/matcher.ts}.
+ * typescript/packages/core/src/matcher.ts}.
  *
  * <p><b>UTF-16 offset verification (confirmed, not assumed):</b> unlike the Python port ({@code
  * var_core/matcher.py}), which must convert every {@code cucumber-expressions}/{@code re} group

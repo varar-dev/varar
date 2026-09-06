@@ -1,7 +1,7 @@
 import type { Drift, OathResults } from '@varar/core'
 
 export type RunInput = {
-  varPath: string
+  oathPath: string
   varSource: string
   stepFiles: ReadonlyArray<{ path: string; source: string }>
   exampleIndex?: number

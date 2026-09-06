@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
-/** Translated from {@code var-core/tests/doc-string-diff.test.ts}. */
+/** Translated from {@code typescript/packages/core/tests/doc-string-diff.test.ts}. */
 class DocStringDiffTest {
 
     private static final Span SPAN = new Span(0, 6, 1, 1, 1, 6);

@@ -19,7 +19,7 @@ export type WorkspaceInput = {
 }
 
 export type MatchRef = {
-  readonly varPath: string
+  readonly oathPath: string
   readonly range: Range
   // The range of the value passed to the handler for each parameter — the
   // inner capture group, e.g. `world` for `{string}` matching `"world"` (the
@@ -40,7 +40,7 @@ export type MatchRef = {
 }
 
 export type DiagnosticRef = {
-  readonly varPath: string
+  readonly oathPath: string
   readonly code: string
   readonly severity: 'error' | 'warning'
   readonly message: string
@@ -121,7 +121,7 @@ export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
         )
         if (!def) continue
         matches.push({
-          varPath: file.path,
+          oathPath: file.path,
           range: toRange(b.matchSpan),
           paramRanges: b.paramSpans.map(toRange),
           paramValues: b.paramSpans.map((s) => file.source.slice(s.startOffset, s.endOffset)),
@@ -138,7 +138,7 @@ export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
         )
         if (!def) continue
         matches.push({
-          varPath: file.path,
+          oathPath: file.path,
           range: toRange(step.matchSpan),
           // Highlight only the value passed to the handler (inner capture
           // group); paramValues keeps the full notation for rename.
@@ -150,7 +150,7 @@ export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
     }
     for (const d of result.diagnostics) {
       diagnostics.push({
-        varPath: file.path,
+        oathPath: file.path,
         code: d.code,
         severity: d.severity,
         message: d.message,

@@ -11,9 +11,9 @@
 
   <name>varar (Java port) — parent</name>
   <description>
-    Java port of var (see doc/adr/0001-second-language-python.md and
-    doc/superpowers/specs/2026-07-01-java-core-port-design.md). A peer of var's
-    other language ports (typescript/, python/, kotlin/, ruby/, rust/).
+    Java port of Varar (see doc/adr/0001-second-language-python.md). A peer of
+    Varar's other language ports (typescript/, python/, kotlin/, ruby/, rust/,
+    dotnet/, go/).
   </description>
 
   <url>https://github.com/varar-dev/varar</url>
@@ -51,7 +51,7 @@
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>21</maven.compiler.release>
-    <!-- Kotlin toolchain + libraries for the var-kotlin/var-kotest facade modules.
+    <!-- Kotlin toolchain + libraries for the varar-kotlin/varar-kotest facade modules.
          Versions confirmed on repo1.maven.org (maven-metadata.xml) 2026-07-01:
          kotlin 2.4.0 = latest stable (2.4.20-Beta1 excluded), coroutines 1.11.0,
          kotest 6.2.1. -->
@@ -92,7 +92,7 @@
 
   <dependencies>
     <!-- Every module gets the Jupiter test API; this is the core's OWN test suite
-         and is unrelated to the ADR 0003 decision about var-junit's JUnit
+         and is unrelated to the ADR 0003 decision about varar-junit's JUnit
          *integration* mechanism (a custom TestEngine, not Jupiter). -->
     <dependency>
       <groupId>org.junit.jupiter</groupId>
@@ -179,8 +179,8 @@
             <goals><goal>report</goal></goals>
           </execution>
           <!-- Ratchet: 0.75 sits just under the weakest module measured when
-               the threshold was introduced (2026-07-03: var-kotlin 76.9%;
-               the strongest, var-runner, was 93.9%). Raise as coverage
+               the threshold was introduced (2026-07-03: varar-kotlin 76.9%;
+               the strongest, varar-runner, was 93.9%). Raise as coverage
                grows; never lower. -->
           <execution>
             <id>check</id>

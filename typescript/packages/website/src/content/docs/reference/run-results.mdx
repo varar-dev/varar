@@ -1,0 +1,289 @@
+---
+title: Run results
+description: The machine-readable, span-anchored record Varar writes after every run — file layout, payload shape, the source fingerprint, the drift baseline, and the stability policy.
+---
+
+Every Varar run leaves one **run-result file** per oath: a structured,
+span-anchored record of which examples ran, which passed, and exactly where in
+the Markdown each failure sits. The language server reads it to draw squiggles;
+this page is the reference for anyone else who wants to consume it — a CI gate,
+a supervising agent, an HTML overlay, an attestation pipeline.
+
+The format is a **cross-port contract** ([ADR 0014](https://github.com/varar-dev/varar/blob/main/doc/adr/0014-run-results-are-a-cross-port-contract.md)):
+every port writes the same payload, and the
+[`conformance/run-results`](https://github.com/varar-dev/varar/tree/main/conformance/run-results)
+corpus keeps them honest.
+
+## File layout
+
+One JSON file per oath, nested under `.varar/` by the oath's path:
+
+```
+varar/library.md
+  → .varar/varar/library.md.json
+```
+
+- `oathPath` is relative to the workspace root, always with POSIX separators —
+  a result written on Windows resolves on Linux and back.
+- Written at the **end of every run**, for every oath that ran — passing runs
+  included, so the LSP can clear diagnostics that no longer apply.
+- `.varar/` is **git-ignored**. It is a run artifact keyed by a source
+  fingerprint, worthless the moment the source moves.
+
+## Payload
+
+A run-result file is a serialized `OathResults`:
+
+```ts
+type OathResults = {
+  readonly version: 1
+  readonly oathPath: string   // POSIX separators, relative to the workspace root
+  readonly sourceHash: string // fingerprint of the oath source as run
+  readonly examples: ReadonlyArray<ExampleResult>
+}
+```
+
+A run with one passing example, one failing on a mismatched cell, and one
+failing by throwing:
+
+```json
+{
+  "version": 1,
+  "oathPath": "varar/library.md",
+  "sourceHash": "fnv1a:1622dfca",
+  "examples": [
+    {
+      "name": "Maya borrowed *Emma*, due back on June 1, 2026",
+      "status": "passed",
+      "lines": [3, 4]
+    },
+    {
+      "name": "Ben borrowed *Dune* for £2.50 & kept it",
+      "status": "failed",
+      "lines": [13, 14],
+      "failure": {
+        "line": 14,
+        "message": "expected £2.50 but was £3.00\nand the library <refused>",
+        "stack": "<stack>",
+        "cells": [{ "from": 71, "to": 77, "actual": "£3.00" }],
+        "anchor": { "from": 60, "to": 90 }
+      }
+    },
+    {
+      "name": "Noor borrowed *Kindred*",
+      "status": "failed",
+      "lines": [8, 9],
+      "failure": {
+        "line": 9,
+        "message": "expected the library to refuse",
+        "stack": "<stack>"
+      }
+    }
+  ]
+}
+```
+
+Note the third example: `cells` and `anchor` are **absent**, not `null`. Every
+optional member works that way.
+
+### `ExampleResult`
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `name` | `string` | The example's primary paragraph, line breaks collapsed and trailing punctuation stripped |
+| `status` | `'passed' \| 'failed'` | Whether every step in the example passed |
+| `lines` | `ReadonlyArray<number>` | 1-based source lines of the example's steps, in document order |
+| `failure?` | object | Present only when `status` is `'failed'` |
+
+### `failure`
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `line` | `number` | 1-based line where the failure occurred |
+| `message` | `string` | Human-readable message from the caught error |
+| `stack` | `string` | Runtime-shaped stack. **Not portable, and no consumer parses it** — a V8 stack, a JVM trace and a rendered Rust location have nothing in common. It is there for a human reading the file |
+| `cells?` | `ReadonlyArray<CellFailure>` | Every mismatched cell: table, header-bound row, inline capture or doc string. Absent when the step simply threw |
+| `anchor?` | `{ from, to }` | Where the failure points in the source — the failing step's match span, or the first mismatched cell's span |
+
+Everything a renderer *acts* on — `line`, `message`, `cells`, `anchor` — is
+identical across every port.
+
+### `CellFailure`
+
+```ts
+type CellFailure = {
+  readonly from: number   // absolute source offset of the expected text
+  readonly to: number     // absolute source offset, exclusive
+  readonly actual: string // the value the step produced
+}
+```
+
+- `from` and `to` are **absolute UTF-16 code-unit offsets** into the Markdown —
+  the same positions CodeMirror uses. `to` is exclusive, so
+  `source.slice(from, to)` recovers the expected text.
+- The record carries only `actual`. **`expected` is never serialized**: it is
+  recovered by slicing the current source at the recorded offsets, which is
+  what ties the result to the source it was computed against.
+
+### Rendering precedence
+
+A consumer with all three signals should prefer the narrowest:
+
+1. `cells`, when non-empty — underline each mismatched cell.
+2. `anchor` — underline the step that threw, not the whole line it shares with
+   its neighbours.
+3. `line` — the fallback when neither is recorded, either by an older release
+   or by a port that has not caught up.
+
+## `sourceHash`
+
+A fingerprint of the whole oath source as it was run, computed identically in
+every port:
+
+```
+fnv1a:4f9f2cab
+```
+
+- **Algorithm**: FNV-1a, 32-bit, over UTF-16 code units (offset basis
+  `0x811c9dc5`, prime `0x01000193`). Not a security hash — it is tiny,
+  dependency-free, and trivially re-implementable in any language.
+- **Prefix**: `fnv1a:` namespaces the algorithm, so a future format version can
+  swap it unambiguously.
+- **Test vectors** — pin your reimplementation against these:
+
+| Input | Hash |
+| --- | --- |
+| `""` (empty) | `fnv1a:811c9dc5` |
+| `hello` | `fnv1a:4f9f2cab` |
+| `abc` | `fnv1a:1a47e90b` |
+| `# Title\n` | `fnv1a:4eace75e` |
+
+### Staleness contract
+
+A consumer compares `sourceHash` against the hash of the source it is about to
+render against:
+
+- **Match** → the recorded offsets are valid; render.
+- **Mismatch** → the file was edited since the run, and the offsets may now
+  point at the wrong text. The consumer **must not** render the result.
+
+There is no partial remap. A stale record is silent, never wrong — the
+persisted equivalent of an editor clearing results on every keystroke.
+
+## Drift baseline (`varar.lock.json`)
+
+Run results are per-run and disposable. Detecting **drift** — a paragraph that
+used to be an example and now matches no step — needs a *committed* baseline,
+which lives in a separate file at the project root:
+
+```ts
+type LockFile = {
+  readonly version: 2
+  readonly oaths: Readonly<Record<string, OathBaseline>>
+}
+
+type OathBaseline = {
+  readonly sourceHash: string
+  readonly examples: ReadonlyArray<{
+    readonly name: string // the paragraph's normalized primary text
+    readonly line: number // 1-based start line
+  }>
+}
+```
+
+- `oaths` is keyed by POSIX oath path relative to the project root.
+- Serialization is **byte-stable**: keys sorted, examples in document order,
+  two-space indent, trailing newline. A clean re-run produces no git diff.
+- Unlike `.varar/`, this file is **committed**. It is the record of what your
+  suite used to test.
+- **Acknowledging drift**: `varar run --update`, the `VARAR_UPDATE=1`
+  environment variable, or the LSP command `varar.acceptDrift` re-records the
+  baseline. The vitest plugin is a read-only gate — it reports drift and never
+  writes.
+- `--update` also **prunes** baselines whose oath path no longer matches the
+  `docs` globs. Nothing is deleted behind your back.
+
+For the semantics of drift — what triggers it, how a moved or reworded
+paragraph keeps its identity, and the acknowledgment workflow — see
+[Examples](/reference/examples/#drift-detection).
+
+## Stability policy
+
+Both records carry a `version` integer: `1` for `OathResults`, `2` for
+`varar.lock.json`.
+
+| Rule | Applies to |
+| --- | --- |
+| A breaking change bumps `version`. | `OathResults`, `LockFile` |
+| Additive **optional** fields may land without a bump. | both |
+| Consumers **must** ignore unknown fields. | both |
+| Consumers **must** treat an unknown `version` as absent — no error, no render. | both |
+| The hash algorithm is versioned independently, by its prefix. A format bump may leave the hash alone, and the hash may change within one format version. | `sourceHash` |
+
+So a tool that consumes run records — a supervising agent, a CI gate, an
+attestation pipeline storing evidence for years — can rely on any `version: 1`
+record staying readable as Varar keeps adding optional fields.
+
+## Cross-port guarantees
+
+Every port writes this payload, and
+[`conformance/run-results/expected.json`](https://github.com/varar-dev/varar/tree/main/conformance/run-results)
+pins it: each port builds the same value in its own types, serializes it, and
+compares the **parsed** result.
+
+| Port | Adapters persist `.varar/<oathPath>.json` |
+| --- | --- |
+| TypeScript | ✅ |
+| Python | ✅ |
+| Java / Kotlin | ✅ |
+| Ruby | ✅ |
+| Rust | ✅ |
+| .NET | ✅ |
+| Go | ✅ |
+
+What the corpus pins:
+
+- **field names** — `oathPath`, never `oath_path`;
+- **optional members absent, never `null`** — a passing example has no
+  `failure` key at all;
+- **value types** — `lines` an array of numbers, `anchor` an object of two
+  offsets.
+
+What it deliberately does **not** pin — these belong to whichever writer
+produced the file, and a consumer must not depend on them:
+
+- key order, indentation, escaping, trailing newline. One port may emit
+  `\u00A3` where another emits `£`; both parse to the same string.
+
+The one convention that *is* fixed everywhere is the coordinate space:
+**absolute UTF-16 code-unit offsets**, `to` exclusive. That matches
+JavaScript's string indexing, CodeMirror's positions, and every port's internal
+representation.
+
+:::note
+`stack` is the one field outside the contract. It is runtime-shaped by design
+and excluded from the corpus comparison.
+:::
+
+## Consumers
+
+Today:
+
+- **The language server** reads `.varar/<oathPath>.json`, checks `sourceHash`
+  against the open buffer, and publishes offset-anchored diagnostics — in every
+  editor, for every language, because one TypeScript language server serves all
+  seven ports.
+- **The website editor** renders red cells and hover-actual straight off the
+  in-memory `OathResults` its browser runner produces.
+
+The format is shaped for more:
+
+- **CI gates** — check an example's `status` mechanically instead of scraping
+  test-runner text.
+- **Supervising agents** — answer "which examples failed, and exactly where?"
+  from a file rather than from console output.
+- **HTML overlays** — a static page fetches the record and highlights spans, so
+  a reviewer sees results in the rendered oath.
+- **Attestation pipelines** (EU Cyber Resilience Act evidence, say) — the
+  records tie verification to a source fingerprint, so an artifact can carry
+  machine-checkable proof that these documented behaviours were verified.

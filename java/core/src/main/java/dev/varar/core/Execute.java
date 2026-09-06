@@ -12,7 +12,7 @@ import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 
 /**
- * The executor — port of {@code var-core/src/execute.ts}, adapted to Task 11's
+ * The executor — port of {@code typescript/packages/core/src/execute.ts}, adapted to Task 11's
  * full-replacement immutable-record state model.
  *
  * <h2>No mutation guard, in any port</h2>
@@ -74,7 +74,7 @@ import java.util.function.Function;
  *
  * <h2>Invoking an opaque handler</h2>
  *
- * <p>{@code var-core} has zero compile-time dependency on the {@code var} module's
+ * <p>{@code varar-core} has zero compile-time dependency on the {@code var} module's
  * author-facing {@code Steps.Stimulus0/1/2}/{@code Sensor0/1/2} interfaces
  * (hexagonal architecture: the core never imports the facade) — {@link
  * Registry.StepRegistration#handler()} is plain {@link Object}. This executor invokes it
@@ -427,7 +427,7 @@ public final class Execute {
     /**
      * Finds {@code handlerClass}'s single abstract method with {@code paramCount}
      * parameters — the functional interface's SAM, whatever it's called and whichever
-     * interface it belongs to (see class javadoc: {@code var-core} never imports {@code
+     * interface it belongs to (see class javadoc: {@code varar-core} never imports {@code
      * dev.varar}'s {@code Context0/1/2}/{@code Sensor0/1/2}).
      */
     private static Method samMethod(Class<?> handlerClass, int paramCount) {
@@ -487,7 +487,7 @@ public final class Execute {
      * fileName}/{@code lineNumber} are the {@code .md} path/line, so {@link
      * Failure#toFailure}'s regex (which reads the printed stack trace text) finds it.
      */
-    private static Throwable augmentStack(Throwable err, Plan.PlannedStep step, String varPath) {
+    private static Throwable augmentStack(Throwable err, Plan.PlannedStep step, String oathPath) {
         String text = step.text();
         String label = text.length() > 60 ? text.substring(0, 60) + "…" : text;
         // Editors resolve the failure's location from this frame; FailureAnchor decides where
@@ -496,7 +496,7 @@ public final class Execute {
         // that's what lets a renderer underline the failing step, not its whole line.
         Span anchor = FailureAnchor.anchor(err, step.matchSpan());
         FailureAnchor.attach(err, anchor);
-        StackTraceElement synthetic = new StackTraceElement("Step", label, varPath, anchor.startLine());
+        StackTraceElement synthetic = new StackTraceElement("Step", label, oathPath, anchor.startLine());
         StackTraceElement[] original = err.getStackTrace();
         StackTraceElement[] augmented = new StackTraceElement[original.length + 1];
         augmented[0] = synthetic;

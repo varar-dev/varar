@@ -16,7 +16,7 @@
   <description>
     Runs var oaths as Kotest tests: subclass OathSpec, one Kotest test per
     planned example. Delegates discovery/loading/planning wholesale to
-    var-runner; no pipeline logic here.
+    varar-runner; no pipeline logic here.
   </description>
 
   <properties>

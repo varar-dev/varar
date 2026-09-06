@@ -23,7 +23,7 @@ import kotlinx.coroutines.runBlocking
 internal class StateBox<C : Any>(val value: C) : State
 
 /**
- * The var-kotlin author entry point. Returns an INERT, replayable [StepDefinitions]: nothing
+ * The varar-kotlin author entry point. Returns an INERT, replayable [StepDefinitions]: nothing
  * registers when a top-level `val stepDefs = steps(::Ctx) { … }` initializes — the block is stored
  * and replayed against whatever fresh [Steps] the runner injects via [StepDefinitions.register].
  * This keeps the Java port's rule that mutable accumulation lives in the shell, never in a

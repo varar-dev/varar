@@ -1,4 +1,4 @@
-"""Step role types — port of var-core/src/step-role.ts."""
+"""Step role types — port of typescript/packages/core/src/step-role.ts."""
 from __future__ import annotations
 
 from typing import Literal

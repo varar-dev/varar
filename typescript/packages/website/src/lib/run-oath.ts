@@ -28,12 +28,12 @@ export type RunOathOptions = {
 }
 
 export async function runRegisteredOath(
-  varPath: string,
+  oathPath: string,
   varSource: string,
   options: RunOathOptions = {},
 ): Promise<RunOutcome> {
   const registry = buildRegistry()
-  const doc = parse(varPath, varSource, [])
+  const doc = parse(oathPath, varSource, [])
   const full = plan(doc, registry)
   const { exampleIndex } = options
   const examples =
@@ -60,7 +60,7 @@ export async function runRegisteredOath(
               name,
               status: 'failed',
               lines,
-              failure: toFailure(err, varPath, lines[0] ?? 0),
+              failure: toFailure(err, oathPath, lines[0] ?? 0),
             }
           }
         })(),
@@ -72,7 +72,7 @@ export async function runRegisteredOath(
   await Promise.all(pending)
   const results: OathResults = {
     version: 1,
-    oathPath: varPath,
+    oathPath: oathPath,
     sourceHash: hashSource(varSource),
     examples: out,
   }
@@ -83,7 +83,7 @@ export async function runRegisteredOath(
     options.baselineStore && exampleIndex == null
       ? await reconcileDrift({
           store: options.baselineStore,
-          oathPath: varPath,
+          oathPath: oathPath,
           source: varSource,
           doc,
           plan: full,

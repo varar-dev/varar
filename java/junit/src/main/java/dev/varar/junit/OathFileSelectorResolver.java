@@ -159,7 +159,7 @@ final class OathFileSelectorResolver implements SelectorResolver {
      *       #fileSelectorFor}/{@link Context#resolve(DiscoverySelector)} exactly like a direct
      *       file/classpath selector — every example, since selecting the whole file means "run all
      *       of it".
-     *   <li>An example-level {@code UniqueId} plans the file (unavoidable — {@code var-core}'s
+     *   <li>An example-level {@code UniqueId} plans the file (unavoidable — {@code varar-core}'s
      *       {@code Plan.plan} is whole-document, not per-example) but adds <strong>only</strong> the
      *       one matching {@link Plan.PlannedExample} as the container's child, via {@link
      *       #createDescriptor(TestDescriptor, String, TestSource, Integer)}'s {@code onlyLine}

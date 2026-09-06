@@ -3,7 +3,7 @@ package dev.varar.core;
 import java.util.List;
 
 /**
- * Port of {@code var-core/src/step-role.ts}: guess a step's role from its neighbours in
+ * Port of {@code typescript/packages/core/src/step-role.ts}: guess a step's role from its neighbours in
  * document order.
  */
 public final class StepRole {

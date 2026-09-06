@@ -1,8 +1,8 @@
 # Varar sample: Kotlin + JUnit + Gradle
 
 A small, standalone sample project that runs Markdown oaths as tests with
-[Varar](https://varar.dev), using the Kotlin DSL (`var-kotlin`) and the
-JUnit Platform engine (`var-junit`). Copy it as the starting point for your
+[Varar](https://varar.dev), using the Kotlin DSL (`varar-kotlin`) and the
+JUnit Platform engine (`dev.varar:junit`). Copy it as the starting point for your
 own project.
 
 The `.md` files in the `varar/` directory are the oaths — they run as tests.
@@ -32,12 +32,12 @@ Each example in the Markdown oaths becomes one JUnit test.
   steps, just like your production code.
 - **`RunVararTest.kt`** is a JUnit `@Suite` that includes the `"var"`
   engine. It exists only because Gradle and Maven Surefire discover tests by
-  class — the engine itself needs no wiring beyond having `var-junit` on the
+  class — the engine itself needs no wiring beyond having `dev.varar:junit` on the
   test classpath.
 
 ## Versioning note
 
-In the `varar-dev/varar` monorepo `varVersion` is the SNAPSHOT that `mvn install`
+In the `varar-dev/varar` monorepo `vararVersion` is the SNAPSHOT that `mvn install`
 (run from `java/`) puts into the local Maven repository, so the sample gates
 trunk; in `varar-dev/varar-examples` the release sync pins it to the released
 Maven Central artifacts.

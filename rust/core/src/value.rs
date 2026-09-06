@@ -1,4 +1,4 @@
-//! The dynamic value model — the Rust replacement for Java var-core's `Object`
+//! The dynamic value model — the Rust replacement for Java varar-core's `Object`
 //! with `instanceof Map`/`List`/`String` duck-typing (see `CellDiff.java`,
 //! `DocStringDiff.java`, `ParamDiff.java`). One closed enum carries handler
 //! arguments, handler returns, thread-through state, row objects, table rows,

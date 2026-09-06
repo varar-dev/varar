@@ -43,13 +43,13 @@ export type Store = {
   // per-language snippet-selection algorithm to pick the language owning the
   // most step files when several are configured.
   stepPaths(): ReadonlyArray<string>
-  // Whether a file is a var oath — i.e. it was discovered by the `docs` globs.
+  // Whether a file is an oath — i.e. it was discovered by the `docs` globs.
   // There is no `.md` extension to key off of; the config defines oaths.
   isDoc(path: string): boolean
   // Accept drift for one oath: re-record its varar.lock.json baseline to the
   // current live examples, so a now-prose paragraph is no longer flagged. The
   // caller reindexes afterwards to clear the squiggle.
-  acceptDrift(varPath: string): Promise<void>
+  acceptDrift(absPath: string): Promise<void>
   fs(): FileSystem
 }
 
@@ -85,7 +85,7 @@ async function driftDiagnosticRefs(
     for (const drift of detectDrift(baseline, doc, executionPlan)) {
       const diag = driftDetected({ name: drift.name, span: drift.span })
       refs.push({
-        varPath: vf.path,
+        oathPath: vf.path,
         code: diag.code,
         // A warning (amber) in the editor — same as the browser — while the
         // runner treats drift as a hard failure.
@@ -174,7 +174,7 @@ export function createStore(deps: StoreDeps): Store {
     // Delegates to the filesystem port so unsaved editor buffers (which the
     // disk-backed index can't see) are still recognised as oath docs.
     isDoc: (path) => fs.matches(path, config.docs),
-    async acceptDrift(varPath) {
+    async acceptDrift(absPath) {
       const [lockAbs] = await fs.list({ include: ['varar.lock.json'], exclude: [] })
       // No baseline file yet → nothing has been recorded, so nothing to accept.
       if (!lockAbs) return
@@ -182,9 +182,9 @@ export function createStore(deps: StoreDeps): Store {
       const root = lockAbs
         .slice(0, lockAbs.length - 'varar.lock.json'.length)
         .replace(/[/\\]+$/, '')
-      const oathPath = toOathPath(root, varPath)
-      const source = await fs.read(varPath)
-      const doc = parse(varPath, source)
+      const oathPath = toOathPath(root, absPath)
+      const source = await fs.read(absPath)
+      const doc = parse(absPath, source)
       const baseline = deriveOathBaseline(source, doc, plan(doc, current.registry))
       const next: LockFile = {
         version: 2,

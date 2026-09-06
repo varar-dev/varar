@@ -30,7 +30,7 @@ updateConfig:
 # loads that. The scanner runs the grammars through web-tree-sitter, reading the
 # `.wasm` files the packages already ship prebuilt (see the `*.wasm` entries in
 # their `files`, and every grammar loader: lsp/src/node-grammar-loader.ts,
-# vitest/src/node-grammar-loader.ts, the var-vscode bundler's copy list).
+# vitest/src/node-grammar-loader.ts, the @varar/vscode bundler's copy list).
 # Denying them skips a native compile that nothing uses and drops the
 # requirement for a C toolchain to install this repo.
 #

@@ -35,7 +35,7 @@ test('cross-references matched substrings in .md to their step defs', () => {
   expect(idx.stepDefs).toHaveLength(1)
   expect(idx.matches).toHaveLength(1)
   const m = idx.matches[0]
-  expect(m?.varPath).toBe('/abs/belly.md')
+  expect(m?.oathPath).toBe('/abs/belly.md')
   expect(m?.stepDef.expression).toBe('I have {int} cukes')
   // Match starts somewhere inside line 3 (the body).
   expect(m?.range.start.line).toBe(3)

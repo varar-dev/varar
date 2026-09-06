@@ -17,9 +17,8 @@ import org.junit.platform.engine.support.hierarchical.Node;
  * <p>{@code UniqueId} segment type {@link #SEGMENT_TYPE} ({@code "example"}), value = {@code
  * example.span().startLine()} as a decimal string — deliberately <strong>not</strong> {@link
  * Plan.PlannedExample#name()} (the display name, derived from the example's Markdown text, shown
- * via {@link #getDisplayName()}). The design doc ({@code
- * doc/superpowers/specs/2026-07-01-java-junit-engine-design.md}) flags this as a hard
- * requirement, not a nice-to-have: a {@code UniqueId} built from wording would change whenever an
+ * via {@link #getDisplayName()}). This is a hard requirement, not a nice-to-have: a {@code
+ * UniqueId} built from wording would change whenever an
  * author edits a sentence without moving the example, silently breaking {@code UniqueIdSelector}
  * re-run-single-test (an IDE's "re-run this test" action round-trips the {@code UniqueId} it
  * captured on a previous run — if that id no longer resolves to the same example, or resolves to

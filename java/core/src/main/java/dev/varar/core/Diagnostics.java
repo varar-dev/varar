@@ -1,7 +1,7 @@
 package dev.varar.core;
 
 /**
- * Diagnostics — port of the subset of {@code var-core/src/diagnostics.ts} that {@link Plan}
+ * Diagnostics — port of the subset of {@code typescript/packages/core/src/diagnostics.ts} that {@link Plan}
  * actually needs.
  *
  * <p>Scoped deliberately narrow: {@code diagnostics.ts}'s {@code Diagnostic} type also carries a

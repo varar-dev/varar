@@ -6,9 +6,8 @@
 - **Tags:** runtime, run-result, drift, cross-language, hashing
 
 > **Implementation note (2026-07-07).** Shipped in TypeScript, Python, and the
-> JVM, tracked by
-> [the drift-detection design spec](../superpowers/specs/2026-07-06-drift-detection-design.md).
-> Two refinements to this ADR emerged in build:
+> JVM (and since in every other port). Two refinements to this ADR emerged in
+> build:
 > (1) **No `sourceHash` short-circuit** for detection — a step rename leaves the
 > Markdown (and its hash) untouched yet is the primary drift case, so detection
 > always re-plans; the fingerprint is recorded but not used to gate detection.
@@ -37,9 +36,9 @@ We already have the substrate for detecting change, but only in TypeScript and
 only for a narrower purpose:
 
 - `hashSource` — an FNV-1a (32-bit, over UTF-16 code units, `fnv1a:` prefix)
-  change-detector in `typescript/packages/var-core/src/hash.ts`. Tiny,
+  change-detector in `typescript/packages/core/src/hash.ts`. Tiny,
   dependency-free, trivially re-implementable in any language.
-- `OathResults` (`typescript/packages/var-core/src/result.ts`) — the persisted
+- `OathResults` (`typescript/packages/core/src/result.ts`) — the persisted
   per-oath run record (`.var/<oath>.json`) carrying `sourceHash` and the list of
   examples that ran.
 - `runResultDiagnostics` (`.../run-diagnostics.ts`) — projects a recorded result
@@ -185,8 +184,7 @@ The distinction the decision turns on:
 ## References
 
 - [Examples](../../typescript/packages/website/src/content/docs/reference/examples.mdx) — the user-facing statement of these semantics (the [Drift detection](../../typescript/packages/website/src/content/docs/reference/examples.mdx#drift-detection) section).
-- `typescript/packages/var-core/src/{hash,result,run-diagnostics}.ts` — the existing TS substrate (fingerprint + run-result + staleness).
-- [Run-result format design](../superpowers/specs/2026-06-28-run-result-format-design.md), [Run-result diagnostics design](../superpowers/specs/2026-06-28-run-result-diagnostics-design.md).
+- `typescript/packages/core/src/{hash,result,run-diagnostics}.ts` — the TS substrate (fingerprint + run-result + staleness).
+- [ADR 0014 — run results are a cross-port contract](0014-run-results-are-a-cross-port-contract.md), and [Run results](../../typescript/packages/website/src/content/docs/reference/run-results.mdx) — the user-facing reference for the format.
 - [ADR 0001 — Python as the second supported language](0001-second-language-python.md).
-- [Cross-implementation consistency design](../superpowers/specs/2026-06-30-cross-implementation-consistency-design.md).
-- [Issue #2 — Python port](https://github.com/oselvar/var/issues/2).
+- [Issue #2 — Python port](https://github.com/varar-dev/varar/issues/2).

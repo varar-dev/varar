@@ -5,15 +5,15 @@
 # package's package.json — but dependencies already implied by a drawn path
 # are omitted for readability: most packages also declare a direct dep on
 # @varar/core (its types are imported directly, and pnpm's strict
-# layout requires declaring everything you import), and var-vitest / var-cli
-# likewise declare var-config (and var-vitest var). See each package.json
+# layout requires declaring everything you import), and vitest / cli
+# likewise declare config (and vitest varar). See each package.json
 # for the full list.
 # Boundaries follow the hexagonal architecture: pure functional core,
 # imperative shell (adapters), editor tooling — plus the static-analysis
 # layer shared by the test-runner and editor paths.
-# Green components are ported to every language — java/ and python/ have a
-# counterpart by role (var-vitest ↔ var-junit/var-kotest ↔ var-pytest/
-# var-unittest); blue components exist only in TypeScript and serve all
+# Green components are ported to every language — each port has a
+# counterpart by role (vitest ↔ junit/kotest ↔ pytest/
+# unittest); blue components exist only in TypeScript and serve all
 # ports from here.
 
 direction: down
@@ -85,7 +85,7 @@ vscode: "VS Code\n[External system]\n\nEditor" {
 core: "Functional core — pure functions over immutable data, no I/O" {
   class: boundary
 
-  var-core: "@varar/core\n[Component: npm package]\n\nPure core: parser, matcher, planner,\nexecutor, AST, diagnostics,\nreturn-based comparison" {
+  core: "@varar/core\n[Component: npm package]\n\nPure core: parser, matcher, planner,\nexecutor, AST, diagnostics,\nreturn-based comparison" {
     class: ported
   }
 
@@ -93,7 +93,7 @@ core: "Functional core — pure functions over immutable data, no I/O" {
     class: ported
   }
 
-  var-config: "@varar/config\n[Component: npm package]\n\nvar.config.ts schema and\noath-glob resolution" {
+  config: "@varar/config\n[Component: npm package]\n\nvarar.config.json schema and\noath-glob resolution" {
     class: ported
   }
 }
@@ -101,7 +101,7 @@ core: "Functional core — pure functions over immutable data, no I/O" {
 analysis: "Static analysis — pure given sources and an injected grammar loader" {
   class: boundary
 
-  var-language: "@varar/language\n[Component: npm package]\n\nStatic analysis: step-definition scanner,\nworkspace indexer, snippet emitter" {
+  language: "@varar/language\n[Component: npm package]\n\nStatic analysis: step-definition scanner,\nworkspace indexer, snippet emitter" {
     class: component
   }
 }
@@ -109,15 +109,15 @@ analysis: "Static analysis — pure given sources and an injected grammar loader
 shell: "Imperative shell — adapters, the only place side effects live" {
   class: boundary
 
-  var-runner: "@varar/runner\n[Component: npm package]\n\nRunner shell: loads oath and step files,\nexecutes plans" {
+  runner: "@varar/runner\n[Component: npm package]\n\nRunner shell: loads oath and step files,\nexecutes plans" {
     class: ported
   }
 
-  var-vitest: "@varar/vitest\n[Component: npm package]\n\nVitest adapter: drives vitest's\ninclude/exclude from var.config.ts" {
+  vitest: "@varar/vitest\n[Component: npm package]\n\nVitest adapter: drives vitest's\ninclude/exclude from varar.config.json" {
     class: ported
   }
 
-  var-cli: "@varar/cli\n[Component: npm package]\n\nCommand-line interface" {
+  cli: "@varar/cli\n[Component: npm package]\n\nCommand-line interface" {
     class: component
   }
 }
@@ -125,11 +125,11 @@ shell: "Imperative shell — adapters, the only place side effects live" {
 tooling: "Editor tooling" {
   class: boundary
 
-  var-lsp: "@varar/lsp\n[Component: npm package]\n\nLanguage server: diagnostics,\ngo-to-definition, completions" {
+  lsp: "@varar/lsp\n[Component: npm package]\n\nLanguage server: diagnostics,\ngo-to-definition, completions" {
     class: component
   }
 
-  var-vscode: "varar\n[Component: VS Code extension]\n\nHighlights matched steps,\nmissing-step diagnostics" {
+  vscode: "varar\n[Component: VS Code extension]\n\nHighlights matched steps,\nmissing-step diagnostics" {
     class: component
   }
 }
@@ -149,33 +149,33 @@ legend: "Legend" {
 # --- People and external systems ---
 
 developer -> core.var: authors oaths and steps with
-developer -> tooling.var-vscode: edits oaths in
+developer -> tooling.vscode: edits oaths in
 
-shell.var-vitest -> vitest: plugs into
-tooling.var-vscode -> vscode: installs into
+shell.vitest -> vitest: plugs into
+tooling.vscode -> vscode: installs into
 
 # --- Functional core ---
 
-core.var -> core.var-core
-core.var-config -> core.var-core
+core.var -> core.core
+core.config -> core.core
 
 # --- Static analysis ---
 
-analysis.var-language -> core.var-core
+analysis.language -> core.core
 
 # --- Imperative shell ---
 
-shell.var-runner -> core.var
-shell.var-runner -> core.var-config
+shell.runner -> core.var
+shell.runner -> core.config
 
-shell.var-vitest -> shell.var-runner
-shell.var-vitest -> analysis.var-language
+shell.vitest -> shell.runner
+shell.vitest -> analysis.language
 
-shell.var-cli -> shell.var-runner
+shell.cli -> shell.runner
 
 # --- Editor tooling ---
 
-tooling.var-lsp -> analysis.var-language
-tooling.var-lsp -> core.var-config
+tooling.lsp -> analysis.language
+tooling.lsp -> core.config
 
-tooling.var-vscode -> tooling.var-lsp
+tooling.vscode -> tooling.lsp

@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Immutable run-result records — port of {@code var-core/src/result.ts}.
+ * Immutable run-result records — port of {@code typescript/packages/core/src/result.ts}.
  *
  * <p>{@code OathResults} is the persisted run result for one oath file: the {@code
  * .varar/<oath>.json} file IS a serialized {@code OathResults}.

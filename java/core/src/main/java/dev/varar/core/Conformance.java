@@ -14,7 +14,7 @@ import java.util.function.Supplier;
  * structures each conformance gate compares against a golden by content (see {@link JsonValue}) —
  * conformance corpus's deterministic JSON artifacts.
  *
- * <p>Port of the var-doc and registry portions of {@code var-core/src/conformance.ts}'s
+ * <p>Port of the var-doc and registry portions of {@code typescript/packages/core/src/conformance.ts}'s
  * {@code toDocArtifact}/{@code toRegistryArtifact} (and the equivalent
  * {@code to_doc_artifact}/{@code to_registry_artifact} in the Python port). Field
  * names are camelCase and must match {@code conformance/bundles/*}/golden/*.json}
@@ -199,7 +199,7 @@ public final class Conformance {
      * in a function that ignores its argument.
      *
      * <p>{@code contextFactory} is typed {@code Supplier<?>}, not {@code
-     * Supplier<dev.varar.State>}: this package ({@code var-core}) has zero compile-time
+     * Supplier<dev.varar.State>}: this package ({@code varar-core}) has zero compile-time
      * dependency on the {@code var} facade's {@code State} marker interface — the same
      * hexagonal boundary {@link Execute}'s own {@code createContext} port already respects by
      * returning plain {@code Object}.

@@ -1,4 +1,4 @@
-"""plan.py — port of var-core/src/plan.ts.
+"""plan.py — port of typescript/packages/core/src/plan.ts.
 
 Produces an ExecutionPlan from a Doc + Registry by matching step
 expressions against every text-bearing block in each example, attaching

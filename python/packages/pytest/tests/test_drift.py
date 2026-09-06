@@ -1,4 +1,4 @@
-"""Drift gate through the pytest plugin (mirrors the TS var-cli drift tests)."""
+"""Drift gate through the pytest plugin (mirrors the TS @varar/cli drift tests)."""
 import json
 
 STEPS = '''

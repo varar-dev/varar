@@ -10,7 +10,7 @@ import { resolveRelative } from './module-resolution.ts'
 import { runRegisteredOath } from './run-oath.ts'
 
 type RunInput = {
-  varPath: string
+  oathPath: string
   varSource: string
   stepFiles: ReadonlyArray<{ path: string; source: string }>
   exampleIndex?: number
@@ -87,7 +87,7 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
     // Only .steps.ts files run eagerly (they register steps as a side effect);
     // plain .ts library files load lazily when a steps file imports them.
     for (const f of input.stepFiles) if (f.path.endsWith('.steps.ts')) loader.load(f)
-    const outcome = await runRegisteredOath(input.varPath, input.varSource, {
+    const outcome = await runRegisteredOath(input.oathPath, input.varSource, {
       exampleIndex: input.exampleIndex,
       baselineStore,
       update: input.update,
@@ -98,7 +98,7 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
     const e2 = err as Error
     results = {
       version: 1,
-      oathPath: input.varPath,
+      oathPath: input.oathPath,
       sourceHash: hashSource(input.varSource),
       examples: [
         {

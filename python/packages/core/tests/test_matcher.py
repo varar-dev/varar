@@ -1,4 +1,4 @@
-"""Tests for var.matcher — port of var-core/tests/matcher.test.ts."""
+"""Tests for var.matcher — port of typescript/packages/core/tests/matcher.test.ts."""
 from __future__ import annotations
 
 from varar_core.matcher import ParamSpan, find_hits, resolve_hits

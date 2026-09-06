@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Table row/cell comparison — port of {@code var-core/src/cell-diff.ts}.
+ * Table row/cell comparison — port of {@code typescript/packages/core/src/cell-diff.ts}.
  *
  * <p>{@code CellDiff} itself is the verdict for one comparison of one CELL — the atomic value a
  * sensor checks against the document. A cell is a table cell, a header-bound row's cell, or a

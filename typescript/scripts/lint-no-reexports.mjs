@@ -11,7 +11,7 @@
 //
 // Relative re-exports (export { x } from './x.js') are the normal way a
 // package assembles its own entry point and are allowed. A package's own
-// subpaths (e.g. '@varar/vitest/runtime' from inside var-vitest) count
+// subpaths (e.g. '@varar/vitest/runtime' from inside @varar/vitest) count
 // as self, not cross-package.
 //
 // TypeScript 7 removed the in-process JS compiler (`ts.createSourceFile`); the

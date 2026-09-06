@@ -1,4 +1,4 @@
-"""Author facade for var: steps over the pure var-core engine."""
+"""Author facade for var: steps over the pure varar-core engine."""
 
 __version__ = "0.0.0"
 

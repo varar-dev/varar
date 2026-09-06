@@ -1,4 +1,4 @@
-"""Registry for step definitions — port of var-core/src/registry.ts."""
+"""Registry for step definitions — port of typescript/packages/core/src/registry.ts."""
 from __future__ import annotations
 
 from dataclasses import dataclass, field

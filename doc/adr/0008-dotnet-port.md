@@ -115,7 +115,7 @@ Target the **current .NET LTS** (`net10.0` as of 2026-07), pinned in
 - The `dotnet test` integration mechanism is its own decision:
   [ADR 0009](0009-dotnet-test-adapter-integration.md).
 - Repo/release integration adds a `dotnet/` workspace, a `make dotnet` gate, a
-  NuGet publish target (`release/targets/67-nuget.sh`), the `dotnet` consumer
+  NuGet publish target (`release/targets/68-nuget.sh`), the `dotnet` consumer
   commit-scope + a NuGet changelog section, a `csharp` `languages.json` entry, a
   C# tree-sitter dialect, and the website/editor surfaces — tracked in the plans,
   not this ADR.
@@ -128,9 +128,6 @@ Target the **current .NET LTS** (`net10.0` as of 2026-07), pinned in
   sharing precedent.
 - [Varar rename plan](../RENAME-VARAR.md) — the naming scheme these coordinates
   follow.
-- Kotlin-over-Java facade — the pattern F# will follow over C#
-  (`doc/superpowers/specs/2026-07-01-kotlin-facade-design.md`).
-- Design specs: `doc/superpowers/specs/2026-07-19-dotnet-core-port-design.md`,
-  `doc/superpowers/specs/2026-07-19-dotnet-runner-adapter-design.md`.
+- Kotlin-over-Java facade (`java/kotlin/`) — the pattern F# would follow over C#.
 - `Cucumber.CucumberExpressions` on NuGet —
   https://www.nuget.org/packages/Cucumber.CucumberExpressions

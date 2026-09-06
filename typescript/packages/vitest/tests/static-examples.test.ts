@@ -9,7 +9,7 @@ sensor('the answer is {int}', () => 42)
 test('discovers only examples with matched steps, named by the whole paragraph', async () => {
   const source = 'Pure narration, no step.\n\nSo the answer is 42, obviously.\n'
   const examples = await discoverStaticExamples({
-    varPath: '/abs/deep.md',
+    absPath: '/abs/deep.md',
     source,
     stepFiles: [{ path: '/abs/deep.steps.ts', source: STEPS }],
   })
@@ -22,7 +22,7 @@ const { sensor } = steps(() => ({})).param('color', /red|green/)
 sensor('the light is {color}', () => 'green')
 `
   const examples = await discoverStaticExamples({
-    varPath: '/abs/light.md',
+    absPath: '/abs/light.md',
     source: 'Right now the light is green.\n',
     stepFiles: [{ path: '/abs/light.steps.ts', source: stepSource }],
   })
@@ -31,7 +31,7 @@ sensor('the light is {color}', () => 'green')
 
 test('returns an empty list when no paragraph matches any step', async () => {
   const examples = await discoverStaticExamples({
-    varPath: '/abs/prose.md',
+    absPath: '/abs/prose.md',
     source: 'Just words.\n\nMore words.\n',
     stepFiles: [{ path: '/abs/deep.steps.ts', source: STEPS }],
   })

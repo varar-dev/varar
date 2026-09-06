@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/** Translated from {@code var-core/tests/step-role.test.ts}. */
+/** Translated from {@code typescript/packages/core/tests/step-role.test.ts}. */
 class StepRoleTest {
 
     @Test

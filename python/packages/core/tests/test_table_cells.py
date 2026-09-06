@@ -1,5 +1,5 @@
 """
-Tests for parse_row_cells — ported from var-core/tests/scanner.test.ts
+Tests for parse_row_cells — ported from typescript/packages/core/tests/scanner.test.ts
 (the table-cell span cases) and from table-cells.ts behaviour directly.
 """
 

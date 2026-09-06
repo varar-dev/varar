@@ -8,7 +8,7 @@ import dev.varar.Steps;
  * A standalone (top-level, own-file) {@link StepDefinitions} fixture for {@code
  * RenderTest} — registers one zero-capture {@code sensor} whose handler receives the
  * attached doc-string body as its trailing argument (mirrors {@code
- * ExecuteTest}'s {@code GREETING_DOC} fixture in {@code var-core}) but returns a
+ * ExecuteTest}'s {@code GREETING_DOC} fixture in {@code varar-core}) but returns a
  * deliberately wrong greeting, so a real oath produces a genuine {@code
  * CellDiff.CellMismatchException} for {@code Render} to format — not a
  * hand-built payload.

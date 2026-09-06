@@ -31,16 +31,16 @@ import org.junit.jupiter.params.provider.MethodSource;
  * <p>Port of the registry stage of {@code typescript/packages/varar/tests/
  * conformance.test.ts} and {@code python/packages/varar/tests/
  * test_conformance.py::test_registry_matches_golden}. This lives in the {@code var}
- * module (not {@code var-core}'s {@code ConformanceTest}, which only covers the
- * var-doc stage from Task 10): the registry stage needs both {@code var-core}'s
+ * module (not {@code varar-core}'s {@code ConformanceTest}, which only covers the
+ * var-doc stage from Task 10): the registry stage needs both {@code varar-core}'s
  * {@link Registry}/{@link Conformance} AND {@code var}'s own {@link Steps}/
  * {@link StepDefinitions} author API that every bundle's fixture is written against.
- * Wiring this into {@code var-core} instead (a test-scoped dependency from
- * {@code var-core} back onto {@code var}) was tried first and rejected — it creates a
- * real Maven reactor cycle ({@code var-core[test] -> var -> var-core[main]}),
- * confirmed empirically via {@code mvn -pl var-core -am test-compile} failing with
+ * Wiring this into {@code varar-core} instead (a test-scoped dependency from
+ * {@code varar-core} back onto {@code var}) was tried first and rejected — it creates a
+ * real Maven reactor cycle ({@code varar-core[test] -> var -> varar-core[main]}),
+ * confirmed empirically via {@code mvn -pl varar-core -am test-compile} failing with
  * "The projects in the reactor contain a cyclic reference". {@code var}'s test scope
- * already depends on {@code var-core} (its own main dependency) with no such cycle.
+ * already depends on {@code varar-core} (its own main dependency) with no such cycle.
  *
  * <p><b>Fixture-layout solution</b> (see {@code java/varar/pom.xml}'s {@code
  * build-helper-maven-plugin} config): every bundle directory under {@code
@@ -64,7 +64,7 @@ class ConformanceTest {
 
     // Maven runs tests with the module directory (java/varar/) as the working directory,
     // so the shared corpus — a sibling of java/, typescript/, python/ at the repo root —
-    // is two levels up, same as var-core's own ConformanceTest.
+    // is two levels up, same as varar-core's own ConformanceTest.
     private static final Path BUNDLES_DIR = Paths.get("..", "..", "conformance", "bundles");
 
     static Stream<Named<Path>> bundleDirs() throws IOException {

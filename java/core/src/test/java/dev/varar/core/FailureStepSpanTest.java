@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 
 /**
- * Translated from {@code var-core/tests/failure-step-span.test.ts}. A throwing sensor sharing its
+ * Translated from {@code typescript/packages/core/tests/failure-step-span.test.ts}. A throwing sensor sharing its
  * line with a stimulus that passed: the chain (executor → {@link Failure#toFailure}) must land on
  * the sensor's own text, since a renderer underlining the line would blame the stimulus too.
  */

@@ -115,7 +115,5 @@ the suite, writing the baseline on a clean run, and honouring an
   adapter-contract precedent (one selectable test per example, span-anchored
   failures) this ADR fills in for Ruby.
 - [ADR 0002 — drift detection & acknowledgment](0002-drift-detection-and-acknowledgment.md).
-- Reference adapters: `python/packages/var-pytest`, `python/packages/var-unittest`,
-  `java/var-kotest`.
-- `doc/superpowers/specs/2026-07-07-ruby-rspec-minitest-design.md` — the concrete
-  `var-runner` + adapter design this decision feeds.
+- Reference adapters: `python/packages/pytest`, `python/packages/unittest`,
+  `java/kotest`.

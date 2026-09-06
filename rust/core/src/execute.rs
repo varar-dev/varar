@@ -316,14 +316,14 @@ fn table_rows(table: &crate::ast::Table) -> Value {
     Value::List(rows)
 }
 
-fn attach_location(error: StepError, step: &PlannedStep, var_path: &str) -> StepFailure {
+fn attach_location(error: StepError, step: &PlannedStep, oath_path: &str) -> StepFailure {
     let anchor = failure_anchor::anchor(&error, step.match_span);
     let label = truncate_label(&step.text);
     StepFailure {
         error,
         location: Some(FailureLocation {
             label,
-            path: var_path.to_string(),
+            path: oath_path.to_string(),
             line: anchor.start_line,
             anchor: AnchorRange {
                 from: anchor.start_offset,

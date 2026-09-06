@@ -7,7 +7,7 @@ import java.util.List;
  * Groups the flat {@link Scanner#scan} output into {@link Ast.Example}s, tracking a heading scope
  * stack as it walks the blocks.
  *
- * <p>Port of {@code var-core/src/structurer.ts}. Every paragraph / list item / blockquote becomes
+ * <p>Port of {@code typescript/packages/core/src/structurer.ts}. Every paragraph / list item / blockquote becomes
  * a candidate example. The names come later (the planner takes the first sentence). Headings are
  * scope markers: they wrap whatever candidate blocks fall under them into nested {@code describe}
  * groups at runtime.

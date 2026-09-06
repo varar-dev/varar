@@ -10,9 +10,9 @@ import org.junit.platform.engine.discovery.DiscoverySelectors.selectFile
 import org.junit.platform.testkit.engine.EngineTestKit
 
 /**
- * End-to-end smoke: the UNMODIFIED var-junit TestEngine discovers a real .md oath and executes
+ * End-to-end smoke: the UNMODIFIED varar-junit TestEngine discovers a real .md oath and executes
  * Kotlin-authored steps (Task 6's top-level-val fixture, loaded through Task 5's StepLoader
- * generalization). Same EngineTestKit + selectFile pattern as var-junit's ConformanceDogfoodTest.
+ * generalization). Same EngineTestKit + selectFile pattern as varar-junit's ConformanceDogfoodTest.
  */
 class JUnitEngineSmokeTest {
 

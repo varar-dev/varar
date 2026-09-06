@@ -262,7 +262,7 @@ function mountEditor(editorEl: HTMLElement): void {
     if (!input) return
     try {
       const { results, drifts } = await runOath({
-        varPath: input.varPath,
+        oathPath: input.oathPath,
         varSource: input.varSource,
         stepFiles: input.stepFiles,
         update,
@@ -275,7 +275,7 @@ function mountEditor(editorEl: HTMLElement): void {
         effects: [
           setRunResults.of({
             version: 1,
-            oathPath: input.varPath,
+            oathPath: input.oathPath,
             sourceHash: hashSource(input.varSource),
             examples: [
               {

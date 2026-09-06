@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/** Translated from {@code var-core/tests/matcher.test.ts}. */
+/** Translated from {@code typescript/packages/core/tests/matcher.test.ts}. */
 class MatcherTest {
 
     private static final Object NOOP_HANDLER = (Runnable) () -> {};

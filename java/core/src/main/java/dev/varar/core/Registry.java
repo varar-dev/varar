@@ -15,7 +15,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
- * Step registry — port of {@code var-core/src/registry.ts}. Wraps the Java {@code
+ * Step registry — port of {@code typescript/packages/core/src/registry.ts}. Wraps the Java {@code
  * cucumber-expressions} library ({@code io.cucumber:cucumber-expressions:20.0.0}).
  *
  * <p><b>API-surface note, confirmed against the 20.0.0 jar (via {@code javap -p}), not

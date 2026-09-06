@@ -16,8 +16,7 @@
   <description>
     Custom JUnit Platform TestEngine (id "varar") turning .md oaths into first-class,
     individually selectable JUnit tests — one container per oath file, one leaf per
-    example. See doc/adr/0003-java-junit-integration.md and
-    doc/superpowers/specs/2026-07-01-java-junit-engine-design.md.
+    example. See doc/adr/0003-java-junit-integration.md.
   </description>
 
   <dependencies>
@@ -40,7 +39,7 @@
       <artifactId>junit-platform-testkit</artifactId>
       <scope>test</scope>
     </dependency>
-    <!-- Explicit, not incidental: once var-junit's own TestEngine is on the test
+    <!-- Explicit, not incidental: once varar-junit's own TestEngine is on the test
          classpath, Maven Surefire auto-detects it and will not also run the Jupiter
          engine unless junit-jupiter is an explicit dependency here too — otherwise
          this module's own @Test-based unit tests (testing the engine itself,
@@ -58,21 +57,21 @@
     <plugins>
       <!-- Task 14 (Milestone 2's dogfood gate): the same fixture-layout solution
            documented at length in java/varar/pom.xml (Task 13) — see that comment
-           block for the full rationale. Repeated here because var-junit is a
+           block for the full rationale. Repeated here because varar-junit is a
            SEPARATE Maven module from var, with its own separate test classpath;
            var's build-helper wiring only puts the fixtures on var's test
            classpath, not this module's. ConformanceDogfoodTest (this module's
            test scope) needs them too, to run each bundle through the real
            OathTestEngine via EngineTestKit.
 
-           No reactor-cycle risk here (unlike var-core's rejected alternative,
+           No reactor-cycle risk here (unlike varar-core's rejected alternative,
            Task 13): this plugin execution adds a test-SOURCE root, not a Maven
            module dependency — conformance/bundles/**'s .java files compile
-           directly into var-junit's own test-classes, with no new <dependency>
-           on any other reactor module. var-junit's real module dependency chain
-           is var-junit -> var-runner -> var -> var-core, one direction only;
-           none of var-core/var/var-runner depends back on var-junit, so there is
-           no cycle to create. Empirically verified: `mvn -pl var-junit -am
+           directly into varar-junit's own test-classes, with no new <dependency>
+           on any other reactor module. varar-junit's real module dependency chain
+           is varar-junit -> varar-runner -> var -> varar-core, one direction only;
+           none of varar-core/var/varar-runner depends back on varar-junit, so there is
+           no cycle to create. Empirically verified: `mvn -pl varar-junit -am
            test-compile` (run from java/) succeeds. -->
       <plugin>
         <groupId>org.codehaus.mojo</groupId>

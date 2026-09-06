@@ -31,11 +31,11 @@ import org.junit.platform.testkit.engine.EngineTestKit;
  * ConformanceTest}. This module's own {@code pom.xml} carries the identical {@code
  * build-helper-maven-plugin} {@code add-test-source} wiring {@code var}'s {@code pom.xml}
  * documents at length (see that comment block for the full fixture-layout rationale): {@code
- * var-junit} is a separate Maven module with its own separate test classpath, so the same
+ * varar-junit} is a separate Maven module with its own separate test classpath, so the same
  * fixtures need the same wiring repeated here to land on THIS module's test classpath. No new
- * reactor cycle results — verified empirically ({@code mvn -pl var-junit -am test-compile}
+ * reactor cycle results — verified empirically ({@code mvn -pl varar-junit -am test-compile}
  * succeeds) — because the wiring adds a test-source root, not a module dependency, and {@code
- * var-junit}'s own dependency chain ({@code var-junit -> var-runner -> var -> var-core}) has
+ * varar-junit}'s own dependency chain ({@code varar-junit -> varar-runner -> var -> varar-core}) has
  * nothing depending back on it.
  *
  * <p><b>Discovery mechanism:</b> each bundle's {@code example.md} lives on the filesystem (a
@@ -65,7 +65,7 @@ import org.junit.platform.testkit.engine.EngineTestKit;
  * (an {@code error} fence was written) but its {@code trace.json} {@code outcome} is {@code
  * "pass"} (the expected failure was satisfied, so the overall example passes) — so asserting
  * directly against {@code trace.json} needs no extra inversion logic in this test; the golden
- * already encodes it. {@code var-junit}'s own {@code TestExecutionResult} only has
+ * already encodes it. {@code varar-junit}'s own {@code TestExecutionResult} only has
  * SUCCESSFUL/FAILED/ABORTED, mapping 1:1 to golden {@code "pass"}/{@code "fail"}.
  *
  * <p>No JSON parsing is introduced here (there is no JSON library anywhere in this Maven
@@ -103,7 +103,7 @@ class ConformanceDogfoodTest {
                         // 03-expected-failure/golden/trace.json: one example, outcome "pass" --
                         // an error fence whose expected failure IS satisfied, so the core
                         // inverts the thrown exception into an overall pass (same semantics
-                        // Python's Task 9 proved for var-pytest).
+                        // Python's Task 9 proved for pytest-varar).
                         new BundleCase("03-expected-failure", "dev.varar.conformance.bundle03.DivisionSteps", 1, 0),
                         // 04-tables-and-docstrings/golden/trace.json: one example, "pass".
                         new BundleCase("04-tables-and-docstrings", "dev.varar.conformance.bundle04.EchoSteps", 1, 0),

@@ -17,12 +17,12 @@ import java.nio.file.Path
 /**
  * The Kotest adapter: subclass, point `root` at the directory holding varar.config.json (whose
  * docs.include / docs.exclude / steps drive oath discovery and step loading — identical contract to
- * var-junit's ConfigBridge/varar.config.root), and every planned example becomes one Kotest test
+ * varar-junit's ConfigBridge/varar.config.root), and every planned example becomes one Kotest test
  * inside a per-oath-file container. All discovery/loading/ planning/failure-rendering is delegated
- * to var-runner — this class contains zero pipeline logic.
+ * to varar-runner — this class contains zero pipeline logic.
  *
- * v1 defers (matching var-pytest): no per-example fixture lifecycle, no plan-diagnostic surfacing
- * (var-junit DOES surface diagnostics via ReportEntry — restoring that parity here is a known
+ * v1 defers (matching pytest-varar): no per-example fixture lifecycle, no plan-diagnostic surfacing
+ * (varar-junit DOES surface diagnostics via ReportEntry — restoring that parity here is a known
  * follow-up).
  *
  * @param root the directory holding varar.config.json; also what its docs.include/docs.exclude

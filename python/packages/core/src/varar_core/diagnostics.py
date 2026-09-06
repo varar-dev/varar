@@ -1,4 +1,4 @@
-"""diagnostics.py — port of var-core/src/diagnostics.ts.
+"""diagnostics.py — port of typescript/packages/core/src/diagnostics.ts.
 
 Only the subset needed by the planner is ported here:
   Severity, DiagnosticCode, Diagnostic, Candidate, AmbiguousInput,

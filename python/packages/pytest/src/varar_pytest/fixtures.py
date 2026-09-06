@@ -1,4 +1,4 @@
-"""fixtures.py — pytest fixture bridge for var-pytest.
+"""fixtures.py — pytest fixture bridge for pytest-varar.
 
 Provides:
 - ``_active_request``: a ContextVar holding the current ``FixtureRequest``.

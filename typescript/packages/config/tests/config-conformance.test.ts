@@ -5,7 +5,7 @@ import { canonicalStringify } from '@varar/core'
 import { expect, test } from 'vitest'
 import { parseConfig } from '../src/config.ts'
 
-// tests/ -> var-config -> packages -> typescript -> repo root. (import.meta.url,
+// tests/ -> varar-config -> packages -> typescript -> repo root. (import.meta.url,
 // not __dirname — this is an ESM package and vitest runs test files as ESM.)
 const CASES_DIR = fileURLToPath(new URL('../../../../conformance/config/cases', import.meta.url))
 

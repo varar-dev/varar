@@ -1,7 +1,7 @@
 package dev.varar;
 
 /**
- * Test double for a registration-forwarding layer (what var-kotlin's StepsScope
+ * Test double for a registration-forwarding layer (what varar-kotlin's StepsScope
  * is in production): annotated {@link StepsGlue}, so {@link Steps}'s
  * StackWalker must skip its frames and attribute the registration to THIS class's
  * caller, not this class.

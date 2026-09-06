@@ -4,7 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
 
-/** Proves the var-core module compiles and its Jupiter test suite runs. */
+/** Proves the varar-core module compiles and its Jupiter test suite runs. */
 class SmokeTest {
 
     @Test

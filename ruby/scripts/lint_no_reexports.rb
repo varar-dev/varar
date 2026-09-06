@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Functional-core purity gate (Ruby mirror of python/scripts/lint_no_reexports.py
-# and scripts/lint-no-reexports.mjs): var-core must never require the facade,
+# and scripts/lint-no-reexports.mjs): varar-core must never require the facade,
 # config, or runner. Fails loudly if it does.
 require 'pathname'
 
@@ -31,4 +31,4 @@ unless violations.empty?
   exit 1
 end
 
-puts 'purity gate: var-core has no facade/config/runner requires ✓'
+puts 'purity gate: varar-core has no facade/config/runner requires ✓'

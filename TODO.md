@@ -55,8 +55,8 @@
 
 ## Runtime adapters & CI
 
-- [ ] `@varar/varar-bun` adapter (parallel to `var-vitest`).
-- [ ] `@varar/varar-deno` adapter.
+- [ ] `@varar/bun` adapter (parallel to `@varar/vitest`).
+- [ ] `@varar/deno` adapter.
 - [ ] CI matrix: node + bun + deno.
 
 ## CLI
@@ -72,19 +72,19 @@
     - [ ] arg 1
 - [ ] Cucumber-js compatible API (just change imports).
   - [ ] CLI codemod for migrating from Cucumber.
-- [ ] `var-cli` build is broken (TS6 can't resolve `node:fs` without
-      `@types/node`). Cucumber's `test:var` invokes `node ../var-cli/src/bin.ts
-      run` (Node runs the TS source natively) as a workaround — once the build
-      is fixed, switch back to the `var` bin.
+- [ ] `@varar/cli` build is broken (TS6 can't resolve `node:fs` without
+      `@types/node`). Cucumber's `test:varar` invokes
+      `node ../cli/src/bin.ts run` (Node runs the TS source natively) as a
+      workaround — once the build is fixed, switch back to the `varar` bin.
 
 ## Code quality
 
 - [x] Hoist the `findFiles` helper (duplicated across
-      `packages/var-vitest/src/plugin.ts`, `packages/cli/src/lint.ts`,
+      `packages/vitest/src/plugin.ts`, `packages/cli/src/lint.ts`,
       `packages/cli/src/run.ts`, and `packages/lsp/src/store.ts`)
       into a shared utility — and standardise on `globSync`.
 - [ ] Move tests next to source
-- [ ] Move packages/var/tests/conformance.test.ts
+- [ ] Move packages/core/tests/conformance.test.ts
 
 ## Markdown
 

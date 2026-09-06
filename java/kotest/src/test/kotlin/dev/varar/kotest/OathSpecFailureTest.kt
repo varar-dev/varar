@@ -21,10 +21,10 @@ class FailingOathSpec : OathSpec(root = Path.of("src/test/resources/kotest-faili
 
 /**
  * Covers OathSpec's only nontrivial logic: the failing-example path, where the thrown failure is
- * wrapped in an AssertionError carrying var-runner's span-anchored rendering (Render.renderFailure)
- * with the original failure as cause. Also the empirical proof that a failing var example fails a
- * Kotest run (Surefire's console count for Kotest specs reads "Tests run: 0", so a green build
- * alone would not prove this).
+ * wrapped in an AssertionError carrying varar-runner's span-anchored rendering
+ * (Render.renderFailure) with the original failure as cause. Also the empirical proof that a
+ * failing var example fails a Kotest run (Surefire's console count for Kotest specs reads "Tests
+ * run: 0", so a green build alone would not prove this).
  */
 class OathSpecFailureTest {
 

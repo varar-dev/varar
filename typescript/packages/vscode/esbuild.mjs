@@ -49,8 +49,8 @@ await build({
 
 // The server's grammar loader falls back to reading these wasm files from
 // disk (VAR_GRAMMAR_DIR) because the cjs bundle above has no
-// `import.meta.resolve`. Resolve them via var-lsp's dependencies on the
-// grammar packages — not var-vscode's own node_modules, since it has no
+// `import.meta.resolve`. Resolve them via @varar/lsp's dependencies on the
+// grammar packages — not @varar/vscode's own node_modules, since it has no
 // direct dependency on them — and copy them flat next to the bundle
 // (basenames are unique across the grammar packages; this mirrors
 // node-grammar-loader.ts's GRAMMAR_FILES map, one entry per language).
@@ -73,8 +73,8 @@ for (const specifier of [
 // web-tree-sitter's own core runtime wasm (distinct from the two grammar
 // wasms above). Its glue resolves this via `import.meta.url` (shimmed
 // above), which points at dist/server.mjs, so the file must sit next to it.
-// var-vscode has no direct dependency on web-tree-sitter — resolve it via
-// var-language's, which does.
+// @varar/vscode has no direct dependency on web-tree-sitter — resolve it via
+// @varar/language's, which does.
 const requireFromLanguage = createRequire(resolve('../language/package.json'))
 await copyFile(
   requireFromLanguage.resolve('web-tree-sitter/web-tree-sitter.wasm'),

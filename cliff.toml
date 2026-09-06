@@ -9,8 +9,8 @@
 # The changelog is organised for CONSUMERS: one section per distribution
 # channel (npm, PyPI, Maven Central, RubyGems, crates.io, NuGet, Go modules, VS
 # Code Marketplace), derived from the commit scope. See "Commit messages &
-# changelog" in CLAUDE.md for the scope convention (`ts/var-vitest`,
-# `py/var-core`, `java`, `ruby`, `rust`, `dotnet`, `go`, `vscode`, `spec`, …).
+# changelog" in CLAUDE.md for the scope convention (`ts/vitest`,
+# `py/core`, `java`, `ruby`, `rust`, `dotnet`, `go`, `vscode`, `spec`, …).
 # A section stays dormant while its port's publishing is parked, because
 # lint-commits.sh only accepts that scope once the matching flag is 1 in lib.sh
 # (CRATES_IO_ENABLED / DOTNET_ENABLED / GO_MODULES_ENABLED), so no such

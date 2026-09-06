@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
-/** Translated from {@code var-core/tests/plan.test.ts}. */
+/** Translated from {@code typescript/packages/core/tests/plan.test.ts}. */
 class PlanTest {
 
     private static final Object NOOP_HANDLER = (Runnable) () -> {};

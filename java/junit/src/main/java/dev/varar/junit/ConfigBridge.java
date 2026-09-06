@@ -16,8 +16,8 @@ public final class ConfigBridge {
 
     /**
      * The JUnit Platform configuration-parameter key naming the directory that holds
-     * {@code varar.config.json}. Public so other ports' engines and tests (e.g. var-kotlin,
-     * var-kotest) reference this constant instead of duplicating the literal string.
+     * {@code varar.config.json}. Public so other ports' engines and tests (e.g. varar-kotlin,
+     * varar-kotest) reference this constant instead of duplicating the literal string.
      */
     public static final String CONFIG_ROOT_KEY = "varar.config.root";
 
