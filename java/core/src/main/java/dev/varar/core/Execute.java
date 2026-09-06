@@ -12,7 +12,7 @@ import java.util.concurrent.CompletionException;
 import java.util.function.Function;
 
 /**
- * The executor — port of {@code var-core/src/execute.ts}, adapted to Task 11's
+ * The executor — port of {@code typescript/packages/core/src/execute.ts}, adapted to Task 11's
  * full-replacement immutable-record state model.
  *
  * <h2>No mutation guard, in any port</h2>
@@ -74,7 +74,7 @@ import java.util.function.Function;
  *
  * <h2>Invoking an opaque handler</h2>
  *
- * <p>{@code var-core} has zero compile-time dependency on the {@code var} module's
+ * <p>{@code varar-core} has zero compile-time dependency on the {@code var} module's
  * author-facing {@code Steps.Stimulus0/1/2}/{@code Sensor0/1/2} interfaces
  * (hexagonal architecture: the core never imports the facade) — {@link
  * Registry.StepRegistration#handler()} is plain {@link Object}. This executor invokes it
@@ -427,7 +427,7 @@ public final class Execute {
     /**
      * Finds {@code handlerClass}'s single abstract method with {@code paramCount}
      * parameters — the functional interface's SAM, whatever it's called and whichever
-     * interface it belongs to (see class javadoc: {@code var-core} never imports {@code
+     * interface it belongs to (see class javadoc: {@code varar-core} never imports {@code
      * dev.varar}'s {@code Context0/1/2}/{@code Sensor0/1/2}).
      */
     private static Method samMethod(Class<?> handlerClass, int paramCount) {

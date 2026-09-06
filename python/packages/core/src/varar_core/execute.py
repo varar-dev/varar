@@ -1,4 +1,4 @@
-"""execute.py — port of var-core/src/execute.ts.
+"""execute.py — port of typescript/packages/core/src/execute.ts.
 
 Executes an ExecutionPlan: routes stimulus/sensor step returns,
 merges immutable state, compares sensor returns via the diff helpers, and

@@ -39,7 +39,7 @@ let client: LanguageClient | undefined
 export function activate(context: ExtensionContext): void {
   // The symlink installer (T8) mirrors `packages/vscode/` into
   // ~/.vscode/extensions/. Resolve the symlink before walking `..` so we land
-  // at the real `packages/` directory. When the sibling var-lsp checkout
+  // at the real `packages/` directory. When the sibling @varar/lsp checkout
   // exists we are in dev: run the live LSP sources through tsx. Otherwise we
   // are a packaged .vsix: use the bundled server next to the extension.
   const extReal = realpathSync(context.extensionPath)

@@ -10,7 +10,7 @@ import (
 	"github.com/varar-dev/varar/go/core"
 )
 
-// The var-config conformance corpus at conformance/config/cases/*: each case has
+// The varar-config conformance corpus at conformance/config/cases/*: each case has
 // a varar.config.json plus either a golden.json (parse succeeds → project to the
 // canonical shape, canonical-serialize, byte-compare) or an expect-error.txt
 // marker (loading must fail; the txt is human-only, not asserted).

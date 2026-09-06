@@ -18,14 +18,14 @@
     <!-- On trunk this is the SNAPSHOT that `mvn install` (run from java/)
          puts into the local repository, so the sample always tests the code
          in this repo. In your own project: pin the latest release. -->
-    <var.version>0.7.1-SNAPSHOT</var.version>
+    <varar.version>0.7.1-SNAPSHOT</varar.version>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>dev.varar</groupId>
       <artifactId>junit</artifactId>
-      <version>${var.version}</version>
+      <version>${varar.version}</version>
       <scope>test</scope>
     </dependency>
     <!-- Maven Surefire only discovers class-based tests, so the sample uses a

@@ -122,7 +122,7 @@ final class OathFileDescriptor extends AbstractTestDescriptor implements Node<Oa
         return loadedSteps;
     }
 
-    /** The {@code var-core} plan this file's children ({@link ExampleDescriptor}) were built from. */
+    /** The {@code varar-core} plan this file's children ({@link ExampleDescriptor}) were built from. */
     Plan.ExecutionPlan plan() {
         return plan;
     }

@@ -7,7 +7,7 @@ import java.util.List;
  * Parses a Markdown/Gherkin table row line ({@code | a | b |}) into trimmed cell text plus the
  * source span of each cell's trimmed text.
  *
- * <p>Port of {@code var-core/src/table-cells.ts}. Java's {@code String}/{@code char} are already
+ * <p>Port of {@code typescript/packages/core/src/table-cells.ts}. Java's {@code String}/{@code char} are already
  * UTF-16 code-unit indexed (see {@link Span}'s javadoc), so — unlike the Python port ({@code
  * var_core/table_cells.py}), which must reconstruct UTF-16 offsets from its code-point-indexed
  * strings — this iterates and slices directly on {@code String} offsets, exactly as {@code

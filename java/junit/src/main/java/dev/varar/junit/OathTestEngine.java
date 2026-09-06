@@ -20,8 +20,8 @@ import org.junit.platform.engine.support.hierarchical.HierarchicalTestEngine;
  * The var {@link org.junit.platform.engine.TestEngine TestEngine} (id {@code "varar"}).
  *
  * <p>Registered via {@code META-INF/services/org.junit.platform.engine.TestEngine} —
- * installing the {@code var-junit} dependency is the entire integration story; no user
- * wiring is required (mirrors {@code var-pytest}'s {@code pytest11} entry-point
+ * installing the {@code varar-junit} dependency is the entire integration story; no user
+ * wiring is required (mirrors {@code pytest-varar}'s {@code pytest11} entry-point
  * ergonomics). See {@code doc/adr/0003-java-junit-integration.md}.
  *
  * <p>{@link #discover} loads every {@code steps} class named by varar.config.json exactly once per

@@ -14,7 +14,7 @@ import java.util.function.Function;
 import org.junit.jupiter.api.Test;
 
 /**
- * Translated from {@code var-core/tests/execute.test.ts}, {@code execute-state.test.ts}, and
+ * Translated from {@code typescript/packages/core/tests/execute.test.ts}, {@code execute-state.test.ts}, and
  * {@code execute-roles.test.ts}, adapted to Task 11's full-replacement record state model and
  * this task's sensor return-comparison contract (see {@link Execute}'s class javadoc).
  *
@@ -35,7 +35,7 @@ class ExecuteTest {
 
     /**
      * Minimal test-local functional interfaces shaped like {@code dev.varar.Steps}'s
-     * {@code Context0/1/2}/{@code Sensor0/1/2} — WITHOUT importing them. {@code var-core} has no
+     * {@code Context0/1/2}/{@code Sensor0/1/2} — WITHOUT importing them. {@code varar-core} has no
      * dependency on the {@code var} module (hexagonal architecture: the core never imports the
      * facade), and {@link Execute} invokes a handler purely via reflection matched by arity,
      * regardless of which concrete functional interface it implements. Using ad hoc interfaces

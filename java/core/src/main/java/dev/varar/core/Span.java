@@ -4,7 +4,7 @@ package dev.varar.core;
  * A source position/range, anchored to UTF-16 code-unit offsets into a source
  * string (1-based line/column, matching editor conventions).
  *
- * <p>Port of {@code var-core/src/span.ts}. Java's {@code String}/{@code char}
+ * <p>Port of {@code typescript/packages/core/src/span.ts}. Java's {@code String}/{@code char}
  * are already UTF-16 code-unit indexed — like JavaScript, and unlike Python —
  * so, unlike the Python port, no code-point/UTF-16 conversion layer is needed
  * here: {@code startOffset}/{@code endOffset} are plain {@code String} offsets

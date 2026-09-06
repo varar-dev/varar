@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/** Translated from {@code var-core/tests/cell-diff.test.ts}. */
+/** Translated from {@code typescript/packages/core/tests/cell-diff.test.ts}. */
 class CellDiffTest {
 
     private static final Span SPAN = new Span(0, 1, 1, 1, 1, 2);

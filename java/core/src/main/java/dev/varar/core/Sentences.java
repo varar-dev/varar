@@ -8,7 +8,7 @@ import java.util.Set;
  * Splits a block of text into sentence-level spans, so the matcher can try each sentence in a
  * paragraph independently against step definitions.
  *
- * <p>Port of {@code var-core/src/sentences.ts}. Java's {@code String}/{@code char} are already
+ * <p>Port of {@code typescript/packages/core/src/sentences.ts}. Java's {@code String}/{@code char} are already
  * UTF-16 code-unit indexed (see {@link Span}'s javadoc), so — as with the other core modules —
  * this iterates and slices directly on {@code String} offsets, exactly as {@code sentences.ts}
  * does, with no code-point conversion layer.

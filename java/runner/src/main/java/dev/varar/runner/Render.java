@@ -6,7 +6,7 @@ import java.util.stream.Collectors;
 
 /**
  * Formats a caught step exception into human-readable text — a pure formatter over
- * {@link Failure#toFailure}'s {@link Result.ExampleFailure} payload. {@code var-junit}'s
+ * {@link Failure#toFailure}'s {@link Result.ExampleFailure} payload. {@code varar-junit}'s
  * engine work uses {@link #renderFailure} to build the message passed to JUnit
  * Platform's {@code TestExecutionResult.failed(Throwable)}.
  *

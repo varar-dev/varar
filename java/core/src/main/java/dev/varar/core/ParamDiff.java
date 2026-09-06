@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.function.Function;
 
 /**
- * Parameter comparison — port of {@code var-core/src/param-diff.ts}.
+ * Parameter comparison — port of {@code typescript/packages/core/src/param-diff.ts}.
  *
  * <p>Used by the executor to compare a sensor's returned inline actuals against the values
  * captured from the document.

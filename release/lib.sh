@@ -7,7 +7,7 @@ REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # Single source of truth for whether the Rust port ships to crates.io. While it
 # is 0 (parked), two targets stay in lock-step: 65-crates-io.sh reports OK
 # without publishing, AND 72-varar-examples.sh omits the rust-* samples (their
-# `var-core` path dependency can't resolve in varar-examples until the crates are
+# `varar-core` path dependency can't resolve in varar-examples until the crates are
 # on crates.io — pinning it to an unpublished version would ship a broken
 # sample). Flip to 1 only once the crates are publishable — see the go-live
 # checklist in release/targets/65-crates-io.sh.
@@ -56,9 +56,9 @@ http_ok() { curl -fsSL -o /dev/null "$1" 2>/dev/null; }
 # placeholder afterwards. perl -pi, not sed -i: BSD/GNU-portable in-place.
 stamp_java_samples() {
   local version="$1"
-  perl -pi -e "s/^val varVersion = \".*\"/val varVersion = \"$version\"/" \
+  perl -pi -e "s/^val vararVersion = \".*\"/val vararVersion = \"$version\"/" \
     examples/*/build.gradle.kts
-  perl -pi -e "s|<var\.version>[^<]*</var\.version>|<var.version>$version</var.version>|" \
+  perl -pi -e "s|<varar\.version>[^<]*</varar\.version>|<varar.version>$version</varar.version>|" \
     examples/java-junit-maven/pom.xml
 }
 
@@ -130,7 +130,7 @@ build_vsix() {
   local manifest_version
   manifest_version="$(jq -r .version "$REPO_ROOT/typescript/packages/vscode/package.json")"
   [[ "$manifest_version" == "$version" ]] ||
-    die "var-vscode/package.json is at $manifest_version, not $version — stamp has not run"
+    die "@varar/vscode/package.json is at $manifest_version, not $version — stamp has not run"
   mkdir -p "$REPO_ROOT/release/dist"
   (cd "$REPO_ROOT/typescript" && pnpm install --frozen-lockfile >&2 && pnpm --filter varar build >&2)
   (cd "$REPO_ROOT/typescript/packages/vscode" && vsce package --no-dependencies -o "$vsix" >&2)

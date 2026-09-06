@@ -7,7 +7,7 @@
 #
 # versions:set -DnextSnapshot=true computes the bump itself (increments the
 # smallest segment, appends -SNAPSHOT: 0.3.0 -> 0.3.1-SNAPSHOT); the samples
-# just need their varVersion pointed at whatever it produced.
+# just need their vararVersion pointed at whatever it produced.
 set -euo pipefail
 source "$(dirname "${BASH_SOURCE[0]}")/lib.sh"
 cd "$REPO_ROOT"

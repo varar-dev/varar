@@ -7,7 +7,7 @@ import dev.varar.core.Sentences.Sentence;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-/** Port of {@code var-core/tests/sentences.test.ts}. */
+/** Port of {@code typescript/packages/core/tests/sentences.test.ts}. */
 class SentencesTest {
 
     @Test

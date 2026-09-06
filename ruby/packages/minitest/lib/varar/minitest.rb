@@ -6,7 +6,7 @@ require 'varar/runner'
 module Varar
   # Minitest adapter. One call turns every oath matched by varar.config.json into
   # a generated Minitest::Test subclass — one class per oath file, one test
-  # method per example. Mirrors var-unittest.
+  # method per example. Mirrors varar-unittest.
   #
   #   # test/varar_test.rb
   #   require "varar/minitest"

@@ -10,12 +10,12 @@ import java.util.List;
 import java.util.function.Function;
 
 /**
- * Bridges {@code var-core}'s pure {@code Plan}/{@code Execute} pipeline into a
+ * Bridges {@code varar-core}'s pure {@code Plan}/{@code Execute} pipeline into a
  * runner-friendly shape: plan an oath in one call ({@link #planOath}), then pair each
  * {@link Plan.PlannedExample} with a {@link Runnable} that actually runs it ({@link
  * #examplesWithRuns}) — mirrors Python's {@code examples_with_runs}.
  *
- * <p>Deliberately thin: all matching/planning/execution logic stays in {@code var-core}
+ * <p>Deliberately thin: all matching/planning/execution logic stays in {@code varar-core}
  * ({@link Plan}, {@link Execute}); this class only parses+plans in one call and zips
  * {@link Execute#collectExamples}'s result with {@link Plan.ExecutionPlan#examples()}.
  */
@@ -57,8 +57,8 @@ public final class Run {
 
     /**
      * A minimal {@link Execute.Reporter} that just collects every diagnostic it's given,
-     * in the order received. Lives in {@code var-runner}'s main sources (not test-only)
-     * because {@code var-junit} needs SOME {@link Execute.Reporter} implementation too —
+     * in the order received. Lives in {@code varar-runner}'s main sources (not test-only)
+     * because {@code varar-junit} needs SOME {@link Execute.Reporter} implementation too —
      * this trivial one is reusable there rather than duplicated.
      */
     public static final class RecordingReporter implements Execute.Reporter {

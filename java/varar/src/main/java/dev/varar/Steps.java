@@ -28,7 +28,7 @@ import java.util.regex.Pattern;
  * internal.ts}'s {@code let steps = []}): those accumulators are not purely run-scoped
  * either — they usually get away with it because Node/Python execute a test file as a
  * fresh process — which is why both ship a reset hatch "for use in tests between isolated
- * scenarios". Java's classloader lifetime is not a run's lifetime, and {@code var-junit}
+ * scenarios". Java's classloader lifetime is not a run's lifetime, and {@code varar-junit}
  * runs in-process, where {@code LauncherSession} reuse, {@code @RepeatedTest} and "rerun
  * failed tests" all drive more than one registration cycle through one classloader. A
  * fresh {@code Steps} per run avoids needing a reset hatch at all. Independently,
@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
  * parameter types explicitly: {@code (Ctx ctx, Integer n) -> …}, not {@code (ctx, n) -> …}.
  *
  * <p>Source location is captured via {@link StackWalker}, walking past this class's own
- * frames and any {@link StepsGlue}-annotated facade (e.g. var-kotlin's {@code StepsScope})
+ * frames and any {@link StepsGlue}-annotated facade (e.g. varar-kotlin's {@code StepsScope})
  * to find the author's actual call site.
  *
  * @param <C> this step file's context-state type

@@ -69,9 +69,9 @@ import java.util.jar.JarFile;
  * <h2>Merging registries</h2>
  *
  * <p>{@link Registry} has no built-in cross-registry merge — {@link #loadSteps}
- * provides one, since {@code var-core}'s {@code Registry} is frozen behavior from the
- * core-port plan (this is a legitimate small addition to {@code var-runner}, not a
- * change to {@code var-core}).
+ * provides one, since {@code varar-core}'s {@code Registry} is frozen behavior from the
+ * core-port plan (this is a legitimate small addition to {@code varar-runner}, not a
+ * change to {@code varar-core}).
  *
  * <p><b>Why this does not go through {@link Registry#addStep}/{@code
  * Registry.defineParameterType}, despite the design note suggesting it:</b> {@code

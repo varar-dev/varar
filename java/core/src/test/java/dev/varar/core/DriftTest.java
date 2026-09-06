@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 
-/** Translated from {@code var-core/tests/drift.test.ts} + hash.test.ts vectors. */
+/** Translated from {@code typescript/packages/core/tests/drift.test.ts} + hash.test.ts vectors. */
 class DriftTest {
 
     private static final Object NOOP_HANDLER = (Runnable) () -> {};

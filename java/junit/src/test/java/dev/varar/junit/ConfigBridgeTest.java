@@ -17,7 +17,7 @@ import org.junit.platform.engine.ConfigurationParameters;
 /**
  * Verifies {@link ConfigBridge#fromConfigurationParameters} is a faithful adapter from a real
  * {@link ConfigurationParameters} instance to {@link Config#load} — no parsing logic of its
- * own (that stays in {@code var-config}, tested independently there).
+ * own (that stays in {@code varar-config}, tested independently there).
  */
 class ConfigBridgeTest {
 

@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Port of the table-row-cell-parsing behavior of {@code table-cells.ts}, cross-checked against
  * {@code python/packages/core/tests/test_table_cells.py} (which in turn ports the table-cell
- * span cases of {@code var-core/tests/scanner.test.ts}).
+ * span cases of {@code typescript/packages/core/tests/scanner.test.ts}).
  */
 class TableCellsTest {
 

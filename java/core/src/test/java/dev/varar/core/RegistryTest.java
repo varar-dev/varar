@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import org.junit.jupiter.api.Test;
 
-/** Translated from {@code var-core/tests/registry.test.ts}. */
+/** Translated from {@code typescript/packages/core/tests/registry.test.ts}. */
 class RegistryTest {
 
     private static final Object NOOP_HANDLER = (Runnable) () -> {};

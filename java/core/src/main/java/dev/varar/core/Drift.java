@@ -14,7 +14,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Oath drift detection — port of {@code var-core/src/drift.ts}.
+ * Oath drift detection — port of {@code typescript/packages/core/src/drift.ts}.
  *
  * <p>A paragraph the committed {@code varar.lock.json} baseline recorded as an example that now
  * matches no step. Pure over the existing {@link Ast.Doc} + {@link Plan.ExecutionPlan}, and

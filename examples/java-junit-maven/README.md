@@ -2,7 +2,7 @@
 
 A small, standalone sample project that runs Markdown oaths as tests with
 [Varar](https://varar.dev), using the Java author API and the JUnit
-Platform engine (`var-junit`). Copy it as the starting point for your own
+Platform engine (`dev.varar:junit`). Copy it as the starting point for your own
 project.
 
 The `.md` files in the `varar/` directory are the oaths — they run as tests.
@@ -31,13 +31,13 @@ Each example in the Markdown oaths becomes one JUnit test.
   steps, just like your production code.
 - **`RunVararTest.java`** is a JUnit `@Suite` that includes the `"var"`
   engine. It exists only because Maven Surefire discovers tests by class name
-  — the engine itself needs no wiring beyond having `var-junit` on the test
+  — the engine itself needs no wiring beyond having `dev.varar:junit` on the test
   classpath. The `*Test` suffix matters: Surefire only scans classes matching
   its naming convention.
 
 ## Versioning note
 
-In the `varar-dev/varar` monorepo `<var.version>` is the SNAPSHOT that
+In the `varar-dev/varar` monorepo `<varar.version>` is the SNAPSHOT that
 `mvn install` (run from `java/`) puts into the local Maven repository, so the
 sample gates trunk; in `varar-dev/varar-examples` the release sync pins it to the
 released Maven Central artifacts.

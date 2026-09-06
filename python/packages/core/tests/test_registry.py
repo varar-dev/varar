@@ -1,4 +1,4 @@
-"""Tests for registry.py — translated from var-core/tests/registry.test.ts."""
+"""Tests for registry.py — translated from typescript/packages/core/tests/registry.test.ts."""
 from __future__ import annotations
 
 import re

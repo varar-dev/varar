@@ -1,7 +1,7 @@
 package dev.varar.core;
 
 /**
- * Doc-string comparison — port of {@code var-core/src/doc-string-diff.ts}.
+ * Doc-string comparison — port of {@code typescript/packages/core/src/doc-string-diff.ts}.
  *
  * <p>A doc string is ONE CELL, compared whole, so a difference is an ordinary {@link CellDiff}
  * and the executor throws the same {@link CellDiff.CellMismatchException} as any other cell.

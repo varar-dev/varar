@@ -118,8 +118,8 @@ rsync -a --copy-links \
 # Pin the JVM samples to the released Maven Central artifacts (idempotent even
 # when stamp.sh already set the version), drop the mavenLocal() repository, and
 # swap the trunk-facing comments for release-facing ones.
-perl -pi -e "s/^val varVersion = \".*\"/val varVersion = \"$VERSION\"/" "$DEST"/*/build.gradle.kts
-perl -pi -e "s|<var\.version>[^<]*</var\.version>|<var.version>$VERSION</var.version>|" \
+perl -pi -e "s/^val vararVersion = \".*\"/val vararVersion = \"$VERSION\"/" "$DEST"/*/build.gradle.kts
+perl -pi -e "s|<varar\.version>[^<]*</varar\.version>|<varar.version>$VERSION</varar.version>|" \
   "$DEST"/java-junit-maven/pom.xml
 perl -ni -e 'print unless /^\s*mavenLocal\(\)\s*$/' "$DEST"/*/build.gradle.kts
 perl -0pi -e 's|// On trunk this is the SNAPSHOT that `mvn install` \(run from java/\) puts into\n// mavenLocal, so the sample always tests the code in this repo\. In your own\n// project: pin the latest release and drop the mavenLocal\(\) repository\.|// The released Varar version from Maven Central.|' \

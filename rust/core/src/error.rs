@@ -1,4 +1,4 @@
-//! The error model: the Rust replacement for Java var-core's typed exception
+//! The error model: the Rust replacement for Java varar-core's typed exception
 //! hierarchy (`CellMismatchException`,
 //! `ReturnShapeException`, `UnexpectedPassException`, author `AssertionError`).
 //! `Result`/panic-catch replace throw; `instanceof` dispatch becomes `match`.

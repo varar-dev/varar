@@ -4,7 +4,7 @@ package dev.varar.core;
  * Top-level entry point of the pure core: {@code scan} the source into blocks, then {@code
  * structure} those blocks into a {@link Ast.Doc}.
  *
- * <p>Port of {@code var-core/src/parse.ts}. That file's {@code plugins} parameter is intentionally
+ * <p>Port of {@code typescript/packages/core/src/parse.ts}. That file's {@code plugins} parameter is intentionally
  * out of scope here, mirroring {@link Scanner#scan}, which takes no plugins parameter in this port.
  */
 public final class Parse {

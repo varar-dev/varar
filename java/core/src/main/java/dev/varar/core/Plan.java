@@ -9,7 +9,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 
 /**
- * The planner — port of {@code var-core/src/plan.ts}. For each {@link Ast.Example} in a {@link
+ * The planner — port of {@code typescript/packages/core/src/plan.ts}. For each {@link Ast.Example} in a {@link
  * Ast.Doc}, plans every text-bearing block via {@link Matcher}, lifts block-relative match
  * offsets to absolute source {@link Span}s, attaches trailing {@link Ast.Table}/{@link Ast.Fence}
  * nodes to the last step (data table / doc string), handles the {@code ```error} fence

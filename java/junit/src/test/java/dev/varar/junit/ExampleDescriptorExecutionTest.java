@@ -31,7 +31,7 @@ import org.junit.platform.testkit.engine.Event;
  * {@code SUCCESSFUL} on a pass, and on a real cell mismatch reports {@code FAILED} with {@code
  * Render#renderFailure}'s markdown-anchored text as the failure's {@code getMessage()} — including
  * the correct {@code .md} line, proving the stack-injection {@code Execute.runExample} already
- * performs round-trips correctly through {@code var-junit}'s wiring.
+ * performs round-trips correctly through {@code varar-junit}'s wiring.
  */
 class ExampleDescriptorExecutionTest {
 

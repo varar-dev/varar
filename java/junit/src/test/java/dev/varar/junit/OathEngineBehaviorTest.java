@@ -55,7 +55,7 @@ import org.junit.platform.testkit.engine.EngineTestKit;
  * elsewhere, to rule out the line lookup being coincidentally right only for that line; or (4)
  * {@code steps} actually gating which step-definition classes get loaded, end to end through
  * the real engine, as opposed to {@code ConfigBridgeTest}'s isolated parsing check or Task 4's
- * {@code var-runner}-only {@code StepLoaderTest}. This class fills exactly those four.
+ * {@code varar-runner}-only {@code StepLoaderTest}. This class fills exactly those four.
  */
 class OathEngineBehaviorTest {
 
@@ -127,7 +127,7 @@ class OathEngineBehaviorTest {
      * {@code widgets.md}'s sentences match only {@link WidgetSteps}' expressions; {@link
      * CounterSteps}' expressions ("I add {int} to the counter" / "the counter should be {int}")
      * match nothing in it. Per {@code Plan.plan}'s documented behavior (confirmed against {@code
-     * var-core}'s own {@code PlanTest#planSkipsAnExampleHeadingWhoseBodyHasNoMatchesAndNoKeywordLedSentences}),
+     * varar-core}'s own {@code PlanTest#planSkipsAnExampleHeadingWhoseBodyHasNoMatchesAndNoKeywordLedSentences}),
      * a paragraph matching no loaded step is silently skipped — zero examples, not an error — so
      * loading only {@code CounterSteps} must discover nothing for this file, and a childless
      * container is itself pruned by the Launcher (per {@code DiscoverySelectorResolverTest}'s

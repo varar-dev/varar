@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 /**
  * Proves the REAL {@link Steps} — {@link Steps}, not the {@code
  * RecordingRegistrar} test double {@link AuthorApiTest} uses to pin the author-API shape
- * — actually builds a var-core {@link Registry} via {@link Registry#addStep}: correct
+ * — actually builds a varar-core {@link Registry} via {@link Registry#addStep}: correct
  * {@link StepKind}, source location captured via {@code StackWalker}, and a genuinely
  * compiled, working cucumber expression (not just a recorded string).
  */

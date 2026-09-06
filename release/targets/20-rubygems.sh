@@ -32,7 +32,7 @@ gems=(
 )
 
 # The gem name no longer shares a prefix with its package directory (gem
-# `varar-core` lives in `packages/var-core`), so locate each package by its
+# `varar-core` lives in `packages/varar-core`), so locate each package by its
 # gemspec rather than by stripping a name prefix.
 gem_dir() { dirname "$(ls "$REPO_ROOT"/ruby/packages/*/"$1.gemspec")"; }
 

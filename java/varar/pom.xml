@@ -43,17 +43,17 @@
            01-roman-numerals/) compile and land on this module's test classpath
            unmodified.
 
-           This lives in var's pom, not var-core's: the registry-stage harness
-           (ConformanceTest, this module's test scope) needs both var-core's
+           This lives in var's pom, not varar-core's: the registry-stage harness
+           (ConformanceTest, this module's test scope) needs both varar-core's
            Registry/Conformance AND var's own Registrar/StepDefinitions author API
            that the fixtures are written against. Wiring the fixtures'
-           test-source root into var-core instead — with a var-core-side
+           test-source root into varar-core instead — with a varar-core-side
            test-scoped dependency on var — was tried first and rejected: it
-           creates a real Maven reactor cycle (var-core[test] -> var -> var-core
-           [main]), confirmed empirically via `mvn -pl var-core -am test-compile`
+           creates a real Maven reactor cycle (varar-core[test] -> var -> varar-core
+           [main]), confirmed empirically via `mvn -pl varar-core -am test-compile`
            failing with "The projects in the reactor contain a cyclic reference".
-           var's test scope already depends on var-core (this module's own main
-           dependency, above) with no such cycle, since var-core has no
+           var's test scope already depends on varar-core (this module's own main
+           dependency, above) with no such cycle, since varar-core has no
            dependency back on var.
 
            Empirically verified: `mvn -f java/pom.xml -pl var -am test-compile`

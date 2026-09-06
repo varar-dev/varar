@@ -1,5 +1,5 @@
 // The LSP wire contract shared by the server (handlers.ts) and the VSCode
-// client (var-vscode/extension.ts). These types describe the JSON exchanged
+// client (@varar/vscode/extension.ts). These types describe the JSON exchanged
 // over custom `var/*` requests, so they must stay structurally identical on
 // both ends — keeping them here is the single source of truth that prevents
 // the two sides from drifting. Ranges/positions are 0-based LSP coordinates.

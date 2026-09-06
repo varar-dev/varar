@@ -13,7 +13,7 @@ import java.util.regex.Pattern;
  * Turns raw Markdown source into a flat list of {@link Block} nodes: headings, paragraphs, list
  * items, blockquotes, fenced code, thematic breaks, tables.
  *
- * <p>Port of {@code var-core/src/scanner.ts}. Java's {@code String}/{@code char} are already
+ * <p>Port of {@code typescript/packages/core/src/scanner.ts}. Java's {@code String}/{@code char} are already
  * UTF-16 code-unit indexed (see {@link Span}'s javadoc), so — as with the other core modules —
  * this iterates and slices directly on {@code String}/{@code Matcher} offsets, exactly as {@code
  * scanner.ts} does, with no code-point conversion layer. {@code java.util.regex.Pattern}'s {@code

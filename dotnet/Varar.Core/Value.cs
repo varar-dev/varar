@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 namespace Varar.Core;
 
 /// <summary>
-/// The dynamic value model — the C# replacement for TypeScript var-core's raw JS
+/// The dynamic value model — the C# replacement for TypeScript varar-core's raw JS
 /// values with <c>deepEqual</c> duck-typing (see <c>deep-equal.ts</c>), mirroring
 /// the Rust port's <c>Value</c> enum. One closed hierarchy carries handler
 /// arguments, handler returns, thread-through state, table rows, and the

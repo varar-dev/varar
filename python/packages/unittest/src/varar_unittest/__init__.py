@@ -99,7 +99,7 @@ def _oath_test_case(
     methods: dict[str, Any] = {"__doc__": rel}
     seen: dict[str, int] = {}
     for example, run in pairs:
-        # Innermost heading as the display name, same rule as var-pytest;
+        # Innermost heading as the display name, same rule as pytest-varar;
         # method names are the identifier-safe projection of it.
         base = example.scope_stack[-1] if example.scope_stack else example.name
         stem = _identifier(base)

@@ -7,7 +7,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 /**
- * Translated from {@code var-core/tests/failure.test.ts}, adapted for Java's structured {@link
+ * Translated from {@code typescript/packages/core/tests/failure.test.ts}, adapted for Java's structured {@link
  * StackTraceElement} stack (see {@code Failure.java}'s class javadoc for why): the TS test
  * manually assigns a text {@code err.stack}; here a synthetic {@link StackTraceElement} plays
  * the same role as the frame {@code execute.ts}'s {@code augmentStack} would inject.
