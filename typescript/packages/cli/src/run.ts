@@ -1,8 +1,22 @@
 import { readFileSync } from 'node:fs'
 import { relative, sep } from 'node:path'
 import { findFiles, loadConfig } from '@varar/config'
-import { type Diagnostic, driftDiagnostics, pruneBaselines, reconcileDrift } from '@varar/core'
-import { createFileBaselineStore, examplesWithRuns, loadSteps, planOath } from '@varar/runner'
+import {
+  type Diagnostic,
+  driftDiagnostics,
+  type ExampleResult,
+  pruneBaselines,
+  reconcileDrift,
+  toFailure,
+} from '@varar/core'
+import {
+  buildOathResults,
+  createFileBaselineStore,
+  examplesWithRuns,
+  loadSteps,
+  planOath,
+  writeOathResults,
+} from '@varar/runner'
 
 export type RunOptions = {
   readonly cwd: string
@@ -48,26 +62,43 @@ export async function runRun(opts: RunOptions): Promise<RunResult> {
 
     const rel = relative(opts.cwd, path) || path
     opts.writeStdout(`${rel}\n`)
+    const examples: ExampleResult[] = []
     for (const { example, run } of items) {
       const start = Date.now()
+      // Built exactly as the vitest runtime builds it, from the same plan and
+      // the same toFailure helper, so a CLI run and a vitest run describe an
+      // identical outcome identically.
+      const lines = [...new Set(example.steps.map((s) => s.matchSpan.startLine))]
       try {
         await run()
         opts.writeStdout(`  ✓ ${example.name} (${Date.now() - start}ms)\n`)
+        examples.push({ name: example.name, status: 'passed', lines })
         passed++
       } catch (err) {
         opts.writeStdout(`  ✗ ${example.name} (${Date.now() - start}ms)\n`)
         opts.writeStdout(`${indent(formatError(err), '      ')}\n`)
+        examples.push({
+          name: example.name,
+          status: 'failed',
+          lines,
+          failure: toFailure(err, path, lines[0] ?? 0),
+        })
         failed++
       }
     }
 
+    // The run record the language server reads (ADR 0014). Every other port's
+    // runner writes one; without this a CLI-run project had no diagnostics in
+    // the editor while a vitest-run one did.
+    const oathPathPosix = rel.split(sep).join('/')
+    writeOathResults(opts.cwd, buildOathResults(oathPathPosix, source, examples))
+
     // Reconcile drift against the committed baseline. On a clean run this
     // records/updates varar.lock.json; an unacknowledged drift is reported as an
     // error diagnostic (non-zero exit) and leaves the baseline untouched.
-    const oathPath = rel.split(sep).join('/')
     const drifts = await reconcileDrift({
       store: baselineStore,
-      oathPath,
+      oathPath: oathPathPosix,
       source,
       doc: execution.doc,
       plan: execution,

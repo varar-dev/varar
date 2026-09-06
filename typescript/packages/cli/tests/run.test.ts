@@ -1,7 +1,10 @@
 import { spawnSync } from 'node:child_process'
-import { dirname, resolve } from 'node:path'
+import { readFileSync, rmSync } from 'node:fs'
+import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import type { OathResults } from '@varar/core'
 import { describe, expect, test } from 'vitest'
+import { runRun } from '../src/run.ts'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
 const BIN_TS = resolve(HERE, '..', 'src', 'bin.ts')
@@ -44,6 +47,32 @@ describe('varar run', () => {
     expect(r.stdout).toMatch(/expected "wrong" but was Hello, world!/)
     expect(r.stdout).toMatch(/2 examples, 1 passed, 1 failed/)
     expect(r.status).toBe(1)
+  })
+
+  // In-process, unlike the spawned tests around it: this exercises the
+  // record-building code itself. Only once per file — loadSteps imports the
+  // fixture's step module, and Node's module cache would hand a second call an
+  // already-registered module with nothing left to register.
+  test('writes the run record the language server reads', async () => {
+    const cwd = resolve(FIXTURES, 'run-basic')
+    rmSync(join(cwd, '.varar'), { recursive: true, force: true })
+    const result = await runRun({ cwd, writeStdout: () => {}, writeStderr: () => {} })
+    expect(result.exitCode).toBe(1)
+
+    // Every other port's runner writes one; the CLI wrote nothing until the
+    // writer moved into @varar/runner, so an editor stayed blank after a CLI run.
+    const record = JSON.parse(
+      readFileSync(join(cwd, '.varar', 'hello.md.json'), 'utf8'),
+    ) as OathResults
+    expect(record.version).toBe(1)
+    expect(record.oathPath).toBe('hello.md')
+    expect(record.sourceHash).toMatch(/^fnv1a:[0-9a-f]{8}$/)
+    expect(record.examples.map((e) => e.status)).toEqual(['passed', 'failed'])
+
+    const failed = record.examples[1]
+    expect(failed?.failure?.cells?.[0]?.actual).toBe('Hello, world!')
+    expect(failed?.failure?.anchor?.from).toBeTypeOf('number')
+    rmSync(join(cwd, '.varar'), { recursive: true, force: true })
   })
 
   test('all-pass run exits 0', () => {

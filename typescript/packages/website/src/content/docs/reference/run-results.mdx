@@ -27,6 +27,10 @@ varar/library.md
   a result written on Windows resolves on Linux and back.
 - Written at the **end of every run**, for every oath that ran — passing runs
   included, so the LSP can clear diagnostics that no longer apply.
+- Written by whatever ran the oaths: the test-framework adapter (`pytest`,
+  RSpec, JUnit, `cargo test`, `dotnet test`, `go test`, the vitest reporter) or
+  the CLI's own runner, `varar run`. Both producers in a port share one writer,
+  so which one you used is not visible in the file.
 - `.varar/` is **git-ignored**. It is a run artifact keyed by a source
   fingerprint, worthless the moment the source moves.
 

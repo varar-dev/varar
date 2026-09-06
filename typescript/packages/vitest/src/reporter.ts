@@ -1,6 +1,6 @@
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, isAbsolute, join, relative, sep } from 'node:path'
-import { type ExampleResult, hashSource, type OathResults } from '@varar/core'
+import { readFileSync } from 'node:fs'
+import type { ExampleResult } from '@varar/core'
+import { buildOathResults, toOathPath, writeOathResults } from '@varar/runner'
 import type { Reporter, TestModule } from 'vitest/node'
 
 // Structural shape of the slice of vitest's TestModule API the collector reads.
@@ -35,48 +35,13 @@ export function collectFromModules(
   return byFile
 }
 
-// Absolute filepath → POSIX oath path relative to cwd.
-export function toOathPath(filepath: string, cwd: string): string {
-  const rel = isAbsolute(filepath) ? relative(cwd, filepath) : filepath
-  return rel.split(sep).join('/')
-}
-
-// Oath path → its result file under .varar/.
-export function resultFilePath(oathPath: string, cwd: string): string {
-  return join(cwd, '.varar', `${oathPath}.json`)
-}
-
-// Examples in document order.
-//
-// vitest reports them in declaration order already, but the file is a
-// cross-port contract read by tools that diff runs, and the other ports have to
-// sort (unittest orders by method name, minitest randomises, cargo runs in
-// parallel). Sorting here says the guarantee out loud instead of inheriting it
-// from a runner's scheduling. The name breaks ties for examples sharing a line.
-function documentOrder(examples: ReadonlyArray<ExampleResult>): ReadonlyArray<ExampleResult> {
-  return [...examples].sort(
-    (a, b) => (a.lines[0] ?? 0) - (b.lines[0] ?? 0) || a.name.localeCompare(b.name),
-  )
-}
-
-export function buildOathResults(
-  oathPath: string,
-  source: string,
-  examples: ReadonlyArray<ExampleResult>,
-): OathResults {
-  return {
-    version: 1,
-    oathPath,
-    sourceHash: hashSource(source),
-    examples: documentOrder(examples),
-  }
-}
-
 export type VararResultsReporterOptions = { readonly cwd?: string }
 
 // Vitest reporter (the only side-effecting piece). Reads each oath's source,
-// hashes it, and writes .varar/<oath>.json. Registry-free: every ExampleResult
-// arrives prebuilt on task.meta from the worker.
+// hashes it, and writes .varar/<oath>.json through the shared runner writer —
+// the same one `varar run` uses, so a CLI run and a vitest run leave identical
+// records. Registry-free: every ExampleResult arrives prebuilt on task.meta
+// from the worker.
 export class VararResultsReporter implements Reporter {
   private readonly cwd: string
   constructor(options: VararResultsReporterOptions = {}) {
@@ -87,10 +52,7 @@ export class VararResultsReporter implements Reporter {
     for (const [filepath, examples] of byFile) {
       const oathPath = toOathPath(filepath, this.cwd)
       const source = readFileSync(filepath, 'utf8')
-      const results = buildOathResults(oathPath, source, examples)
-      const out = resultFilePath(oathPath, this.cwd)
-      mkdirSync(dirname(out), { recursive: true })
-      writeFileSync(out, `${JSON.stringify(results, null, 2)}\n`)
+      writeOathResults(this.cwd, buildOathResults(oathPath, source, examples))
     }
   }
 

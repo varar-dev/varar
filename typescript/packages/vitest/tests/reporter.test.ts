@@ -1,12 +1,10 @@
 import { join } from 'node:path'
 import { hashSource } from '@varar/core'
+// buildOathResults/resultFilePath/toOathPath live in @varar/runner: the CLI and
+// this reporter are two adapters of one port and must write identical records.
+import { buildOathResults, resultFilePath, toOathPath } from '@varar/runner'
 import { describe, expect, test } from 'vitest'
-import {
-  buildOathResults,
-  collectFromModules,
-  resultFilePath,
-  toOathPath,
-} from '../src/reporter.ts'
+import { collectFromModules } from '../src/reporter.ts'
 
 const passed = { name: 'A', status: 'passed' as const, lines: [3] }
 const failed = {
