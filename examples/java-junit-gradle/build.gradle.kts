@@ -14,7 +14,7 @@ repositories {
 
 dependencies {
     testImplementation("dev.varar:junit:$vararVersion")
-    testImplementation(platform("org.junit:junit-bom:6.1.2"))
+    testImplementation(platform("org.junit:junit-bom:6.1.3"))
     // Gradle only discovers class-based tests, so the sample uses a JUnit
     // @Suite (see RunOathSpecsTest) to hand the spec corpus to the "var" engine.
     testImplementation("org.junit.platform:junit-platform-suite")

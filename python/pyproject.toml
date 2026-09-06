@@ -31,6 +31,21 @@ addopts = "--import-mode=importlib"
 line-length = 100
 target-version = "py311"
 
+# The rule set is SELECTED, not inherited. ruff 0.16 widened its default
+# selection, and a lockfile refresh that changed no source line turned 88 new
+# findings red (#68) — in rules this repo had never opted into, several of which
+# it deliberately violates: the core catches bare `Exception` around every user
+# step handler, because a test framework's job is to turn any error the handler
+# raises into a failure rather than a crash (BLE001, S110), and the config
+# parser raises the same error type as its TypeScript and Java counterparts
+# rather than the one TRY004 prefers.
+#
+# E4/E7/E9 + F is ruff's classic default: import and syntax errors, undefined
+# names, unused imports. Adding a rule family here is a deliberate act; it must
+# not arrive with a version bump.
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F"]
+
 # Coverage is opt-in (not in addopts, so plain pytest runs stay fast):
 #   uv run pytest --cov
 # Text summary on stdout; HTML in htmlcov/; lcov in coverage.lcov for

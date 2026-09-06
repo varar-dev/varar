@@ -3,5 +3,5 @@
 # whatever `rustup` default the checkout happens to have, and edition 2024
 # needs >= 1.85. rustup auto-installs this on first cargo invocation.
 [toolchain]
-channel = "1.97"
+channel = "1.98"
 components = ["rustfmt", "clippy"]

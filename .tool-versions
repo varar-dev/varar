@@ -14,8 +14,8 @@
 #   Rust    rust/rust-toolchain.toml        (rustup, cargo)
 #   pnpm    "packageManager" in typescript/package.json  (corepack)
 adr-tools 3.0.0
-dotnet 10.0.302
-java temurin-25.0.4+7.0.LTS temurin-21.0.5+11.0.LTS
-nodejs 26.5.1
+dotnet 10.0.400
+java temurin-25.0.4+101.0.LTS temurin-21.0.5+11.0.LTS
+nodejs 26.8.1
 ruby 4.0.6 3.2.2
-golang 1.26.5
+golang 1.27.1
