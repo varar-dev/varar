@@ -26,7 +26,8 @@ async function main(): Promise<void> {
           '  varar run [globs]        run markdown oath examples (no test runner)',
           '  varar run --update       accept drift and re-record varar.lock.json',
           '  varar lint [globs]       check oaths against their step definitions',
-          '  varar init               scaffold a new project',
+          '  varar init               scaffold a new project (detects the test runner)',
+          '  varar init --runner <r>  scaffold for a specific runner (vitest)',
           '',
         ].join('\n'),
       )
@@ -37,7 +38,13 @@ async function main(): Promise<void> {
       break
     }
     case 'init': {
-      const result = await runInit({ cwd: io.cwd, writeStdout: io.writeStdout })
+      const runner = typeof parsed.flags.runner === 'string' ? parsed.flags.runner : undefined
+      const result = await runInit({
+        cwd: io.cwd,
+        writeStdout: io.writeStdout,
+        writeStderr: io.writeStderr,
+        runner,
+      })
       process.exitCode = result.exitCode
       break
     }
