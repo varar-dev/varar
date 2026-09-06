@@ -1,6 +1,5 @@
 /*
- * Fjord — the teal theme (see
- * doc/superpowers/specs/2026-07-02-named-themes-jord-fjord-design.md).
+ * Fjord — the teal theme.
  *
  * Selected via `data-palette='fjord'` on <html>, orthogonal to Starlight's
  * `data-theme` (dark/light). Without the attribute the Jord palette in

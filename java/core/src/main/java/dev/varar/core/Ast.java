@@ -30,8 +30,7 @@ public final class Ast {
      * Maps a block-text offset to its source offset. Block text is the raw
      * source minus BLOCK markers only (list bullets, blockquote {@code >}
      * prefixes), so a paragraph or list item has a single entry and a
-     * blockquote one entry per quoted line. Inline markup is never stripped —
-     * see {@code doc/superpowers/specs/2026-07-06-explicit-inline-format-plugins-design.md}.
+     * blockquote one entry per quoted line. Inline markup is never stripped.
      */
     public record SegmentOffset(int textOffset, int sourceOffset) {}
 

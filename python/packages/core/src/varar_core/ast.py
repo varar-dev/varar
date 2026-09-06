@@ -9,8 +9,7 @@ from varar_core.span import Span
 # Maps a block-text offset to its source offset. Block text is the raw
 # source minus BLOCK markers only (list bullets, blockquote `>` prefixes),
 # so a paragraph or list item has a single entry and a blockquote one entry
-# per quoted line. Inline markup is never stripped — see
-# doc/superpowers/specs/2026-07-06-explicit-inline-format-plugins-design.md.
+# per quoted line. Inline markup is never stripped.
 @dataclass(frozen=True, slots=True)
 class SegmentOffset:
     text_offset: int

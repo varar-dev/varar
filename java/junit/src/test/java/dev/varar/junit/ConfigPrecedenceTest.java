@@ -11,9 +11,8 @@ import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
 
 /**
  * Empirically confirms {@link ConfigurationParameters}' real precedence order, rather than
- * trusting {@code doc/superpowers/specs/2026-07-01-java-junit-engine-design.md}'s original
- * stated assumption (system property → environment variable → {@code
- * junit-platform.properties} file).
+ * trusting the JUnit engine design's original stated assumption (system property →
+ * environment variable → {@code junit-platform.properties} file).
  *
  * <p>Reading {@code org.junit.platform.launcher.core.LauncherConfigurationParameters}'s source
  * (6.1.2 sources jar) shows five provider tiers, checked in this order — first match wins:

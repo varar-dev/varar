@@ -9,8 +9,8 @@ package dev.varar;
  * State}; the factory returns the initial value and {@code context}/{@code action}
  * handlers return a <em>new, complete</em> state value. This keeps state typed,
  * IDE-navigable, and literally "updates produce a new value" (CLAUDE.md), at the cost
- * of reconstructing all fields when only one changes — deliberate divergence from the
- * other two languages. See doc/superpowers/specs/2026-07-01-java-core-port-design.md.
+ * of reconstructing all fields when only one changes — a deliberate divergence from the
+ * dynamically typed ports.
  */
 public interface State {
 

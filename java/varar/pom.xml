@@ -14,8 +14,7 @@
   <packaging>jar</packaging>
   <name>varar (Java) — author facade</name>
   <description>
-    Author-facing API over var-core: context/action/sensor registration (see
-    doc/superpowers/specs/2026-07-01-java-core-port-design.md#author-api).
+    Author-facing API over varar-core: context/action/sensor registration.
   </description>
 
   <dependencies>

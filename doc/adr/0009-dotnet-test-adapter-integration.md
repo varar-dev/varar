@@ -133,5 +133,3 @@ test.
 - [ADR 0003 — Java JUnit Platform `TestEngine`](0003-java-junit-integration.md)
   — the structurally identical decision on the JVM.
 - [ADR 0002 — drift detection & acknowledgment](0002-drift-detection-and-acknowledgment.md).
-- `doc/superpowers/specs/2026-07-19-dotnet-runner-adapter-design.md` — the
-  concrete `Varar.Runner`/`Varar.TestAdapter` design this decision feeds.

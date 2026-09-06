@@ -14,11 +14,9 @@
   <packaging>jar</packaging>
   <name>varar-config (Java) — varar.config.json reader</name>
   <description>
-    Reads varar.config.json, the shared config file for all var tools (see
-    conformance/config/README.md and
-    doc/superpowers/specs/2026-07-02-multi-language-authoring-design.md).
-    Zero runtime dependencies: JSON parsing is hand-rolled, mirroring
-    var-core's hand-rolled CanonicalJson writer.
+    Reads varar.config.json, the shared config file for all Varar tools (see
+    conformance/config/README.md). Zero runtime dependencies: JSON parsing is
+    hand-rolled, mirroring varar-core's hand-rolled JSON reader.
   </description>
 
   <dependencies>

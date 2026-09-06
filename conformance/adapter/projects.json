@@ -11,7 +11,7 @@
     "",
     "baseline is how the adapter treats varar.lock.json:",
     "  reconcile — reads AND rewrites it on a clean run (most adapters)",
-    "  gate      — read-only; the file is written by `varar run` (var-vitest, whose",
+    "  gate      — read-only; the file is written by `varar run` (@varar/vitest, whose",
     "              plugin is a build-time transform and must not write during it)",
     "",
     "probe.stalePath is the baseline-pruned probe: a path no docs glob matches (the",

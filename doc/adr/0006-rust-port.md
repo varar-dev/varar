@@ -35,8 +35,8 @@ facade over an existing engine.
 (209 tests, ported 1:1 from the Java suite; drift/hash unit-gated). A standalone
 `examples/rust-cargotest` sample runs the six shared example oaths via
 `cargo test` and matches the Python samples byte-for-byte. What remains is the
-rest of the package shape and the three deferred golden gates — see the
-[completion plan](../superpowers/plans/2026-07-12-rust-port-completion.md).
+rest of the package shape and the three deferred golden gates. (Since closed:
+the Rust port is complete and at full parity.)
 
 ## Decision
 

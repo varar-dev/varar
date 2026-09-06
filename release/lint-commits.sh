@@ -19,7 +19,7 @@ TYPES='feat|fix|perf|refactor|docs|test|build|ci|chore|style|revert'
 CC_RE="^($TYPES)(\\(([^)]+)\\))?(!)?: .+$"
 # feat/fix/perf and breaking commits become changelog entries; their scope
 # decides which consumer section the entry lands in, so it must be one of
-# these (optionally `/package`, e.g. ts/var-vitest). Work that ships nothing
+# these (optionally `/package`, e.g. ts/vitest). Work that ships nothing
 # to a consumer (website, CI, tooling) is a chore/docs/build commit instead.
 # The always-shipping consumer scopes; parked ports (below) join once live.
 SCOPES=(ts py java ruby vscode spec)
@@ -97,7 +97,7 @@ while IFS=$'\t' read -r sha subject; do
   [[ -z "$breaking" ]] && git log -1 --format=%b "$sha" | grep -q '^BREAKING[- ]CHANGE:' && breaking=1
   if [[ "$type" =~ ^(feat|fix|perf)$ || -n "$breaking" ]]; then
     [[ "$scope" =~ $CONSUMER_SCOPE ]] ||
-      complain "changelog-visible commit needs a consumer scope (ts|py|java|ruby|vscode|spec, e.g. ts/var-vitest) — or use chore:/docs: if nothing shipped changes" "$short" "$subject"
+      complain "changelog-visible commit needs a consumer scope (ts|py|java|ruby|vscode|spec, e.g. ts/vitest) — or use chore:/docs: if nothing shipped changes" "$short" "$subject"
   fi
   if [[ "$scope" == "spec" && " ${PORTS_EXEMPT[*]} " != *" $sha "* ]]; then
     touched="$(ports_touched "$sha")"

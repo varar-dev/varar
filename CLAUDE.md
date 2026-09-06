@@ -63,7 +63,7 @@ Decide the quadrant before writing and don't mix them in one page.
 
 - **Immutable types.** All data types are `readonly` — no mutable fields, no in-place mutation. Use `ReadonlyArray<T>` and `ReadonlyMap<K, V>`. Updates produce a new value.
 - **Pure functions everywhere they're possible.** Parsing, matching, planning, snippet generation, diagnostics: all pure. Given the same input, return the same output, with no side effects.
-- **Functional core, imperative shell.** The core (`@varar/varar`) is pure functions over immutable data. The shell — file I/O, module loading, test-runner integration, CLI prompts, terminal output — lives in the adapter packages (`var-vitest`, `var-node`, `var-bun`, `var-cli`) and is the *only* place side effects are allowed.
+- **Functional core, imperative shell.** The core (`@varar/varar`) is pure functions over immutable data. The shell — file I/O, module loading, test-runner integration, CLI prompts, terminal output — lives in the adapter packages (`@varar/vitest`, `@varar/runner`, `@varar/cli`) and is the *only* place side effects are allowed.
 - **Hexagonal architecture.** The core defines ports (interfaces it depends on); adapters implement them. The core never imports from `node:fs`, `vitest`, `bun:test`, etc. — those are wired in at the edges.
 
 Concretely:
@@ -126,7 +126,7 @@ on everything since the last release tag):
   `refactor`, `test`, `build`, `ci`, `style`, `revert` are not.
 - **Scope names the consumer.** `feat`/`fix`/`perf` (and anything breaking)
   must be scoped `ts`, `py`, `java`, `ruby`, `vscode`, or `spec`, optionally
-  `/package`: `feat(ts/var-vitest): …`, `fix(py/var-core): …`,
+  `/package`: `feat(ts/vitest): …`, `fix(py/core): …`,
   `refactor(java/junit)!: …`. The scope decides which changelog section
   the entry lands in (npm / PyPI / Maven Central / RubyGems / VS Code / all ports).
   Work that ships nothing to a consumer — website, CI, tooling — is a

@@ -1,10 +1,8 @@
 # Varar — .NET (C#) port
 
-Full-pipeline port of Varar on the CLR. See the design/plan under `doc/`:
+Full-pipeline port of Varar on the CLR. See:
 
 - ADR [0008](../doc/adr/0008-dotnet-port.md) (port) · [0009](../doc/adr/0009-dotnet-test-adapter-integration.md) (VSTest adapter)
-- Specs: [core + facade](../doc/superpowers/specs/2026-07-19-dotnet-core-port-design.md), [runner + adapter](../doc/superpowers/specs/2026-07-19-dotnet-runner-adapter-design.md)
-- Plans: [core](../doc/superpowers/plans/2026-07-19-dotnet-core-port.md), [runner/adapters](../doc/superpowers/plans/2026-07-19-dotnet-runner-adapters.md)
 
 ## Projects
 
@@ -26,7 +24,7 @@ dotnet test  Varar.sln
 ## Environment notes
 
 - **Target framework: `net10.0`** (the current LTS), pinned via `global.json` +
-  `Directory.Build.props`; `dotnet/.tool-versions` pins the SDK to `10.0.302`.
+  `Directory.Build.props`; the repo-root `.tool-versions` pins the SDK.
   `Cucumber.CucumberExpressions` targets `netstandard2.0`, so it runs unchanged.
 - **UTF-16 offsets confirmed (no conversion layer needed).** Empirically verified
   that `Cucumber.CucumberExpressions` `20.0.0` reports match offsets as UTF-16

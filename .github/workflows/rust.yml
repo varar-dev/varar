@@ -32,7 +32,7 @@ jobs:
         working-directory: rust
 
       # Standalone sample project (see examples/rust-cargotest): runs the
-      # Markdown specs through var-core via `cargo test`.
+      # oaths through varar-core via `cargo test`.
       - run: cargo fmt --check && cargo clippy --all-targets -- -D warnings && cargo test
         working-directory: examples/rust-cargotest
 

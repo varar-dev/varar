@@ -15,9 +15,8 @@
   <name>varar-runner (Java) — shared imperative shell</name>
   <description>
     Config, discovery, step loading, run orchestration, and failure rendering for
-    var test-runner adapters. Depends only on var (no JUnit-Platform types — that
-    is var-junit's job). See
-    doc/superpowers/specs/2026-07-01-java-junit-engine-design.md.
+    Varar test-runner adapters. Depends only on varar (no JUnit-Platform types —
+    that is varar-junit's job).
   </description>
 
   <dependencies>
