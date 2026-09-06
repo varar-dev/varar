@@ -33,6 +33,18 @@ def write_oath_results(root: Path, results: OathResults) -> Path:
     return out
 
 
+def _document_order(result: ExampleResult) -> tuple[int, str]:
+    """Sort key putting examples in document order.
+
+    A test framework reports examples in ITS order — unittest sorts by method
+    name, minitest randomises, cargo runs in parallel — so the order results are
+    recorded in is not the order they appear in the oath. The file is a
+    cross-port contract read by tools that diff runs, so it is written in
+    document order everywhere. Name breaks ties for examples sharing a line.
+    """
+    return (result.lines[0] if result.lines else 0, result.name)
+
+
 class ResultsCollector:
     """Accumulates each oath's example results across a run, then writes them.
 
@@ -57,7 +69,7 @@ class ResultsCollector:
                 version=1,
                 oath_path=oath_path,
                 source_hash=hash_source(self._sources[oath_path]),
-                examples=tuple(examples),
+                examples=tuple(sorted(examples, key=_document_order)),
             )
             written.append(write_oath_results(root, results))
         return written
