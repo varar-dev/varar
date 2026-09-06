@@ -15,7 +15,7 @@ repositories {
 dependencies {
     testImplementation("dev.varar:kotlin:$vararVersion")
     testImplementation("dev.varar:junit:$vararVersion")
-    testImplementation(platform("org.junit:junit-bom:6.1.2"))
+    testImplementation(platform("org.junit:junit-bom:6.1.3"))
     testImplementation("org.junit.platform:junit-platform-suite")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
