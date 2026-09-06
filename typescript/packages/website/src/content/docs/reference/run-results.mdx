@@ -30,36 +30,6 @@ varar/library.md
 - `.varar/` is **git-ignored**. It is a run artifact keyed by a source
   fingerprint, worthless the moment the source moves.
 
-## On stdout, without the file layout
-
-`varar run --json` prints the same records — one `OathResults` per oath, as a
-single JSON array — and nothing else on stdout. Diagnostics and drift warnings
-stay on stderr, so the stream stays parseable:
-
-```bash
-varar run --json | jq '[.[].examples[] | select(.status == "failed")] | length'
-```
-
-The exit code is unchanged: non-zero when an example failed or a drift went
-unacknowledged, so the flag suits a CI gate that wants both a verdict and the
-detail behind it. Use it when a consumer should not have to know where the files
-live — a supervising agent, a CI step, an attestation pipeline — and read
-`.varar/` directly when something watches results as they land, like the
-language server.
-
-One array rather than a line-per-oath stream: a run is bounded and the records
-are small, so `JSON.parse` on the whole stream beats making every consumer
-reassemble NDJSON.
-
-:::note
-`varar run` is the TypeScript CLI's runner, so `--json` is TypeScript-only. It
-is a convenience, not a second contract: in every other port the same records
-reach you as `.varar/<oathPath>.json`, written by the adapter after the run —
-`uv run pytest && jq . .varar/varar/library.md.json` gets a Python CI gate the
-same payload. The file layout is the cross-port surface; the flag just saves a
-consumer from having to know it.
-:::
-
 ## Payload
 
 A run-result file is a serialized `OathResults`:
@@ -323,9 +293,9 @@ Today:
 The format is shaped for more:
 
 - **CI gates** — check an example's `status` mechanically instead of scraping
-  test-runner text. `varar run --json` hands the whole run to `jq` in one step.
+  test-runner text.
 - **Supervising agents** — answer "which examples failed, and exactly where?"
-  from a file (or from `varar run --json`) rather than from console output.
+  from a file rather than from console output.
 - **HTML overlays** — a static page fetches the record and highlights spans, so
   a reviewer sees results in the rendered oath.
 - **Attestation pipelines** (EU Cyber Resilience Act evidence, say) — the
