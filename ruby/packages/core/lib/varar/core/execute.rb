@@ -42,17 +42,17 @@ module Varar
       def execute_plan(plan, sink:, create_context:, observer: nil, reporter: nil)
         plan.diagnostics.each { |d| reporter.call(d) } if reporter
         create_ctx = create_context || ->(_file) { {} }
-        var_path = plan.doc.path
+        oath_path = plan.doc.path
 
         plan.examples.each_with_index do |ex, example_index|
           seen_lines = {}
           ex.steps.each { |s| seen_lines[s.match_span.start_line] = true }
           info = { lines: seen_lines.keys }
-          sink.call(ex.name, build_run(plan, ex, example_index, create_ctx, observer, var_path), info)
+          sink.call(ex.name, build_run(plan, ex, example_index, create_ctx, observer, oath_path), info)
         end
       end
 
-      def build_run(plan, ex, example_index, create_ctx, observer, var_path)
+      def build_run(plan, ex, example_index, create_ctx, observer, oath_path)
         lambda do
           state_by_file = {}
           last_return = nil
@@ -97,7 +97,7 @@ module Varar
                 raise ReturnShapeError, "unknown step kind: #{step.step_def.kind}"
               end
             rescue StandardError => e
-              augmented = augment_stack(e, step, var_path)
+              augmented = augment_stack(e, step, oath_path)
               observer&.call(observation(ex, example_index, i + 1, file, 'fail', augmented))
               thrown = augmented
               break
@@ -117,7 +117,7 @@ module Varar
             bad = CellDiffs.compare_row(last_return, ex.row_checks).reject(&:ok)
             if row_error || !bad.empty?
               last_step = ex.steps.last
-              augmented = augment_stack(row_error || CellMismatchError.new(bad), last_step, var_path)
+              augmented = augment_stack(row_error || CellMismatchError.new(bad), last_step, oath_path)
               observer&.call(observation(ex, example_index, ex.steps.length,
                                          last_step.step_def.expression_source_file, 'fail', augmented))
               thrown = augmented
@@ -129,7 +129,7 @@ module Varar
             if thrown.nil?
               error = UnexpectedPassError.new
               last = ex.steps.last
-              raise(last ? augment_stack(error, last, var_path) : error)
+              raise(last ? augment_stack(error, last, oath_path) : error)
             end
             raise thrown if ex.expected_error_message && !thrown.message.include?(ex.expected_error_message)
 

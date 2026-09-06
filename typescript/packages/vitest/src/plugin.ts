@@ -64,8 +64,8 @@ export function vararVitestPlugin(options: VararVitestPluginOptions = {}): Plugi
     },
     async load(id) {
       if (!isVararOathId(id, oathFiles)) return null
-      const varPath = id.split('?')[0] ?? id
-      const source = readFileSync(varPath, 'utf8')
+      const absPath = id.split('?')[0] ?? id
+      const source = readFileSync(absPath, 'utf8')
       // The transform result depends on the step definitions (they decide
       // which paragraphs are examples), so a step-file edit must re-transform
       // every oath in watch mode.
@@ -74,17 +74,17 @@ export function vararVitestPlugin(options: VararVitestPluginOptions = {}): Plugi
       // Editing the baseline re-transforms so the drift gate reflects it.
       this.addWatchFile(lockPath)
       const examples = await discoverStaticExamples({
-        varPath,
+        absPath,
         source,
         stepFiles: stepFiles.map((path) => ({ path, source: readFileSync(path, 'utf8') })),
       })
       // This oath's baseline entry from varar.lock.json (POSIX path, relative to
       // cwd), injected so the runtime can run the read-only drift gate.
-      const oathPath = relative(cwd, varPath).split(sep).join('/')
+      const oathPath = relative(cwd, absPath).split(sep).join('/')
       const lock = existsSync(lockPath) ? parseLockFile(readFileSync(lockPath, 'utf8')) : null
       const baseline = lock?.oaths[oathPath] ?? null
       return generateVirtualModule({
-        varPath,
+        oathPath,
         stepImports: stepFiles,
         source,
         examples,
@@ -95,7 +95,7 @@ export function vararVitestPlugin(options: VararVitestPluginOptions = {}): Plugi
 }
 
 export type GenerateInput = {
-  readonly varPath: string
+  readonly oathPath: string
   readonly stepImports: ReadonlyArray<string>
   readonly source?: string
   // Statically discovered examples (see discoverStaticExamples). Each one
@@ -115,7 +115,7 @@ export type GenerateInput = {
 // any source map.
 export function generateVirtualModule(input: GenerateInput): string {
   const sourceJson = JSON.stringify(input.source ?? '')
-  const pathJson = JSON.stringify(input.varPath)
+  const pathJson = JSON.stringify(input.oathPath)
   const baselineJson = JSON.stringify(input.baseline ?? null)
   const examples = input.examples ?? []
   const header: string[] = [

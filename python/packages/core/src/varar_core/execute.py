@@ -133,7 +133,7 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
     _create_context: Callable[[str], Any] = (
         ports.create_context if ports.create_context is not None else lambda _: {}
     )
-    var_path = plan.doc.path
+    oath_path = plan.doc.path
 
     for example_index, ex in enumerate(plan.examples):
         # Deduplicated step lines, preserving document order.
@@ -297,7 +297,7 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
                             raise ReturnShapeError(f"unknown step kind: {kind}")
 
                     except Exception as err:
-                        augmented = _augment_stack(err, step, var_path)
+                        augmented = _augment_stack(err, step, oath_path)
                         if ports.observer is not None:
                             ports.observer.step(
                                 StepObservation(
@@ -342,7 +342,7 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
                         augmented = _augment_stack(
                             row_error if row_error is not None else CellMismatchError(bad),
                             last_step,
-                            var_path,
+                            oath_path,
                         )
                         if ports.observer is not None:
                             ports.observer.step(
@@ -363,7 +363,7 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
                         last_step_or_none = ex.steps[-1] if ex.steps else None
                         e = UnexpectedPassError()
                         if last_step_or_none is not None:
-                            raise _augment_stack(e, last_step_or_none, var_path)
+                            raise _augment_stack(e, last_step_or_none, oath_path)
                         raise e
                     if ex.expected_error_message is not None:
                         msg = str(thrown)
@@ -384,7 +384,7 @@ def execute_plan(plan: ExecutionPlan, ports: ExecutePorts) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _augment_stack(err: Exception, step: PlannedStep, var_path: str) -> Exception:
+def _augment_stack(err: Exception, step: PlannedStep, oath_path: str) -> Exception:
     """Attach a synthetic location note pointing at the failing step in the .md.
 
     Mirrors augmentStack() from execute.ts — instead of injecting into a JS
@@ -403,6 +403,6 @@ def _augment_stack(err: Exception, step: PlannedStep, var_path: str) -> Exceptio
     if not isinstance(err, Exception):
         return err  # type: ignore[return-value]
     label = step.text[:60] + "…" if len(step.text) > 60 else step.text
-    frame = f"    at {label} ({var_path}:{anchor.start_line}:{anchor.start_col})"
+    frame = f"    at {label} ({oath_path}:{anchor.start_line}:{anchor.start_col})"
     err.add_note(frame)
     return err

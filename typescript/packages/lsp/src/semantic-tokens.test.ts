@@ -12,7 +12,7 @@ describe('semanticTokenData', () => {
     const source = 'I greet "x"'
     const matches = [
       {
-        varPath: '/a.md',
+        oathPath: '/a.md',
         range: r(1, 1, 1, 12), // 0-based 0..11
         paramRanges: [r(1, 10, 1, 11)], // 0-based char 9
         paramValues: ['x'],
@@ -43,7 +43,7 @@ describe('semanticTokenData', () => {
     const source = 'the dice roll\n\n| dice |'
     const matches = [
       {
-        varPath: '/t.md',
+        oathPath: '/t.md',
         range: r(1, 1, 1, 14),
         paramRanges: [r(1, 5, 1, 9)], // "dice" in the paragraph
         paramValues: ['dice'],

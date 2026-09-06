@@ -231,13 +231,13 @@ func tableRows(table Table) Value {
 	return ListOf(rows)
 }
 
-func attachLocation(error StepError, step PlannedStep, varPath string) StepFailure {
+func attachLocation(error StepError, step PlannedStep, oathPath string) StepFailure {
 	a := anchor(error, step.MatchSpan)
 	return StepFailure{
 		Error: error,
 		Location: &FailureLocation{
 			Label:  truncateLabel(step.Text),
-			Path:   varPath,
+			Path:   oathPath,
 			Line:   a.StartLine,
 			Anchor: AnchorRange{From: a.StartOffset, To: a.EndOffset},
 		},

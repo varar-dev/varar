@@ -14,7 +14,7 @@ type Range = {
 
 export function semanticTokenData(
   matches: ReadonlyArray<MatchRef>,
-  varPath: string,
+  oathPath: string,
   source: string,
 ): number[] {
   const lines = source.split('\n')
@@ -34,7 +34,7 @@ export function semanticTokenData(
   }
 
   for (const m of matches) {
-    if (m.varPath !== varPath) continue
+    if (m.oathPath !== oathPath) continue
     paint(m.range, 1)
     for (const p of m.paramRanges) paint(p, 2)
     for (const h of m.headerCellRanges ?? []) paint(h, 2)

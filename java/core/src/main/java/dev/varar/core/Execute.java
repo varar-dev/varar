@@ -487,7 +487,7 @@ public final class Execute {
      * fileName}/{@code lineNumber} are the {@code .md} path/line, so {@link
      * Failure#toFailure}'s regex (which reads the printed stack trace text) finds it.
      */
-    private static Throwable augmentStack(Throwable err, Plan.PlannedStep step, String varPath) {
+    private static Throwable augmentStack(Throwable err, Plan.PlannedStep step, String oathPath) {
         String text = step.text();
         String label = text.length() > 60 ? text.substring(0, 60) + "…" : text;
         // Editors resolve the failure's location from this frame; FailureAnchor decides where
@@ -496,7 +496,7 @@ public final class Execute {
         // that's what lets a renderer underline the failing step, not its whole line.
         Span anchor = FailureAnchor.anchor(err, step.matchSpan());
         FailureAnchor.attach(err, anchor);
-        StackTraceElement synthetic = new StackTraceElement("Step", label, varPath, anchor.startLine());
+        StackTraceElement synthetic = new StackTraceElement("Step", label, oathPath, anchor.startLine());
         StackTraceElement[] original = err.getStackTrace();
         StackTraceElement[] augmented = new StackTraceElement[original.length + 1];
         augmented[0] = synthetic;

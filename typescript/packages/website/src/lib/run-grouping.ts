@@ -8,7 +8,7 @@ export type EditorDescriptor = {
 
 export type RunInput = {
   readonly group: string
-  readonly varPath: string
+  readonly oathPath: string
   readonly varSource: string
   readonly stepFiles: ReadonlyArray<StepFile>
 }
@@ -56,7 +56,7 @@ export function groupRunInputs(
     }))
     inputs.push({
       group,
-      varPath: stripFileScheme(oath.uri),
+      oathPath: stripFileScheme(oath.uri),
       varSource: oath.source,
       stepFiles: [...visibleSteps, ...hidden],
     })

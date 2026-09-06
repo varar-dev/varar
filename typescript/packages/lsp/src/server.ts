@@ -141,7 +141,7 @@ export function registerHandlers(
   function publishAll(): void {
     if (!store) return
     const uris = new Set<string>()
-    for (const d of store.index().diagnostics) uris.add(`file://${d.varPath}`)
+    for (const d of store.index().diagnostics) uris.add(`file://${d.oathPath}`)
     if (runResults) for (const u of runResults.oathUris()) uris.add(u)
     for (const u of uris) void publishFor(u)
   }

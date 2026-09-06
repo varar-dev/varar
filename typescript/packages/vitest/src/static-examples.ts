@@ -23,7 +23,7 @@ export type StaticExample = {
 }
 
 export type DiscoverInput = {
-  readonly varPath: string
+  readonly absPath: string
   readonly source: string
   readonly stepFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>
 }
@@ -44,7 +44,7 @@ export async function discoverStaticExamples(
     oathFiles: [],
     scanner,
   })
-  const p = planOath(input.varPath, input.source, registry)
+  const p = planOath(input.absPath, input.source, registry)
   return p.examples.map((ex) => ({
     name: ex.name,
     line: ex.span.startLine,

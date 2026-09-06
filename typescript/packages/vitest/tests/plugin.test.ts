@@ -20,7 +20,7 @@ describe('isVararOathId', () => {
 describe('generateVirtualModule', () => {
   test('squeezes all imports and setup onto line 1 and places each test call on its example line', () => {
     const out = generateVirtualModule({
-      varPath: '/abs/foo.md',
+      oathPath: '/abs/foo.md',
       stepImports: ['/abs/account.steps.ts'],
       source: 'Narration.\n\nThe answer is 42.\n',
       examples: [{ name: 'The answer is 42', line: 3, col: 1 }],
@@ -49,7 +49,7 @@ describe('generateVirtualModule', () => {
 
   test('indents the test call to the example column', () => {
     const out = generateVirtualModule({
-      varPath: '/abs/foo.md',
+      oathPath: '/abs/foo.md',
       stepImports: [],
       source: '- The answer is 42.\n',
       examples: [{ name: 'The answer is 42', line: 2, col: 3 }],
@@ -61,7 +61,7 @@ describe('generateVirtualModule', () => {
 
   test('an example on line 1 shares the header line', () => {
     const out = generateVirtualModule({
-      varPath: '/abs/foo.md',
+      oathPath: '/abs/foo.md',
       stepImports: [],
       source: 'The answer is 42.\n',
       examples: [{ name: 'The answer is 42', line: 1, col: 1 }],
@@ -73,7 +73,7 @@ describe('generateVirtualModule', () => {
 
   test('forwards the static example count so the runtime can guard against a stale transform', () => {
     const out = generateVirtualModule({
-      varPath: '/abs/foo.md',
+      oathPath: '/abs/foo.md',
       stepImports: [],
       source: 'The answer is 42.\n',
       examples: [{ name: 'The answer is 42', line: 1, col: 1 }],
@@ -86,7 +86,7 @@ describe('generateVirtualModule', () => {
 
   test('inlines the oath baseline so the runtime can run the read-only drift gate', () => {
     const out = generateVirtualModule({
-      varPath: '/abs/foo.md',
+      oathPath: '/abs/foo.md',
       stepImports: [],
       source: 'The answer is 42.\n',
       examples: [{ name: 'The answer is 42', line: 1, col: 1 }],
@@ -98,7 +98,7 @@ describe('generateVirtualModule', () => {
 
   test('inlines a null baseline when the oath is not yet in varar.lock.json', () => {
     const out = generateVirtualModule({
-      varPath: '/abs/foo.md',
+      oathPath: '/abs/foo.md',
       stepImports: [],
       examples: [],
     })

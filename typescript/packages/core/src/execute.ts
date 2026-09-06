@@ -266,7 +266,7 @@ export function executePlan(plan: ExecutionPlan, ports: ExecutePorts): void {
 // the caller (one level out). Vitest's reporter auto-renders the code snippet
 // for the topmost frame, so the `.ts` source stays as the main error location
 // and the .md becomes a clickable link directly under it.
-function augmentStack(err: unknown, step: PlannedStep, varPath: string): unknown {
+function augmentStack(err: unknown, step: PlannedStep, oathPath: string): unknown {
   // Editors resolve the failure's location from the frame below (the VS Code
   // vitest extension underlines the word at line:col); failureAnchor decides
   // where it points, and the conformance trace pins that same rule across
@@ -277,7 +277,7 @@ function augmentStack(err: unknown, step: PlannedStep, varPath: string): unknown
   attachFailureAnchor(err, anchor)
   if (!(err instanceof Error) || typeof err.stack !== 'string') return err
   const label = step.text.length > 60 ? `${step.text.slice(0, 60)}…` : step.text
-  const frame = `    at ${label} (${varPath}:${anchor.startLine}:${anchor.startCol})`
+  const frame = `    at ${label} (${oathPath}:${anchor.startLine}:${anchor.startCol})`
   const lines = err.stack.split('\n')
   // Find the first existing stack frame (the handler's `.ts` line) and insert
   // immediately after it. If the error has no frames, fall back to position 1.
