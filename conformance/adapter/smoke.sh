@@ -106,6 +106,11 @@ run_contract() {
   fi
   pass "baseline-complete ($(wc -l <<<"$in_lock" | tr -d ' ') oaths)"
 
+  # Every check below runs the suite, and check 6 reads what those runs wrote. Clear the
+  # artifact directory first so a record left by an earlier run cannot stand in for one this
+  # run failed to write.
+  rm -rf "$abs/.varar"
+
   # 3. drift-detected — record a prose paragraph in the baseline as though it had once been an
   #    example (what a renamed or deleted step definition leaves behind) and require the suite
   #    to go red. THIS is the check issue #69 would have failed.
@@ -177,8 +182,33 @@ run_contract() {
     restore_lock
   fi
 
+  # 6. run-results-written — the adapter must persist .varar/<oath>.json for every oath it
+  #    ran (ADR 0014). The wire corpus pins the SHAPE of that payload, but each port builds
+  #    the fixture value by hand, so nothing there notices an adapter that never writes a
+  #    file at all — which is exactly what the vitest sample did while the docs table
+  #    claimed every port persisted them (#81).
+  assert_run_results "$dir"
+
   # Between projects, not just at exit — --all must not leave A's probe behind while B runs.
   restore_lock
+}
+
+# Every oath has a record from the run that just happened: the documented top-level shape,
+# and its examples in DOCUMENT order. Order is the part a test framework silently decides —
+# unittest sorts by method name, minitest randomises, cargo runs in parallel — so three ports
+# wrote a different sequence for the same oath until this check existed.
+assert_run_results() {
+  local dir="$1"
+  local abs="$REPO_ROOT/$dir"
+  local oath record
+  while IFS= read -r oath; do
+    record="$abs/.varar/$oath.json"
+    [ -f "$record" ] || fail "$dir: the run wrote no .varar/$oath.json"       "Every adapter persists one run record per oath — the language server reads them."       "See doc/adr/0014-run-results-are-a-cross-port-contract.md."
+    jq -e --arg o "$oath" '.version == 1 and .oathPath == $o and (.sourceHash | startswith("fnv1a:"))'       "$record" >/dev/null || fail "$dir: .varar/$oath.json is not the documented payload"       "Expected version 1, oathPath \"$oath\", and an fnv1a: sourceHash."       "Got: $(jq -c '{version, oathPath, sourceHash}' "$record")"
+    jq -e '[.examples[].lines[0]] == ([.examples[].lines[0]] | sort)' "$record" >/dev/null ||
+      fail "$dir: .varar/$oath.json lists its examples out of document order"         "Sort them by first line before writing — the framework's own order is not the oath's."         "Got lines: $(jq -c '[.examples[].lines[0]]' "$record")"
+  done <<<"$(oaths_on_disk "$dir")"
+  pass "run-results-written ($(oaths_on_disk "$dir" | wc -l | tr -d ' ') records)"
 }
 
 # Add the probe to the lock: a baseline entry for a paragraph that is prose, not an example.
