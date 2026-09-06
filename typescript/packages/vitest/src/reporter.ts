@@ -46,12 +46,30 @@ export function resultFilePath(oathPath: string, cwd: string): string {
   return join(cwd, '.varar', `${oathPath}.json`)
 }
 
+// Examples in document order.
+//
+// vitest reports them in declaration order already, but the file is a
+// cross-port contract read by tools that diff runs, and the other ports have to
+// sort (unittest orders by method name, minitest randomises, cargo runs in
+// parallel). Sorting here says the guarantee out loud instead of inheriting it
+// from a runner's scheduling. The name breaks ties for examples sharing a line.
+function documentOrder(examples: ReadonlyArray<ExampleResult>): ReadonlyArray<ExampleResult> {
+  return [...examples].sort(
+    (a, b) => (a.lines[0] ?? 0) - (b.lines[0] ?? 0) || a.name.localeCompare(b.name),
+  )
+}
+
 export function buildOathResults(
   oathPath: string,
   source: string,
   examples: ReadonlyArray<ExampleResult>,
 ): OathResults {
-  return { version: 1, oathPath, sourceHash: hashSource(source), examples }
+  return {
+    version: 1,
+    oathPath,
+    sourceHash: hashSource(source),
+    examples: documentOrder(examples),
+  }
 }
 
 export type VararResultsReporterOptions = { readonly cwd?: string }

@@ -1,4 +1,5 @@
 import vararPlugin from '@varar/vitest'
+import { VararResultsReporter } from '@varar/vitest/reporter'
 import { defineConfig } from 'vitest/config'
 
 // The var plugin reads this project's varar.config.json and drives vitest's
@@ -11,5 +12,9 @@ export default defineConfig({
   test: {
     // Inline the var packages so the plugin and runtime are transformed by vite.
     server: { deps: { inline: [/^@varar\//] } },
+    // Writes .varar/<oath>.json after the run — the record the language server
+    // reads to put a failure back on the Markdown. Every other port's sample
+    // writes it from its adapter; in vitest it is a reporter you register.
+    reporters: ['default', new VararResultsReporter({ cwd: projectDir })],
   },
 })
