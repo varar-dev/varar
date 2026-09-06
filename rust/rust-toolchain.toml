@@ -3,5 +3,5 @@
 # Components listed so rustup auto-installs fmt/clippy with the pinned
 # toolchain (CI's setup action only adds them to `stable`).
 [toolchain]
-channel = "1.97"
+channel = "1.98"
 components = ["rustfmt", "clippy"]
