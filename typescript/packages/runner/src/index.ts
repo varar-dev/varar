@@ -1,5 +1,4 @@
 export { createFileBaselineStore, lockPath } from './baseline-store.ts'
-export { renderFailure } from './render.ts'
 export {
   buildOathResults,
   resultFilePath,
