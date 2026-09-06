@@ -36,6 +36,14 @@ export type CommandBlock = {
   readonly code: string
 }
 
+/** What a reader must already have installed to follow the tutorial in this language. */
+export type Prerequisite = {
+  /** The runtime and build tool, as a sentence fragment ("Node.js 22.18 or newer"). */
+  readonly toolchain: string
+  /** Optional second sentence: what breaks below the baseline, or which tool the commands assume. */
+  readonly note?: string
+}
+
 /** One entry in `languages.json`. */
 export type Language = {
   readonly id: SiteLang
@@ -54,6 +62,8 @@ export type Language = {
   readonly stepsPath: string
   /** Whether the port ships a `var` CLI (TS/Python/Ruby) or is copy-paste (JVM). */
   readonly hasCli: boolean
+  /** The toolchain this port needs, shown before step 1 of the get-started tutorial. */
+  readonly prerequisite: Prerequisite
   readonly install: CommandBlock
   /** The scaffold command, or null for ports without a CLI. */
   readonly scaffold: CommandBlock | null

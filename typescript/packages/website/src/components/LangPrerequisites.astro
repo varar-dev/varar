@@ -1,0 +1,24 @@
+---
+/**
+ * The toolchain each port needs before step 1, as a `<Tabs syncKey="lang">`
+ * group driven by the shared `languages.json` manifest — so a new port has to
+ * state its baseline where every other per-language fact already lives, and a
+ * reader on too old a runtime learns it before the install rather than from a
+ * failure three steps later (#62).
+ */
+import { TabItem, Tabs } from '@astrojs/starlight/components'
+import { LANGUAGES } from '../lib/site-lang'
+---
+
+<Tabs syncKey="lang">
+  {
+    LANGUAGES.map((lang) => (
+      <TabItem label={lang.label}>
+        <p>
+          <strong>{lang.prerequisite.toolchain}.</strong>
+          {lang.prerequisite.note ? ` ${lang.prerequisite.note}` : ''}
+        </p>
+      </TabItem>
+    ))
+  }
+</Tabs>

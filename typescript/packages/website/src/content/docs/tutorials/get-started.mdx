@@ -6,6 +6,7 @@ description: Install Varar, configure a project, run your first oath — and wat
 import { Tabs, TabItem, Steps } from '@astrojs/starlight/components';
 import LangCommand from '$components/LangCommand.astro';
 import LangConfigure from '$components/LangConfigure.astro';
+import LangPrerequisites from '$components/LangPrerequisites.astro';
 
 In this tutorial we'll install Varar into a project, configure it, run a first
 [oath](/explanation/oaths/), and then deliberately break it. By the end you will
@@ -13,6 +14,13 @@ have seen an oath pass and fail as a test on your own machine.
 
 **Pick your preferred programming language in the language selector in the top-right corner of the page**.
 Every command and code sample below follows that choice.
+
+## Before you start
+
+You need your language's toolchain already installed — Varar adds a library and a
+test-framework adapter to a project you can already build and test.
+
+<LangPrerequisites />
 
 <Steps>
 

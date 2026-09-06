@@ -7,6 +7,10 @@
     "stepsGlob": "src/varar/**/*.steps.ts",
     "stepsPath": "src/varar/deep-thought.steps.ts",
     "hasCli": true,
+    "prerequisite": {
+      "toolchain": "Node.js 22.18 or newer",
+      "note": "Node strips TypeScript types by itself from 22.18 on. Older versions fail the run with 'Unknown file extension \".ts\"', and need NODE_OPTIONS=--experimental-strip-types."
+    },
     "install": {
       "lang": "bash",
       "code": "pnpm add -D @varar/varar @varar/cli"
@@ -28,6 +32,10 @@
     "stepsGlob": "varar.*",
     "stepsPath": "src/test/java/varar/DeepThoughtSteps.java",
     "hasCli": false,
+    "prerequisite": {
+      "toolchain": "JDK 21 or newer, with Maven or Gradle",
+      "note": "The published artifacts target Java 21."
+    },
     "install": {
       "lang": "xml",
       "code": "<!-- pom.xml — use the latest release from Maven Central -->\n<dependency>\n  <groupId>dev.varar</groupId>\n  <artifactId>junit</artifactId>\n  <version>{{version}}</version>\n  <scope>test</scope>\n</dependency>"
@@ -46,6 +54,10 @@
     "stepsGlob": "varar.*",
     "stepsPath": "src/test/kotlin/varar/deep-thought.steps.kt",
     "hasCli": false,
+    "prerequisite": {
+      "toolchain": "JDK 21 or newer, with Gradle and Kotlin 2.x",
+      "note": "The published artifacts target Java 21."
+    },
     "install": {
       "lang": "kotlin",
       "code": "// build.gradle.kts — use the latest release from Maven Central\ntestImplementation(\"dev.varar:kotlin:{{version}}\")\ntestImplementation(\"dev.varar:junit:{{version}}\")"
@@ -64,6 +76,10 @@
     "stepsGlob": "tests/varar/**/*.steps.py",
     "stepsPath": "tests/varar/deep_thought.steps.py",
     "hasCli": true,
+    "prerequisite": {
+      "toolchain": "Python 3.11 or newer",
+      "note": "The commands below use uv; pip and poetry work the same way."
+    },
     "install": {
       "lang": "bash",
       "code": "uv add --dev pytest-varar"
@@ -85,6 +101,9 @@
     "stepsGlob": "spec/varar/**/*.steps.rb",
     "stepsPath": "spec/varar/deep_thought.steps.rb",
     "hasCli": true,
+    "prerequisite": {
+      "toolchain": "Ruby 3.2 or newer, with Bundler"
+    },
     "install": {
       "lang": "bash",
       "code": "bundle add varar-rspec"
@@ -106,6 +125,10 @@
     "stepsGlob": "src/varar/*.steps.rs",
     "stepsPath": "src/varar/deep_thought.steps.rs",
     "hasCli": false,
+    "prerequisite": {
+      "toolchain": "Rust 1.85 or newer, installed with rustup",
+      "note": "The crates are edition 2024, which 1.85 is the first release to support."
+    },
     "install": {
       "lang": "bash",
       "code": "cargo add varar-cargotest --dev"
@@ -124,6 +147,10 @@
     "stepsGlob": "steps/*.steps.cs",
     "stepsPath": "steps/deep-thought.steps.cs",
     "hasCli": false,
+    "prerequisite": {
+      "toolchain": "The .NET 10 SDK or newer",
+      "note": "The packages target net10.0."
+    },
     "install": {
       "lang": "bash",
       "code": "dotnet add package Varar.TestAdapter"
@@ -142,6 +169,9 @@
     "stepsGlob": "*.steps.go",
     "stepsPath": "deep_thought.steps.go",
     "hasCli": false,
+    "prerequisite": {
+      "toolchain": "Go 1.26 or newer"
+    },
     "install": {
       "lang": "bash",
       "code": "go get github.com/varar-dev/varar/go"

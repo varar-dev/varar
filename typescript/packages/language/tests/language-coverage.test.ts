@@ -58,6 +58,19 @@ describe('language coverage (drift gate)', () => {
     }
   })
 
+  test('every languages.json language states its toolchain prerequisite', () => {
+    // The get-started tutorial renders these before step 1 (#62): a reader on
+    // too old a runtime must learn the baseline there, not from a failure three
+    // steps later. A port that adds itself to the manifest without a baseline
+    // would render an empty bullet, so pin it here rather than in review.
+    for (const lang of languages) {
+      expect(
+        lang.prerequisite?.toolchain,
+        `${lang.label} has no prerequisite.toolchain`,
+      ).toBeTruthy()
+    }
+  })
+
   test('the grammar loaders and the VS Code bundler list the same grammars', () => {
     const nodeLoader = grammarWasms('../../lsp/src/node-grammar-loader.ts')
     const testLoader = grammarWasms('./test-grammar-loader.ts')
