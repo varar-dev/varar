@@ -13,7 +13,7 @@
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.3",
-    "@astrojs/starlight": "^0.41.5",
+    "@astrojs/starlight": "^0.42.0",
     "@astrojs/starlight-tailwind": "^5.0.0",
     "@codemirror/lang-java": "^6.0.2",
     "@codemirror/lang-javascript": "^6.2.5",
@@ -45,7 +45,7 @@
     "tree-sitter-typescript": "^0.23.2",
     "typescript": "^6.0.3",
     "vscode-languageserver": "^10.1.0",
-    "web-tree-sitter": "^0.26.11"
+    "web-tree-sitter": "^0.27.0"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10"
