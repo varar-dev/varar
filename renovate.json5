@@ -144,6 +144,21 @@
       groupName: "toolchains",
       commitMessagePrefix: "chore(build):",
     },
+    {
+      // LAST, because later rules win: this one has to override both the nuget
+      // group above and the toolchains group just before it.
+      //
+      // The .NET SDK is pinned TWICE — dotnet/global.json says what the build
+      // demands (rollForward: latestFeature, so an OLDER installed SDK does not
+      // satisfy it), and .tool-versions says what asdf installs. Renovate sees
+      // the two through different managers, so they arrived as two PRs, and
+      // merging the global.json one alone left `make dotnet` unable to find an
+      // SDK on every developer machine while CI — which installs from
+      // global.json — stayed green. One fact, one branch.
+      matchPackageNames: ["dotnet-sdk", "dotnet"],
+      groupName: "dotnet sdk pin",
+      commitMessagePrefix: "chore(dotnet):",
+    },
   ],
   // Security fixes still surface promptly and are labelled, but — like
   // everything else — they wait for your dashboard approval before a PR opens.
