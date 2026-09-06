@@ -25,7 +25,7 @@ async function main(): Promise<void> {
           'Usage:',
           '  varar run [globs]        run markdown oath examples (no test runner)',
           '  varar run --update       accept drift and re-record varar.lock.json',
-          '  varar lint [globs]       check for missing/ambiguous/orphan steps',
+          '  varar lint [globs]       check oaths against their step definitions',
           '  varar init               scaffold a new project',
           '',
         ].join('\n'),
