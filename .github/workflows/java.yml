@@ -51,13 +51,13 @@ jobs:
       - run: mvn --batch-mode test
         working-directory: examples/java-junit-maven
 
-      - run: ./gradlew --console=plain test
+      - run: ./gradlew --console=plain --build-cache test
         working-directory: examples/java-junit-gradle
 
-      - run: ./gradlew --console=plain test
+      - run: ./gradlew --console=plain --build-cache test
         working-directory: examples/kotlin-junit
 
-      - run: ./gradlew --console=plain test
+      - run: ./gradlew --console=plain --build-cache test
         working-directory: examples/kotlin-kotest
 
       # The adapter smoke contract: the golden corpora only see the pure core, so an

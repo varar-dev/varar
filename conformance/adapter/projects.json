@@ -9,6 +9,11 @@
     "'nothing to do' from source timestamps reports a stale green and makes the whole",
     "contract vacuous. That is why go carries -count=1 and gradle carries cleanTest.",
     "",
+    "gradle also carries --build-cache, which sounds backwards but is the point: cleanTest",
+    "defeats only the up-to-date check, so a build with the cache on (#84) restored a PASS",
+    "for a drifted baseline and the contract went vacuous exactly where it was loudest.",
+    "Running the samples WITH the cache keeps that path covered.",
+    "",
     "baseline is how the adapter treats varar.lock.json:",
     "  reconcile — reads AND rewrites it on a clean run (most adapters)",
     "  gate      — read-only; the file is written by `varar run` (@varar/vitest, whose",
@@ -52,19 +57,19 @@
     {
       "dir": "examples/java-junit-gradle",
       "adapter": "dev.varar:junit",
-      "command": "./gradlew --console=plain cleanTest test",
+      "command": "./gradlew --console=plain --build-cache cleanTest test",
       "baseline": "reconcile"
     },
     {
       "dir": "examples/kotlin-junit",
       "adapter": "dev.varar:junit",
-      "command": "./gradlew --console=plain cleanTest test",
+      "command": "./gradlew --console=plain --build-cache cleanTest test",
       "baseline": "reconcile"
     },
     {
       "dir": "examples/kotlin-kotest",
       "adapter": "dev.varar:kotest",
-      "command": "./gradlew --console=plain cleanTest test",
+      "command": "./gradlew --console=plain --build-cache cleanTest test",
       "baseline": "reconcile"
     },
     {
