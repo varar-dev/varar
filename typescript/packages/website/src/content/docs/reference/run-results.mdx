@@ -43,6 +43,13 @@ type OathResults = {
 }
 ```
 
+`examples` is in **document order** — sorted by the first line of each example,
+as they appear in the Markdown. That is not the order a test framework hands
+them back (unittest orders by method name, minitest randomises, `cargo test`
+runs in parallel), so every port sorts before writing. It means two runs of the
+same unchanged oath produce the same sequence, in any language, and a tool can
+diff two records without normalizing them first.
+
 A run with one passing example, one failing on a mismatched cell, and one
 failing by throwing:
 
@@ -254,6 +261,13 @@ produced the file, and a consumer must not depend on them:
 
 - key order, indentation, escaping, trailing newline. One port may emit
   `\u00A3` where another emits `£`; both parse to the same string.
+
+The per-port ✅ above is not a promise on paper: the
+[adapter smoke contract](https://github.com/varar-dev/varar/tree/main/conformance/adapter)
+clears each sample project's `.varar/` directory, runs its real test command,
+and requires a well-formed record — right shape, right `oathPath`, examples in
+document order — for every oath. A port that stops writing them, or writes them
+in its framework's order, fails there.
 
 The one convention that *is* fixed everywhere is the coordinate space:
 **absolute UTF-16 code-unit offsets**, `to` exclusive. That matches
