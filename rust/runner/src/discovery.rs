@@ -83,15 +83,18 @@ fn glob_literal_dir(glob: &str) -> &str {
 ///
 /// A directory is prunable when every include glob is anchored to a different
 /// part of the tree — e.g. `docs/loop.md` cannot match anything under `target/`.
-/// Globs that start with a wildcard (`**/*.md`, `*.md`) are never prunable.
+/// A glob whose first segment is a wildcard (`**/*.md`, `docs*/x.md`) can match
+/// at depth and never prunes.
 fn dir_could_match_include(dir_rel: &str, include: &[String]) -> bool {
     include.iter().any(|g| {
         let lit = glob_literal_dir(g);
         if lit.is_empty() {
-            // Glob either starts with a wildcard (could match anywhere) or is a
-            // bare filename like "README.md" that only lives at the root.
-            // Prune subdirectories for bare root filenames; keep for wildcards.
-            g.starts_with(['*', '?'])
+            // No literal directory prefix. A glob with no `/` and no `**` can
+            // only match files sitting directly at the root ("README.md",
+            // "*.md"), so every subdirectory is prunable. Anything else — a
+            // wildcard first segment ("docs*/*.md") or a `**` — may still match
+            // arbitrarily deep, so keep walking.
+            g.contains('/') || g.contains("**")
         } else {
             // lit is something like "docs" or "src/components".
             // Keep if dir_rel is heading toward lit, is lit, or is already inside lit.
@@ -102,11 +105,20 @@ fn dir_could_match_include(dir_rel: &str, include: &[String]) -> bool {
     })
 }
 
-/// Returns `true` if the directory at `dir_rel` is broadly excluded — i.e.
-/// any probe file under it (`dir_rel/x`) matches an exclude glob.
+/// Returns `true` if the directory at `dir_rel` is excluded *in its entirety*.
+///
+/// Pruning a subtree is only safe when the glob excludes everything under it,
+/// at any depth — so both a shallow probe (`dir_rel/x`) and a deeper one
+/// (`dir_rel/x/y`) must match. `skip/**` excludes the whole subtree and is
+/// prunable; `skip/*` only excludes that directory's own files, so its nested
+/// oaths must still be discovered.
 fn dir_is_excluded(dir_rel: &str, exclude: &[String]) -> bool {
-    let probe = format!("{dir_rel}/x");
-    exclude.iter().any(|g| glob_to_regex(g).is_match(&probe))
+    let shallow = format!("{dir_rel}/x");
+    let deep = format!("{dir_rel}/x/y");
+    exclude.iter().any(|g| {
+        let re = glob_to_regex(g);
+        re.is_match(&shallow) && re.is_match(&deep)
+    })
 }
 
 fn walk(dir: &Path, root: &Path, include: &[String], exclude: &[String], out: &mut Vec<PathBuf>) {
@@ -186,6 +198,46 @@ mod tests {
             "walk should not have entered target/: {out:?}"
         );
         assert_eq!(out.len(), 2, "expected README.md + docs/loop.md, got {out:?}");
+    }
+
+    /// `skip/*` excludes only that directory's own files, so `skip/nested/`
+    /// must still be walked — pruning the whole subtree would silently drop
+    /// oaths the config never excluded.
+    #[test]
+    fn walk_keeps_dir_whose_exclude_covers_only_its_own_files() {
+        let root = tmp("walk-shallow-excl");
+        std::fs::create_dir_all(root.join("skip/nested")).unwrap();
+        std::fs::write(root.join("skip/top.md"), "x").unwrap();
+        std::fs::write(root.join("skip/nested/deep.md"), "x").unwrap();
+
+        let include = vec!["**/*.md".to_string()];
+        let exclude = vec!["skip/*".to_string()];
+        let mut out = Vec::new();
+        walk(&root, &root, &include, &exclude, &mut out);
+
+        assert!(
+            out.iter().any(|p| p.ends_with("deep.md")),
+            "walk should have entered skip/nested/: {out:?}"
+        );
+    }
+
+    /// A wildcard in the glob's first segment leaves no literal directory
+    /// prefix, but the glob still matches inside subdirectories.
+    #[test]
+    fn walk_keeps_dir_matching_wildcard_first_segment() {
+        let root = tmp("walk-wild-seg");
+        std::fs::create_dir_all(root.join("docs1")).unwrap();
+        std::fs::write(root.join("docs1/a.md"), "x").unwrap();
+
+        let include = vec!["docs*/*.md".to_string()];
+        let exclude: Vec<String> = vec![];
+        let mut out = Vec::new();
+        walk(&root, &root, &include, &exclude, &mut out);
+
+        assert!(
+            out.iter().any(|p| p.ends_with("a.md")),
+            "walk should have entered docs1/: {out:?}"
+        );
     }
 
     /// Same guarantee for exclude-based pruning.
