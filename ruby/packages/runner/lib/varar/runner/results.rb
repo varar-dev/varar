@@ -34,6 +34,17 @@ module Varar
         out
       end
 
+      # Examples in document order.
+      #
+      # A test framework reports examples in ITS order — minitest randomises by
+      # design — so the order they are recorded in is not the order they appear
+      # in the oath. The file is a cross-port contract read by tools that diff
+      # runs, so it is written in document order everywhere. Name breaks ties
+      # for examples sharing a line.
+      def self.document_order(examples)
+        examples.sort_by { |r| [r.lines.first || 0, r.name] }
+      end
+
       # Accumulates one example's outcome; the oath's file is written once its
       # examples are in.
       def record(oath_path, source, result)
@@ -52,7 +63,7 @@ module Varar
                                  version: 1,
                                  oath_path: oath_path,
                                  source_hash: Core::Hash32.hash_source(@sources[oath_path]),
-                                 examples: recorded
+                                 examples: self.class.document_order(recorded)
                                ))
       end
 
