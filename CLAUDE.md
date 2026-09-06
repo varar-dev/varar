@@ -194,7 +194,7 @@ With one or more slots the return is **required**: `undefined`/`null`/`None` →
 
 Per slot kind: **inline parameter** — deep-equal against the transformed arg → `CellMismatchError` (`CellDiff[]`, each with a source `span` + `expected` + `actual`); **whole table** — exact string compare per cell → `CellMismatchError`; **doc string** — one cell, compared whole: exact equality including the trailing `\n` → `CellMismatchError` (quoted, so a whitespace-only difference stays visible). **Header-bound table rows** bypass the slot contract: the step returns its computed columns as a row object, compared cell-by-cell — returning nothing there is a `ReturnShapeError` too. **Wrong shape** → `ReturnShapeError`; an `undefined` return passes only for a zero-slot sensor.
 
-Because the diffs are anchored to source spans (`startOffset`/`endOffset`), editors render them directly (the website CodeMirror reddens the failing source span and shows `actual: …` on hover). These diffs are the basis of the emerging shared run-result format consumed by the editor, the LSP, and future HTML overlays.
+Because the diffs are anchored to source spans (`startOffset`/`endOffset`), editors render them directly (the website CodeMirror reddens the failing source span and shows `actual: …` on hover). These diffs are the basis of the run-result format — a cross-port contract (ADR 0014), documented at [Run results](https://varar.dev/reference/run-results/) and consumed by the editor, the LSP, CI gates and attestation pipelines.
 
 ## What's intentionally absent
 

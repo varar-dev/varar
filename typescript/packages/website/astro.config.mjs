@@ -108,6 +108,7 @@ export default defineConfig({
             'reference/sensors',
             'reference/custom-parameters',
             'reference/editor-support',
+            'reference/run-results',
             'reference/example-projects',
           ],
         },
