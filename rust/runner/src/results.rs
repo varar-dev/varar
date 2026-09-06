@@ -27,6 +27,20 @@ pub fn write_oath_results(root: &Path, results: &OathResults) -> std::io::Result
     Ok(out)
 }
 
+/// Sorts examples into document order.
+///
+/// A test framework reports examples in ITS order — `cargo test` runs them in
+/// parallel, so the order results are recorded in is not the order they appear
+/// in the oath. The file is a cross-port contract read by tools that diff runs,
+/// so it is written in document order everywhere. The name breaks ties for
+/// examples sharing a line.
+fn document_order(examples: &mut [ExampleResult]) {
+    examples.sort_by(|a, b| {
+        let line = |e: &ExampleResult| e.lines.first().copied().unwrap_or(0);
+        line(a).cmp(&line(b)).then_with(|| a.name.cmp(&b.name))
+    });
+}
+
 /// Accumulates each oath's example results across a run, then writes them.
 ///
 /// `cargo test` reports one test at a time and has no end-of-run hook of its
@@ -58,10 +72,11 @@ impl Results {
     /// a read-only or missing workspace must not fail a test run whose results
     /// are otherwise fine — the editor simply shows nothing for it.
     pub fn flush_all(&mut self, root: &Path) {
-        for (oath_path, examples) in std::mem::take(&mut self.examples) {
+        for (oath_path, mut examples) in std::mem::take(&mut self.examples) {
             let Some(source) = self.sources.get(&oath_path) else {
                 continue;
             };
+            document_order(&mut examples);
             let results = OathResults {
                 version: 1,
                 oath_path: oath_path.clone(),
