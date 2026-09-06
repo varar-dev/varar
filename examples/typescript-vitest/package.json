@@ -10,7 +10,7 @@
     "varar": "varar run"
   },
   "devDependencies": {
-    "@types/node": "^26.1.2",
+    "@types/node": "^26.4.1",
     "@varar/cli": "workspace:*",
     "@varar/core": "workspace:*",
     "@varar/varar": "workspace:*",

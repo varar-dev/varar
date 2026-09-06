@@ -19,7 +19,7 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@cucumber/cucumber-expressions": "^20.0.0"
+    "@cucumber/cucumber-expressions": "^20.1.0"
   },
   "publishConfig": {
     "exports": {
