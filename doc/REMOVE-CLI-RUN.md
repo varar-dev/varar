@@ -1,7 +1,14 @@
 # Remove `varar run` from the TypeScript CLI
 
 Migration plan for deleting the standalone runner, leaving `varar` as
-`init` + `lint`. Status: planned 2026-09-06. Branch: `plan/remove-cli-run`.
+`init` + `lint`.
+
+**Status: done (2026-09-06).** All four phases landed on `plan/remove-cli-run`.
+The one design question left open — where the reporter's baseline comes from —
+was settled in favour of the **runtime** plan, shipped from the worker on
+file-level task meta; see
+[ADR 0015](adr/0015-the-reporter-writes-what-the-plugin-may-not.md) for the
+reasoning and the alternatives. Kept as the record of why.
 
 ## Why
 

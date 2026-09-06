@@ -21,7 +21,7 @@
     },
     "run": {
       "lang": "bash",
-      "code": "pnpm exec varar run"
+      "code": "pnpm vitest run"
     }
   },
   {

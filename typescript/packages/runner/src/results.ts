@@ -6,13 +6,13 @@ import { type ExampleResult, hashSource, type OathResults } from '@varar/core'
  * Persists run results for the language server (ADR 0014) — the shell half of
  * the contract the core builds the payload for.
  *
- * Lives in the runner, not in an adapter, so every producer in this port feeds
- * the same writer: the vitest reporter and `varar run` alike. That is how the
- * other ports are arranged (python/packages/runner/results.py,
- * ruby/packages/runner/lib/varar/runner/results.rb, rust/runner/src/results.rs)
- * — and while it lived inside @varar/vitest, the CLI structurally could not
- * reach it, so `varar run` persisted nothing and the LSP stayed blank after a
- * CLI run while every other port's runner filled it in.
+ * Lives in the runner, not in an adapter, so every producer feeds the same
+ * writer — which is how the other ports are arranged too
+ * (python/packages/runner/results.py,
+ * ruby/packages/runner/lib/varar/runner/results.rb, rust/runner/src/results.rs).
+ * While it lived inside @varar/vitest instead, anything that was not the vitest
+ * adapter structurally could not reach it, and the LSP stayed blank after those
+ * runs while every other port's runner filled it in.
  */
 
 /** Absolute filepath → POSIX oath path relative to cwd. */

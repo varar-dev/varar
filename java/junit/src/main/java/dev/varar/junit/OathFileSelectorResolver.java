@@ -368,8 +368,7 @@ final class OathFileSelectorResolver implements SelectorResolver {
     /**
      * Reconciles {@code fileDescriptor}'s oath against {@code varar.lock.json} and adds one failing
      * {@link DriftDescriptor} per drift. The oath path used as the baseline key is {@link
-     * OathFileDescriptor#oathPath()} — the same relative, POSIX-separated path {@code varar run} and
-     * the other ports key by.
+     * OathFileDescriptor#oathPath()} — the same relative, POSIX-separated path every port keys by.
      */
     private void addDriftChildren(
             OathFileDescriptor fileDescriptor, TestSource fileSource, String content, Plan.ExecutionPlan plan) {

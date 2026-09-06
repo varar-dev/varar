@@ -5,7 +5,7 @@ description: What `varar lint` checks, what it reports, the exit code it gives C
 
 `varar lint` checks your oaths against the step definitions they bind to,
 without running anything. It parses and plans every oath the config discovers,
-using the same registry [`varar run`](/reference/examples/) uses — so it sees
+using the same registry your [test runner](/reference/examples/) uses — so it sees
 what the runner would see, minus the execution.
 
 ```bash

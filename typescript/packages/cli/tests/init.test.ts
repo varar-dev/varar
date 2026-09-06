@@ -74,7 +74,7 @@ test('creates a package.json with "type": "module" when the project has none', a
 
 test('adds "type": "module" to a package.json that declares no type, keeping its other fields', async () => {
   // The `npm init -y` case: the scaffolded .steps.ts is an ES module, so
-  // without this `varar run` fails with "Cannot use import statement outside a
+  // without this the runner fails with "Cannot use import statement outside a
   // module".
   const dir = mkdtempSync(join(tmpdir(), 'varar-init-addtype-'))
   try {

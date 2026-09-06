@@ -3,7 +3,7 @@
 Today it offers a single sub-command, `varar init`, which scaffolds a new
 project: a `varar.config.json`, one Markdown oath, and its step definitions.
 Oaths then run through pytest (`pytest-varar`) or unittest — there is no
-`varar run` in the Python port; the test framework is the runner.
+a standalone runner in the Python port; the test framework is the runner.
 
 The scaffold mirrors the TypeScript CLI (`@varar/varar-cli`) byte-for-byte
 except for the steps file, so a project started with `varar init` looks the same

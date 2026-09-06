@@ -13,7 +13,7 @@ import { createTsDiagnostics } from '../src/lib/ts-diagnostics.ts'
 // diagnostics with the service's lenient options — assert only on messages
 // that are NOT unresolved-module noise for the domain module. Matched without
 // the extension: the sample carries an explicit `.ts` (Node's ESM resolver
-// needs it, so `varar run` can load the steps), but the filter should not
+// needs it, so the runner can load the steps), but the filter should not
 // depend on that.
 function realProblems(tsd: ReturnType<typeof createTsDiagnostics>, name: string, source: string) {
   tsd.updateDoc(name, source)
