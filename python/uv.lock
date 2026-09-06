@@ -119,11 +119,11 @@ toml = [
 
 [[package]]
 name = "cucumber-expressions"
-version = "20.0.0"
+version = "20.1.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/a2/a6/eaac4ff3afdc776a4d3e0ef29c79db1c9faf11c423175771e225bcef9c84/cucumber_expressions-20.0.0.tar.gz", hash = "sha256:5cbd4012c66584aa82ada990a6e7cb131274796e132e905d27d95ae9a2ca0f48", size = 13738, upload-time = "2026-06-11T07:13:43.691Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/58/a3/001d7725688d5f8ae7d73d746457c9d11b851a4bad3a315dc7762144ec96/cucumber_expressions-20.1.0.tar.gz", hash = "sha256:0d216ec26e36c71b3e5643f2e72c41f9b266ef04eaa0c7e47a6e3b2caf523b1a", size = 13826, upload-time = "2026-08-05T20:16:52.542Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/75/24/e403585f201d30ab561d8a971a1adc4de28123fb9bf2f9813650fda8ddb0/cucumber_expressions-20.0.0-py3-none-any.whl", hash = "sha256:8a0434529efd7ca6e2052934ec8d677c7e24edc0fad3b1d1b1bc4bbca5e521f3", size = 20236, upload-time = "2026-06-11T07:13:42.667Z" },
+    { url = "https://files.pythonhosted.org/packages/ea/b1/fba2393968001b2307facb76e0bc47be5c67185df752a8f5b61926d26760/cucumber_expressions-20.1.0-py3-none-any.whl", hash = "sha256:640782ebaef82313dc64e4684d0e5c5efbab0611b23f0cfad64f90c7041cf73d", size = 20230, upload-time = "2026-08-05T20:16:51.565Z" },
 ]
 
 [[package]]
@@ -303,7 +303,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
-    { name = "cucumber-expressions", specifier = "==20.0.0" },
+    { name = "cucumber-expressions", specifier = "==20.1.0" },
     { name = "varar-core", editable = "packages/core" },
 ]
 
@@ -321,7 +321,7 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "cucumber-expressions", specifier = "==20.0.0" }]
+requires-dist = [{ name = "cucumber-expressions", specifier = "==20.1.0" }]
 
 [[package]]
 name = "varar-runner"
