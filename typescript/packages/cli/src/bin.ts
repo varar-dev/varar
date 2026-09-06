@@ -25,6 +25,7 @@ async function main(): Promise<void> {
           'Usage:',
           '  varar run [globs]        run markdown oath examples (no test runner)',
           '  varar run --update       accept drift and re-record varar.lock.json',
+          '  varar run --json         print the run as JSON (run results, on stdout)',
           '  varar lint [globs]       check oaths against their step definitions',
           '  varar init               scaffold a new project',
           '',
@@ -42,7 +43,12 @@ async function main(): Promise<void> {
       break
     }
     case 'run': {
-      const result = await runRun({ ...io, globs, update: parsed.flags.update === true })
+      const result = await runRun({
+        ...io,
+        globs,
+        update: parsed.flags.update === true,
+        json: parsed.flags.json === true,
+      })
       process.exitCode = result.exitCode
       break
     }

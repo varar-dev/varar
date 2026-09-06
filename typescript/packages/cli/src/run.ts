@@ -1,7 +1,16 @@
 import { readFileSync } from 'node:fs'
 import { relative, sep } from 'node:path'
 import { findFiles, loadConfig } from '@varar/config'
-import { type Diagnostic, driftDiagnostics, pruneBaselines, reconcileDrift } from '@varar/core'
+import {
+  type Diagnostic,
+  driftDiagnostics,
+  type ExampleResult,
+  hashSource,
+  type OathResults,
+  pruneBaselines,
+  reconcileDrift,
+  toFailure,
+} from '@varar/core'
 import { createFileBaselineStore, examplesWithRuns, loadSteps, planOath } from '@varar/runner'
 
 export type RunOptions = {
@@ -12,6 +21,10 @@ export type RunOptions = {
   // Accept all current drift and re-record the baseline (snapshot-update
   // semantics). Also enabled by the VARAR_UPDATE environment variable.
   readonly update?: boolean
+  // Print the run as JSON on stdout instead of the ✓/✗ report: one OathResults
+  // per oath, the same payload the adapters persist to .varar/<oath>.json
+  // (ADR 0014). Diagnostics stay on stderr, so stdout is always parseable.
+  readonly json?: boolean
 }
 
 export type RunResult = { readonly exitCode: number }
@@ -31,6 +44,12 @@ export async function runRun(opts: RunOptions): Promise<RunResult> {
   let passed = 0
   let failed = 0
   let errorDiagnostics = 0
+  // Human-readable output only: in --json mode stdout carries the payload and
+  // nothing else, or a consumer cannot parse it.
+  const report = (s: string) => {
+    if (opts.json !== true) opts.writeStdout(s)
+  }
+  const results: OathResults[] = []
 
   for (const path of oathFiles) {
     const source = readFileSync(path, 'utf8')
@@ -47,19 +66,37 @@ export async function runRun(opts: RunOptions): Promise<RunResult> {
     const items = examplesWithRuns(execution, createContext, reporter)
 
     const rel = relative(opts.cwd, path) || path
-    opts.writeStdout(`${rel}\n`)
+    report(`${rel}\n`)
+    const examples: ExampleResult[] = []
     for (const { example, run } of items) {
       const start = Date.now()
+      // The same shape the vitest runtime records, built from the same plan —
+      // one producer's worth of code, so a CLI run and a vitest run describe an
+      // identical outcome identically.
+      const lines = [...new Set(example.steps.map((s) => s.matchSpan.startLine))]
       try {
         await run()
-        opts.writeStdout(`  ✓ ${example.name} (${Date.now() - start}ms)\n`)
+        report(`  ✓ ${example.name} (${Date.now() - start}ms)\n`)
+        examples.push({ name: example.name, status: 'passed', lines })
         passed++
       } catch (err) {
-        opts.writeStdout(`  ✗ ${example.name} (${Date.now() - start}ms)\n`)
-        opts.writeStdout(`${indent(formatError(err), '      ')}\n`)
+        report(`  ✗ ${example.name} (${Date.now() - start}ms)\n`)
+        report(`${indent(formatError(err), '      ')}\n`)
+        examples.push({
+          name: example.name,
+          status: 'failed',
+          lines,
+          failure: toFailure(err, path, lines[0] ?? 0),
+        })
         failed++
       }
     }
+    results.push({
+      version: 1,
+      oathPath: (relative(opts.cwd, path) || path).split(sep).join('/'),
+      sourceHash: hashSource(source),
+      examples,
+    })
 
     // Reconcile drift against the committed baseline. On a clean run this
     // records/updates varar.lock.json; an unacknowledged drift is reported as an
@@ -92,14 +129,19 @@ export async function runRun(opts: RunOptions): Promise<RunResult> {
     )
   }
 
-  const total = passed + failed
-  opts.writeStdout(
-    `\n${total} example${total === 1 ? '' : 's'}, ${passed} passed, ${failed} failed`,
-  )
-  if (errorDiagnostics > 0) {
-    opts.writeStdout(`, ${errorDiagnostics} diagnostic${errorDiagnostics === 1 ? '' : 's'}`)
+  if (opts.json === true) {
+    // One document rather than a line-per-oath stream: a run is bounded, the
+    // records are small, and `JSON.parse(stdout)` (or a bare `jq`) beats making
+    // every consumer reassemble NDJSON. Order follows the oaths as discovered.
+    opts.writeStdout(`${JSON.stringify(results, null, 2)}\n`)
   }
-  opts.writeStdout('\n')
+
+  const total = passed + failed
+  report(`\n${total} example${total === 1 ? '' : 's'}, ${passed} passed, ${failed} failed`)
+  if (errorDiagnostics > 0) {
+    report(`, ${errorDiagnostics} diagnostic${errorDiagnostics === 1 ? '' : 's'}`)
+  }
+  report('\n')
 
   return { exitCode: failed > 0 || errorDiagnostics > 0 ? 1 : 0 }
 }
