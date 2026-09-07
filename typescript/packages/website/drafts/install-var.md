@@ -54,16 +54,16 @@ I greet "world". The greeting should be "Hello, world!".
 ## Run it
 
 ```bash
-pnpm exec varar run
+pnpm vitest run
 ```
 
 The freshly scaffolded example passes:
 
 ```
-varar/hello-varar.md
-  ✓ Hello, Varar
+✓ varar/hello-varar.md (1 test) 1ms
 
-1 example, 1 passed
+Test Files  1 passed (1)
+     Tests  1 passed (1)
 ```
 
 ## Watch it fail on purpose
@@ -77,27 +77,27 @@ produces:
 stimulus('I greet {string}', (_state, name) => ({ greeting: `Hi, ${name}!` }))
 ```
 
-Run var again:
+Run it again:
 
 ```bash
-pnpm exec varar run
+pnpm vitest run
 ```
 
 Now the oath is *broken* — the oath still says `"Hello, world!"`, but the step
 produces something else:
 
 ```
-varar/hello-varar.md
-  ✗ Hello, Varar
-      expected "Hello, world!", actual "Hi, world!"
+× varar/hello-varar.md > Hello, Varar
+  → expected "Hello, world!", actual "Hi, world!"
 
-1 example, 0 passed, 1 failed
+Test Files  1 failed (1)
+     Tests  1 failed (1)
 ```
 
 Revert the change and run once more. The oath is *kept* again:
 
 ```
-1 example, 1 passed
+Test Files  1 passed (1)
 ```
 
 ## Next

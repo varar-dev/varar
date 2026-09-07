@@ -27,7 +27,8 @@ type Item = {
 /**
  * Check the oaths against the step definitions they bind to.
  *
- * Lint plans every discovered oath with the SAME registry `varar run` uses — it
+ * Lint plans every discovered oath with the SAME registry the test-runner
+ * adapter uses — it
  * loads the step files first. It used to plan against an empty registry, which
  * meant it could not see an ambiguous match (that needs two definitions) and
  * flagged every `error` fence as orphaned even when a step matched perfectly.
@@ -35,7 +36,7 @@ type Item = {
  * What lint deliberately does NOT report is a sentence that matches nothing.
  * That is prose, by design — the whole point of a Varar oath is that most of the
  * document is documentation. A sentence that USED to be an example is caught by
- * drift detection against varar.lock.json (`varar run`), not here.
+ * drift detection against varar.lock.json (the runner adapter), not here.
  */
 export async function runLint(opts: LintOptions): Promise<LintResult> {
   const cfg = await loadConfig(opts.cwd)

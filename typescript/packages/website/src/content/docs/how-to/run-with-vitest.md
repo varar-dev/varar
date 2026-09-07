@@ -81,13 +81,15 @@ CI reporting, next to your ordinary `*.test.ts` files.
 ## Accept drift
 
 When a paragraph that used to be an example stops matching any step, the run
-fails as [drift](/reference/examples/#drift-detection). The plugin only *reads*
-the baseline, so accepting it takes two steps:
+fails as [drift](/reference/examples/#drift-detection). Accepting it is one
+command — the same one every other port uses:
 
 ```bash
-VARAR_UPDATE=1 npx vitest run   # let this run go green
-npx varar run --update          # re-record varar.lock.json
+VARAR_UPDATE=1 npx vitest run   # go green AND re-record varar.lock.json
 ```
+
+The plugin never writes during a transform; the reporter records the baseline at
+the end of the run.
 
 Commit the updated `varar.lock.json` — that is what makes the acknowledgment
 visible in review.

@@ -11,7 +11,11 @@ const repoRoot = new URL('..', import.meta.url).pathname
 export default defineConfig({
   test: {
     projects: ['packages/*/vitest.config.ts', '../examples/typescript-vitest/vitest.config.ts'],
-    reporters: ['default', new VararResultsReporter({ cwd: repoRoot })],
+    // writeBaseline: false — examples/typescript-vitest owns its own
+    // varar.lock.json, recorded when its suite runs standalone (which is what
+    // the adapter smoke contract does). Recording a second one here, keyed by
+    // the longer repo-root path, would produce a lock nothing reads.
+    reporters: ['default', new VararResultsReporter({ cwd: repoRoot, writeBaseline: false })],
     // Coverage is root-level in vitest 4 workspace mode, like reporters.
     // Opt-in via `pnpm test:coverage`; reports land in coverage/ (text
     // summary + HTML + lcov for editor/CI integrations).

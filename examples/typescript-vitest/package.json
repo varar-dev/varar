@@ -6,12 +6,10 @@
   "packageManager": "pnpm@12.3.4",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "test": "vitest run",
-    "varar": "varar run"
+    "test": "vitest run"
   },
   "devDependencies": {
     "@types/node": "^26.4.1",
-    "@varar/cli": "workspace:*",
     "@varar/core": "workspace:*",
     "@varar/varar": "workspace:*",
     "@varar/vitest": "workspace:*",

@@ -43,7 +43,7 @@ command and asserts:
 | `baseline-committed` | `varar.lock.json` is tracked by git | a project that ships no baseline, so the gate is armed against nothing |
 | `baseline-complete` | one lock entry per oath on disk | discovery that silently covers a subset, or nothing |
 | `drift-detected` | with a drifted baseline the suite exits non-zero, naming the drift and the paragraph | **the adapter never reconciles at all — #69** |
-| `drift-accepted` | `VARAR_UPDATE=1` exits zero, and a reconciling adapter re-records the baseline byte-identically | a missing acknowledgment path; a divergent lock serializer |
+| `drift-accepted` | `VARAR_UPDATE=1` exits zero and re-records the baseline byte-identically | a missing acknowledgment path; a divergent lock serializer |
 | `baseline-pruned` | accepting drift also drops entries for oaths the config no longer discovers | the lock hoarding dead paths forever ([#70][]) |
 
 [#70]: https://github.com/varar-dev/varar/issues/70
@@ -75,9 +75,7 @@ entry keyed at `deep-thought.md`, the pre-`varar/` location these samples
 actually migrated from. It is well-formed in every respect except that no `docs`
 glob matches it any more.
 
-Note that `baseline-pruned` only runs for `reconcile` adapters. `@varar/vitest`
-never writes the lock at all, so for `examples/typescript-vitest` the pruning
-path lives in `varar run` and is covered by `@varar/cli`'s own tests instead.
+`baseline-pruned` runs for every adapter: they all reconcile.
 
 ## Registering an adapter
 
@@ -87,8 +85,7 @@ Add an entry to `projects.json`:
 {
   "dir": "examples/go-gotest",
   "adapter": "varar/go/gotest",
-  "command": "go test -count=1 ./...",
-  "baseline": "reconcile"
+  "command": "go test -count=1 ./..."
 }
 ```
 
@@ -99,14 +96,12 @@ why `go` carries `-count=1` and the Gradle projects carry `cleanTest`. If you
 add a port, check this deliberately — a cached green here looks identical to a
 real one.
 
-**`baseline`** is how the adapter treats the lock file:
-
-- `reconcile` — reads *and* rewrites it on a clean run. Every adapter but one.
-- `gate` — read-only. `@varar/vitest` only, because its plugin is a build-time
-  Vite transform and its runtime executes in parallel workers; either would be
-  the wrong place to write a single shared file. The baseline is recorded by
-  `varar run` instead, which is why `examples/typescript-vitest` depends on
-  `@varar/cli`.
+**Every adapter reconciles the lock file** — reads it, gates on drift, and
+rewrites it on a clean run. `@varar/vitest` was the last holdout: its plugin is a
+build-time Vite transform and its runtime executes in parallel workers, so
+neither may write a single shared file. Its *reporter* may, and does, in the
+main process at the end of the run — the same moment pytest, JUnit, RSpec, cargo
+and vstest write theirs.
 
 ## Where it runs
 

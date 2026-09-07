@@ -295,8 +295,8 @@ The distinction is deliberate:
 
 ### The baseline file
 
-`varar.lock.json` is written and updated by `varar run` in the directory it runs
-in. **Commit it.** Drift detection needs history to tell intentional prose from a
+`varar.lock.json` is written and updated by your test runner, in the directory
+it runs in. **Commit it.** Drift detection needs history to tell intentional prose from a
 regression, and having the baseline in version control is what makes an
 acknowledgment visible in review instead of swallowed.
 
@@ -307,7 +307,6 @@ snapshot:
 
 | Runner | Accept drift with |
 | ------ | ----------------- |
-| `varar run` | `varar run --update`, or `VARAR_UPDATE=1` |
 | vitest | `VARAR_UPDATE=1` |
 | pytest | `--varar-update`, or `VARAR_UPDATE=1` |
 | unittest, minitest, RSpec, `go test`, `cargo test` | `VARAR_UPDATE=1` |
@@ -315,10 +314,9 @@ snapshot:
 
 `VARAR_UPDATE` accepts `1` or `true`.
 
-Every runner records the baseline on a clean run, with one exception: the
-**vitest plugin only reads it**. Under vitest, `VARAR_UPDATE=1` lets the run go
-green but does not re-record — run `varar run --update` to write the new
-baseline, then commit it. Editors can also accept a single drifted example — see
+Every runner records the baseline on a clean run, and `VARAR_UPDATE=1` both
+lets a drifted run go green and re-records it. Commit the result. Editors can
+also accept a single drifted example — see
 [Accept as prose](/reference/editor-support/).
 
 An unacknowledged drift never rewrites the baseline: the old entry stays, so the
@@ -334,7 +332,7 @@ it looks exactly like success — a green suite testing less than it claims.
 
 A plain "missing step" warning in an editor doesn't close the gap: a developer
 who never opens the editor never sees it, and CI never gates on it. Drift
-detection lives in the runner, so the same `vitest` / `pytest` / `varar run` that
+detection lives in the runner, so the same `vitest` / `pytest` / `go test` that
 proves your examples pass also proves that your examples are *still examples*.
 Distinguishing intentional prose (never matched) from a regression (stopped
 matching) needs history, which is exactly what the fingerprinted baseline

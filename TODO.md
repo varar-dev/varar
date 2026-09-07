@@ -66,7 +66,6 @@
 - [ ] `varar lint` async `glob` crashes on symlinks (Node 22 bug). Run.ts already
       switched to `globSync`; lint.ts and the LSP store still use the buggy
       `node:fs/promises.glob`. Hoist together with the findFiles cleanup.
-- [ ] `varar run` Phase 2 polish: colors, file grouping summary, `--quiet`.
   - [ ] CellMismatchError: arg 1: expected "Hello, world!" but was Hello, worlsd!
     - [ ] Quotes
     - [ ] arg 1
@@ -97,7 +96,7 @@
 ## Runner
 
 - [x] Vitest runner
-- [x] CLI runner (`varar run`): ~0.74 s wall on the cucumber sample, ~2× faster
+- [x] CLI runner (`varar run`, since removed): ~0.74 s wall on the cucumber sample, ~2× faster
       than the vitest path (~1.5 s) and slightly faster than cucumber-js
       (~0.85 s). See `packages/cucumber/README.md`.
 - [x] Cucumber.js comparison documented in `packages/cucumber/README.md`

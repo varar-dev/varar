@@ -71,14 +71,13 @@ run_contract() {
   local dir="$1"
   local abs="$REPO_ROOT/$dir"
   local lock="$abs/varar.lock.json"
-  local project command baseline adapter
+  local project command adapter
   project="$(jq -r --arg d "$dir" '.projects[] | select(.dir == $d)' "$MANIFEST")"
   [ -n "$project" ] || fail "$dir is not registered in conformance/adapter/projects.json"
   command="$(jq -r '.command' <<<"$project")"
-  baseline="$(jq -r '.baseline' <<<"$project")"
   adapter="$(jq -r '.adapter' <<<"$project")"
 
-  printf '\n%s (%s, baseline=%s)\n' "$dir" "$adapter" "$baseline"
+  printf '\n%s (%s)\n' "$dir" "$adapter"
 
   # Precondition: a lock that is already dirty makes every later diff meaningless.
   if ! git -C "$REPO_ROOT" diff --quiet -- "$dir/varar.lock.json" 2>/dev/null; then
@@ -146,41 +145,35 @@ run_contract() {
       "Command: VARAR_UPDATE=1 $command" \
       "Got:" "$(tail -n 20 <<<"$output")"
   fi
-  if [ "$baseline" = "reconcile" ]; then
-    # A reconciling adapter must have re-recorded the baseline — byte-identically to the
-    # committed one, since accepting the probe just removes it again. This is what pins every
-    # port to the same canonical varar.lock.json serializer.
-    if ! git -C "$REPO_ROOT" diff --quiet -- "$dir/varar.lock.json"; then
-      fail "$dir: VARAR_UPDATE=1 accepted the drift but did not re-record the baseline" \
-        "$(git -C "$REPO_ROOT" diff -- "$dir/varar.lock.json" | head -n 30)"
-    fi
-    pass "drift-accepted (baseline re-recorded)"
-  else
-    pass "drift-accepted (read-only gate — baseline is written by \`varar run\`)"
+  # The adapter must have re-recorded the baseline — byte-identically to the committed one,
+  # since accepting the probe just removes it again. This is what pins every port to the same
+  # canonical varar.lock.json serializer.
+  if ! git -C "$REPO_ROOT" diff --quiet -- "$dir/varar.lock.json"; then
+    fail "$dir: VARAR_UPDATE=1 accepted the drift but did not re-record the baseline" \
+      "$(git -C "$REPO_ROOT" diff -- "$dir/varar.lock.json" | head -n 30)"
   fi
+  pass "drift-accepted (baseline re-recorded)"
 
   # 5. baseline-pruned — accepting drift must also drop entries for oaths the config no
   #    longer discovers. Without this the lock silently accumulates dead paths: moving the
   #    oaths into varar/ left every port's lock carrying both the old root-level keys and the
   #    new ones, and the only cure was deleting the file (#70). Removal is still not *gated*
   #    (a deleted oath is not drift, per ADR 0002) — dead state is just no longer preserved.
-  if [ "$baseline" = "reconcile" ]; then
-    DIRTIED_LOCK="$dir/varar.lock.json"
-    inject_stale_oath "$lock"
-    output="$(cd "$abs" && VARAR_UPDATE=1 eval "$command" 2>&1)" && status=0 || status=$?
-    if [ "$status" -ne 0 ]; then
-      fail "$dir: the suite failed with a stale lock entry present" \
-        "A path the config no longer discovers must not break the run." \
-        "Got:" "$(tail -n 20 <<<"$output")"
-    fi
-    if ! git -C "$REPO_ROOT" diff --quiet -- "$dir/varar.lock.json"; then
-      fail "$dir: VARAR_UPDATE=1 did not prune the entry for a deleted oath" \
-        "The lock still lists a path that varar.config.json no longer matches." \
-        "$(git -C "$REPO_ROOT" diff -- "$dir/varar.lock.json" | head -n 20)"
-    fi
-    pass "baseline-pruned"
-    restore_lock
+  DIRTIED_LOCK="$dir/varar.lock.json"
+  inject_stale_oath "$lock"
+  output="$(cd "$abs" && VARAR_UPDATE=1 eval "$command" 2>&1)" && status=0 || status=$?
+  if [ "$status" -ne 0 ]; then
+    fail "$dir: the suite failed with a stale lock entry present" \
+      "A path the config no longer discovers must not break the run." \
+      "Got:" "$(tail -n 20 <<<"$output")"
   fi
+  if ! git -C "$REPO_ROOT" diff --quiet -- "$dir/varar.lock.json"; then
+    fail "$dir: VARAR_UPDATE=1 did not prune the entry for a deleted oath" \
+      "The lock still lists a path that varar.config.json no longer matches." \
+      "$(git -C "$REPO_ROOT" diff -- "$dir/varar.lock.json" | head -n 20)"
+  fi
+  pass "baseline-pruned"
+  restore_lock
 
   # 6. run-results-written — the adapter must persist .varar/<oath>.json for every oath it
   #    ran (ADR 0014). The wire corpus pins the SHAPE of that payload, but each port builds

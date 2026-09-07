@@ -1,10 +1,10 @@
 import { join } from 'node:path'
-import { hashSource } from '@varar/core'
+import { hashSource, type OathBaseline } from '@varar/core'
 // buildOathResults/resultFilePath/toOathPath live in @varar/runner: the CLI and
 // this reporter are two adapters of one port and must write identical records.
 import { buildOathResults, resultFilePath, toOathPath } from '@varar/runner'
 import { describe, expect, test } from 'vitest'
-import { collectFromModules } from '../src/reporter.ts'
+import { collectBaselines, collectFromModules, mergeLockFile } from '../src/reporter.ts'
 
 const passed = { name: 'A', status: 'passed' as const, lines: [3] }
 const failed = {
@@ -57,5 +57,40 @@ describe('path helpers', () => {
   })
   test('resultFilePath mirrors the oath path under .varar/', () => {
     expect(resultFilePath('docs/a.md', '/cwd')).toBe(join('/cwd', '.varar', 'docs/a.md.json'))
+  })
+})
+
+const baselineA: OathBaseline = { sourceHash: 'ha', examples: [{ name: 'A', line: 3 }] }
+const baselineB: OathBaseline = { sourceHash: 'hb', examples: [{ name: 'B', line: 5 }] }
+
+describe('collectBaselines', () => {
+  test('reads the derived baseline off each module’s own meta', () => {
+    const modules = [
+      { moduleId: '/cwd/docs/a.md', meta: () => ({ vararBaseline: baselineA }) },
+      // An oath whose drift was not acknowledged parks nothing, so its
+      // committed entry must survive untouched.
+      { moduleId: '/cwd/docs/drifted.md', meta: () => ({}) },
+    ]
+    const byFile = collectBaselines(modules)
+    expect([...byFile.keys()]).toEqual(['/cwd/docs/a.md'])
+    expect(byFile.get('/cwd/docs/a.md')).toEqual(baselineA)
+  })
+})
+
+describe('mergeLockFile', () => {
+  test('a filtered run rewrites only what ran and keeps the rest', () => {
+    const current = {
+      version: 2 as const,
+      oaths: { 'docs/a.md': baselineA, 'docs/b.md': baselineB },
+    }
+    const merged = mergeLockFile(current, new Map([['docs/a.md', baselineB]]))
+    expect(merged.oaths).toEqual({ 'docs/a.md': baselineB, 'docs/b.md': baselineB })
+  })
+
+  test('records into an absent lock', () => {
+    expect(mergeLockFile(null, new Map([['docs/a.md', baselineA]]))).toEqual({
+      version: 2,
+      oaths: { 'docs/a.md': baselineA },
+    })
   })
 })

@@ -41,7 +41,7 @@ VARAR_UPDATE=1 pnpm test   # accept drift instead of failing
 - **`src/yahtzee.ts`** and **`src/roman-numerals.ts`** are the sample's
   domain code (the system under test), imported by the steps like any other
   module. Relative imports carry an explicit `.ts` extension because
-  `varar run` loads the step files through Node's ESM resolver, which does not
+  Node's ESM resolver loads the step files, and it does not
   guess extensions.
 
 ## Versioning note

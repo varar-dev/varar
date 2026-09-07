@@ -201,7 +201,7 @@ export function pruneLockFile(lock: LockFile, keepPaths: ReadonlyArray<string>):
 // the oath set (#70).
 //
 // `keepPaths` MUST be everything the `docs` globs currently match — never the set
-// the run happened to execute. Runs are routinely filtered (`varar run --globs`,
+// the run happened to execute. Runs are routinely filtered (a vitest file filter,
 // a pytest path argument, a JUnit method selector), and pruning against a
 // filtered set would delete live baselines.
 //

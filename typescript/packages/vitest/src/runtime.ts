@@ -1,5 +1,6 @@
 import {
   type CellDiff,
+  deriveOathBaseline,
   detectDrift,
   driftDiagnostics,
   isCellMismatchError,
@@ -24,11 +25,22 @@ export type CollectPorts = {
   readonly expectedCount?: number
   // This oath's committed drift baseline (from varar.lock.json), injected by the
   // plugin. When present, drift is detected and reported as a diagnostic (a
-  // failing `varar:diagnostic:drift` test) — a read-only gate. The baseline is
-  // written only by `varar run`; VARAR_UPDATE=1 skips the gate so you can
-  // re-record it there without vitest going red first.
+  // failing `varar:diagnostic:drift` test). VARAR_UPDATE=1 accepts all drift:
+  // the gate is skipped and the baseline is re-recorded by the reporter at the
+  // end of the run.
   readonly baseline?: OathBaseline | null
 }
+
+// Baselines derived at collection time, keyed by oath path, waiting for a test
+// body to attach them to the file's task meta (the only channel out of the
+// worker). Module-scoped because one worker collects several oaths; an entry is
+// consumed on first attach, so a re-collected oath (watch mode) always parks a
+// freshly derived baseline rather than reusing a stale one.
+const pendingBaselines = new Map<string, OathBaseline>()
+
+// The key the file-level task meta carries the derived baseline under. The
+// reporter reads it back through vitest's TestModule.meta().
+export const VARAR_BASELINE_META = 'vararBaseline'
 
 export type CollectedExample = {
   readonly name: string
@@ -55,17 +67,21 @@ export function collectVararExamples(
   }
   const registry = buildRegistry()
   const p = planOath(path, source, registry)
-  // Read-only drift gate: a paragraph the baseline recorded as an example that
-  // now matches no step surfaces as a drift diagnostic (a failing test) unless
-  // VARAR_UPDATE is set (then re-record via `varar run --update`).
-  if (ports.baseline) {
-    const update = process.env.VARAR_UPDATE === '1' || process.env.VARAR_UPDATE === 'true'
-    if (!update) {
-      for (const d of driftDiagnostics(detectDrift(ports.baseline, p.doc, p))) {
-        reporter.diagnostic(d)
-      }
-    }
-  }
+  // Drift reconciliation, split across the process boundary. Detection happens
+  // HERE, against the runtime plan — the same plan every other port reconciles
+  // from (RSpec at describe time, JUnit in its selector resolver). A paragraph
+  // the baseline recorded as an example that now matches no step surfaces as a
+  // drift diagnostic (a failing test); VARAR_UPDATE=1 accepts all drift and
+  // skips the gate.
+  //
+  // The WRITE cannot happen here: this runs per oath, in a worker, in parallel.
+  // So a clean (or accepted) run derives the new baseline and parks it for the
+  // reporter, which writes varar.lock.json once, in the main process, at the end
+  // of the run. An unacknowledged drift parks nothing, so the old entry stands.
+  const update = process.env.VARAR_UPDATE === '1' || process.env.VARAR_UPDATE === 'true'
+  const drifts = update ? [] : detectDrift(ports.baseline ?? undefined, p.doc, p)
+  for (const d of driftDiagnostics(drifts)) reporter.diagnostic(d)
+  if (drifts.length === 0) pendingBaselines.set(path, deriveOathBaseline(source, p.doc, p))
   const examples = examplesWithRuns(p, contextFactory(), reporter).map(({ example, run }) => ({
     name: example.name,
     lines: [...new Set(example.steps.map((s) => s.matchSpan.startLine))],
@@ -82,9 +98,29 @@ export function collectVararExamples(
   return examples
 }
 
-// Structural slice of vitest's TestContext — enough to attach vararResult
-// without importing vitest types into the runtime.
-type TaskContext = { readonly task: { readonly meta: { vararResult?: unknown } } }
+// Structural slice of vitest's TestContext — enough to attach vararResult (per
+// test) and the derived baseline (once per file) without importing vitest types
+// into the runtime.
+type TaskContext = {
+  readonly task: {
+    readonly meta: { vararResult?: unknown }
+    readonly file?: { readonly meta: Record<string, unknown> }
+  }
+}
+
+// Hand the collection-time baseline to the main process on the FILE's task meta,
+// where the reporter reads it as TestModule.meta(). Per file, not per test: the
+// baseline lists every example, so attaching it to each test would make the
+// worker→reporter payload quadratic in a header-bound table's row count.
+// Deleting on attach makes this a one-shot per collection.
+function attachBaseline(ctx: TaskContext, path: string): void {
+  const fileMeta = ctx.task.file?.meta
+  if (!fileMeta) return
+  const baseline = pendingBaselines.get(path)
+  if (!baseline) return
+  pendingBaselines.delete(path)
+  fileMeta[VARAR_BASELINE_META] = baseline
+}
 
 // A single failing cell diffs as its bare value ("JMK" vs "JFK"); several diff
 // as a value list in document order (`["LGR", "JMK"]` vs `["LHR", "JFK"]`).
@@ -136,6 +172,7 @@ export function vararTestBody(
   path: string,
 ): (ctx: TaskContext) => Promise<void> {
   return async (ctx) => {
+    attachBaseline(ctx, path)
     const ex = examples[index]
     if (!ex || ex.name !== name) {
       throw new Error(

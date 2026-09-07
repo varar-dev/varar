@@ -13,7 +13,11 @@
 > always re-plans; the fingerprint is recorded but not used to gate detection.
 > (2) **Writer vs read-only gate.** `var run` (and the Python/JVM test runners,
 > which have no separate CLI) is the writer that records/accepts; vitest is a
-> read-only gate. Re-identification uses **text similarity** (Jaccard ≥ 0.5), so
+> read-only gate. **Superseded by
+> [ADR 0015](0015-the-reporter-writes-what-the-plugin-may-not.md) (2026-09-06):**
+> the vitest *reporter* now records the baseline at the end of the run, every
+> adapter reconciles, and `varar run` has been removed.
+> Re-identification uses **text similarity** (Jaccard ≥ 0.5), so
 > moving and rewording examples never false-alarm.
 
 ## Context
@@ -113,7 +117,7 @@ The distinction the decision turns on:
   Every port's `make` target and CI workflow runs it. See
   `conformance/adapter/README.md`.
 - **It must slot into the normal runner run to be useful** — surfaced through a
-  regular `pytest` / `vitest` / `var run`, in **both** implementations — not as a
+  regular `pytest` / `vitest` run, in **both** implementations — not as a
   separate tool.
 - Implementation order (each its own design spec → plan): port `hash.ts` + the
   `OathResults` run-result format + baseline persistence to Python; then add
@@ -156,11 +160,11 @@ The distinction the decision turns on:
   explicit acknowledgment as accepting drift. Two properties keep it honest:
 
   - **The predicate is the `docs` globs, not the set the run executed.** Runs are
-    routinely filtered — `varar run --globs`, a pytest path argument, an IDE's
+    routinely filtered — a vitest file filter, a pytest path argument, an IDE's
     single-example re-run — and pruning against a filtered view would delete live
     baselines. Every adapter passes the full configured set.
-  - **It only writes under `update`.** A plain run reports (the CLI prints which
-    paths are stale and how to prune them) and changes nothing. Removal stays as
+  - **It only writes under `update`.** A plain run reports (the adapter prints
+    which paths are stale and how to prune them) and changes nothing. Removal stays as
     deliberate as accepting drift; this is not silent garbage collection.
 
   Removal is still not gated. Deleting an oath remains a decision the tool does

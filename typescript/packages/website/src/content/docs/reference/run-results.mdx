@@ -27,10 +27,10 @@ varar/library.md
   a result written on Windows resolves on Linux and back.
 - Written at the **end of every run**, for every oath that ran — passing runs
   included, so the LSP can clear diagnostics that no longer apply.
-- Written by whatever ran the oaths: the test-framework adapter (`pytest`,
-  RSpec, JUnit, `cargo test`, `dotnet test`, `go test`, the vitest reporter) or
-  the CLI's own runner, `varar run`. Both producers in a port share one writer,
-  so which one you used is not visible in the file.
+- Written by whatever ran the oaths — the test-framework adapter (`pytest`,
+  RSpec, JUnit, `cargo test`, `dotnet test`, `go test`, the vitest reporter).
+  Every producer in a port shares one writer, so which runner you used is not
+  visible in the file.
 - `.varar/` is **git-ignored**. It is a run artifact keyed by a source
   fingerprint, worthless the moment the source moves.
 
@@ -207,12 +207,12 @@ type OathBaseline = {
   two-space indent, trailing newline. A clean re-run produces no git diff.
 - Unlike `.varar/`, this file is **committed**. It is the record of what your
   suite used to test.
-- **Acknowledging drift**: `varar run --update`, the `VARAR_UPDATE=1`
-  environment variable, or the LSP command `varar.acceptDrift` re-records the
-  baseline. The vitest plugin is a read-only gate — it reports drift and never
-  writes.
-- `--update` also **prunes** baselines whose oath path no longer matches the
-  `docs` globs. Nothing is deleted behind your back.
+- **Acknowledging drift**: the `VARAR_UPDATE=1` environment variable (or a
+  runner's own flag, or the LSP command `varar.acceptDrift`) re-records the
+  baseline. Under vitest the *plugin* never writes — it is a build-time
+  transform — but the reporter records the baseline at the end of the run.
+- Accepting drift also **prunes** baselines whose oath path no longer matches
+  the `docs` globs. Nothing is deleted behind your back.
 
 For the semantics of drift — what triggers it, how a moved or reworded
 paragraph keeps its identity, and the acknowledgment workflow — see
