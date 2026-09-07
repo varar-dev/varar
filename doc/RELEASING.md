@@ -43,8 +43,8 @@ deploy runs near the end:
 
 1. **npm** — browser 2FA, one round-trip per package.
 2. **RubyGems** — one OTP prompt for all six gems (see below).
-3. **PyPI**, **Open VSX** — token-based, unattended. (VS Code Marketplace is
-   parked; see below.)
+3. **PyPI**, **Open VSX**, **VS Code Marketplace** — token-based, unattended.
+   The two extension registries share one `.vsix`, built once by `build_vsix`.
 4. **crates.io**, **NuGet** — parked. NuGet still *packs* every package to
    `release/dist/nuget/<version>/` and prints the paths, for manual upload.
 5. **Maven Central** — by far the slowest (GPG-signed, atomic multi-module
@@ -71,8 +71,9 @@ batch (`GEM_HOST_OTP_CODE`). If a code expires mid-batch, re-run — published g
 are skipped and you're prompted again for the rest.
 
 A target can be parked with the `DISABLED=1` variable at the top of its
-`release/targets/*.sh` (it warns and reports OK). Currently parked:
-VS Code Marketplace — **npm, PyPI, Maven Central and Open VSX publish**.
+`release/targets/*.sh` (it warns and reports OK). Nothing is parked that way
+today — the VS Code Marketplace was the last one, un-parked once the publisher
+and PAT existed.
 
 ## Credentials
 
@@ -106,7 +107,18 @@ and `npm install -g @vscode/vsce ovsx`. Sign in: `op signin`, `gh auth login`.
   keyserver.ubuntu.com. → `maven-gpg`, field `passphrase`, with an armored
   secret-key export attached as backup.
 - **VS Code Marketplace** — Azure DevOps PAT with the **Marketplace →
-  Manage** scope, publisher `varar`. → `vscode-marketplace`, field `pat`.
+  Manage** scope, publisher `varar` (so the extension is `varar.varar`, same
+  id as on Open VSX). → `vscode-marketplace`, field `pat`. Two things bite
+  here. The PAT's **Organization must be "All accessible organizations"** —
+  scoped to the single Azure DevOps org it fails with
+  `TF400813: the user 'aaaaaaaa-…' is not authorized`, which reads like a
+  revoked token but is really the wrong org scope. And a PAT **expires within
+  a year at most** (unlike the npm/PyPI tokens), so this is the one credential
+  on a recurring rotation. Check one without publishing:
+  `op run --env-file=release/release.env -- vsce verify-pat varar`.
+  The publisher itself is created in the web UI at
+  <https://marketplace.visualstudio.com/manage> (`vsce create-publisher` is
+  gone); the id is immutable once taken.
 - **Open VSX** — access token for the Eclipse Foundation account, namespace
   `varar`. → `open-vsx`, field `pat`.
 
