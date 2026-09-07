@@ -77,7 +77,11 @@ ports_touched() {
   for dir in "${PORT_DIRS[@]}"; do
     git diff-tree --no-commit-id --name-only -r "$sha" -- "$dir" | grep -q . && touched+=("$dir")
   done
-  echo "${touched[*]}"
+  # ${touched[*]+...} — the array is empty for a (spec) commit that touched no
+  # port at all, and `set -u` makes a bare ${touched[*]} an error there. That is
+  # exactly the case this function exists to report, so it must return the empty
+  # string and let the caller complain, not abort the whole lint run.
+  echo "${touched[*]+${touched[*]}}"
 }
 
 fail=0
