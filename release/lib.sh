@@ -47,7 +47,16 @@ require_tool() { command -v "$1" >/dev/null 2>&1 || die "required tool not on PA
 is_semver() { [[ "$1" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; }
 
 # 0 iff the URL answers 2xx.
-http_ok() { curl -fsSL -o /dev/null "$1" 2>/dev/null; }
+# Probe a registry URL: true iff it answers 2xx. Used by every target to decide
+# "is this version already published?", so a WRONG false is dangerous — it makes
+# an idempotent target try to publish again.
+#
+# The User-Agent is not optional. crates.io answers curl's default UA with 403,
+# not 404, so all five crates read as missing and `cargo publish --workspace`
+# re-ran against immutable versions. It stayed hidden until v0.8.0 because the
+# probe is only consulted on a re-run: the first release of a version has
+# nothing published, which is what a 403 looks like too.
+http_ok() { curl -fsSL -o /dev/null -A "varar-release/https://github.com/varar-dev/varar" "$1" 2>/dev/null; }
 
 # Rewrite the var version the java sample projects consume. On trunk that's
 # the SNAPSHOT installed into mavenLocal by `mvn install` (see the Makefile's
