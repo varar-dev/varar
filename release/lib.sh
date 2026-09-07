@@ -132,7 +132,15 @@ build_vsix() {
   [[ "$manifest_version" == "$version" ]] ||
     die "@varar/vscode/package.json is at $manifest_version, not $version — stamp has not run"
   mkdir -p "$REPO_ROOT/release/dist"
-  (cd "$REPO_ROOT/typescript" && pnpm install --frozen-lockfile >&2 && pnpm --filter varar build >&2)
-  (cd "$REPO_ROOT/typescript/packages/vscode" && vsce package --no-dependencies -o "$vsix" >&2)
+  # `|| die` on every step, not bare `set -e`: this function only ever runs
+  # inside a command substitution (`vsix="$(build_vsix ...)"`), and bash does
+  # not propagate errexit out of one. v0.8.0 shipped a failing `vsce package`
+  # straight through to `ovsx publish`, which then reported the missing file as
+  # a confusing ENOENT instead of the real error two lines above it.
+  (cd "$REPO_ROOT/typescript" && pnpm install --frozen-lockfile >&2 && pnpm --filter varar build >&2) ||
+    die "vsix: building @varar/vscode failed"
+  (cd "$REPO_ROOT/typescript/packages/vscode" && vsce package --no-dependencies -o "$vsix" >&2) ||
+    die "vsix: vsce package failed"
+  [[ -f "$vsix" ]] || die "vsix: vsce package reported success but wrote no $vsix"
   echo "$vsix"
 }

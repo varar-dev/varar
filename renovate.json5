@@ -95,6 +95,34 @@
       allowedVersions: "<7",
     },
     {
+      // `@types/vscode` is NOT an ordinary dependency to keep current — it is
+      // half of a two-field decision about how OLD an editor the extension
+      // still installs on, and Renovate can only see one half.
+      //
+      // `engines.vscode` is the floor: VS Code refuses to install an extension
+      // whose floor is above the running version. `@types/vscode` must equal
+      // that floor, because the types are what let the code compile against an
+      // API — types newer than the engine compile calls that are simply absent
+      // on the oldest supported host, and it breaks there at runtime.
+      //
+      // The floor is deliberately LOW because the forks matter: Cursor has been
+      // on VS Code 1.105.1 (a September 2025 release) since early 2026, was on
+      // 1.99.3 before that, and has announced no upgrade. Tracking upstream VS
+      // Code here would silently make the extension uninstallable for every
+      // Cursor user — invisible in CI, total for them.
+      // https://forum.cursor.com/t/request-upgrade-vs-code-extension-api-base-beyond-1-105-1/164443
+      //
+      // So: no automated bumps. Moving the floor is a deliberate act, editing
+      // both fields in typescript/packages/vscode/package.json in one commit.
+      // typescript/scripts/lint-vscode-engine.mjs enforces all of this in
+      // `make check` — it is what would have caught the v0.8.0 failure, where a
+      // types-only bump to ~1.136.0 passed the whole gate (nothing before the
+      // release targets builds a .vsix) and died at `ovsx publish`.
+      matchManagers: ["npm"],
+      matchPackageNames: ["@types/vscode"],
+      enabled: false,
+    },
+    {
       matchManagers: ["pep621", "pip_requirements", "pip-compile"],
       groupName: "python dependencies",
       commitMessagePrefix: "chore(py):",
