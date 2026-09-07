@@ -9,6 +9,106 @@ This file is generated from conventional commit messages by
 [git-cliff](https://git-cliff.org) — do not edit it by hand. It is written at
 release time by `make prepare`; preview the next release with `make changelog`.
 
+## [0.8.0] - 2026-09-07
+
+### TypeScript (npm)
+
+- ⚠️ **Breaking:** **cli:** Varar run is gone — oaths run through your own test runner
+  `varar run` has been removed. Run oaths with your test runner
+instead — `pnpm vitest run`, and `VARAR_UPDATE=1 pnpm vitest run` to accept
+drift and re-record varar.lock.json. `varar init` scaffolds the vitest wiring
+for you. `renderFailure` is no longer exported from @varar/runner.
+- Added: **cli:** Varar init scaffolds oaths into varar/ and steps into src/varar/
+- Added: **core:** A failure records the failing step's span, so editors underline the step and not its whole line
+- Added: **cli:** Varar run --json prints the run as machine-readable results
+- Added: **vitest:** The reporter records varar.lock.json, so vitest no longer needs `varar run`
+- Added: **cli:** Varar init scaffolds the test-runner config, so one command leaves a runnable project
+- Fixed: Examples/typescript-vitest commits pnpm-workspace.yaml so its suite runs anywhere
+- Fixed: **language:** @varar/language no longer installs the TypeScript compiler
+- Fixed: **cli:** Varar lint checks oaths against the step definitions they bind to
+- Fixed: **vitest:** The vitest sample writes run records, and the reporter orders them
+- Fixed: **cli:** Varar run writes the run record every other port's runner writes
+
+### Python (PyPI)
+
+- Added: **runner:** Varar init scaffolds oaths into varar/ and steps into tests/varar/
+- Added: **config:** Parse_varar_config validates config text without a file
+- Added: Pytest and unittest write run results, so editors show Python failures
+- Fixed: **runner:** Varar init scaffolds the Deep Thought example, matching the TypeScript CLI
+- Fixed: **runner:** List run-record examples in document order
+
+### Java & Kotlin (Maven Central)
+
+- Added: **junit:** Steps entries support package wildcards — ["varar.*"] loads every step class in the package
+- Added: JUnit and Kotest write run results, so editors show JVM failures
+- Fixed: Gradle samples re-run the suite when an oath or the baseline changes
+
+### Ruby (RubyGems)
+
+- Added: **runner:** Varar init scaffolds oaths into varar/ and steps into spec/varar/ or test/varar/
+- Added: **config:** Parse_var_config validates config text without a file
+- Added: RSpec and Minitest write run results, so editors show Ruby failures
+- Fixed: **runner:** Varar init scaffolds the Deep Thought example, matching the TypeScript CLI
+- Fixed: **runner:** List run-record examples in document order
+
+### Rust (crates.io)
+
+- Added: **config:** Parse_var_config validates config text without a file
+- Added: Cargo test writes run results, so editors show Rust failures
+- Fixed: Skip scanning dirs that can't match
+- Fixed: **runner:** Stop discovery pruning subtrees that can still hold oaths
+- Fixed: **runner:** List run-record examples in document order
+
+### C# / .NET (NuGet)
+
+- Fixed: **vstest:** Dotnet test enforces the drift gate — a paragraph that stopped matching fails the run
+
+### Go (Go modules)
+
+- Added: **config:** ParseVarConfig validates config text without a file
+
+### VS Code extension (Marketplace & Open VSX)
+
+- Added: Publish the extension to the VS Code Marketplace
+
+### Specification (all ports)
+
+- ⚠️ **Breaking:** The spec concept is renamed to oath — varar.lock.json is now version 2 with an "oaths" key
+  varar.lock.json is now `{"version": 2, "oaths": {...}}` —
+delete the old lock file and re-run with the update flag (`varar run
+--update` / `VARAR_UPDATE=1`) to regenerate it; version-1 files no longer
+parse. Renamed APIs in every port (per-language casing): SpecBaseline →
+OathBaseline, SpecResults → OathResults, deriveSpecBaseline →
+deriveOathBaseline, findSpecs/matchSpec/planSpec →
+findOaths/matchOath/planOath. The JUnit engine's UniqueId segment type is
+now "oath" (was "spec") and the VSTest property Varar.SpecPath is now
+Varar.OathPath. The scaffolded JVM suite class is RunOathsTest, the Go
+example test is TestOaths in oaths_test.go, and the Rust example harness
+is tests/oaths.rs.
+- ⚠️ **Breaking:** Drop the redundant Var prefix from every identifier and key
+  every Var-prefixed public identifier is renamed. Types:
+VarDoc -> Doc, VarConfig -> Config (C#: the reader is ConfigFile, the record
+ParsedConfig), VarLock -> LockFile, VarGlobs -> Globs, VarConfigException ->
+ConfigException, VarDocArtifact -> DocArtifact, VarSpec -> OathSpec. Functions
+(per-language casing): parseVarLock -> parseLockFile, stringifyVarLock ->
+stringifyLockFile, pruneVarLock -> pruneLockFile, parseVarConfig -> parseConfig,
+loadVarConfig/read_var_config/ReadVarConfig -> loadConfig/read_config/ReadConfig,
+isVarDoc -> isDoc, toVarDocArtifact -> toDocArtifact. Go value conversion:
+DecodeVarValue/EncodeVarValue -> DecodeValue/EncodeValue. The ExecutionPlan
+field varDoc/var_doc is now doc. JUnit configuration parameters var.config.root
+and var.acceptDrift are now varar.config.root and varar.acceptDrift. Run results
+move from .var/ to .varar/ — update your .gitignore. Vitest task meta varResult
+is now vararResult. Generated test names var:drift:/var:diagnostic: are now
+- ⚠️ **Breaking:** Rename varPath to oathPath
+  `@varar/language`'s `WorkspaceMatch.varPath` and
+`WorkspaceDiagnostic.varPath` are now `oathPath`, and `@varar/vitest`'s
+`DiscoverInput.varPath` is now `absPath`.
+- Added: A failure records the failing step's span in Python, Java, Kotlin and Rust too
+- Added: Ruby, .NET and Go gain the run-result failure payload
+- Added: .NET and Go write run results — every port now feeds the language server
+- Added: The run-result wire format is pinned across all seven ports
+- Fixed: Accepting drift prunes varar.lock.json entries for oaths that no longer exist
+
 ## [0.7.0] - 2026-07-23
 
 ### TypeScript (npm)

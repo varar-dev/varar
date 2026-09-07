@@ -224,7 +224,7 @@ wheels = [
 
 [[package]]
 name = "pytest-varar"
-version = "0.7.0"
+version = "0.8.0"
 source = { editable = "packages/pytest" }
 dependencies = [
     { name = "pytest" },
@@ -324,7 +324,7 @@ wheels = [
 
 [[package]]
 name = "varar"
-version = "0.7.0"
+version = "0.8.0"
 source = { editable = "packages/varar" }
 dependencies = [
     { name = "cucumber-expressions" },
@@ -339,12 +339,12 @@ requires-dist = [
 
 [[package]]
 name = "varar-config"
-version = "0.7.0"
+version = "0.8.0"
 source = { editable = "packages/config" }
 
 [[package]]
 name = "varar-core"
-version = "0.7.0"
+version = "0.8.0"
 source = { editable = "packages/core" }
 dependencies = [
     { name = "cucumber-expressions" },
@@ -355,7 +355,7 @@ requires-dist = [{ name = "cucumber-expressions", specifier = "==20.1.0" }]
 
 [[package]]
 name = "varar-runner"
-version = "0.7.0"
+version = "0.8.0"
 source = { editable = "packages/runner" }
 dependencies = [
     { name = "varar" },
@@ -370,7 +370,7 @@ requires-dist = [
 
 [[package]]
 name = "varar-unittest"
-version = "0.7.0"
+version = "0.8.0"
 source = { editable = "packages/unittest" }
 dependencies = [
     { name = "varar" },
