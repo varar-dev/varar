@@ -70,6 +70,12 @@ export type PlannedStep = {
   // Whole matched notation per parameter, incl. delimiters (e.g. quotes) —
   // used for rename and the "actual" side of a mismatch.
   readonly paramSpans: ReadonlyArray<Span>
+  // The text those spans cover, sliced at plan time from the document the step
+  // was written in. Consumers must use this rather than slicing the running
+  // oath's source: a step spliced in by a reference block (ADR 0016) has spans
+  // in a DIFFERENT document, and slicing the host source by them yields
+  // whatever text happens to sit at those offsets.
+  readonly paramTexts: ReadonlyArray<string>
   // The value passed to the handler per parameter (inner capture group), for
   // editor highlighting. Aligned 1:1 with `paramSpans`; equals it when the
   // parameter regexp has no capture group.
@@ -373,6 +379,7 @@ function planCandidate(
         text: block.text.slice(hit.matchStart, hit.matchEnd),
         matchSpan: liftSpan(doc.source, block, hit.matchStart, hit.matchEnd),
         paramSpans: hit.paramSpans.map((p) => liftSpan(doc.source, block, p.start, p.end)),
+        paramTexts: hit.paramSpans.map((p) => block.text.slice(p.start, p.end)),
         paramInnerSpans: hit.paramInnerSpans.map((p) =>
           liftSpan(doc.source, block, p.start, p.end),
         ),

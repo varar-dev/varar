@@ -252,7 +252,9 @@ export function buildWorkspaceIndex(input: WorkspaceInput, cache?: IndexCache): 
           // Highlight only the value passed to the handler (inner capture
           // group); paramValues keeps the full notation for rename.
           paramRanges: step.paramInnerSpans.map(toRange),
-          paramValues: step.paramSpans.map((s) => file.source.slice(s.startOffset, s.endOffset)),
+          // From the step's own document — a step spliced in by a reference
+          // block has spans in another file, which this source cannot slice.
+          paramValues: step.paramTexts,
           stepDef: def,
         })
       }

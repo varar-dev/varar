@@ -1,7 +1,7 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { canonicalStringify, parse, runConformance } from '@varar/core'
+import { buildWorkspace, canonicalStringify, parse, runConformance } from '@varar/core'
 import { describe, expect, test } from 'vitest'
 import {
   _customParameterTypes,
@@ -41,9 +41,23 @@ for (const name of readdirSync(BUNDLES, { withFileTypes: true })
       }
       const registry = buildRegistry()
       const createContext = contextFactory()
-      const source = readFileSync(resolve(dir, 'example.md'), 'utf8')
-      const doc = parse('example.md', source)
-      const artifacts = await runConformance(doc, registry, createContext, _customParameterTypes())
+      // A bundle is one oath (example.md) plus, for a bundle that exercises
+      // reference blocks (ADR 0016), the other oaths it links to — every other
+      // `.md` in the bundle directory. They are parsed under their bare file
+      // names, so `./shared.md` resolves the same way in every port.
+      const oathFiles = readdirSync(dir)
+        .filter((f) => f.endsWith('.md'))
+        .sort()
+      const docs = oathFiles.map((f) => parse(f, readFileSync(resolve(dir, f), 'utf8')))
+      const doc = docs.find((d) => d.path === 'example.md')
+      if (!doc) throw new Error(`Bundle "${name}" has no example.md`)
+      const artifacts = await runConformance(
+        doc,
+        registry,
+        createContext,
+        _customParameterTypes(),
+        buildWorkspace(docs),
+      )
 
       const goldenDir = resolve(dir, 'golden')
       if (UPDATE && !existsSync(goldenDir)) mkdirSync(goldenDir, { recursive: true })

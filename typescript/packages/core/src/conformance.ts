@@ -190,10 +190,14 @@ export function toPlanArtifact(plan: ExecutionPlan): PlanArtifact {
           matchSpan: step.matchSpan,
           paramSpans: step.paramSpans,
           matchedExpression: step.stepDef.expression,
-          args: step.paramSpans.map((span, i) => ({
-            value: plan.doc.source.slice(span.startOffset, span.endOffset),
+          args: step.paramTexts.map((value, i) => ({
+            value,
             parameterType: stepNames[i] ?? null,
           })),
+          // Present only on a step a reference block spliced in from another
+          // oath (ADR 0016): the document its spans belong to. Pinned so a port
+          // that resolves references but loses the identity goes red.
+          ...(step.docPath ? { docPath: step.docPath } : {}),
           ...(step.dataTable ? { dataTable: step.dataTable } : {}),
           ...(step.docString ? { docString: step.docString } : {}),
         }
