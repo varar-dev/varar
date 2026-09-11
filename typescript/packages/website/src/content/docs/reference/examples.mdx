@@ -103,6 +103,53 @@ ends it — the steps after the prose start a fresh example and do not see the
 earlier state. Keep narration before or after an example, not in the middle of
 it.
 
+## Reference blocks
+
+There is a fourth kind of block, beside an example, prose, and an attachment: a
+block whose **entire content is a single Markdown link to an oath section** is a
+**reference block**. It splices that section's steps in at its own position,
+sharing the example's state:
+
+```markdown
+[An overdue loan](./shared/an-overdue-loan.md#an-overdue-loan)
+
+When she asks to borrow *Beloved* on June 10, 2026, the library refuses.
+```
+
+A paragraph, a blockquote or a list item all spell it. The target is either a
+`#fragment` (a section of the same oath), a relative `.md` path with a fragment
+(a section of another oath), or a relative `.md` path alone (that whole oath).
+Anchors are GFM heading slugs — the anchors GitHub itself generates. A link-only
+block with any other target (`https://…`, a `.ts` file) is prose, as before.
+
+Reference blocks are **not delimiters**: a matching paragraph after one continues
+the same example. Because the splice happens at the block's own position, a
+reference also works in the middle of an example (a shared act) and at its end
+(shared assertions) — see
+[Share setup between examples](/how-to/share-setup-between-examples/).
+
+Three rules follow:
+
+- **A referenced section stops being a standalone example.** It runs where it is
+  referenced, once per referencing example.
+- **The referring example keeps its own name** — its first matching paragraph,
+  not the section it pulls in.
+- **References nest to any depth.** Depth is a style question Varar does not
+  enforce; a cycle is an error.
+
+Four authoring mistakes fail the run rather than degrading to prose:
+
+| Code | Means |
+| ---- | ----- |
+| `reference-not-found` | The target is not an oath in this workspace (wrong path, or not matched by the `docs` globs). |
+| `reference-empty` | The document exists but the section contributes no steps — a mistyped anchor, or a section that is pure prose. |
+| `reference-cycle` | A chain of references reaches a section already on it. Reported with the whole chain. |
+
+A dangling reference is deliberately *not* [drift](#drift-detection): drift is
+"this used to match and now reads as prose", which needs an acknowledgment
+because prose is a legitimate destination. A link-only block that resolves to
+nothing has no legitimate reading.
+
 ## Tables and doc strings
 
 A table or a fenced code block (a **doc string**) is not an example on its own.

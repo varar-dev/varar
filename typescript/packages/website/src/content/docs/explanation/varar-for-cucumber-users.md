@@ -29,7 +29,7 @@ bound by matching phrases in the text.
 | `Scenario Outline` + `Examples:` table | A [**header-bound table**](/reference/examples/#header-bound-tables): one step whose parameters name every column, and each data row runs as its own example. |
 | `World` and untyped state | `steps` — a typed state factory per oath; every example starts fresh. |
 | `Before` / `After` hooks | None in Varar. Use your test runner's own `beforeEach` / `afterEach`. |
-| `Background:` | No equivalent. Inline its steps into the examples that need them. |
+| `Background:` | A [**reference block**](/how-to/share-setup-between-examples/): a link to the section that describes the shared world state splices its steps in. It also works mid-example and at the end, across files, and is visible at the point of use. |
 | Tags | Not in v1. |
 | A separate test-run artefact | The document *is* the test. There is no report that drifts from the docs, because the docs are what ran. |
 
@@ -49,8 +49,11 @@ What to expect in the translated result:
 - **A `Scenario Outline` with an `Examples:` table becomes a
   [header-bound table](/reference/examples/#header-bound-tables)** — a single
   step whose parameters name the columns, with each row running as its own test.
-- **`Background:` is inlined** into the examples that need it (there are no
-  lifecycle hooks in the BDD layer).
+- **`Background:` becomes a linked section.** Write the shared world state once
+  under its own heading and link to it from each example that needs it — see
+  [Share setup between examples](/how-to/share-setup-between-examples/). If the
+  background is really one idea spelled out in several steps, write the step it
+  wants to be instead (there are no lifecycle hooks in the BDD layer).
 - **Unmatched lines become prose.** There is no undefined-step report: in
   Cucumber an unmatched step is an error with a generated snippet; in Varar an
   unmatched sentence is simply prose, which is what lets the document be a
