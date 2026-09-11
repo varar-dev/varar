@@ -8,7 +8,7 @@ collecting diagnostics.
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Literal
 
 from varar_core.ast import Block, Example, Fence, SegmentOffset, Table, Doc
@@ -19,8 +19,19 @@ from varar_core.diagnostics import (
     Diagnostic,
     ambiguous_match,
     error_fence_without_step,
+    reference_cycle,
+    reference_empty,
+    reference_not_found,
 )
 from varar_core.matcher import Hit, find_hits, resolve_hits
+from varar_core.reference import (
+    OathWorkspace,
+    Reference,
+    reference_of,
+    section_candidates,
+    section_key,
+    slugify,
+)
 from varar_core.registry import Registry, StepRegistration
 from varar_core.sentences import split_sentences
 from varar_core.span import Span, span_from_offsets, to_utf16_offset, utf16_len
@@ -48,6 +59,14 @@ class PlannedStep:
     # Per-argument display formatters from the matched parameter types,
     # aligned with args. Presentation only — see param_diff.py.
     formats: tuple = ()
+    # The text the param spans cover, sliced at plan time from the document the
+    # step was written in. Consumers must use this rather than slicing the
+    # running oath's source: a step spliced in by a reference block (ADR 0016)
+    # has spans in a DIFFERENT document.
+    param_texts: tuple[str, ...] = ()
+    # Set only when this step was spliced in from another oath by a reference
+    # block: the path of the document its spans belong to.
+    doc_path: str | None = None
     data_table: Table | None = None
     doc_string: DocString | None = None
 
@@ -290,6 +309,17 @@ class _HeaderBoundUnit:
 
 
 @dataclass(frozen=True, slots=True)
+class _ReferenceUnit:
+    """A reference block: its whole text is a link to an oath section, whose
+    steps are spliced in here (ADR 0016). Never prose, so it does not close the
+    open example."""
+
+    reference: Reference
+    preceded_by_delimiter: bool
+    span: Span
+
+
+@dataclass(frozen=True, slots=True)
 class _StepsUnit:
     """A single candidate paragraph, planned in isolation."""
 
@@ -303,7 +333,7 @@ class _StepsUnit:
     expected_error_message: str | None = None
 
 
-_CandidateUnit = _HeaderBoundUnit | _StepsUnit
+_CandidateUnit = _HeaderBoundUnit | _StepsUnit | _ReferenceUnit
 
 
 @dataclass(slots=True)
@@ -318,6 +348,9 @@ class _MergedExample:
     steps: list[PlannedStep]
     expected_outcome: Literal["fail"] | None = None
     expected_error_message: str | None = None
+    # True while the name came from a spliced (referenced) paragraph and is
+    # waiting to be replaced by the example's own first matching paragraph.
+    name_from_reference: bool = False
 
 
 def _start_merged(unit: _StepsUnit) -> _MergedExample:
@@ -332,7 +365,13 @@ def _start_merged(unit: _StepsUnit) -> _MergedExample:
     )
 
 
-def _merge_into(open_ex: _MergedExample, unit: _StepsUnit) -> None:
+def _merge_into(
+    open_ex: _MergedExample, unit: _StepsUnit, from_reference: bool = False
+) -> None:
+    if open_ex.name_from_reference and not from_reference:
+        open_ex.name = unit.name
+        open_ex.scope_stack = unit.scope_stack
+        open_ex.name_from_reference = False
     open_ex.end_offset = unit.span.end_offset
     open_ex.steps.extend(unit.steps)
     # Any error fence in a merged part marks the whole example expected-to-fail;
@@ -358,7 +397,7 @@ def _finish_merged(open_ex: _MergedExample, source: str) -> PlannedExample:
     )
 
 
-def plan(doc: Doc, registry: Registry) -> ExecutionPlan:
+def plan(doc: Doc, registry: Registry, workspace: OathWorkspace) -> ExecutionPlan:
     """Mirror plan() from plan.ts.
 
     Phase 1 plans each candidate paragraph independently into a "unit"; phase 2
@@ -367,8 +406,22 @@ def plan(doc: Doc, registry: Registry) -> ExecutionPlan:
     """
     diagnostics: list[Diagnostic] = []
 
+    # A section another oath references stops being a standalone example: it
+    # runs where it is referenced, not here (ADR 0016).
+    def consumed(ex: Example) -> bool:
+        if section_key(doc.path, "") in workspace.referenced:
+            return True
+        return any(
+            section_key(doc.path, slugify(h)) in workspace.referenced
+            for h in ex.scope_stack
+        )
+
     # Phase 1: plan each candidate paragraph independently into a "unit".
-    units = [_plan_candidate(ex, doc, registry, diagnostics) for ex in doc.examples]
+    units = [
+        _plan_candidate(ex, doc, registry, diagnostics)
+        for ex in doc.examples
+        if not consumed(ex)
+    ]
 
     # Phase 2: group adjacent candidates into examples. A matching candidate
     # continues the open example when no delimiter (heading / `---`) precedes it;
@@ -388,6 +441,22 @@ def plan(doc: Doc, registry: Registry) -> ExecutionPlan:
         if isinstance(unit, _HeaderBoundUnit):
             flush()
             examples.extend(unit.rows)
+            continue
+        if isinstance(unit, _ReferenceUnit):
+            # Splice the referenced section's steps in at this position. Only
+            # the reference block itself is subject to the delimiter rule;
+            # everything it splices in belongs to the same sequence, so a
+            # section of several paragraphs stays one example.
+            resolved = _resolve_reference(unit, doc, registry, workspace, diagnostics, ())
+            for i, spliced in enumerate(resolved):
+                if open_ex is not None and (i > 0 or not unit.preceded_by_delimiter):
+                    _merge_into(open_ex, spliced, from_reference=True)
+                else:
+                    flush()
+                    open_ex = _start_merged(spliced)
+                    # An example that OPENS with a reference is named by its own
+                    # first matching paragraph, not by the section it pulls in.
+                    open_ex.name_from_reference = True
             continue
         if not unit.matched:
             # Prose paragraph — a delimiter. Drop it and end the open example.
@@ -410,6 +479,63 @@ def plan(doc: Doc, registry: Registry) -> ExecutionPlan:
     )
 
 
+def _resolve_reference(
+    unit: _ReferenceUnit,
+    from_doc: Doc,
+    registry: Registry,
+    workspace: OathWorkspace,
+    diagnostics: list[Diagnostic],
+    chain: tuple[str, ...],
+) -> tuple[_StepsUnit, ...]:
+    """Resolve one reference block into the step-bearing units of the section it
+    names, recursively: a referenced section may itself contain reference
+    blocks, to any depth (ADR 0016 leaves depth to the author's judgement).
+    *chain* carries the sections currently being resolved so a repeat is
+    reported as a cycle instead of recursing forever."""
+    ref = unit.reference
+    key = section_key(ref.path, ref.slug)
+    if key in chain:
+        diagnostics.append(reference_cycle(chain + (key,), unit.span))
+        return ()
+    # A same-file reference resolves against the document being planned, which
+    # is not necessarily in the workspace (a caller may plan one in isolation).
+    target = from_doc if ref.path == from_doc.path else workspace.docs.get(ref.path)
+    if target is None:
+        diagnostics.append(reference_not_found(ref.text, ref.path, unit.span))
+        return ()
+    out: list[_StepsUnit] = []
+    for candidate in section_candidates(target, ref.slug):
+        planned = _plan_candidate(candidate, target, registry, diagnostics)
+        if isinstance(planned, _ReferenceUnit):
+            out.extend(
+                _resolve_reference(
+                    planned, target, registry, workspace, diagnostics, chain + (key,)
+                )
+            )
+            continue
+        # A header-bound table produces one example per row, which a spliced
+        # step list cannot express; an `error` fence declares an outcome for an
+        # example, not for a reusable fragment. Both are left out.
+        if not isinstance(planned, _StepsUnit) or not planned.matched:
+            continue
+        out.append(_tag_with_doc(planned, target.path, from_doc.path))
+    if not out:
+        diagnostics.append(reference_empty(ref.text, ref.path, ref.slug, unit.span))
+    return tuple(out)
+
+
+def _tag_with_doc(unit: _StepsUnit, doc_path: str, host_path: str) -> _StepsUnit:
+    """Carry the source document's identity on every spliced step, so a failure
+    in a referenced section reports spans against the file they were written in
+    rather than the file being run."""
+    if doc_path == host_path:
+        return unit
+    return replace(
+        unit,
+        steps=tuple(replace(step, doc_path=doc_path) for step in unit.steps),
+    )
+
+
 def _plan_candidate(
     ex: Example,
     doc: Doc,
@@ -418,6 +544,19 @@ def _plan_candidate(
 ) -> _CandidateUnit:
     """Plan a single candidate paragraph (plus its attached tables/fences) in
     isolation. Emits ambiguity / error-fence diagnostics into *diagnostics*."""
+    # A block whose whole text is a link to an oath section is a reference, not
+    # content: never matched against step definitions, and never prose.
+    primary = ex.body[0] if ex.body else None
+    primary_text = getattr(primary, "text", None)
+    if primary_text is not None:
+        ref = reference_of(primary_text, doc.path)
+        if ref is not None:
+            return _ReferenceUnit(
+                reference=ref,
+                preceded_by_delimiter=ex.preceded_by_delimiter,
+                span=ex.span,
+            )
+
     had_ambiguous = False
 
     # ------------------------------------------------------------------
@@ -472,6 +611,10 @@ def _plan_candidate(
                         _lift_span(doc.source, block, p.start, p.end)
                         for p in hit.param_spans
                     ),
+                    param_texts=tuple(
+                        _utf16_slice(block.text, p.start, p.end)  # type: ignore[union-attr]
+                        for p in hit.param_spans
+                    ),
                     step_def=hit.step_def,
                     args=hit.args,
                     formats=hit.formats,
@@ -498,13 +641,10 @@ def _plan_candidate(
             row_object: dict[str, str] = {}
             for i, cell_name in enumerate(table.header.cells):
                 row_object[cell_name] = row.cells[i] if i < len(row.cells) else ""
-            row_step = PlannedStep(
-                text=binding_step.text,
+            row_step = replace(
+                binding_step,
                 match_span=row.span,  # type: ignore[arg-type]
-                param_spans=binding_step.param_spans,
-                step_def=binding_step.step_def,
                 args=(*binding_step.args, row_object),
-                formats=binding_step.formats,
             )
             row_checks = tuple(
                 RowCheck(
@@ -578,16 +718,7 @@ def _plan_candidate(
             if s_idx == len(block_steps) - 1 and attach is not None:
                 data_table, doc_string = attach
                 final_steps.append(
-                    PlannedStep(
-                        text=step.text,
-                        match_span=step.match_span,
-                        param_spans=step.param_spans,
-                        step_def=step.step_def,
-                        args=step.args,
-                        formats=step.formats,
-                        data_table=data_table,
-                        doc_string=doc_string,
-                    )
+                    replace(step, data_table=data_table, doc_string=doc_string)
                 )
             else:
                 final_steps.append(step)

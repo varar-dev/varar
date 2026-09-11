@@ -26,10 +26,22 @@ from varar_core.conformance import run_conformance, to_plan_artifact, to_registr
 from varar.registry import _custom_parameter_types, _reset_builder, build_registry, context_factory
 from varar_core.parse import parse
 from varar_core.plan import plan as build_plan
+from varar_core.reference import build_workspace
 
 # python/packages/varar/tests/ -> parents[4] = repo root
 BUNDLES_DIR = Path(__file__).resolve().parents[4] / "conformance" / "bundles"
 BUNDLES = sorted(p for p in BUNDLES_DIR.iterdir() if p.is_dir())
+
+
+def _workspace(bundle: Path):
+    """A bundle is one oath (example.md) plus, for a bundle that exercises
+    reference blocks (ADR 0016), the other oaths it links to — every other
+    ``.md`` in the bundle directory. They are parsed under their bare file
+    names, so ``./shared.md`` resolves the same way in every port."""
+    docs = [
+        parse(p.name, p.read_text(encoding="utf-8")) for p in sorted(bundle.glob("*.md"))
+    ]
+    return build_workspace(docs)
 
 
 def _golden(bundle: Path, name: str):
@@ -101,7 +113,7 @@ def test_plan_matches_golden(bundle: Path) -> None:
     registry = build_registry()
     source = (bundle / "example.md").read_text(encoding="utf-8")
     doc = parse("example.md", source)
-    execution = build_plan(doc, registry)
+    execution = build_plan(doc, registry, _workspace(bundle))
     artifact = to_plan_artifact(execution)
     assert artifact == _golden(bundle, "plan.json"), f"plan.json mismatch for {bundle.name}"
 
@@ -114,5 +126,7 @@ def test_trace_matches_golden(bundle: Path) -> None:
     create_ctx = context_factory()
     source = (bundle / "example.md").read_text(encoding="utf-8")
     doc = parse("example.md", source)
-    artifacts = run_conformance(doc, registry, create_ctx, tuple(_custom_parameter_types()))
+    artifacts = run_conformance(
+        doc, registry, create_ctx, tuple(_custom_parameter_types()), _workspace(bundle)
+    )
     assert artifacts.trace == _golden(bundle, "trace.json"), f"trace.json mismatch for {bundle.name}"

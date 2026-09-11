@@ -15,6 +15,7 @@ from varar_core.parse import parse
 from varar_core.plan import plan
 from varar_core.registry import add_step, create_registry
 from varar_core.span import span_from_offsets
+from varar_core.reference import empty_workspace
 
 SOURCE = "# L\n\nHe asks on June 10, and the library agrees.\n"
 STEP_TEXT = "the library agrees"
@@ -42,7 +43,7 @@ def _failure() -> Any:
         kind="sensor",
         handler=boom,
     )
-    p = plan(parse("l.md", SOURCE), r)
+    p = plan(parse("l.md", SOURCE), r, empty_workspace())
 
     runs: list[Any] = []
 

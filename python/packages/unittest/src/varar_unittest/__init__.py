@@ -29,6 +29,8 @@ from varar_core.diagnostics import drift_detected
 from varar_core.drift import prune_baselines, reconcile_drift
 from varar_core.execute import is_unexpected_pass_error
 from varar_core.failure import to_failure
+from varar_core.parse import parse
+from varar_core.reference import OathWorkspace, build_workspace
 from varar_core.result import ExampleResult
 from varar_runner.baseline_store import create_file_baseline_store
 from varar_runner.discovery import find_oaths
@@ -75,9 +77,31 @@ def generate_tests(namespace: dict[str, Any], root: str | Path | None = None) ->
     results = ResultsCollector()
     atexit.register(results.write_all, root)
 
+    # Whether a section is a standalone example depends on whether another oath
+    # references it, which is whole-project knowledge (ADR 0016). Built here,
+    # from the config globs — the full set, never the filtered view a `-k` run
+    # would leave.
+    workspace = _project_workspace(oaths, root)
+
     for oath_path in oaths:
-        cls = _oath_test_case(oath_path, root, loaded, module_name, store, results)
+        cls = _oath_test_case(oath_path, root, loaded, module_name, store, results, workspace)
         namespace[cls.__name__] = cls
+
+
+def _rel_of(oath_path: Path, root: Path) -> str:
+    return Path(os.path.abspath(oath_path)).relative_to(root, walk_up=True).as_posix()
+
+
+def _project_workspace(oaths: list[Path], root: Path) -> OathWorkspace:
+    """Parse every discovered oath so references resolve and consumed sections
+    are recognised. Parsing runs no step code, so this is cheap."""
+    docs = []
+    for path in oaths:
+        try:
+            docs.append(parse(_rel_of(path, root), path.read_text(encoding="utf-8")))
+        except OSError:
+            continue
+    return build_workspace(docs)
 
 
 def _oath_test_case(
@@ -87,16 +111,17 @@ def _oath_test_case(
     module_name: str | None,
     store: Any,
     results: ResultsCollector,
+    workspace: OathWorkspace,
 ) -> type[unittest.TestCase]:
     """Build one TestCase subclass for *oath_path*, one method per example."""
     # walk_up: an oath outside the config root (matched via a ../ glob) still
     # gets a stable relative label.
-    rel = Path(os.path.abspath(oath_path)).relative_to(root, walk_up=True).as_posix()
+    rel = _rel_of(oath_path, root)
     source = oath_path.read_text(encoding="utf-8")
     # `rel`, not the basename: doc.path is an oath's identity in every port, so
     # a relative reference resolves alike and two same-named oaths in different
     # directories stay distinct (ADR 0016).
-    execution_plan = plan_oath(rel, source, loaded.registry)
+    execution_plan = plan_oath(rel, source, loaded.registry, workspace)
     pairs = examples_with_runs(execution_plan, loaded.create_context, RecordingReporter())
 
     methods: dict[str, Any] = {"__doc__": rel}

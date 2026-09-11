@@ -4,6 +4,7 @@ from typing import Any
 from varar_core.execute import CollectPorts, collect_examples
 from varar_core.parse import parse
 from varar_core.plan import ExecutionPlan, PlannedExample, plan
+from varar_core.reference import OathWorkspace
 from varar_core.registry import Registry
 
 class RecordingReporter:
@@ -12,8 +13,10 @@ class RecordingReporter:
     def diagnostic(self, d: Any) -> None:
         self.diagnostics.append(d)
 
-def plan_oath(path: str, source: str, registry: Registry) -> ExecutionPlan:
-    return plan(parse(path, source), registry)
+def plan_oath(
+    path: str, source: str, registry: Registry, workspace: OathWorkspace
+) -> ExecutionPlan:
+    return plan(parse(path, source), registry, workspace)
 
 def examples_with_runs(
     execution_plan: ExecutionPlan,

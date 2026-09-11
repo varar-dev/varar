@@ -12,7 +12,14 @@ from typing import Literal
 from varar_core.span import Span
 
 Severity = Literal["error", "warning"]
-DiagnosticCode = Literal["ambiguous-match", "error-fence-without-step", "drift"]
+DiagnosticCode = Literal[
+    "ambiguous-match",
+    "error-fence-without-step",
+    "drift",
+    "reference-not-found",
+    "reference-empty",
+    "reference-cycle",
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,5 +85,49 @@ def error_fence_without_step(span: Span) -> Diagnostic:
             "This `error` fence marks the example as expected-to-fail, "
             "but the example has no step to run."
         ),
+        span=span,
+    )
+
+
+def reference_not_found(text: str, path: str, span: Span) -> Diagnostic:
+    """A reference block (ADR 0016) points at an oath the workspace does not
+    hold. Never prose: a link-only block that resolves to nothing has no other
+    reading, so it fails the run rather than degrading silently."""
+    return Diagnostic(
+        severity="error",
+        code="reference-not-found",
+        message=(
+            f'Reference to "{text}" points at "{path}", which is not an oath in this '
+            "workspace.\nCheck the path, and that the file is matched by the `docs` globs "
+            "in varar.config.json."
+        ),
+        span=span,
+    )
+
+
+def reference_empty(text: str, path: str, slug: str, span: Span) -> Diagnostic:
+    """The referenced document exists but the section contributes no steps — a
+    mistyped anchor, or a section that is pure prose."""
+    where = path if slug == "" else f"{path}#{slug}"
+    return Diagnostic(
+        severity="error",
+        code="reference-empty",
+        message=(
+            f'Reference to "{text}" resolves to "{where}", which contributes no steps.\n'
+            "Check the heading the anchor names, and that its section contains a matching "
+            "paragraph."
+        ),
+        span=span,
+    )
+
+
+def reference_cycle(chain: tuple[str, ...], span: Span) -> Diagnostic:
+    """References may nest to any depth (depth is a style question, not a rule),
+    so a chain that reaches a section already on it must be reported rather than
+    recursed into."""
+    return Diagnostic(
+        severity="error",
+        code="reference-cycle",
+        message="Reference cycle: " + " \u2192 ".join(chain) + ".",
         span=span,
     )

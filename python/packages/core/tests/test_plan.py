@@ -4,6 +4,7 @@ from __future__ import annotations
 from varar_core.parse import parse
 from varar_core.plan import plan
 from varar_core.registry import add_step, create_registry
+from varar_core.reference import empty_workspace
 
 
 def _noop(*_args: object, **_kwargs: object) -> None:
@@ -21,7 +22,7 @@ def _reg():
 def test_plan_produces_a_planned_example_with_steps_in_document_order() -> None:
     source = "# Withdrawing\n\nGiven I have 100 in my account. When I withdraw 40. Then I should have 60 left."
     doc = parse("w.md", source)
-    result = plan(doc, _reg())
+    result = plan(doc, _reg(), empty_workspace())
     assert result.diagnostics == ()
     assert len(result.examples) == 1
     ex = result.examples[0]
@@ -40,7 +41,7 @@ def test_plan_emits_ambiguous_match_diagnostic_and_produces_no_example() -> None
     r = add_step(r, expression="I have {int} cukes", expression_source_file="a.ts", expression_source_line=3, handler=_noop, kind="stimulus")
     r = add_step(r, expression="I have {int} {word}", expression_source_file="a.ts", expression_source_line=8, handler=_noop, kind="stimulus")
     doc = parse("e.md", "# Ambig\n\nGiven I have 5 cukes")
-    result = plan(doc, r)
+    result = plan(doc, r, empty_workspace())
     assert len(result.diagnostics) == 1
     assert result.diagnostics[0].code == "ambiguous-match"
     # An ambiguous candidate has no runnable step, so it is prose (a delimiter),
@@ -51,7 +52,7 @@ def test_plan_emits_ambiguous_match_diagnostic_and_produces_no_example() -> None
 def test_plan_skips_example_with_no_matches() -> None:
     source = "# Just docs\n\nSome prose with no matches and no keywords."
     doc = parse("d.md", source)
-    result = plan(doc, _reg())
+    result = plan(doc, _reg(), empty_workspace())
     assert result.examples == ()
     assert result.diagnostics == ()
 
@@ -63,7 +64,7 @@ def test_plan_merges_consecutive_list_items_into_one_example() -> None:
     # Two list items, no delimiter between them → one example, shared state (ADR
     # 0012). A bulleted scenario reads as Given/When/Then bullets.
     source = "# Bullets\n\n- Given I have 100 in my account\n- When I withdraw 40"
-    result = plan(parse("b.md", source), r)
+    result = plan(parse("b.md", source), r, empty_workspace())
     assert len(result.examples) == 1
     assert [s.text for s in result.examples[0].steps] == [
         "I have 100 in my account",
@@ -75,7 +76,7 @@ def test_plan_walks_blockquote_content_as_step_bearing() -> None:
     r = create_registry()
     r = add_step(r, expression="I have {int} in my account", expression_source_file="s.ts", expression_source_line=1, handler=_noop, kind="stimulus")
     source = "# Quote\n\n> Given I have 100 in my account"
-    result = plan(parse("q.md", source), r)
+    result = plan(parse("q.md", source), r, empty_workspace())
     assert len(result.examples[0].steps) == 1
 
 
@@ -83,7 +84,7 @@ def test_markdown_table_immediately_after_step_attaches_as_data_table() -> None:
     r = create_registry()
     r = add_step(r, expression="these users exist", expression_source_file="s.ts", expression_source_line=1, handler=_noop, kind="stimulus")
     source = "# Users\nGiven these users exist:\n\n| name | age |\n|------|-----|\n| Bob  | 30  |\n| Eve  | 25  |"
-    result = plan(parse("u.md", source), r)
+    result = plan(parse("u.md", source), r, empty_workspace())
     step = result.examples[0].steps[0]
     assert step.data_table is not None
     assert step.data_table.header.cells == ("name", "age")
@@ -94,7 +95,7 @@ def test_table_not_immediately_after_step_does_not_attach() -> None:
     r = create_registry()
     r = add_step(r, expression="these users exist", expression_source_file="s.ts", expression_source_line=1, handler=_noop, kind="stimulus")
     source = "# Mid\nGiven these users exist:\n\nSome interrupting prose.\n\n| name | age |\n|------|-----|\n| Bob  | 30  |"
-    result = plan(parse("m.md", source), r)
+    result = plan(parse("m.md", source), r, empty_workspace())
     step = result.examples[0].steps[0]
     assert step.data_table is None
 
@@ -103,7 +104,7 @@ def test_fenced_code_block_immediately_after_step_attaches_as_doc_string() -> No
     r = create_registry()
     r = add_step(r, expression="I send the payload", expression_source_file="s.ts", expression_source_line=1, handler=_noop, kind="stimulus")
     source = "# Payload\nWhen I send the payload:\n\n```json\n{ \"action\": \"import\" }\n```"
-    result = plan(parse("p.md", source), r)
+    result = plan(parse("p.md", source), r, empty_workspace())
     step = result.examples[0].steps[0]
     assert step.doc_string is not None
     assert step.doc_string.content_type == "json"
@@ -113,21 +114,21 @@ def test_fenced_code_block_immediately_after_step_attaches_as_doc_string() -> No
 def test_step_with_no_following_fence_has_no_doc_string() -> None:
     r = create_registry()
     r = add_step(r, expression="I send the payload", expression_source_file="s.ts", expression_source_line=1, handler=_noop, kind="stimulus")
-    result = plan(parse("p.md", "# P\nWhen I send the payload"), r)
+    result = plan(parse("p.md", "# P\nWhen I send the payload"), r, empty_workspace())
     assert result.examples[0].steps[0].doc_string is None
 
 
 def test_keyword_led_sentence_with_no_match_produces_no_diagnostic() -> None:
     r = create_registry()
     doc = parse("m.md", "# Empty\n\nGiven I have 5 cukes in my belly.")
-    result = plan(doc, r)
+    result = plan(doc, r, empty_workspace())
     assert result.diagnostics == ()
 
 
 def test_unmatched_sentence_without_keyword_is_silently_prose() -> None:
     r = create_registry()
     doc = parse("p.md", "# Prose\n\nI have 5 cukes in my belly.")
-    result = plan(doc, r)
+    result = plan(doc, r, empty_workspace())
     assert result.diagnostics == ()
 
 
@@ -142,7 +143,7 @@ def test_header_bound_table_expands_into_one_example_per_row() -> None:
         "| 3, 3, 3, 4, 4 | full house | 17    |\n"
         "| 3, 3, 3, 3, 3 | Yahtzee    | 50    |"
     )
-    result = plan(parse("y.md", source), r)
+    result = plan(parse("y.md", source), r, empty_workspace())
     assert result.diagnostics == ()
     assert len(result.examples) == 2
     first, second = result.examples
@@ -161,7 +162,7 @@ def test_table_whose_paragraph_names_only_some_header_cells_keeps_whole_table_be
         "# Users\nthese users exist:\n\n"
         "| name | age |\n| ---- | --- |\n| Bob  | 30  |\n| Eve  | 25  |"
     )
-    result = plan(parse("u.md", source), r)
+    result = plan(parse("u.md", source), r, empty_workspace())
     assert len(result.examples) == 1
     step = result.examples[0].steps[0]
     assert step.data_table is not None
@@ -177,7 +178,7 @@ def test_header_bound_matching_is_case_sensitive() -> None:
         "# Case\neach row lists the Dice and the Score:\n\n"
         "| dice      | score |\n| --------- | ----- |\n| 1,1,1,1,1 | 5     |"
     )
-    result = plan(parse("c.md", source), r)
+    result = plan(parse("c.md", source), r, empty_workspace())
     # No exact-case match → falls back to a single whole-table example.
     assert len(result.examples) == 1
     assert result.examples[0].steps[0].data_table is not None
@@ -195,7 +196,7 @@ def test_header_bound_rows_are_named_by_cells_and_nested_under_paragraph() -> No
         "| 3, 3, 3, 4, 4 | full house | 17    |\n"
         "| 3, 3, 3, 3, 3 | Yahtzee    | 50    |"
     )
-    result = plan(parse("y.md", source), r)
+    result = plan(parse("y.md", source), r, empty_workspace())
     assert [e.name for e in result.examples] == [
         "3, 3, 3, 4, 4 / full house / 17",
         "3, 3, 3, 3, 3 / Yahtzee / 50",
@@ -216,7 +217,7 @@ def test_detached_table_produces_no_diagnostic() -> None:
         "Some interrupting prose paragraph.\n\n"
         "| name | age |\n|------|-----|\n| Bob  | 30  |"
     )
-    result = plan(parse("o.md", source), r)
+    result = plan(parse("o.md", source), r, empty_workspace())
     assert result.diagnostics == ()
 
 
@@ -230,7 +231,7 @@ def test_header_bound_row_example_carries_row_checks() -> None:
         "| ------------- | ---------- | ----- |\n"
         "| 3, 3, 3, 4, 4 | full house | 17    |"
     )
-    result = plan(parse("y.md", source), r)
+    result = plan(parse("y.md", source), r, empty_workspace())
     checks = result.examples[0].row_checks
     assert checks is not None
     assert [c.column for c in checks] == ["dice", "category", "score"]
@@ -243,7 +244,7 @@ def test_header_bound_row_example_carries_row_checks() -> None:
 def test_error_fence_marks_expected_outcome_fail_with_message() -> None:
     r = add_step(create_registry(), expression="I divide {int} by {int}", expression_source_file="s.ts", expression_source_line=1, handler=_noop, kind="stimulus")
     src = "# Division\n\nI divide 1 by 0.\n\n```error\ndivision by zero\n```\n"
-    ex = plan(parse("e.md", src), r).examples[0]
+    ex = plan(parse("e.md", src), r, empty_workspace()).examples[0]
     assert ex.expected_outcome == "fail"
     assert ex.expected_error_message == "division by zero"
     # The error fence must NOT become a docString attachment on the step.
@@ -252,14 +253,14 @@ def test_error_fence_marks_expected_outcome_fail_with_message() -> None:
 
 def test_no_error_fence_leaves_expected_outcome_undefined() -> None:
     r = add_step(create_registry(), expression="I divide {int} by {int}", expression_source_file="s.ts", expression_source_line=1, handler=_noop, kind="stimulus")
-    ex = plan(parse("e.md", "# Division\n\nI divide 1 by 1."), r).examples[0]
+    ex = plan(parse("e.md", "# Division\n\nI divide 1 by 1."), r, empty_workspace()).examples[0]
     assert ex.expected_outcome is None
 
 
 def test_error_fence_with_no_matching_step_emits_error_fence_without_step() -> None:
     r = add_step(create_registry(), expression="I divide {int} by {int}", expression_source_file="s.ts", expression_source_line=1, handler=_noop, kind="stimulus")
     src = "# Nope\n\nThis prose matches nothing.\n\n```error\nboom\n```\n"
-    result = plan(parse("e.md", src), r)
+    result = plan(parse("e.md", src), r, empty_workspace())
     assert result.examples == ()
     assert len(result.diagnostics) == 1
     assert result.diagnostics[0].code == "error-fence-without-step"
@@ -270,7 +271,7 @@ def test_error_fence_on_ambiguous_example_emits_both_diagnostics() -> None:
     r = add_step(r, expression="I divide {int} by {int}", expression_source_file="s.ts", expression_source_line=1, handler=_noop, kind="stimulus")
     r = add_step(r, expression="I divide 1 by 0", expression_source_file="s.ts", expression_source_line=2, handler=_noop, kind="stimulus")
     src = "# Ambiguous\n\nI divide 1 by 0.\n\n```error\nboom\n```\n"
-    result = plan(parse("e.md", src), r)
+    result = plan(parse("e.md", src), r, empty_workspace())
     codes = sorted(d.code for d in result.diagnostics)
     assert codes == ["ambiguous-match", "error-fence-without-step"]
 
@@ -293,7 +294,7 @@ def test_header_binding_param_spans_point_at_header_cells_in_paragraph() -> None
         "| ------------- | ---------- | ----- |\n"
         "| 3, 3, 3, 4, 4 | full house | 17    |"
     )
-    result = plan(parse("y.md", source), r)
+    result = plan(parse("y.md", source), r, empty_workspace())
     assert len(result.examples) == 1
     ex = result.examples[0]
     assert ex.header_binding is not None
@@ -309,7 +310,7 @@ def test_header_binding_param_spans_point_at_header_cells_in_paragraph() -> None
 def test_doc_string_step_carries_fence_body_span() -> None:
     r = add_step(create_registry(), expression="the payload is", expression_source_file="s.ts", expression_source_line=1, handler=_noop, kind="stimulus")
     source = "# T\n\nthe payload is:\n\n```json\n{ \"ok\": true }\n```"
-    result = plan(parse("d.md", source), r)
+    result = plan(parse("d.md", source), r, empty_workspace())
     ds = result.examples[0].steps[0].doc_string
     assert ds is not None
     assert ds.content == '{ "ok": true }\n'
@@ -322,7 +323,7 @@ def test_doc_string_step_carries_fence_body_span() -> None:
 
 def test_consecutive_matching_paragraphs_with_no_delimiter_merge_into_one_example() -> None:
     source = "I have 100 in my account.\n\nI withdraw 40.\n\nI should have 60 left."
-    result = plan(parse("m.md", source), _reg())
+    result = plan(parse("m.md", source), _reg(), empty_workspace())
     assert len(result.examples) == 1
     assert [s.text for s in result.examples[0].steps] == [
         "I have 100 in my account",
@@ -335,7 +336,7 @@ def test_consecutive_matching_paragraphs_with_no_delimiter_merge_into_one_exampl
 
 def test_thematic_break_between_matching_paragraphs_splits_them() -> None:
     source = "I have 100 in my account.\n\n---\n\nI withdraw 40."
-    result = plan(parse("h.md", source), _reg())
+    result = plan(parse("h.md", source), _reg(), empty_workspace())
     assert len(result.examples) == 2
     assert [[s.text for s in e.steps] for e in result.examples] == [
         ["I have 100 in my account"],
@@ -345,14 +346,14 @@ def test_thematic_break_between_matching_paragraphs_splits_them() -> None:
 
 def test_heading_between_matching_paragraphs_splits_them() -> None:
     source = "I have 100 in my account.\n\n## Next\n\nI withdraw 40."
-    result = plan(parse("hd.md", source), _reg())
+    result = plan(parse("hd.md", source), _reg(), empty_workspace())
     assert len(result.examples) == 2
     assert result.examples[1].scope_stack == ("Next",)
 
 
 def test_prose_paragraph_between_matching_paragraphs_splits_the_example() -> None:
     source = "I have 100 in my account.\n\nJust explaining what happens next.\n\nI withdraw 40."
-    result = plan(parse("p.md", source), _reg())
+    result = plan(parse("p.md", source), _reg(), empty_workspace())
     assert len(result.examples) == 2
     assert [[s.text for s in e.steps] for e in result.examples] == [
         ["I have 100 in my account"],
@@ -362,7 +363,7 @@ def test_prose_paragraph_between_matching_paragraphs_splits_the_example() -> Non
 
 def test_leading_and_trailing_prose_does_not_merge_into_an_example() -> None:
     source = "A preamble that matches nothing.\n\nI withdraw 40.\n\nA closing remark."
-    result = plan(parse("pp.md", source), _reg())
+    result = plan(parse("pp.md", source), _reg(), empty_workspace())
     assert len(result.examples) == 1
     assert [s.text for s in result.examples[0].steps] == ["I withdraw 40"]
 
@@ -377,7 +378,7 @@ def test_multi_table_shape_two_tables_in_one_example_survive_blank_lines() -> No
         "And the following assets have been imported:\n\n"
         "| name  |\n| ----- |\n| Moose |"
     )
-    result = plan(parse("basket.md", source), r)
+    result = plan(parse("basket.md", source), r, empty_workspace())
     assert len(result.examples) == 1
     ex = result.examples[0]
     assert len(ex.steps) == 2
