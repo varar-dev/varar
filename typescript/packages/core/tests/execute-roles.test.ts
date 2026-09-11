@@ -3,6 +3,7 @@ import { isCellMismatchError } from '../src/cell-diff.ts'
 import { type ExecutePorts, executePlan } from '../src/execute.ts'
 import { parse } from '../src/parse.ts'
 import { plan } from '../src/plan.ts'
+import { emptyWorkspace } from '../src/reference.ts'
 import { addStep, createRegistry, defineParameterType, type StepHandler } from '../src/registry.ts'
 
 // Minimal ports that run the example body and surface the thrown error.
@@ -14,7 +15,7 @@ function runOne(
   registry = register(registry)
   // parse(path, source) — path first, source second
   const doc = parse('x.md', source)
-  const p = plan(doc, registry)
+  const p = plan(doc, registry, emptyWorkspace())
   let caught: unknown
   const ports: ExecutePorts = {
     reporter: { diagnostic: () => {} },

@@ -58,6 +58,31 @@
         }
       ]
     },
+    "varar/reuse.md": {
+      "sourceHash": "fnv1a:a0e53ea6",
+      "examples": [
+        {
+          "name": "Both examples below start from the same borrowed book. Rather than repeating it, each one links to the section that describes it — the link renders on GitHub, and clicking it takes you to the world state being assumed",
+          "line": 3
+        },
+        {
+          "name": "[An overdue loan](./shared/an-overdue-loan.md#an-overdue-loan)",
+          "line": 9
+        },
+        {
+          "name": "When she asks to borrow *Beloved* on June 10, 2026, the library refuses: an overdue book blocks new loans",
+          "line": 11
+        },
+        {
+          "name": "[An overdue loan](./shared/an-overdue-loan.md#an-overdue-loan)",
+          "line": 15
+        },
+        {
+          "name": "She returns it on June 6, 2026 and owes a £2.50 late fee",
+          "line": 17
+        }
+      ]
+    },
     "varar/roman-numerals.md": {
       "sourceHash": "fnv1a:a3b97c9a",
       "examples": [
@@ -66,6 +91,10 @@
           "line": 3
         }
       ]
+    },
+    "varar/shared/an-overdue-loan.md": {
+      "sourceHash": "fnv1a:cf0dea5f",
+      "examples": []
     },
     "varar/tables-and-docstrings.md": {
       "sourceHash": "fnv1a:f45255ca",

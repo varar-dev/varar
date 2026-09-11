@@ -1,4 +1,4 @@
-import { addStep, createRegistry, type Diagnostic } from '@varar/core'
+import { addStep, createRegistry, type Diagnostic, emptyWorkspace } from '@varar/core'
 import { expect, test } from 'vitest'
 import { examplesWithRuns, planOath, RecordingReporter } from '../src/run.ts'
 
@@ -36,7 +36,7 @@ test('planOath returns an ExecutionPlan with examples and steps', () => {
     'I have 10 cucumbers. I eat 3 cucumbers. I should have 7 cucumbers left.',
   ].join('\n')
 
-  const result = planOath('oath.md', source, makeRegistry())
+  const result = planOath('oath.md', source, makeRegistry(), emptyWorkspace())
 
   expect(result.diagnostics).toHaveLength(0)
   expect(result.examples).toHaveLength(1)
@@ -53,7 +53,7 @@ test('planOath returns an ExecutionPlan with examples and steps', () => {
 
 test('planOath parses and plans an oath', () => {
   const source = '# Simple\n\nI have 5 cucumbers.\n'
-  const result = planOath('oath.md', source, makeRegistry())
+  const result = planOath('oath.md', source, makeRegistry(), emptyWorkspace())
   expect(result.doc.source).toBe(source)
   expect(result.examples).toHaveLength(1)
 })
@@ -79,7 +79,7 @@ test('examplesWithRuns pairs examples with run functions', async () => {
     '',
     'I have 10 cucumbers. I eat 3 cucumbers. I should have 7 cucumbers left.',
   ].join('\n')
-  const plan = planOath('oath.md', source, makeRegistry())
+  const plan = planOath('oath.md', source, makeRegistry(), emptyWorkspace())
   const reporter = new RecordingReporter()
   const pairs = examplesWithRuns(plan, () => ({}), reporter)
 
@@ -105,7 +105,7 @@ test('examplesWithRuns — failing run rejects', async () => {
     },
   })
   const source = '# Test\n\nthe value is 42.\n'
-  const plan = planOath('oath.md', source, r)
+  const plan = planOath('oath.md', source, r, emptyWorkspace())
   const reporter = new RecordingReporter()
   const pairs = examplesWithRuns(plan, () => ({}), reporter)
 

@@ -64,7 +64,9 @@ oaths_on_disk() {
   [ "$include" = "varar/**/*.md" ] || fail "$dir: the smoke contract assumes oaths live in varar/" \
     "varar.config.json docs.include is [$include]" \
     "Teach smoke.sh to glob, or move the oaths (see CLAUDE.md — 'varar means oaths')."
-  (cd "$REPO_ROOT/$dir" && ls varar/*.md | sort)
+  # `varar/**/*.md` is recursive, and a project may nest oaths (shared sections
+  # referenced from elsewhere conventionally live in varar/shared/ — ADR 0016).
+  (cd "$REPO_ROOT/$dir" && find varar -name '*.md' | sed 's|^\./||' | sort)
 }
 
 run_contract() {

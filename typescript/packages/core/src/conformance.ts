@@ -5,6 +5,7 @@ import type { DiagnosticCode, Severity } from './diagnostics.ts'
 import { collectExamples, isUnexpectedPassError, type StepObservation } from './execute.ts'
 import { failureAnchor } from './failure-anchor.ts'
 import { plan as buildPlan, type ExecutionPlan } from './plan.ts'
+import { emptyWorkspace, type OathWorkspace } from './reference.ts'
 import type { Registry } from './registry.ts'
 import type { Span } from './span.ts'
 
@@ -246,8 +247,11 @@ export async function runConformance(
   registry: Registry,
   createContext: (stepFile: string) => unknown | Promise<unknown>,
   parameterTypes: ReadonlyArray<{ name: string; regexp: string }> = [],
+  // The other oaths in the bundle, for a bundle whose oath references them
+  // (ADR 0016). A single-document bundle passes nothing.
+  workspace: OathWorkspace = emptyWorkspace(),
 ): Promise<BundleArtifacts> {
-  const execution = buildPlan(doc, registry)
+  const execution = buildPlan(doc, registry, workspace)
 
   const observed = new Map<number, StepObservation[]>()
   const queue = collectExamples(execution, {

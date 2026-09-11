@@ -9,7 +9,13 @@ export type Diagnostic = {
   readonly span: Span
 }
 
-export type DiagnosticCode = 'ambiguous-match' | 'error-fence-without-step' | 'drift'
+export type DiagnosticCode =
+  | 'ambiguous-match'
+  | 'error-fence-without-step'
+  | 'drift'
+  | 'reference-not-found'
+  | 'reference-empty'
+  | 'reference-cycle'
 
 export type Candidate = {
   readonly expression: string
@@ -59,6 +65,59 @@ export function errorFenceWithoutStep(input: { readonly span: Span }): Diagnosti
     code: 'error-fence-without-step',
     message:
       'This `error` fence marks the example as expected-to-fail, but the example has no step to run.',
+    span: input.span,
+  }
+}
+
+// A reference block (ADR 0016) points at an oath the workspace does not hold.
+// Never prose: a link-only block that resolves to nothing has no other reading,
+// so it fails the run rather than degrading silently.
+export function referenceNotFound(input: {
+  readonly text: string
+  readonly path: string
+  readonly span: Span
+}): Diagnostic {
+  return {
+    severity: 'error',
+    code: 'reference-not-found',
+    message:
+      `Reference to "${input.text}" points at "${input.path}", which is not an oath in this ` +
+      'workspace.\nCheck the path, and that the file is matched by the `docs` globs in ' +
+      'varar.config.json.',
+    span: input.span,
+  }
+}
+
+// The referenced document exists but the section contributes no steps — a
+// mistyped anchor, or a section that is pure prose.
+export function referenceEmpty(input: {
+  readonly text: string
+  readonly path: string
+  readonly slug: string
+  readonly span: Span
+}): Diagnostic {
+  const where = input.slug === '' ? input.path : `${input.path}#${input.slug}`
+  return {
+    severity: 'error',
+    code: 'reference-empty',
+    message:
+      `Reference to "${input.text}" resolves to "${where}", which contributes no steps.\n` +
+      'Check the heading the anchor names, and that its section contains a matching paragraph.',
+    span: input.span,
+  }
+}
+
+// References may nest to any depth (depth is a style question, not a rule), so
+// a chain that reaches a section already on it must be reported rather than
+// recursed into.
+export function referenceCycle(input: {
+  readonly chain: ReadonlyArray<string>
+  readonly span: Span
+}): Diagnostic {
+  return {
+    severity: 'error',
+    code: 'reference-cycle',
+    message: `Reference cycle: ${input.chain.join(' → ')}.`,
     span: input.span,
   }
 }

@@ -1,10 +1,12 @@
 import {
   addStep,
+  buildWorkspace,
   createRegistry,
   type Doc,
   defineParameterType,
   type ExecutionPlan,
   hashSource,
+  type OathWorkspace,
   parse,
   plan,
   type Registry,
@@ -93,6 +95,10 @@ export type WorkspaceIndex = {
   // downstream tools — snippet generation, completion, etc. — can use the
   // same view the matcher used.
   readonly registry: Registry
+  // The reference topology the plans were built against (ADR 0016), so a
+  // caller that re-plans one document — the LSP accepting drift — plans it the
+  // way the index did rather than as if it stood alone.
+  readonly workspace: OathWorkspace
   // Every oath's parsed document and execution plan, keyed by the path it was
   // indexed under. Exposed so a caller that needs the same plan — the LSP's
   // drift pass — reuses this one instead of parsing and planning a second time.
@@ -166,11 +172,38 @@ export function buildWorkspaceIndex(input: WorkspaceInput, cache?: IndexCache): 
   const diagnostics: DiagnosticRef[] = []
   const oaths = new Map<string, PlannedOath>()
 
-  for (const file of input.oathFiles) {
-    // Parse is pure in the source, so it is cached by content alone; the plan
-    // and everything derived from it also depend on the registry.
+  // Parse every oath before planning any: whether a section is a standalone
+  // example depends on whether another oath references it, which is
+  // whole-project knowledge (ADR 0016).
+  const docs = input.oathFiles.map((file) => {
     const docKey = versionKey(file.path, file.source)
-    const planKey = `${docKey}\u0000${registryKey}`
+    let doc = cache?.docs.get(docKey)
+    if (!doc) {
+      doc = parse(file.path, file.source)
+      cache?.docs.set(docKey, doc)
+    }
+    return { file, docKey, doc }
+  })
+  const workspace = buildWorkspace(docs.map((d) => d.doc))
+  // A plan depends on the reference topology and on the content of the
+  // documents that topology reaches — and on nothing else in the workspace, so
+  // a project without references (the common case) keeps per-file caching
+  // exact, and one with references invalidates conservatively.
+  const workspaceKey = hashSource(
+    [
+      ...[...workspace.referenced].sort(),
+      ...docs
+        .filter((d) => referencedPaths(workspace).has(d.doc.path))
+        .map((d) => d.docKey)
+        .sort(),
+    ].join('\n'),
+  )
+
+  for (const { file, docKey, doc } of docs) {
+    // Parse is pure in the source, so it is cached by content alone; the plan
+    // and everything derived from it also depend on the registry and on the
+    // project's reference topology.
+    const planKey = `${docKey}\u0000${registryKey}\u0000${workspaceKey}`
     const cached = cache?.plans.get(planKey)
     if (cached) {
       oaths.set(file.path, cached)
@@ -178,12 +211,7 @@ export function buildWorkspaceIndex(input: WorkspaceInput, cache?: IndexCache): 
       diagnostics.push(...cached.diagnostics)
       continue
     }
-    let doc = cache?.docs.get(docKey)
-    if (!doc) {
-      doc = parse(file.path, file.source)
-      cache?.docs.set(docKey, doc)
-    }
-    const result = plan(doc, registry)
+    const result = plan(doc, registry, workspace)
     const fileMatches: MatchRef[] = []
     const fileDiagnostics: DiagnosticRef[] = []
     // Header-bound tables expand to one example per row, all sharing the same
@@ -250,7 +278,7 @@ export function buildWorkspaceIndex(input: WorkspaceInput, cache?: IndexCache): 
     diagnostics.push(...fileDiagnostics)
   }
 
-  return { stepDefs, matches, diagnostics, registry, oaths }
+  return { stepDefs, matches, diagnostics, registry, workspace, oaths }
 }
 
 type SpanLike = {
@@ -265,4 +293,15 @@ function toRange(span: SpanLike): Range {
     start: { line: span.startLine, character: span.startCol },
     end: { line: span.endLine, character: span.endCol },
   }
+}
+
+// The paths a reference points at, so cache invalidation can ignore every
+// document that takes no part in the reference graph.
+function referencedPaths(workspace: ReturnType<typeof buildWorkspace>): ReadonlySet<string> {
+  const out = new Set<string>()
+  for (const key of workspace.referenced) {
+    const hash = key.lastIndexOf('#')
+    out.add(hash === -1 ? key : key.slice(0, hash))
+  }
+  return out
 }

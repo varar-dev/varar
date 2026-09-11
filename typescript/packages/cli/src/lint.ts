@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs'
 import { relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { findFiles, loadConfig, toOathPath } from '@varar/config'
-import type { StepRegistration } from '@varar/core'
+import { buildWorkspace, parse, type StepRegistration } from '@varar/core'
 import { loadSteps, planOath } from '@varar/runner'
 
 export type LintOptions = {
@@ -49,9 +49,15 @@ export async function runLint(opts: LintOptions): Promise<LintResult> {
 
   const items: Item[] = []
   const matched = new Set<StepRegistration>()
+  // Parse every oath before planning any: a section another oath references is
+  // not a standalone example, which is whole-project knowledge (ADR 0016).
+  const sources = new Map(files.map((path) => [path, readFileSync(path, 'utf8')]))
+  const workspace = buildWorkspace(
+    files.map((path) => parse(toOathPath(opts.cwd, path), sources.get(path) ?? '')),
+  )
   for (const path of files) {
-    const source = readFileSync(path, 'utf8')
-    const execution = planOath(toOathPath(opts.cwd, path), source, registry)
+    const source = sources.get(path) ?? ''
+    const execution = planOath(toOathPath(opts.cwd, path), source, registry, workspace)
     for (const d of execution.diagnostics) {
       items.push({
         path: rel(opts.cwd, path),

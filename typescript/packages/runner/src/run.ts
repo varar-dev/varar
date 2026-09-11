@@ -2,6 +2,7 @@ import {
   collectExamples,
   type Diagnostic,
   type ExecutionPlan,
+  type OathWorkspace,
   type PlannedExample,
   parse,
   plan,
@@ -22,8 +23,18 @@ export function examplesWithRuns(
   }))
 }
 
-export function planOath(path: string, source: string, registry: Registry): ExecutionPlan {
-  return plan(parse(path, source), registry)
+// Plan one oath. `workspace` carries every other oath in the project plus the
+// sections a reference block consumes (ADR 0016) — it is required because an
+// adapter that omitted it would run consumed sections as standalone examples,
+// which is green and wrong. An adapter with no reference support yet passes
+// emptyWorkspace(); one that discovers the project passes buildWorkspace(docs).
+export function planOath(
+  path: string,
+  source: string,
+  registry: Registry,
+  workspace: OathWorkspace,
+): ExecutionPlan {
+  return plan(parse(path, source), registry, workspace)
 }
 
 export class RecordingReporter implements Reporter {

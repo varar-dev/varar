@@ -1,10 +1,13 @@
 import {
+  buildWorkspace,
   type CellDiff,
   deriveOathBaseline,
   detectDrift,
   driftDiagnostics,
   isCellMismatchError,
   type OathBaseline,
+  type OathWorkspace,
+  parse,
   type Reporter,
   toFailure,
 } from '@varar/core'
@@ -29,6 +32,13 @@ export type CollectPorts = {
   // the gate is skipped and the baseline is re-recorded by the reporter at the
   // end of the run.
   readonly baseline?: OathBaseline | null
+  // The project's reference topology, inlined by the plugin (ADR 0016): the
+  // sources of every oath this one references, transitively, plus the
+  // consumed-section keys. Absent in a project that uses no reference blocks.
+  readonly workspace?: {
+    readonly sources: Readonly<Record<string, string>>
+    readonly referenced: ReadonlyArray<string>
+  }
 }
 
 // Baselines derived at collection time, keyed by oath path, waiting for a test
@@ -41,6 +51,13 @@ const pendingBaselines = new Map<string, OathBaseline>()
 // The key the file-level task meta carries the derived baseline under. The
 // reporter reads it back through vitest's TestModule.meta().
 export const VARAR_BASELINE_META = 'vararBaseline'
+
+// Marks an oath module that is a discovered oath but contributes no standalone
+// example, because every section it holds is referenced from another oath (ADR
+// 0016). The reporter writes it an EMPTY .varar/<oath>.json: skipping the file
+// would leave the language server showing diagnostics from the run before the
+// section was consumed.
+export const VARAR_CONSUMED_META = 'vararConsumed'
 
 export type CollectedExample = {
   readonly name: string
@@ -66,7 +83,7 @@ export function collectVararExamples(
       }),
   }
   const registry = buildRegistry()
-  const p = planOath(path, source, registry)
+  const p = planOath(path, source, registry, runtimeWorkspace(path, source, ports))
   // Drift reconciliation, split across the process boundary. Detection happens
   // HERE, against the runtime plan — the same plan every other port reconciles
   // from (RSpec at describe time, JUnit in its selector resolver). A paragraph
@@ -165,6 +182,20 @@ function attachExpectedActual(error: unknown): void {
   }
 }
 
+// The body of the single bookkeeping test a fully-consumed oath registers: it
+// contributes no standalone example (every section it holds is referenced from
+// another oath — ADR 0016), but it is still a discovered oath, so its drift
+// baseline must be recorded like any other's. Registering one test is also what
+// keeps vitest from failing the file outright, which it does for a module that
+// declares no test at all.
+export function vararConsumedBody(path: string): (ctx: TaskContext) => void {
+  return (ctx) => {
+    attachBaseline(ctx, path)
+    const fileMeta = ctx.task.file?.meta
+    if (fileMeta) fileMeta[VARAR_CONSUMED_META] = true
+  }
+}
+
 export function vararTestBody(
   examples: ReadonlyArray<CollectedExample>,
   index: number,
@@ -196,4 +227,20 @@ export function vararTestBody(
       throw error
     }
   }
+}
+
+// Rebuild the workspace the plugin saw, from what it inlined. The referencing
+// oath itself is included, so a same-file reference resolves; `referenced` is
+// project-wide, so this oath's own consumed sections are suppressed here
+// exactly as they were in the build-time plan.
+function runtimeWorkspace(path: string, source: string, ports: CollectPorts): OathWorkspace {
+  const inlined = ports.workspace
+  if (!inlined || inlined.referenced.length === 0) {
+    return buildWorkspace([])
+  }
+  const docs = [
+    parse(path, source),
+    ...Object.entries(inlined.sources).map(([p, s]) => parse(p, s)),
+  ]
+  return { docs: new Map(docs.map((d) => [d.path, d])), referenced: new Set(inlined.referenced) }
 }

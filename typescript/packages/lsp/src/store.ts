@@ -4,6 +4,7 @@ import {
   deriveOathBaseline,
   detectDrift,
   driftDetected,
+  emptyWorkspace,
   type LockFile,
   parse,
   parseLockFile,
@@ -120,6 +121,7 @@ export function createStore(deps: StoreDeps): Store {
     matches: [],
     diagnostics: [],
     registry: createRegistry(),
+    workspace: emptyWorkspace(),
     oaths: new Map(),
   }
   // Created once, lazily, on the first reindex — not in createStore itself,
@@ -196,7 +198,11 @@ export function createStore(deps: StoreDeps): Store {
       const oathPath = toOathPath(root, absPath)
       const source = await fs.read(absPath)
       const doc = parse(absPath, source)
-      const baseline = deriveOathBaseline(source, doc, plan(doc, current.registry))
+      const baseline = deriveOathBaseline(
+        source,
+        doc,
+        plan(doc, current.registry, current.workspace),
+      )
       const next: LockFile = {
         version: 2,
         oaths: { ...(existing?.oaths ?? {}), [oathPath]: baseline },

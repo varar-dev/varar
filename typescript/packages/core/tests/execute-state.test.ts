@@ -3,6 +3,7 @@ import { ReturnShapeError } from '../src/cell-diff.ts'
 import { type ExecutePorts, executePlan } from '../src/execute.ts'
 import { parse } from '../src/parse.ts'
 import { plan } from '../src/plan.ts'
+import { emptyWorkspace } from '../src/reference.ts'
 import { addStep, createRegistry } from '../src/registry.ts'
 
 // Runs one example. `createContext` seeds the initial state; step handlers may
@@ -14,7 +15,7 @@ function run(
 ) {
   const registry = register(createRegistry())
   const doc = parse('x.md', source)
-  const p = plan(doc, registry)
+  const p = plan(doc, registry, emptyWorkspace())
   let caught: unknown
   const ports: ExecutePorts = {
     reporter: { diagnostic: () => {} },
