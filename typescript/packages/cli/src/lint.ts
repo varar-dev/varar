@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs'
 import { relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { findFiles, loadConfig } from '@varar/config'
+import { findFiles, loadConfig, toOathPath } from '@varar/config'
 import type { StepRegistration } from '@varar/core'
 import { loadSteps, planOath } from '@varar/runner'
 
@@ -51,7 +51,7 @@ export async function runLint(opts: LintOptions): Promise<LintResult> {
   const matched = new Set<StepRegistration>()
   for (const path of files) {
     const source = readFileSync(path, 'utf8')
-    const execution = planOath(path, source, registry)
+    const execution = planOath(toOathPath(opts.cwd, path), source, registry)
     for (const d of execution.diagnostics) {
       items.push({
         path: rel(opts.cwd, path),

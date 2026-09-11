@@ -75,14 +75,16 @@ func Collect(root string, build BuildRegistry, ctx ContextFactory, update bool) 
 	for _, oathPath := range oaths {
 		sourceBytes, _ := os.ReadFile(oathPath)
 		source := string(sourceBytes)
-		oathFile := filepath.Base(oathPath)
 		rel, relErr := filepath.Rel(root, oathPath)
 		if relErr != nil {
-			rel = oathFile
+			rel = filepath.Base(oathPath)
 		}
 		rel = filepath.ToSlash(rel)
 
-		plan := runner.PlanOath(oathFile, source, build())
+		// `rel` (workspace-relative, POSIX), not the basename: doc.path is an
+		// oath's identity in every port, and a basename cannot tell two
+		// same-named oaths apart or anchor a relative reference (ADR 0016).
+		plan := runner.PlanOath(rel, source, build())
 		for i, display := range runner.ExampleNames(plan) {
 			index := i
 			src := source
@@ -109,7 +111,7 @@ func Collect(root string, build BuildRegistry, ctx ContextFactory, update bool) 
 		// Drift reconciliation: rewrites the baseline on a clean run; each
 		// drifted paragraph becomes a failing case (ADR 0002).
 		store := runner.NewFileBaselineStore(root)
-		doc := core.Parse(oathFile, source)
+		doc := core.Parse(rel, source)
 		for _, drifted := range core.ReconcileDrift(store, rel, source, doc, plan, update) {
 			cases = append(cases, Case{
 				Name:         rel + "::varar:drift:" + strconv.Itoa(drifted.Line),

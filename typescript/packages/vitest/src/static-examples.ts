@@ -23,7 +23,11 @@ export type StaticExample = {
 }
 
 export type DiscoverInput = {
-  readonly absPath: string
+  // The oath's workspace-relative POSIX path — its identity everywhere
+  // (varar.lock.json, .varar/<oathPath>.json, doc.path). Planning must see the
+  // same string the runtime does, so a relative reference resolves alike in
+  // both (ADR 0016).
+  readonly oathPath: string
   readonly source: string
   readonly stepFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>
 }
@@ -44,7 +48,7 @@ export async function discoverStaticExamples(
     oathFiles: [],
     scanner,
   })
-  const p = planOath(input.absPath, input.source, registry)
+  const p = planOath(input.oathPath, input.source, registry)
   return p.examples.map((ex) => ({
     name: ex.name,
     line: ex.span.startLine,

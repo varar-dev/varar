@@ -1,6 +1,6 @@
 import { existsSync, readFileSync } from 'node:fs'
-import { relative, resolve, sep } from 'node:path'
-import { findFiles, loadConfig } from '@varar/config'
+import { resolve } from 'node:path'
+import { findFiles, loadConfig, toOathPath } from '@varar/config'
 import { type OathBaseline, parseLockFile } from '@varar/core'
 import type { Plugin } from 'vite'
 import { configDefaults } from 'vitest/config'
@@ -73,14 +73,15 @@ export function vararVitestPlugin(options: VararVitestPluginOptions = {}): Plugi
       if (configJsonPath) this.addWatchFile(configJsonPath)
       // Editing the baseline re-transforms so the drift gate reflects it.
       this.addWatchFile(lockPath)
+      // This oath's identity: POSIX path relative to cwd. Keys varar.lock.json
+      // and .varar/, and is the `doc.path` both the static plan below and the
+      // runtime plan see — they must agree (ADR 0016).
+      const oathPath = toOathPath(cwd, absPath)
       const examples = await discoverStaticExamples({
-        absPath,
+        oathPath,
         source,
         stepFiles: stepFiles.map((path) => ({ path, source: readFileSync(path, 'utf8') })),
       })
-      // This oath's baseline entry from varar.lock.json (POSIX path, relative to
-      // cwd), injected so the runtime can run the read-only drift gate.
-      const oathPath = relative(cwd, absPath).split(sep).join('/')
       const lock = existsSync(lockPath) ? parseLockFile(readFileSync(lockPath, 'utf8')) : null
       const baseline = lock?.oaths[oathPath] ?? null
       return generateVirtualModule({

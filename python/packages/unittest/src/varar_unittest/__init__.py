@@ -93,7 +93,10 @@ def _oath_test_case(
     # gets a stable relative label.
     rel = Path(os.path.abspath(oath_path)).relative_to(root, walk_up=True).as_posix()
     source = oath_path.read_text(encoding="utf-8")
-    execution_plan = plan_oath(oath_path.name, source, loaded.registry)
+    # `rel`, not the basename: doc.path is an oath's identity in every port, so
+    # a relative reference resolves alike and two same-named oaths in different
+    # directories stay distinct (ADR 0016).
+    execution_plan = plan_oath(rel, source, loaded.registry)
     pairs = examples_with_runs(execution_plan, loaded.create_context, RecordingReporter())
 
     methods: dict[str, Any] = {"__doc__": rel}

@@ -47,7 +47,10 @@ module Varar
     def build_test_case(oath_path, root, loaded, store, update, results)
       rel = Runner.rel_posix(oath_path, root)
       source = File.read(oath_path, encoding: 'UTF-8')
-      plan = Runner.plan_oath(File.basename(oath_path), source, loaded.registry)
+      # `rel`, not the basename: doc.path is an oath's identity in every port,
+      # so a relative reference resolves alike and two same-named oaths in
+      # different directories stay distinct (ADR 0016).
+      plan = Runner.plan_oath(rel, source, loaded.registry)
       pairs = Runner.examples_with_runs(plan, loaded.create_context, Runner::RecordingReporter.new)
 
       klass = Class.new(::Minitest::Test)

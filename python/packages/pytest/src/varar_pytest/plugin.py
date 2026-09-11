@@ -98,7 +98,9 @@ class OathFile(pytest.File):
     def collect(self):
         _cfg, loaded, root, store, results = _STASH[id(self.config)]
         source = self.path.read_text(encoding="utf-8")
-        execution_plan = plan_oath(self.path.name, source, loaded.registry)
+        # The oath's workspace-relative POSIX path, not its basename: doc.path
+        # is an oath's identity in every port (ADR 0016).
+        execution_plan = plan_oath(_oath_path(self.path, root), source, loaded.registry)
         pairs = examples_with_runs(execution_plan, loaded.create_context, RecordingReporter())
         seen: dict[str, int] = {}
         for example, run in pairs:

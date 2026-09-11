@@ -108,22 +108,21 @@ fn trials_recording(
 
     for oath_path in oaths {
         let source = std::fs::read_to_string(&oath_path).unwrap_or_default();
-        let oath_file = oath_path
-            .file_name()
-            .unwrap()
-            .to_string_lossy()
-            .into_owned();
+        // An oath's identity is its workspace-relative POSIX path, not its
+        // basename: `doc.path` means the same string in every port, so a
+        // relative reference from one oath to another resolves alike and two
+        // same-named oaths stay distinct (ADR 0016).
         let rel = oath_path
             .strip_prefix(root)
             .unwrap_or(&oath_path)
             .to_string_lossy()
-            .into_owned();
+            .replace('\\', "/");
 
         let registry = build_registry();
-        let execution = plan_oath(&oath_file, &source, &registry);
+        let execution = plan_oath(&rel, &source, &registry);
 
         for (index, display) in example_names(&execution).into_iter().enumerate() {
-            let (sf, src, r) = (oath_file.clone(), source.clone(), rel.clone());
+            let (sf, src, r) = (rel.clone(), source.clone(), rel.clone());
             let example = &execution.examples[index];
             let name = example.name.clone();
             let mut lines: Vec<usize> = example
@@ -163,7 +162,7 @@ fn trials_recording(
         // Drift reconciliation (main thread): rewrites the baseline on a clean
         // run; each drifted paragraph becomes a failing trial (ADR 0002).
         let mut store = FileBaselineStore::new(root);
-        let doc = parse(&oath_file, &source);
+        let doc = parse(&rel, &source);
         for drifted in reconcile_drift(&mut store, &rel, &source, &doc, &execution, update) {
             let message = drift::message(&drifted);
             trials.push(Trial::test(format!("{rel}::varar:drift:{}", drifted.line), move || {
