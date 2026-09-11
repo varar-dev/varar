@@ -235,6 +235,91 @@ Kept out of v1 so the primitive lands small; each is additive:
   oath diff (`no-theatre`), and setup that is invisible in the document defeats
   that.
 
+## The inbound index
+
+"A section that is linked stops being a standalone example" is the rule with the
+longest reach in this ADR, because it makes planning depend on the whole project.
+This section resolves how.
+
+### What the ports do today
+
+Every runner already performs a **whole-project glob once per run**, and every
+one of them already does it for a reason that is the same shape as this problem
+— pruning `varar.lock.json` entries for oaths the config no longer discovers,
+which must be keyed off the config globs and *not* off the files the runner
+happened to collect:
+
+| Port | Once-per-run whole-project seam |
+|------|----------------------------------|
+| vitest | plugin `config()` / `configResolved()` — globs `docs`, and `load()` already reads **every step file** per oath |
+| pytest | `pytest_configure` → `find_oaths(...)`, explicitly *not* the collected subset ("`pytest tests/one_dir/` is a filtered view") |
+| JUnit | `OathTestEngine` — `onDisk` walk before pruning |
+| Kotest | `OathSpec` — "`findOaths` ignores whatever test filter Kotest was given" |
+| minitest / RSpec | `Runner.find_oaths(...)` at load |
+| cargo test | `find_oaths(&config, root)` |
+| go test | `runner.FindOaths(cfg, root)` — "Collect always discovers everything" |
+| .NET | `Discovery.FindOaths(workspace.Config, workspace.Root)` |
+
+The LSP is not the hard case it looked like either: `store.reindex()` lists
+**every** oath, reads every source, and hands the lot to `buildWorkspaceIndex`,
+which already parses and plans all of them — and it does this on every
+`didChange`, not per buffer. The LSP is already whole-project on every keystroke.
+
+Planning itself is per-file and lazy everywhere (`planOath(path, source,
+registry)`, `OathFile.collect`, the vitest `load()` hook), which is the seam that
+has to change — but the *discovery* it would need already happens one layer up.
+
+### Decision
+
+**Build the inbound index at the existing once-per-run glob seam, in every
+port.** Concretely: at that point, read and `parse()` every discovered oath
+(parsing is pure and executes no step code), collect every reference block, and
+carry the resulting `(path, slug) → referrers` map into each `plan()` call.
+
+The decisive argument is **determinism**: whether a section is a test must not
+depend on which files the invocation happened to select. A best-effort index
+built from "the files this run planned" would make `pytest tests/fees/` and
+`pytest` disagree about whether `shared/library.md` contains a test — the same
+source, two answers, both green. That is the failure mode Varar exists to rule
+out.
+
+### The alternative, and why not
+
+**A file-level opt-out** — shared sections live under a glob `docs` excludes from
+example discovery — keeps planning local and needs no index at all. It was the
+tempting option, and it loses on three counts:
+
+1. It does not save the I/O. Resolving a reference still reads the target file
+   (the *forward* closure). The index only adds inbound bookkeeping over sources
+   the run already has in hand.
+2. It is coarse: a whole file becomes shared-only, so a file cannot hold both
+   ordinary examples and a section other files link to.
+3. It adds a second configuration concept that means the same thing as a link,
+   and can disagree with it — a file in the shared glob that nothing references,
+   or a referenced section in a file that is not.
+
+### The real costs
+
+- **vitest: an oath whose sections are all consumed produces a test file with
+  zero tests**, which vitest reports as an error ("No test suite found in
+  file"). `test.include` is driven straight from the `docs` globs, so the plugin
+  must either drop fully-consumed oaths from `include` (it now has the index in
+  `config()` to know) or emit a placeholder. No other port has this problem: an
+  empty pytest collector, an childless JUnit descriptor and a Go subtest-less
+  file are all fine.
+- **vitest watch mode gets wider invalidation.** Editing *any* oath can change
+  another oath's plan, so `load()` must `addWatchFile` every oath, not just the
+  step files. Precedented — step files already force a re-transform of every
+  oath — but it means one keystroke in a shared oath re-transforms the project.
+- **Filtered runs parse files they do not run.** Parse-only, no step execution,
+  and bounded by the oath count; cache by (path, hash) if it ever shows up in a
+  profile.
+- **Seven ports plus the LSP must thread one more argument through `plan()`.**
+  Mechanical, but it is the kind of change where one port quietly keeps the old
+  single-argument call and silently runs shared sections as examples — so the
+  conformance corpus must pin a bundle where a section is consumed, and the
+  expected plan for its *defining* file is empty.
+
 ## Implementation
 
 The split follows ADR 0012's: syntax in `structure()`, meaning in `plan()`.
@@ -301,11 +386,10 @@ incrementally.
   (`feat(spec)!`), near-zero in practice; the dogfood oaths contain none.
 - **Planning stops being a per-document pure function of one document.** Whether
   a section is an example now depends on whether anything, anywhere in the
-  project, links to it. Every caller that plans a subset — a single-file vitest
-  run, the LSP on one buffer, each port's runner — has to be handed an inbound
-  index, and a caller that forgets runs referenced sections as standalone
-  examples: wrong, and green. This is the deepest change in the proposal and the
-  one that touches all seven ports plus the LSP.
+  project, links to it, so every caller that plans an oath must be handed an
+  inbound index. A caller that forgets runs referenced sections as standalone
+  examples: wrong, and green. See [The inbound index](#the-inbound-index) — the
+  seam exists in all seven ports already, but every one of them has to use it.
 - **Shared setup is no longer independently verified.** A section that only ever
   runs inlined has no line of its own; if every referrer is deleted it silently
   becomes an ordinary example again. Accepted in exchange for not duplicating
@@ -328,14 +412,8 @@ incrementally.
 
 Unresolved; each needs a decision before implementation.
 
-1. **How does a subset run get the inbound index?** Options: (a) the runner
-   always globs and parses every oath before planning any (accurate, costs a
-   project scan on every single-file run and every LSP keystroke); (b) a
-   file-level opt-out — shared files live under a glob that `docs` excludes from
-   example discovery, making "not standalone" local and cheap but coarse (a whole
-   file, not a section); (c) cache the index and invalidate on change. (b) is the
-   only option that keeps planning local; it conflicts with section-level
-   granularity.
+1. ~~How does a subset run get the inbound index?~~ **Resolved** — see
+   [The inbound index](#the-inbound-index).
 2. **Where is drift reported for a referenced section?** At the section (the
    author's location, but the failure names a file the run may not have targeted)
    or at each reference block (N copies of one problem)?
