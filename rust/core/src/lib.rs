@@ -40,6 +40,7 @@ pub mod offsets;
 pub mod param_diff;
 pub mod parse;
 pub mod plan;
+pub mod reference;
 pub mod registry;
 pub mod result;
 pub mod scanner;

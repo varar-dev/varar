@@ -10,6 +10,7 @@ use varar_core::handler::Handler;
 use varar_core::offsets::utf16_slice;
 use varar_core::parse::parse;
 use varar_core::plan::plan;
+use varar_core::reference::empty_workspace;
 use varar_core::registry::{add_step, create_registry};
 use varar_core::step_kind::StepKind;
 
@@ -38,7 +39,7 @@ fn a_failing_step_records_the_anchor_of_the_step_that_failed() {
     )
     .unwrap();
 
-    let p = plan(&parse("l.md", SOURCE), &r);
+    let p = plan(&parse("l.md", SOURCE), &r, &empty_workspace());
     let ports = ExecutePorts::silent();
     let failure = collect_examples(&p, &ports)[0].run().unwrap_err();
     assert!(matches!(failure.error, StepError::Handler(_)));

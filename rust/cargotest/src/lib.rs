@@ -29,6 +29,7 @@ use libtest_mimic::{Arguments, Failed, Trial};
 use varar_core::drift::{self, prune_baselines, reconcile_drift};
 use varar_core::failure::to_failure;
 use varar_core::parse::parse;
+use varar_core::reference::{OathWorkspace, build_workspace};
 use varar_core::registry::Registry;
 use varar_core::result::{ExampleResult, Status};
 use varar_runner::{
@@ -49,8 +50,9 @@ pub fn run_one(
     build_registry: BuildRegistry,
     context: ContextFactory,
     index: usize,
+    workspace: &OathWorkspace,
 ) -> Result<(), String> {
-    run_one_failure(oath_file, source, build_registry, context, index)
+    run_one_failure(oath_file, source, build_registry, context, index, workspace)
         .map_err(|failure| render_failure(&failure, source, rel))
 }
 
@@ -63,9 +65,10 @@ fn run_one_failure(
     build_registry: BuildRegistry,
     context: ContextFactory,
     index: usize,
+    workspace: &OathWorkspace,
 ) -> Result<(), varar_core::error::StepFailure> {
     let registry = build_registry();
-    let execution = plan_oath(oath_file, source, &registry);
+    let execution = plan_oath(oath_file, source, &registry, workspace);
     let context_factory = move |file: &str| context(file);
     run_example(&execution, &context_factory, index)
 }
@@ -106,6 +109,11 @@ fn trials_recording(
         .collect();
     prune_baselines(&mut FileBaselineStore::new(root), &keep, update);
 
+    // Whether a section is a standalone example depends on whether another oath
+    // references it, which is whole-project knowledge (ADR 0016). Built from the
+    // config globs — the full set, for the same reason baseline pruning is.
+    let workspace = Arc::new(project_workspace(&oaths, root));
+
     for oath_path in oaths {
         let source = std::fs::read_to_string(&oath_path).unwrap_or_default();
         // An oath's identity is its workspace-relative POSIX path, not its
@@ -119,7 +127,7 @@ fn trials_recording(
             .replace('\\', "/");
 
         let registry = build_registry();
-        let execution = plan_oath(&rel, &source, &registry);
+        let execution = plan_oath(&rel, &source, &registry, &workspace);
 
         for (index, display) in example_names(&execution).into_iter().enumerate() {
             let (sf, src, r) = (rel.clone(), source.clone(), rel.clone());
@@ -132,8 +140,9 @@ fn trials_recording(
                 .collect();
             lines.dedup();
             let recorder = Arc::clone(results);
+            let ws = Arc::clone(&workspace);
             trials.push(Trial::test(format!("{rel}::{display}"), move || {
-                let outcome = run_one_failure(&sf, &src, build_registry, context, index);
+                let outcome = run_one_failure(&sf, &src, build_registry, context, index, &ws);
                 let recorded = match &outcome {
                     Ok(()) => ExampleResult {
                         name: name.clone(),
@@ -190,4 +199,22 @@ pub fn run(root: &Path, build_registry: BuildRegistry, context: ContextFactory) 
 
 fn read_config(root: &Path) -> varar_config::Config {
     varar_config::read_config(root).unwrap_or_else(|e| panic!("{e}"))
+}
+
+/// Parse every discovered oath so references resolve and consumed sections are
+/// recognised (ADR 0016). Parsing runs no step code, so this is cheap.
+fn project_workspace(oaths: &[std::path::PathBuf], root: &Path) -> OathWorkspace {
+    let docs: Vec<_> = oaths
+        .iter()
+        .filter_map(|path| {
+            let source = std::fs::read_to_string(path).ok()?;
+            let rel = path
+                .strip_prefix(root)
+                .unwrap_or(path)
+                .to_string_lossy()
+                .replace('\\', "/");
+            Some(parse(&rel, &source))
+        })
+        .collect();
+    build_workspace(&docs)
 }

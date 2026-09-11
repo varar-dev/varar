@@ -10,6 +10,7 @@ use varar_core::handler::Handler;
 use varar_core::hash::hash_source;
 use varar_core::parse::parse;
 use varar_core::plan::{ExecutionPlan, plan};
+use varar_core::reference::empty_workspace;
 use varar_core::registry::{Registry, add_step, create_registry};
 use varar_core::span::Span;
 use varar_core::step_kind::StepKind;
@@ -42,7 +43,7 @@ fn roman_reg(with_step: bool) -> Registry {
 }
 
 fn plan_of(source: &str, r: &Registry) -> ExecutionPlan {
-    plan(&parse("w.md", source), r)
+    plan(&parse("w.md", source), r, &empty_workspace())
 }
 
 fn bare(drifts: &[Drifted]) -> Vec<String> {
@@ -200,17 +201,22 @@ fn header_bound_table_records_its_binding_paragraph_once() {
             name: "Each row gives a decimal and a roman number:".to_string(),
             line: 1
         }],
-        live_examples(&doc, &plan(&doc, &roman_reg(true)))
+        live_examples(&doc, &plan(&doc, &roman_reg(true), &empty_workspace()))
     );
 }
 
 #[test]
 fn a_header_bound_binding_paragraph_that_stops_matching_drifts() {
     let doc = parse("r.md", ROMAN);
-    let baseline = derive_oath_baseline(ROMAN, &doc, &plan(&doc, &roman_reg(true)));
+    let baseline =
+        derive_oath_baseline(ROMAN, &doc, &plan(&doc, &roman_reg(true), &empty_workspace()));
     assert_eq!(
         vec!["Each row gives a decimal and a roman number:@1".to_string()],
-        bare(&detect_drift(Some(&baseline), &doc, &plan(&doc, &roman_reg(false))))
+        bare(&detect_drift(
+            Some(&baseline),
+            &doc,
+            &plan(&doc, &roman_reg(false), &empty_workspace())
+        ))
     );
 }
 
@@ -295,7 +301,7 @@ fn deposit_withdraw_reg(with_deposit: bool) -> Registry {
 fn two_paragraphs_that_merge_into_one_example_are_each_a_live_baseline_entry() {
     let source = "I deposit 100.\n\nI withdraw 40.";
     let doc = parse("w.md", source);
-    let plan1 = plan(&doc, &deposit_withdraw_reg(true));
+    let plan1 = plan(&doc, &deposit_withdraw_reg(true), &empty_workspace());
     // One planned example (the two paragraphs merged), but two live entries.
     assert_eq!(1, plan1.examples.len());
     assert_eq!(
@@ -317,10 +323,18 @@ fn two_paragraphs_that_merge_into_one_example_are_each_a_live_baseline_entry() {
 fn deleting_one_step_def_of_a_merged_example_drifts_only_the_now_prose_paragraph() {
     let source = "I deposit 100.\n\nI withdraw 40.";
     let doc = parse("w.md", source);
-    let baseline = derive_oath_baseline(source, &doc, &plan(&doc, &deposit_withdraw_reg(true)));
+    let baseline = derive_oath_baseline(
+        source,
+        &doc,
+        &plan(&doc, &deposit_withdraw_reg(true), &empty_workspace()),
+    );
     // The deposit step is gone: its paragraph becomes prose, splitting the
     // example. The withdraw paragraph is still live; the deposit one drifts.
-    let drift = detect_drift(Some(&baseline), &doc, &plan(&doc, &deposit_withdraw_reg(false)));
+    let drift = detect_drift(
+        Some(&baseline),
+        &doc,
+        &plan(&doc, &deposit_withdraw_reg(false), &empty_workspace()),
+    );
     assert_eq!(vec!["I deposit 100@1".to_string()], bare(&drift));
 }
 
@@ -342,7 +356,7 @@ fn drift_message_names_the_paragraph() {
 fn lock_with_stale_path() -> String {
     let source = "I withdraw 40.";
     let doc = parse("w.md", source);
-    let baseline = derive_oath_baseline(source, &doc, &plan(&doc, &reg(true)));
+    let baseline = derive_oath_baseline(source, &doc, &plan(&doc, &reg(true), &empty_workspace()));
     let mut oaths = BTreeMap::new();
     oaths.insert("varar/w.md".to_string(), baseline.clone());
     oaths.insert("w.md".to_string(), baseline);

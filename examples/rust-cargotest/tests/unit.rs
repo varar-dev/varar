@@ -45,6 +45,7 @@ fn a_mutated_expectation_fails_with_a_cell_mismatch() {
         build_registry,
         context_value,
         0,
+        &varar_core::reference::empty_workspace(),
     )
     .expect_err("expected a failure");
     // Expected column is the source token as written (quotes included); actual
