@@ -38,19 +38,33 @@ module Varar
       # everything.
       Core::Drifts.prune_baselines(store, oaths.map { |p| Runner.rel_posix(p, root) }, update: update)
 
+      workspace = project_workspace(oaths, root)
+
       oaths.each do |oath_path|
-        klass = build_test_case(oath_path, root, loaded, store, update, results)
+        klass = build_test_case(oath_path, root, loaded, store, update, results, workspace)
         namespace.const_set("Var_#{identifier(Runner.rel_posix(oath_path, root))}", klass)
       end
     end
 
-    def build_test_case(oath_path, root, loaded, store, update, results)
+    # Whether a section is a standalone example depends on whether another oath
+    # references it, which is whole-project knowledge (ADR 0016). Built from the
+    # config globs — the full set, for the same reason baseline pruning is.
+    def project_workspace(oaths, root)
+      docs = oaths.filter_map do |path|
+        Core::Parse.parse(Runner.rel_posix(path, root), File.read(path, encoding: 'UTF-8'))
+      rescue SystemCallError
+        nil
+      end
+      Core::Reference.build_workspace(docs)
+    end
+
+    def build_test_case(oath_path, root, loaded, store, update, results, workspace)
       rel = Runner.rel_posix(oath_path, root)
       source = File.read(oath_path, encoding: 'UTF-8')
       # `rel`, not the basename: doc.path is an oath's identity in every port,
       # so a relative reference resolves alike and two same-named oaths in
       # different directories stay distinct (ADR 0016).
-      plan = Runner.plan_oath(rel, source, loaded.registry)
+      plan = Runner.plan_oath(rel, source, loaded.registry, workspace)
       pairs = Runner.examples_with_runs(plan, loaded.create_context, Runner::RecordingReporter.new)
 
       klass = Class.new(::Minitest::Test)

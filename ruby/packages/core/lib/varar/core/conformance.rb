@@ -2,6 +2,7 @@
 
 require 'varar/core/ast'
 require 'varar/core/plan'
+require 'varar/core/reference'
 require 'varar/core/execute'
 require 'varar/core/failure_anchor'
 
@@ -158,20 +159,23 @@ module Varar
         result
       end
 
-      def planned_step_hash(step, source)
+      def planned_step_hash(step, _source)
         step_names = parameter_type_names(step.step_def.compiled)
         result = {
           'text' => step.text,
           'matchSpan' => span_hash(step.match_span),
           'paramSpans' => step.param_spans.map { |s| span_hash(s) },
           'matchedExpression' => step.step_def.expression,
-          'args' => step.param_spans.each_with_index.map do |s, i|
+          'args' => step.param_texts.each_with_index.map do |value, i|
             {
-              'value' => Offsets.utf16_slice(source, s.start_offset, s.end_offset),
+              'value' => value,
               'parameterType' => i < step_names.length ? step_names[i] : nil
             }
           end
         }
+        # Present only on a step a reference block spliced in from another oath
+        # (ADR 0016): the document its spans belong to.
+        result['docPath'] = step.doc_path if step.doc_path
         result['dataTable'] = block_hash(step.data_table) if step.data_table
         result['docString'] = doc_string_hash(step.doc_string) if step.doc_string
         result
@@ -206,8 +210,8 @@ module Varar
       end
 
       # Run all examples and return the four-artifact bundle. Port of runConformance.
-      def run_conformance(doc, registry, create_context, parameter_types = [])
-        execution = Plan.plan(doc, registry)
+      def run_conformance(doc, registry, create_context, parameter_types = [], workspace = nil)
+        execution = Plan.plan(doc, registry, workspace || Reference.empty_workspace)
         observed = Hash.new { |h, k| h[k] = [] }
         observer = ->(o) { observed[o.example_index] << o }
         queue = Execute.collect_examples(execution, create_context: create_context, observer: observer)

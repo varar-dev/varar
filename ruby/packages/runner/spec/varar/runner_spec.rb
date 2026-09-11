@@ -43,8 +43,12 @@ module Varar
 
         it "#{bundle} — runner outcomes agree with the trace goldens" do
           loaded = described_class.load_steps(['*.steps.rb'], bundle_dir)
+          docs = Dir.glob(File.join(bundle_dir, '*.md')).map do |path|
+            Core::Parse.parse(File.basename(path), File.read(path, encoding: 'UTF-8'))
+          end
           source = File.read(File.join(bundle_dir, 'example.md'), encoding: 'UTF-8')
-          plan = described_class.plan_oath('example.md', source, loaded.registry)
+          plan = described_class.plan_oath('example.md', source, loaded.registry,
+                                           Core::Reference.build_workspace(docs))
           pairs = described_class.examples_with_runs(plan, loaded.create_context, Runner::RecordingReporter.new)
 
           actual = pairs.map do |example, run|

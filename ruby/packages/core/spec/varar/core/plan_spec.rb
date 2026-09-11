@@ -24,7 +24,7 @@ module Varar
       end
 
       def plan_source(source, registry)
-        described_class.plan(Parse.parse('m.md', source), registry)
+        described_class.plan(Parse.parse('m.md', source), registry, Reference.empty_workspace)
       end
 
       def step_texts(example)
