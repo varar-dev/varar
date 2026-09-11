@@ -83,6 +83,11 @@ internal static class VararAdapter
             [.. oaths.Select(oath => Discovery.RelPosix(oath, workspace.Root))],
             update);
 
+        // Whether a section is a standalone example depends on whether another oath references it,
+        // which is whole-project knowledge (ADR 0016). Built from the config globs — the full set,
+        // for the same reason baseline pruning is.
+        var oathWorkspace = ProjectWorkspace(oaths, workspace.Root);
+
         foreach (var oath in oaths)
         {
             var relName = Discovery.RelPosix(oath, workspace.Root);
@@ -93,7 +98,7 @@ internal static class VararAdapter
             {
                 text = File.ReadAllText(oath);
                 doc = Parse.Run(relName, text);
-                plan = Plan.Run(doc, workspace.Registry);
+                plan = Plan.Run(doc, workspace.Registry, oathWorkspace);
             }
             catch (Exception e)
             {
@@ -223,7 +228,11 @@ internal static class VararAdapter
                 {
                     if (!planCache.TryGetValue(oathPath, out var plan))
                     {
-                        plan = RunnerApi.PlanOath(oathPath, File.ReadAllText(Path.Combine(workspace.Root, oathPath)), workspace.Registry);
+                        plan = RunnerApi.PlanOath(
+                            oathPath,
+                            File.ReadAllText(Path.Combine(workspace.Root, oathPath)),
+                            workspace.Registry,
+                            ProjectWorkspace(Discovery.FindOaths(workspace.Config, workspace.Root), workspace.Root));
                         planCache[oathPath] = plan;
                     }
 
@@ -270,6 +279,28 @@ internal static class VararAdapter
     }
 
     /// <summary>The built test assembly plus its workspace root (nearest <c>varar.config.json</c>) and registry.</summary>
+    /// <summary>
+    /// Parses every discovered oath so references resolve and consumed sections are recognised
+    /// (ADR 0016). Parsing runs no step code, so this is cheap.
+    /// </summary>
+    private static OathWorkspace ProjectWorkspace(IEnumerable<string> oaths, string root)
+    {
+        var docs = new List<Doc>();
+        foreach (var oath in oaths)
+        {
+            try
+            {
+                docs.Add(Parse.Run(Discovery.RelPosix(oath, root), File.ReadAllText(oath)));
+            }
+            catch (IOException)
+            {
+                // A file that vanished between discovery and read contributes nothing.
+            }
+        }
+
+        return Reference_.BuildWorkspace(docs);
+    }
+
     internal sealed class Workspace
     {
         internal Workspace(string root, ParsedConfig config, Registry registry)
@@ -323,4 +354,5 @@ internal interface ITestReporter
     void RecordResult(TestResult result);
 
     void RecordEnd(TestCase testCase, TestOutcome outcome);
+
 }

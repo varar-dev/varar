@@ -6,6 +6,14 @@ namespace Varar.Core;
 /// <summary>A doc string attached to a step (<c>content</c> includes the trailing newline).</summary>
 public sealed record DocString(string Content, string ContentType, Span Span);
 
+/// <param name="ParamTexts">
+/// The notation each parameter matched, sliced at plan time from the document the step was WRITTEN
+/// in. Consumers must use this rather than slicing the running oath's source: a step a reference
+/// block spliced in (ADR 0016) has spans in a different document.
+/// </param>
+/// <param name="DocPath">
+/// Set only on such a spliced step: the document its spans belong to. Null means the example's own.
+/// </param>
 public sealed record PlannedStep(
     string Text,
     Span MatchSpan,
@@ -14,7 +22,9 @@ public sealed record PlannedStep(
     ImmutableArray<Value> Args,
     ImmutableArray<ParameterFormat?> Formats,
     Table? DataTable = null,
-    DocString? DocString = null);
+    DocString? DocString = null,
+    ImmutableArray<string> ParamTexts = default,
+    string? DocPath = null);
 
 public sealed record HeaderBinding(
     Span MatchSpan,
@@ -40,12 +50,21 @@ public sealed record ExecutionPlan(
 /// <summary>Matching + planning. Port of <c>plan.ts</c>.</summary>
 public static class Plan
 {
-    public static ExecutionPlan Run(Doc doc, Registry registry)
+    public static ExecutionPlan Run(Doc doc, Registry registry, OathWorkspace workspace)
     {
         var diagnostics = ImmutableArray.CreateBuilder<Diagnostic>();
 
+        // A section another oath references stops being a standalone example: it runs where it is
+        // referenced, not here (ADR 0016).
+        bool Consumed(Example ex) =>
+            workspace.Referenced.Contains(Reference_.SectionKey(doc.Path, string.Empty))
+            || ex.ScopeStack.Any(h => workspace.Referenced.Contains(Reference_.SectionKey(doc.Path, Reference_.Slugify(h))));
+
         // Phase 1: plan each candidate paragraph independently into a "unit".
-        var units = doc.Examples.Select(ex => PlanCandidate(ex, doc, registry, diagnostics)).ToList();
+        var units = doc.Examples
+            .Where(ex => !Consumed(ex))
+            .Select(ex => PlanCandidate(ex, doc, registry, diagnostics))
+            .ToList();
 
         // Phase 2: group adjacent candidates into examples. A matching candidate continues the open
         // example when no delimiter (heading / `---`) precedes it; otherwise it starts a new one. A
@@ -74,13 +93,40 @@ public static class Plan
                     examples.AddRange(hb.Rows);
                     break;
 
+                case ReferenceUnit ru:
+                    {
+                        // Splice the referenced section's steps in at this position. Only the reference
+                        // block itself is subject to the delimiter rule; everything it splices in
+                        // belongs to the same sequence, so a section of several paragraphs stays one
+                        // example.
+                        var resolved = ResolveReference(ru, doc, registry, workspace, diagnostics, []);
+                        for (int i = 0; i < resolved.Count; i++)
+                        {
+                            if (open is not null && (i > 0 || !ru.PrecededByDelimiter))
+                            {
+                                MergeInto(open, resolved[i], fromReference: true);
+                            }
+                            else
+                            {
+                                Flush();
+                                open = StartMerged(resolved[i]);
+
+                                // An example that OPENS with a reference is named by its own first
+                                // matching paragraph, not by the section it pulls in.
+                                open.NameFromReference = true;
+                            }
+                        }
+
+                        break;
+                    }
+
                 case StepsUnit { Matched: false }:
                     // Prose paragraph — a delimiter. Drop it and end the open example.
                     Flush();
                     break;
 
                 case StepsUnit su when open is not null && !su.PrecededByDelimiter:
-                    MergeInto(open, su);
+                    MergeInto(open, su, fromReference: false);
                     break;
 
                 case StepsUnit su:
@@ -103,7 +149,7 @@ public static class Plan
     {
         public required string Name { get; set; }
 
-        public required ImmutableArray<string> ScopeStack { get; init; }
+        public required ImmutableArray<string> ScopeStack { get; set; }
 
         public required int StartOffset { get; init; }
 
@@ -114,12 +160,25 @@ public static class Plan
         public bool ExpectedFail { get; set; }
 
         public string? ExpectedErrorMessage { get; set; }
+
+        /// <summary>
+        /// True while the name came from a spliced (referenced) paragraph and is waiting to be
+        /// replaced by the example's own first matching paragraph.
+        /// </summary>
+        public bool NameFromReference { get; set; }
     }
 
     // One candidate paragraph, planned in isolation.
     private abstract record CandidateUnit;
 
     private sealed record HeaderBoundUnit(ImmutableArray<PlannedExample> Rows) : CandidateUnit;
+
+    // A reference block: its whole text is a link to an oath section, whose steps are spliced in
+    // here (ADR 0016). Never prose, so it does not close the open example.
+    private sealed record ReferenceUnit(
+        Reference Reference,
+        bool PrecededByDelimiter,
+        Span Span) : CandidateUnit;
 
     private sealed record StepsUnit(
         bool Matched,
@@ -142,8 +201,15 @@ public static class Plan
         ExpectedErrorMessage = unit.ExpectedErrorMessage,
     };
 
-    private static void MergeInto(MergedExample open, StepsUnit unit)
+    private static void MergeInto(MergedExample open, StepsUnit unit, bool fromReference)
     {
+        if (open.NameFromReference && !fromReference)
+        {
+            open.Name = unit.Name;
+            open.ScopeStack = unit.ScopeStack;
+            open.NameFromReference = false;
+        }
+
         open.EndOffset = unit.Span.EndOffset;
         open.Steps.AddRange(unit.Steps);
 
@@ -169,12 +235,88 @@ public static class Plan
 
     // Plan a single candidate paragraph (plus its attached tables/fences) in isolation. Emits
     // ambiguity / error-fence diagnostics into <paramref name="diagnostics"/>.
+    /// <summary>
+    /// Resolve one reference block into the step-bearing units of the section it names,
+    /// recursively: a referenced section may itself contain reference blocks, to any depth (ADR
+    /// 0016 leaves depth to the author's judgement). <paramref name="chain"/> carries the sections
+    /// currently being resolved so a repeat is reported as a cycle instead of recursing forever.
+    /// </summary>
+    private static List<StepsUnit> ResolveReference(
+        ReferenceUnit unit,
+        Doc from,
+        Registry registry,
+        OathWorkspace workspace,
+        ImmutableArray<Diagnostic>.Builder diagnostics,
+        ImmutableList<string> chain)
+    {
+        var reference = unit.Reference;
+        var key = Reference_.SectionKey(reference.Path, reference.Slug);
+        if (chain.Contains(key))
+        {
+            diagnostics.Add(Varar.Core.Diagnostics.ReferenceCycle(chain.Add(key), unit.Span));
+            return [];
+        }
+
+        // A same-file reference resolves against the document being planned, which is not
+        // necessarily in the workspace.
+        Doc? target = reference.Path == from.Path
+            ? from
+            : workspace.Docs.TryGetValue(reference.Path, out var found) ? found : null;
+        if (target is null)
+        {
+            diagnostics.Add(Varar.Core.Diagnostics.ReferenceNotFound(reference.Text, reference.Path, unit.Span));
+            return [];
+        }
+
+        var result = new List<StepsUnit>();
+        foreach (var candidate in Reference_.SectionCandidates(target, reference.Slug))
+        {
+            switch (PlanCandidate(candidate, target, registry, diagnostics))
+            {
+                case ReferenceUnit nested:
+                    result.AddRange(ResolveReference(nested, target, registry, workspace, diagnostics, chain.Add(key)));
+                    break;
+
+                // A header-bound table produces one example per row, which a spliced step list
+                // cannot express; an `error` fence declares an outcome for an example, not for a
+                // reusable fragment. Both are left out.
+                case StepsUnit { Matched: true } planned:
+                    result.Add(TagWithDoc(planned, target.Path, from.Path));
+                    break;
+            }
+        }
+
+        if (result.Count == 0)
+        {
+            diagnostics.Add(Varar.Core.Diagnostics.ReferenceEmpty(
+                reference.Text, reference.Path, reference.Slug, unit.Span));
+        }
+
+        return result;
+    }
+
+    // Carry the source document's identity on every spliced step, so a failure in a referenced
+    // section reports spans against the file they were written in rather than the file being run.
+    private static StepsUnit TagWithDoc(StepsUnit unit, string docPath, string hostPath) =>
+        docPath == hostPath
+            ? unit
+            : unit with { Steps = [.. unit.Steps.Select(s => s with { DocPath = docPath })] };
+
     private static CandidateUnit PlanCandidate(
         Example ex,
         Doc doc,
         Registry registry,
         ImmutableArray<Diagnostic>.Builder diagnostics)
     {
+        // A block whose whole text is a link to an oath section is a reference, not content: never
+        // matched against step definitions, and never prose.
+        if (ex.Body.Length > 0
+            && Reference_.TextOf(ex.Body[0]) is { } primaryText
+            && Reference_.ReferenceOf(primaryText, doc.Path) is { } reference)
+        {
+            return new ReferenceUnit(reference, ex.PrecededByDelimiter, ex.Span);
+        }
+
         bool hadAmbiguous = false;
 
         // Pass 1: plan each text-bearing block, collecting steps per body index.
@@ -208,7 +350,8 @@ public static class Plan
                     [.. hit.ParamSpans.Select(p => LiftSpan(doc.Source, block, p.Start, p.End))],
                     hit.StepDef,
                     hit.Args,
-                    hit.Formats)).ToList();
+                    hit.Formats,
+                    ParamTexts: [.. hit.ParamSpans.Select(p => Scanner.Slice(blockText, p.Start, p.End))])).ToList();
             }
         }
 

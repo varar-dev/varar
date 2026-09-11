@@ -26,7 +26,7 @@ public class FailureTests
             2,
             (_, _) => throw new InvalidOperationException("expected the library to refuse"),
             StepKind.Sensor));
-        var plan = Plan.Run(Parse.Run("l.md", Source), r);
+        var plan = Plan.Run(Parse.Run("l.md", Source), r, Reference_.EmptyWorkspace());
         var failure = Execute.RunExample(plan, plan.Examples[0], _ => Value.Null, []);
         Assert.NotNull(failure);
         return failure!;

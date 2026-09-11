@@ -1,0 +1,93 @@
+{
+  "diagnostics": [],
+  "examples": [
+    {
+      "expectedOutcome": "pass",
+      "name": "I borrow a book. The shelf holds 2 books",
+      "scopeStack": [
+        "Late fees"
+      ],
+      "span": {
+        "endCol": 42,
+        "endLine": 7,
+        "endOffset": 177,
+        "startCol": 31,
+        "startLine": 5,
+        "startOffset": 114
+      },
+      "steps": [
+        {
+          "args": [
+            {
+              "parameterType": "int",
+              "value": "3"
+            }
+          ],
+          "docPath": "shared.md",
+          "matchSpan": {
+            "endCol": 17,
+            "endLine": 7,
+            "endOffset": 130,
+            "startCol": 1,
+            "startLine": 7,
+            "startOffset": 114
+          },
+          "matchedExpression": "I shelve {int} books",
+          "paramSpans": [
+            {
+              "endCol": 11,
+              "endLine": 7,
+              "endOffset": 124,
+              "startCol": 10,
+              "startLine": 7,
+              "startOffset": 123
+            }
+          ],
+          "text": "I shelve 3 books"
+        },
+        {
+          "args": [],
+          "matchSpan": {
+            "endCol": 16,
+            "endLine": 7,
+            "endOffset": 151,
+            "startCol": 1,
+            "startLine": 7,
+            "startOffset": 136
+          },
+          "matchedExpression": "I borrow a book",
+          "paramSpans": [],
+          "text": "I borrow a book"
+        },
+        {
+          "args": [
+            {
+              "parameterType": "int",
+              "value": "2"
+            }
+          ],
+          "matchSpan": {
+            "endCol": 41,
+            "endLine": 7,
+            "endOffset": 176,
+            "startCol": 18,
+            "startLine": 7,
+            "startOffset": 153
+          },
+          "matchedExpression": "The shelf holds {int} books",
+          "paramSpans": [
+            {
+              "endCol": 35,
+              "endLine": 7,
+              "endOffset": 170,
+              "startCol": 34,
+              "startLine": 7,
+              "startOffset": 169
+            }
+          ],
+          "text": "The shelf holds 2 books"
+        }
+      ]
+    }
+  ]
+}

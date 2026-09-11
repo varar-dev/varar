@@ -1,0 +1,108 @@
+{
+  "examples": [
+    {
+      "body": [
+        {
+          "kind": "paragraph",
+          "segmentMap": [
+            {
+              "sourceOffset": 13,
+              "textOffset": 0
+            }
+          ],
+          "span": {
+            "endCol": 70,
+            "endLine": 3,
+            "endOffset": 82,
+            "startCol": 1,
+            "startLine": 3,
+            "startOffset": 13
+          },
+          "text": "A world state written once and linked from the examples that need it."
+        }
+      ],
+      "precededByDelimiter": true,
+      "scopeStack": [
+        "Late fees"
+      ],
+      "span": {
+        "endCol": 70,
+        "endLine": 3,
+        "endOffset": 82,
+        "startCol": 1,
+        "startLine": 3,
+        "startOffset": 13
+      }
+    },
+    {
+      "body": [
+        {
+          "kind": "paragraph",
+          "segmentMap": [
+            {
+              "sourceOffset": 84,
+              "textOffset": 0
+            }
+          ],
+          "span": {
+            "endCol": 51,
+            "endLine": 5,
+            "endOffset": 134,
+            "startCol": 1,
+            "startLine": 5,
+            "startOffset": 84
+          },
+          "text": "[A stocked library](./shared.md#a-stocked-library)"
+        }
+      ],
+      "precededByDelimiter": false,
+      "scopeStack": [
+        "Late fees"
+      ],
+      "span": {
+        "endCol": 51,
+        "endLine": 5,
+        "endOffset": 134,
+        "startCol": 1,
+        "startLine": 5,
+        "startOffset": 84
+      }
+    },
+    {
+      "body": [
+        {
+          "kind": "paragraph",
+          "segmentMap": [
+            {
+              "sourceOffset": 136,
+              "textOffset": 0
+            }
+          ],
+          "span": {
+            "endCol": 42,
+            "endLine": 7,
+            "endOffset": 177,
+            "startCol": 1,
+            "startLine": 7,
+            "startOffset": 136
+          },
+          "text": "I borrow a book. The shelf holds 2 books."
+        }
+      ],
+      "precededByDelimiter": false,
+      "scopeStack": [
+        "Late fees"
+      ],
+      "span": {
+        "endCol": 42,
+        "endLine": 7,
+        "endOffset": 177,
+        "startCol": 1,
+        "startLine": 7,
+        "startOffset": 136
+      }
+    }
+  ],
+  "orphanAttachments": [],
+  "path": "example.md"
+}

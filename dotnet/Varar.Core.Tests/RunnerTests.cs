@@ -93,7 +93,7 @@ public class RunnerTests
     [Fact]
     public void PlanOathAndRunExamplePassAMatchingExample()
     {
-        var plan = Runner.Runner.PlanOath("w.md", "I withdraw 40.", WithdrawReg());
+        var plan = Runner.Runner.PlanOath("w.md", "I withdraw 40.", WithdrawReg(), Reference_.EmptyWorkspace());
         var failure = Runner.Runner.RunExample(plan, _ => Value.Null, 0);
         Assert.Null(failure);
     }
@@ -104,7 +104,7 @@ public class RunnerTests
         // Two examples under the same innermost heading get a [1] suffix on the second. A `---`
         // delimiter keeps them as two examples (ADR 0012 — adjacent matching paragraphs otherwise
         // merge into one).
-        var plan = Runner.Runner.PlanOath("w.md", "# Withdrawals\n\nI withdraw 40.\n\n---\n\nI withdraw 10.", WithdrawReg());
+        var plan = Runner.Runner.PlanOath("w.md", "# Withdrawals\n\nI withdraw 40.\n\n---\n\nI withdraw 10.", WithdrawReg(), Reference_.EmptyWorkspace());
         var names = Runner.Runner.ExampleNames(plan);
         Assert.Equal(new[] { "Withdrawals", "Withdrawals[1]" }, names);
     }
@@ -121,13 +121,13 @@ public class RunnerTests
             var store = new FileBaselineStore(root);
 
             // First run records the baseline and reports no drift.
-            var first = DriftDetection.ReconcileDrift(store, "w.md", source, doc, Runner.Runner.PlanOath("w.md", source, WithdrawReg(true)));
+            var first = DriftDetection.ReconcileDrift(store, "w.md", source, doc, Runner.Runner.PlanOath("w.md", source, WithdrawReg(true), Reference_.EmptyWorkspace()));
             Assert.Empty(first);
             Assert.True(File.Exists(Path.Combine(root, "varar.lock.json")));
 
             // The step is gone — same source drifts, and the baseline is preserved on disk.
             var before = store.Read();
-            var drifts = DriftDetection.ReconcileDrift(store, "w.md", source, doc, Runner.Runner.PlanOath("w.md", source, WithdrawReg(false)));
+            var drifts = DriftDetection.ReconcileDrift(store, "w.md", source, doc, Runner.Runner.PlanOath("w.md", source, WithdrawReg(false), Reference_.EmptyWorkspace()));
             Assert.Single(drifts);
             Assert.Equal("I withdraw 40", drifts[0].Name);
             Assert.Equal(before, store.Read());

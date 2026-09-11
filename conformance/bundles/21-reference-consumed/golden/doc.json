@@ -1,0 +1,75 @@
+{
+  "examples": [
+    {
+      "body": [
+        {
+          "kind": "paragraph",
+          "segmentMap": [
+            {
+              "sourceOffset": 23,
+              "textOffset": 0
+            }
+          ],
+          "span": {
+            "endCol": 31,
+            "endLine": 4,
+            "endOffset": 131,
+            "startCol": 1,
+            "startLine": 3,
+            "startOffset": 23
+          },
+          "text": "This oath's only section is referenced from another one, so it contributes no\nstandalone example of its own."
+        }
+      ],
+      "precededByDelimiter": true,
+      "scopeStack": [
+        "Shared world states"
+      ],
+      "span": {
+        "endCol": 31,
+        "endLine": 4,
+        "endOffset": 131,
+        "startCol": 1,
+        "startLine": 3,
+        "startOffset": 23
+      }
+    },
+    {
+      "body": [
+        {
+          "kind": "paragraph",
+          "segmentMap": [
+            {
+              "sourceOffset": 155,
+              "textOffset": 0
+            }
+          ],
+          "span": {
+            "endCol": 18,
+            "endLine": 8,
+            "endOffset": 172,
+            "startCol": 1,
+            "startLine": 8,
+            "startOffset": 155
+          },
+          "text": "I shelve 3 books."
+        }
+      ],
+      "precededByDelimiter": true,
+      "scopeStack": [
+        "Shared world states",
+        "A stocked library"
+      ],
+      "span": {
+        "endCol": 18,
+        "endLine": 8,
+        "endOffset": 172,
+        "startCol": 1,
+        "startLine": 8,
+        "startOffset": 155
+      }
+    }
+  ],
+  "orphanAttachments": [],
+  "path": "example.md"
+}

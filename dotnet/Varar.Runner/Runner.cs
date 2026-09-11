@@ -7,9 +7,13 @@ namespace Varar.Runner;
 /// <summary>Planning, running, load-steps, and failure rendering. Port of the runner <c>run</c>/<c>render</c>/<c>steps</c>.</summary>
 public static class Runner
 {
-    /// <summary>Parse + plan one oath.</summary>
-    public static ExecutionPlan PlanOath(string name, string source, Registry registry) =>
-        Plan.Run(Parse.Run(name, source), registry);
+    /// <summary>
+    /// Plans one oath. <paramref name="workspace"/> carries every other oath in the project plus the
+    /// sections a reference block consumes (ADR 0016); it is required because an adapter that
+    /// omitted it would run consumed sections as standalone examples, which is green and wrong.
+    /// </summary>
+    public static ExecutionPlan PlanOath(string name, string source, Registry registry, OathWorkspace workspace) =>
+        Plan.Run(Parse.Run(name, source), registry, workspace);
 
     /// <summary>
     /// Per-example display names: the innermost heading (or the body-derived name when there is no
