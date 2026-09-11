@@ -72,6 +72,11 @@ func Collect(root string, build BuildRegistry, ctx ContextFactory, update bool) 
 	}
 	core.PruneBaselines(runner.NewFileBaselineStore(root), keep, update)
 
+	// Whether a section is a standalone example depends on whether another oath
+	// references it, which is whole-project knowledge (ADR 0016). Built from the
+	// config globs — the full set, for the same reason baseline pruning is.
+	workspace := projectWorkspace(oaths, root)
+
 	for _, oathPath := range oaths {
 		sourceBytes, _ := os.ReadFile(oathPath)
 		source := string(sourceBytes)
@@ -84,7 +89,7 @@ func Collect(root string, build BuildRegistry, ctx ContextFactory, update bool) 
 		// `rel` (workspace-relative, POSIX), not the basename: doc.path is an
 		// oath's identity in every port, and a basename cannot tell two
 		// same-named oaths apart or anchor a relative reference (ADR 0016).
-		plan := runner.PlanOath(rel, source, build())
+		plan := runner.PlanOath(rel, source, build(), workspace)
 		for i, display := range runner.ExampleNames(plan) {
 			index := i
 			src := source
@@ -177,4 +182,22 @@ func isUpdate() bool {
 		return true
 	}
 	return false
+}
+
+// projectWorkspace parses every discovered oath so references resolve and
+// consumed sections are recognised. Parsing runs no step code, so this is cheap.
+func projectWorkspace(oaths []string, root string) core.OathWorkspace {
+	docs := make([]core.Doc, 0, len(oaths))
+	for _, oathPath := range oaths {
+		sourceBytes, err := os.ReadFile(oathPath)
+		if err != nil {
+			continue
+		}
+		rel, relErr := filepath.Rel(root, oathPath)
+		if relErr != nil {
+			rel = filepath.Base(oathPath)
+		}
+		docs = append(docs, core.Parse(filepath.ToSlash(rel), string(sourceBytes)))
+	}
+	return core.BuildWorkspace(docs)
 }

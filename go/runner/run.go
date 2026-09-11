@@ -6,9 +6,12 @@ import (
 	"github.com/varar-dev/varar/go/core"
 )
 
-// PlanOath parses + plans one oath.
-func PlanOath(name, source string, registry core.Registry) core.ExecutionPlan {
-	return core.Plan(core.Parse(name, source), registry)
+// PlanOath plans one oath. workspace carries every other oath in the project
+// plus the sections a reference block consumes (ADR 0016); it is required
+// because an adapter that omitted it would run consumed sections as standalone
+// examples, which is green and wrong.
+func PlanOath(name, source string, registry core.Registry, workspace core.OathWorkspace) core.ExecutionPlan {
+	return core.Plan(core.Parse(name, source), registry, workspace)
 }
 
 // ExampleNames is the per-example display names: the innermost heading (or the

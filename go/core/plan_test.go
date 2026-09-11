@@ -35,7 +35,7 @@ func stepTexts(ex PlannedExample) []string {
 
 func TestConsecutiveMatchingParagraphsMergeIntoOneExample(t *testing.T) {
 	source := "I have 100 in my account.\n\nI withdraw 40.\n\nI should have 60 left."
-	result := Plan(Parse("m.md", source), bankReg(t))
+	result := Plan(Parse("m.md", source), bankReg(t), EmptyWorkspace())
 	if len(result.Examples) != 1 {
 		t.Fatalf("expected 1 example, got %d", len(result.Examples))
 	}
@@ -52,7 +52,7 @@ func TestConsecutiveMatchingParagraphsMergeIntoOneExample(t *testing.T) {
 
 func TestThematicBreakSplitsMatchingParagraphs(t *testing.T) {
 	source := "I have 100 in my account.\n\n---\n\nI withdraw 40."
-	result := Plan(Parse("h.md", source), bankReg(t))
+	result := Plan(Parse("h.md", source), bankReg(t), EmptyWorkspace())
 	if len(result.Examples) != 2 {
 		t.Fatalf("expected 2 examples, got %d", len(result.Examples))
 	}
@@ -64,7 +64,7 @@ func TestThematicBreakSplitsMatchingParagraphs(t *testing.T) {
 
 func TestHeadingSplitsMatchingParagraphs(t *testing.T) {
 	source := "I have 100 in my account.\n\n## Next\n\nI withdraw 40."
-	result := Plan(Parse("hd.md", source), bankReg(t))
+	result := Plan(Parse("hd.md", source), bankReg(t), EmptyWorkspace())
 	if len(result.Examples) != 2 {
 		t.Fatalf("expected 2 examples, got %d", len(result.Examples))
 	}
@@ -75,7 +75,7 @@ func TestHeadingSplitsMatchingParagraphs(t *testing.T) {
 
 func TestProseBetweenMatchingParagraphsSplitsTheExample(t *testing.T) {
 	source := "I have 100 in my account.\n\nJust explaining what happens next.\n\nI withdraw 40."
-	result := Plan(Parse("p.md", source), bankReg(t))
+	result := Plan(Parse("p.md", source), bankReg(t), EmptyWorkspace())
 	if len(result.Examples) != 2 {
 		t.Fatalf("expected 2 examples, got %d", len(result.Examples))
 	}
@@ -87,7 +87,7 @@ func TestProseBetweenMatchingParagraphsSplitsTheExample(t *testing.T) {
 
 func TestLeadingAndTrailingProseDoesNotMerge(t *testing.T) {
 	source := "A preamble that matches nothing.\n\nI withdraw 40.\n\nA closing remark."
-	result := Plan(Parse("pp.md", source), bankReg(t))
+	result := Plan(Parse("pp.md", source), bankReg(t), EmptyWorkspace())
 	if len(result.Examples) != 1 {
 		t.Fatalf("expected 1 example, got %d", len(result.Examples))
 	}
@@ -107,7 +107,7 @@ func TestConsecutiveListItemsMergeIntoOneExample(t *testing.T) {
 	}
 	// Two list items, no delimiter between them → one example, shared state.
 	source := "# Bullets\n\n- Given I have 100 in my account\n- When I withdraw 40"
-	result := Plan(Parse("b.md", source), r)
+	result := Plan(Parse("b.md", source), r, EmptyWorkspace())
 	if len(result.Examples) != 1 {
 		t.Fatalf("expected 1 example, got %d", len(result.Examples))
 	}
@@ -127,7 +127,7 @@ func TestAmbiguousMatchProducesNoRunnableExample(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	result := Plan(Parse("a.md", "I have 42 cukes."), r2)
+	result := Plan(Parse("a.md", "I have 42 cukes."), r2, EmptyWorkspace())
 	if len(result.Diagnostics) != 1 {
 		t.Fatalf("expected 1 diagnostic, got %d", len(result.Diagnostics))
 	}
@@ -157,7 +157,7 @@ func TestMultiTableShapeSurvivesBlankLines(t *testing.T) {
 		"| email | name |\n| ----- | ---- |\n| a@b.c | Ada  |\n\n" +
 		"And the following assets have been imported:\n\n" +
 		"| name  |\n| ----- |\n| Moose |"
-	result := Plan(Parse("basket.md", source), r)
+	result := Plan(Parse("basket.md", source), r, EmptyWorkspace())
 	if len(result.Examples) != 1 {
 		t.Fatalf("expected 1 example, got %d", len(result.Examples))
 	}

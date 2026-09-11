@@ -44,11 +44,19 @@ type PlannedStep struct {
 	Text       string
 	MatchSpan  Span
 	ParamSpans []Span
-	StepDef    *StepRegistration
-	Args       []Value
-	Formats    []FormatFn
-	DataTable  *Table
-	DocString  *Fence
+	// ParamTexts is the notation each parameter matched, sliced at plan time
+	// from the document the step was WRITTEN in. Consumers must use it rather
+	// than slicing the running oath's source: a step a reference block spliced
+	// in (ADR 0016) has spans in a different document.
+	ParamTexts []string
+	// DocPath is set only on such a spliced step: the document its spans belong
+	// to. Empty means the example's own document.
+	DocPath   string
+	StepDef   *StepRegistration
+	Args      []Value
+	Formats   []FormatFn
+	DataTable *Table
+	DocString *Fence
 }
 
 var (
@@ -64,14 +72,31 @@ var (
 // example; a matching candidate after a delimiter (or the first) starts a new
 // one; a non-matching candidate (prose) is a delimiter that closes the open
 // example and is dropped; a header-bound candidate stays standalone.
-func Plan(doc Doc, registry Registry) ExecutionPlan {
+func Plan(doc Doc, registry Registry, workspace OathWorkspace) ExecutionPlan {
 	source := doc.Source
 	diagnostics := []Diagnostic{}
 
+	// A section another oath references stops being a standalone example: it
+	// runs where it is referenced, not here (ADR 0016).
+	consumed := func(ex Example) bool {
+		if workspace.Referenced[SectionKey(doc.Path, "")] {
+			return true
+		}
+		for _, h := range ex.ScopeStack {
+			if workspace.Referenced[SectionKey(doc.Path, Slugify(h))] {
+				return true
+			}
+		}
+		return false
+	}
+
 	// Phase 1: plan each candidate paragraph independently.
-	units := make([]candidateUnit, len(doc.Examples))
-	for i, ex := range doc.Examples {
-		units[i] = planCandidate(ex, doc, registry, &diagnostics)
+	units := make([]candidateUnit, 0, len(doc.Examples))
+	for _, ex := range doc.Examples {
+		if consumed(ex) {
+			continue
+		}
+		units = append(units, planCandidate(ex, doc, registry, &diagnostics))
 	}
 
 	// Phase 2: group adjacent candidates into examples.
@@ -89,13 +114,32 @@ func Plan(doc Doc, registry Registry) ExecutionPlan {
 			examples = append(examples, unit.rows...)
 			continue
 		}
+		if unit.reference != nil {
+			// Splice the referenced section's steps in at this position. Only
+			// the reference block itself is subject to the delimiter rule;
+			// everything it splices in belongs to the same sequence, so a
+			// section of several paragraphs stays one example.
+			for i, spliced := range resolveReference(unit, doc, registry, workspace, &diagnostics, nil) {
+				if open != nil && (i > 0 || !unit.precededByDelimiter) {
+					mergeInto(open, spliced, true)
+				} else {
+					flush()
+					open = startMerged(spliced)
+					// An example that OPENS with a reference is named by its
+					// own first matching paragraph, not by the section it
+					// pulls in.
+					open.nameFromReference = true
+				}
+			}
+			continue
+		}
 		if !unit.matched {
 			// Prose paragraph — a delimiter. Drop it and end the open example.
 			flush()
 			continue
 		}
 		if open != nil && !unit.precededByDelimiter {
-			mergeInto(open, unit)
+			mergeInto(open, unit, false)
 		} else {
 			flush()
 			open = startMerged(unit)
@@ -123,6 +167,10 @@ type mergedExample struct {
 	steps                []PlannedStep
 	expectedOutcome      *string
 	expectedErrorMessage *string
+	// nameFromReference is true while the name came from a spliced (referenced)
+	// paragraph and is waiting to be replaced by the example's own first
+	// matching paragraph.
+	nameFromReference bool
 }
 
 // candidateUnit is one candidate paragraph, planned in isolation. When
@@ -131,6 +179,11 @@ type mergedExample struct {
 type candidateUnit struct {
 	headerBound bool
 	rows        []PlannedExample
+
+	// reference is non-nil when the candidate's whole text is a link to an oath
+	// section, whose steps are spliced in here (ADR 0016). Never prose, so it
+	// does not close the open example.
+	reference *Reference
 
 	matched              bool
 	precededByDelimiter  bool
@@ -161,7 +214,12 @@ func startMerged(unit candidateUnit) *mergedExample {
 	return m
 }
 
-func mergeInto(open *mergedExample, unit candidateUnit) {
+func mergeInto(open *mergedExample, unit candidateUnit, fromReference bool) {
+	if open.nameFromReference && !fromReference {
+		open.name = unit.name
+		open.scopeStack = unit.scopeStack
+		open.nameFromReference = false
+	}
 	open.endOffset = unit.span.EndOffset
 	open.steps = append(open.steps, unit.steps...)
 	// Any error fence in a merged part marks the whole example expected-to-fail;
@@ -189,7 +247,86 @@ func finishMerged(open *mergedExample, source string) PlannedExample {
 
 // planCandidate plans a single candidate paragraph (plus its attached
 // tables/fences) in isolation, appending any ambiguity / error-fence diagnostics.
+// resolveReference resolves one reference block into the step-bearing units of
+// the section it names, recursively: a referenced section may itself contain
+// reference blocks, to any depth (ADR 0016 leaves depth to the author's
+// judgement). chain carries the sections currently being resolved so a repeat is
+// reported as a cycle instead of recursing forever.
+func resolveReference(
+	unit candidateUnit,
+	from Doc,
+	registry Registry,
+	workspace OathWorkspace,
+	diagnostics *[]Diagnostic,
+	chain []string,
+) []candidateUnit {
+	ref := unit.reference
+	key := SectionKey(ref.Path, ref.Slug)
+	for _, seen := range chain {
+		if seen == key {
+			*diagnostics = append(*diagnostics, referenceCycle(append(append([]string{}, chain...), key), unit.span))
+			return nil
+		}
+	}
+	// A same-file reference resolves against the document being planned, which
+	// is not necessarily in the workspace.
+	target, ok := from, true
+	if ref.Path != from.Path {
+		target, ok = workspace.Docs[ref.Path]
+	}
+	if !ok {
+		*diagnostics = append(*diagnostics, referenceNotFound(ref.Text, ref.Path, unit.span))
+		return nil
+	}
+	var out []candidateUnit
+	for _, candidate := range SectionCandidates(target, ref.Slug) {
+		planned := planCandidate(candidate, target, registry, diagnostics)
+		if planned.reference != nil {
+			out = append(out, resolveReference(planned, target, registry, workspace, diagnostics, append(chain, key))...)
+			continue
+		}
+		// A header-bound table produces one example per row, which a spliced
+		// step list cannot express; an `error` fence declares an outcome for an
+		// example, not for a reusable fragment. Both are left out.
+		if planned.headerBound || !planned.matched {
+			continue
+		}
+		out = append(out, tagWithDoc(planned, target.Path, from.Path))
+	}
+	if len(out) == 0 {
+		*diagnostics = append(*diagnostics, referenceEmpty(ref.Text, ref.Path, ref.Slug, unit.span))
+	}
+	return out
+}
+
+// tagWithDoc carries the source document's identity on every spliced step, so a
+// failure in a referenced section reports spans against the file they were
+// written in rather than the file being run.
+func tagWithDoc(unit candidateUnit, docPath, hostPath string) candidateUnit {
+	if docPath == hostPath {
+		return unit
+	}
+	steps := make([]PlannedStep, len(unit.steps))
+	for i, step := range unit.steps {
+		step.DocPath = docPath
+		steps[i] = step
+	}
+	unit.steps = steps
+	return unit
+}
+
 func planCandidate(ex Example, doc Doc, registry Registry, diagnostics *[]Diagnostic) candidateUnit {
+	// A block whose whole text is a link to an oath section is a reference, not
+	// content: never matched against step definitions, and never prose.
+	if len(ex.Body) > 0 && isTextBearing(ex.Body[0]) {
+		if ref := ReferenceOf(textOf(ex.Body[0]), doc.Path); ref != nil {
+			return candidateUnit{
+				reference:           ref,
+				precededByDelimiter: ex.PrecededByDelimiter,
+				span:                ex.Span,
+			}
+		}
+	}
 	source := doc.Source
 	hadAmbiguous := false
 	body := ex.Body
@@ -214,10 +351,15 @@ func planCandidate(ex Example, doc Doc, registry Registry, diagnostics *[]Diagno
 				for i, p := range h.paramSpans {
 					paramSpans[i] = liftSpan(source, block, p.start, p.end)
 				}
+				paramTexts := make([]string, len(h.paramSpans))
+				for i, p := range h.paramSpans {
+					paramTexts[i] = utf16Slice(text, p.start, p.end)
+				}
 				blockSteps = append(blockSteps, PlannedStep{
 					Text:       utf16Slice(text, h.matchStart, h.matchEnd),
 					MatchSpan:  liftSpan(source, block, h.matchStart, h.matchEnd),
 					ParamSpans: paramSpans,
+					ParamTexts: paramTexts,
 					StepDef:    h.stepDef,
 					Args:       h.args,
 					Formats:    h.formats,

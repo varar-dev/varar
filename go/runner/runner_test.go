@@ -79,7 +79,7 @@ func TestBaselineStoreRoundTripsAndReconcileWritesLock(t *testing.T) {
 	}
 	source := "# Hi\n\nI greet \"world\"."
 	doc := core.Parse("hi.md", source)
-	execution := core.Plan(doc, registry)
+	execution := core.Plan(doc, registry, core.EmptyWorkspace())
 
 	drifts := core.ReconcileDrift(store, "hi.md", source, doc, execution, false)
 	if len(drifts) != 0 {
