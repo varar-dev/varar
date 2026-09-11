@@ -300,25 +300,144 @@ tempting option, and it loses on three counts:
 
 ### The real costs
 
-- **vitest: an oath whose sections are all consumed produces a test file with
-  zero tests**, which vitest reports as an error ("No test suite found in
-  file"). `test.include` is driven straight from the `docs` globs, so the plugin
-  must either drop fully-consumed oaths from `include` (it now has the index in
-  `config()` to know) or emit a placeholder. No other port has this problem: an
-  empty pytest collector, an childless JUnit descriptor and a Go subtest-less
-  file are all fine.
 - **vitest watch mode gets wider invalidation.** Editing *any* oath can change
   another oath's plan, so `load()` must `addWatchFile` every oath, not just the
   step files. Precedented — step files already force a re-transform of every
   oath — but it means one keystroke in a shared oath re-transforms the project.
 - **Filtered runs parse files they do not run.** Parse-only, no step execution,
-  and bounded by the oath count; cache by (path, hash) if it ever shows up in a
-  profile.
-- **Seven ports plus the LSP must thread one more argument through `plan()`.**
-  Mechanical, but it is the kind of change where one port quietly keeps the old
-  single-argument call and silently runs shared sections as examples — so the
-  conformance corpus must pin a bundle where a section is consumed, and the
-  expected plan for its *defining* file is empty.
+  bounded by the oath count, and cached by (path, hash) — see
+  [Keeping the LSP fast](#keeping-the-lsp-fast), whose caches the runners share.
+
+## Port and runner compatibility
+
+The adapters differ in *when* they plan, and two of them have hazards the others
+do not. Everything below is a decision, not an open question.
+
+| Adapter | How examples are produced today | What changes |
+|---------|---------------------------------|--------------|
+| cargo test | `trials_recording` loops every oath from `find_oaths` in one function | one pre-pass in the same loop |
+| go test | `Collect` — "always discovers everything" | same |
+| .NET | `Discovery.FindOaths` then a loop | same |
+| JUnit / Kotest | engine/spec walks the on-disk set in one place | same |
+| RSpec / minitest | `Runner.find_oaths` at load | same |
+| pytest | plans lazily in `pytest_collect_file` → `OathFile.collect`, but `pytest_configure` already stashes the full set | index into the stash |
+| vitest | plans lazily in the `load()` hook per oath; `configResolved` already globs the full set | index built there, cached; plus the zero-test fix below |
+
+Five ports already hold every oath in one loop, so the index is a local change.
+The two that plan lazily both already stash the whole set for baseline pruning.
+No port needs a new discovery pass.
+
+### Document identity must become the same thing in every port
+
+This is a **prerequisite**, and it is currently broken. The path handed to
+`parse()` differs per port: pytest passes `self.path.name` (a *basename*), Rust
+passes `file_name`, .NET passes a workspace-relative POSIX path, the vitest
+plugin and the LSP pass absolute paths. A relative link — `./shared/library.md`
+— cannot be resolved against a basename, and two same-named oaths in different
+directories are indistinguishable.
+
+**Decision: `doc.path` is the workspace-relative POSIX path in every port**, the
+identity `varar.lock.json` and `.varar/<oathPath>.json` already use. It lands
+before the reference work as its own `fix(spec)` change, which is worth doing on
+its own merits — `doc.path` currently means three different things. Each port's
+failure rendering must be checked for basename assumptions as part of it.
+
+### vitest: a fully-consumed oath must not become a zero-test file
+
+`test.include` is driven straight from the `docs` globs, so every oath is a test
+*file*. An oath whose sections are all consumed would register no tests, and
+vitest fails that file outright (verified on vitest 5.0.0):
+
+```
+FAIL  empty.test.ts [ empty.test.ts ]
+Error: No test suite found in file …/empty.test.ts
+```
+
+**Decision: a fully-consumed oath transforms to a module containing a single
+empty `describe.skip(...)`**, named for the oath and its referrers. Verified: the
+run reports `Test Files 1 skipped (1)`, no error, no failure — which is also the
+honest report, since the file holds no standalone example.
+
+The alternative — dropping consumed oaths from `test.include` — is rejected:
+`include` is fixed in the `config()` hook, so the first watch-mode edit that
+consumes or releases a section would need a dev-server restart to take effect.
+Transforming the module instead makes the transition an ordinary re-transform.
+
+No other adapter has this problem: an empty pytest collector, a childless JUnit
+descriptor, a Go parent test with no subtests and a .NET discovery yielding no
+test cases are all silent and green.
+
+### The index is a required argument, not an optional one
+
+The likeliest way this decays is a port that keeps calling the old
+single-argument `plan()` and runs shared sections as standalone examples —
+wrong, and green, in exactly the way ADR 0014 describes for unpinned fields.
+Three gates, deliberately redundant:
+
+1. **The core's `plan()` takes the index as a required parameter** in all seven
+   ports. The five statically-typed ports fail to compile; Python and Ruby fail
+   loudly at the first call. No defaulting to "no references".
+2. **A conformance bundle pins it**: a multi-file bundle where one file's section
+   is consumed by another, whose `golden/plan.json` for the *defining* file has an
+   empty example list. A port that ignores the index produces a non-empty plan
+   and goes red.
+3. **An `adapter/` smoke case** runs each example project's real test command and
+   asserts the consumed oath contributes no test. The corpus exists precisely
+   because a port can be conformance-green and wired wrong; "shared sections run
+   twice" is that failure exactly.
+
+### Run results for a consumed oath
+
+Adapters write `.varar/<oathPath>.json` for every oath they *discovered*,
+including a consumed one — with an empty example list. Skipping the file would
+leave the LSP showing diagnostics from the run before the section was consumed.
+For the same reason baseline pruning keeps a consumed oath's `varar.lock.json`
+entry: it is still a discovered oath, and its source is still fingerprinted.
+
+## Keeping the LSP fast
+
+### What it costs today
+
+Every `didChange` writes the buffer through to the filesystem and calls
+`store.reindex()`, which re-globs the workspace, re-reads every step file,
+re-runs the **tree-sitter scan on all of them**, re-reads every oath, and
+re-parses and re-plans all of them — and then `driftDiagnosticRefs` parses and
+plans **every oath a second time**. There is no debounce: that is the cost of one
+keystroke today, twice over.
+
+References do not introduce this, but they would make the whole-project shape
+permanent, so the incrementality lands with them.
+
+### Four changes, in order of payoff
+
+1. **Debounce `reindex`** — a trailing ~75 ms coalescing timer, so a burst of
+   typing produces one index, not one per character. Alone, this removes most of
+   the cost of fast typing.
+2. **Memoise by content hash.** `parse()` is pure, and the tree-sitter step scan
+   is pure in its file's source; cache both keyed by `(path, contentHash)`. After
+   the first index, a keystroke re-parses exactly one file and re-scans no step
+   files at all.
+3. **Invalidate along the reference graph.** The inbound index *is* a dependency
+   graph, so a changed oath re-plans only
+
+       {edited} ∪ referrers*(edited) ∪ targets(edited before) ∪ targets(edited after)
+
+   — the last two because editing a reference block changes whether its old and
+   new targets are standalone. A change that affects the *registry* (a step file,
+   `varar.config.json`) still invalidates every plan, as it must.
+4. **Delete the double plan.** `driftDiagnosticRefs` re-parses and re-plans every
+   oath; hand it the plans `buildWorkspaceIndex` just computed instead. This is a
+   straight halving, and it is worth doing whether or not references ship.
+
+The result is that with references the LSP does *less* work per keystroke than it
+does today: an edit to an ordinary oath costs one parse and one plan, and an edit
+to a shared oath costs one parse plus a re-plan of its referrers. The pathological
+case — a project where every oath references one shared file — is bounded by the
+referrer count, and is the same document shape the reuse docs (and the optional
+depth lint) warn against.
+
+The browser LSP used by the website runs the same store over a memory filesystem
+and gets the identical improvement.
 
 ## Implementation
 
@@ -368,15 +487,24 @@ The split follows ADR 0012's: syntax in `structure()`, meaning in `plan()`.
   which means the referencing side has to report back. This is the second piece
   of whole-project state the change introduces, and the one most likely to be
   got wrong quietly.
-- **The inbound index is whole-project.** A full run already globs every oath, so
-  building (path, slug) → referrers costs one pass. The hard cases are the ones
-  that plan a subset: `vitest path/to/one.md`, and the LSP planning a single open
-  buffer. Both need the index, or they will run a referenced section as a
-  standalone example (wrong, and green) — see [Open questions](#open-questions).
+- **The inbound index** is built at each port's existing once-per-run glob and
+  passed to `plan()` as a required argument — see
+  [The inbound index](#the-inbound-index) and
+  [Port and runner compatibility](#port-and-runner-compatibility).
 
-Rollout: TypeScript first behind the corpus, then the remaining six ports;
-`spec` commits per CLAUDE.md, with `Ports-deferred:` footers while it lands
-incrementally.
+Rollout, in dependency order — each step is independently shippable and green:
+
+1. **`doc.path` becomes the workspace-relative POSIX path in every port**
+   (`fix(spec)`). A prerequisite, and an improvement on its own: the field
+   currently means a basename, a relative path or an absolute path depending on
+   who called.
+2. **LSP incrementality** — debounce, hash-keyed caches, and dropping the double
+   plan (`perf(ts/lsp)`). Independent of references, and a win today.
+3. **The reference block itself**, TypeScript first behind the new multi-file
+   conformance bundle, then the remaining six ports; `spec` commits with
+   `Ports-deferred:` footers while it lands incrementally.
+4. **Run-result v2** (per-step document identity) with its golden, once the
+   parser work proves the shape.
 
 ## Consequences
 
@@ -428,9 +556,10 @@ Unresolved; each needs a decision before implementation.
    same section twice in one example is an error or a legitimate "do it again".
 6. **Is a fragment-less `.md` reference (whole file) worth keeping?** It is the
    one form whose meaning changes when the target file grows a second example.
-7. **Does `varar.lock.json` still fingerprint a file that contributes no
-   standalone examples?** It must, or edits to shared setup go unnoticed — but
-   the entry's meaning changes.
+7. ~~Does `varar.lock.json` still fingerprint a consumed file?~~ **Resolved** —
+   yes; see [Run results for a consumed oath](#run-results-for-a-consumed-oath).
+   What remains open is what a consumed file's baseline entry *means* once its
+   paragraphs are live only through their referrers.
 8. **What does the editor do at a reference block?** Go-to-definition is
    obvious; the open question is whether hovering shows the resolved steps
    inline, which is what would keep the "reader must see the world state"
