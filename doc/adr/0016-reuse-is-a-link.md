@@ -154,21 +154,34 @@ knowledge. It cannot be answered from the file being planned, which has
 consequences for single-file runs and for the LSP planning one open buffer — see
 [Open questions](#open-questions).
 
-### References do not nest
+### References nest, and depth is a style question
 
-A referenced section may not itself contain a reference block. Reuse is exactly
-one level deep.
+A referenced section may itself contain reference blocks, to any depth. The
+steps of an example are the depth-first, document-order flattening of its
+reference graph.
 
-This is a deliberate ceiling, not a limitation waiting to be lifted: chained
-transclusion makes a reader open three files to learn what the world state is,
-which is worse than the repetition it removes. A reference block inside a
-referenced section is an error.
+Deep chains are **bad practice** — a reader who must open three files to learn
+what the world state is has lost more than the repetition saved — but that is a
+judgement about a particular document, not a property the parser can decide.
+Varar's line is that the tool enforces what is *checkable* (an anchor resolves,
+a step matches, a claimed value holds) and leaves what is *tasteful* to prose:
+the reuse how-to and the authoring skills say "one level, two at the outside",
+and review catches the rest. Encoding a depth ceiling would also be the first
+place Varar told an author their correct document was disallowed on style
+grounds.
 
-It also **eliminates cycles by construction**. With a maximum depth of one, the
-only reachable cycle is a section referencing itself, which the nesting rule
-already rejects — so there is no cycle *detection* to implement, only a depth
-check with a clear message. (If nesting is ever allowed, cycle detection comes
-back with it; that is part of the cost of lifting the ceiling.)
+The cost is real and is accepted:
+
+- **Cycles become reachable and must be detected.** A → B → A, and the
+  self-reference A → A, are errors reported with the full chain
+  (`library.md#stocked → billing.md#fees → library.md#stocked`), not a stack
+  overflow.
+- **An example's steps can come from arbitrarily many documents.** The per-step
+  document identity below already carries this; nothing further is needed, but
+  the "which file am I looking at" burden on reporters and the LSP grows.
+- **Cost is multiplicative.** A section referenced from a section referenced by
+  forty examples runs forty times. Nothing caps it; the deferred state-snapshot
+  optimisation is the eventual answer.
 
 ### Naming
 
@@ -183,8 +196,8 @@ All are authoring mistakes, reported as diagnostics and failing the run — none
 degrade to prose:
 
 - **dangling reference** — no such file, or no heading with that slug;
-- **nested reference** — a reference block inside a referenced section (this is
-  also what makes a cycle unreachable);
+- **cycle** — a reference chain that reaches a section already on the chain,
+  including a section referencing itself; reported with the whole chain;
 - **empty reference** — the resolved section plans no steps;
 - **ambiguous anchor** — two headings in the target file slug identically
   (`#setup` / `#setup-1`); lint requires unique headings in any referenced file;
@@ -239,8 +252,9 @@ The split follows ADR 0012's: syntax in `structure()`, meaning in `plan()`.
   `plan(doc, registry, { docs, referenced })` where `docs` maps POSIX-relative
   path → already-parsed `Doc`, and `referenced` is the set of (path, slug)
   sections the project links to. A `reference` candidate resolves to a section,
-  plans it (memoised per (path, slug); depth is capped at one, so no cycle
-  guard), and splices its `PlannedStep`s into the open `MergedExample`. A
+  plans it (memoised per (path, slug), with the chain of in-progress sections
+  carried down so a repeat is reported as a cycle rather than recursing), and
+  splices its `PlannedStep`s into the open `MergedExample`. A
   candidate that *is* a referenced section is planned and then dropped, not
   emitted as an example. Two new branches in the grouping loop, and one new
   input the caller must supply.
@@ -342,12 +356,27 @@ Unresolved; each needs a decision before implementation.
 8. **What does the editor do at a reference block?** Go-to-definition is
    obvious; the open question is whether hovering shows the resolved steps
    inline, which is what would keep the "reader must see the world state"
-   argument true at the point of use.
+   argument true at the point of use. With nesting allowed, a hover that
+   resolves the *whole* chain is the thing that keeps a deep document readable
+   despite itself.
+9. **Is an opt-in depth lint worth it?** Nesting depth is a style question and
+   stays out of the parser, but `reference/lint.md` is where checkable house
+   style already lives. A rule that is **off by default** and warns past a
+   configured depth would let a team enforce its own ceiling without Varar
+   picking one. Decide whether that is a useful escape hatch or the same
+   prohibition wearing a hat.
 
 ## Documentation
 
-- New: `explanation/reuse.md` (why a link, and the altitude argument first).
-- New: `how-to/share-setup-between-examples.md`.
+- New: `explanation/reuse.md` (why a link, the altitude argument first, and why
+  nesting depth is left to judgement rather than enforced).
+- New: `how-to/share-setup-between-examples.md` — including the house-style
+  guidance the parser deliberately does not enforce: one level, two at the
+  outside; a chain a reader cannot hold in their head is a step nobody wrote.
+- Edit: `how-to/agent-instructions.md` and the authoring skills — an agent
+  generating oaths is exactly the author most likely to build a deep reference
+  chain, so the depth guidance has to reach the instruction block, not only the
+  prose docs.
 - Edit: `reference/examples.mdx` — a fourth block role beside example, prose and
   attachment; the naming rule; the error table.
 - Edit: `explanation/varar-for-cucumber-users.md` — the `Background:` row stops
