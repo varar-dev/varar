@@ -1,7 +1,7 @@
 # ADR 0016 — Reuse is a link: reference blocks instead of `Background`
 
-- **Status:** Draft
-- **Date:** 2026-09-11
+- **Status:** Accepted (implemented)
+- **Date:** 2026-09-11 (implemented 2026-09-11)
 - **Deciders:** Aslak Hellesøy
 - **Tags:** spec, parsing, gfm, reuse, cross-language
 
@@ -590,3 +590,66 @@ Unresolved; each needs a decision before implementation.
   saying "no equivalent".
 
 New pages ship `draft: true` until the release that carries the feature.
+
+## What shipped, and how it differs from this plan
+
+Implemented across all seven ports. Three deliberate deviations, and one bug the
+corpus caught:
+
+1. **Reference blocks are recognised in `plan()`, not the structurer.** The ADR
+   proposed a new `reference` `Block` kind emitted by `structure()`. Detecting a
+   link-only block is equally pure in the planner, and keeping it there left
+   `golden/doc.json` untouched in every port — the var-doc artifact did not have
+   to change at all. `plan()` returns a reference *unit*, which is where the
+   splice already had to happen.
+
+2. **Sections resolve through the scope stack, not a heading index.** A
+   candidate belongs to a section iff the section's slug is in its `scopeStack`
+   — which is exactly "from this heading until the next of the same or higher
+   level", already computed. No `headings` field was added to `Doc`, so no
+   golden moved. The cost is the **ambiguous-anchor** error from the Errors
+   list: two headings in one file that slug identically are indistinguishable
+   this way, so that case is not detected. It remains open (see below).
+
+3. **`PlannedStep` gained `paramTexts` as well as `docPath`.** Not in the plan,
+   and necessary: consumers sliced the *running* oath's source by a step's
+   param spans to recover the matched notation (the conformance artifact's
+   `args[].value`, the LSP's rename values). For a spliced step those spans
+   belong to another document, so the slice returned whatever text sat at those
+   offsets. Slicing at plan time, from the document the step was written in,
+   removes the hazard at its source rather than teaching each consumer about it.
+
+4. **The corpus caught a real divergence.** `21-reference-consumed` was green in
+   six ports and red in .NET: `MergedExample.ScopeStack` was `init`-only, so the
+   name-replacement rule updated the name but left the *referenced* section's
+   heading chain on the example. Exactly the failure mode the bundle exists to
+   catch, caught on its first run.
+
+Two adapter-level notes:
+
+- **vitest's zero-test file** was handled as decided, but the placeholder is a
+  single bookkeeping test rather than an empty `describe.skip`. A skipped suite
+  keeps vitest happy, but no test body runs — and the drift baseline and the
+  `.varar` run record are both written from a test body, so a consumed oath
+  would have silently dropped out of `varar.lock.json` (the adapter smoke
+  contract's `baseline-complete` check caught this). One `varar:referenced-
+  elsewhere` test attaches both, alongside the `varar:diagnostic:*` and
+  `varar:stale-oath-transform` tests the runtime already registers.
+- **`smoke.sh` now globs oaths recursively.** It listed `varar/*.md`, which
+  cannot see the `varar/shared/` convention this ADR introduces.
+
+### Still open
+
+- **Run-result v2 (ADR 0014).** `docPath` reaches the plan and the plan artifact,
+  but *not* the persisted `.varar/<oath>.json` payload. Until it does, a failure
+  inside a referenced section is reported to the LSP with spans in that section's
+  document and a `sourceHash` for the referencing one, so the editor will not
+  place it. **A mismatch inside a shared section is therefore not yet rendered
+  correctly in editors** — the run still fails, with the correct message, in
+  every runner. This is the next piece of work, and it is a cross-port payload
+  change with its own golden.
+- **Ambiguous anchors** (deviation 2) are undetected; the lint rule requiring
+  unique headings in a referenced file is not written.
+- **LSP reference support** — go-to-definition and hover on a reference block —
+  is not implemented; the block is inert in the editor beyond ordinary Markdown.
+- Open questions 2–6, 8 and 9 stand as written.
