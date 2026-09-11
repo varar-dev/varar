@@ -63,7 +63,7 @@ class ExecuteTest {
     }
 
     private static Plan.ExecutionPlan planOf(String source, Registry registry) {
-        return Plan.plan(Parse.parse("x.md", source), registry);
+        return Plan.plan(Parse.parse("x.md", source), registry, Reference.emptyWorkspace());
     }
 
     private static Execute.ExecutePorts silentPorts() {

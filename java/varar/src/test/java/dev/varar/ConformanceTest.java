@@ -8,12 +8,14 @@ import dev.varar.core.Conformance;
 import dev.varar.core.JsonValue;
 import dev.varar.core.Parse;
 import dev.varar.core.Plan;
+import dev.varar.core.Reference;
 import dev.varar.core.Registry;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Named;
@@ -86,6 +88,32 @@ class ConformanceTest {
      * class name) keeps the bundle-to-fixture mapping explicit and compiler-checked —
      * every case is a real, statically resolved constructor call.
      */
+    /**
+     * A bundle is one oath ({@code example.md}) plus, for a bundle that exercises reference blocks
+     * (ADR 0016), the other oaths it links to — every other {@code .md} in the bundle directory.
+     * They are parsed under their bare file names, so {@code ./shared.md} resolves the same way in
+     * every port.
+     */
+    private static List<Ast.Doc> bundleDocs(Path bundle) throws IOException {
+        try (var files = Files.list(bundle)) {
+            List<Path> paths = files.filter(p -> p.getFileName().toString().endsWith(".md"))
+                    .sorted()
+                    .toList();
+            List<Ast.Doc> docs = new java.util.ArrayList<>(paths.size());
+            for (Path path : paths) {
+                docs.add(Parse.parse(path.getFileName().toString(), Files.readString(path, StandardCharsets.UTF_8)));
+            }
+            return docs;
+        }
+    }
+
+    private static Ast.Doc exampleDoc(List<Ast.Doc> docs) {
+        return docs.stream()
+                .filter(d -> d.path().equals("example.md"))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("bundle has no example.md"));
+    }
+
     private static StepDefinitions loadFixture(String bundleName) {
         return switch (bundleName) {
             case "01-roman-numerals" -> new dev.varar.conformance.bundle01.NumeralsSteps();
@@ -107,6 +135,8 @@ class ConformanceTest {
             case "17-unexpected-pass" -> new dev.varar.conformance.bundle17.QuietSteps();
             case "18-multi-table-example" -> new dev.varar.conformance.bundle18.BasketSteps();
             case "19-emphasis-parameter" -> new dev.varar.conformance.bundle19.MentionSteps();
+            case "20-reference-splice" -> new dev.varar.conformance.bundle20.LibrarySteps();
+            case "21-reference-consumed" -> new dev.varar.conformance.bundle21.LibrarySteps();
             default -> throw new IllegalStateException("No Java step fixture registered for bundle " + bundleName);
         };
     }
@@ -145,9 +175,9 @@ class ConformanceTest {
         Steps.Bound bound = Steps.bind(fixture);
         Registry registry = bound.registry();
 
-        String source = Files.readString(bundle.resolve("example.md"), StandardCharsets.UTF_8);
-        Ast.Doc doc = Parse.parse("example.md", source);
-        Plan.ExecutionPlan plan = Plan.plan(doc, registry);
+        List<Ast.Doc> docs = bundleDocs(bundle);
+        Ast.Doc doc = exampleDoc(docs);
+        Plan.ExecutionPlan plan = Plan.plan(doc, registry, Reference.buildWorkspace(docs));
 
         var artifact = Conformance.toPlanArtifact(plan);
         Object actual = JsonValue.normalize(artifact);
@@ -182,10 +212,11 @@ class ConformanceTest {
         Registry registry = bound.registry();
         Supplier<? extends State> contextFactory = bound.stateFactory();
 
-        String source = Files.readString(bundle.resolve("example.md"), StandardCharsets.UTF_8);
-        Ast.Doc doc = Parse.parse("example.md", source);
+        List<Ast.Doc> docs = bundleDocs(bundle);
+        Ast.Doc doc = exampleDoc(docs);
 
-        Conformance.BundleArtifacts artifacts = Conformance.runConformance(doc, registry, contextFactory);
+        Conformance.BundleArtifacts artifacts =
+                Conformance.runConformance(doc, registry, contextFactory, Reference.buildWorkspace(docs));
 
         Object actual = JsonValue.normalize(artifacts.trace());
         Object expected = JsonValue.normalize(JsonValue.parse(

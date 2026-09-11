@@ -1,8 +1,11 @@
 package dev.varar.junit;
 
 import dev.varar.config.Config;
+import dev.varar.core.Ast;
 import dev.varar.core.Drift;
+import dev.varar.core.Parse;
 import dev.varar.core.Plan;
+import dev.varar.core.Reference;
 import dev.varar.runner.BaselineStores;
 import dev.varar.runner.Discovery;
 import dev.varar.runner.Run;
@@ -13,6 +16,7 @@ import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -83,6 +87,14 @@ final class OathFileSelectorResolver implements SelectorResolver {
      * call in this discovery pass (Task 17) — see this class's javadoc.
      */
     private final Map<String, OathFileDescriptor> fileDescriptors = new HashMap<>();
+
+    /**
+     * The project's reference topology (ADR 0016), built lazily from the config globs — the full
+     * set, never the filtered view a single-selector run would give. Whether a section is a
+     * standalone example depends on whether another oath references it, which no single file can
+     * answer.
+     */
+    private Reference.OathWorkspace workspace;
 
     private final Drift.BaselineStore baselineStore;
     private final boolean update;
@@ -317,6 +329,29 @@ final class OathFileSelectorResolver implements SelectorResolver {
      * call, is what lets a second bare {@code UniqueIdSelector} for a different example in the same
      * file add a sibling instead of silently vanishing (see {@link #resolveOneExample}'s javadoc).
      */
+    private Reference.OathWorkspace workspace() {
+        if (workspace == null) {
+            List<Ast.Doc> docs = new ArrayList<>();
+            for (Path oath : Discovery.findOaths(config.docsInclude(), config.docsExclude(), root)) {
+                try {
+                    docs.add(Parse.parse(relOf(oath), Files.readString(oath)));
+                } catch (IOException e) {
+                    // A file that vanished between discovery and read contributes nothing.
+                }
+            }
+            workspace = Reference.buildWorkspace(docs);
+        }
+        return workspace;
+    }
+
+    private String relOf(Path oath) {
+        return root.toAbsolutePath()
+                .normalize()
+                .relativize(oath.toAbsolutePath().normalize())
+                .toString()
+                .replace('\\', '/');
+    }
+
     private OathFileDescriptor createDescriptor(
             TestDescriptor parent, String oathPath, TestSource source, Integer onlyLine) {
         OathFileDescriptor existing = fileDescriptors.get(oathPath);
@@ -326,7 +361,7 @@ final class OathFileSelectorResolver implements SelectorResolver {
         }
         UniqueId uniqueId = parent.getUniqueId().append(OathFileDescriptor.SEGMENT_TYPE, oathPath);
         String content = readContent(source);
-        Plan.ExecutionPlan plan = Run.planOath(oathPath, content, loadedSteps.registry());
+        Plan.ExecutionPlan plan = Run.planOath(oathPath, content, loadedSteps.registry(), workspace());
         OathFileDescriptor fileDescriptor =
                 new OathFileDescriptor(uniqueId, oathPath, source, content, loadedSteps, plan, root);
         mergeChildren(fileDescriptor, source, onlyLine);

@@ -32,7 +32,7 @@ class DriftTest {
     }
 
     private static Plan.ExecutionPlan planOf(String source, Registry r) {
-        return Plan.plan(Parse.parse("w.md", source), r);
+        return Plan.plan(Parse.parse("w.md", source), r, Reference.emptyWorkspace());
     }
 
     private static List<String> bare(List<Drift.Drifted> drifts) {
@@ -152,16 +152,17 @@ class DriftTest {
         Ast.Doc doc = Parse.parse("r.md", ROMAN);
         assertEquals(
                 List.of(new Drift.BaselineExample("Each row gives a decimal and a roman number:", 1)),
-                Drift.liveExamples(doc, Plan.plan(doc, romanReg(true))));
+                Drift.liveExamples(doc, Plan.plan(doc, romanReg(true), Reference.emptyWorkspace())));
     }
 
     @Test
     void aHeaderBoundBindingParagraphThatStopsMatchingDrifts() {
         Ast.Doc doc = Parse.parse("r.md", ROMAN);
-        Drift.OathBaseline baseline = Drift.deriveOathBaseline(ROMAN, doc, Plan.plan(doc, romanReg(true)));
+        Drift.OathBaseline baseline =
+                Drift.deriveOathBaseline(ROMAN, doc, Plan.plan(doc, romanReg(true), Reference.emptyWorkspace()));
         assertEquals(
                 List.of("Each row gives a decimal and a roman number:@1"),
-                bare(Drift.detectDrift(baseline, doc, Plan.plan(doc, romanReg(false)))));
+                bare(Drift.detectDrift(baseline, doc, Plan.plan(doc, romanReg(false), Reference.emptyWorkspace()))));
     }
 
     @Test
@@ -261,7 +262,7 @@ class DriftTest {
     void twoParagraphsThatMergeIntoOneExampleAreEachRecordedAsALiveBaselineEntry() {
         String source = "I deposit 100.\n\nI withdraw 40.";
         Ast.Doc doc = Parse.parse("w.md", source);
-        Plan.ExecutionPlan plan = Plan.plan(doc, depositWithdrawReg(true));
+        Plan.ExecutionPlan plan = Plan.plan(doc, depositWithdrawReg(true), Reference.emptyWorkspace());
         // One planned example (the two paragraphs merged), but two live entries.
         assertEquals(1, plan.examples().size());
         assertEquals(
@@ -273,10 +274,12 @@ class DriftTest {
     void deletingOneStepDefOfAMergedExampleDriftsOnlyTheNowProseParagraph() {
         String source = "I deposit 100.\n\nI withdraw 40.";
         Ast.Doc doc = Parse.parse("w.md", source);
-        Drift.OathBaseline baseline = Drift.deriveOathBaseline(source, doc, Plan.plan(doc, depositWithdrawReg(true)));
+        Drift.OathBaseline baseline = Drift.deriveOathBaseline(
+                source, doc, Plan.plan(doc, depositWithdrawReg(true), Reference.emptyWorkspace()));
         // The deposit step is gone: its paragraph becomes prose, splitting the example. The
         // withdraw paragraph is still live; the deposit one drifts.
-        List<Drift.Drifted> drift = Drift.detectDrift(baseline, doc, Plan.plan(doc, depositWithdrawReg(false)));
+        List<Drift.Drifted> drift =
+                Drift.detectDrift(baseline, doc, Plan.plan(doc, depositWithdrawReg(false), Reference.emptyWorkspace()));
         assertEquals(List.of("I deposit 100@1"), bare(drift));
     }
 
@@ -289,7 +292,8 @@ class DriftTest {
     private static String lockWithStalePath() {
         String source = "I withdraw 40.";
         Ast.Doc doc = Parse.parse("w.md", source);
-        Drift.OathBaseline baseline = Drift.deriveOathBaseline(source, doc, Plan.plan(doc, reg(true)));
+        Drift.OathBaseline baseline =
+                Drift.deriveOathBaseline(source, doc, Plan.plan(doc, reg(true), Reference.emptyWorkspace()));
         return Drift.stringifyLockFile(new Drift.LockFile(2, Map.of("varar/w.md", baseline, "w.md", baseline)));
     }
 

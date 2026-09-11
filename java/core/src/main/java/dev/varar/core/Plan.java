@@ -83,6 +83,13 @@ public final class Plan {
      * reaching back into the registry. Copied null-tolerantly ({@code List.copyOf} rejects
      * nulls).
      */
+    /**
+     * @param paramTexts the notation each parameter matched, sliced at plan time from the document
+     *     the step was WRITTEN in. Consumers must use this rather than slicing the running oath's
+     *     source: a step a reference block spliced in (ADR 0016) has spans in a different document.
+     * @param docPath set only on such a spliced step — the document its spans belong to; {@code
+     *     null} means the example's own document.
+     */
     public record PlannedStep(
             String text,
             Span matchSpan,
@@ -91,11 +98,20 @@ public final class Plan {
             List<Object> args,
             List<Function<Object, String>> formats,
             Ast.Table dataTable,
-            Ast.Fence docString) {
+            Ast.Fence docString,
+            List<String> paramTexts,
+            String docPath) {
         public PlannedStep {
             paramSpans = List.copyOf(paramSpans);
             args = List.copyOf(args);
             formats = Collections.unmodifiableList(new ArrayList<>(formats));
+            paramTexts = List.copyOf(paramTexts);
+        }
+
+        /** Same step, tagged with the document its spans belong to. */
+        public PlannedStep withDocPath(String path) {
+            return new PlannedStep(
+                    text, matchSpan, paramSpans, stepDef, args, formats, dataTable, docString, paramTexts, path);
         }
     }
 
@@ -104,12 +120,15 @@ public final class Plan {
     // -----------------------------------------------------------------------------------------
 
     /** Plans {@code doc} against {@code registry}: mirrors {@code plan()} in plan.ts exactly. */
-    public static ExecutionPlan plan(Ast.Doc doc, Registry registry) {
+    public static ExecutionPlan plan(Ast.Doc doc, Registry registry, Reference.OathWorkspace workspace) {
         List<Diagnostics.Diagnostic> diagnostics = new ArrayList<>();
 
-        // Phase 1: plan each candidate paragraph independently into a "unit".
+        // Phase 1: plan each candidate paragraph independently into a "unit". A section another
+        // oath references stops being a standalone example: it runs where it is referenced, not
+        // here (ADR 0016).
         List<CandidateUnit> units = new ArrayList<>(doc.examples().size());
         for (Ast.Example ex : doc.examples()) {
+            if (consumed(ex, doc, workspace)) continue;
             units.add(planCandidate(ex, doc, registry, diagnostics));
         }
 
@@ -129,6 +148,25 @@ public final class Plan {
                 examples.addAll(hb.rows());
                 continue;
             }
+            if (unit instanceof ReferenceUnit ru) {
+                // Splice the referenced section's steps in at this position. Only the reference
+                // block itself is subject to the delimiter rule; everything it splices in belongs
+                // to the same sequence, so a section of several paragraphs stays one example.
+                List<StepsUnit> resolved = resolveReference(ru, doc, registry, workspace, diagnostics, List.of());
+                for (int i = 0; i < resolved.size(); i++) {
+                    StepsUnit spliced = resolved.get(i);
+                    if (open != null && (i > 0 || !ru.precededByDelimiter())) {
+                        mergeInto(open, spliced, true);
+                    } else {
+                        if (open != null) examples.add(finishMerged(open, doc.source()));
+                        open = startMerged(spliced);
+                        // An example that OPENS with a reference is named by its own first matching
+                        // paragraph, not by the section it pulls in.
+                        open.nameFromReference = true;
+                    }
+                }
+                continue;
+            }
             StepsUnit su = (StepsUnit) unit;
             if (!su.matched()) {
                 // Prose paragraph — a delimiter. Drop it and end the open example.
@@ -139,7 +177,7 @@ public final class Plan {
                 continue;
             }
             if (open != null && !su.precededByDelimiter()) {
-                mergeInto(open, su);
+                mergeInto(open, su, false);
             } else {
                 if (open != null) examples.add(finishMerged(open, doc.source()));
                 open = startMerged(su);
@@ -158,7 +196,14 @@ public final class Plan {
     // -----------------------------------------------------------------------------------------
 
     /** One candidate paragraph, planned in isolation. */
-    private sealed interface CandidateUnit permits HeaderBoundUnit, StepsUnit {}
+    private sealed interface CandidateUnit permits HeaderBoundUnit, StepsUnit, ReferenceUnit {}
+
+    /**
+     * A reference block: its whole text is a link to an oath section, whose steps are spliced in
+     * here (ADR 0016). Never prose, so it does not close the open example.
+     */
+    private record ReferenceUnit(Reference.Ref reference, boolean precededByDelimiter, Span span)
+            implements CandidateUnit {}
 
     /** A header-bound table candidate — standalone, one planned example per data row. */
     private record HeaderBoundUnit(List<PlannedExample> rows) implements CandidateUnit {}
@@ -188,6 +233,12 @@ public final class Plan {
         List<PlannedStep> steps;
         String expectedOutcome; // null or "fail"
         String expectedErrorMessage; // null when absent
+
+        /**
+         * True while the name came from a spliced (referenced) paragraph and is waiting to be
+         * replaced by the example's own first matching paragraph.
+         */
+        boolean nameFromReference;
     }
 
     private static MergedExample startMerged(StepsUnit unit) {
@@ -202,7 +253,12 @@ public final class Plan {
         return m;
     }
 
-    private static void mergeInto(MergedExample open, StepsUnit unit) {
+    private static void mergeInto(MergedExample open, StepsUnit unit, boolean fromReference) {
+        if (open.nameFromReference && !fromReference) {
+            open.name = unit.name();
+            open.scopeStack = unit.scopeStack();
+            open.nameFromReference = false;
+        }
         open.endOffset = unit.span().endOffset();
         open.steps.addAll(unit.steps());
         // Any error fence in a merged part marks the whole example expected-to-fail; keep the first
@@ -233,8 +289,96 @@ public final class Plan {
      * ambiguity / error-fence diagnostics into {@code diagnostics}. Uses the same per-candidate
      * logic the old single-pass planner ran per example; grouping is Phase 2's job.
      */
+    private static boolean consumed(Ast.Example ex, Ast.Doc doc, Reference.OathWorkspace workspace) {
+        if (workspace.referenced().contains(Reference.sectionKey(doc.path(), ""))) return true;
+        for (String h : ex.scopeStack()) {
+            if (workspace.referenced().contains(Reference.sectionKey(doc.path(), Reference.slugify(h)))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Resolves one reference block into the step-bearing units of the section it names,
+     * recursively: a referenced section may itself contain reference blocks, to any depth (ADR 0016
+     * leaves depth to the author's judgement). {@code chain} carries the sections currently being
+     * resolved so a repeat is reported as a cycle instead of recursing forever.
+     */
+    private static List<StepsUnit> resolveReference(
+            ReferenceUnit unit,
+            Ast.Doc from,
+            Registry registry,
+            Reference.OathWorkspace workspace,
+            List<Diagnostics.Diagnostic> diagnostics,
+            List<String> chain) {
+        Reference.Ref ref = unit.reference();
+        String key = Reference.sectionKey(ref.path(), ref.slug());
+        if (chain.contains(key)) {
+            diagnostics.add(Diagnostics.referenceCycle(unit.span()));
+            return List.of();
+        }
+        // A same-file reference resolves against the document being planned, which is not
+        // necessarily in the workspace.
+        Ast.Doc target =
+                ref.path().equals(from.path()) ? from : workspace.docs().get(ref.path());
+        if (target == null) {
+            diagnostics.add(Diagnostics.referenceNotFound(unit.span()));
+            return List.of();
+        }
+        List<String> deeper = new ArrayList<>(chain);
+        deeper.add(key);
+        List<StepsUnit> out = new ArrayList<>();
+        for (Ast.Example candidate : Reference.sectionCandidates(target, ref.slug())) {
+            CandidateUnit planned = planCandidate(candidate, target, registry, diagnostics);
+            if (planned instanceof ReferenceUnit nested) {
+                out.addAll(resolveReference(nested, target, registry, workspace, diagnostics, deeper));
+                continue;
+            }
+            // A header-bound table produces one example per row, which a spliced step list cannot
+            // express; an `error` fence declares an outcome for an example, not for a reusable
+            // fragment. Both are left out.
+            if (planned instanceof StepsUnit su && su.matched()) {
+                out.add(tagWithDoc(su, target.path(), from.path()));
+            }
+        }
+        if (out.isEmpty()) diagnostics.add(Diagnostics.referenceEmpty(unit.span()));
+        return out;
+    }
+
+    /**
+     * Carries the source document's identity on every spliced step, so a failure in a referenced
+     * section reports spans against the file they were written in rather than the file being run.
+     */
+    private static StepsUnit tagWithDoc(StepsUnit unit, String docPath, String hostPath) {
+        if (docPath.equals(hostPath)) return unit;
+        List<PlannedStep> tagged = new ArrayList<>(unit.steps().size());
+        for (PlannedStep step : unit.steps()) tagged.add(step.withDocPath(docPath));
+        return new StepsUnit(
+                unit.matched(),
+                unit.precededByDelimiter(),
+                unit.name(),
+                unit.scopeStack(),
+                unit.span(),
+                tagged,
+                unit.expectedOutcome(),
+                unit.expectedErrorMessage());
+    }
+
     private static CandidateUnit planCandidate(
             Ast.Example ex, Ast.Doc doc, Registry registry, List<Diagnostics.Diagnostic> diagnostics) {
+        // A block whose whole text is a link to an oath section is a reference, not content: never
+        // matched against step definitions, and never prose.
+        if (!ex.body().isEmpty()) {
+            String primaryText = Reference.textOf(ex.body().get(0));
+            if (primaryText != null) {
+                Reference.Ref ref = Reference.referenceOf(primaryText, doc.path());
+                if (ref != null) {
+                    return new ReferenceUnit(ref, ex.precededByDelimiter(), ex.span());
+                }
+            }
+        }
+
         boolean hadAmbiguous = false;
         List<Ast.Block> body = ex.body();
 
@@ -257,6 +401,10 @@ public final class Plan {
                     for (Matcher.ParamSpan p : hit.paramSpans()) {
                         paramSpans.add(liftSpan(doc.source(), block, p.start(), p.end()));
                     }
+                    List<String> paramTexts = new ArrayList<>(hit.paramSpans().size());
+                    for (Matcher.ParamSpan p : hit.paramSpans()) {
+                        paramTexts.add(text.substring(p.start(), p.end()));
+                    }
                     blockSteps.add(new PlannedStep(
                             text.substring(hit.matchStart(), hit.matchEnd()),
                             liftSpan(doc.source(), block, hit.matchStart(), hit.matchEnd()),
@@ -265,6 +413,8 @@ public final class Plan {
                             hit.args(),
                             hit.formats(),
                             null,
+                            null,
+                            paramTexts,
                             null));
                 }
                 stepsByBlock.put(idx, blockSteps);
@@ -296,7 +446,9 @@ public final class Plan {
                         rowArgs,
                         bound.step().formats(),
                         null,
-                        null);
+                        null,
+                        bound.step().paramTexts(),
+                        bound.step().docPath());
                 List<CellDiff.RowCheck> rowChecks = new ArrayList<>(headerCells.size());
                 for (int i = 0; i < headerCells.size(); i++) {
                     rowChecks.add(new CellDiff.RowCheck(headerCells.get(i), cellAt(row, i), cellSpanAt(row, i)));
@@ -357,7 +509,9 @@ public final class Plan {
                             step.args(),
                             step.formats(),
                             attachAt.dataTable(),
-                            attachAt.docString()));
+                            attachAt.docString(),
+                            step.paramTexts(),
+                            step.docPath()));
                 } else {
                     finalSteps.add(step);
                 }

@@ -36,6 +36,19 @@
       }
     },
     {
+      "name": "reference",
+      "what": "reference blocks: a link-only block splices an oath section's steps in (ADR 0016)",
+      "files": {
+        "typescript": "reference.ts",
+        "python": "reference.py",
+        "java": "Reference.java",
+        "ruby": "reference.rb",
+        "rust": "reference.rs",
+        "dotnet": "Reference.cs",
+        "go": "reference.go"
+      }
+    },
+    {
       "name": "plan",
       "what": "AST + registry \u2192 the execution plan",
       "files": {

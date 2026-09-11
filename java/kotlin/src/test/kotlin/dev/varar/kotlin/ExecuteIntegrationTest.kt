@@ -5,6 +5,7 @@ import dev.varar.core.CellDiff
 import dev.varar.core.Execute
 import dev.varar.core.Parse
 import dev.varar.core.Plan
+import dev.varar.core.Reference
 import java.util.function.Function
 import kotlinx.coroutines.delay
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -26,7 +27,8 @@ class ExecuteIntegrationTest {
 
     private fun execute(source: String) {
         val bound = Steps.bind(steps())
-        val plan = Plan.plan(Parse.parse("cukes.md", source), bound.registry())
+        val plan =
+            Plan.plan(Parse.parse("cukes.md", source), bound.registry(), Reference.emptyWorkspace())
         val ports =
             Execute.ExecutePorts(
                 Execute.Reporter {},

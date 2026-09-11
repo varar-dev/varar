@@ -30,7 +30,7 @@ class PlanTest {
         String source =
                 "# Withdrawing\n\nGiven I have 100 in my account. When I withdraw 40. Then I should" + " have 60 left.";
         Ast.Doc doc = Parse.parse("w.md", source);
-        Plan.ExecutionPlan result = Plan.plan(doc, reg());
+        Plan.ExecutionPlan result = Plan.plan(doc, reg(), Reference.emptyWorkspace());
         assertEquals(0, result.diagnostics().size());
         assertEquals(1, result.examples().size());
         Plan.PlannedExample ex = result.examples().get(0);
@@ -48,7 +48,7 @@ class PlanTest {
         r = Registry.addStep(r, "I have {int} cukes", "a.ts", 3, NOOP_HANDLER, StepKind.STIMULUS);
         r = Registry.addStep(r, "I have {int} {word}", "a.ts", 8, NOOP_HANDLER, StepKind.STIMULUS);
         Ast.Doc doc = Parse.parse("e.md", "# Ambig\n\nGiven I have 5 cukes");
-        Plan.ExecutionPlan result = Plan.plan(doc, r);
+        Plan.ExecutionPlan result = Plan.plan(doc, r, Reference.emptyWorkspace());
         assertEquals(1, result.diagnostics().size());
         assertEquals(
                 Diagnostics.DiagnosticCode.AMBIGUOUS_MATCH,
@@ -62,7 +62,7 @@ class PlanTest {
     void planSkipsAnExampleHeadingWhoseBodyHasNoMatchesAndNoKeywordLedSentences() {
         String source = "# Just docs\n\nSome prose with no matches and no keywords.";
         Ast.Doc doc = Parse.parse("d.md", source);
-        Plan.ExecutionPlan result = Plan.plan(doc, reg());
+        Plan.ExecutionPlan result = Plan.plan(doc, reg(), Reference.emptyWorkspace());
         assertEquals(0, result.examples().size());
         assertEquals(0, result.diagnostics().size());
     }
@@ -75,7 +75,7 @@ class PlanTest {
         // Two list items, no delimiter between them → one example, shared state (ADR 0012). A
         // bulleted scenario reads as Given/When/Then bullets.
         String source = "# Bullets\n\n- Given I have 100 in my account\n- When I withdraw 40";
-        Plan.ExecutionPlan result = Plan.plan(Parse.parse("b.md", source), r);
+        Plan.ExecutionPlan result = Plan.plan(Parse.parse("b.md", source), r, Reference.emptyWorkspace());
         assertEquals(1, result.examples().size());
         assertEquals(
                 List.of("I have 100 in my account", "I withdraw 40"),
@@ -89,7 +89,7 @@ class PlanTest {
         Registry r = Registry.createRegistry();
         r = Registry.addStep(r, "I have {int} in my account", "s.ts", 1, NOOP_HANDLER, StepKind.STIMULUS);
         String source = "# Quote\n\n> Given I have 100 in my account";
-        Plan.ExecutionPlan result = Plan.plan(Parse.parse("q.md", source), r);
+        Plan.ExecutionPlan result = Plan.plan(Parse.parse("q.md", source), r, Reference.emptyWorkspace());
         assertEquals(1, result.examples().get(0).steps().size());
     }
 
@@ -105,7 +105,7 @@ class PlanTest {
                 |------|-----|
                 | Bob  | 30  |
                 | Eve  | 25  |""";
-        Plan.ExecutionPlan result = Plan.plan(Parse.parse("u.md", source), r);
+        Plan.ExecutionPlan result = Plan.plan(Parse.parse("u.md", source), r, Reference.emptyWorkspace());
         Plan.PlannedStep step = result.examples().get(0).steps().get(0);
         assertEquals(List.of("name", "age"), step.dataTable().header().cells());
         assertEquals(2, step.dataTable().rows().size());
@@ -125,7 +125,7 @@ class PlanTest {
                 | name | age |
                 |------|-----|
                 | Bob  | 30  |""";
-        Plan.ExecutionPlan result = Plan.plan(Parse.parse("m.md", source), r);
+        Plan.ExecutionPlan result = Plan.plan(Parse.parse("m.md", source), r, Reference.emptyWorkspace());
         Plan.PlannedStep step = result.examples().get(0).steps().get(0);
         assertNull(step.dataTable());
     }
@@ -141,7 +141,7 @@ class PlanTest {
                 ```json
                 { "action": "import" }
                 ```""";
-        Plan.ExecutionPlan result = Plan.plan(Parse.parse("p.md", source), r);
+        Plan.ExecutionPlan result = Plan.plan(Parse.parse("p.md", source), r, Reference.emptyWorkspace());
         Plan.PlannedStep step = result.examples().get(0).steps().get(0);
         assertEquals("json", step.docString().info());
         assertEquals("{ \"action\": \"import\" }\n", step.docString().body());
@@ -151,7 +151,8 @@ class PlanTest {
     void aStepWithNoFollowingFenceHasNoDocString() {
         Registry r = Registry.createRegistry();
         r = Registry.addStep(r, "I send the payload", "s.ts", 1, NOOP_HANDLER, StepKind.STIMULUS);
-        Plan.ExecutionPlan result = Plan.plan(Parse.parse("p.md", "# P\nWhen I send the payload"), r);
+        Plan.ExecutionPlan result =
+                Plan.plan(Parse.parse("p.md", "# P\nWhen I send the payload"), r, Reference.emptyWorkspace());
         assertNull(result.examples().get(0).steps().get(0).docString());
     }
 
@@ -161,7 +162,7 @@ class PlanTest {
         // sentence "should" have matched a step definition.
         Registry r = Registry.createRegistry();
         Ast.Doc doc = Parse.parse("m.md", "# Empty\n\nGiven I have 5 cukes in my belly.");
-        Plan.ExecutionPlan result = Plan.plan(doc, r);
+        Plan.ExecutionPlan result = Plan.plan(doc, r, Reference.emptyWorkspace());
         assertEquals(0, result.diagnostics().size());
     }
 
@@ -169,7 +170,7 @@ class PlanTest {
     void anUnmatchedSentenceWithoutAKeywordIsAlsoSilentlyTreatedAsProse() {
         Registry r = Registry.createRegistry();
         Ast.Doc doc = Parse.parse("p.md", "# Prose\n\nI have 5 cukes in my belly.");
-        Plan.ExecutionPlan result = Plan.plan(doc, r);
+        Plan.ExecutionPlan result = Plan.plan(doc, r, Reference.emptyWorkspace());
         assertEquals(0, result.diagnostics().size());
     }
 
@@ -187,7 +188,7 @@ class PlanTest {
                 | ------------- | ---------- | ----- |
                 | 3, 3, 3, 4, 4 | full house | 17    |
                 | 3, 3, 3, 3, 3 | Yahtzee    | 50    |""";
-        Plan.ExecutionPlan result = Plan.plan(Parse.parse("y.md", source), r);
+        Plan.ExecutionPlan result = Plan.plan(Parse.parse("y.md", source), r, Reference.emptyWorkspace());
         assertEquals(0, result.diagnostics().size());
         // One example per data row (the header row is the binding, not an example).
         assertEquals(2, result.examples().size());
@@ -219,7 +220,7 @@ class PlanTest {
                 | ---- | --- |
                 | Bob  | 30  |
                 | Eve  | 25  |""";
-        Plan.ExecutionPlan result = Plan.plan(Parse.parse("u.md", source), r);
+        Plan.ExecutionPlan result = Plan.plan(Parse.parse("u.md", source), r, Reference.emptyWorkspace());
         assertEquals(1, result.examples().size());
         Plan.PlannedStep step = result.examples().get(0).steps().get(0);
         assertEquals(List.of("name", "age"), step.dataTable().header().cells());
@@ -238,7 +239,7 @@ class PlanTest {
                 | dice      | score |
                 | --------- | ----- |
                 | 1,1,1,1,1 | 5     |""";
-        Plan.ExecutionPlan result = Plan.plan(Parse.parse("c.md", source), r);
+        Plan.ExecutionPlan result = Plan.plan(Parse.parse("c.md", source), r, Reference.emptyWorkspace());
         // No exact-case match → falls back to a single whole-table example.
         assertEquals(1, result.examples().size());
         assertEquals(
@@ -259,7 +260,7 @@ class PlanTest {
                 | ------------- | ---------- | ----- |
                 | 3, 3, 3, 4, 4 | full house | 17    |
                 | 3, 3, 3, 3, 3 | Yahtzee    | 50    |""";
-        Plan.ExecutionPlan result = Plan.plan(Parse.parse("y.md", source), r);
+        Plan.ExecutionPlan result = Plan.plan(Parse.parse("y.md", source), r, Reference.emptyWorkspace());
         assertEquals(
                 List.of("3, 3, 3, 4, 4 / full house / 17", "3, 3, 3, 3, 3 / Yahtzee / 50"),
                 result.examples().stream().map(Plan.PlannedExample::name).toList());
@@ -290,7 +291,7 @@ class PlanTest {
                 | name | age |
                 |------|-----|
                 | Bob  | 30  |""";
-        Plan.ExecutionPlan result = Plan.plan(Parse.parse("o.md", source), r);
+        Plan.ExecutionPlan result = Plan.plan(Parse.parse("o.md", source), r, Reference.emptyWorkspace());
         assertEquals(0, result.diagnostics().size());
     }
 
@@ -307,7 +308,7 @@ class PlanTest {
                 | dice          | category   | score |
                 | ------------- | ---------- | ----- |
                 | 3, 3, 3, 4, 4 | full house | 17    |""";
-        Plan.ExecutionPlan result = Plan.plan(Parse.parse("y.md", source), r);
+        Plan.ExecutionPlan result = Plan.plan(Parse.parse("y.md", source), r, Reference.emptyWorkspace());
         @SuppressWarnings("unchecked")
         List<CellDiff.RowCheck> checks =
                 (List<CellDiff.RowCheck>) result.examples().get(0).rowChecks();
@@ -331,8 +332,9 @@ class PlanTest {
         Registry r = Registry.addStep(
                 Registry.createRegistry(), "I divide {int} by {int}", "s.ts", 1, NOOP_HANDLER, StepKind.STIMULUS);
         String src = "# Division\n\nI divide 1 by 0.\n\n```error\ndivision by zero\n```\n";
-        Plan.PlannedExample ex =
-                Plan.plan(Parse.parse("e.md", src), r).examples().get(0);
+        Plan.PlannedExample ex = Plan.plan(Parse.parse("e.md", src), r, Reference.emptyWorkspace())
+                .examples()
+                .get(0);
         assertEquals("fail", ex.expectedOutcome());
         assertEquals("division by zero", ex.expectedErrorMessage());
         // The error fence must NOT become a docString attachment on the step.
@@ -343,7 +345,8 @@ class PlanTest {
     void noErrorFenceLeavesExpectedOutcomeNull() {
         Registry r = Registry.addStep(
                 Registry.createRegistry(), "I divide {int} by {int}", "s.ts", 1, NOOP_HANDLER, StepKind.STIMULUS);
-        Plan.PlannedExample ex = Plan.plan(Parse.parse("e.md", "# Division\n\nI divide 1 by 1."), r)
+        Plan.PlannedExample ex = Plan.plan(
+                        Parse.parse("e.md", "# Division\n\nI divide 1 by 1."), r, Reference.emptyWorkspace())
                 .examples()
                 .get(0);
         assertNull(ex.expectedOutcome());
@@ -355,7 +358,7 @@ class PlanTest {
         Registry r = Registry.addStep(
                 Registry.createRegistry(), "I divide {int} by {int}", "s.ts", 1, NOOP_HANDLER, StepKind.STIMULUS);
         String src = "# Nope\n\nThis prose matches nothing.\n\n```error\nboom\n```\n";
-        Plan.ExecutionPlan result = Plan.plan(Parse.parse("e.md", src), r);
+        Plan.ExecutionPlan result = Plan.plan(Parse.parse("e.md", src), r, Reference.emptyWorkspace());
         assertEquals(0, result.examples().size());
         assertEquals(1, result.diagnostics().size());
         assertEquals(
@@ -369,7 +372,7 @@ class PlanTest {
         r = Registry.addStep(r, "I divide {int} by {int}", "s.ts", 1, NOOP_HANDLER, StepKind.STIMULUS);
         r = Registry.addStep(r, "I divide 1 by 0", "s.ts", 2, NOOP_HANDLER, StepKind.STIMULUS);
         String src = "# Ambiguous\n\nI divide 1 by 0.\n\n```error\nboom\n```\n";
-        Plan.ExecutionPlan result = Plan.plan(Parse.parse("e.md", src), r);
+        Plan.ExecutionPlan result = Plan.plan(Parse.parse("e.md", src), r, Reference.emptyWorkspace());
         List<Diagnostics.DiagnosticCode> codes = result.diagnostics().stream()
                 .map(Diagnostics.Diagnostic::code)
                 .sorted()
@@ -393,7 +396,7 @@ class PlanTest {
                 ```json
                 { "ok": true }
                 ```""";
-        Plan.ExecutionPlan result = Plan.plan(Parse.parse("d.md", source), r);
+        Plan.ExecutionPlan result = Plan.plan(Parse.parse("d.md", source), r, Reference.emptyWorkspace());
         Ast.Fence docString = result.examples().get(0).steps().get(0).docString();
         if (docString == null) fail("no docString");
         assertEquals("{ \"ok\": true }\n", docString.body());
@@ -409,7 +412,7 @@ class PlanTest {
     @Test
     void consecutiveMatchingParagraphsWithNoDelimiterMergeIntoOneExample() {
         String source = "I have 100 in my account.\n\nI withdraw 40.\n\nI should have 60 left.";
-        Plan.ExecutionPlan result = Plan.plan(Parse.parse("m.md", source), reg());
+        Plan.ExecutionPlan result = Plan.plan(Parse.parse("m.md", source), reg(), Reference.emptyWorkspace());
         assertEquals(1, result.examples().size());
         assertEquals(
                 List.of("I have 100 in my account", "I withdraw 40", "I should have 60 left"),
@@ -423,7 +426,7 @@ class PlanTest {
     @Test
     void aThematicBreakBetweenMatchingParagraphsSplitsThemIntoTwoExamples() {
         String source = "I have 100 in my account.\n\n---\n\nI withdraw 40.";
-        Plan.ExecutionPlan result = Plan.plan(Parse.parse("h.md", source), reg());
+        Plan.ExecutionPlan result = Plan.plan(Parse.parse("h.md", source), reg(), Reference.emptyWorkspace());
         assertEquals(2, result.examples().size());
         assertEquals(
                 List.of(List.of("I have 100 in my account"), List.of("I withdraw 40")),
@@ -435,7 +438,7 @@ class PlanTest {
     @Test
     void aHeadingBetweenMatchingParagraphsSplitsThemIntoTwoExamples() {
         String source = "I have 100 in my account.\n\n## Next\n\nI withdraw 40.";
-        Plan.ExecutionPlan result = Plan.plan(Parse.parse("hd.md", source), reg());
+        Plan.ExecutionPlan result = Plan.plan(Parse.parse("hd.md", source), reg(), Reference.emptyWorkspace());
         assertEquals(2, result.examples().size());
         assertEquals(List.of("Next"), result.examples().get(1).scopeStack());
     }
@@ -443,7 +446,7 @@ class PlanTest {
     @Test
     void aNonMatchingParagraphBetweenMatchingParagraphsSplitsTheExample() {
         String source = "I have 100 in my account.\n\nJust explaining what happens next.\n\nI withdraw 40.";
-        Plan.ExecutionPlan result = Plan.plan(Parse.parse("p.md", source), reg());
+        Plan.ExecutionPlan result = Plan.plan(Parse.parse("p.md", source), reg(), Reference.emptyWorkspace());
         assertEquals(2, result.examples().size());
         assertEquals(
                 List.of(List.of("I have 100 in my account"), List.of("I withdraw 40")),
@@ -455,7 +458,7 @@ class PlanTest {
     @Test
     void leadingAndTrailingProseDoesNotMergeIntoAnExample() {
         String source = "A preamble that matches nothing.\n\nI withdraw 40.\n\nA closing remark.";
-        Plan.ExecutionPlan result = Plan.plan(Parse.parse("pp.md", source), reg());
+        Plan.ExecutionPlan result = Plan.plan(Parse.parse("pp.md", source), reg(), Reference.emptyWorkspace());
         assertEquals(1, result.examples().size());
         assertEquals(
                 List.of("I withdraw 40"),
@@ -481,7 +484,7 @@ class PlanTest {
                 | name  |
                 | ----- |
                 | Moose |""";
-        Plan.ExecutionPlan result = Plan.plan(Parse.parse("basket.md", source), r);
+        Plan.ExecutionPlan result = Plan.plan(Parse.parse("basket.md", source), r, Reference.emptyWorkspace());
         assertEquals(1, result.examples().size());
         Plan.PlannedExample ex = result.examples().get(0);
         assertEquals(2, ex.steps().size());

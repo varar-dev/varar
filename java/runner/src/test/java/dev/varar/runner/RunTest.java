@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import dev.varar.core.CellDiff;
 import dev.varar.core.Diagnostics;
 import dev.varar.core.Plan;
+import dev.varar.core.Reference;
 import dev.varar.core.Registry;
 import dev.varar.core.StepKind;
 import dev.varar.runner.StepLoader.LoadedSteps;
@@ -36,7 +37,7 @@ class RunTest {
     void planOathParsesAndPlansInOneStep() {
         LoadedSteps loaded = loadWidgetSteps();
         String source = "# Widgets\n\nI have 3 widgets. I should have 3 widgets.";
-        Plan.ExecutionPlan plan = Run.planOath("widgets.md", source, loaded.registry());
+        Plan.ExecutionPlan plan = Run.planOath("widgets.md", source, loaded.registry(), Reference.emptyWorkspace());
         assertEquals(1, plan.examples().size());
         assertEquals(0, plan.diagnostics().size());
     }
@@ -46,7 +47,7 @@ class RunTest {
         LoadedSteps loaded = loadWidgetSteps();
         String source = "# Widgets\n\nI have 3 widgets. I should have 3 widgets.\n\n"
                 + "# More widgets\n\nI have 9 widgets. I should have 9 widgets.";
-        Plan.ExecutionPlan plan = Run.planOath("widgets.md", source, loaded.registry());
+        Plan.ExecutionPlan plan = Run.planOath("widgets.md", source, loaded.registry(), Reference.emptyWorkspace());
 
         Run.RecordingReporter reporter = new Run.RecordingReporter();
         List<Run.ExampleRun> runs = Run.examplesWithRuns(plan, loaded.createContext(), reporter);
@@ -67,7 +68,7 @@ class RunTest {
         // The sensor reports 3, but the oath asserts 4 — a genuine mismatch the core
         // pipeline detects itself, not a hand-thrown generic exception.
         String source = "# Widgets\n\nI have 3 widgets. I should have 4 widgets.";
-        Plan.ExecutionPlan plan = Run.planOath("widgets.md", source, loaded.registry());
+        Plan.ExecutionPlan plan = Run.planOath("widgets.md", source, loaded.registry(), Reference.emptyWorkspace());
 
         List<Run.ExampleRun> runs = Run.examplesWithRuns(plan, loaded.createContext(), new Run.RecordingReporter());
         assertEquals(1, runs.size());
@@ -87,7 +88,8 @@ class RunTest {
         LoadedSteps loaded = loadWidgetSteps();
         Registry ambiguousRegistry =
                 Registry.addStep(loaded.registry(), "I have 3 widgets", "extra.ts", 1, NOOP_HANDLER, StepKind.STIMULUS);
-        Plan.ExecutionPlan plan = Run.planOath("widgets.md", "# Widgets\n\nI have 3 widgets.", ambiguousRegistry);
+        Plan.ExecutionPlan plan = Run.planOath(
+                "widgets.md", "# Widgets\n\nI have 3 widgets.", ambiguousRegistry, Reference.emptyWorkspace());
         assertEquals(1, plan.diagnostics().size());
         assertEquals(
                 Diagnostics.DiagnosticCode.AMBIGUOUS_MATCH,

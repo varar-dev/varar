@@ -214,8 +214,9 @@ public final class Conformance {
      * of its steps is individually traced as {@code "fail"}; see {@code
      * conformance/bundles/03-expected-failure/golden/trace.json}).
      */
-    public static BundleArtifacts runConformance(Ast.Doc doc, Registry registry, Supplier<?> contextFactory) {
-        Plan.ExecutionPlan execution = Plan.plan(doc, registry);
+    public static BundleArtifacts runConformance(
+            Ast.Doc doc, Registry registry, Supplier<?> contextFactory, Reference.OathWorkspace workspace) {
+        Plan.ExecutionPlan execution = Plan.plan(doc, registry, workspace);
 
         Map<Integer, List<Execute.StepObservation>> observed = new HashMap<>();
         Execute.ExecutePorts ports = new Execute.ExecutePorts(
@@ -337,16 +338,18 @@ public final class Conformance {
         out.put("matchedExpression", step.stepDef().expression());
 
         List<String> paramNames = parameterTypeNames(step.stepDef().expression());
-        List<Object> args = new ArrayList<>(step.paramSpans().size());
-        for (int i = 0; i < step.paramSpans().size(); i++) {
-            Span paramSpan = step.paramSpans().get(i);
+        List<Object> args = new ArrayList<>(step.paramTexts().size());
+        for (int i = 0; i < step.paramTexts().size(); i++) {
             Map<String, Object> arg = new LinkedHashMap<>();
-            arg.put("value", source.substring(paramSpan.startOffset(), paramSpan.endOffset()));
+            arg.put("value", step.paramTexts().get(i));
             arg.put("parameterType", i < paramNames.size() ? paramNames.get(i) : null);
             args.add(arg);
         }
         out.put("args", args);
 
+        // Present only on a step a reference block spliced in from another oath (ADR 0016): the
+        // document its spans belong to.
+        if (step.docPath() != null) out.put("docPath", step.docPath());
         if (step.dataTable() != null) out.put("dataTable", table(step.dataTable()));
         if (step.docString() != null) out.put("docString", docString(step.docString()));
         return out;
@@ -377,6 +380,9 @@ public final class Conformance {
     private static String diagnosticCode(Diagnostics.DiagnosticCode code) {
         return switch (code) {
             case AMBIGUOUS_MATCH -> "ambiguous-match";
+            case REFERENCE_NOT_FOUND -> "reference-not-found";
+            case REFERENCE_EMPTY -> "reference-empty";
+            case REFERENCE_CYCLE -> "reference-cycle";
             case ERROR_FENCE_WITHOUT_STEP -> "error-fence-without-step";
             case DRIFT -> "drift";
         };
