@@ -1,13 +1,51 @@
 import {
   addStep,
   createRegistry,
+  type Doc,
   defineParameterType,
+  type ExecutionPlan,
+  hashSource,
   parse,
   plan,
   type Registry,
 } from '@varar/core'
 import type { StepDefScanner } from './scanner.ts'
 import type { Range, StepDef } from './step-defs.ts'
+
+// Memoisation across reindexes. The LSP rebuilds the whole workspace index on
+// every change (see createStore), so without this a keystroke re-runs the
+// tree-sitter scan on every step file and re-parses and re-plans every oath.
+// Everything cached here is a pure function of a file's content, keyed by
+// (path, content hash) — a stale entry is impossible, and an unbounded cache is
+// bounded in practice by the number of file versions a session sees. Pass the
+// same cache object to every call; omit it for a one-shot index.
+export type IndexCache = {
+  readonly steps: Map<string, ScannedSteps>
+  readonly docs: Map<string, Doc>
+  readonly plans: Map<string, PlannedOath>
+}
+
+type ScannedSteps = {
+  readonly parameterTypes: ReadonlyArray<{ readonly name: string; readonly regexp: string }>
+  readonly stepDefs: ReadonlyArray<StepDef>
+}
+
+export type PlannedOath = {
+  readonly doc: Doc
+  readonly plan: ExecutionPlan
+  readonly matches: ReadonlyArray<MatchRef>
+  readonly diagnostics: ReadonlyArray<DiagnosticRef>
+}
+
+export function createIndexCache(): IndexCache {
+  return { steps: new Map(), docs: new Map(), plans: new Map() }
+}
+
+// A file version's cache key. hashSource is the same FNV-1a every port uses for
+// drift baselines, so it is already a dependency and already fast.
+function versionKey(path: string, source: string): string {
+  return `${path}\u0000${hashSource(source)}`
+}
 
 export type WorkspaceInput = {
   readonly stepFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>
@@ -55,20 +93,45 @@ export type WorkspaceIndex = {
   // downstream tools — snippet generation, completion, etc. — can use the
   // same view the matcher used.
   readonly registry: Registry
+  // Every oath's parsed document and execution plan, keyed by the path it was
+  // indexed under. Exposed so a caller that needs the same plan — the LSP's
+  // drift pass — reuses this one instead of parsing and planning a second time.
+  readonly oaths: ReadonlyMap<string, PlannedOath>
 }
 
 const EMPTY_HANDLER = (): void => {}
 
-export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
+export function buildWorkspaceIndex(input: WorkspaceInput, cache?: IndexCache): WorkspaceIndex {
   const scanner = input.scanner
   const stepDefs: StepDef[] = []
   let registry = createRegistry()
 
+  // Scan each step file once — the tree-sitter parse is the most expensive
+  // thing in a reindex, and a cached hit makes an oath-only edit cost nothing
+  // here at all.
+  const scanned = input.stepFiles.map((file) => {
+    const key = versionKey(file.path, file.source)
+    const hit = cache?.steps.get(key)
+    if (hit) return hit
+    const fresh: ScannedSteps = {
+      parameterTypes: scanner.discoverParameterTypes(file.path, file.source),
+      stepDefs: scanner.discoverStepDefs(file.path, file.source),
+    }
+    cache?.steps.set(key, fresh)
+    return fresh
+  })
+
+  // The registry's identity: when it changes, every cached plan is stale, since
+  // which paragraphs are examples depends on the step definitions.
+  const registryKey = hashSource(
+    input.stepFiles.map((f) => versionKey(f.path, f.source)).join('\n'),
+  )
+
   // First pass: register every custom parameter type. We need them in place
   // before compiling any step expressions, otherwise a `step('I fly to {airport}')`
   // discovered in the same file would fail with UndefinedParameterTypeError.
-  for (const file of input.stepFiles) {
-    for (const pt of scanner.discoverParameterTypes(file.path, file.source)) {
+  for (const file of scanned) {
+    for (const pt of file.parameterTypes) {
       try {
         registry = defineParameterType(registry, {
           name: pt.name,
@@ -80,8 +143,8 @@ export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
     }
   }
 
-  for (const file of input.stepFiles) {
-    const defs = scanner.discoverStepDefs(file.path, file.source)
+  for (const file of scanned) {
+    const defs = file.stepDefs
     for (const def of defs) {
       stepDefs.push(def)
       try {
@@ -101,10 +164,28 @@ export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
 
   const matches: MatchRef[] = []
   const diagnostics: DiagnosticRef[] = []
+  const oaths = new Map<string, PlannedOath>()
 
   for (const file of input.oathFiles) {
-    const doc = parse(file.path, file.source)
+    // Parse is pure in the source, so it is cached by content alone; the plan
+    // and everything derived from it also depend on the registry.
+    const docKey = versionKey(file.path, file.source)
+    const planKey = `${docKey}\u0000${registryKey}`
+    const cached = cache?.plans.get(planKey)
+    if (cached) {
+      oaths.set(file.path, cached)
+      matches.push(...cached.matches)
+      diagnostics.push(...cached.diagnostics)
+      continue
+    }
+    let doc = cache?.docs.get(docKey)
+    if (!doc) {
+      doc = parse(file.path, file.source)
+      cache?.docs.set(docKey, doc)
+    }
     const result = plan(doc, registry)
+    const fileMatches: MatchRef[] = []
+    const fileDiagnostics: DiagnosticRef[] = []
     // Header-bound tables expand to one example per row, all sharing the same
     // binding paragraph. For highlighting we want the paragraph (with its
     // header-cell words as parameters) once — not the per-row table lines the
@@ -120,7 +201,7 @@ export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
           (d) => d.expression === b.stepDef.expression && d.file === b.stepDef.expressionSourceFile,
         )
         if (!def) continue
-        matches.push({
+        fileMatches.push({
           oathPath: file.path,
           range: toRange(b.matchSpan),
           paramRanges: b.paramSpans.map(toRange),
@@ -137,7 +218,7 @@ export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
             d.file === step.stepDef.expressionSourceFile,
         )
         if (!def) continue
-        matches.push({
+        fileMatches.push({
           oathPath: file.path,
           range: toRange(step.matchSpan),
           // Highlight only the value passed to the handler (inner capture
@@ -149,7 +230,7 @@ export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
       }
     }
     for (const d of result.diagnostics) {
-      diagnostics.push({
+      fileDiagnostics.push({
         oathPath: file.path,
         code: d.code,
         severity: d.severity,
@@ -157,9 +238,19 @@ export function buildWorkspaceIndex(input: WorkspaceInput): WorkspaceIndex {
         range: toRange(d.span),
       })
     }
+    const planned: PlannedOath = {
+      doc,
+      plan: result,
+      matches: fileMatches,
+      diagnostics: fileDiagnostics,
+    }
+    cache?.plans.set(planKey, planned)
+    oaths.set(file.path, planned)
+    matches.push(...fileMatches)
+    diagnostics.push(...fileDiagnostics)
   }
 
-  return { stepDefs, matches, diagnostics, registry }
+  return { stepDefs, matches, diagnostics, registry, oaths }
 }
 
 type SpanLike = {
