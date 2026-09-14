@@ -60,7 +60,13 @@ and the corpus pins the format.**
    - `sourceHash` is `hashSource(source)` over the oath's bytes as run. The LSP
      drops every diagnostic when the hash no longer matches the buffer, which
      is what stops a stale result from pointing at moved text.
-   - `version` is `1`.
+   - `version` is `2`. Version 2 adds the per-step document identity reference
+     blocks need (ADR 0016): `failure.docPath` names the document a failure's
+     `line`, `cells` and `anchor` are offsets into — absent means the oath
+     itself — and a top-level `documents` array carries a hash per other oath
+     whose steps this run spliced in, so a consumer can tell a stale failure
+     from a live one exactly as `sourceHash` does for the oath. `lines` holds
+     only the running oath's own lines.
 
 3. **`stack` stays runtime-shaped.** A V8 stack, a JVM stack trace and a Rust
    rendered location have nothing in common, and no consumer parses it — it is

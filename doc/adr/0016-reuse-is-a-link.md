@@ -640,14 +640,13 @@ Two adapter-level notes:
 
 ### Still open
 
-- **Run-result v2 (ADR 0014).** `docPath` reaches the plan and the plan artifact,
-  but *not* the persisted `.varar/<oath>.json` payload. Until it does, a failure
-  inside a referenced section is reported to the LSP with spans in that section's
-  document and a `sourceHash` for the referencing one, so the editor will not
-  place it. **A mismatch inside a shared section is therefore not yet rendered
-  correctly in editors** — the run still fails, with the correct message, in
-  every runner. This is the next piece of work, and it is a cross-port payload
-  change with its own golden.
+- ~~**Run-result v2 (ADR 0014).**~~ **Done** — `.varar/<oath>.json` is version 2:
+  `failure.docPath` names the document its offsets address, `documents` carries a
+  hash per referenced oath, and `lines` holds only the running oath's own lines.
+  The LSP publishes a spliced failure against the referenced document's URI (a
+  shared oath has no result file of its own, so its failures previously had no
+  way to reach the editor at all). `conformance/run-results/expected.json` grew a
+  fourth example, which is what gated the other six ports.
 - **Ambiguous anchors** (deviation 2) are undetected; the lint rule requiring
   unique headings in a referenced file is not written.
 - **LSP reference support** — go-to-definition and hover on a reference block —
