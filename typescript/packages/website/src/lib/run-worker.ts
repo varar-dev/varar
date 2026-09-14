@@ -97,7 +97,7 @@ self.onmessage = async (e: MessageEvent<WorkerRequest>) => {
   } catch (err) {
     const e2 = err as Error
     results = {
-      version: 1,
+      version: 2,
       oathPath: input.oathPath,
       sourceHash: hashSource(input.varSource),
       examples: [

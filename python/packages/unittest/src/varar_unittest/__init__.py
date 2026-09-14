@@ -124,6 +124,20 @@ def _oath_test_case(
     execution_plan = plan_oath(rel, source, loaded.registry, workspace)
     pairs = examples_with_runs(execution_plan, loaded.create_context, RecordingReporter())
 
+    # The sources of every oath this one's steps were spliced in from (ADR
+    # 0016). Their hashes go in the run record, so a consumer can tell a stale
+    # failure from a live one.
+    referenced = {
+        path: doc.source
+        for path in {
+            step.doc_path
+            for ex in execution_plan.examples
+            for step in ex.steps
+            if step.doc_path is not None
+        }
+        if (doc := workspace.docs.get(path)) is not None
+    }
+
     methods: dict[str, Any] = {"__doc__": rel}
     seen: dict[str, int] = {}
     for example, run in pairs:
@@ -135,7 +149,9 @@ def _oath_test_case(
         seen[stem] = idx + 1
         display = base if idx == 0 else f"{base}[{idx}]"
         method_name = f"test_{stem}" if idx == 0 else f"test_{stem}_{idx}"
-        methods[method_name] = _make_test_method(run, display, source, rel, example, results)
+        methods[method_name] = _make_test_method(
+            run, display, source, rel, example, results, referenced
+        )
 
     # Reconcile drift: a clean run records/updates the baseline; a paragraph
     # that was an example and no longer matches becomes a failing test method
@@ -162,14 +178,23 @@ def _make_test_method(
     rel_path: str,
     example: Any,
     results: ResultsCollector,
+    referenced_sources: dict[str, str],
 ) -> Callable[[Any], None]:
-    lines = tuple(dict.fromkeys(s.match_span.start_line for s in example.steps))
+    # Lines in THIS oath. A step a reference block spliced in from another oath
+    # (ADR 0016) contributes none: its line belongs to that document, and a
+    # line-wash renderer would decorate an unrelated sentence here.
+    lines = tuple(
+        dict.fromkeys(
+            s.match_span.start_line for s in example.steps if s.doc_path is None
+        )
+    )
 
     def record(status: str, failure: Any = None) -> None:
         results.record(
             rel_path,
             source,
             ExampleResult(name=example.name, status=status, lines=lines, failure=failure),
+            referenced_sources,
         )
 
     def test(self: unittest.TestCase) -> None:

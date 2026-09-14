@@ -22,13 +22,17 @@ pub fn to_failure(failure: &StepFailure, oath_path: &str, fallback_line: i64) ->
         _ => None,
     };
 
-    // Structural path match replaces Java's regex-escaped stack-trace scrape.
-    let here = failure.location.as_ref().filter(|l| l.path == oath_path);
+    // The location's path is the oath, or — for a step a reference block
+    // spliced in (ADR 0016) — the document that step was written in. Either way
+    // its line and anchor are the precise ones; `doc_path` says which file they
+    // address.
+    let here = failure.location.as_ref();
     let line = here.map_or(fallback_line, |l| l.line as i64);
+    let doc_path = here.filter(|l| l.path != oath_path).map(|l| l.path.clone());
     // The executor recorded the anchor alongside the location, so this is the
     // failing step's span (or the first mismatched cell's) — what a renderer
     // underlines instead of the whole line. `None` when the failure carries no
-    // location for this oath, i.e. it never passed through one of its steps.
+    // location at all, i.e. it never passed through a step.
     let anchor = here.map(|l| l.anchor);
 
     let stack = render_stack(failure);
@@ -38,6 +42,7 @@ pub fn to_failure(failure: &StepFailure, oath_path: &str, fallback_line: i64) ->
         stack,
         cells,
         anchor,
+        doc_path,
     }
 }
 

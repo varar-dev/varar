@@ -72,7 +72,11 @@ final class ExampleDescriptor extends AbstractTestDescriptor implements Node<Oat
             OathEngineExecutionContext context, DynamicTestExecutor dynamicTestExecutor) throws Exception {
         OathFileDescriptor fileDescriptor = fileDescriptor();
         Runnable run = fileDescriptor.runFor(example);
+        // Lines in THIS oath. A step a reference block spliced in from another oath (ADR 0016)
+        // contributes none: its line belongs to that document, and a line-wash renderer would
+        // decorate an unrelated sentence here.
         List<Integer> lines = example.steps().stream()
+                .filter(step -> step.docPath() == null)
                 .map(step -> step.matchSpan().startLine())
                 .distinct()
                 .toList();

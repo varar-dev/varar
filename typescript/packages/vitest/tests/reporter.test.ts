@@ -18,11 +18,30 @@ describe('buildOathResults', () => {
   test('wraps examples with version, path, and source hash', () => {
     const r = buildOathResults('docs/a.md', 'src', [passed, failed])
     expect(r).toEqual({
-      version: 1,
+      version: 2,
       oathPath: 'docs/a.md',
       sourceHash: hashSource('src'),
       examples: [passed, failed],
     })
+  })
+
+  // ADR 0016: the oaths a reference block pulled steps in from are hashed too,
+  // so a consumer can tell a stale failure from a live one.
+  test('records a hash per referenced document, sorted, and omits the key when there are none', () => {
+    const r = buildOathResults(
+      'docs/a.md',
+      'src',
+      [passed],
+      new Map([
+        ['docs/shared/b.md', 'b source'],
+        ['docs/shared/a.md', 'a source'],
+      ]),
+    )
+    expect(r.documents).toEqual([
+      { path: 'docs/shared/a.md', sourceHash: hashSource('a source') },
+      { path: 'docs/shared/b.md', sourceHash: hashSource('b source') },
+    ])
+    expect(buildOathResults('docs/a.md', 'src', [passed])).not.toHaveProperty('documents')
   })
 })
 

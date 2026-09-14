@@ -18,6 +18,8 @@ module Varar
       def initialize
         @sources = {}
         @examples = {}
+        # Per oath: the other documents its steps were spliced in from (ADR 0016).
+        @documents = {}
       end
 
       # `<root>/.varar/<oath_path>.json` — the file the LSP watches.
@@ -47,9 +49,15 @@ module Varar
 
       # Accumulates one example's outcome; the oath's file is written once its
       # examples are in.
-      def record(oath_path, source, result)
+      # `referenced_sources` carries the OTHER documents this oath's steps were
+      # spliced in from (ADR 0016), as path => source; their hashes go in the
+      # payload so a consumer can tell a stale failure from a live one.
+      def record(oath_path, source, result, referenced_sources = nil)
         @sources[oath_path] = source
         (@examples[oath_path] ||= []) << result
+        return if referenced_sources.nil? || referenced_sources.empty?
+
+        (@documents[oath_path] ||= {}).merge!(referenced_sources)
       end
 
       # Writes what has been recorded for `oath_path` and forgets it. Passing
@@ -59,11 +67,15 @@ module Varar
         recorded = @examples.delete(oath_path)
         return nil if recorded.nil? || recorded.empty?
 
+        documents = (@documents.delete(oath_path) || {}).sort.map do |path, text|
+          Core::ReferencedDocument.new(path: path, source_hash: Core::Hash32.hash_source(text))
+        end
         self.class.write(root, Core::OathResults.new(
-                                 version: 1,
+                                 version: 2,
                                  oath_path: oath_path,
                                  source_hash: Core::Hash32.hash_source(@sources[oath_path]),
-                                 examples: self.class.document_order(recorded)
+                                 examples: self.class.document_order(recorded),
+                                 documents: documents
                                ))
       end
 

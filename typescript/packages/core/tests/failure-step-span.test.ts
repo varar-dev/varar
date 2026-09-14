@@ -66,7 +66,7 @@ test('the diagnostic underlines the failing step, leaving the passing one alone'
   const f = await failureOf()
   const diags = runResultDiagnostics(
     {
-      version: 1,
+      version: 2,
       oathPath: 'l.md',
       sourceHash: hashSource(SOURCE),
       examples: [{ name: 'e', status: 'failed', lines: [3], failure: f }],

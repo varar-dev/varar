@@ -144,18 +144,21 @@ export function registerHandlers(
     for (const change of params.changes) {
       const path = uriToPath(change.uri)
       if (!path.includes('/.varar/') || !path.endsWith('.json')) continue
-      // FileChangeType: 1 Created, 2 Changed, 3 Deleted
-      const oathUri = change.type === 3 ? runResults.remove(path) : await ingestWatched(path)
-      if (oathUri) await publishFor(oathUri)
+      // FileChangeType: 1 Created, 2 Changed, 3 Deleted. A result file speaks
+      // for its oath AND for every document its steps were spliced in from
+      // (ADR 0016), so each of those is republished — including a document
+      // the previous record named and this one no longer does.
+      const uris = change.type === 3 ? runResults.remove(path) : await ingestWatched(path)
+      for (const uri of uris) await publishFor(uri)
     }
   })
 
-  async function ingestWatched(path: string): Promise<string | null> {
-    if (!store || !runResults) return null
+  async function ingestWatched(path: string): Promise<ReadonlyArray<string>> {
+    if (!store || !runResults) return []
     try {
       return runResults.ingest(path, await store.fs().read(path))
     } catch {
-      return null
+      return []
     }
   }
 
@@ -176,9 +179,11 @@ export function registerHandlers(
   async function publishFor(uri: string): Promise<void> {
     if (!store) return
     const parse = toParseDiagnostics(uri)
+    // A URI can be the subject of several results: its own, plus one per oath
+    // that referenced a section of it (ADR 0016).
+    const relevant = runResults?.resultsFor(uri) ?? []
     let run: LspDiagnostic[] = []
-    const results = runResults?.get(uri)
-    if (results) {
+    if (relevant.length > 0) {
       let source = documents.get(uri)?.getText()
       if (source === undefined) {
         try {
@@ -187,7 +192,10 @@ export function registerHandlers(
           source = undefined
         }
       }
-      if (source !== undefined) run = runLspDiagnostics(results, source)
+      if (source !== undefined) {
+        const text = source
+        run = relevant.flatMap((r) => runLspDiagnostics(r.results, text, r.forDocument))
+      }
     }
     void connection.sendDiagnostics({ uri, diagnostics: [...parse, ...run] as Diagnostic[] })
   }

@@ -6,9 +6,12 @@ import dev.varar.core.Result;
 import dev.varar.runner.Results;
 import dev.varar.runner.Run;
 import dev.varar.runner.StepLoader;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import org.junit.platform.engine.TestSource;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.reporting.ReportEntry;
@@ -75,9 +78,33 @@ final class OathFileDescriptor extends AbstractTestDescriptor implements Node<Oa
         this.root = root;
     }
 
+    /**
+     * The source of every oath this plan's steps were spliced in from (ADR 0016), read once. Their
+     * hashes go in the run record, so a consumer can tell a stale failure from a live one. Populated
+     * by {@link #before} alongside {@link #exampleRuns}, under the same ordering guarantee — reading
+     * them per recorded example would be O(examples × references) disk reads.
+     */
+    private Map<String, String> referencedSources;
+
     /** Records one example's outcome, for {@link #after} to persist. */
     void recordResult(Result.ExampleResult result) {
-        results.record(oathPath, content, result);
+        if (referencedSources == null) referencedSources = readReferencedSources();
+        results.record(oathPath, content, result, referencedSources);
+    }
+
+    private Map<String, String> readReferencedSources() {
+        Map<String, String> out = new TreeMap<>();
+        for (Plan.PlannedExample example : plan.examples()) {
+            for (Plan.PlannedStep step : example.steps()) {
+                if (step.docPath() == null) continue;
+                try {
+                    out.put(step.docPath(), Files.readString(root.resolve(step.docPath())));
+                } catch (IOException e) {
+                    // A file that vanished since the run contributes nothing.
+                }
+            }
+        }
+        return out;
     }
 
     @Override
@@ -136,6 +163,7 @@ final class OathFileDescriptor extends AbstractTestDescriptor implements Node<Oa
         // between examples, in or out of document order.
         Run.RecordingReporter reporter = new Run.RecordingReporter();
         exampleRuns = Run.examplesWithRuns(plan, loadedSteps.createContext(), reporter);
+        referencedSources = readReferencedSources();
         publishDiagnostics(context, reporter.diagnostics());
         return context;
     }

@@ -46,6 +46,21 @@ class ExampleFailure:
     # Optional for the same reason ``cells`` is: a result written by a port (or
     # a release) that doesn't record it still reads, and falls back to ``line``.
     anchor: AnchorRange | None = None
+    # The document ``line``, ``cells`` and ``anchor`` are offsets INTO. None —
+    # the overwhelming majority — means the oath itself. Set only when the
+    # failing step was spliced in from another oath by a reference block (ADR
+    # 0016): its spans belong to that document, and a renderer that placed them
+    # in this one would underline whatever text sat at those offsets.
+    doc_path: str | None = None
+
+
+@dataclass(frozen=True, slots=True)
+class ReferencedDocument:
+    """An oath other than this one that contributed steps to the run, with its
+    source hash as run (ADR 0016)."""
+
+    path: str
+    source_hash: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -62,10 +77,14 @@ class ExampleResult:
 class OathResults:
     """The persisted run result for one oath file (.varar/<oath>.json)."""
 
-    version: int  # always 1
+    version: int  # always 2
     oath_path: str  # POSIX separators, relative to cwd
     source_hash: str  # hashSource(oath source) at run time
     examples: tuple[ExampleResult, ...]
+    # Every OTHER document this run's steps came from — the oaths a reference
+    # block pulled steps in from (ADR 0016), with their hashes as run. Empty
+    # when no step was spliced in, which is the common case.
+    documents: tuple[ReferencedDocument, ...] = ()
 
 
 def to_wire(results: OathResults) -> dict:
@@ -86,6 +105,8 @@ def to_wire(results: OathResults) -> dict:
             out["cells"] = [cell(c) for c in f.cells]
         if f.anchor is not None:
             out["anchor"] = {"from": f.anchor.from_, "to": f.anchor.to}
+        if f.doc_path is not None:
+            out["docPath"] = f.doc_path
         return out
 
     def example(e: ExampleResult) -> dict:
@@ -94,9 +115,14 @@ def to_wire(results: OathResults) -> dict:
             out["failure"] = failure(e.failure)
         return out
 
-    return {
+    out: dict = {
         "version": results.version,
         "oathPath": results.oath_path,
         "sourceHash": results.source_hash,
-        "examples": [example(e) for e in results.examples],
     }
+    if results.documents:
+        out["documents"] = [
+            {"path": d.path, "sourceHash": d.source_hash} for d in results.documents
+        ]
+    out["examples"] = [example(e) for e in results.examples]
+    return out

@@ -75,6 +75,16 @@ abstract class OathSpec(root: Path = Path.of(".")) : FunSpec() {
             val rel = relOf(oathPath)
             val source = Files.readString(oathPath)
             val plan = Run.planOath(rel, source, loaded.registry(), workspace)
+            // The source of every oath this plan's steps were spliced in from (ADR 0016); their
+            // hashes go in the run record, so a consumer can tell a stale failure from a live one.
+            val referenced =
+                plan
+                    .examples()
+                    .flatMap { it.steps() }
+                    .mapNotNull { it.docPath() }
+                    .distinct()
+                    .mapNotNull { path -> workspace.docs()[path]?.let { path to it.source() } }
+                    .toMap()
             val runs = Run.examplesWithRuns(plan, loaded.createContext(), Run.RecordingReporter())
             // Reconcile drift: a clean run records/updates varar.lock.json; a paragraph that was
             // an example and no longer matches becomes a failing test (accept with -Dvarar.update).
@@ -82,7 +92,14 @@ abstract class OathSpec(root: Path = Path.of(".")) : FunSpec() {
             context(rel) {
                 for (exampleRun in runs) {
                     val example = exampleRun.example()
-                    val lines = example.steps().map { it.matchSpan().startLine() }.distinct()
+                    // Lines in THIS oath: a step a reference block spliced in from another oath
+                    // (ADR 0016) contributes none, since its line is not in this file.
+                    val lines =
+                        example
+                            .steps()
+                            .filter { it.docPath() == null }
+                            .map { it.matchSpan().startLine() }
+                            .distinct()
                     test(example.name()) {
                         try {
                             exampleRun.run().run()
@@ -99,6 +116,7 @@ abstract class OathSpec(root: Path = Path.of(".")) : FunSpec() {
                                     lines,
                                     Failure.toFailure(failure, rel, lines.firstOrNull() ?: 0),
                                 ),
+                                referenced,
                             )
                             // Reuse the runner's span-anchored rendering — never
                             // re-derive failure text in an adapter.
@@ -111,6 +129,7 @@ abstract class OathSpec(root: Path = Path.of(".")) : FunSpec() {
                             rel,
                             source,
                             Result.ExampleResult(example.name(), Result.Status.PASSED, lines, null),
+                            referenced,
                         )
                     }
                 }

@@ -50,13 +50,20 @@ func TestToFailureRecordsTheAnchorOfTheStepThatFailed(t *testing.T) {
 	}
 }
 
-func TestToFailureFallsBackWhenTheLocationIsForAnotherOath(t *testing.T) {
+// A location naming a document other than the oath being run is a step a
+// reference block spliced in from that document (ADR 0016). Its line and anchor
+// are the precise ones — they are simply offsets into that file, which is what
+// docPath says.
+func TestToFailureRecordsTheDocumentASplicedStepWasWrittenIn(t *testing.T) {
 	f := ToFailure(located(returnShapeError("bad")), "other.md", 99)
-	if f.Anchor != nil {
-		t.Errorf("anchor %v, want none for a different oath", *f.Anchor)
+	if f.DocPath != "l.md" {
+		t.Errorf("docPath %q, want \"l.md\"", f.DocPath)
 	}
-	if f.Line != 99 {
-		t.Errorf("line %d, want the fallback 99", f.Line)
+	if f.Anchor == nil {
+		t.Fatal("a spliced failure keeps its anchor — in the other document's offsets")
+	}
+	if f.Line != 3 {
+		t.Errorf("line %d, want the location's line 3, not the fallback", f.Line)
 	}
 }
 

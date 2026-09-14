@@ -15,9 +15,12 @@ import (
 
 func wireResults() core.OathResults {
 	return core.OathResults{
-		Version:    1,
+		Version:    2,
 		OathPath:   "varar/library.md",
 		SourceHash: "fnv1a:1622dfca",
+		Documents: []core.ReferencedDocument{
+			{Path: "varar/shared/loans.md", SourceHash: "fnv1a:2f0e1d3c"},
+		},
 		Examples: []core.ExampleResult{
 			{
 				Name:   "Maya borrowed *Emma*, due back on June 1, 2026",
@@ -44,6 +47,22 @@ func wireResults() core.OathResults {
 					Line:    9,
 					Message: "expected the library to refuse",
 					Stack:   "<stack>",
+				},
+			},
+			{
+				// A failure inside a section this oath referenced (ADR 0016):
+				// every offset is into varar/shared/loans.md, named by docPath
+				// and hashed in documents. Lines holds only this oath's own.
+				Name:   "An overdue loan blocks a new one",
+				Status: core.StatusFailed,
+				Lines:  []int{20},
+				Failure: &core.ExampleFailure{
+					Line:    6,
+					Message: "expected 3 but was 2",
+					Stack:   "<stack>",
+					Cells:   []core.CellFailure{{From: 41, To: 42, Actual: "2"}},
+					Anchor:  &core.AnchorRange{From: 41, To: 42},
+					DocPath: "varar/shared/loans.md",
 				},
 			},
 		},

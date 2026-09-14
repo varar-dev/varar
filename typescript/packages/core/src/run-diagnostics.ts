@@ -31,12 +31,25 @@ function lineRange(source: string, line: number): { from: number; to: number } {
 export function runResultDiagnostics(
   results: OathResults,
   source: string,
+  // Which document `source` is. Omitted (the usual case) means the oath itself:
+  // only failures whose offsets are in the oath are projected. Pass a path from
+  // `results.documents` to project the failures of steps a reference block
+  // spliced in from THAT oath instead — their offsets are in its source, not
+  // this one's (ADR 0016).
+  forDocument?: string,
 ): ReadonlyArray<RunDiagnostic> {
-  if (hashSource(source) !== results.sourceHash) return []
+  const expectedHash =
+    forDocument === undefined
+      ? results.sourceHash
+      : results.documents?.find((d) => d.path === forDocument)?.sourceHash
+  if (expectedHash === undefined || hashSource(source) !== expectedHash) return []
   const out: RunDiagnostic[] = []
   for (const ex of results.examples) {
     if (ex.status !== 'failed' || !ex.failure) continue
     const f = ex.failure
+    // A failure belongs to exactly one document: the oath, or the one a
+    // reference block spliced its failing step in from.
+    if (f.docPath !== forDocument) continue
     if (f.cells && f.cells.length > 0) {
       for (const c of f.cells) {
         out.push({

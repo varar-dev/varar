@@ -43,10 +43,25 @@ type ExampleFailure struct {
 	Stack   string        `json:"stack"`
 	Cells   []CellFailure `json:"cells,omitempty"`
 	Anchor  *AnchorRange  `json:"anchor,omitempty"`
+	// DocPath is the document Line, Cells and Anchor are offsets INTO. Empty —
+	// the overwhelming majority — means the oath itself. Set only when the
+	// failing step was spliced in from another oath by a reference block (ADR
+	// 0016): its spans belong to that document, and a renderer that placed them
+	// in this one would underline whatever text sat at those offsets.
+	DocPath string `json:"docPath,omitempty"`
+}
+
+// ReferencedDocument is an oath other than this one that contributed steps to
+// the run, with its source hash as run (ADR 0016).
+type ReferencedDocument struct {
+	Path       string `json:"path"`
+	SourceHash string `json:"sourceHash"`
 }
 
 // ExampleResult is the run result for one BDD example. Lines are the 1-based
-// source lines of its steps (the editor's line-wash anchors).
+// source lines of its steps IN THIS OATH (the editor's line-wash anchors) — a
+// step spliced in from another oath contributes none, because its line is not
+// in this file.
 type ExampleResult struct {
 	Name    string          `json:"name"`
 	Status  ExampleStatus   `json:"status"`
@@ -59,8 +74,12 @@ type ExampleResult struct {
 // HashSource over the oath as it was run, so a reader can tell whether the
 // offsets still apply to the buffer in front of it.
 type OathResults struct {
-	Version    int             `json:"version"`
-	OathPath   string          `json:"oathPath"`
-	SourceHash string          `json:"sourceHash"`
-	Examples   []ExampleResult `json:"examples"`
+	Version    int    `json:"version"`
+	OathPath   string `json:"oathPath"`
+	SourceHash string `json:"sourceHash"`
+	// Documents holds every OTHER document this run's steps came from — the
+	// oaths a reference block pulled steps in from (ADR 0016), with their hashes
+	// as run. Omitted when no step was spliced in, which is the common case.
+	Documents []ReferencedDocument `json:"documents,omitempty"`
+	Examples  []ExampleResult      `json:"examples"`
 }

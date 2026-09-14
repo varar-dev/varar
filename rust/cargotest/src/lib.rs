@@ -21,6 +21,7 @@
 #![allow(clippy::result_large_err)]
 
 use std::any::Any;
+use std::collections::BTreeMap;
 use std::path::Path;
 use std::rc::Rc;
 use std::sync::{Arc, Mutex};
@@ -133,14 +134,20 @@ fn trials_recording(
             let (sf, src, r) = (rel.clone(), source.clone(), rel.clone());
             let example = &execution.examples[index];
             let name = example.name.clone();
+            // Lines in THIS oath. A step a reference block spliced in from
+            // another oath (ADR 0016) contributes none: its line belongs to
+            // that document, and a line-wash renderer would decorate an
+            // unrelated sentence here.
             let mut lines: Vec<usize> = example
                 .steps
                 .iter()
+                .filter(|s| s.doc_path.is_none())
                 .map(|s| s.match_span.start_line)
                 .collect();
             lines.dedup();
             let recorder = Arc::clone(results);
             let ws = Arc::clone(&workspace);
+            let referenced = referenced_sources(&execution, &workspace);
             trials.push(Trial::test(format!("{rel}::{display}"), move || {
                 let outcome = run_one_failure(&sf, &src, build_registry, context, index, &ws);
                 let recorded = match &outcome {
@@ -162,7 +169,7 @@ fn trials_recording(
                     },
                 };
                 if let Ok(mut results) = recorder.lock() {
-                    results.record(&r, &src, recorded);
+                    results.record(&r, &src, recorded, &referenced);
                 }
                 outcome.map_err(|failure| Failed::from(render_failure(&failure, &src, &r)))
             }));
@@ -217,4 +224,24 @@ fn project_workspace(oaths: &[std::path::PathBuf], root: &Path) -> OathWorkspace
         })
         .collect();
     build_workspace(&docs)
+}
+
+/// The source of every oath this plan's steps were spliced in from (ADR 0016).
+/// Their hashes go in the run record, so a consumer can tell a stale failure
+/// from a live one.
+fn referenced_sources(
+    execution: &varar_core::plan::ExecutionPlan,
+    workspace: &OathWorkspace,
+) -> BTreeMap<String, String> {
+    let mut out = BTreeMap::new();
+    for example in &execution.examples {
+        for step in &example.steps {
+            if let Some(path) = &step.doc_path
+                && let Some(doc) = workspace.docs.get(path)
+            {
+                out.insert(path.clone(), doc.source.clone());
+            }
+        }
+    }
+    out
 }

@@ -9,7 +9,7 @@
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use varar_core::hash::hash_source;
-use varar_core::result::{ExampleResult, OathResults, to_wire_json};
+use varar_core::result::{ExampleResult, OathResults, ReferencedDocument, to_wire_json};
 
 /// `<root>/.varar/<oath_path>.json` — the file the LSP watches.
 pub fn result_file_path(root: &Path, oath_path: &str) -> PathBuf {
@@ -51,6 +51,9 @@ fn document_order(examples: &mut [ExampleResult]) {
 pub struct Results {
     sources: BTreeMap<String, String>,
     examples: BTreeMap<String, Vec<ExampleResult>>,
+    /// Per oath: the other documents its steps were spliced in from (ADR 0016),
+    /// as path → source.
+    documents: BTreeMap<String, BTreeMap<String, String>>,
 }
 
 impl Results {
@@ -58,7 +61,17 @@ impl Results {
         Results::default()
     }
 
-    pub fn record(&mut self, oath_path: &str, source: &str, result: ExampleResult) {
+    /// Accumulates one example's outcome. `referenced_sources` carries the OTHER
+    /// documents this oath's steps were spliced in from (ADR 0016), as
+    /// path → source; their hashes go in the payload so a consumer can tell a
+    /// stale failure from a live one.
+    pub fn record(
+        &mut self,
+        oath_path: &str,
+        source: &str,
+        result: ExampleResult,
+        referenced_sources: &BTreeMap<String, String>,
+    ) {
         self.sources
             .entry(oath_path.to_string())
             .or_insert_with(|| source.to_string());
@@ -66,6 +79,16 @@ impl Results {
             .entry(oath_path.to_string())
             .or_default()
             .push(result);
+        if !referenced_sources.is_empty() {
+            self.documents
+                .entry(oath_path.to_string())
+                .or_default()
+                .extend(
+                    referenced_sources
+                        .iter()
+                        .map(|(k, v)| (k.clone(), v.clone())),
+                );
+        }
     }
 
     /// Writes every oath held, and forgets them. Errors are ignored on purpose:
@@ -77,10 +100,23 @@ impl Results {
                 continue;
             };
             document_order(&mut examples);
+            let documents = self
+                .documents
+                .get(&oath_path)
+                .map(|docs| {
+                    docs.iter()
+                        .map(|(path, text)| ReferencedDocument {
+                            path: path.clone(),
+                            source_hash: hash_source(text),
+                        })
+                        .collect()
+                })
+                .unwrap_or_default();
             let results = OathResults {
-                version: 1,
+                version: 2,
                 oath_path: oath_path.clone(),
                 source_hash: hash_source(source),
+                documents,
                 examples,
             };
             let _ = write_oath_results(root, &results);

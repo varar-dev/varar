@@ -199,7 +199,7 @@ assert_run_results() {
   while IFS= read -r oath; do
     record="$abs/.varar/$oath.json"
     [ -f "$record" ] || fail "$dir: the run wrote no .varar/$oath.json"       "Every adapter persists one run record per oath — the language server reads them."       "See doc/adr/0014-run-results-are-a-cross-port-contract.md."
-    jq -e --arg o "$oath" '.version == 1 and .oathPath == $o and (.sourceHash | startswith("fnv1a:"))'       "$record" >/dev/null || fail "$dir: .varar/$oath.json is not the documented payload"       "Expected version 1, oathPath \"$oath\", and an fnv1a: sourceHash."       "Got: $(jq -c '{version, oathPath, sourceHash}' "$record")"
+    jq -e --arg o "$oath" '.version == 2 and .oathPath == $o and (.sourceHash | startswith("fnv1a:"))'       "$record" >/dev/null || fail "$dir: .varar/$oath.json is not the documented payload"       "Expected version 2, oathPath \"$oath\", and an fnv1a: sourceHash."       "Got: $(jq -c '{version, oathPath, sourceHash}' "$record")"
     jq -e '[.examples[].lines[0]] == ([.examples[].lines[0]] | sort)' "$record" >/dev/null ||
       fail "$dir: .varar/$oath.json lists its examples out of document order"         "Sort them by first line before writing — the framework's own order is not the oath's."         "Got lines: $(jq -c '[.examples[].lines[0]]' "$record")"
   done <<<"$(oaths_on_disk "$dir")"

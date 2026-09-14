@@ -20,7 +20,7 @@ class RunResultsWireTest {
 
     private static Result.OathResults results() {
         return new Result.OathResults(
-                1,
+                2,
                 "varar/library.md",
                 "fnv1a:1622dfca",
                 List.of(
@@ -43,7 +43,22 @@ class RunResultsWireTest {
                                 "Noor borrowed *Kindred*",
                                 Result.Status.FAILED,
                                 List.of(8, 9),
-                                new Result.ExampleFailure(9, "expected the library to refuse", "<stack>", null))));
+                                new Result.ExampleFailure(9, "expected the library to refuse", "<stack>", null)),
+                        // A failure inside a section this oath referenced (ADR 0016): every offset
+                        // is into varar/shared/loans.md, named by docPath and hashed in documents.
+                        // lines holds only this oath's own lines.
+                        new Result.ExampleResult(
+                                "An overdue loan blocks a new one",
+                                Result.Status.FAILED,
+                                List.of(20),
+                                new Result.ExampleFailure(
+                                        6,
+                                        "expected 3 but was 2",
+                                        "<stack>",
+                                        List.of(new Result.CellFailure(41, 42, "2")),
+                                        new Result.AnchorRange(41, 42),
+                                        "varar/shared/loans.md"))),
+                List.of(new Result.ReferencedDocument("varar/shared/loans.md", "fnv1a:2f0e1d3c")));
     }
 
     @Test

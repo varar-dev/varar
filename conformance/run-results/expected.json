@@ -1,7 +1,13 @@
 {
-  "version": 1,
+  "version": 2,
   "oathPath": "varar/library.md",
   "sourceHash": "fnv1a:1622dfca",
+  "documents": [
+    {
+      "path": "varar/shared/loans.md",
+      "sourceHash": "fnv1a:2f0e1d3c"
+    }
+  ],
   "examples": [
     {
       "name": "Maya borrowed *Emma*, due back on June 1, 2026",
@@ -46,6 +52,30 @@
         "line": 9,
         "message": "expected the library to refuse",
         "stack": "<stack>"
+      }
+    },
+    {
+      "name": "An overdue loan blocks a new one",
+      "status": "failed",
+      "lines": [
+        20
+      ],
+      "failure": {
+        "line": 6,
+        "message": "expected 3 but was 2",
+        "stack": "<stack>",
+        "cells": [
+          {
+            "from": 41,
+            "to": 42,
+            "actual": "2"
+          }
+        ],
+        "anchor": {
+          "from": 41,
+          "to": 42
+        },
+        "docPath": "varar/shared/loans.md"
       }
     }
   ]

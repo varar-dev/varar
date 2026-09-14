@@ -29,7 +29,8 @@ module Varar
           message: error.message,
           stack: render_stack(error),
           cells: failing_cells(error),
-          anchor: anchor && AnchorRange.new(from: anchor.start_offset, to: anchor.end_offset)
+          anchor: anchor && AnchorRange.new(from: anchor.start_offset, to: anchor.end_offset),
+          doc_path: FailureAnchor.attached_doc_path(error)
         )
       end
 

@@ -32,6 +32,20 @@ public static class ResultJson
             writer.WriteNumber("version", results.Version);
             writer.WriteString("oathPath", results.OathPath);
             writer.WriteString("sourceHash", results.SourceHash);
+            if (!results.Documents.IsDefaultOrEmpty)
+            {
+                writer.WriteStartArray("documents");
+                foreach (var document in results.Documents)
+                {
+                    writer.WriteStartObject();
+                    writer.WriteString("path", document.Path);
+                    writer.WriteString("sourceHash", document.SourceHash);
+                    writer.WriteEndObject();
+                }
+
+                writer.WriteEndArray();
+            }
+
             writer.WriteStartArray("examples");
             foreach (var example in results.Examples)
             {
@@ -93,6 +107,12 @@ public static class ResultJson
             writer.WriteNumber("from", failure.Anchor.From);
             writer.WriteNumber("to", failure.Anchor.To);
             writer.WriteEndObject();
+        }
+
+        // Present only on a step a reference block spliced in from another oath (ADR 0016).
+        if (failure.DocPath is not null)
+        {
+            writer.WriteString("docPath", failure.DocPath);
         }
 
         writer.WriteEndObject();

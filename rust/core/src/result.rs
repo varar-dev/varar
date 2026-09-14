@@ -52,6 +52,20 @@ pub struct ExampleFailure {
     pub stack: String,
     pub cells: Option<Vec<CellFailure>>,
     pub anchor: Option<AnchorRange>,
+    /// The document `line`, `cells` and `anchor` are offsets INTO. `None` — the
+    /// overwhelming majority — means the oath itself. Set only when the failing
+    /// step was spliced in from another oath by a reference block (ADR 0016):
+    /// its spans belong to that document, and a renderer that placed them in
+    /// this one would underline whatever text sat at those offsets.
+    pub doc_path: Option<String>,
+}
+
+/// An oath other than this one that contributed steps to the run, with its
+/// source hash as run (ADR 0016).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ReferencedDocument {
+    pub path: String,
+    pub source_hash: String,
 }
 
 /// The run result for one BDD example.
@@ -69,6 +83,10 @@ pub struct OathResults {
     pub version: u32,
     pub oath_path: String,
     pub source_hash: String,
+    /// Every OTHER document this run's steps came from — the oaths a reference
+    /// block pulled steps in from (ADR 0016), with their hashes as run. Empty
+    /// when no step was spliced in, which is the common case.
+    pub documents: Vec<ReferencedDocument>,
     pub examples: Vec<ExampleResult>,
 }
 
@@ -85,6 +103,25 @@ pub fn to_wire_json(results: &OathResults) -> String {
     field(&mut out, 1, "version", &results.version.to_string(), true);
     string_field(&mut out, 1, "oathPath", &results.oath_path, true);
     string_field(&mut out, 1, "sourceHash", &results.source_hash, true);
+    if !results.documents.is_empty() {
+        indent(&mut out, 1);
+        out.push_str("\"documents\": [\n");
+        for (i, doc) in results.documents.iter().enumerate() {
+            indent(&mut out, 2);
+            out.push_str("{\n");
+            string_field(&mut out, 3, "path", &doc.path, true);
+            string_field(&mut out, 3, "sourceHash", &doc.source_hash, false);
+            out.push('\n');
+            indent(&mut out, 2);
+            out.push('}');
+            if i + 1 < results.documents.len() {
+                out.push(',');
+            }
+            out.push('\n');
+        }
+        indent(&mut out, 1);
+        out.push_str("],\n");
+    }
     indent(&mut out, 1);
     out.push_str("\"examples\": ");
     write_examples(&mut out, &results.examples, 1);
@@ -136,7 +173,8 @@ fn write_failure(out: &mut String, failure: &ExampleFailure, depth: usize) {
     out.push_str("{\n");
     field(out, depth + 1, "line", &failure.line.to_string(), true);
     string_field(out, depth + 1, "message", &failure.message, true);
-    let has_more = failure.cells.is_some() || failure.anchor.is_some();
+    let has_more =
+        failure.cells.is_some() || failure.anchor.is_some() || failure.doc_path.is_some();
     string_field(out, depth + 1, "stack", &failure.stack, has_more);
     if let Some(cells) = &failure.cells {
         indent(out, depth + 1);
@@ -156,7 +194,7 @@ fn write_failure(out: &mut String, failure: &ExampleFailure, depth: usize) {
         }
         indent(out, depth + 1);
         out.push(']');
-        out.push_str(if failure.anchor.is_some() {
+        out.push_str(if failure.anchor.is_some() || failure.doc_path.is_some() {
             ",\n"
         } else {
             "\n"
@@ -168,7 +206,16 @@ fn write_failure(out: &mut String, failure: &ExampleFailure, depth: usize) {
         field(out, depth + 2, "from", &anchor.from.to_string(), true);
         field(out, depth + 2, "to", &anchor.to.to_string(), false);
         indent(out, depth + 1);
-        out.push_str("}\n");
+        out.push('}');
+        out.push_str(if failure.doc_path.is_some() {
+            ",\n"
+        } else {
+            "\n"
+        });
+    }
+    if let Some(doc_path) = &failure.doc_path {
+        string_field(out, depth + 1, "docPath", doc_path, false);
+        out.push('\n');
     }
     indent(out, depth);
     out.push('}');

@@ -10,9 +10,10 @@ import { expect, test } from 'vitest'
 const EXPECTED = resolve(import.meta.dirname, '../../../../conformance/run-results/expected.json')
 
 const results: OathResults = {
-  version: 1,
+  version: 2,
   oathPath: 'varar/library.md',
   sourceHash: 'fnv1a:1622dfca',
+  documents: [{ path: 'varar/shared/loans.md', sourceHash: 'fnv1a:2f0e1d3c' }],
   examples: [
     { name: 'Maya borrowed *Emma*, due back on June 1, 2026', status: 'passed', lines: [3, 4] },
     {
@@ -32,6 +33,23 @@ const results: OathResults = {
       status: 'failed',
       lines: [8, 9],
       failure: { line: 9, message: 'expected the library to refuse', stack: '<stack>' },
+    },
+    {
+      // A failure inside a section this oath referenced (ADR 0016): every
+      // offset here is into varar/shared/loans.md, named by `docPath` and
+      // hashed in `documents`. `lines` holds only this oath's own lines — the
+      // spliced step contributes none.
+      name: 'An overdue loan blocks a new one',
+      status: 'failed',
+      lines: [20],
+      failure: {
+        line: 6,
+        message: 'expected 3 but was 2',
+        stack: '<stack>',
+        cells: [{ from: 41, to: 42, actual: '2' }],
+        anchor: { from: 41, to: 42 },
+        docPath: 'varar/shared/loans.md',
+      },
     },
   ],
 }

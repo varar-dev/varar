@@ -69,9 +69,13 @@ fn to_failure_reads_the_failing_line_from_an_injected_location_else_falls_back()
 }
 
 #[test]
-fn to_failure_uses_an_exact_oath_path_match() {
-    // 'aXmd' must not be treated as matching oath path 'a.md' (Java escapes the
-    // regex dot; Rust compares paths by `==`).
-    let sf = located(StepError::Handler(HandlerError::new("boom")), "aXmd", 7);
-    assert_eq!(42, to_failure(&sf, "a.md", 42).line);
+fn to_failure_records_the_document_a_spliced_step_was_written_in() {
+    // A location naming a document other than the oath being run is a step a
+    // reference block spliced in from that document (ADR 0016). Its line and
+    // anchor are the precise ones — they are simply offsets into that file,
+    // which is what `doc_path` says.
+    let sf = located(StepError::Handler(HandlerError::new("boom")), "shared.md", 7);
+    let failure = to_failure(&sf, "a.md", 42);
+    assert_eq!(Some("shared.md".to_string()), failure.doc_path);
+    assert_eq!(7, failure.line);
 }

@@ -49,9 +49,22 @@ public final class Result {
      *     a step. Optional for the same reason {@code cells} is: a result written without it still
      *     reads, and a renderer falls back to {@code line}.
      */
-    public record ExampleFailure(int line, String message, String stack, List<CellFailure> cells, AnchorRange anchor) {
+    /**
+     * @param docPath the document {@code line}, {@code cells} and {@code anchor} are offsets INTO.
+     *     Null — the overwhelming majority — means the oath itself. Set only when the failing step
+     *     was spliced in from another oath by a reference block (ADR 0016): its spans belong to
+     *     that document, and a renderer that placed them in this one would underline whatever text
+     *     sat at those offsets.
+     */
+    public record ExampleFailure(
+            int line, String message, String stack, List<CellFailure> cells, AnchorRange anchor, String docPath) {
         public ExampleFailure {
             cells = cells == null ? null : List.copyOf(cells);
+        }
+
+        /** A failure written by an oath's own step — the overwhelming majority. */
+        public ExampleFailure(int line, String message, String stack, List<CellFailure> cells, AnchorRange anchor) {
+            this(line, message, stack, cells, anchor, null);
         }
 
         /** A failure with no anchor — the shape producers wrote before anchors were recorded. */
@@ -59,6 +72,12 @@ public final class Result {
             this(line, message, stack, cells, null);
         }
     }
+
+    /**
+     * An oath other than this one that contributed steps to the run, with its source hash as run
+     * (ADR 0016).
+     */
+    public record ReferencedDocument(String path, String sourceHash) {}
 
     /**
      * The run result for one BDD example.
@@ -74,9 +93,24 @@ public final class Result {
     }
 
     /** The persisted run result for one oath file. */
-    public record OathResults(int version, String oathPath, String sourceHash, List<ExampleResult> examples) {
+    /**
+     * @param documents every OTHER document this run's steps came from — the oaths a reference
+     *     block pulled steps in from (ADR 0016), with their hashes as run. Empty when no step was
+     *     spliced in, which is the common case.
+     */
+    public record OathResults(
+            int version,
+            String oathPath,
+            String sourceHash,
+            List<ExampleResult> examples,
+            List<ReferencedDocument> documents) {
         public OathResults {
             examples = List.copyOf(examples);
+            documents = documents == null ? List.of() : List.copyOf(documents);
+        }
+
+        public OathResults(int version, String oathPath, String sourceHash, List<ExampleResult> examples) {
+            this(version, oathPath, sourceHash, examples, List.of());
         }
     }
 
@@ -91,6 +125,13 @@ public final class Result {
         out.put("version", results.version());
         out.put("oathPath", results.oathPath());
         out.put("sourceHash", results.sourceHash());
+        if (!results.documents().isEmpty()) {
+            out.put(
+                    "documents",
+                    results.documents().stream()
+                            .map(d -> (Object) orderedMap("path", d.path(), "sourceHash", d.sourceHash()))
+                            .toList());
+        }
         out.put(
                 "examples",
                 results.examples().stream().map(Result::exampleToWire).toList());
@@ -128,6 +169,10 @@ public final class Result {
                             failure.anchor().from(),
                             "to",
                             failure.anchor().to()));
+        }
+        // Present only on a step a reference block spliced in from another oath (ADR 0016).
+        if (failure.docPath() != null) {
+            out.put("docPath", failure.docPath());
         }
         return out;
     }

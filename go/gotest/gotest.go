@@ -43,6 +43,9 @@ type Case struct {
 	// the 1-based source lines of its steps. Empty for a drift case.
 	ExampleName string
 	Lines       []int
+	// The other documents this example's steps were spliced in from (ADR 0016),
+	// as path→source, for the run record's hashes.
+	referenced map[string]string
 }
 
 // Collect enumerates every example (and any drift) matched by varar.config.json
@@ -96,12 +99,20 @@ func Collect(root string, build BuildRegistry, ctx ContextFactory, update bool) 
 			r := rel
 			p := plan
 			example := p.Examples[index]
+			// Lines in THIS oath. A step a reference block spliced in from
+			// another oath (ADR 0016) contributes none: its line belongs to that
+			// document, and a line-wash renderer would decorate an unrelated
+			// sentence here.
 			var lines []int
 			for _, step := range example.Steps {
+				if step.DocPath != "" {
+					continue
+				}
 				if len(lines) == 0 || lines[len(lines)-1] != step.MatchSpan.StartLine {
 					lines = append(lines, step.MatchSpan.StartLine)
 				}
 			}
+			refs := referencedSources(p, workspace)
 			cases = append(cases, Case{
 				Name:        r + "::" + display,
 				Source:      src,
@@ -110,6 +121,7 @@ func Collect(root string, build BuildRegistry, ctx ContextFactory, update bool) 
 				run:         func() *core.StepFailure { return runner.RunExample(p, ctx, index) },
 				ExampleName: example.Name,
 				Lines:       lines,
+				referenced:  refs,
 			})
 		}
 
@@ -153,7 +165,7 @@ func Run(t *testing.T, root string, build BuildRegistry, ctx ContextFactory) {
 			if failure == nil {
 				results.Record(c.Rel, c.Source, core.ExampleResult{
 					Name: c.ExampleName, Status: core.StatusPassed, Lines: c.Lines,
-				})
+				}, c.referenced)
 				return
 			}
 			// Recorded from the failure itself: ToFailure reads the anchor the
@@ -167,7 +179,7 @@ func Run(t *testing.T, root string, build BuildRegistry, ctx ContextFactory) {
 				Status:  core.StatusFailed,
 				Lines:   c.Lines,
 				Failure: ptr(core.ToFailure(*failure, c.Rel, line)),
-			})
+			}, c.referenced)
 			t.Error(runner.RenderFailure(*failure, c.Source, c.Rel))
 		})
 	}
@@ -200,4 +212,27 @@ func projectWorkspace(oaths []string, root string) core.OathWorkspace {
 		docs = append(docs, core.Parse(filepath.ToSlash(rel), string(sourceBytes)))
 	}
 	return core.BuildWorkspace(docs)
+}
+
+// referencedSources is the source of every oath this plan's steps were spliced
+// in from (ADR 0016). Their hashes go in the run record, so a consumer can tell
+// a stale failure from a live one.
+func referencedSources(plan core.ExecutionPlan, workspace core.OathWorkspace) map[string]string {
+	var out map[string]string
+	for _, example := range plan.Examples {
+		for _, step := range example.Steps {
+			if step.DocPath == "" {
+				continue
+			}
+			doc, ok := workspace.Docs[step.DocPath]
+			if !ok {
+				continue
+			}
+			if out == nil {
+				out = map[string]string{}
+			}
+			out[step.DocPath] = doc.Source
+		}
+	}
+	return out
 }
