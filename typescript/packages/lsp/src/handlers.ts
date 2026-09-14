@@ -1,9 +1,16 @@
 import {
+  type Doc,
   diffExpressions,
   expressionSegments,
   inferStepRole,
+  type PlannedStep,
+  plan,
+  type Reference,
+  referenceOf,
   renderExpression,
+  type Span,
   type StepKind,
+  slugify,
 } from '@varar/core'
 import {
   createTypeScriptSnippetEmitter,
@@ -12,6 +19,7 @@ import {
   languageIdForPath,
   type MatchRef,
   type SnippetEmitter,
+  type WorkspaceIndex,
 } from '@varar/language'
 import type {
   GenerateSnippetResult,
@@ -100,12 +108,19 @@ type Handlers = {
 export function buildHandlers(store: Store): Handlers {
   return {
     hover({ uri, position }) {
+      // A reference block (ADR 0016) is never a matched step, so the two
+      // lookups cannot both hit; the reference goes first because it is the
+      // cheaper miss.
+      const at = findReferenceAt(store, uri, position)
+      if (at) return referenceHover(store.index(), at)
       const m = findMatchAt(store, uri, position)
       if (!m) return null
       const contents = `\`"${m.stepDef.expression}"\` at ${m.stepDef.file}:${m.stepDef.expressionRange.start.line}`
       return { contents }
     },
     definition({ uri, position }) {
+      const at = findReferenceAt(store, uri, position)
+      if (at) return referenceDefinition(store.index(), at)
       const m = findMatchAt(store, uri, position)
       if (!m) return []
       const targetRange = toLspRange(m.stepDef.expressionRange)
@@ -371,6 +386,151 @@ function findMatchAt(store: Store, uri: string, position: Position): MatchRef | 
     if (m.oathPath !== path) return false
     return contains(m.range, pos)
   })
+}
+
+// The reference block (ADR 0016) under the cursor, if the cursor is on one: the
+// link-only candidate whose primary block contains the position. The index
+// keeps every oath's parsed document, so this is a lookup, not a parse.
+type ReferenceAt = {
+  readonly reference: Reference
+  readonly doc: Doc
+  readonly span: Span
+  // The block as the author wrote it, for display — `referenceOf` resolves
+  // the target to a workspace path, which is not what they typed.
+  readonly written: string
+}
+
+function findReferenceAt(store: Store, uri: string, position: Position): ReferenceAt | undefined {
+  const planned = store.index().oaths.get(uriToPath(uri))
+  if (!planned) return undefined
+  const pos: Position = { line: position.line + 1, character: position.character + 1 }
+  for (const ex of planned.doc.examples) {
+    const primary = ex.body[0]
+    if (!primary || !('text' in primary) || !contains(spanRange(primary.span), pos)) continue
+    const reference = referenceOf(primary.text, planned.doc.path)
+    if (!reference) return undefined
+    return { reference, doc: planned.doc, span: primary.span, written: primary.text.trim() }
+  }
+  return undefined
+}
+
+// The same resolution plan() uses: a same-file reference resolves against the
+// document itself, anything else against the workspace.
+function referenceTarget(index: WorkspaceIndex, at: ReferenceAt): Doc | undefined {
+  return at.reference.path === at.doc.path ? at.doc : index.workspace.docs.get(at.reference.path)
+}
+
+// Go-to-definition on a reference block lands on the heading it names — or on
+// the top of the file for a whole-file reference. An ambiguous anchor yields
+// one link per heading, so the editor peeks them all rather than picking one.
+// A target that does not exist yields nothing: reference-not-found is already
+// a diagnostic on the block.
+function referenceDefinition(index: WorkspaceIndex, at: ReferenceAt): DefinitionResult {
+  const target = referenceTarget(index, at)
+  if (!target) return []
+  const originSelectionRange = toLspRange(spanRange(at.span))
+  const targetUri = `file://${target.path}`
+  const top: Range = { start: { line: 0, character: 0 }, end: { line: 0, character: 0 } }
+  const ranges =
+    at.reference.slug === ''
+      ? [top]
+      : sectionHeadings(target, at.reference.slug).map((h) => toLspRange(spanRange(h.span)))
+  return ranges.map((range) => ({
+    originSelectionRange,
+    targetUri,
+    targetRange: range,
+    targetSelectionRange: range,
+  }))
+}
+
+// Hover on a reference block shows the steps it splices in, resolved through
+// any nested references — ADR 0016's case for references is that the reader
+// must see the setup, and this keeps that true at the point of use without
+// opening the other file.
+function referenceHover(index: WorkspaceIndex, at: ReferenceAt): HoverResult {
+  const target = referenceTarget(index, at)
+  if (!target) return null
+  const { slug } = at.reference
+  const headings = slug === '' ? [] : sectionHeadings(target, slug)
+  const title = slug === '' ? basenamePosix(target.path) : (headings[0]?.text ?? `#${slug}`)
+  const lines = [`**${title}** · \`${linkTarget(at.written)}\``, '']
+  // An ambiguous anchor splices nothing in (it is an error on the block), so
+  // previewing "both" sections would show steps that never run.
+  if (headings.length > 1) {
+    lines.push(
+      `_Ambiguous: ${headings.length} headings share this anchor (lines ${headings
+        .map((h) => h.span.startLine)
+        .join(', ')}), so nothing is spliced in._`,
+    )
+    return { contents: lines.join('\n') }
+  }
+  const steps = sectionSteps(index, target, slug)
+  if (steps.length === 0) lines.push('_Contributes no steps._')
+  steps.forEach((step, i) => {
+    // A step a nested reference pulled in from a third file says so.
+    const from =
+      step.docPath !== undefined && step.docPath !== target.path
+        ? ` — from \`${relativePosix(dirnamePosix(target.path), step.docPath)}\``
+        : ''
+    lines.push(`${i + 1}. ${step.text}${from}`)
+  })
+  return { contents: lines.join('\n') }
+}
+
+// The steps a reference splices in, resolved the way plan() resolves them —
+// nested references included. The section is consumed (that is what being
+// referenced means), so the index's plan of the target holds no example for
+// it; planning the target as if nothing referenced it gives the section back.
+// Header-bound rows are left out, as the splice leaves them out.
+function sectionSteps(
+  index: WorkspaceIndex,
+  target: Doc,
+  slug: string,
+): ReadonlyArray<PlannedStep> {
+  const standalone = plan(target, index.registry, {
+    docs: index.workspace.docs,
+    referenced: new Set(),
+  })
+  return standalone.examples
+    .filter(
+      (ex) => !ex.headerBinding && (slug === '' || ex.scopeStack.some((h) => slugify(h) === slug)),
+    )
+    .flatMap((ex) => ex.steps)
+}
+
+function sectionHeadings(target: Doc, slug: string) {
+  return target.headings.filter((h) => slugify(h.text) === slug)
+}
+
+// `[text](target)` → `target`, as written.
+function linkTarget(written: string): string {
+  return /\]\(\s*([^\s)]+)\s*\)$/.exec(written)?.[1] ?? written
+}
+
+function spanRange(span: Span): { start: Position; end: Position } {
+  return {
+    start: { line: span.startLine, character: span.startCol },
+    end: { line: span.endLine, character: span.endCol },
+  }
+}
+
+// Oath paths are '/'-separated in every environment the server runs in (the
+// browser has no node:path), so these stay string-only.
+function dirnamePosix(path: string): string {
+  const i = path.lastIndexOf('/')
+  return i === -1 ? '' : path.slice(0, i)
+}
+
+function basenamePosix(path: string): string {
+  return path.slice(path.lastIndexOf('/') + 1)
+}
+
+function relativePosix(fromDir: string, to: string): string {
+  const a = fromDir.split('/').filter(Boolean)
+  const b = to.split('/').filter(Boolean)
+  let i = 0
+  while (i < a.length && i < b.length && a[i] === b[i]) i++
+  return [...a.slice(i).map(() => '..'), ...b.slice(i)].join('/')
 }
 
 function contains(range: { start: Position; end: Position }, position: Position): boolean {

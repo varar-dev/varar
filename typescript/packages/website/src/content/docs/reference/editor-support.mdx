@@ -74,6 +74,22 @@ expression.
 Hovering a matched step surfaces details about the step it resolves to — the
 binding behind the sentence — without leaving the oath.
 
+### Reference blocks
+
+A [reference block](/reference/examples/#reference-blocks) — a link-only block
+that splices another section's steps in — gets the same treatment as a step:
+
+- **Go to Definition** on the link jumps to the heading it names, in the oath
+  that holds it (or to the top of the file, for a whole-file reference). An
+  anchor that names two headings offers both.
+- **Hover** shows the steps the reference splices in, in order, with nested
+  references resolved — so the world state an example assumes is visible where
+  it is used, without opening the other file. A step a nested reference pulled
+  in from a third file says which.
+- **Diagnostics** for a broken reference — no such oath, a section with no
+  steps, a cycle, or an anchor that names two headings — sit on the reference
+  block itself.
+
 ### Completion
 
 As you write a sentence in an oath, completion offers the registered steps that
