@@ -43,11 +43,16 @@ function isOathResults(v: unknown): v is OathResults {
 }
 
 export type RunResultsStore = {
-  // Parse a .varar/<oath>.json and key it by its oath's file:// URI. Returns that
-  // URI, or null if the content is unparseable / the wrong version.
-  ingest(varJsonPath: string, content: string): string | null
-  // Forget a .varar json (on delete). Returns the oath URI it had mapped, or null.
-  remove(varJsonPath: string): string | null
+  // Parse a .varar/<oath>.json and key it by its oath's file:// URI. Returns
+  // every URI whose diagnostics the record changes — the oath's own, plus each
+  // document the new record names and each the record it replaces named (ADR
+  // 0016: a failure inside a shared section lights that file up, and a clean
+  // rerun must clear it) — or [] if the content is unparseable / the wrong
+  // version. The oath's own URI is always first.
+  ingest(varJsonPath: string, content: string): ReadonlyArray<string>
+  // Forget a .varar json (on delete). Returns the URIs it had a say about —
+  // the oath's own first, then the documents it named — or [] if unknown.
+  remove(varJsonPath: string): ReadonlyArray<string>
   get(oathUri: string): OathResults | undefined
   // Every result that has something to say about this URI: the oath's own
   // result, plus — for a shared oath whose sections other oaths reference (ADR
@@ -66,26 +71,30 @@ export function createRunResultsStore(rootUri: string): RunResultsStore {
   const byUri = new Map<string, OathResults>()
   const uriByPath = new Map<string, string>() // varJsonPath → oathUri, so deletes resolve
   const uriFor = (oathPath: string) => `${root}/${oathPath}`
+  const documentUris = (results: OathResults | undefined): ReadonlyArray<string> =>
+    (results?.documents ?? []).map((d) => uriFor(d.path))
   return {
     ingest(varJsonPath, content) {
       let parsed: unknown
       try {
         parsed = JSON.parse(content)
       } catch {
-        return null
+        return []
       }
-      if (!isOathResults(parsed)) return null
+      if (!isOathResults(parsed)) return []
       const oathUri = uriFor(parsed.oathPath)
+      const previous = byUri.get(oathUri)
       byUri.set(oathUri, parsed)
       uriByPath.set(varJsonPath, oathUri)
-      return oathUri
+      return [...new Set([oathUri, ...documentUris(previous), ...documentUris(parsed)])]
     },
     remove(varJsonPath) {
       const oathUri = uriByPath.get(varJsonPath)
-      if (oathUri === undefined) return null
+      if (oathUri === undefined) return []
+      const removed = byUri.get(oathUri)
       byUri.delete(oathUri)
       uriByPath.delete(varJsonPath)
-      return oathUri
+      return [...new Set([oathUri, ...documentUris(removed)])]
     },
     get: (oathUri) => byUri.get(oathUri),
     resultsFor(uri) {
