@@ -164,6 +164,10 @@ function attachBaseline(ctx: TaskContext, path: string): void {
   const fileMeta = ctx.task.file?.meta
   if (!fileMeta) return
   const documents = pendingDocuments.get(path)
+  // One-shot, like the baseline below: in watch mode an oath whose reference
+  // was removed collects again without setting an entry, and a stale map
+  // left here would be attached — and its hashes written — a second time.
+  pendingDocuments.delete(path)
   if (documents && Object.keys(documents).length > 0) fileMeta[VARAR_DOCUMENTS_META] = documents
   const baseline = pendingBaselines.get(path)
   if (!baseline) return
