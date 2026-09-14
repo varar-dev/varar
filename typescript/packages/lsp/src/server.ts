@@ -87,6 +87,10 @@ export function registerHandlers(
   // Reindexes are serialised through this chain: store.reindex() is async, and
   // two overlapping runs would race to assign the index.
   let inFlight: Promise<void> = Promise.resolve()
+  // Write-throughs are serialised too: two edits in quick succession are two
+  // async writes of the same file, and the earlier one finishing last would
+  // leave the older text on disk for the reindex to read.
+  let writes: Promise<void> = Promise.resolve()
 
   function scheduleReindex(): void {
     dirty = true
@@ -106,6 +110,9 @@ export function registerHandlers(
     if (!dirty) return inFlight
     dirty = false
     inFlight = inFlight.then(async () => {
+      // Every write queued before this reindex lands first, so the index is
+      // never built from a file older than the edit it answers about.
+      await writes
       if (!store) return
       await store.reindex()
       afterReindex()
@@ -113,11 +120,22 @@ export function registerHandlers(
     return inFlight
   }
 
-  // Write-through: persist edited docs to the FileSystem, then reindex (debounced).
-  documents.onDidChangeContent(async (e) => {
-    await opts?.onDidChangeDocument?.(e.document.uri, e.document.getText())
-    if (!store) return
-    await store.fs().write(uriToPath(e.document.uri), e.document.getText())
+  // Write-through: persist edited docs to the FileSystem, then reindex
+  // (debounced). The reindex is scheduled at once — marking the index dirty
+  // before the write completes — so a request arriving mid-write still waits
+  // for it via settled().
+  documents.onDidChangeContent((e) => {
+    const uri = e.document.uri
+    const text = e.document.getText()
+    writes = writes
+      .then(async () => {
+        await opts?.onDidChangeDocument?.(uri, text)
+        if (store) await store.fs().write(uriToPath(uri), text)
+      })
+      .catch((err: unknown) => {
+        // A failed write must not poison the chain for later edits.
+        connection.console.error(`varar: write-through failed for ${uri}: ${String(err)}`)
+      })
     scheduleReindex()
   })
 
