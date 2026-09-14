@@ -74,7 +74,7 @@ export async function runRegisteredOath(
   executePlan(toRun, { sink, reporter: { diagnostic() {} }, createContext })
   await Promise.all(pending)
   const results: OathResults = {
-    version: 1,
+    version: 2,
     oathPath: oathPath,
     sourceHash: hashSource(varSource),
     examples: out,
