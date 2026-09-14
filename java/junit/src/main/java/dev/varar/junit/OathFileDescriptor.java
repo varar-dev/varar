@@ -78,16 +78,21 @@ final class OathFileDescriptor extends AbstractTestDescriptor implements Node<Oa
         this.root = root;
     }
 
+    /**
+     * The source of every oath this plan's steps were spliced in from (ADR 0016), read once. Their
+     * hashes go in the run record, so a consumer can tell a stale failure from a live one. Populated
+     * by {@link #before} alongside {@link #exampleRuns}, under the same ordering guarantee — reading
+     * them per recorded example would be O(examples × references) disk reads.
+     */
+    private Map<String, String> referencedSources;
+
     /** Records one example's outcome, for {@link #after} to persist. */
     void recordResult(Result.ExampleResult result) {
-        results.record(oathPath, content, result, referencedSources());
+        if (referencedSources == null) referencedSources = readReferencedSources();
+        results.record(oathPath, content, result, referencedSources);
     }
 
-    /**
-     * The source of every oath this plan's steps were spliced in from (ADR 0016). Their hashes go
-     * in the run record, so a consumer can tell a stale failure from a live one.
-     */
-    private Map<String, String> referencedSources() {
+    private Map<String, String> readReferencedSources() {
         Map<String, String> out = new TreeMap<>();
         for (Plan.PlannedExample example : plan.examples()) {
             for (Plan.PlannedStep step : example.steps()) {
@@ -158,6 +163,7 @@ final class OathFileDescriptor extends AbstractTestDescriptor implements Node<Oa
         // between examples, in or out of document order.
         Run.RecordingReporter reporter = new Run.RecordingReporter();
         exampleRuns = Run.examplesWithRuns(plan, loadedSteps.createContext(), reporter);
+        referencedSources = readReferencedSources();
         publishDiagnostics(context, reporter.diagnostics());
         return context;
     }
