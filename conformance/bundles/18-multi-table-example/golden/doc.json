@@ -307,6 +307,21 @@
       }
     }
   ],
+  "headings": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "span": {
+        "endCol": 36,
+        "endLine": 1,
+        "endOffset": 35,
+        "startCol": 1,
+        "startLine": 1,
+        "startOffset": 0
+      },
+      "text": "A basket imports users and assets"
+    }
+  ],
   "orphanAttachments": [],
   "path": "example.md"
 }

@@ -1,0 +1,123 @@
+{
+  "examples": [
+    {
+      "body": [
+        {
+          "kind": "paragraph",
+          "segmentMap": [
+            {
+              "sourceOffset": 13,
+              "textOffset": 0
+            }
+          ],
+          "span": {
+            "endCol": 69,
+            "endLine": 4,
+            "endOffset": 158,
+            "startCol": 1,
+            "startLine": 3,
+            "startOffset": 13
+          },
+          "text": "A world state written once — but the file it lives in names it twice, so the\nlink below could mean either section. That is an error, not a guess."
+        }
+      ],
+      "precededByDelimiter": true,
+      "scopeStack": [
+        "Late fees"
+      ],
+      "span": {
+        "endCol": 69,
+        "endLine": 4,
+        "endOffset": 158,
+        "startCol": 1,
+        "startLine": 3,
+        "startOffset": 13
+      }
+    },
+    {
+      "body": [
+        {
+          "kind": "paragraph",
+          "segmentMap": [
+            {
+              "sourceOffset": 160,
+              "textOffset": 0
+            }
+          ],
+          "span": {
+            "endCol": 51,
+            "endLine": 6,
+            "endOffset": 210,
+            "startCol": 1,
+            "startLine": 6,
+            "startOffset": 160
+          },
+          "text": "[A stocked library](./shared.md#a-stocked-library)"
+        }
+      ],
+      "precededByDelimiter": false,
+      "scopeStack": [
+        "Late fees"
+      ],
+      "span": {
+        "endCol": 51,
+        "endLine": 6,
+        "endOffset": 210,
+        "startCol": 1,
+        "startLine": 6,
+        "startOffset": 160
+      }
+    },
+    {
+      "body": [
+        {
+          "kind": "paragraph",
+          "segmentMap": [
+            {
+              "sourceOffset": 212,
+              "textOffset": 0
+            }
+          ],
+          "span": {
+            "endCol": 17,
+            "endLine": 8,
+            "endOffset": 228,
+            "startCol": 1,
+            "startLine": 8,
+            "startOffset": 212
+          },
+          "text": "I borrow a book."
+        }
+      ],
+      "precededByDelimiter": false,
+      "scopeStack": [
+        "Late fees"
+      ],
+      "span": {
+        "endCol": 17,
+        "endLine": 8,
+        "endOffset": 228,
+        "startCol": 1,
+        "startLine": 8,
+        "startOffset": 212
+      }
+    }
+  ],
+  "headings": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "span": {
+        "endCol": 12,
+        "endLine": 1,
+        "endOffset": 11,
+        "startCol": 1,
+        "startLine": 1,
+        "startOffset": 0
+      },
+      "text": "Late fees"
+    }
+  ],
+  "orphanAttachments": [],
+  "path": "example.md"
+}

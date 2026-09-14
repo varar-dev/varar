@@ -184,3 +184,26 @@ test('a spliced step is a match in the oath it was written in, once, however man
   expect(shelve[0]?.range.start.line).toBe(5)
   expect(idx.matches.filter((m) => m.oathPath === '/abs/varar/fees.md')).toHaveLength(1)
 })
+
+test('a reference whose anchor names two headings in its file surfaces as an ambiguous-anchor diagnostic on the reference', () => {
+  // ADR 0016's ambiguous-anchor is a plan diagnostic, so the index carries it
+  // like the other three; the squiggle lands on the referring block.
+  const idx = build({
+    stepFiles: [],
+    oathFiles: [
+      {
+        path: '/abs/varar/shared.md',
+        source: '# Shared\n\n## Setup\n\nA.\n\n## Setup\n\nB.\n',
+      },
+      {
+        path: '/abs/varar/fees.md',
+        source: '# Fees\n\n[Setup](./shared.md#setup)\n\nMaya borrows "Emma".\n',
+      },
+    ],
+  })
+  const anchors = idx.diagnostics.filter((d) => d.code === 'ambiguous-anchor')
+  expect(anchors).toHaveLength(1)
+  expect(anchors[0]?.oathPath).toBe('/abs/varar/fees.md')
+  expect(anchors[0]?.range.start.line).toBe(3)
+  expect(anchors[0]?.message).toContain('"/abs/varar/shared.md" has 2 headings')
+})

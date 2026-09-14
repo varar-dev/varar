@@ -34,7 +34,7 @@ public final class Conformance {
 
     /**
      * Projects a parsed {@link Ast.Doc} to the var-doc wire artifact: {@code
-     * {path, examples, orphanAttachments}}.
+     * {path, examples, orphanAttachments, headings}}.
      */
     public static Map<String, Object> toDocArtifact(Ast.Doc doc) {
         Map<String, Object> out = new LinkedHashMap<>();
@@ -43,6 +43,7 @@ public final class Conformance {
         out.put(
                 "orphanAttachments",
                 doc.orphanAttachments().stream().map(Conformance::tableOrFence).toList());
+        out.put("headings", doc.headings().stream().map(Conformance::heading).toList());
         return out;
     }
 
@@ -383,6 +384,7 @@ public final class Conformance {
             case REFERENCE_NOT_FOUND -> "reference-not-found";
             case REFERENCE_EMPTY -> "reference-empty";
             case REFERENCE_CYCLE -> "reference-cycle";
+            case AMBIGUOUS_ANCHOR -> "ambiguous-anchor";
             case ERROR_FENCE_WITHOUT_STEP -> "error-fence-without-step";
             case DRIFT -> "drift";
         };

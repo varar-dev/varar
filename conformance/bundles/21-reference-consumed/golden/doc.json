@@ -70,6 +70,34 @@
       }
     }
   ],
+  "headings": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "span": {
+        "endCol": 22,
+        "endLine": 1,
+        "endOffset": 21,
+        "startCol": 1,
+        "startLine": 1,
+        "startOffset": 0
+      },
+      "text": "Shared world states"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "span": {
+        "endCol": 21,
+        "endLine": 6,
+        "endOffset": 153,
+        "startCol": 1,
+        "startLine": 6,
+        "startOffset": 133
+      },
+      "text": "A stocked library"
+    }
+  ],
   "orphanAttachments": [],
   "path": "example.md"
 }

@@ -57,6 +57,34 @@
       }
     }
   ],
+  "headings": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "span": {
+        "endCol": 19,
+        "endLine": 1,
+        "endOffset": 18,
+        "startCol": 1,
+        "startLine": 1,
+        "startOffset": 0
+      },
+      "text": "Message mismatch"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "span": {
+        "endCol": 47,
+        "endLine": 3,
+        "endOffset": 66,
+        "startCol": 1,
+        "startLine": 3,
+        "startOffset": 20
+      },
+      "text": "A non-matching expected message still fails"
+    }
+  ],
   "orphanAttachments": [],
   "path": "example.md"
 }

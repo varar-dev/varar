@@ -1,4 +1,4 @@
-import { mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, realpathSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { loadConfig } from '@varar/config'
@@ -827,6 +827,187 @@ test('diagnosticsFor does NOT emit anything for a keyword-led but unmatched sent
     const h = buildHandlers(store)
     const diags = h.diagnosticsFor(`file://${join(dir, 'b.md')}`)
     expect(diags).toEqual([])
+  } finally {
+    cleanup()
+  }
+})
+
+// Reference blocks (ADR 0016): a link-only block that splices an oath section
+// in. Three oaths: fees.md references a section of shared/library.md, which in
+// turn references a section of shared/billing.md.
+function referenceWorkspace(dir: string): void {
+  writeFileSync(
+    join(dir, 'varar.config.json'),
+    '{ "docs": { "include": ["varar/**/*.md"], "exclude": [] }, "steps": ["**/*.steps.ts"] }\n',
+  )
+  writeFileSync(
+    join(dir, 'a.steps.ts'),
+    `stimulus('The library holds {string}', () => {})
+stimulus('Fees are enabled', () => {})
+stimulus('Maya borrows {string}', () => {})
+`,
+  )
+  mkdirSync(join(dir, 'varar', 'shared'), { recursive: true })
+  writeFileSync(
+    join(dir, 'varar', 'shared', 'library.md'),
+    '# Shared\n\n## A stocked library\n\nThe library holds "Dune".\n\n[Fees are enabled](./billing.md#fees-are-enabled)\n',
+  )
+  writeFileSync(
+    join(dir, 'varar', 'shared', 'billing.md'),
+    '# Billing\n\n## Fees are enabled\n\nFees are enabled.\n',
+  )
+  writeFileSync(
+    join(dir, 'varar', 'fees.md'),
+    '# Late fees\n\n[A stocked library](./shared/library.md#a-stocked-library)\n\nMaya borrows "Emma".\n\n[Everything in billing](./shared/billing.md)\n\n[Not an oath](https://example.com/library)\n',
+  )
+}
+
+test('definition on a reference block lands on the heading it names', async () => {
+  const { dir, cleanup } = tempWorkspace(referenceWorkspace)
+  try {
+    const h = buildHandlers(await makeStore(dir))
+    // 0-based: source line 3 is the reference block → LSP line 2.
+    const links = h.definition({
+      uri: `file://${join(dir, 'varar', 'fees.md')}`,
+      position: { line: 2, character: 5 },
+    })
+    expect(links).toHaveLength(1)
+    const link = links[0]!
+    expect(link.targetUri).toBe(`file://${join(dir, 'varar', 'shared', 'library.md')}`)
+    // `## A stocked library` is source line 3 of library.md → LSP line 2.
+    expect(link.targetRange.start.line).toBe(2)
+    expect(link.targetRange.start.character).toBe(0)
+    // The whole link is the origin, so cmd-hover underlines all of it.
+    expect(link.originSelectionRange.start).toEqual({ line: 2, character: 0 })
+    expect(link.originSelectionRange.end.line).toBe(2)
+  } finally {
+    cleanup()
+  }
+})
+
+test('definition on a whole-file reference lands on the top of that file', async () => {
+  const { dir, cleanup } = tempWorkspace(referenceWorkspace)
+  try {
+    const h = buildHandlers(await makeStore(dir))
+    // Source line 7 is `[Everything in billing](./shared/billing.md)`.
+    const links = h.definition({
+      uri: `file://${join(dir, 'varar', 'fees.md')}`,
+      position: { line: 6, character: 3 },
+    })
+    expect(links).toHaveLength(1)
+    expect(links[0]?.targetUri).toBe(`file://${join(dir, 'varar', 'shared', 'billing.md')}`)
+    expect(links[0]?.targetRange.start).toEqual({ line: 0, character: 0 })
+  } finally {
+    cleanup()
+  }
+})
+
+test('hover on a reference block shows the steps it splices in, nested references resolved', async () => {
+  const { dir, cleanup } = tempWorkspace(referenceWorkspace)
+  try {
+    const h = buildHandlers(await makeStore(dir))
+    const result = h.hover({
+      uri: `file://${join(dir, 'varar', 'fees.md')}`,
+      position: { line: 2, character: 5 },
+    })
+    expect(result?.contents).toBe(
+      [
+        '**A stocked library** · `./shared/library.md#a-stocked-library`',
+        '',
+        '1. The library holds "Dune"',
+        // Pulled in by library.md's own reference, so it says where from.
+        '2. Fees are enabled — from `billing.md`',
+      ].join('\n'),
+    )
+  } finally {
+    cleanup()
+  }
+})
+
+test('hover on a whole-file reference is titled by the file and lists every step in it', async () => {
+  const { dir, cleanup } = tempWorkspace(referenceWorkspace)
+  try {
+    const h = buildHandlers(await makeStore(dir))
+    const result = h.hover({
+      uri: `file://${join(dir, 'varar', 'fees.md')}`,
+      position: { line: 6, character: 3 },
+    })
+    expect(result?.contents).toBe(
+      ['**billing.md** · `./shared/billing.md`', '', '1. Fees are enabled'].join('\n'),
+    )
+  } finally {
+    cleanup()
+  }
+})
+
+test('a link-only block whose target is not an oath is prose: no hover, no definition', async () => {
+  const { dir, cleanup } = tempWorkspace(referenceWorkspace)
+  try {
+    const h = buildHandlers(await makeStore(dir))
+    const uri = `file://${join(dir, 'varar', 'fees.md')}`
+    // Source line 9 is `[Not an oath](https://example.com/library)`.
+    expect(h.hover({ uri, position: { line: 8, character: 3 } })).toBeNull()
+    expect(h.definition({ uri, position: { line: 8, character: 3 } })).toEqual([])
+  } finally {
+    cleanup()
+  }
+})
+
+test('a broken reference is a diagnostic on the block, through the ordinary rail', async () => {
+  const { dir, cleanup } = tempWorkspace((dir) => {
+    referenceWorkspace(dir)
+    writeFileSync(
+      join(dir, 'varar', 'broken.md'),
+      '# Broken\n\n[Gone](./shared/gone.md#setup)\n\nMaya borrows "Emma".\n',
+    )
+  })
+  try {
+    const h = buildHandlers(await makeStore(dir))
+    const diags = h.diagnosticsFor(`file://${join(dir, 'varar', 'broken.md')}`)
+    expect(diags.map((d) => d.code)).toEqual(['reference-not-found'])
+    // Index ranges are 1-based; the server shifts them for the wire.
+    expect(diags[0]?.range.start.line).toBe(3)
+    expect(diags[0]?.severity).toBe('error')
+    // And go-to-definition has nowhere to go — the squiggle says why.
+    expect(
+      h.definition({
+        uri: `file://${join(dir, 'varar', 'broken.md')}`,
+        position: { line: 2, character: 3 },
+      }),
+    ).toEqual([])
+  } finally {
+    cleanup()
+  }
+})
+
+test('hover on a reference whose anchor is ambiguous says so instead of previewing both sections', async () => {
+  // An ambiguous anchor splices nothing in (ambiguous-anchor is an error on
+  // the block), so a preview of "both" sections would show steps that never run.
+  const { dir, cleanup } = tempWorkspace((dir) => {
+    referenceWorkspace(dir)
+    writeFileSync(
+      join(dir, 'varar', 'shared', 'twice.md'),
+      '# Twice\n\n## Setup\n\nThe library holds "Dune".\n\n## Setup\n\nFees are enabled.\n',
+    )
+    writeFileSync(
+      join(dir, 'varar', 'ambiguous.md'),
+      '# Ambiguous\n\n[Setup](./shared/twice.md#setup)\n',
+    )
+  })
+  try {
+    const h = buildHandlers(await makeStore(dir))
+    const uri = `file://${join(dir, 'varar', 'ambiguous.md')}`
+    const result = h.hover({ uri, position: { line: 2, character: 3 } })
+    expect(result?.contents).toBe(
+      [
+        '**Setup** · `./shared/twice.md#setup`',
+        '',
+        '_Ambiguous: 2 headings share this anchor (lines 3, 7), so nothing is spliced in._',
+      ].join('\n'),
+    )
+    // Definition still offers both headings, so the reader can see the clash.
+    expect(h.definition({ uri, position: { line: 2, character: 3 } })).toHaveLength(2)
+    expect(h.diagnosticsFor(uri).map((d) => d.code)).toEqual(['ambiguous-anchor'])
   } finally {
     cleanup()
   }

@@ -143,4 +143,8 @@ pub struct Doc {
     pub source: String,
     pub examples: Vec<Example>,
     pub orphan_attachments: Vec<TableOrFence>,
+    /// Every heading in the document, in source order — the same nodes the
+    /// scanner produced. The planner reads them to tell whether a reference
+    /// anchor names exactly one section (ADR 0016).
+    pub headings: Vec<Heading>,
 }

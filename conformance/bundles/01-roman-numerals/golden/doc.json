@@ -36,6 +36,34 @@
       }
     }
   ],
+  "headings": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "span": {
+        "endCol": 17,
+        "endLine": 1,
+        "endOffset": 16,
+        "startCol": 1,
+        "startLine": 1,
+        "startOffset": 0
+      },
+      "text": "Roman numerals"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "span": {
+        "endCol": 16,
+        "endLine": 3,
+        "endOffset": 33,
+        "startCol": 1,
+        "startLine": 3,
+        "startOffset": 18
+      },
+      "text": "Converting 1"
+    }
+  ],
   "orphanAttachments": [],
   "path": "example.md"
 }

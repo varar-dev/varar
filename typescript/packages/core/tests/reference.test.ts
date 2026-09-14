@@ -316,3 +316,87 @@ test('a link that climbs above the workspace root keeps its leading ../', () => 
   const deeper = parse('../outside/a.md', '[Up](../b.md)\n')
   expect(references(deeper)[0]?.path).toBe('../b.md')
 })
+
+// ADR 0016's "ambiguous anchor": the anchor a reference names belongs to two
+// headings in the target file (`## Setup` twice). Sections resolve through the
+// scope stack, which cannot tell them apart, so the reference is an error.
+const TWICE = `# Shared
+
+## Setup
+
+The library holds "Dune".
+
+## Other
+
+Fees are enabled.
+
+## Setup
+
+The library holds "Emma".
+`
+
+test('a reference whose anchor names two headings is ambiguous-anchor, and contributes nothing', () => {
+  const { main } = planWith(
+    `# Fees
+
+[Setup](./shared.md#setup)
+
+Maya borrows "Emma".
+`,
+    TWICE,
+  )
+  expect(main.diagnostics.map((d) => d.code)).toEqual(['ambiguous-anchor'])
+  const d = main.diagnostics[0]!
+  expect(d.severity).toBe('error')
+  expect(d.message).toContain('"varar/shared.md" has 2 headings with the anchor "#setup"')
+  expect(d.message).toContain('lines 3, 11')
+  // Anchored on the reference block, like every other reference diagnostic.
+  expect(d.span.startLine).toBe(3)
+  // Neither section is spliced in; the example is its own paragraph alone.
+  expect(main.examples.map((ex) => ex.steps.map((s) => s.text))).toEqual([['Maya borrows "Emma"']])
+})
+
+test('an anchor that names exactly one heading is not ambiguous', () => {
+  const { main } = planWith('# Fees\n\n[Other](./shared.md#other)\n', TWICE)
+  expect(main.diagnostics).toEqual([])
+  expect(main.examples[0]?.steps.map((s) => s.text)).toEqual(['Fees are enabled'])
+})
+
+test('a whole-file reference names no heading and is never ambiguous', () => {
+  const { main } = planWith('# Fees\n\n[Shared](./shared.md)\n', TWICE)
+  expect(main.diagnostics).toEqual([])
+})
+
+test('a same-file ambiguous anchor is checked against the document itself, workspace or not', () => {
+  const doc = parse(
+    'varar/solo.md',
+    `# Solo
+
+## Setup
+
+The library holds "Dune".
+
+## Setup
+
+The library holds "Emma".
+
+## Late fees
+
+[Setup](#setup)
+
+Maya borrows "Emma".
+`,
+  )
+  const result = plan(doc, reg(), emptyWorkspace())
+  expect(result.diagnostics.map((d) => d.code)).toEqual(['ambiguous-anchor'])
+  expect(result.diagnostics[0]?.span.startLine).toBe(13)
+})
+
+test('headings that differ only in inline markup or case still share an anchor', () => {
+  // GitHub slugs `## *Setup*` and `## setup` both to #setup.
+  const { main } = planWith(
+    '# Fees\n\n[Setup](./shared.md#setup)\n',
+    '# Shared\n\n## *Setup*\n\nFees are enabled.\n\n## setup\n\nFees are enabled.\n',
+  )
+  expect(main.diagnostics.map((d) => d.code)).toEqual(['ambiguous-anchor'])
+})

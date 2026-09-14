@@ -144,3 +144,7 @@ class Doc:
     source: str = ""
     examples: tuple[Example, ...] = ()
     orphan_attachments: tuple[Union[Table, Fence], ...] = ()
+    # Every heading in the document, in source order — the same blocks the
+    # scanner produced. The planner reads them to tell whether a reference's
+    # anchor names exactly one heading (ADR 0016).
+    headings: tuple[Heading, ...] = ()

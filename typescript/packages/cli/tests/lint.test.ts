@@ -1,5 +1,5 @@
 import { spawnSync } from 'node:child_process'
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -93,4 +93,40 @@ describe('varar lint (against loaded step definitions)', () => {
     // Dead code is worth saying out loud, but it does not break a build.
     expect(r.status).toBe(0)
   })
+})
+
+test('a reference whose anchor names two headings in its file is an ambiguous-anchor error', async () => {
+  // ADR 0016's "ambiguous anchor" is lint's to report: a run splices both
+  // sections in and stays green. No step files needed — the check reads the
+  // outline, not the registry.
+  const dir = mkdtempSync(join(tmpdir(), 'varar-lint-anchor-'))
+  try {
+    writeFileSync(
+      join(dir, 'varar.config.json'),
+      '{ "docs": { "include": ["varar/**/*.md"], "exclude": [] }, "steps": [] }\n',
+    )
+    mkdirSync(join(dir, 'varar', 'shared'), { recursive: true })
+    writeFileSync(
+      join(dir, 'varar', 'shared', 'library.md'),
+      '# Shared\n\n## Setup\n\nThe library holds "Dune".\n\n## Setup\n\nThe library holds "Emma".\n',
+    )
+    writeFileSync(
+      join(dir, 'varar', 'fees.md'),
+      '# Fees\n\n[Setup](./shared/library.md#setup)\n\nMaya borrows "Emma".\n',
+    )
+    const captured: string[] = []
+    const result = await runLint({
+      cwd: dir,
+      json: false,
+      globs: undefined,
+      writeStdout: (s) => captured.push(s),
+      writeStderr: () => {},
+    })
+    expect(captured.join('')).toMatch(
+      /^varar\/fees\.md:3:1 {2}error {2}ambiguous-anchor {2}Reference to "Setup" is ambiguous: "varar\/shared\/library\.md" has 2 headings with the anchor "#setup" \(lines 3, 7\)/m,
+    )
+    expect(result.exitCode).toBe(1)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
 })

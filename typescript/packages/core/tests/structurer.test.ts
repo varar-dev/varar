@@ -90,3 +90,14 @@ test('precededByDelimiter marks candidates after a heading or thematic break (AD
     true, // after a heading
   ])
 })
+
+test('the document records its outline: every heading, in order, with level and span', () => {
+  const source = '# Shared\n\n## Setup\n\nA.\n\n### Inner\n\nB.\n\n## Setup\n\nC.\n'
+  const doc = structure('test.md', source, scan(source))
+  expect(doc.headings.map((h) => [h.level, h.text, h.span.startLine])).toEqual([
+    [1, 'Shared', 1],
+    [2, 'Setup', 3],
+    [3, 'Inner', 7],
+    [2, 'Setup', 11],
+  ])
+})

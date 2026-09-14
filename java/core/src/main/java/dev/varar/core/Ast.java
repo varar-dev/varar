@@ -119,11 +119,21 @@ public final class Ast {
         }
     }
 
-    /** A parsed source file: its matched examples plus any table/fence blocks not attached to one. */
-    public record Doc(String path, String source, List<Example> examples, List<TableOrFence> orphanAttachments) {
+    /**
+     * A parsed source file: its matched examples, any table/fence blocks not attached to one, and
+     * every heading in source order (the same {@link Heading} blocks the scanner produced), so a
+     * reference resolver can tell when two headings share an anchor (ADR 0016).
+     */
+    public record Doc(
+            String path,
+            String source,
+            List<Example> examples,
+            List<TableOrFence> orphanAttachments,
+            List<Heading> headings) {
         public Doc {
             examples = List.copyOf(examples);
             orphanAttachments = List.copyOf(orphanAttachments);
+            headings = List.copyOf(headings);
         }
     }
 }

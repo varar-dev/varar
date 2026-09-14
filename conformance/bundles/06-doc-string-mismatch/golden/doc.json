@@ -57,6 +57,34 @@
       }
     }
   ],
+  "headings": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "span": {
+        "endCol": 16,
+        "endLine": 1,
+        "endOffset": 15,
+        "startCol": 1,
+        "startLine": 1,
+        "startOffset": 0
+      },
+      "text": "Echo mismatch"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "span": {
+        "endCol": 26,
+        "endLine": 3,
+        "endOffset": 42,
+        "startCol": 1,
+        "startLine": 3,
+        "startOffset": 17
+      },
+      "text": "A wrong echo is caught"
+    }
+  ],
   "orphanAttachments": [],
   "path": "example.md"
 }

@@ -17,6 +17,7 @@ type scopeEntry struct {
 func structure(path, source string, blocks []Block) Doc {
 	var examples []Example
 	orphanAttachments := []Block{}
+	headings := []Heading{}
 	var scopeStack []scopeEntry
 	lastExampleIdx := -1
 	attachmentOpen := false
@@ -28,6 +29,7 @@ func structure(path, source string, blocks []Block) Doc {
 	for _, block := range blocks {
 		switch b := block.(type) {
 		case Heading:
+			headings = append(headings, b)
 			// Pop deeper-or-equal-level entries before pushing the new heading.
 			for len(scopeStack) > 0 && scopeStack[len(scopeStack)-1].level >= b.Level {
 				scopeStack = scopeStack[:len(scopeStack)-1]
@@ -72,6 +74,7 @@ func structure(path, source string, blocks []Block) Doc {
 		Source:            source,
 		Examples:          examples,
 		OrphanAttachments: orphanAttachments,
+		Headings:          headings,
 	}
 }
 

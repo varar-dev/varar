@@ -17,6 +17,7 @@ module Varar
       def structure(path, source, blocks)
         examples = []
         orphan_attachments = []
+        headings = []
         scope_stack = [] # [[level, text], ...]
         last_example_idx = -1
         attachment_open = false
@@ -32,6 +33,7 @@ module Varar
             # Pop deeper-or-equal-level entries before pushing the new heading.
             scope_stack.pop while !scope_stack.empty? && scope_stack.last[0] >= block.level
             scope_stack << [block.level, block.text]
+            headings << block
             attachment_open = false
             delimiter_pending = true
 
@@ -70,7 +72,8 @@ module Varar
           path: path,
           source: source,
           examples: examples,
-          orphan_attachments: orphan_attachments
+          orphan_attachments: orphan_attachments,
+          headings: headings
         )
       end
     end

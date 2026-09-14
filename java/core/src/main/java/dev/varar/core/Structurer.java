@@ -32,6 +32,7 @@ public final class Structurer {
     public static Ast.Doc structure(String path, String source, List<Ast.Block> blocks) {
         List<Ast.Example> examples = new ArrayList<>();
         List<Ast.TableOrFence> orphanAttachments = new ArrayList<>();
+        List<Ast.Heading> headings = new ArrayList<>();
         List<ScopeEntry> scopeStack = new ArrayList<>();
         int lastExampleIdx = -1;
         boolean attachmentOpen = false;
@@ -42,6 +43,7 @@ public final class Structurer {
 
         for (Ast.Block block : blocks) {
             if (block instanceof Ast.Heading heading) {
+                headings.add(heading);
                 // Pop deeper-or-equal-level entries before pushing the new heading.
                 while (!scopeStack.isEmpty()
                         && scopeStack.get(scopeStack.size() - 1).level() >= heading.level()) {
@@ -76,7 +78,7 @@ public final class Structurer {
             }
         }
 
-        return new Ast.Doc(path, source, examples, orphanAttachments);
+        return new Ast.Doc(path, source, examples, orphanAttachments, headings);
     }
 
     private static List<String> scopeTexts(List<ScopeEntry> scopeStack) {

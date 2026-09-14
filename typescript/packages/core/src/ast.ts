@@ -91,4 +91,9 @@ export type Doc = {
   readonly source: string
   readonly examples: ReadonlyArray<Example>
   readonly orphanAttachments: ReadonlyArray<Table | Fence>
+  // Every heading in the document, in order: the outline a reference block's
+  // anchor is resolved against (ADR 0016). Candidates still carry the chain
+  // above them in `scopeStack`; this is the list itself, so the planner can
+  // tell that two headings slug identically — which the chain cannot.
+  readonly headings: ReadonlyArray<Heading>
 }

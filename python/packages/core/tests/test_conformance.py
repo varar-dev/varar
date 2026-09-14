@@ -269,3 +269,21 @@ def test_run_conformance_expected_failure_example_reads_pass_but_step_carries_fa
     assert ex["outcome"] == "pass"
     assert ex["steps"][0]["outcome"] == "fail"
     assert ex["steps"][0]["failure"]["kind"] == "thrown"
+
+
+def test_to_doc_artifact_projects_headings() -> None:
+    art = to_doc_artifact(parse("h.md", "# Top\n\nprose\n\n## Sub\n"))
+    assert [h["text"] for h in art["headings"]] == ["Top", "Sub"]
+    assert art["headings"][1] == {
+        "kind": "heading",
+        "level": 2,
+        "text": "Sub",
+        "span": {
+            "startOffset": 14,
+            "endOffset": 20,
+            "startLine": 5,
+            "startCol": 1,
+            "endLine": 5,
+            "endCol": 7,
+        },
+    }

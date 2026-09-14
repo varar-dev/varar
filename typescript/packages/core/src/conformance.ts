@@ -1,5 +1,5 @@
 import { type CucumberExpression, type Node, NodeType } from '@cucumber/cucumber-expressions'
-import type { Doc, Fence, Table } from './ast.ts'
+import type { Doc, Fence, Heading, Table } from './ast.ts'
 import { isCellMismatchError, ReturnShapeError } from './cell-diff.ts'
 import type { DiagnosticCode, Severity } from './diagnostics.ts'
 import { collectExamples, isUnexpectedPassError, type StepObservation } from './execute.ts'
@@ -15,6 +15,9 @@ export type DocArtifact = {
   readonly path: string
   readonly examples: Doc['examples']
   readonly orphanAttachments: ReadonlyArray<Table | Fence>
+  // The outline (ADR 0016). Pinned so a port whose structurer drops or
+  // misreads a heading goes red before its reference resolution does.
+  readonly headings: ReadonlyArray<Heading>
 }
 
 export type RegistryArtifact = {
@@ -159,7 +162,12 @@ function parameterTypeNames(compiled: CucumberExpression): ReadonlyArray<string>
 }
 
 export function toDocArtifact(doc: Doc): DocArtifact {
-  return { path: doc.path, examples: doc.examples, orphanAttachments: doc.orphanAttachments }
+  return {
+    path: doc.path,
+    examples: doc.examples,
+    orphanAttachments: doc.orphanAttachments,
+    headings: doc.headings,
+  }
 }
 
 export function toRegistryArtifact(

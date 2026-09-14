@@ -100,10 +100,14 @@ type Example struct {
 }
 
 // Doc is a parsed source file: its matched examples plus unattached
-// table/fence blocks (each of which is a Table or Fence).
+// table/fence blocks (each of which is a Table or Fence), and every heading in
+// source order — the same Heading blocks the scanner produced, kept so the
+// planner can tell whether a reference anchor names one section or several
+// (ADR 0016).
 type Doc struct {
 	Path              string
 	Source            string
 	Examples          []Example
 	OrphanAttachments []Block
+	Headings          []Heading
 }

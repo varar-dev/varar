@@ -136,10 +136,11 @@ test('toPlanArtifact projects examples, expectedOutcome and stringified args', (
   expect(art.examples[0]?.steps[0]?.args).toEqual([{ value: '5', parameterType: 'int' }])
 })
 
-test('toDocArtifact keeps path, examples and orphanAttachments', () => {
+test('toDocArtifact keeps path, examples, orphanAttachments and headings', () => {
   const art = toDocArtifact(parse('e.md', '# A\n\nI have 5 cukes.'))
   expect(art.path).toBe('e.md')
   expect(Array.isArray(art.examples)).toBe(true)
+  expect(art.headings.map((h) => h.text)).toEqual(['A'])
 })
 
 test('toPlanArtifact projects diagnostics to portable fields (no message/path)', () => {

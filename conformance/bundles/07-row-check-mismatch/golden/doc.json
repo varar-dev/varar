@@ -113,6 +113,34 @@
       }
     }
   ],
+  "headings": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "span": {
+        "endCol": 10,
+        "endLine": 1,
+        "endOffset": 9,
+        "startCol": 1,
+        "startLine": 1,
+        "startOffset": 0
+      },
+      "text": "Scoring"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "span": {
+        "endCol": 27,
+        "endLine": 3,
+        "endOffset": 37,
+        "startCol": 1,
+        "startLine": 3,
+        "startOffset": 11
+      },
+      "text": "A wrong score is caught"
+    }
+  ],
   "orphanAttachments": [],
   "path": "example.md"
 }

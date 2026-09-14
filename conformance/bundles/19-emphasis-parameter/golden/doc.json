@@ -36,6 +36,34 @@
       }
     }
   ],
+  "headings": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "span": {
+        "endCol": 11,
+        "endLine": 1,
+        "endOffset": 10,
+        "startCol": 1,
+        "startLine": 1,
+        "startOffset": 0
+      },
+      "text": "Emphasis"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "span": {
+        "endCol": 35,
+        "endLine": 3,
+        "endOffset": 46,
+        "startCol": 1,
+        "startLine": 3,
+        "startOffset": 12
+      },
+      "text": "It captures an emphasized value"
+    }
+  ],
   "orphanAttachments": [],
   "path": "example.md"
 }

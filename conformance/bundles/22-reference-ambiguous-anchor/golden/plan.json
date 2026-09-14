@@ -1,0 +1,49 @@
+{
+  "diagnostics": [
+    {
+      "code": "ambiguous-anchor",
+      "severity": "error",
+      "span": {
+        "endCol": 51,
+        "endLine": 6,
+        "endOffset": 210,
+        "startCol": 1,
+        "startLine": 6,
+        "startOffset": 160
+      }
+    }
+  ],
+  "examples": [
+    {
+      "expectedOutcome": "pass",
+      "name": "I borrow a book",
+      "scopeStack": [
+        "Late fees"
+      ],
+      "span": {
+        "endCol": 17,
+        "endLine": 8,
+        "endOffset": 228,
+        "startCol": 1,
+        "startLine": 8,
+        "startOffset": 212
+      },
+      "steps": [
+        {
+          "args": [],
+          "matchSpan": {
+            "endCol": 16,
+            "endLine": 8,
+            "endOffset": 227,
+            "startCol": 1,
+            "startLine": 8,
+            "startOffset": 212
+          },
+          "matchedExpression": "I borrow a book",
+          "paramSpans": [],
+          "text": "I borrow a book"
+        }
+      ]
+    }
+  ]
+}

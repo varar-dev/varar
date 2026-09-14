@@ -3,8 +3,9 @@
 module Varar
   module Core
     # A planning/run diagnostic on the shared rail. code is one of
-    # "ambiguous-match", "error-fence-without-step", "drift". Port of
-    # diagnostics.ts.
+    # "ambiguous-match", "error-fence-without-step", "drift",
+    # "reference-not-found", "reference-empty", "reference-cycle",
+    # "ambiguous-anchor". Port of diagnostics.ts.
     Diagnostic = Data.define(:code, :severity, :message, :span)
     Candidate = Data.define(:expression, :source_file, :source_line)
     AmbiguousInput = Data.define(:text, :span, :candidates)
@@ -68,6 +69,20 @@ module Varar
           message: %(Reference to "#{text}" resolves to "#{where}", which contributes no steps.\n) +
                    'Check the heading the anchor names, and that its section contains a matching ' \
                    'paragraph.',
+          span: span
+        )
+      end
+
+      # The anchor names more than one heading in the referenced document:
+      # GitHub would disambiguate with a numeric suffix, but a reference that
+      # could mean either section is an error, not a guess (ADR 0016).
+      def ambiguous_anchor(text, path, slug, heading_lines, span)
+        Diagnostic.new(
+          severity: 'error',
+          code: 'ambiguous-anchor',
+          message: "Reference to \"#{text}\" is ambiguous: \"#{path}\" has #{heading_lines.length} headings " \
+                   "with the anchor \"##{slug}\" (lines #{heading_lines.join(', ')}).\n" \
+                   'Rename the headings so each has an anchor of its own.',
           span: span
         )
       end

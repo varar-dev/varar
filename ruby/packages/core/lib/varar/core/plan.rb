@@ -161,6 +161,17 @@ module Varar
           diagnostics << Diagnostics.reference_not_found(ref.text, ref.path, unit.span)
           return []
         end
+        # An anchor that names more than one heading could mean either section:
+        # report it rather than splicing both. A whole-file reference ('' slug)
+        # names no heading, so it is never ambiguous.
+        unless ref.slug.empty?
+          named = target.headings.select { |h| Reference.slugify(h.text) == ref.slug }
+          if named.length > 1
+            diagnostics << Diagnostics.ambiguous_anchor(ref.text, ref.path, ref.slug,
+                                                        named.map { |h| h.span.start_line }, unit.span)
+            return []
+          end
+        end
         out = []
         Reference.section_candidates(target, ref.slug).each do |candidate|
           planned = plan_candidate(candidate, target, registry, diagnostics)

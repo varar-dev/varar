@@ -289,6 +289,21 @@ func resolveReference(
 		*diagnostics = append(*diagnostics, referenceNotFound(ref.Text, ref.Path, unit.span))
 		return nil
 	}
+	// An anchor that more than one heading slugifies to could mean either
+	// section: an error, not a guess. A whole-file reference (empty slug) is
+	// never ambiguous.
+	if ref.Slug != "" {
+		var headingLines []int
+		for _, h := range target.Headings {
+			if Slugify(h.Text) == ref.Slug {
+				headingLines = append(headingLines, h.Span.StartLine)
+			}
+		}
+		if len(headingLines) > 1 {
+			*diagnostics = append(*diagnostics, ambiguousAnchor(ref.Text, ref.Path, ref.Slug, headingLines, unit.span))
+			return nil
+		}
+	}
 	var out []candidateUnit
 	for _, candidate := range SectionCandidates(target, ref.Slug) {
 		planned := planCandidate(candidate, target, registry, diagnostics)

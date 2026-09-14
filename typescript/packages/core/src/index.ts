@@ -47,7 +47,7 @@ export type {
   DiagnosticCode,
   Severity,
 } from './diagnostics.ts'
-export { ambiguousMatch, driftDetected } from './diagnostics.ts'
+export { ambiguousAnchor, ambiguousMatch, driftDetected } from './diagnostics.ts'
 export { compareDocString, DOC_STRING_COLUMN } from './doc-string-diff.ts'
 export type { BaselineExample, Drift, LockFile, OathBaseline } from './drift.ts'
 export {

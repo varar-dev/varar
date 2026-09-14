@@ -1,0 +1,21 @@
+{
+  "examples": [
+    {
+      "name": "I borrow a book",
+      "outcome": "pass",
+      "steps": [
+        {
+          "contextKey": {
+            "exampleName": "I borrow a book",
+            "stepFile": "library.steps"
+          },
+          "exampleName": "I borrow a book",
+          "matchedExpression": "I borrow a book",
+          "ordinal": 1,
+          "outcome": "pass",
+          "stepText": "I borrow a book"
+        }
+      ]
+    }
+  ]
+}

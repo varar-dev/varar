@@ -16,11 +16,12 @@ public enum DiagnosticCode
 
     /// <summary>
     /// Reference blocks (ADR 0016): a link that resolves to no oath, to a section with no steps,
-    /// or to a chain that reaches itself.
+    /// to a chain that reaches itself, or to an anchor that two headings share.
     /// </summary>
     ReferenceNotFound,
     ReferenceEmpty,
     ReferenceCycle,
+    AmbiguousAnchor,
 }
 
 /// <summary>A diagnostic on the shared rail. Port of <c>diagnostics.ts</c>.</summary>
@@ -45,6 +46,7 @@ public static class Diagnostics
         DiagnosticCode.ReferenceNotFound => "reference-not-found",
         DiagnosticCode.ReferenceEmpty => "reference-empty",
         DiagnosticCode.ReferenceCycle => "reference-cycle",
+        DiagnosticCode.AmbiguousAnchor => "ambiguous-anchor",
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 
@@ -104,4 +106,26 @@ public static class Diagnostics
         DiagnosticCode.ReferenceCycle,
         $"Reference cycle: {string.Join(" \u2192 ", chain)}.",
         span);
+
+    /// <summary>
+    /// The anchor names more than one heading in the target document (two headings that slug
+    /// identically). An error rather than a guess: GitHub would disambiguate the second with a
+    /// numeric suffix, but a reference that could mean either section means neither.
+    /// </summary>
+    public static Diagnostic AmbiguousAnchor(
+        string text,
+        string path,
+        string slug,
+        IEnumerable<int> headingLines,
+        Span span)
+    {
+        var lines = headingLines.ToList();
+        return new Diagnostic(
+            Severity.Error,
+            DiagnosticCode.AmbiguousAnchor,
+            $"Reference to \"{text}\" is ambiguous: \"{path}\" has {lines.Count} headings with the " +
+            $"anchor \"#{slug}\" (lines {string.Join(", ", lines)}).\n" +
+            "Rename the headings so each has an anchor of its own.",
+            span);
+    }
 }

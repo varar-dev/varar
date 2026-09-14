@@ -97,8 +97,11 @@ in place.
   referenced, once per referencing example — not twice.
 - **The example keeps its own name.** An example that opens with a reference is
   named after its own first matching paragraph, not the section it pulls in.
-- **A broken link fails the run.** A link to a file that is not an oath, or to a
-  heading that contributes no steps, is an error — never silently prose.
+- **A broken link fails the run.** A link to a file that is not an oath, to a
+  heading that contributes no steps, or to a heading the file has twice, is an
+  error — never silently prose.
+- **Referencing a section twice runs it twice.** Two links are two splices, in
+  document order.
 - **Failures point at the file the step was written in.** A mismatch inside a
   shared section reports against that section's source, not the oath that
   referenced it.

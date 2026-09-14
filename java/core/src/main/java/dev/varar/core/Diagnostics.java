@@ -42,7 +42,9 @@ public final class Diagnostics {
          */
         REFERENCE_NOT_FOUND,
         REFERENCE_EMPTY,
-        REFERENCE_CYCLE
+        REFERENCE_CYCLE,
+        /** The anchor a reference names belongs to more than one heading in the target document. */
+        AMBIGUOUS_ANCHOR
     }
 
     /** One diagnostic: its code, severity, and the source span it points at. */
@@ -87,5 +89,14 @@ public final class Diagnostics {
      */
     public static Diagnostic referenceCycle(Span span) {
         return new Diagnostic(DiagnosticCode.REFERENCE_CYCLE, Severity.ERROR, span);
+    }
+
+    /**
+     * The referenced document has two or more headings whose GFM slug is the anchor the link
+     * names (GitHub would suffix the later ones {@code -1}, {@code -2}; Varar does not guess).
+     * Reported instead of resolving either section, and instead of {@code reference-empty}.
+     */
+    public static Diagnostic ambiguousAnchor(Span span) {
+        return new Diagnostic(DiagnosticCode.AMBIGUOUS_ANCHOR, Severity.ERROR, span);
     }
 }

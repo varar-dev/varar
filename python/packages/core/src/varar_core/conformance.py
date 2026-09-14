@@ -183,6 +183,7 @@ def to_doc_artifact(doc: Doc) -> dict[str, Any]:
         "path": doc.path,
         "examples": [_example(ex) for ex in doc.examples],
         "orphanAttachments": [_block(b) for b in doc.orphan_attachments],
+        "headings": [_block(h) for h in doc.headings],
     }
 
 

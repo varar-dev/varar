@@ -36,6 +36,34 @@
       }
     }
   ],
+  "headings": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "span": {
+        "endCol": 26,
+        "endLine": 1,
+        "endOffset": 25,
+        "startCol": 1,
+        "startLine": 1,
+        "startOffset": 0
+      },
+      "text": "Custom parameter format"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "span": {
+        "endCol": 44,
+        "endLine": 3,
+        "endOffset": 70,
+        "startCol": 1,
+        "startLine": 3,
+        "startOffset": 27
+      },
+      "text": "A wrong fee renders in document notation"
+    }
+  ],
   "orphanAttachments": [],
   "path": "example.md"
 }
