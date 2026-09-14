@@ -145,14 +145,14 @@ guarantee that shared setup is independently verified. It is still verified, but
 only through its references: a section nothing links to any more is simply an
 ordinary example again (it was never marked as anything else), and a section
 whose steps stop matching is reported as drift at its own location — see
-[Open questions](#open-questions) for how that is surfaced.
+[Open questions](#open-questions-and-how-each-was-decided) for how that is surfaced.
 
 Convention (not a rule): shared sections live in `varar/shared/*.md`.
 
 Note the scope this creates: "is this section referenced?" is **whole-project**
 knowledge. It cannot be answered from the file being planned, which has
 consequences for single-file runs and for the LSP planning one open buffer — see
-[Open questions](#open-questions).
+[Open questions](#open-questions-and-how-each-was-decided).
 
 ### References nest, and depth is a style question
 
@@ -199,8 +199,12 @@ degrade to prose:
 - **cycle** — a reference chain that reaches a section already on the chain,
   including a section referencing itself; reported with the whole chain;
 - **empty reference** — the resolved section plans no steps;
-- **ambiguous anchor** — two headings in the target file slug identically
-  (`#setup` / `#setup-1`); lint requires unique headings in any referenced file;
+- **ambiguous anchor** — the anchor a reference names belongs to two headings
+  in the target file (`#setup` / `#setup-1`). Reported on the reference,
+  naming the headings' lines, and the reference contributes nothing until it
+  is fixed. The rule is "the anchor a reference names belongs to one heading",
+  not "unique headings in any referenced file": a duplicate nobody links to is
+  harmless, and the tool enforces what is checkable, not what is tidy;
 - **unreferenceable construct in a referenced section** — a header-bound table
   (it multiplies examples, which a spliced step list cannot express) or an
   ```error``` fence (expected-failure is a property of an example, not of a
@@ -536,41 +540,54 @@ Rollout, in dependency order — each step is independently shippable and green:
   and end-of-example reuse, works across files, and is visible at the point of
   use. That is the line for the migration guide.
 
-## Open questions
+## Open questions, and how each was decided
 
-Unresolved; each needs a decision before implementation.
+Every question this ADR opened is now closed. They are kept in place, struck
+through, with the decision under each, so the reasoning that led to what
+shipped stays readable next to the question that prompted it.
 
 1. ~~How does a subset run get the inbound index?~~ **Resolved** — see
    [The inbound index](#the-inbound-index).
-2. **Where is drift reported for a referenced section?** At the section (the
-   author's location, but the failure names a file the run may not have targeted)
-   or at each reference block (N copies of one problem)?
-3. **Does a referenced section show up in the report at all** — as a nested
-   `describe` under the referencing example, as a flat run of spliced steps, or
-   invisibly? This decides whether a reader of CI output can tell reuse happened.
-4. **What if a referenced section sits under headings?** Its own `scopeStack` is
-   discarded in favour of the referencing example's — confirm that is right, and
-   that the heading is used only as the anchor and the link text.
-5. **May an example reference more than one section, and in what order?** The
-   list spelling implies yes, in document order; confirm, and decide whether the
-   same section twice in one example is an error or a legitimate "do it again".
-6. **Is a fragment-less `.md` reference (whole file) worth keeping?** It is the
-   one form whose meaning changes when the target file grows a second example.
+2. ~~Where is drift reported for a referenced section?~~ **Resolved** — it is
+   not drift at all. A consumed section plans no example in its own file, so
+   its paragraphs are not in the baseline; a step that stops matching one is
+   caught as `reference-empty` at the reference that depends on it — once,
+   loudly, where the fix goes. The consumed file's baseline entry means only
+   "this file was discovered". Consequence, accepted: delete every referrer and
+   the section reads as a new example, not a restored one. Documented under
+   Drift detection in `reference/examples.mdx`.
+3. ~~Does a referenced section show up in the report at all?~~ **Resolved** —
+   flat, attributed. Spliced steps read as if written in place, in the
+   referencing example, in the order they ran; no nesting, since the seven
+   adapters share no report shape and a level of nesting in each is real
+   cost for a reader who mostly wants the steps. What records reuse is the
+   run result: `failure.docPath` (ADR 0014 v2) names the document a failing
+   step was written in.
+4. ~~What if a referenced section sits under headings?~~ **Resolved** — its
+   own `scopeStack` is discarded in favour of the referring example's; the
+   heading is the anchor and the link text, nothing more. Pinned by
+   `21-reference-consumed`, documented in the reference.
+5. ~~May an example reference more than one section, and the same one twice?~~
+   **Resolved** — yes and yes, in document order. Two references are two
+   splices; "the nightly batch runs" twice is a real scenario, not a paste
+   error, and no diagnostic second-guesses it.
+6. ~~Is a fragment-less `.md` reference (whole file) worth keeping?~~
+   **Resolved** — kept. A one-section file is the common shared-setup shape
+   and the link reads best. The hazard (its meaning changes when the file
+   grows a section) is documented rather than forbidden.
 7. ~~Does `varar.lock.json` still fingerprint a consumed file?~~ **Resolved** —
    yes; see [Run results for a consumed oath](#run-results-for-a-consumed-oath).
-   What remains open is what a consumed file's baseline entry *means* once its
-   paragraphs are live only through their referrers.
-8. **What does the editor do at a reference block?** Go-to-definition is
-   obvious; the open question is whether hovering shows the resolved steps
-   inline, which is what would keep the "reader must see the world state"
-   argument true at the point of use. With nesting allowed, a hover that
-   resolves the *whole* chain is the thing that keeps a deep document readable
-   despite itself.
-9. **Is an opt-in depth lint worth it?** Nesting depth is a style question and
-   stays out of the parser, but `reference/lint.md` is where checkable house
-   style already lives. A rule that is **off by default** and warns past a
-   configured depth would let a team enforce its own ceiling without Varar
-   picking one. Decide whether that is a useful escape hatch or the same
+   What the entry *means* is settled by question 2.
+8. ~~What does the editor do at a reference block?~~ **Resolved** — both.
+   Go-to-definition lands on the heading the anchor names (the top of the file
+   for a whole-file reference; one link per heading for an ambiguous anchor).
+   Hover shows the steps the reference splices in, the whole chain resolved,
+   with a step from a third file saying which — which is what keeps the "reader
+   must see the world state" argument true at the point of use. The three
+   reference diagnostics and `ambiguous-anchor` sit on the block.
+9. ~~Is an opt-in depth lint worth it?~~ **Resolved** — no. Depth stays a
+   style question for prose, review and agent instructions, as
+   `explanation/reuse.md` argues; a configurable ceiling would be the same
    prohibition wearing a hat.
 
 ## Documentation
@@ -603,13 +620,20 @@ corpus caught:
    to change at all. `plan()` returns a reference *unit*, which is where the
    splice already had to happen.
 
-2. **Sections resolve through the scope stack, not a heading index.** A
-   candidate belongs to a section iff the section's slug is in its `scopeStack`
-   — which is exactly "from this heading until the next of the same or higher
-   level", already computed. No `headings` field was added to `Doc`, so no
-   golden moved. The cost is the **ambiguous-anchor** error from the Errors
-   list: two headings in one file that slug identically are indistinguishable
-   this way, so that case is not detected. It remains open (see below).
+2. **Sections resolve through the scope stack, and `Doc` carries the outline.**
+   A candidate belongs to a section iff the section's slug is in its
+   `scopeStack` — which is exactly "from this heading until the next of the
+   same or higher level", already computed. That rule cannot tell two headings
+   that slug identically apart, which is the **ambiguous-anchor** error from
+   the Errors list. It first shipped as a TypeScript-only lint check that
+   re-read the target's outline from its source, on the argument that a
+   `headings` field would move every port's `doc.json` golden; the decision
+   was reversed so the error fails the run in every port, like the other
+   three. `Doc` now carries `headings` (the heading blocks, in order), the
+   doc artifact pins them, `plan()` refuses a reference whose anchor names
+   more than one, and `22-reference-ambiguous-anchor` gates all seven ports.
+   The goldens moved after all; the outline is now available for sections to
+   resolve against directly, should the scope-stack rule ever need replacing.
 
 3. **`PlannedStep` gained `paramTexts` as well as `docPath`.** Not in the plan,
    and necessary: consumers sliced the *running* oath's source by a step's
@@ -647,8 +671,10 @@ Two adapter-level notes:
   shared oath has no result file of its own, so its failures previously had no
   way to reach the editor at all). `conformance/run-results/expected.json` grew a
   fourth example, which is what gated the other six ports.
-- **Ambiguous anchors** (deviation 2) are undetected; the lint rule requiring
-  unique headings in a referenced file is not written.
-- **LSP reference support** — go-to-definition and hover on a reference block —
-  is not implemented; the block is inert in the editor beyond ordinary Markdown.
-- Open questions 2–6, 8 and 9 stand as written.
+- ~~**Ambiguous anchors** (deviation 2) are undetected.~~ **Done** — a plan
+  diagnostic in every port, gated by `22-reference-ambiguous-anchor`; see
+  deviation 2 for the shape and the reversal.
+- ~~**LSP reference support** — go-to-definition and hover on a reference
+  block.~~ **Done** — open question 8.
+- ~~Open questions 2–6 and 9.~~ **Resolved** — each answered in place above,
+  and the reference documents what was decided. Nothing on this ADR is open.
