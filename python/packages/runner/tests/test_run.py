@@ -1,4 +1,5 @@
 from varar_runner.steps import load_steps
+from varar_core.reference import empty_workspace
 from varar_runner.run import plan_oath, examples_with_runs, RecordingReporter
 
 STEPS = '''
@@ -17,7 +18,7 @@ SRC_FAIL = "# Calc\n\n## adds wrong\n\nI add 2\nthe total is 99\n"
 def _runs(tmp_path, src):
     (tmp_path / "c.steps.py").write_text(STEPS, encoding="utf-8")
     loaded = load_steps(["**/*.steps.py"], tmp_path)
-    plan = plan_oath("c.md", src, loaded.registry)
+    plan = plan_oath("c.md", src, loaded.registry, empty_workspace())
     return examples_with_runs(plan, loaded.create_context, RecordingReporter())
 
 def test_passing_example_runs_clean(tmp_path):

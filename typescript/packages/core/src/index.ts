@@ -79,6 +79,17 @@ export { parse } from './parse.ts'
 export type { ExecutionPlan, PlannedExample, PlannedStep } from './plan.ts'
 export { plan } from './plan.ts'
 export type { BaselineStore, Reporter, TestSink } from './ports.ts'
+export {
+  buildWorkspace,
+  emptyWorkspace,
+  type OathWorkspace,
+  type Reference,
+  referenceOf,
+  references,
+  sectionCandidates,
+  sectionKey,
+  slugify,
+} from './reference.ts'
 export type {
   ParameterTypeInput,
   Registry,

@@ -1,3 +1,4 @@
+import { emptyWorkspace, type OathWorkspace } from '@varar/core'
 import { buildWorkspaceIndex, createTreeSitterScanner, type StepDefScanner } from '@varar/language'
 import { planOath } from '@varar/runner'
 import { createNodeGrammarLoader } from './node-grammar-loader.ts'
@@ -23,9 +24,17 @@ export type StaticExample = {
 }
 
 export type DiscoverInput = {
-  readonly absPath: string
+  // The oath's workspace-relative POSIX path — its identity everywhere
+  // (varar.lock.json, .varar/<oathPath>.json, doc.path). Planning must see the
+  // same string the runtime does, so a relative reference resolves alike in
+  // both (ADR 0016).
+  readonly oathPath: string
   readonly source: string
   readonly stepFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>
+  // The project's reference topology (ADR 0016). Without it this plan would
+  // disagree with the runtime's about which sections are standalone examples,
+  // and the stale-transform guard would fire on every run.
+  readonly workspace?: OathWorkspace
 }
 
 // Build-time twin of the runtime plan: statically scan the step sources
@@ -44,7 +53,7 @@ export async function discoverStaticExamples(
     oathFiles: [],
     scanner,
   })
-  const p = planOath(input.absPath, input.source, registry)
+  const p = planOath(input.oathPath, input.source, registry, input.workspace ?? emptyWorkspace())
   return p.examples.map((ex) => ({
     name: ex.name,
     line: ex.span.startLine,

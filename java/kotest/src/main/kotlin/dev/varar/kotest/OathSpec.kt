@@ -3,6 +3,8 @@ package dev.varar.kotest
 import dev.varar.config.Config
 import dev.varar.core.Drift
 import dev.varar.core.Failure
+import dev.varar.core.Parse
+import dev.varar.core.Reference
 import dev.varar.core.Result
 import dev.varar.runner.BaselineStores
 import dev.varar.runner.Discovery
@@ -59,10 +61,20 @@ abstract class OathSpec(root: Path = Path.of(".")) : FunSpec() {
         // run — see the finalizer below.
         val results = Results()
 
+        // Whether a section is a standalone example depends on whether another oath references it,
+        // which is whole-project knowledge (ADR 0016). Built from the config globs — the full set,
+        // for the same reason baseline pruning is.
+        val workspace =
+            Reference.buildWorkspace(
+                oaths.mapNotNull { path ->
+                    runCatching { Parse.parse(relOf(path), Files.readString(path)) }.getOrNull()
+                }
+            )
+
         for (oathPath in oaths) {
             val rel = relOf(oathPath)
             val source = Files.readString(oathPath)
-            val plan = Run.planOath(rel, source, loaded.registry())
+            val plan = Run.planOath(rel, source, loaded.registry(), workspace)
             val runs = Run.examplesWithRuns(plan, loaded.createContext(), Run.RecordingReporter())
             // Reconcile drift: a clean run records/updates varar.lock.json; a paragraph that was
             // an example and no longer matches becomes a failing test (accept with -Dvarar.update).

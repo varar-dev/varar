@@ -272,8 +272,11 @@ func fileStem(path string) string {
 
 // RunConformance runs one bundle end-to-end: plan, execute (recording
 // observations), and project all four wire artifacts. Port of runConformance.
-func RunConformance(doc Doc, registry Registry, stateFactory func() any) BundleArtifacts {
-	execution := Plan(doc, registry)
+// RunConformance runs every example and projects the four bundle artifacts.
+// workspace carries the other oaths in the bundle, for one that exercises
+// reference blocks (ADR 0016); a single-document bundle passes EmptyWorkspace().
+func RunConformance(doc Doc, registry Registry, stateFactory func() any, workspace OathWorkspace) BundleArtifacts {
+	execution := Plan(doc, registry, workspace)
 
 	observed := map[int][]StepObservation{}
 	ports := ExecutePorts{
@@ -426,8 +429,8 @@ func plannedExampleValue(source string, ex PlannedExample) Value {
 
 func plannedStepValue(source string, step PlannedStep) Value {
 	paramNames := ParameterTypeNames(step.StepDef.Expression)
-	args := make([]Value, len(step.ParamSpans))
-	for i, ps := range step.ParamSpans {
+	args := make([]Value, len(step.ParamTexts))
+	for i, text := range step.ParamTexts {
 		var paramType Value
 		if i < len(paramNames) {
 			paramType = StrValue(paramNames[i])
@@ -435,7 +438,7 @@ func plannedStepValue(source string, step PlannedStep) Value {
 			paramType = NullValue
 		}
 		args[i] = obj(
-			kv("value", StrValue(utf16Slice(source, ps.StartOffset, ps.EndOffset))),
+			kv("value", StrValue(text)),
 			kv("parameterType", paramType),
 		)
 	}
@@ -449,6 +452,11 @@ func plannedStepValue(source string, step PlannedStep) Value {
 		"paramSpans":        ListOf(spans),
 		"matchedExpression": StrValue(step.StepDef.Expression),
 		"args":              ListOf(args),
+	}
+	// Present only on a step a reference block spliced in from another oath
+	// (ADR 0016): the document its spans belong to.
+	if step.DocPath != "" {
+		m["docPath"] = StrValue(step.DocPath)
 	}
 	if step.DataTable != nil {
 		m["dataTable"] = tableValue(*step.DataTable)
@@ -483,6 +491,12 @@ func diagnosticCodeString(code DiagnosticCode) string {
 		return "error-fence-without-step"
 	case CodeDrift:
 		return "drift"
+	case CodeReferenceNotFound:
+		return "reference-not-found"
+	case CodeReferenceEmpty:
+		return "reference-empty"
+	case CodeReferenceCycle:
+		return "reference-cycle"
 	}
 	return ""
 }

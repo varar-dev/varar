@@ -5,6 +5,7 @@ import { attachFailureAnchor, readFailureAnchor } from '../src/failure-anchor.ts
 import { hashSource } from '../src/hash.ts'
 import { parse } from '../src/parse.ts'
 import { plan } from '../src/plan.ts'
+import { emptyWorkspace } from '../src/reference.ts'
 import { addStep, createRegistry } from '../src/registry.ts'
 import { runResultDiagnostics } from '../src/run-diagnostics.ts'
 import { spanFromOffsets } from '../src/span.ts'
@@ -33,7 +34,7 @@ function throwingPlan() {
       throw new Error('expected the library to refuse')
     },
   })
-  return plan(parse('l.md', SOURCE), r)
+  return plan(parse('l.md', SOURCE), r, emptyWorkspace())
 }
 
 async function failureOf() {

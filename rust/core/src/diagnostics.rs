@@ -18,6 +18,11 @@ pub enum DiagnosticCode {
     AmbiguousMatch,
     ErrorFenceWithoutStep,
     Drift,
+    /// Reference blocks (ADR 0016): a link that resolves to no oath, to a
+    /// section with no steps, or to a chain that reaches itself.
+    ReferenceNotFound,
+    ReferenceEmpty,
+    ReferenceCycle,
 }
 
 /// One diagnostic: its code, severity, and the source span it points at.
@@ -41,6 +46,37 @@ pub fn ambiguous_match(span: Span) -> Diagnostic {
 pub fn error_fence_without_step(span: Span) -> Diagnostic {
     Diagnostic {
         code: DiagnosticCode::ErrorFenceWithoutStep,
+        severity: Severity::Error,
+        span,
+    }
+}
+
+/// A reference block (ADR 0016) points at an oath the workspace does not hold.
+/// Never prose: a link-only block that resolves to nothing has no other
+/// reading, so it fails the run rather than degrading silently.
+pub fn reference_not_found(span: Span) -> Diagnostic {
+    Diagnostic {
+        code: DiagnosticCode::ReferenceNotFound,
+        severity: Severity::Error,
+        span,
+    }
+}
+
+/// The referenced document exists but the section contributes no steps — a
+/// mistyped anchor, or a section that is pure prose.
+pub fn reference_empty(span: Span) -> Diagnostic {
+    Diagnostic {
+        code: DiagnosticCode::ReferenceEmpty,
+        severity: Severity::Error,
+        span,
+    }
+}
+
+/// References nest to any depth, so a chain that reaches a section already on
+/// it is reported rather than recursed into.
+pub fn reference_cycle(span: Span) -> Diagnostic {
+    Diagnostic {
+        code: DiagnosticCode::ReferenceCycle,
         severity: Severity::Error,
         span,
     }

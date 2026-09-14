@@ -36,6 +36,9 @@ import (
 	b17 "github.com/varar-dev/varar/go/conformance/b17"
 	b18 "github.com/varar-dev/varar/go/conformance/b18"
 	b19 "github.com/varar-dev/varar/go/conformance/b19"
+	b20 "github.com/varar-dev/varar/go/conformance/b20"
+	b21 "github.com/varar-dev/varar/go/conformance/b21"
+	b23 "github.com/varar-dev/varar/go/conformance/b23"
 )
 
 type fixture struct {
@@ -63,6 +66,9 @@ var fixtures = map[string]fixture{
 	"17-unexpected-pass":            {b17.Register, b17.State},
 	"18-multi-table-example":        {b18.Register, b18.State},
 	"19-emphasis-parameter":         {b19.Register, b19.State},
+	"20-reference-splice":           {b20.Register, b20.State},
+	"21-reference-consumed":         {b21.Register, b21.State},
+	"23-reference-only-example":     {b23.Register, b23.State},
 }
 
 func bundlesDir() string { return filepath.Join("..", "..", "conformance", "bundles") }
@@ -125,8 +131,8 @@ func TestPlanMatchesGolden(t *testing.T) {
 	for _, name := range bundleNames(t) {
 		t.Run(name, func(t *testing.T) {
 			reg := registryFor(t, name)
-			doc := core.Parse("example.md", sourceOf(t, name))
-			plan := core.Plan(doc, reg)
+			doc, workspace := bundleDocs(t, name)
+			plan := core.Plan(doc, reg, workspace)
 			assertMatchesGolden(t, name, "plan.json", core.ToPlanArtifact(plan), golden(t, name, "plan.json"))
 		})
 	}
@@ -138,8 +144,8 @@ func TestTraceMatchesGolden(t *testing.T) {
 			f := fixtures[name]
 			s := varar.NewSteps[varar.Value]()
 			f.register(s)
-			doc := core.Parse("example.md", sourceOf(t, name))
-			artifacts := core.RunConformance(doc, s.Registry(), func() any { return f.state() })
+			doc, workspace := bundleDocs(t, name)
+			artifacts := core.RunConformance(doc, s.Registry(), func() any { return f.state() }, workspace)
 			assertMatchesGolden(t, name, "trace.json", artifacts.Trace, golden(t, name, "trace.json"))
 		})
 	}
@@ -156,4 +162,31 @@ func assertMatchesGolden(t *testing.T, bundle, artifactName string, actual core.
 	if !core.ValueEqual(actual, want) {
 		t.Errorf("%s mismatch for %s\n--- got ---\n%#v\n--- want ---\n%#v", artifactName, bundle, actual, want)
 	}
+}
+
+// bundleDocs returns a bundle's example.md plus the workspace of every other
+// `.md` beside it — the oaths a bundle that exercises reference blocks (ADR
+// 0016) links to. They are parsed under their bare file names, so `./shared.md`
+// resolves the same way in every port.
+func bundleDocs(t *testing.T, name string) (core.Doc, core.OathWorkspace) {
+	t.Helper()
+	paths, err := filepath.Glob(filepath.Join(bundlesDir(), name, "*.md"))
+	if err != nil {
+		t.Fatalf("glob %s: %v", name, err)
+	}
+	sort.Strings(paths)
+	docs := make([]core.Doc, 0, len(paths))
+	var doc core.Doc
+	for _, path := range paths {
+		b, readErr := os.ReadFile(path)
+		if readErr != nil {
+			t.Fatalf("read %s: %v", path, readErr)
+		}
+		parsed := core.Parse(filepath.Base(path), string(b))
+		docs = append(docs, parsed)
+		if filepath.Base(path) == "example.md" {
+			doc = parsed
+		}
+	}
+	return doc, core.BuildWorkspace(docs)
 }

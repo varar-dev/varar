@@ -2,6 +2,7 @@ import {
   type BaselineStore,
   type Drift,
   type ExampleResult,
+  emptyWorkspace,
   executePlan,
   hashSource,
   type OathResults,
@@ -33,8 +34,10 @@ export async function runRegisteredOath(
   options: RunOathOptions = {},
 ): Promise<RunOutcome> {
   const registry = buildRegistry()
-  const doc = parse(oathPath, varSource, [])
-  const full = plan(doc, registry)
+  const doc = parse(oathPath, varSource)
+  // The playground runs one oath on its own, so nothing references anything:
+  // the empty workspace is the honest one (ADR 0016).
+  const full = plan(doc, registry, emptyWorkspace())
   const { exampleIndex } = options
   const examples =
     exampleIndex == null ? full.examples : full.examples.filter((_, i) => i === exampleIndex)

@@ -19,8 +19,8 @@ module Varar
 
     module_function
 
-    def plan_oath(path, source, registry)
-      Core::Plan.plan(Core::Parse.parse(path, source), registry)
+    def plan_oath(path, source, registry, workspace)
+      Core::Plan.plan(Core::Parse.parse(path, source), registry, workspace)
     end
 
     # Pair each PlannedExample with its lazy run closure, in plan order.

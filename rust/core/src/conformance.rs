@@ -9,8 +9,8 @@ use crate::ast::{
 use crate::diagnostics::{Diagnostic, DiagnosticCode, Severity};
 use crate::error::{StepError, StepFailure};
 use crate::execute::{ExecutePorts, StepObservation, StepOutcome, collect_examples};
-use crate::offsets::utf16_slice;
 use crate::plan::{ExecutionPlan, PlannedExample, PlannedStep, plan};
+use crate::reference::OathWorkspace;
 use crate::registry::Registry;
 use crate::span::Span;
 use crate::value::Value;
@@ -270,15 +270,15 @@ fn planned_example(source: &str, ex: &PlannedExample) -> Value {
     obj(pairs)
 }
 
-fn planned_step(source: &str, step: &PlannedStep) -> Value {
+fn planned_step(_source: &str, step: &PlannedStep) -> Value {
     let param_names = parameter_type_names(&step.step_def.expression);
     let args: Vec<Value> = step
-        .param_spans
+        .param_texts
         .iter()
         .enumerate()
-        .map(|(i, ps)| {
+        .map(|(i, text)| {
             obj(vec![
-                ("value", Value::from(utf16_slice(source, ps.start_offset, ps.end_offset))),
+                ("value", Value::from(text.as_str())),
                 (
                     "parameterType",
                     param_names
@@ -296,6 +296,11 @@ fn planned_step(source: &str, step: &PlannedStep) -> Value {
         ("matchedExpression", Value::from(step.step_def.expression.as_str())),
         ("args", Value::List(args)),
     ];
+    // Present only on a step a reference block spliced in from another oath
+    // (ADR 0016): the document its spans belong to.
+    if let Some(p) = &step.doc_path {
+        pairs.push(("docPath", Value::from(p.as_str())));
+    }
     if let Some(t) = &step.data_table {
         pairs.push(("dataTable", table(t)));
     }
@@ -326,6 +331,9 @@ fn diagnostic_code(code: DiagnosticCode) -> &'static str {
         DiagnosticCode::AmbiguousMatch => "ambiguous-match",
         DiagnosticCode::ErrorFenceWithoutStep => "error-fence-without-step",
         DiagnosticCode::Drift => "drift",
+        DiagnosticCode::ReferenceNotFound => "reference-not-found",
+        DiagnosticCode::ReferenceEmpty => "reference-empty",
+        DiagnosticCode::ReferenceCycle => "reference-cycle",
     }
 }
 
@@ -410,8 +418,11 @@ pub fn run_conformance(
     doc: &Doc,
     registry: &Registry,
     context_factory: &dyn Fn() -> Rc<dyn Any>,
+    // The other oaths in the bundle, for a bundle whose oath references them
+    // (ADR 0016). A single-document bundle passes `&empty_workspace()`.
+    workspace: &OathWorkspace,
 ) -> BundleArtifacts {
-    let execution = plan(doc, registry);
+    let execution = plan(doc, registry, workspace);
 
     let observed: Rc<RefCell<HashMap<usize, Vec<StepObservation>>>> =
         Rc::new(RefCell::new(HashMap::new()));

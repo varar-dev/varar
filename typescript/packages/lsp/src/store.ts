@@ -4,19 +4,21 @@ import {
   deriveOathBaseline,
   detectDrift,
   driftDetected,
+  emptyWorkspace,
   type LockFile,
   parse,
   parseLockFile,
   plan,
-  type Registry,
   stringifyLockFile,
 } from '@varar/core'
 import {
   buildWorkspaceIndex,
+  createIndexCache,
   createTreeSitterScanner,
   type DiagnosticRef,
   type GrammarLoader,
   languageIdForPath,
+  type PlannedOath,
   type StepDefScanner,
   type WorkspaceIndex,
 } from '@varar/language'
@@ -60,7 +62,10 @@ export type Store = {
 async function driftDiagnosticRefs(
   fs: FileSystem,
   oathFiles: ReadonlyArray<{ readonly path: string; readonly source: string }>,
-  registry: Registry,
+  // The plans the workspace index just built. Drift used to re-parse and
+  // re-plan every oath here, doubling the cost of every keystroke; it reads
+  // them from the index instead.
+  planned: ReadonlyMap<string, PlannedOath>,
 ): Promise<DiagnosticRef[]> {
   const [lockAbs] = await fs.list({ include: ['varar.lock.json'], exclude: [] })
   if (!lockAbs) return []
@@ -80,9 +85,9 @@ async function driftDiagnosticRefs(
     const oathPath = toOathPath(root, vf.path)
     const baseline = lock.oaths[oathPath]
     if (!baseline) continue
-    const doc = parse(vf.path, vf.source)
-    const executionPlan = plan(doc, registry)
-    for (const drift of detectDrift(baseline, doc, executionPlan)) {
+    const indexed = planned.get(vf.path)
+    if (!indexed) continue
+    for (const drift of detectDrift(baseline, indexed.doc, indexed.plan)) {
       const diag = driftDetected({ name: drift.name, span: drift.span })
       refs.push({
         oathPath: vf.path,
@@ -116,12 +121,17 @@ export function createStore(deps: StoreDeps): Store {
     matches: [],
     diagnostics: [],
     registry: createRegistry(),
+    workspace: emptyWorkspace(),
+    oaths: new Map(),
   }
   // Created once, lazily, on the first reindex — not in createStore itself,
   // which stays synchronous. Later reindexes reuse it.
   let scannerPromise: Promise<StepDefScanner> | undefined
   let scannerKey: string | undefined
   let currentStepPaths: ReadonlyArray<string> = []
+  // Survives across reindexes: a keystroke then re-scans no step files and
+  // re-parses and re-plans only the file that changed.
+  const indexCache = createIndexCache()
   return {
     async reindex() {
       const stepPaths = await fs.list({ include: config.steps, exclude: [] })
@@ -153,16 +163,19 @@ export function createStore(deps: StoreDeps): Store {
       const oathFiles = await Promise.all(
         varPaths.map(async (path) => ({ path, source: await fs.read(path) })),
       )
-      current = buildWorkspaceIndex({
-        stepFiles,
-        oathFiles,
-        scanner,
-      })
+      current = buildWorkspaceIndex(
+        {
+          stepFiles,
+          oathFiles,
+          scanner,
+        },
+        indexCache,
+      )
       // Drift is a run-result concern, but the LSP surfaces it live: a
       // paragraph the committed varar.lock.json recorded as an example that now
       // matches no step gets a warning squiggle. Additive to the index's own
       // parse/plan diagnostics.
-      const drift = await driftDiagnosticRefs(fs, oathFiles, current.registry)
+      const drift = await driftDiagnosticRefs(fs, oathFiles, current.oaths)
       if (drift.length > 0)
         current = { ...current, diagnostics: [...current.diagnostics, ...drift] }
     },
@@ -185,7 +198,11 @@ export function createStore(deps: StoreDeps): Store {
       const oathPath = toOathPath(root, absPath)
       const source = await fs.read(absPath)
       const doc = parse(absPath, source)
-      const baseline = deriveOathBaseline(source, doc, plan(doc, current.registry))
+      const baseline = deriveOathBaseline(
+        source,
+        doc,
+        plan(doc, current.registry, current.workspace),
+      )
       const next: LockFile = {
         version: 2,
         oaths: { ...(existing?.oaths ?? {}), [oathPath]: baseline },

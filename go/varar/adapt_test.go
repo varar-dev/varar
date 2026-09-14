@@ -92,7 +92,7 @@ func TestToGoConvertsSupportedTypes(t *testing.T) {
 func TestMismatchedSlotTypeFailsTheStep(t *testing.T) {
 	s := NewSteps[Value]()
 	s.Sensor("the result is {word}", func(state Value, n int) (int, error) { return n, nil })
-	plan := core.Plan(core.Parse("t.md", "the result is IV."), s.Registry())
+	plan := core.Plan(core.Parse("t.md", "the result is IV."), s.Registry(), core.EmptyWorkspace())
 	failure := core.ExecutePlan(plan, core.ExecutePorts{})
 	if failure == nil {
 		t.Fatal("expected the step to fail reading a String slot as int")
@@ -107,7 +107,7 @@ func TestMismatchedSlotTypeFailsTheStep(t *testing.T) {
 func TestSlotCountMismatchFailsTheStep(t *testing.T) {
 	s := NewSteps[Value]()
 	s.Sensor("I have {int} cukes", func(state Value, a, b int) (int, int, error) { return a, b, nil })
-	plan := core.Plan(core.Parse("t.md", "I have 5 cukes."), s.Registry())
+	plan := core.Plan(core.Parse("t.md", "I have 5 cukes."), s.Registry(), core.EmptyWorkspace())
 	failure := core.ExecutePlan(plan, core.ExecutePorts{})
 	if failure == nil {
 		t.Fatal("expected the step to fail on the slot-count mismatch")
@@ -242,7 +242,7 @@ func TestSlottedSensorReturningNothingFailsTheStep(t *testing.T) {
 	s.Sensor("the name is {string}", func(state Value, args []Value) (*Value, error) {
 		return nil, nil
 	})
-	plan := core.Plan(core.Parse("t.md", `the name is "Ada".`), s.Registry())
+	plan := core.Plan(core.Parse("t.md", `the name is "Ada".`), s.Registry(), core.EmptyWorkspace())
 	failure := core.ExecutePlan(plan, core.ExecutePorts{})
 	if failure == nil {
 		t.Fatal("expected the step to fail with a missing return")
@@ -260,7 +260,7 @@ func TestHeaderBoundRowReturningNothingFailsTheStep(t *testing.T) {
 	})
 	source := "I report the score and grade.\n\n" +
 		"| score | grade |\n| ----- | ----- |\n| 10    | A     |\n"
-	plan := core.Plan(core.Parse("t.md", source), s.Registry())
+	plan := core.Plan(core.Parse("t.md", source), s.Registry(), core.EmptyWorkspace())
 	failure := core.ExecutePlan(plan, core.ExecutePorts{})
 	if failure == nil {
 		t.Fatal("expected the row step to fail with a missing return")

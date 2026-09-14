@@ -33,7 +33,7 @@ describe('generateVirtualModule', () => {
     // depends on (@varar/vitest, vitest) — a bare '@varar/core'
     // would not resolve from the oath's path under pnpm's strict layout.
     expect(lines[0]).toContain(
-      "import { collectVararExamples, vararTestBody } from '@varar/vitest/runtime'",
+      "import { collectVararExamples, vararConsumedBody, vararTestBody } from '@varar/vitest/runtime'",
     )
     expect(lines[0]).not.toContain("from '@varar/core'")
     expect(lines[0]).toContain('import "/abs/account.steps.ts"')

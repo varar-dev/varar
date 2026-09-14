@@ -5,16 +5,22 @@ require 'varar/core/ast'
 require 'varar/core/cell_diff'
 require 'varar/core/diagnostics'
 require 'varar/core/matcher'
+require 'varar/core/reference'
 require 'varar/core/sentences'
 
 module Varar
   module Core
     DocString = Data.define(:content, :content_type, :span)
 
-    PlannedStep = Data.define(:text, :match_span, :param_spans, :step_def, :args, :formats, :data_table,
-                              :doc_string) do
-      def initialize(text:, match_span:, param_spans:, step_def:, args:, formats: [], data_table: nil,
-                     doc_string: nil)
+    # param_texts: the notation each parameter matched, sliced at plan time from
+    # the document the step was WRITTEN in — consumers must use it rather than
+    # slicing the running oath's source, because a step a reference block
+    # spliced in (ADR 0016) has spans in a different document.
+    # doc_path: set only on such a spliced step — the document its spans belong to.
+    PlannedStep = Data.define(:text, :match_span, :param_spans, :param_texts, :step_def, :args, :formats,
+                              :data_table, :doc_string, :doc_path) do
+      def initialize(text:, match_span:, param_spans:, step_def:, args:, param_texts: [], formats: [],
+                     data_table: nil, doc_string: nil, doc_path: nil)
         super
       end
     end
@@ -42,21 +48,40 @@ module Varar
       # header-bound table (standalone rows) or a step-bearing candidate the
       # grouping pass may merge into an open example.
       HeaderBoundUnit = Data.define(:rows)
+      # A reference block: its whole text is a link to an oath section, whose
+      # steps are spliced in here (ADR 0016). Never prose, so it does not close
+      # the open example. Its span and scope stack are the referring
+      # document's: the example it opens lives here, not in the section.
+      ReferenceUnit = Data.define(:reference, :preceded_by_delimiter, :span, :scope_stack)
       StepsUnit = Data.define(:matched, :preceded_by_delimiter, :name, :scope_stack, :span, :steps,
                               :expected_outcome, :expected_error_message)
 
       # An open, merging example being built up across adjacent matching
       # candidates in Phase 2.
+      # name_from_reference: true while the name came from a spliced
+      # (referenced) paragraph and is waiting to be replaced by the example's
+      # own first matching paragraph.
       MergedExample = Struct.new(:name, :scope_stack, :start_offset, :end_offset, :steps,
-                                 :expected_outcome, :expected_error_message)
+                                 :expected_outcome, :expected_error_message, :name_from_reference)
 
       module_function
 
-      def plan(doc, registry)
+      def plan(doc, registry, workspace)
         diagnostics = []
 
+        # A section another oath references stops being a standalone example:
+        # it runs where it is referenced, not here (ADR 0016).
+        whole_file = Reference.section_key(doc.path, '')
+        consumed = lambda do |ex|
+          workspace.referenced.include?(whole_file) ||
+            ex.scope_stack.any? do |h|
+              workspace.referenced.include?(Reference.section_key(doc.path, Reference.slugify(h)))
+            end
+        end
+
         # Phase 1: plan each candidate paragraph independently into a "unit".
-        units = doc.examples.map { |ex| plan_candidate(ex, doc, registry, diagnostics) }
+        units = doc.examples.reject { |ex| consumed.call(ex) }
+                   .map { |ex| plan_candidate(ex, doc, registry, diagnostics) }
 
         # Phase 2: group adjacent candidates into examples. A matching candidate
         # continues the open example when no delimiter (heading / `---`) precedes
@@ -73,6 +98,31 @@ module Varar
           if unit.is_a?(HeaderBoundUnit)
             flush.call
             examples.concat(unit.rows)
+            next
+          end
+          if unit.is_a?(ReferenceUnit)
+            # Splice the referenced section's steps in at this position. Only
+            # the reference block itself is subject to the delimiter rule;
+            # everything it splices in belongs to the same sequence, so a
+            # section of several paragraphs stays one example.
+            resolve_reference(unit, doc, registry, workspace, diagnostics, []).each_with_index do |spliced, i|
+              if open && (i.positive? || !unit.preceded_by_delimiter)
+                merge_into(open, spliced, from_reference: true)
+              else
+                flush.call
+                open = start_merged(spliced)
+                # An example that OPENS with a reference is named by its own
+                # first matching paragraph, not by the section it pulls in, and
+                # it sits under THIS document's headings, not the section's.
+                open.name_from_reference = true
+                open.scope_stack = unit.scope_stack
+                open.start_offset = unit.span.start_offset
+              end
+              # A spliced unit's span is in the referenced document; the
+              # example's span is in this one. It ends at the reference block
+              # until a later paragraph of the example's own extends it.
+              open.end_offset = unit.span.end_offset
+            end
             next
           end
           unless unit.matched
@@ -92,12 +142,63 @@ module Varar
         ExecutionPlan.new(doc: doc, examples: examples, diagnostics: diagnostics)
       end
 
-      def start_merged(unit)
-        MergedExample.new(unit.name, unit.scope_stack, unit.span.start_offset, unit.span.end_offset,
-                          unit.steps.dup, unit.expected_outcome, unit.expected_error_message)
+      # Resolve one reference block into the step-bearing units of the section
+      # it names, recursively: a referenced section may itself contain
+      # reference blocks, to any depth (ADR 0016 leaves depth to the author's
+      # judgement). `chain` carries the sections currently being resolved so a
+      # repeat is reported as a cycle instead of recursing forever.
+      def resolve_reference(unit, from_doc, registry, workspace, diagnostics, chain)
+        ref = unit.reference
+        key = Reference.section_key(ref.path, ref.slug)
+        if chain.include?(key)
+          diagnostics << Diagnostics.reference_cycle(chain + [key], unit.span)
+          return []
+        end
+        # A same-file reference resolves against the document being planned,
+        # which is not necessarily in the workspace.
+        target = ref.path == from_doc.path ? from_doc : workspace.docs[ref.path]
+        if target.nil?
+          diagnostics << Diagnostics.reference_not_found(ref.text, ref.path, unit.span)
+          return []
+        end
+        out = []
+        Reference.section_candidates(target, ref.slug).each do |candidate|
+          planned = plan_candidate(candidate, target, registry, diagnostics)
+          if planned.is_a?(ReferenceUnit)
+            out.concat(resolve_reference(planned, target, registry, workspace, diagnostics, chain + [key]))
+            next
+          end
+          # A header-bound table produces one example per row, which a spliced
+          # step list cannot express; an `error` fence declares an outcome for
+          # an example, not for a reusable fragment. Both are left out.
+          next unless planned.is_a?(StepsUnit) && planned.matched
+
+          out << tag_with_doc(planned, target.path, from_doc.path)
+        end
+        diagnostics << Diagnostics.reference_empty(ref.text, ref.path, ref.slug, unit.span) if out.empty?
+        out
       end
 
-      def merge_into(open, unit)
+      # Carry the source document's identity on every spliced step, so a failure
+      # in a referenced section reports spans against the file they were written
+      # in rather than the file being run.
+      def tag_with_doc(unit, doc_path, host_path)
+        return unit if doc_path == host_path
+
+        unit.with(steps: unit.steps.map { |step| step.with(doc_path: doc_path) })
+      end
+
+      def start_merged(unit)
+        MergedExample.new(unit.name, unit.scope_stack, unit.span.start_offset, unit.span.end_offset,
+                          unit.steps.dup, unit.expected_outcome, unit.expected_error_message, false)
+      end
+
+      def merge_into(open, unit, from_reference: false)
+        if open.name_from_reference && !from_reference
+          open.name = unit.name
+          open.scope_stack = unit.scope_stack
+          open.name_from_reference = false
+        end
         open.end_offset = unit.span.end_offset
         open.steps.concat(unit.steps)
         # Any error fence in a merged part marks the whole example
@@ -125,6 +226,17 @@ module Varar
       # Plan a single candidate paragraph (plus attached tables/fences) in
       # isolation. Emits ambiguity / error-fence diagnostics into +diagnostics+.
       def plan_candidate(ex, doc, registry, diagnostics)
+        # A block whose whole text is a link to an oath section is a reference,
+        # not content: never matched against step definitions, never prose.
+        primary = ex.body.first
+        if primary.respond_to?(:text)
+          ref = Reference.reference_of(primary.text, doc.path)
+          if ref
+            return ReferenceUnit.new(reference: ref, preceded_by_delimiter: ex.preceded_by_delimiter,
+                                     span: ex.span, scope_stack: ex.scope_stack)
+          end
+        end
+
         had_ambiguous = false
         steps_by_block = {}
 
@@ -161,6 +273,7 @@ module Varar
               text: Offsets.utf16_slice(block.text, hit.match_start, hit.match_end),
               match_span: lift_span(doc.source, block, hit.match_start, hit.match_end),
               param_spans: hit.param_spans.map { |p| lift_span(doc.source, block, p.start, p.end) },
+              param_texts: hit.param_spans.map { |p| Offsets.utf16_slice(block.text, p.start, p.end) },
               step_def: hit.step_def,
               args: hit.args,
               formats: hit.formats
@@ -182,14 +295,7 @@ module Varar
             table.header.cells.each_with_index do |cell_name, i|
               row_object[cell_name] = i < row.cells.length ? row.cells[i] : ''
             end
-            row_step = PlannedStep.new(
-              text: binding_step.text,
-              match_span: row.span,
-              param_spans: binding_step.param_spans,
-              step_def: binding_step.step_def,
-              args: binding_step.args + [row_object],
-              formats: binding_step.formats
-            )
+            row_step = binding_step.with(match_span: row.span, args: binding_step.args + [row_object])
             row_checks = table.header.cells.each_with_index.map do |cell_name, i|
               RowCheck.new(
                 column: cell_name,
@@ -236,11 +342,7 @@ module Varar
           block_steps.each_with_index do |step, s_idx|
             if s_idx == block_steps.length - 1 && attach
               data_table, doc_string = attach
-              final_steps << PlannedStep.new(
-                text: step.text, match_span: step.match_span, param_spans: step.param_spans,
-                step_def: step.step_def, args: step.args, formats: step.formats,
-                data_table: data_table, doc_string: doc_string
-              )
+              final_steps << step.with(data_table: data_table, doc_string: doc_string)
             else
               final_steps << step
             end

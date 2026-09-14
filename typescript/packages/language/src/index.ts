@@ -1,6 +1,13 @@
 export type { GrammarLoader } from './grammar-loader.ts'
-export type { DiagnosticRef, MatchRef, WorkspaceIndex, WorkspaceInput } from './index-workspace.ts'
-export { buildWorkspaceIndex } from './index-workspace.ts'
+export type {
+  DiagnosticRef,
+  IndexCache,
+  MatchRef,
+  PlannedOath,
+  WorkspaceIndex,
+  WorkspaceInput,
+} from './index-workspace.ts'
+export { buildWorkspaceIndex, createIndexCache } from './index-workspace.ts'
 export type { StepDefScanner } from './scanner.ts'
 export type { Snippet } from './snippet.ts'
 export { generateSnippet } from './snippet.ts'

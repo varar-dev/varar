@@ -42,7 +42,7 @@ module Varar
 
       def plan_for(source, registry)
         doc = Parse.parse('w.md', source)
-        [doc, Plan.plan(doc, registry)]
+        [doc, Plan.plan(doc, registry, Reference.empty_workspace)]
       end
 
       def bare(drifts) = drifts.map { |d| [d.name, d.line] }

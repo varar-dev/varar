@@ -76,13 +76,67 @@ export function registerHandlers(
     }
   })
 
-  // Write-through: persist edited docs to the FileSystem, then reindex.
-  documents.onDidChangeContent(async (e) => {
-    await opts?.onDidChangeDocument?.(e.document.uri, e.document.getText())
-    if (!store) return
-    await store.fs().write(uriToPath(e.document.uri), e.document.getText())
-    await store.reindex()
-    afterReindex()
+  // Reindexing is whole-workspace, so a burst of keystrokes must not queue one
+  // per character. The buffer is written through immediately — the filesystem
+  // is the source of truth and stays current — and only the derived index is
+  // debounced. Every request handler awaits `settled()` first, so no feature
+  // can observe an index older than the edit it is answering about.
+  const REINDEX_DEBOUNCE_MS = 75
+  let debounceTimer: ReturnType<typeof setTimeout> | undefined
+  let dirty = false
+  // Reindexes are serialised through this chain: store.reindex() is async, and
+  // two overlapping runs would race to assign the index.
+  let inFlight: Promise<void> = Promise.resolve()
+  // Write-throughs are serialised too: two edits in quick succession are two
+  // async writes of the same file, and the earlier one finishing last would
+  // leave the older text on disk for the reindex to read.
+  let writes: Promise<void> = Promise.resolve()
+
+  function scheduleReindex(): void {
+    dirty = true
+    if (debounceTimer) clearTimeout(debounceTimer)
+    debounceTimer = setTimeout(() => {
+      void settled()
+    }, REINDEX_DEBOUNCE_MS)
+  }
+
+  // Run any pending reindex now and wait for it (plus whatever was already in
+  // flight). Safe to call when nothing is pending: it awaits the current chain.
+  function settled(): Promise<void> {
+    if (debounceTimer) {
+      clearTimeout(debounceTimer)
+      debounceTimer = undefined
+    }
+    if (!dirty) return inFlight
+    dirty = false
+    inFlight = inFlight.then(async () => {
+      // Every write queued before this reindex lands first, so the index is
+      // never built from a file older than the edit it answers about.
+      await writes
+      if (!store) return
+      await store.reindex()
+      afterReindex()
+    })
+    return inFlight
+  }
+
+  // Write-through: persist edited docs to the FileSystem, then reindex
+  // (debounced). The reindex is scheduled at once — marking the index dirty
+  // before the write completes — so a request arriving mid-write still waits
+  // for it via settled().
+  documents.onDidChangeContent((e) => {
+    const uri = e.document.uri
+    const text = e.document.getText()
+    writes = writes
+      .then(async () => {
+        await opts?.onDidChangeDocument?.(uri, text)
+        if (store) await store.fs().write(uriToPath(uri), text)
+      })
+      .catch((err: unknown) => {
+        // A failed write must not poison the chain for later edits.
+        connection.console.error(`varar: write-through failed for ${uri}: ${String(err)}`)
+      })
+    scheduleReindex()
   })
 
   connection.onDidChangeWatchedFiles(async (params) => {
@@ -182,7 +236,8 @@ export function registerHandlers(
     afterReindex()
   })
 
-  connection.onHover((params) => {
+  connection.onHover(async (params) => {
+    await settled()
     if (!handlers) return null
     const result = handlers.hover({
       uri: params.textDocument.uri,
@@ -191,7 +246,8 @@ export function registerHandlers(
     return result === null ? null : { contents: result.contents }
   })
 
-  connection.onDefinition((params) => {
+  connection.onDefinition(async (params) => {
+    await settled()
     if (!handlers) return []
     const links = handlers.definition({
       uri: params.textDocument.uri,
@@ -206,7 +262,12 @@ export function registerHandlers(
   // text → snippet.
   connection.onRequest(
     'var/generateSnippet',
-    (params: { text: string; uri?: string; position?: { line: number; character: number } }) => {
+    async (params: {
+      text: string
+      uri?: string
+      position?: { line: number; character: number }
+    }) => {
+      await settled()
       if (!handlers) return null
       return handlers.generateSnippet({
         text: params.text,
@@ -226,7 +287,8 @@ export function registerHandlers(
   // captured values. Returns null when the position isn't on a step.
   connection.onRequest(
     'var/stepAt',
-    (params: { uri: string; position: { line: number; character: number } }) => {
+    async (params: { uri: string; position: { line: number; character: number } }) => {
+      await settled()
       if (!handlers) return null
       return handlers.stepAt(params)
     },
@@ -237,7 +299,12 @@ export function registerHandlers(
   // Phase 3 path: refuses when any parameter is added/removed/type-changed.
   connection.onRequest<ReturnType<LspHandlers['renameStep']> | null, void>(
     'var/renameStep',
-    (params: { uri: string; position: { line: number; character: number }; newName: string }) => {
+    async (params: {
+      uri: string
+      position: { line: number; character: number }
+      newName: string
+    }) => {
+      await settled()
       if (!handlers) return null
       return handlers.renameStep(params)
     },
@@ -248,7 +315,12 @@ export function registerHandlers(
   // parameters before applying anything.
   connection.onRequest<ReturnType<LspHandlers['planRename']> | null, void>(
     'var/planRename',
-    (params: { uri: string; position: { line: number; character: number }; newName: string }) => {
+    async (params: {
+      uri: string
+      position: { line: number; character: number }
+      newName: string
+    }) => {
+      await settled()
       if (!handlers) return null
       return handlers.planRename(params)
     },
@@ -266,7 +338,8 @@ export function registerHandlers(
 
   connection.onRequest(
     'textDocument/semanticTokens/full',
-    (params: { textDocument: { uri: string } }) => {
+    async (params: { textDocument: { uri: string } }) => {
+      await settled()
       if (!store) return { data: [] }
       const uri = params.textDocument.uri
       const source = documents.get(uri)?.getText() ?? ''
@@ -274,7 +347,8 @@ export function registerHandlers(
     },
   )
 
-  connection.onCompletion((params) => {
+  connection.onCompletion(async (params) => {
+    await settled()
     if (!handlers) return []
     const doc = documents.get(params.textDocument.uri)
     const line = doc

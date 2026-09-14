@@ -4,6 +4,7 @@ import dev.varar.core.Diagnostics;
 import dev.varar.core.Execute;
 import dev.varar.core.Parse;
 import dev.varar.core.Plan;
+import dev.varar.core.Reference;
 import dev.varar.core.Registry;
 import java.util.ArrayList;
 import java.util.List;
@@ -23,9 +24,14 @@ public final class Run {
 
     private Run() {}
 
-    /** Parses {@code source} and plans it against {@code registry} in one call. */
-    public static Plan.ExecutionPlan planOath(String path, String source, Registry registry) {
-        return Plan.plan(Parse.parse(path, source), registry);
+    /**
+     * Plans one oath. {@code workspace} carries every other oath in the project plus the sections a
+     * reference block consumes (ADR 0016); it is required because an adapter that omitted it would
+     * run consumed sections as standalone examples, which is green and wrong.
+     */
+    public static Plan.ExecutionPlan planOath(
+            String path, String source, Registry registry, Reference.OathWorkspace workspace) {
+        return Plan.plan(Parse.parse(path, source), registry, workspace);
     }
 
     /** One planned example paired with the {@link Runnable} that actually runs it. */

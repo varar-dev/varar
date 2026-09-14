@@ -32,8 +32,9 @@ from varar_core.execute import CollectPorts, StepObservation, collect_examples, 
 from varar_core.failure_anchor import failure_anchor
 from varar_core.plan import ExecutionPlan
 from varar_core.plan import plan as build_plan
+from varar_core.reference import OathWorkspace, empty_workspace
 from varar_core.registry import Registry
-from varar_core.span import Span, utf16_slice
+from varar_core.span import Span
 
 
 @dataclass(frozen=True, slots=True)
@@ -203,7 +204,6 @@ def to_plan_artifact(plan: ExecutionPlan) -> dict[str, Any]:
 
     Port of ``toPlanArtifact`` from conformance.ts.
     """
-    source = plan.doc.source
 
     def _step(step: Any) -> dict[str, Any]:
         step_names = parameter_type_names(step.step_def.compiled)
@@ -214,12 +214,16 @@ def to_plan_artifact(plan: ExecutionPlan) -> dict[str, Any]:
             "matchedExpression": step.step_def.expression,
             "args": [
                 {
-                    "value": utf16_slice(source, s.start_offset, s.end_offset),
+                    "value": value,
                     "parameterType": step_names[i] if i < len(step_names) else None,
                 }
-                for i, s in enumerate(step.param_spans)
+                for i, value in enumerate(step.param_texts)
             ],
         }
+        # Present only on a step a reference block spliced in from another oath
+        # (ADR 0016): the document its spans belong to.
+        if step.doc_path is not None:
+            result["docPath"] = step.doc_path
         if step.data_table is not None:
             result["dataTable"] = _block(step.data_table)
         if step.doc_string is not None:
@@ -310,12 +314,15 @@ def run_conformance(
     registry: Registry,
     create_context: Callable[[str], Any],
     parameter_types: tuple[dict[str, str], ...] = (),
+    # The other oaths in the bundle, for a bundle whose oath references them
+    # (ADR 0016). A single-document bundle passes nothing.
+    workspace: OathWorkspace | None = None,
 ) -> BundleArtifacts:
     """Run all examples and return the four-artifact bundle as a typed BundleArtifacts.
 
     Port of ``runConformance`` from conformance.ts.
     """
-    execution = build_plan(doc, registry)
+    execution = build_plan(doc, registry, workspace or empty_workspace())
 
     # Accumulate step observations keyed by example index.
     observed: dict[int, list[StepObservation]] = {}

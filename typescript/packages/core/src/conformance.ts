@@ -5,6 +5,7 @@ import type { DiagnosticCode, Severity } from './diagnostics.ts'
 import { collectExamples, isUnexpectedPassError, type StepObservation } from './execute.ts'
 import { failureAnchor } from './failure-anchor.ts'
 import { plan as buildPlan, type ExecutionPlan } from './plan.ts'
+import { emptyWorkspace, type OathWorkspace } from './reference.ts'
 import type { Registry } from './registry.ts'
 import type { Span } from './span.ts'
 
@@ -189,10 +190,14 @@ export function toPlanArtifact(plan: ExecutionPlan): PlanArtifact {
           matchSpan: step.matchSpan,
           paramSpans: step.paramSpans,
           matchedExpression: step.stepDef.expression,
-          args: step.paramSpans.map((span, i) => ({
-            value: plan.doc.source.slice(span.startOffset, span.endOffset),
+          args: step.paramTexts.map((value, i) => ({
+            value,
             parameterType: stepNames[i] ?? null,
           })),
+          // Present only on a step a reference block spliced in from another
+          // oath (ADR 0016): the document its spans belong to. Pinned so a port
+          // that resolves references but loses the identity goes red.
+          ...(step.docPath ? { docPath: step.docPath } : {}),
           ...(step.dataTable ? { dataTable: step.dataTable } : {}),
           ...(step.docString ? { docString: step.docString } : {}),
         }
@@ -246,8 +251,11 @@ export async function runConformance(
   registry: Registry,
   createContext: (stepFile: string) => unknown | Promise<unknown>,
   parameterTypes: ReadonlyArray<{ name: string; regexp: string }> = [],
+  // The other oaths in the bundle, for a bundle whose oath references them
+  // (ADR 0016). A single-document bundle passes nothing.
+  workspace: OathWorkspace = emptyWorkspace(),
 ): Promise<BundleArtifacts> {
-  const execution = buildPlan(doc, registry)
+  const execution = buildPlan(doc, registry, workspace)
 
   const observed = new Map<number, StepObservation[]>()
   const queue = collectExamples(execution, {

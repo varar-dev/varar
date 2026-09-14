@@ -18,7 +18,7 @@ public class PlanTests
     }
 
     private static ExecutionPlan PlanFor(string source, Registry registry) =>
-        Plan.Run(Parse.Run("m.md", source), registry);
+        Plan.Run(Parse.Run("m.md", source), registry, Reference_.EmptyWorkspace());
 
     private static string[][] StepTexts(ExecutionPlan plan) =>
         plan.Examples.Select(e => e.Steps.Select(s => s.Text).ToArray()).ToArray();

@@ -1,5 +1,6 @@
 //! Port of `PlanTest.java` / `plan.test.ts`.
 
+use varar_core::reference::{build_workspace, empty_workspace};
 mod common;
 
 use common::vmap;
@@ -50,7 +51,7 @@ fn step_texts(ex: &varar_core::plan::PlannedExample) -> Vec<String> {
 fn plan_produces_a_planned_example_with_steps_in_document_order() {
     let source = "# Withdrawing\n\nGiven I have 100 in my account. When I withdraw 40. Then I should have 60 left.";
     let doc = parse("w.md", source);
-    let result = plan(&doc, &reg());
+    let result = plan(&doc, &reg(), &empty_workspace());
     assert_eq!(0, result.diagnostics.len());
     assert_eq!(1, result.examples.len());
     let ex = &result.examples[0];
@@ -76,7 +77,7 @@ fn plan_emits_an_ambiguous_match_diagnostic_and_produces_no_runnable_example() {
     let r = step(&r, "I have {int} cukes", "a.ts", 3);
     let r = step(&r, "I have {int} {word}", "a.ts", 8);
     let doc = parse("e.md", "# Ambig\n\nGiven I have 5 cukes");
-    let result = plan(&doc, &r);
+    let result = plan(&doc, &r, &empty_workspace());
     assert_eq!(1, result.diagnostics.len());
     assert_eq!(DiagnosticCode::AmbiguousMatch, result.diagnostics[0].code);
     // An ambiguous candidate has no runnable step, so it is prose (a delimiter),
@@ -87,7 +88,7 @@ fn plan_emits_an_ambiguous_match_diagnostic_and_produces_no_runnable_example() {
 #[test]
 fn plan_skips_an_example_heading_whose_body_has_no_matches_and_no_keyword_led_sentences() {
     let source = "# Just docs\n\nSome prose with no matches and no keywords.";
-    let result = plan(&parse("d.md", source), &reg());
+    let result = plan(&parse("d.md", source), &reg(), &empty_workspace());
     assert_eq!(0, result.examples.len());
     assert_eq!(0, result.diagnostics.len());
 }
@@ -100,7 +101,7 @@ fn plan_merges_consecutive_list_items_into_one_example() {
     // Two list items, no delimiter between them → one example, shared state (ADR
     // 0012). A bulleted scenario reads as Given/When/Then bullets.
     let source = "# Bullets\n\n- Given I have 100 in my account\n- When I withdraw 40";
-    let result = plan(&parse("b.md", source), &r);
+    let result = plan(&parse("b.md", source), &r, &empty_workspace());
     assert_eq!(1, result.examples.len());
     assert_eq!(
         vec![
@@ -116,7 +117,7 @@ fn plan_walks_blockquote_content_as_step_bearing() {
     let r = create_registry();
     let r = step(&r, "I have {int} in my account", "s.ts", 1);
     let source = "# Quote\n\n> Given I have 100 in my account";
-    let result = plan(&parse("q.md", source), &r);
+    let result = plan(&parse("q.md", source), &r, &empty_workspace());
     assert_eq!(1, result.examples[0].steps.len());
 }
 
@@ -125,7 +126,7 @@ fn a_markdown_table_immediately_following_a_step_bearing_block_attaches_as_data_
     let r = create_registry();
     let r = step(&r, "these users exist", "s.ts", 1);
     let source = "# Users\nGiven these users exist:\n\n| name | age |\n|------|-----|\n| Bob  | 30  |\n| Eve  | 25  |";
-    let result = plan(&parse("u.md", source), &r);
+    let result = plan(&parse("u.md", source), &r, &empty_workspace());
     let step0 = &result.examples[0].steps[0];
     let table = step0.data_table.as_ref().expect("data table");
     assert_eq!(vec!["name".to_string(), "age".to_string()], table.header.cells);
@@ -137,7 +138,7 @@ fn a_table_not_immediately_after_a_step_bearing_block_does_not_attach() {
     let r = create_registry();
     let r = step(&r, "these users exist", "s.ts", 1);
     let source = "# Mid\nGiven these users exist:\n\nSome interrupting prose.\n\n| name | age |\n|------|-----|\n| Bob  | 30  |";
-    let result = plan(&parse("m.md", source), &r);
+    let result = plan(&parse("m.md", source), &r, &empty_workspace());
     assert!(result.examples[0].steps[0].data_table.is_none());
 }
 
@@ -146,7 +147,7 @@ fn a_fenced_code_block_immediately_following_a_step_bearing_block_attaches_as_do
     let r = create_registry();
     let r = step(&r, "I send the payload", "s.ts", 1);
     let source = "# Payload\nWhen I send the payload:\n\n```json\n{ \"action\": \"import\" }\n```";
-    let result = plan(&parse("p.md", source), &r);
+    let result = plan(&parse("p.md", source), &r, &empty_workspace());
     let step0 = &result.examples[0].steps[0];
     let doc = step0.doc_string.as_ref().expect("doc string");
     assert_eq!("json", doc.info);
@@ -157,21 +158,26 @@ fn a_fenced_code_block_immediately_following_a_step_bearing_block_attaches_as_do
 fn a_step_with_no_following_fence_has_no_doc_string() {
     let r = create_registry();
     let r = step(&r, "I send the payload", "s.ts", 1);
-    let result = plan(&parse("p.md", "# P\nWhen I send the payload"), &r);
+    let result = plan(&parse("p.md", "# P\nWhen I send the payload"), &r, &empty_workspace());
     assert!(result.examples[0].steps[0].doc_string.is_none());
 }
 
 #[test]
 fn a_keyword_led_sentence_with_no_match_does_not_produce_a_diagnostic() {
     let r = create_registry();
-    let result = plan(&parse("m.md", "# Empty\n\nGiven I have 5 cukes in my belly."), &r);
+    let result = plan(
+        &parse("m.md", "# Empty\n\nGiven I have 5 cukes in my belly."),
+        &r,
+        &empty_workspace(),
+    );
     assert_eq!(0, result.diagnostics.len());
 }
 
 #[test]
 fn an_unmatched_sentence_without_a_keyword_is_also_silently_treated_as_prose() {
     let r = create_registry();
-    let result = plan(&parse("p.md", "# Prose\n\nI have 5 cukes in my belly."), &r);
+    let result =
+        plan(&parse("p.md", "# Prose\n\nI have 5 cukes in my belly."), &r, &empty_workspace());
     assert_eq!(0, result.diagnostics.len());
 }
 
@@ -181,7 +187,7 @@ const YAHTZEE: &str = "# Yahtzee\n\neach row lists the dice, the category and th
 fn a_header_bound_table_expands_into_one_example_per_row() {
     let r = create_registry();
     let r = step(&r, "each row lists the dice, the category and the score", "s.ts", 1);
-    let result = plan(&parse("y.md", YAHTZEE), &r);
+    let result = plan(&parse("y.md", YAHTZEE), &r, &empty_workspace());
     assert_eq!(0, result.diagnostics.len());
     assert_eq!(2, result.examples.len());
     let first = &result.examples[0];
@@ -211,7 +217,7 @@ fn a_table_whose_paragraph_names_only_some_header_cells_keeps_whole_table_behavi
     let r = create_registry();
     let r = step(&r, "these users exist", "s.ts", 1);
     let source = "# Users\nthese users exist:\n\n| name | age |\n| ---- | --- |\n| Bob  | 30  |\n| Eve  | 25  |";
-    let result = plan(&parse("u.md", source), &r);
+    let result = plan(&parse("u.md", source), &r, &empty_workspace());
     assert_eq!(1, result.examples.len());
     let table = result.examples[0].steps[0].data_table.as_ref().unwrap();
     assert_eq!(vec!["name".to_string(), "age".to_string()], table.header.cells);
@@ -223,7 +229,7 @@ fn header_bound_matching_is_case_sensitive() {
     let r = create_registry();
     let r = step(&r, "each row lists the Dice and the Score", "s.ts", 1);
     let source = "# Case\neach row lists the Dice and the Score:\n\n| dice      | score |\n| --------- | ----- |\n| 1,1,1,1,1 | 5     |";
-    let result = plan(&parse("c.md", source), &r);
+    let result = plan(&parse("c.md", source), &r, &empty_workspace());
     assert_eq!(1, result.examples.len());
     assert_eq!(
         1,
@@ -240,7 +246,7 @@ fn header_bound_matching_is_case_sensitive() {
 fn header_bound_rows_are_named_by_their_cells_and_nested_under_the_paragraph() {
     let r = create_registry();
     let r = step(&r, "each row lists the dice, the category and the score", "s.ts", 1);
-    let result = plan(&parse("y.md", YAHTZEE), &r);
+    let result = plan(&parse("y.md", YAHTZEE), &r, &empty_workspace());
     let names: Vec<String> = result.examples.iter().map(|e| e.name.clone()).collect();
     assert_eq!(
         vec![
@@ -268,7 +274,7 @@ fn a_table_not_attached_to_a_step_is_allowed_no_diagnostic() {
     let r = create_registry();
     let r = step(&r, "I have {int} cukes", "s.ts", 1);
     let source = "# Detached\n\nGiven I have 5 cukes.\n\nSome interrupting prose paragraph.\n\n| name | age |\n|------|-----|\n| Bob  | 30  |";
-    let result = plan(&parse("o.md", source), &r);
+    let result = plan(&parse("o.md", source), &r, &empty_workspace());
     assert_eq!(0, result.diagnostics.len());
 }
 
@@ -277,7 +283,7 @@ fn a_header_bound_row_example_carries_row_checks() {
     let r = create_registry();
     let r = step(&r, "each row lists the dice, the category and the score", "s.ts", 1);
     let source = "# Yahtzee\n\neach row lists the dice, the category and the score:\n\n| dice          | category   | score |\n| ------------- | ---------- | ----- |\n| 3, 3, 3, 4, 4 | full house | 17    |";
-    let result = plan(&parse("y.md", source), &r);
+    let result = plan(&parse("y.md", source), &r, &empty_workspace());
     let checks: &Vec<RowCheck> = result.examples[0]
         .row_checks
         .as_ref()
@@ -319,7 +325,9 @@ fn an_error_fence_marks_the_example_expected_outcome_fail_with_a_message_substri
     )
     .unwrap();
     let src = "# Division\n\nI divide 1 by 0.\n\n```error\ndivision by zero\n```\n";
-    let ex = plan(&parse("e.md", src), &r).examples.remove(0);
+    let ex = plan(&parse("e.md", src), &r, &empty_workspace())
+        .examples
+        .remove(0);
     assert_eq!(Some("fail".to_string()), ex.expected_outcome);
     assert_eq!(Some("division by zero".to_string()), ex.expected_error_message);
     assert!(ex.steps[0].doc_string.is_none());
@@ -336,7 +344,7 @@ fn no_error_fence_leaves_expected_outcome_null() {
         Some(StepKind::Stimulus),
     )
     .unwrap();
-    let ex = plan(&parse("e.md", "# Division\n\nI divide 1 by 1."), &r)
+    let ex = plan(&parse("e.md", "# Division\n\nI divide 1 by 1."), &r, &empty_workspace())
         .examples
         .remove(0);
     assert_eq!(None, ex.expected_outcome);
@@ -354,7 +362,7 @@ fn an_error_fence_with_no_matching_step_emits_an_error_fence_without_step_diagno
     )
     .unwrap();
     let src = "# Nope\n\nThis prose matches nothing.\n\n```error\nboom\n```\n";
-    let result = plan(&parse("e.md", src), &r);
+    let result = plan(&parse("e.md", src), &r, &empty_workspace());
     assert_eq!(0, result.examples.len());
     assert_eq!(1, result.diagnostics.len());
     assert_eq!(DiagnosticCode::ErrorFenceWithoutStep, result.diagnostics[0].code);
@@ -366,7 +374,7 @@ fn an_error_fence_on_an_ambiguous_example_emits_both_diagnostics() {
     let r = step(&r, "I divide {int} by {int}", "s.ts", 1);
     let r = step(&r, "I divide 1 by 0", "s.ts", 2);
     let src = "# Ambiguous\n\nI divide 1 by 0.\n\n```error\nboom\n```\n";
-    let result = plan(&parse("e.md", src), &r);
+    let result = plan(&parse("e.md", src), &r, &empty_workspace());
     let mut codes: Vec<DiagnosticCode> = result.diagnostics.iter().map(|d| d.code).collect();
     codes.sort();
     assert_eq!(
@@ -390,7 +398,7 @@ fn a_doc_string_step_carries_the_fence_body_span_on_its_plan() {
     )
     .unwrap();
     let source = "# T\n\nthe payload is:\n\n```json\n{ \"ok\": true }\n```";
-    let result = plan(&parse("d.md", source), &r);
+    let result = plan(&parse("d.md", source), &r, &empty_workspace());
     let doc = result.examples[0].steps[0]
         .doc_string
         .as_ref()
@@ -407,7 +415,7 @@ fn a_doc_string_step_carries_the_fence_body_span_on_its_plan() {
 #[test]
 fn consecutive_matching_paragraphs_with_no_delimiter_merge_into_one_example() {
     let source = "I have 100 in my account.\n\nI withdraw 40.\n\nI should have 60 left.";
-    let result = plan(&parse("m.md", source), &reg());
+    let result = plan(&parse("m.md", source), &reg(), &empty_workspace());
     assert_eq!(1, result.examples.len());
     assert_eq!(
         vec![
@@ -424,7 +432,7 @@ fn consecutive_matching_paragraphs_with_no_delimiter_merge_into_one_example() {
 #[test]
 fn a_thematic_break_between_matching_paragraphs_splits_them_into_two_examples() {
     let source = "I have 100 in my account.\n\n---\n\nI withdraw 40.";
-    let result = plan(&parse("h.md", source), &reg());
+    let result = plan(&parse("h.md", source), &reg(), &empty_workspace());
     assert_eq!(2, result.examples.len());
     let texts: Vec<Vec<String>> = result.examples.iter().map(step_texts).collect();
     assert_eq!(
@@ -439,7 +447,7 @@ fn a_thematic_break_between_matching_paragraphs_splits_them_into_two_examples() 
 #[test]
 fn a_heading_between_matching_paragraphs_splits_them_into_two_examples() {
     let source = "I have 100 in my account.\n\n## Next\n\nI withdraw 40.";
-    let result = plan(&parse("hd.md", source), &reg());
+    let result = plan(&parse("hd.md", source), &reg(), &empty_workspace());
     assert_eq!(2, result.examples.len());
     assert_eq!(vec!["Next".to_string()], result.examples[1].scope_stack);
 }
@@ -448,7 +456,7 @@ fn a_heading_between_matching_paragraphs_splits_them_into_two_examples() {
 fn a_non_matching_paragraph_prose_between_matching_paragraphs_splits_the_example() {
     let source =
         "I have 100 in my account.\n\nJust explaining what happens next.\n\nI withdraw 40.";
-    let result = plan(&parse("p.md", source), &reg());
+    let result = plan(&parse("p.md", source), &reg(), &empty_workspace());
     assert_eq!(2, result.examples.len());
     let texts: Vec<Vec<String>> = result.examples.iter().map(step_texts).collect();
     assert_eq!(
@@ -463,7 +471,7 @@ fn a_non_matching_paragraph_prose_between_matching_paragraphs_splits_the_example
 #[test]
 fn leading_and_trailing_prose_does_not_merge_into_an_example() {
     let source = "A preamble that matches nothing.\n\nI withdraw 40.\n\nA closing remark.";
-    let result = plan(&parse("pp.md", source), &reg());
+    let result = plan(&parse("pp.md", source), &reg(), &empty_workspace());
     assert_eq!(1, result.examples.len());
     assert_eq!(vec!["I withdraw 40".to_string()], step_texts(&result.examples[0]));
 }
@@ -474,10 +482,51 @@ fn the_multi_table_shape_two_tables_in_one_example_survive_blank_lines() {
     let r = step(&r, "the following users have been imported", "s.ts", 1);
     let r = step(&r, "the following assets have been imported", "s.ts", 2);
     let source = "Given the following users have been imported:\n\n| email | name |\n| ----- | ---- |\n| a@b.c | Ada  |\n\nAnd the following assets have been imported:\n\n| name  |\n| ----- |\n| Moose |";
-    let result = plan(&parse("basket.md", source), &r);
+    let result = plan(&parse("basket.md", source), &r, &empty_workspace());
     assert_eq!(1, result.examples.len());
     let ex = &result.examples[0];
     assert_eq!(2, ex.steps.len());
     assert_eq!(1, ex.steps[0].data_table.as_ref().unwrap().rows.len());
     assert_eq!(1, ex.steps[1].data_table.as_ref().unwrap().rows.len());
+}
+
+#[test]
+fn an_example_a_reference_block_opens_belongs_to_the_referring_document() {
+    let r = create_registry();
+    let r = step(&r, "I shelve {int} books", "s.ts", 1);
+    let r = step(&r, "I borrow a book", "s.ts", 2);
+    let shared = parse("varar/shared.md", "# Shared\n\n## Setup\n\nI shelve 3 books.");
+    let source = "# Late fees\n\n## Shelf invariants\n\nProse.\n\n[Setup](./shared.md#setup)";
+    let doc = parse("varar/a.md", source);
+    let workspace = build_workspace(&[shared, doc.clone()]);
+    let result = plan(&doc, &r, &workspace);
+    assert_eq!(0, result.diagnostics.len());
+    assert_eq!(1, result.examples.len());
+    let ex = &result.examples[0];
+    // Its span is the reference block in THIS document, not the spliced
+    // paragraph's span in the referenced one.
+    assert_eq!("[Setup](./shared.md#setup)", &source[ex.span.start_offset..ex.span.end_offset]);
+    assert_eq!(vec!["Late fees".to_string(), "Shelf invariants".to_string()], ex.scope_stack);
+    assert_eq!(vec!["I shelve 3 books".to_string()], step_texts(ex));
+    assert_eq!(Some("varar/shared.md"), ex.steps[0].doc_path.as_deref());
+}
+
+#[test]
+fn a_paragraph_of_the_examples_own_extends_the_span_past_the_reference_block() {
+    let r = create_registry();
+    let r = step(&r, "I shelve {int} books", "s.ts", 1);
+    let r = step(&r, "I borrow a book", "s.ts", 2);
+    let shared = parse("varar/shared.md", "# Shared\n\n## Setup\n\nI shelve 3 books.");
+    let source = "# Late fees\n\n[Setup](./shared.md#setup)\n\nI borrow a book.";
+    let doc = parse("varar/a.md", source);
+    let workspace = build_workspace(&[shared, doc.clone()]);
+    let result = plan(&doc, &r, &workspace);
+    assert_eq!(1, result.examples.len());
+    let ex = &result.examples[0];
+    assert_eq!(
+        "[Setup](./shared.md#setup)\n\nI borrow a book.",
+        &source[ex.span.start_offset..ex.span.end_offset]
+    );
+    assert_eq!("I borrow a book", ex.name);
+    assert_eq!(vec!["Late fees".to_string()], ex.scope_stack);
 }

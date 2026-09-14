@@ -20,6 +20,11 @@ const (
 	CodeAmbiguousMatch DiagnosticCode = iota
 	CodeErrorFenceWithoutStep
 	CodeDrift
+	// Reference blocks (ADR 0016): a link that resolves to no oath, to a
+	// section with no steps, or to a chain that reaches itself.
+	CodeReferenceNotFound
+	CodeReferenceEmpty
+	CodeReferenceCycle
 )
 
 // Diagnostic is one diagnostic: its code, severity, and the source span it
@@ -38,4 +43,23 @@ func ambiguousMatch(span Span) Diagnostic {
 // errorFenceWithoutStep builds an error-fence-without-step diagnostic.
 func errorFenceWithoutStep(span Span) Diagnostic {
 	return Diagnostic{Code: CodeErrorFenceWithoutStep, Severity: SeverityError, Span: span}
+}
+
+// referenceNotFound: a reference block points at an oath the workspace does not
+// hold. Never prose — a link-only block that resolves to nothing has no other
+// reading, so it fails the run rather than degrading silently (ADR 0016).
+func referenceNotFound(text, path string, span Span) Diagnostic {
+	return Diagnostic{Code: CodeReferenceNotFound, Severity: SeverityError, Span: span}
+}
+
+// referenceEmpty: the referenced document exists but the section contributes no
+// steps — a mistyped anchor, or a section that is pure prose.
+func referenceEmpty(text, path, slug string, span Span) Diagnostic {
+	return Diagnostic{Code: CodeReferenceEmpty, Severity: SeverityError, Span: span}
+}
+
+// referenceCycle: references nest to any depth, so a chain that reaches a
+// section already on it is reported rather than recursed into.
+func referenceCycle(chain []string, span Span) Diagnostic {
+	return Diagnostic{Code: CodeReferenceCycle, Severity: SeverityError, Span: span}
 }

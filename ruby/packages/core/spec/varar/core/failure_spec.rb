@@ -25,7 +25,7 @@ module Varar
                                                  handler: lambda { |_state|
                                                    raise 'expected the library to refuse'
                                                  })
-        execution = Plan.plan(Parse.parse('l.md', source), registry)
+        execution = Plan.plan(Parse.parse('l.md', source), registry, Reference.empty_workspace)
         caught = nil
         Execute.collect_examples(execution, create_context: ->(_file) {}).each do |q|
           q.run.call

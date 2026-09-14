@@ -13,6 +13,14 @@ public enum DiagnosticCode
     AmbiguousMatch,
     ErrorFenceWithoutStep,
     Drift,
+
+    /// <summary>
+    /// Reference blocks (ADR 0016): a link that resolves to no oath, to a section with no steps,
+    /// or to a chain that reaches itself.
+    /// </summary>
+    ReferenceNotFound,
+    ReferenceEmpty,
+    ReferenceCycle,
 }
 
 /// <summary>A diagnostic on the shared rail. Port of <c>diagnostics.ts</c>.</summary>
@@ -34,6 +42,9 @@ public static class Diagnostics
         DiagnosticCode.AmbiguousMatch => "ambiguous-match",
         DiagnosticCode.ErrorFenceWithoutStep => "error-fence-without-step",
         DiagnosticCode.Drift => "drift",
+        DiagnosticCode.ReferenceNotFound => "reference-not-found",
+        DiagnosticCode.ReferenceEmpty => "reference-empty",
+        DiagnosticCode.ReferenceCycle => "reference-cycle",
         _ => throw new ArgumentOutOfRangeException(nameof(code), code, null),
     };
 
@@ -58,5 +69,39 @@ public static class Diagnostics
         Severity.Error,
         DiagnosticCode.ErrorFenceWithoutStep,
         "This `error` fence marks the example as expected-to-fail, but the example has no step to run.",
+        span);
+
+    /// <summary>
+    /// A reference block (ADR 0016) points at an oath the workspace does not hold. Never prose: a
+    /// link-only block that resolves to nothing has no other reading, so it fails the run rather
+    /// than degrading silently.
+    /// </summary>
+    public static Diagnostic ReferenceNotFound(string text, string path, Span span) => new(
+        Severity.Error,
+        DiagnosticCode.ReferenceNotFound,
+        $"Reference to \"{text}\" points at \"{path}\", which is not an oath in this workspace.\n" +
+        "Check the path, and that the file is matched by the `docs` globs in varar.config.json.",
+        span);
+
+    /// <summary>
+    /// The referenced document exists but the section contributes no steps — a mistyped anchor, or
+    /// a section that is pure prose.
+    /// </summary>
+    public static Diagnostic ReferenceEmpty(string text, string path, string slug, Span span) => new(
+        Severity.Error,
+        DiagnosticCode.ReferenceEmpty,
+        $"Reference to \"{text}\" resolves to \"{(slug.Length == 0 ? path : $"{path}#{slug}")}\", " +
+        "which contributes no steps.\nCheck the heading the anchor names, and that its section " +
+        "contains a matching paragraph.",
+        span);
+
+    /// <summary>
+    /// References nest to any depth, so a chain that reaches a section already on it is reported
+    /// rather than recursed into.
+    /// </summary>
+    public static Diagnostic ReferenceCycle(IEnumerable<string> chain, Span span) => new(
+        Severity.Error,
+        DiagnosticCode.ReferenceCycle,
+        $"Reference cycle: {string.Join(" \u2192 ", chain)}.",
         span);
 }

@@ -144,10 +144,18 @@ public static class Conformance
             new("matchSpan", SpanValue(step.MatchSpan)),
             new("paramSpans", List(step.ParamSpans, SpanValue)),
             new("matchedExpression", Value.Of(step.StepDef.Expression)),
-            new("args", Value.List(step.ParamSpans.Select((span, i) => Map(
-                ("value", Value.Of(Scanner.Slice(source, span.StartOffset, span.EndOffset))),
+            new("args", Value.List(step.ParamTexts.Select((text, i) => Map(
+                ("value", Value.Of(text)),
                 ("parameterType", i < typeNames.Length ? Value.Of(typeNames[i]) : Value.Null))))),
         };
+
+        // Present only on a step a reference block spliced in from another oath (ADR 0016): the
+        // document its spans belong to.
+        if (step.DocPath is not null)
+        {
+            entries.Add(new("docPath", Value.Of(step.DocPath)));
+        }
+
         if (step.DataTable is not null)
         {
             entries.Add(new("dataTable", BlockValue(step.DataTable)));

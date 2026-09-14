@@ -12,6 +12,7 @@
 
 use std::fs;
 use std::path::{Path, PathBuf};
+use varar_core::reference::build_workspace;
 
 use std::any::Any;
 use std::rc::Rc;
@@ -63,6 +64,12 @@ mod b17;
 mod b18;
 #[path = "../../../conformance/bundles/19-emphasis-parameter/mention.steps.rs"]
 mod b19;
+#[path = "../../../conformance/bundles/20-reference-splice/library.steps.rs"]
+mod b20;
+#[path = "../../../conformance/bundles/21-reference-consumed/library.steps.rs"]
+mod b21;
+#[path = "../../../conformance/bundles/23-reference-only-example/library.steps.rs"]
+mod b23;
 
 // Each bundle now has its OWN context type, so the fixtures cannot share one
 // function-pointer type. This macro erases that difference: it builds the
@@ -100,8 +107,37 @@ fn fixture(bundle: &str) -> (Registry, ContextFactory) {
         "17-unexpected-pass" => bundle!(b17),
         "18-multi-table-example" => bundle!(b18),
         "19-emphasis-parameter" => bundle!(b19),
+        "20-reference-splice" => bundle!(b20),
+        "21-reference-consumed" => bundle!(b21),
+        "23-reference-only-example" => bundle!(b23),
         other => panic!("no Rust step fixture for bundle {other}"),
     }
+}
+
+/// A bundle is one oath (example.md) plus, for a bundle that exercises
+/// reference blocks (ADR 0016), the other oaths it links to — every other `.md`
+/// in the bundle directory. They are parsed under their bare file names, so
+/// `./shared.md` resolves the same way in every port.
+fn bundle_docs(dir: &Path) -> (varar_core::ast::Doc, varar_core::reference::OathWorkspace) {
+    let mut paths: Vec<PathBuf> = fs::read_dir(dir)
+        .unwrap()
+        .filter_map(|e| e.ok().map(|e| e.path()))
+        .filter(|p| p.extension().is_some_and(|e| e == "md"))
+        .collect();
+    paths.sort();
+    let docs: Vec<_> = paths
+        .iter()
+        .map(|p| {
+            let name = p.file_name().unwrap().to_string_lossy().into_owned();
+            parse(&name, &fs::read_to_string(p).unwrap())
+        })
+        .collect();
+    let doc = docs
+        .iter()
+        .find(|d| d.path == "example.md")
+        .expect("bundle has no example.md")
+        .clone();
+    (doc, build_workspace(&docs))
 }
 
 fn bundles_dir() -> PathBuf {
@@ -148,9 +184,8 @@ fn plan_matches_golden() {
     for dir in bundle_dirs() {
         let name = name_of(&dir);
         let (registry, _) = fixture(&name);
-        let source = fs::read_to_string(dir.join("example.md")).unwrap();
-        let doc = parse("example.md", &source);
-        let execution = plan(&doc, &registry);
+        let (doc, workspace) = bundle_docs(&dir);
+        let execution = plan(&doc, &registry, &workspace);
         // By CONTENT, not bytes — see the note in core's doc gate.
         let expected = parse_json_value(&golden(&dir, "plan.json")).expect("golden is valid JSON");
         if to_plan_artifact(&execution) != expected {
@@ -166,9 +201,8 @@ fn trace_matches_golden() {
     for dir in bundle_dirs() {
         let name = name_of(&dir);
         let (registry, state) = fixture(&name);
-        let source = fs::read_to_string(dir.join("example.md")).unwrap();
-        let doc = parse("example.md", &source);
-        let artifacts = run_conformance(&doc, &registry, &|| state());
+        let (doc, workspace) = bundle_docs(&dir);
+        let artifacts = run_conformance(&doc, &registry, &|| state(), &workspace);
         // By CONTENT, not bytes — see the note in core's doc gate.
         let expected = parse_json_value(&golden(&dir, "trace.json")).expect("golden is valid JSON");
         if artifacts.trace != expected {

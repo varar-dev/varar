@@ -1,10 +1,17 @@
 import { existsSync, readFileSync } from 'node:fs'
-import { relative, resolve, sep } from 'node:path'
-import { findFiles, loadConfig } from '@varar/config'
+import { resolve } from 'node:path'
+import { findFiles, loadConfig, toOathPath } from '@varar/config'
 import { type OathBaseline, parseLockFile } from '@varar/core'
 import type { Plugin } from 'vite'
 import { configDefaults } from 'vitest/config'
 import { discoverStaticExamples, type StaticExample } from './static-examples.ts'
+import {
+  hasConsumedSection,
+  type OathSources,
+  projectWorkspace,
+  referencedKeys,
+  referencedSources,
+} from './workspace.ts'
 
 export type VararVitestPluginOptions = {
   readonly cwd?: string
@@ -73,14 +80,20 @@ export function vararVitestPlugin(options: VararVitestPluginOptions = {}): Plugi
       if (configJsonPath) this.addWatchFile(configJsonPath)
       // Editing the baseline re-transforms so the drift gate reflects it.
       this.addWatchFile(lockPath)
+      // This oath's identity: POSIX path relative to cwd. Keys varar.lock.json
+      // and .varar/, and is the `doc.path` both the static plan below and the
+      // runtime plan see — they must agree (ADR 0016).
+      const oathPath = toOathPath(cwd, absPath)
+      // Any oath can consume a section of this one, or be consumed by it, so
+      // every oath is a watch dependency of every transform (ADR 0016).
+      for (const f of oathFiles) if (f !== absPath) this.addWatchFile(f)
+      const workspace = projectWorkspace(cwd, [...oathFiles])
       const examples = await discoverStaticExamples({
-        absPath,
+        oathPath,
         source,
         stepFiles: stepFiles.map((path) => ({ path, source: readFileSync(path, 'utf8') })),
+        workspace,
       })
-      // This oath's baseline entry from varar.lock.json (POSIX path, relative to
-      // cwd), injected so the runtime can run the read-only drift gate.
-      const oathPath = relative(cwd, absPath).split(sep).join('/')
       const lock = existsSync(lockPath) ? parseLockFile(readFileSync(lockPath, 'utf8')) : null
       const baseline = lock?.oaths[oathPath] ?? null
       return generateVirtualModule({
@@ -89,6 +102,9 @@ export function vararVitestPlugin(options: VararVitestPluginOptions = {}): Plugi
         source,
         examples,
         baseline,
+        referencedSources: referencedSources(workspace, oathPath),
+        referencedKeys: referencedKeys(workspace),
+        consumed: hasConsumedSection(workspace, oathPath),
       })
     },
   }
@@ -105,6 +121,16 @@ export type GenerateInput = {
   // This oath's drift baseline from varar.lock.json (or null when unbaselined),
   // inlined so the runtime can run the read-only drift gate.
   readonly baseline?: OathBaseline | null
+  // The sources of every oath this one references, transitively, and the
+  // project's consumed-section keys — inlined so the runtime plan sees the same
+  // workspace the build-time plan did (ADR 0016). Both empty in a project that
+  // uses no reference blocks, which is the common case.
+  readonly referencedSources?: OathSources
+  readonly referencedKeys?: ReadonlyArray<string>
+  // True when every section of this oath is consumed by a reference elsewhere
+  // — it contributes no standalone example, and must not become a zero-test
+  // file.
+  readonly consumed?: boolean
 }
 
 // The generated module preserves an IDENTITY LINE MAPPING to the markdown
@@ -117,6 +143,10 @@ export function generateVirtualModule(input: GenerateInput): string {
   const sourceJson = JSON.stringify(input.source ?? '')
   const pathJson = JSON.stringify(input.oathPath)
   const baselineJson = JSON.stringify(input.baseline ?? null)
+  const workspaceJson = JSON.stringify({
+    sources: Object.fromEntries(input.referencedSources ?? new Map()),
+    referenced: input.referencedKeys ?? [],
+  })
   const examples = input.examples ?? []
   const header: string[] = [
     "import { test } from 'vitest'",
@@ -125,15 +155,24 @@ export function generateVirtualModule(input: GenerateInput): string {
     // @varar/core here would fail under pnpm's strict node_modules
     // layout, because the module id (the oath path) resolves in the
     // consumer's project, where transitive deps are not visible.
-    "import { collectVararExamples, vararTestBody } from '@varar/vitest/runtime'",
+    "import { collectVararExamples, vararConsumedBody, vararTestBody } from '@varar/vitest/runtime'",
     ...input.stepImports.map((p) => `import ${JSON.stringify(p)}`),
     `const PATH = ${pathJson}`,
     // Diagnostics and the stale-transform guard register their tests inside
     // collectVararExamples, so the only `test(...)` callsites in this module
     // are the real per-example ones below — static AST discovery sees an
     // exact test tree.
-    `const EXAMPLES = collectVararExamples(PATH, ${sourceJson}, { expectedCount: ${examples.length}, baseline: ${baselineJson} })`,
+    `const EXAMPLES = collectVararExamples(PATH, ${sourceJson}, { expectedCount: ${examples.length}, baseline: ${baselineJson}, workspace: ${workspaceJson} })`,
   ]
+  // Every section of this oath is consumed by a reference elsewhere, so it
+  // holds no standalone example. It is still a discovered oath: it plans, and
+  // its drift baseline is recorded like any other's. One bookkeeping test does
+  // that — and keeps vitest from failing the file, which it does for a module
+  // that declares no test at all ("No test suite found in file"). ADR 0016.
+  if (examples.length === 0 && input.consumed === true) {
+    const label = JSON.stringify(`varar:referenced-elsewhere`)
+    return `${header.join(';')};test(${label}, vararConsumedBody(PATH))\n`
+  }
   const testCall = (ex: StaticExample, i: number): string => {
     const nameJson = JSON.stringify(ex.name)
     return `test(${nameJson}, vararTestBody(EXAMPLES, ${i}, ${nameJson}, PATH))`

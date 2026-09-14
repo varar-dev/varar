@@ -5,6 +5,7 @@ use std::any::Any;
 use std::rc::Rc;
 use varar_cargotest::run_one;
 use varar_core::handler::Handler;
+use varar_core::reference::empty_workspace;
 use varar_core::registry::{Registry, add_step, create_registry};
 use varar_core::step_kind::StepKind;
 use varar_core::value::Value;
@@ -28,13 +29,16 @@ fn context(_file: &str) -> Rc<dyn Any> {
 #[test]
 fn a_matching_example_passes() {
     let source = "# Q\n\nthe answer is 42.";
-    assert!(run_one("q.md", source, "q.md", build_registry, context, 0).is_ok());
+    assert!(
+        run_one("q.md", source, "q.md", build_registry, context, 0, &empty_workspace()).is_ok()
+    );
 }
 
 #[test]
 fn a_mismatching_example_fails_with_a_rendered_message() {
     let source = "# Q\n\nthe answer is 41.";
-    let err = run_one("q.md", source, "q.md", build_registry, context, 0).unwrap_err();
+    let err = run_one("q.md", source, "q.md", build_registry, context, 0, &empty_workspace())
+        .unwrap_err();
     assert!(err.contains("Cell mismatch"), "unexpected render: {err}");
     assert!(err.contains("41") && err.contains("42"));
 }

@@ -5,6 +5,7 @@ import dev.varar.Steps
 import dev.varar.core.Conformance
 import dev.varar.core.JsonValue
 import dev.varar.core.Parse
+import dev.varar.core.Reference
 import dev.varar.kotlin.conformance.bundle01.steps as bundle01Steps
 import dev.varar.kotlin.conformance.bundle02.steps as bundle02Steps
 import dev.varar.kotlin.conformance.bundle03.steps as bundle03Steps
@@ -24,6 +25,9 @@ import dev.varar.kotlin.conformance.bundle16.steps as bundle16Steps
 import dev.varar.kotlin.conformance.bundle17.steps as bundle17Steps
 import dev.varar.kotlin.conformance.bundle18.steps as bundle18Steps
 import dev.varar.kotlin.conformance.bundle19.steps as bundle19Steps
+import dev.varar.kotlin.conformance.bundle20.steps as bundle20Steps
+import dev.varar.kotlin.conformance.bundle21.steps as bundle21Steps
+import dev.varar.kotlin.conformance.bundle23.steps as bundle23Steps
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
@@ -73,9 +77,14 @@ class ConformanceTest {
         val fixture = loadFixture(bundle.fileName.toString())
         val bound = Steps.bind(fixture)
 
-        val source = Files.readString(bundle.resolve("example.md"), StandardCharsets.UTF_8)
-        val doc = Parse.parse("example.md", source)
-        val artifacts = Conformance.runConformance(doc, bound.registry(), bound.stateFactory())
+        val docs = bundleDocs(bundle)
+        val artifacts =
+            Conformance.runConformance(
+                docs.first { it.path() == "example.md" },
+                bound.registry(),
+                bound.stateFactory(),
+                Reference.buildWorkspace(docs),
+            )
 
         val actual = JsonValue.normalize(artifacts.trace())
         val expected =
@@ -110,6 +119,25 @@ class ConformanceTest {
             }
         }
 
+        /**
+         * A bundle is one oath (example.md) plus, for a bundle that exercises reference blocks (ADR
+         * 0016), the other oaths it links to — every other `.md` in the bundle directory. They are
+         * parsed under their bare file names, so `./shared.md` resolves the same way in every port.
+         */
+        private fun bundleDocs(bundle: Path): List<dev.varar.core.Ast.Doc> =
+            Files.list(bundle).use { entries ->
+                entries
+                    .filter { it.fileName.toString().endsWith(".md") }
+                    .sorted()
+                    .map {
+                        Parse.parse(
+                            it.fileName.toString(),
+                            Files.readString(it, StandardCharsets.UTF_8),
+                        )
+                    }
+                    .toList()
+            }
+
         private fun loadFixture(bundleName: String): StepDefinitions<*> =
             when (bundleName) {
                 "01-roman-numerals" -> bundle01Steps
@@ -131,6 +159,9 @@ class ConformanceTest {
                 "17-unexpected-pass" -> bundle17Steps
                 "18-multi-table-example" -> bundle18Steps
                 "19-emphasis-parameter" -> bundle19Steps
+                "20-reference-splice" -> bundle20Steps
+                "21-reference-consumed" -> bundle21Steps
+                "23-reference-only-example" -> bundle23Steps
                 else ->
                     throw IllegalStateException(
                         "No Kotlin step fixture registered for bundle $bundleName"

@@ -12,6 +12,7 @@ import { compareDocString } from '../src/doc-string-diff.ts'
 import { UnexpectedPassError } from '../src/execute.ts'
 import { parse } from '../src/parse.ts'
 import { plan } from '../src/plan.ts'
+import { emptyWorkspace } from '../src/reference.ts'
 import { addStep, createRegistry, defineParameterType } from '../src/registry.ts'
 
 test('canonicalStringify sorts keys recursively and ends with a newline', () => {
@@ -129,7 +130,7 @@ test('toPlanArtifact projects examples, expectedOutcome and stringified args', (
     kind: 'stimulus',
     handler: () => {},
   })
-  const art = toPlanArtifact(plan(parse('e.md', '# A\n\nI have 5 cukes.'), r))
+  const art = toPlanArtifact(plan(parse('e.md', '# A\n\nI have 5 cukes.'), r, emptyWorkspace()))
   expect(art.examples[0]?.expectedOutcome).toBe('pass')
   expect(art.examples[0]?.steps[0]?.matchedExpression).toBe('I have {int} cukes')
   expect(art.examples[0]?.steps[0]?.args).toEqual([{ value: '5', parameterType: 'int' }])
@@ -157,7 +158,7 @@ test('toPlanArtifact projects diagnostics to portable fields (no message/path)',
     kind: 'stimulus',
     handler: () => {},
   })
-  const art = toPlanArtifact(plan(parse('e.md', '# A\n\nI have 5 cukes.'), r))
+  const art = toPlanArtifact(plan(parse('e.md', '# A\n\nI have 5 cukes.'), r, emptyWorkspace()))
   expect(art.diagnostics).toHaveLength(1)
   expect(art.diagnostics[0]).not.toHaveProperty('message')
   expect(art.diagnostics[0]?.code).toBe('ambiguous-match')

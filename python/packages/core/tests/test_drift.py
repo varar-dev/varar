@@ -19,6 +19,7 @@ from varar_core.hash import hash_source
 from varar_core.parse import parse
 from varar_core.plan import plan
 from varar_core.registry import add_step, create_registry
+from varar_core.reference import empty_workspace
 
 
 def _noop(*_args: object, **_kwargs: object) -> None:
@@ -70,83 +71,83 @@ class MemoryStore:
 
 def test_live_examples_records_one_entry_per_example_producing_paragraph() -> None:
     doc = parse("w.md", "I withdraw 40.")
-    assert live_examples(doc, plan(doc, _reg())) == (
+    assert live_examples(doc, plan(doc, _reg(), empty_workspace())) == (
         BaselineExample(name="I withdraw 40", line=1),
     )
 
 
 def test_a_never_matched_paragraph_is_not_a_live_example() -> None:
     doc = parse("w.md", "Just some prose.")
-    assert live_examples(doc, plan(doc, _reg())) == ()
+    assert live_examples(doc, plan(doc, _reg(), empty_workspace())) == ()
 
 
 def test_derive_oath_baseline_carries_the_source_fingerprint() -> None:
     source = "I withdraw 40."
     doc = parse("w.md", source)
-    baseline = derive_oath_baseline(source, doc, plan(doc, _reg()))
+    baseline = derive_oath_baseline(source, doc, plan(doc, _reg(), empty_workspace()))
     assert baseline.source_hash == hash_source(source)
     assert baseline.examples == (BaselineExample(name="I withdraw 40", line=1),)
 
 
 def test_no_baseline_means_no_drift() -> None:
     doc = parse("w.md", "I withdraw 40.")
-    assert detect_drift(None, doc, plan(doc, _reg())) == ()
+    assert detect_drift(None, doc, plan(doc, _reg(), empty_workspace())) == ()
 
 
 def test_an_unchanged_oath_and_steps_have_no_drift() -> None:
     source = "I withdraw 40."
     doc = parse("w.md", source)
-    baseline = derive_oath_baseline(source, doc, plan(doc, _reg()))
-    assert detect_drift(baseline, doc, plan(doc, _reg())) == ()
+    baseline = derive_oath_baseline(source, doc, plan(doc, _reg(), empty_workspace()))
+    assert detect_drift(baseline, doc, plan(doc, _reg(), empty_workspace())) == ()
 
 
 def test_a_renamed_step_drifts_matched_by_name() -> None:
     source = "I withdraw 40."
     doc = parse("w.md", source)
-    baseline = derive_oath_baseline(source, doc, plan(doc, _reg(True)))
-    drift = detect_drift(baseline, doc, plan(doc, _reg(False)))
+    baseline = derive_oath_baseline(source, doc, plan(doc, _reg(True), empty_workspace()))
+    drift = detect_drift(baseline, doc, plan(doc, _reg(False), empty_workspace()))
     assert _bare(drift) == [("I withdraw 40", 1)]
 
 
 def test_an_in_place_typo_drifts_matched_by_line() -> None:
     before = "I withdraw 40."
     before_doc = parse("w.md", before)
-    baseline = derive_oath_baseline(before, before_doc, plan(before_doc, _reg()))
+    baseline = derive_oath_baseline(before, before_doc, plan(before_doc, _reg(), empty_workspace()))
     after_doc = parse("w.md", "I withdrraw 40.")
-    drift = detect_drift(baseline, after_doc, plan(after_doc, _reg()))
+    drift = detect_drift(baseline, after_doc, plan(after_doc, _reg(), empty_workspace()))
     assert _bare(drift) == [("I withdraw 40", 1)]
 
 
 def test_a_deleted_paragraph_is_not_drift() -> None:
     before = "I withdraw 40."
     before_doc = parse("w.md", before)
-    baseline = derive_oath_baseline(before, before_doc, plan(before_doc, _reg()))
+    baseline = derive_oath_baseline(before, before_doc, plan(before_doc, _reg(), empty_workspace()))
     after_doc = parse("w.md", "")
-    assert detect_drift(baseline, after_doc, plan(after_doc, _reg())) == ()
+    assert detect_drift(baseline, after_doc, plan(after_doc, _reg(), empty_workspace())) == ()
 
 
 def test_moving_and_rewording_a_still_matching_example_does_not_drift() -> None:
     before = "I withdraw 40.\n\nI withdraw 10."
     before_doc = parse("w.md", before)
-    baseline = derive_oath_baseline(before, before_doc, plan(before_doc, _reg()))
+    baseline = derive_oath_baseline(before, before_doc, plan(before_doc, _reg(), empty_workspace()))
     after_doc = parse("w.md", "I withdraw 11.\n\nI withdraw 40.")
-    assert detect_drift(baseline, after_doc, plan(after_doc, _reg())) == ()
+    assert detect_drift(baseline, after_doc, plan(after_doc, _reg(), empty_workspace())) == ()
 
 
 def test_move_plus_reword_plus_prose_on_old_line_does_not_false_positive() -> None:
     before = "I withdraw 40."
     before_doc = parse("w.md", before)
-    baseline = derive_oath_baseline(before, before_doc, plan(before_doc, _reg()))
+    baseline = derive_oath_baseline(before, before_doc, plan(before_doc, _reg(), empty_workspace()))
     after_doc = parse("w.md", "Just some notes.\n\nI withdraw 41.")
-    assert detect_drift(baseline, after_doc, plan(after_doc, _reg())) == ()
+    assert detect_drift(baseline, after_doc, plan(after_doc, _reg(), empty_workspace())) == ()
 
 
 def test_a_paragraph_rewritten_past_recognition_is_remove_add_not_drift() -> None:
     before = "I withdraw 40."
     before_doc = parse("w.md", before)
-    baseline = derive_oath_baseline(before, before_doc, plan(before_doc, _reg()))
+    baseline = derive_oath_baseline(before, before_doc, plan(before_doc, _reg(), empty_workspace()))
     after_doc = parse("w.md", "The branch closed years ago.")
-    assert detect_drift(baseline, after_doc, plan(after_doc, _reg())) == ()
+    assert detect_drift(baseline, after_doc, plan(after_doc, _reg(), empty_workspace())) == ()
 
 
 _ROMAN = (
@@ -157,23 +158,23 @@ _ROMAN = (
 
 def test_header_bound_table_records_its_binding_paragraph_once() -> None:
     doc = parse("r.md", _ROMAN)
-    assert live_examples(doc, plan(doc, _roman_reg())) == (
+    assert live_examples(doc, plan(doc, _roman_reg(), empty_workspace())) == (
         BaselineExample(name="Each row gives a decimal and a roman number:", line=1),
     )
 
 
 def test_a_header_bound_binding_paragraph_that_stops_matching_drifts() -> None:
     doc = parse("r.md", _ROMAN)
-    baseline = derive_oath_baseline(_ROMAN, doc, plan(doc, _roman_reg(True)))
-    drift = detect_drift(baseline, doc, plan(doc, _roman_reg(False)))
+    baseline = derive_oath_baseline(_ROMAN, doc, plan(doc, _roman_reg(True), empty_workspace()))
+    drift = detect_drift(baseline, doc, plan(doc, _roman_reg(False), empty_workspace()))
     assert _bare(drift) == [("Each row gives a decimal and a roman number:", 1)]
 
 
 def test_drift_diagnostics_are_error_severity() -> None:
     source = "I withdraw 40."
     doc = parse("w.md", source)
-    baseline = derive_oath_baseline(source, doc, plan(doc, _reg(True)))
-    diags = drift_diagnostics(detect_drift(baseline, doc, plan(doc, _reg(False))))
+    baseline = derive_oath_baseline(source, doc, plan(doc, _reg(True), empty_workspace()))
+    diags = drift_diagnostics(detect_drift(baseline, doc, plan(doc, _reg(False), empty_workspace())))
     assert len(diags) == 1
     assert diags[0].severity == "error"
     assert diags[0].code == "drift"
@@ -184,9 +185,9 @@ def test_reconcile_records_on_first_run_then_reports_and_preserves_on_drift() ->
     source = "I withdraw 40."
     doc = parse("w.md", source)
     store = MemoryStore()
-    assert reconcile_drift(store, "w.md", source, doc, plan(doc, _reg(True))) == ()
+    assert reconcile_drift(store, "w.md", source, doc, plan(doc, _reg(True), empty_workspace())) == ()
     before = store.contents
-    drift = reconcile_drift(store, "w.md", source, doc, plan(doc, _reg(False)))
+    drift = reconcile_drift(store, "w.md", source, doc, plan(doc, _reg(False), empty_workspace()))
     assert _bare(drift) == [("I withdraw 40", 1)]
     assert store.contents == before  # baseline untouched while drift unacknowledged
 
@@ -195,9 +196,9 @@ def test_reconcile_update_mode_accepts_drift() -> None:
     source = "I withdraw 40."
     doc = parse("w.md", source)
     store = MemoryStore()
-    reconcile_drift(store, "w.md", source, doc, plan(doc, _reg(True)))
+    reconcile_drift(store, "w.md", source, doc, plan(doc, _reg(True), empty_workspace()))
     drift = reconcile_drift(
-        store, "w.md", source, doc, plan(doc, _reg(False)), update=True
+        store, "w.md", source, doc, plan(doc, _reg(False), empty_workspace()), update=True
     )
     assert drift == ()
     lock = parse_lock_file(store.contents or "")
@@ -299,7 +300,7 @@ def _deposit_withdraw_reg(with_deposit: bool = True):
 def test_two_paragraphs_that_merge_are_each_recorded_as_a_live_baseline_entry() -> None:
     source = "I deposit 100.\n\nI withdraw 40."
     doc = parse("w.md", source)
-    plan1 = plan(doc, _deposit_withdraw_reg())
+    plan1 = plan(doc, _deposit_withdraw_reg(), empty_workspace())
     # One planned example (the two paragraphs merged), but two live entries.
     assert len(plan1.examples) == 1
     assert live_examples(doc, plan1) == (
@@ -311,10 +312,10 @@ def test_two_paragraphs_that_merge_are_each_recorded_as_a_live_baseline_entry() 
 def test_deleting_one_step_def_of_a_merged_example_drifts_only_the_now_prose_paragraph() -> None:
     source = "I deposit 100.\n\nI withdraw 40."
     doc = parse("w.md", source)
-    baseline = derive_oath_baseline(source, doc, plan(doc, _deposit_withdraw_reg(True)))
+    baseline = derive_oath_baseline(source, doc, plan(doc, _deposit_withdraw_reg(True), empty_workspace()))
     # The deposit step is gone: its paragraph becomes prose, splitting the
     # example. The withdraw paragraph is still live; the deposit one drifts.
-    drift = detect_drift(baseline, doc, plan(doc, _deposit_withdraw_reg(False)))
+    drift = detect_drift(baseline, doc, plan(doc, _deposit_withdraw_reg(False), empty_workspace()))
     assert _bare(drift) == [("I deposit 100", 1)]
 
 
@@ -325,7 +326,7 @@ def _lock_with_stale_path() -> str:
     """
     source = "I withdraw 40."
     doc = parse("w.md", source)
-    baseline = derive_oath_baseline(source, doc, plan(doc, _reg()))
+    baseline = derive_oath_baseline(source, doc, plan(doc, _reg(), empty_workspace()))
     return stringify_lock_file(LockFile(version=2, oaths={"varar/w.md": baseline, "w.md": baseline}))
 
 

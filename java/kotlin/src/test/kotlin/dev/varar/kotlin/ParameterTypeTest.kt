@@ -3,6 +3,7 @@ package dev.varar.kotlin
 import dev.varar.Steps
 import dev.varar.core.Parse
 import dev.varar.core.Plan
+import dev.varar.core.Reference
 import io.cucumber.cucumberexpressions.UndefinedParameterTypeException
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertThrows
@@ -26,6 +27,7 @@ class ParameterTypeTest {
             Plan.plan(
                 Parse.parse("colors.md", "# Colors\n\n## Picking\n\nI pick red.\n"),
                 bound.registry(),
+                Reference.emptyWorkspace(),
             )
         assertEquals(listOf<Any>("RED"), plan.examples()[0].steps()[0].args())
     }
@@ -50,6 +52,7 @@ class ParameterTypeTest {
             Plan.plan(
                 Parse.parse("m.md", "# M\n\n## One\n\nI mention *Emma*.\n"),
                 bound.registry(),
+                Reference.emptyWorkspace(),
             )
         assertEquals(listOf<Any>("Emma"), italic.examples()[0].steps()[0].args())
 
@@ -57,6 +60,7 @@ class ParameterTypeTest {
             Plan.plan(
                 Parse.parse("m.md", "# M\n\n## Two\n\nI mention **Emma**.\n"),
                 bound.registry(),
+                Reference.emptyWorkspace(),
             )
         assertEquals(listOf<Any>("Emma"), bold.examples()[0].steps()[0].args())
     }

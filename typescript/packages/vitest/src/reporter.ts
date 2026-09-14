@@ -16,7 +16,7 @@ import {
   writeOathResults,
 } from '@varar/runner'
 import type { Reporter, TestModule } from 'vitest/node'
-import { VARAR_BASELINE_META } from './runtime.ts'
+import { VARAR_BASELINE_META, VARAR_CONSUMED_META } from './runtime.ts'
 
 // Structural shape of the slice of vitest's TestModule API the collector reads.
 // `meta()` is typed `unknown` so both vitest's real `TestModule` (whose
@@ -29,6 +29,7 @@ type TestCaseNode = {
 type TestModuleNode = {
   readonly moduleId: string
   readonly children: { allTests(): Iterable<TestCaseNode> }
+  meta?(): unknown
 }
 // The baseline arrives on the FILE's meta rather than any test's, so the
 // collector below reads a different slice of the same TestModule.
@@ -51,7 +52,13 @@ export function collectFromModules(
         ?.vararResult
       if (vararResult) examples.push(vararResult)
     }
-    if (examples.length > 0) byFile.set(m.moduleId, examples)
+    // A fully-consumed oath (every section referenced elsewhere) runs no
+    // example but is still a discovered oath: it gets an empty record, so a
+    // stale diagnostic from before it was consumed is cleared.
+    const consumed = (m.meta?.() as Record<string, unknown> | null | undefined)?.[
+      VARAR_CONSUMED_META
+    ]
+    if (examples.length > 0 || consumed === true) byFile.set(m.moduleId, examples)
   }
   return byFile
 }

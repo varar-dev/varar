@@ -12,6 +12,8 @@ from varar_core.drift import prune_baselines, reconcile_drift
 from varar_core.failure import to_failure
 from varar_core.result import ExampleResult
 from varar_runner.baseline_store import create_file_baseline_store
+from varar_core.parse import parse
+from varar_core.reference import OathWorkspace, build_workspace
 from varar_runner.discovery import find_oaths, match_oath
 from varar_runner.results import ResultsCollector
 from varar_runner.run import RecordingReporter, examples_with_runs, plan_oath
@@ -43,7 +45,14 @@ def pytest_configure(config: pytest.Config) -> None:
     wrapped_registry = wrap_registry_for_fixtures(loaded.registry, get_active_request)
     loaded = dataclasses.replace(loaded, registry=wrapped_registry)
     store = create_file_baseline_store(root)
-    _STASH[id(config)] = (cfg, loaded, root, store, ResultsCollector())
+    oaths = find_oaths(cfg.docs_include, cfg.docs_exclude, root)
+    # Whether a section is a standalone example depends on whether another oath
+    # references it (ADR 0016) — whole-project knowledge, built here from the
+    # config globs for the same reason baseline pruning is: `pytest one_dir/`
+    # is a filtered view, and planning against it would run a consumed section
+    # as an example of its own.
+    workspace = _project_workspace(oaths, root)
+    _STASH[id(config)] = (cfg, loaded, root, store, ResultsCollector(), workspace)
 
     # Drop baselines for oaths the config no longer discovers. Reconciliation is
     # per-oath and never sees a path that has gone, so the lock would otherwise
@@ -53,9 +62,21 @@ def pytest_configure(config: pytest.Config) -> None:
     # pruning against it would delete live baselines.
     prune_baselines(
         store,
-        [p.relative_to(root).as_posix() for p in find_oaths(cfg.docs_include, cfg.docs_exclude, root)],
+        [p.relative_to(root).as_posix() for p in oaths],
         update=_update_mode(config),
     )
+
+
+def _project_workspace(oaths, root: Path) -> OathWorkspace:
+    """Parse every discovered oath so references resolve and consumed sections
+    are recognised. Parsing runs no step code, so this is cheap."""
+    docs = []
+    for path in oaths:
+        try:
+            docs.append(parse(_oath_path(path, root), path.read_text(encoding="utf-8")))
+        except OSError:
+            continue
+    return build_workspace(docs)
 
 
 def pytest_sessionfinish(session: pytest.Session) -> None:
@@ -68,7 +89,7 @@ def pytest_sessionfinish(session: pytest.Session) -> None:
     stashed = _STASH.get(id(session.config))
     if stashed is None:
         return
-    _cfg, _loaded, root, _store, results = stashed
+    _cfg, _loaded, root, _store, results, _workspace = stashed
     results.write_all(root)
 
 
@@ -88,7 +109,7 @@ def _oath_path(path: Path, root: Path) -> str:
 def pytest_collect_file(file_path: Path, parent: pytest.Collector):
     if file_path.suffix != ".md":
         return None
-    cfg, _loaded, root, _store, _results = _STASH[id(parent.config)]
+    cfg, _loaded, root, _store, _results, _workspace = _STASH[id(parent.config)]
     if not match_oath(file_path, cfg.docs_include, cfg.docs_exclude, root):
         return None
     return OathFile.from_parent(parent, path=file_path)
@@ -96,9 +117,11 @@ def pytest_collect_file(file_path: Path, parent: pytest.Collector):
 
 class OathFile(pytest.File):
     def collect(self):
-        _cfg, loaded, root, store, results = _STASH[id(self.config)]
+        _cfg, loaded, root, store, results, workspace = _STASH[id(self.config)]
         source = self.path.read_text(encoding="utf-8")
-        execution_plan = plan_oath(self.path.name, source, loaded.registry)
+        # The oath's workspace-relative POSIX path, not its basename: doc.path
+        # is an oath's identity in every port (ADR 0016).
+        execution_plan = plan_oath(_oath_path(self.path, root), source, loaded.registry, workspace)
         pairs = examples_with_runs(execution_plan, loaded.create_context, RecordingReporter())
         seen: dict[str, int] = {}
         for example, run in pairs:

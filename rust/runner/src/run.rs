@@ -7,11 +7,20 @@ use varar_core::error::StepFailure;
 use varar_core::execute::{ExecutePorts, collect_examples};
 use varar_core::parse::parse;
 use varar_core::plan::{ExecutionPlan, plan};
+use varar_core::reference::OathWorkspace;
 use varar_core::registry::Registry;
 
-/// Parse + plan one oath.
-pub fn plan_oath(name: &str, source: &str, registry: &Registry) -> ExecutionPlan {
-    plan(&parse(name, source), registry)
+/// Plans one oath. `workspace` carries every other oath in the project plus the
+/// sections a reference block consumes (ADR 0016); it is required because an
+/// adapter that omitted it would run consumed sections as standalone examples,
+/// which is green and wrong.
+pub fn plan_oath(
+    name: &str,
+    source: &str,
+    registry: &Registry,
+    workspace: &OathWorkspace,
+) -> ExecutionPlan {
+    plan(&parse(name, source), registry, workspace)
 }
 
 /// The per-example display names: the innermost heading (or the body-derived

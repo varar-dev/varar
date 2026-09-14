@@ -43,6 +43,46 @@ module Varar
           span: span
         )
       end
+
+      # A reference block (ADR 0016) points at an oath the workspace does not
+      # hold. Never prose: a link-only block that resolves to nothing has no
+      # other reading, so it fails the run rather than degrading silently.
+      def reference_not_found(text, path, span)
+        Diagnostic.new(
+          severity: 'error',
+          code: 'reference-not-found',
+          message: %(Reference to "#{text}" points at "#{path}", which is not an oath in this ) +
+                   "workspace.\nCheck the path, and that the file is matched by the `docs` globs " \
+                   'in varar.config.json.',
+          span: span
+        )
+      end
+
+      # The referenced document exists but the section contributes no steps — a
+      # mistyped anchor, or a section that is pure prose.
+      def reference_empty(text, path, slug, span)
+        where = slug.empty? ? path : "#{path}##{slug}"
+        Diagnostic.new(
+          severity: 'error',
+          code: 'reference-empty',
+          message: %(Reference to "#{text}" resolves to "#{where}", which contributes no steps.\n) +
+                   'Check the heading the anchor names, and that its section contains a matching ' \
+                   'paragraph.',
+          span: span
+        )
+      end
+
+      # References may nest to any depth (depth is a style question, not a
+      # rule), so a chain that reaches a section already on it must be reported
+      # rather than recursed into.
+      def reference_cycle(chain, span)
+        Diagnostic.new(
+          severity: 'error',
+          code: 'reference-cycle',
+          message: "Reference cycle: #{chain.join(' → ')}.",
+          span: span
+        )
+      end
     end
   end
 end

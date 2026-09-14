@@ -20,6 +20,7 @@ from varar_core.parse import parse
 from varar_core.plan import plan
 from varar_core.registry import add_step, create_registry, define_parameter_type
 from varar_core.span import Span
+from varar_core.reference import empty_workspace
 
 
 # ---------------------------------------------------------------------------
@@ -174,7 +175,7 @@ def test_to_plan_artifact_projects_examples_expected_outcome_and_args():
         kind="stimulus",
         handler=lambda *_: None,
     )
-    art = to_plan_artifact(plan(parse("e.md", "# A\n\nI have 5 cukes."), r))
+    art = to_plan_artifact(plan(parse("e.md", "# A\n\nI have 5 cukes."), r, empty_workspace()))
     assert art["examples"][0]["expectedOutcome"] == "pass"
     assert art["examples"][0]["steps"][0]["matchedExpression"] == "I have {int} cukes"
     assert art["examples"][0]["steps"][0]["args"] == [{"value": "5", "parameterType": "int"}]
@@ -200,7 +201,7 @@ def test_to_plan_artifact_projects_diagnostics_without_message_or_path():
         kind="stimulus",
         handler=lambda *_: None,
     )
-    art = to_plan_artifact(plan(parse("e.md", "# A\n\nI have 5 cukes."), r))
+    art = to_plan_artifact(plan(parse("e.md", "# A\n\nI have 5 cukes."), r, empty_workspace()))
     assert len(art["diagnostics"]) == 1
     assert "message" not in art["diagnostics"][0]
     assert art["diagnostics"][0]["code"] == "ambiguous-match"

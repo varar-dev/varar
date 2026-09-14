@@ -5,9 +5,15 @@
 
 use crate::ast::{Block, Doc, Fence, Row, SegmentOffset, Table};
 use crate::cell_diff::RowCheck;
-use crate::diagnostics::{Diagnostic, ambiguous_match, error_fence_without_step};
+use crate::diagnostics::{
+    Diagnostic, ambiguous_match, error_fence_without_step, reference_cycle, reference_empty,
+    reference_not_found,
+};
 use crate::matcher::{Hit, ParamSpan, ResolvedSteps, find_hits, resolve_hits};
 use crate::offsets::{java_trim, utf16_len};
+use crate::reference::{
+    OathWorkspace, Reference, reference_of, section_candidates, section_key, slugify,
+};
 use crate::registry::{FormatFn, Registry, StepRegistration};
 use crate::sentences::split_sentences;
 use crate::span::Span;
@@ -50,6 +56,13 @@ pub struct PlannedStep {
     pub text: String,
     pub match_span: Span,
     pub param_spans: Vec<Span>,
+    /// The notation each parameter matched, sliced at plan time from the
+    /// document the step was WRITTEN in. Consumers must use this rather than
+    /// slicing the running oath's source: a step a reference block spliced in
+    /// (ADR 0016) has spans in a different document.
+    pub param_texts: Vec<String>,
+    /// Set only on such a spliced step: the document its spans belong to.
+    pub doc_path: Option<String>,
     pub step_def: Rc<StepRegistration>,
     pub args: Vec<Value>,
     pub formats: Vec<Option<FormatFn>>,
@@ -61,14 +74,27 @@ static WHITESPACE_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\s+").unwr
 static WORD_CHAR_RE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"^[\p{L}\p{N}_]$").unwrap());
 
 /// Plans `doc` against `registry`. Port of `plan()`.
-pub fn plan(doc: &Doc, registry: &Registry) -> ExecutionPlan {
+pub fn plan(doc: &Doc, registry: &Registry, workspace: &OathWorkspace) -> ExecutionPlan {
     let source = &doc.source;
     let mut diagnostics = Vec::new();
+
+    // A section another oath references stops being a standalone example: it
+    // runs where it is referenced, not here (ADR 0016).
+    let whole_file = section_key(&doc.path, "");
+    let consumed = |ex: &crate::ast::Example| {
+        workspace.referenced.contains(&whole_file)
+            || ex.scope_stack.iter().any(|h| {
+                workspace
+                    .referenced
+                    .contains(&section_key(&doc.path, &slugify(h)))
+            })
+    };
 
     // Phase 1: plan each candidate paragraph independently into a "unit".
     let units: Vec<CandidateUnit> = doc
         .examples
         .iter()
+        .filter(|ex| !consumed(ex))
         .map(|ex| plan_candidate(ex, doc, registry, &mut diagnostics))
         .collect();
 
@@ -87,6 +113,41 @@ pub fn plan(doc: &Doc, registry: &Registry) -> ExecutionPlan {
                 }
                 examples.extend(rows);
             }
+            CandidateUnit::Reference(unit) => {
+                // Splice the referenced section's steps in at this position.
+                // Only the reference block itself is subject to the delimiter
+                // rule; everything it splices in belongs to the same sequence,
+                // so a section of several paragraphs stays one example.
+                let preceded = unit.preceded_by_delimiter;
+                let resolved =
+                    resolve_reference(&unit, doc, registry, workspace, &mut diagnostics, &[]);
+                for (i, spliced) in resolved.into_iter().enumerate() {
+                    let mergeable = open.is_some() && (i > 0 || !preceded);
+                    let current = if mergeable {
+                        let m = open.as_mut().expect("an example is open");
+                        merge_into(m, spliced, true);
+                        m
+                    } else {
+                        if let Some(m) = open.take() {
+                            examples.push(finish_merged(m, source));
+                        }
+                        let mut fresh = start_merged(spliced);
+                        // An example that OPENS with a reference is named by
+                        // its own first matching paragraph, not by the section
+                        // it pulls in — and it sits under THIS document's
+                        // headings, starting at the reference block.
+                        fresh.name_from_reference = true;
+                        fresh.scope_stack = unit.scope_stack.clone();
+                        fresh.start_offset = unit.span.start_offset;
+                        open.insert(fresh)
+                    };
+                    // A spliced unit's span is in the referenced document; the
+                    // example's span is in this one. It ends at the reference
+                    // block until a later paragraph of the example's own
+                    // extends it.
+                    current.end_offset = unit.span.end_offset;
+                }
+            }
             CandidateUnit::Steps(unit) => {
                 if !unit.matched {
                     // Prose paragraph — a delimiter. Drop it and end the open example.
@@ -96,7 +157,7 @@ pub fn plan(doc: &Doc, registry: &Registry) -> ExecutionPlan {
                     continue;
                 }
                 match open.as_mut() {
-                    Some(m) if !unit.preceded_by_delimiter => merge_into(m, unit),
+                    Some(m) if !unit.preceded_by_delimiter => merge_into(m, unit, false),
                     _ => {
                         if let Some(m) = open.take() {
                             examples.push(finish_merged(m, source));
@@ -131,12 +192,30 @@ struct MergedExample {
     steps: Vec<PlannedStep>,
     expected_outcome: Option<String>,
     expected_error_message: Option<String>,
+    /// True while the name came from a spliced (referenced) paragraph and is
+    /// waiting to be replaced by the example's own first matching paragraph.
+    name_from_reference: bool,
 }
 
 /// One candidate paragraph, planned in isolation.
 enum CandidateUnit {
-    HeaderBound { rows: Vec<PlannedExample> },
+    HeaderBound {
+        rows: Vec<PlannedExample>,
+    },
+    /// A reference block: its whole text is a link to an oath section, whose
+    /// steps are spliced in here (ADR 0016). Never prose, so it does not close
+    /// the open example.
+    Reference(ReferenceUnit),
     Steps(StepsUnit),
+}
+
+struct ReferenceUnit {
+    reference: Reference,
+    preceded_by_delimiter: bool,
+    span: Span,
+    /// The referring document's headings at the reference block: an example
+    /// the block opens sits under THESE, not the referenced section's.
+    scope_stack: Vec<String>,
 }
 
 struct StepsUnit {
@@ -159,10 +238,16 @@ fn start_merged(unit: StepsUnit) -> MergedExample {
         steps: unit.steps,
         expected_outcome: unit.expected_outcome,
         expected_error_message: unit.expected_error_message,
+        name_from_reference: false,
     }
 }
 
-fn merge_into(open: &mut MergedExample, unit: StepsUnit) {
+fn merge_into(open: &mut MergedExample, unit: StepsUnit, from_reference: bool) {
+    if open.name_from_reference && !from_reference {
+        open.name = unit.name.clone();
+        open.scope_stack = unit.scope_stack.clone();
+        open.name_from_reference = false;
+    }
     open.end_offset = unit.span.end_offset;
     open.steps.extend(unit.steps);
     // Any error fence in a merged part marks the whole example expected-to-fail;
@@ -189,6 +274,79 @@ fn finish_merged(open: MergedExample, source: &str) -> PlannedExample {
     }
 }
 
+/// Resolve one reference block into the step-bearing units of the section it
+/// names, recursively: a referenced section may itself contain reference
+/// blocks, to any depth (ADR 0016 leaves depth to the author's judgement).
+/// `chain` carries the sections currently being resolved so a repeat is
+/// reported as a cycle instead of recursing forever.
+fn resolve_reference(
+    unit: &ReferenceUnit,
+    from: &Doc,
+    registry: &Registry,
+    workspace: &OathWorkspace,
+    diagnostics: &mut Vec<Diagnostic>,
+    chain: &[String],
+) -> Vec<StepsUnit> {
+    let key = section_key(&unit.reference.path, &unit.reference.slug);
+    if chain.contains(&key) {
+        diagnostics.push(reference_cycle(unit.span));
+        return Vec::new();
+    }
+    // A same-file reference resolves against the document being planned, which
+    // is not necessarily in the workspace.
+    let target = if unit.reference.path == from.path {
+        Some(from)
+    } else {
+        workspace.docs.get(&unit.reference.path)
+    };
+    let Some(target) = target else {
+        diagnostics.push(reference_not_found(unit.span));
+        return Vec::new();
+    };
+    let mut out: Vec<StepsUnit> = Vec::new();
+    let mut deeper: Vec<String> = chain.to_vec();
+    deeper.push(key);
+    for candidate in section_candidates(target, &unit.reference.slug) {
+        match plan_candidate(candidate, target, registry, diagnostics) {
+            CandidateUnit::Reference(nested) => out.extend(resolve_reference(
+                &nested,
+                target,
+                registry,
+                workspace,
+                diagnostics,
+                &deeper,
+            )),
+            // A header-bound table produces one example per row, which a
+            // spliced step list cannot express; an `error` fence declares an
+            // outcome for an example, not for a reusable fragment. Both are
+            // left out.
+            CandidateUnit::HeaderBound { .. } => {}
+            CandidateUnit::Steps(planned) => {
+                if planned.matched {
+                    out.push(tag_with_doc(planned, &target.path, &from.path));
+                }
+            }
+        }
+    }
+    if out.is_empty() {
+        diagnostics.push(reference_empty(unit.span));
+    }
+    out
+}
+
+/// Carry the source document's identity on every spliced step, so a failure in
+/// a referenced section reports spans against the file they were written in
+/// rather than the file being run.
+fn tag_with_doc(mut unit: StepsUnit, doc_path: &str, host_path: &str) -> StepsUnit {
+    if doc_path == host_path {
+        return unit;
+    }
+    for step in &mut unit.steps {
+        step.doc_path = Some(doc_path.to_string());
+    }
+    unit
+}
+
 /// Plan a single candidate paragraph (plus its attached tables/fences) in
 /// isolation. Emits ambiguity / error-fence diagnostics into `diagnostics`.
 fn plan_candidate(
@@ -197,6 +355,19 @@ fn plan_candidate(
     registry: &Registry,
     diagnostics: &mut Vec<Diagnostic>,
 ) -> CandidateUnit {
+    // A block whose whole text is a link to an oath section is a reference, not
+    // content: never matched against step definitions, and never prose.
+    if let Some(text) = ex.body.first().and_then(block_text_of) {
+        if let Some(reference) = reference_of(text, &doc.path) {
+            return CandidateUnit::Reference(ReferenceUnit {
+                reference,
+                preceded_by_delimiter: ex.preceded_by_delimiter,
+                span: ex.span,
+                scope_stack: ex.scope_stack.clone(),
+            });
+        }
+    }
+
     let source = &doc.source;
     let mut had_ambiguous = false;
     let body = &ex.body;
@@ -226,6 +397,12 @@ fn plan_candidate(
                         .iter()
                         .map(|p| lift_span(source, block, p.start, p.end))
                         .collect(),
+                    param_texts: hit
+                        .param_spans
+                        .iter()
+                        .map(|p| crate::offsets::utf16_slice(text, p.start, p.end).to_string())
+                        .collect(),
+                    doc_path: None,
                     step_def: hit.step_def,
                     args: hit.args,
                     formats: hit.formats,
@@ -259,14 +436,11 @@ fn plan_candidate(
             let mut row_args = bound.step.args.clone();
             row_args.push(Value::Map(row_object));
             let row_step = PlannedStep {
-                text: bound.step.text.clone(),
                 match_span: row.span,
-                param_spans: bound.step.param_spans.clone(),
-                step_def: bound.step.step_def.clone(),
                 args: row_args,
-                formats: bound.step.formats.clone(),
                 data_table: None,
                 doc_string: None,
+                ..bound.step.clone()
             };
             let row_checks: Vec<RowCheck> = header_cells
                 .iter()
@@ -583,4 +757,13 @@ fn lift_segment_offset(segment_map: &[SegmentOffset], text_offset: usize) -> usi
     }
     let best = best.expect("empty segmentMap");
     best.source_offset + (text_offset - best.text_offset)
+}
+
+fn block_text_of(block: &Block) -> Option<&str> {
+    match block {
+        Block::Paragraph(p) => Some(&p.text),
+        Block::ListItem(l) => Some(&l.text),
+        Block::Blockquote(b) => Some(&b.text),
+        _ => None,
+    }
 }

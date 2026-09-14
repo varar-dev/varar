@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import dev.varar.core.CellDiff;
 import dev.varar.core.Plan;
+import dev.varar.core.Reference;
 import dev.varar.runner.StepLoader.LoadedSteps;
 import dev.varar.runner.fixtures.BoomSteps;
 import dev.varar.runner.fixtures.GreetingSteps;
@@ -28,7 +29,7 @@ class RenderTest {
         LoadedSteps loaded = StepLoader.loadSteps(List.of(WidgetSteps.class.getName()), LOADER);
         String source = "# Widgets\n\nI have 3 widgets. I should have 4 widgets.";
         String path = "widgets.md";
-        Plan.ExecutionPlan plan = Run.planOath(path, source, loaded.registry());
+        Plan.ExecutionPlan plan = Run.planOath(path, source, loaded.registry(), Reference.emptyWorkspace());
 
         List<Run.ExampleRun> runs = Run.examplesWithRuns(plan, loaded.createContext(), new Run.RecordingReporter());
         CellDiff.CellMismatchException error = assertThrows(
@@ -57,7 +58,7 @@ class RenderTest {
                 Hello, world!
                 ```""";
         String path = "greeting.md";
-        Plan.ExecutionPlan plan = Run.planOath(path, source, loaded.registry());
+        Plan.ExecutionPlan plan = Run.planOath(path, source, loaded.registry(), Reference.emptyWorkspace());
 
         List<Run.ExampleRun> runs = Run.examplesWithRuns(plan, loaded.createContext(), new Run.RecordingReporter());
         CellDiff.CellMismatchException error = assertThrows(
@@ -77,7 +78,7 @@ class RenderTest {
         LoadedSteps loaded = StepLoader.loadSteps(List.of(BoomSteps.class.getName()), LOADER);
         String source = "# Boom\n\nsomething explodes.";
         String path = "boom.md";
-        Plan.ExecutionPlan plan = Run.planOath(path, source, loaded.registry());
+        Plan.ExecutionPlan plan = Run.planOath(path, source, loaded.registry(), Reference.emptyWorkspace());
 
         List<Run.ExampleRun> runs = Run.examplesWithRuns(plan, loaded.createContext(), new Run.RecordingReporter());
         RuntimeException error =

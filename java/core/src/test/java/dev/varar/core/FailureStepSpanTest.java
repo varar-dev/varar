@@ -34,7 +34,7 @@ class FailureStepSpanTest {
                     throw new AssertionError("expected the library to refuse");
                 },
                 StepKind.SENSOR);
-        Plan.ExecutionPlan p = Plan.plan(Parse.parse("l.md", SOURCE), r);
+        Plan.ExecutionPlan p = Plan.plan(Parse.parse("l.md", SOURCE), r, Reference.emptyWorkspace());
         Throwable caught = assertThrows(
                 AssertionError.class,
                 () -> Execute.collectExamples(p, new Execute.ExecutePorts(d -> {}))

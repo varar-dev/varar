@@ -6,6 +6,7 @@
 //! `CompletableFuture` return becomes [`Handler::async0`] driven by the executor's
 //! `block_on`.
 
+use varar_core::reference::empty_workspace;
 mod common;
 
 use common::vmap;
@@ -49,7 +50,7 @@ fn reg(
 }
 
 fn plan_of(source: &str, registry: &Registry) -> ExecutionPlan {
-    plan(&parse("x.md", source), registry)
+    plan(&parse("x.md", source), registry, &empty_workspace())
 }
 
 /// A future that yields `Pending` exactly once (exercising the executor's

@@ -1,7 +1,22 @@
 import type { Block, Doc, Fence, SegmentOffset, Table } from './ast.ts'
 import type { RowCheck } from './cell-diff.ts'
-import { ambiguousMatch, type Diagnostic, errorFenceWithoutStep } from './diagnostics.ts'
+import {
+  ambiguousMatch,
+  type Diagnostic,
+  errorFenceWithoutStep,
+  referenceCycle,
+  referenceEmpty,
+  referenceNotFound,
+} from './diagnostics.ts'
 import { findHits, type Hit, resolveHits } from './matcher.ts'
+import {
+  type OathWorkspace,
+  type Reference,
+  referenceOf,
+  sectionCandidates,
+  sectionKey,
+  slugify as slugOf,
+} from './reference.ts'
 import type { ParameterFormat, Registry, StepRegistration } from './registry.ts'
 import { splitSentences } from './sentences.ts'
 import { type Span, spanFromOffsets } from './span.ts'
@@ -48,9 +63,19 @@ export type HeaderBinding = {
 export type PlannedStep = {
   readonly text: string
   readonly matchSpan: Span
+  // Set only when this step was spliced in from another oath by a reference
+  // block (ADR 0016): the path of the document its spans belong to. Absent
+  // means the example's own document, which is the overwhelming majority.
+  readonly docPath?: string
   // Whole matched notation per parameter, incl. delimiters (e.g. quotes) —
   // used for rename and the "actual" side of a mismatch.
   readonly paramSpans: ReadonlyArray<Span>
+  // The text those spans cover, sliced at plan time from the document the step
+  // was written in. Consumers must use this rather than slicing the running
+  // oath's source: a step spliced in by a reference block (ADR 0016) has spans
+  // in a DIFFERENT document, and slicing the host source by them yields
+  // whatever text happens to sit at those offsets.
+  readonly paramTexts: ReadonlyArray<string>
   // The value passed to the handler per parameter (inner capture group), for
   // editor highlighting. Aligned 1:1 with `paramSpans`; equals it when the
   // parameter regexp has no capture group.
@@ -68,11 +93,27 @@ export type PlannedStep = {
   }
 }
 
-export function plan(doc: Doc, registry: Registry): ExecutionPlan {
+export function plan(
+  doc: Doc,
+  registry: Registry,
+  // Every oath in the project, plus which sections a reference block consumes
+  // (ADR 0016). Required, not defaulted: a caller that has not built it would
+  // otherwise silently run consumed sections as standalone examples — green,
+  // and wrong. Pass emptyWorkspace() to plan a document in isolation.
+  workspace: OathWorkspace,
+): ExecutionPlan {
   const diagnostics: Diagnostic[] = []
 
+  // A section another oath references stops being a standalone example: it runs
+  // where it is referenced, not here.
+  const consumed = (ex: Doc['examples'][number]): boolean =>
+    ex.scopeStack.some((h) => workspace.referenced.has(sectionKey(doc.path, slugOf(h)))) ||
+    workspace.referenced.has(sectionKey(doc.path, ''))
+
   // Phase 1: plan each candidate paragraph independently into a "unit".
-  const units = doc.examples.map((ex) => planCandidate(ex, doc, registry, diagnostics))
+  const units = doc.examples
+    .filter((ex) => !consumed(ex))
+    .map((ex) => planCandidate(ex, doc, registry, diagnostics))
 
   // Phase 2: group adjacent candidates into examples. A matching candidate
   // continues the open example when no delimiter (heading / `---`) precedes it;
@@ -89,6 +130,39 @@ export function plan(doc: Doc, registry: Registry): ExecutionPlan {
     if (unit.kind === 'header-bound') {
       flush()
       examples.push(...unit.rows)
+      continue
+    }
+    if (unit.kind === 'reference') {
+      // Splice the referenced section's steps in at this position. The steps
+      // join the open example (sharing its state) unless a delimiter separates
+      // them, in which case this reference starts a new example — the same
+      // grouping rule every other candidate follows.
+      const resolved = resolveReference(unit, doc, registry, workspace, diagnostics, [])
+      resolved.forEach((spliced, i) => {
+        // Only the reference block itself is subject to the delimiter rule.
+        // Everything it splices in belongs to the same sequence, so a section
+        // of several paragraphs stays one example rather than fragmenting.
+        let current: MergedExample
+        if (open && (i > 0 || !unit.precededByDelimiter)) {
+          mergeInto(open, spliced, true)
+          current = open
+        } else {
+          flush()
+          current = startMerged(spliced)
+          // An example that OPENS with a reference is named by its own first
+          // matching paragraph, not by the section it pulls in — otherwise
+          // every example under a shared setup carries the same name — and it
+          // sits under THIS document's headings, not the section's.
+          current.nameFromReference = true
+          current.scopeStack = unit.scopeStack
+          current.startOffset = unit.span.startOffset
+          open = current
+        }
+        // A spliced unit's span is in the referenced document; the example's
+        // span is in this one. It ends at the reference block until a later
+        // paragraph of the example's own extends it.
+        current.endOffset = unit.span.endOffset
+      })
       continue
     }
     if (!unit.matched) {
@@ -111,10 +185,82 @@ export function plan(doc: Doc, registry: Registry): ExecutionPlan {
   return { doc, examples, diagnostics }
 }
 
+// Resolve one reference block into the step-bearing units of the section it
+// names, recursively: a referenced section may itself contain reference blocks,
+// to any depth (ADR 0016 leaves depth to the author's judgement). `chain`
+// carries the sections currently being resolved so a repeat is reported as a
+// cycle instead of recursing forever.
+function resolveReference(
+  unit: Extract<CandidateUnit, { kind: 'reference' }>,
+  from: Doc,
+  registry: Registry,
+  workspace: OathWorkspace,
+  diagnostics: Diagnostic[],
+  chain: ReadonlyArray<string>,
+): ReadonlyArray<Extract<CandidateUnit, { kind: 'steps' }>> {
+  const { reference } = unit
+  const key = sectionKey(reference.path, reference.slug)
+  if (chain.includes(key)) {
+    diagnostics.push(referenceCycle({ chain: [...chain, key], span: unit.span }))
+    return []
+  }
+  // A same-file reference resolves against the document being planned, which is
+  // not necessarily in the workspace (a caller may plan a document in isolation).
+  const target = reference.path === from.path ? from : workspace.docs.get(reference.path)
+  if (!target) {
+    diagnostics.push(
+      referenceNotFound({ text: reference.text, path: reference.path, span: unit.span }),
+    )
+    return []
+  }
+  const out: Array<Extract<CandidateUnit, { kind: 'steps' }>> = []
+  for (const candidate of sectionCandidates(target, reference.slug)) {
+    const planned = planCandidate(candidate, target, registry, diagnostics)
+    if (planned.kind === 'reference') {
+      out.push(
+        ...resolveReference(planned, target, registry, workspace, diagnostics, [...chain, key]),
+      )
+      continue
+    }
+    // A header-bound table produces one example per row, which a spliced step
+    // list cannot express; an `error` fence declares an outcome for an example,
+    // not for a reusable fragment. Both are left out, and the section reads as
+    // empty if that is all it held.
+    if (planned.kind !== 'steps' || !planned.matched) continue
+    out.push(tagWithDoc(planned, target.path, from.path))
+  }
+  if (out.length === 0) {
+    diagnostics.push(
+      referenceEmpty({
+        text: reference.text,
+        path: reference.path,
+        slug: reference.slug,
+        span: unit.span,
+      }),
+    )
+  }
+  return out
+}
+
+// Carry the source document's identity on every spliced step, so a failure in
+// a referenced section reports spans against the file they were written in
+// rather than the file being run.
+function tagWithDoc(
+  unit: Extract<CandidateUnit, { kind: 'steps' }>,
+  docPath: string,
+  hostPath: string,
+): Extract<CandidateUnit, { kind: 'steps' }> {
+  if (docPath === hostPath) return unit
+  return { ...unit, steps: unit.steps.map((step) => ({ ...step, docPath })) }
+}
+
 // A step-bearing candidate accumulating into one example while adjacent matching
 // candidates keep merging in.
 type MergedExample = {
   name: string
+  // True while the name came from a spliced (referenced) paragraph and is
+  // waiting to be replaced by the example's own first matching paragraph.
+  nameFromReference?: boolean
   scopeStack: ReadonlyArray<string>
   startOffset: number
   endOffset: number
@@ -126,6 +272,18 @@ type MergedExample = {
 // One candidate paragraph, planned in isolation.
 type CandidateUnit =
   | { readonly kind: 'header-bound'; readonly rows: ReadonlyArray<PlannedExample> }
+  | {
+      // A reference block: its whole text is a link to an oath section, whose
+      // steps are spliced in here (ADR 0016). Never prose, so it does not close
+      // the open example.
+      readonly kind: 'reference'
+      readonly reference: Reference
+      readonly precededByDelimiter: boolean
+      // The referring document's own heading chain and the block's own span:
+      // an example this reference opens belongs here, not to the section.
+      readonly scopeStack: ReadonlyArray<string>
+      readonly span: Span
+    }
   | {
       readonly kind: 'steps'
       readonly matched: boolean
@@ -150,7 +308,16 @@ function startMerged(unit: Extract<CandidateUnit, { kind: 'steps' }>): MergedExa
   }
 }
 
-function mergeInto(open: MergedExample, unit: Extract<CandidateUnit, { kind: 'steps' }>): void {
+function mergeInto(
+  open: MergedExample,
+  unit: Extract<CandidateUnit, { kind: 'steps' }>,
+  fromReference = false,
+): void {
+  if (open.nameFromReference && !fromReference) {
+    open.name = unit.name
+    open.scopeStack = unit.scopeStack
+    open.nameFromReference = false
+  }
   open.endOffset = unit.span.endOffset
   open.steps.push(...unit.steps)
   // Any error fence in a merged part marks the whole example expected-to-fail;
@@ -183,6 +350,21 @@ function planCandidate(
   registry: Registry,
   diagnostics: Diagnostic[],
 ): CandidateUnit {
+  // A block whose whole text is a link to an oath section is a reference, not
+  // content: it is never matched against step definitions, and never prose.
+  const primary = ex.body[0]
+  if (primary && 'text' in primary) {
+    const reference = referenceOf(primary.text, doc.path)
+    if (reference) {
+      return {
+        kind: 'reference',
+        reference,
+        precededByDelimiter: ex.precededByDelimiter,
+        scopeStack: ex.scopeStack,
+        span: ex.span,
+      }
+    }
+  }
   let hadAmbiguous = false
 
   // Pass 1: plan each text-bearing block and collect steps per body index.
@@ -211,6 +393,7 @@ function planCandidate(
         text: block.text.slice(hit.matchStart, hit.matchEnd),
         matchSpan: liftSpan(doc.source, block, hit.matchStart, hit.matchEnd),
         paramSpans: hit.paramSpans.map((p) => liftSpan(doc.source, block, p.start, p.end)),
+        paramTexts: hit.paramSpans.map((p) => block.text.slice(p.start, p.end)),
         paramInnerSpans: hit.paramInnerSpans.map((p) =>
           liftSpan(doc.source, block, p.start, p.end),
         ),

@@ -1,6 +1,7 @@
 import { expect, test } from 'vitest'
 import { parse } from '../src/parse.ts'
 import { plan } from '../src/plan.ts'
+import { emptyWorkspace } from '../src/reference.ts'
 import { addStep, createRegistry } from '../src/registry.ts'
 
 function reg() {
@@ -36,7 +37,7 @@ test('plan produces a PlannedExample with steps in document order', () => {
   const source =
     '# Withdrawing\n\nGiven I have 100 in my account. When I withdraw 40. Then I should have 60 left.'
   const doc = parse('w.md', source)
-  const result = plan(doc, reg())
+  const result = plan(doc, reg(), emptyWorkspace())
   expect(result.diagnostics).toHaveLength(0)
   expect(result.examples).toHaveLength(1)
   const ex = result.examples[0]
@@ -55,7 +56,7 @@ test('plan produces a PlannedExample with steps in document order', () => {
 
 test('the example name is the entire paragraph even when only part of it matches steps', () => {
   const source = 'It was a dark night. I withdraw 40. Nobody was watching.'
-  const result = plan(parse('w.md', source), reg())
+  const result = plan(parse('w.md', source), reg(), emptyWorkspace())
   expect(result.examples).toHaveLength(1)
   expect(result.examples[0]?.name).toBe('It was a dark night. I withdraw 40. Nobody was watching')
   expect(result.examples[0]?.steps.map((s) => s.text)).toEqual(['I withdraw 40'])
@@ -63,7 +64,7 @@ test('the example name is the entire paragraph even when only part of it matches
 
 test('hard line breaks inside the paragraph collapse to single spaces in the name', () => {
   const source = 'I withdraw 40.\nI should have 60 left.'
-  const result = plan(parse('w.md', source), reg())
+  const result = plan(parse('w.md', source), reg(), emptyWorkspace())
   expect(result.examples[0]?.name).toBe('I withdraw 40. I should have 60 left')
 })
 
@@ -84,7 +85,7 @@ test('plan emits an ambiguous-match diagnostic and produces no runnable example'
     handler: () => {},
   })
   const doc = parse('e.md', '# Ambig\n\nGiven I have 5 cukes')
-  const result = plan(doc, r)
+  const result = plan(doc, r, emptyWorkspace())
   expect(result.diagnostics).toHaveLength(1)
   expect(result.diagnostics[0]?.code).toBe('ambiguous-match')
   // An ambiguous candidate has no runnable step, so it is prose (a delimiter),
@@ -95,7 +96,7 @@ test('plan emits an ambiguous-match diagnostic and produces no runnable example'
 test('plan skips an example heading whose body has no matches and no keyword-led sentences', () => {
   const source = '# Just docs\n\nSome prose with no matches and no keywords.'
   const doc = parse('d.md', source)
-  const result = plan(doc, reg())
+  const result = plan(doc, reg(), emptyWorkspace())
   expect(result.examples).toHaveLength(0)
   expect(result.diagnostics).toHaveLength(0)
 })
@@ -119,7 +120,7 @@ test('plan merges consecutive list items into one example (a scenario as a bulle
   // Two list items, no delimiter between them → one example, shared state (ADR
   // 0012). A bulleted scenario reads as Given/When/Then bullets.
   const source = '# Bullets\n\n- Given I have 100 in my account\n- When I withdraw 40'
-  const result = plan(parse('b.md', source), r)
+  const result = plan(parse('b.md', source), r, emptyWorkspace())
   expect(result.examples).toHaveLength(1)
   expect(result.examples[0]?.steps.map((s) => s.text)).toEqual([
     'I have 100 in my account',
@@ -137,7 +138,7 @@ test('plan walks blockquote content as step-bearing', () => {
     handler: () => {},
   })
   const source = '# Quote\n\n> Given I have 100 in my account'
-  const result = plan(parse('q.md', source), r)
+  const result = plan(parse('q.md', source), r, emptyWorkspace())
   expect(result.examples[0]?.steps).toHaveLength(1)
 })
 
@@ -157,7 +158,7 @@ Given these users exist:
 |------|-----|
 | Bob  | 30  |
 | Eve  | 25  |`
-  const result = plan(parse('u.md', source), r)
+  const result = plan(parse('u.md', source), r, emptyWorkspace())
   const step = result.examples[0]?.steps[0]
   expect(step?.dataTable?.header.cells).toEqual(['name', 'age'])
   expect(step?.dataTable?.rows).toHaveLength(2)
@@ -181,7 +182,7 @@ Some interrupting prose.
 | name | age |
 |------|-----|
 | Bob  | 30  |`
-  const result = plan(parse('m.md', source), r)
+  const result = plan(parse('m.md', source), r, emptyWorkspace())
   const step = result.examples[0]?.steps[0]
   expect(step?.dataTable).toBeUndefined()
 })
@@ -201,7 +202,7 @@ When I send the payload:
 \`\`\`json
 { "action": "import" }
 \`\`\``
-  const result = plan(parse('p.md', source), r)
+  const result = plan(parse('p.md', source), r, emptyWorkspace())
   const step = result.examples[0]?.steps[0]
   expect(step?.docString?.contentType).toBe('json')
   expect(step?.docString?.content).toBe('{ "action": "import" }\n')
@@ -216,7 +217,7 @@ test('a step with NO following fence has no docString', () => {
     kind: 'stimulus',
     handler: () => {},
   })
-  const result = plan(parse('p.md', '# P\nWhen I send the payload'), r)
+  const result = plan(parse('p.md', '# P\nWhen I send the payload'), r, emptyWorkspace())
   expect(result.examples[0]?.steps[0]?.docString).toBeUndefined()
 })
 
@@ -225,14 +226,14 @@ test('a keyword-led sentence with no match does NOT produce a diagnostic (no Giv
   // keyword-led sentence "should" have matched a step definition.
   const r = createRegistry()
   const doc = parse('m.md', '# Empty\n\nGiven I have 5 cukes in my belly.')
-  const result = plan(doc, r)
+  const result = plan(doc, r, emptyWorkspace())
   expect(result.diagnostics).toHaveLength(0)
 })
 
 test('an unmatched sentence without a keyword is also silently treated as prose', () => {
   const r = createRegistry()
   const doc = parse('p.md', '# Prose\n\nI have 5 cukes in my belly.')
-  const result = plan(doc, r)
+  const result = plan(doc, r, emptyWorkspace())
   expect(result.diagnostics).toHaveLength(0)
 })
 
@@ -253,7 +254,7 @@ each row lists the dice, the category and the score:
 | ------------- | ---------- | ----- |
 | 3, 3, 3, 4, 4 | full house | 17    |
 | 3, 3, 3, 3, 3 | Yahtzee    | 50    |`
-  const result = plan(parse('y.md', source), r)
+  const result = plan(parse('y.md', source), r, emptyWorkspace())
   expect(result.diagnostics).toHaveLength(0)
   // One example per data row (the header row is the binding, not an example).
   expect(result.examples).toHaveLength(2)
@@ -288,7 +289,7 @@ these users exist:
 | ---- | --- |
 | Bob  | 30  |
 | Eve  | 25  |`
-  const result = plan(parse('u.md', source), r)
+  const result = plan(parse('u.md', source), r, emptyWorkspace())
   expect(result.examples).toHaveLength(1)
   const step = result.examples[0]?.steps[0]
   expect(step?.dataTable?.header.cells).toEqual(['name', 'age'])
@@ -311,7 +312,7 @@ each row lists the Dice and the Score:
 | dice      | score |
 | --------- | ----- |
 | 1,1,1,1,1 | 5     |`
-  const result = plan(parse('c.md', source), r)
+  const result = plan(parse('c.md', source), r, emptyWorkspace())
   // No exact-case match → falls back to a single whole-table example.
   expect(result.examples).toHaveLength(1)
   expect(result.examples[0]?.steps[0]?.dataTable?.rows).toHaveLength(1)
@@ -334,7 +335,7 @@ each row lists the dice, the category and the score:
 | ------------- | ---------- | ----- |
 | 3, 3, 3, 4, 4 | full house | 17    |
 | 3, 3, 3, 3, 3 | Yahtzee    | 50    |`
-  const result = plan(parse('y.md', source), r)
+  const result = plan(parse('y.md', source), r, emptyWorkspace())
   expect(result.examples.map((e) => e.name)).toEqual([
     '3, 3, 3, 4, 4 / full house / 17',
     '3, 3, 3, 3, 3 / Yahtzee / 50',
@@ -367,7 +368,7 @@ each row lists the dice, the category and the score:
 | dice          | category   | score |
 | ------------- | ---------- | ----- |
 | 3, 3, 3, 4, 4 | full house | 17    |`
-  const result = plan(parse('y.md', source), r)
+  const result = plan(parse('y.md', source), r, emptyWorkspace())
   const binding = result.examples[0]?.headerBinding
   if (!binding) throw new Error('no headerBinding')
   // One span per header cell, located in the table's header row (distinct from
@@ -392,7 +393,7 @@ test('plan carries paramInnerSpans (value only) alongside paramSpans (full notat
   })
   const source = '# Greeting\n\nGiven I greet "world" warmly.'
   const doc = parse('g.md', source)
-  const result = plan(doc, r)
+  const result = plan(doc, r, emptyWorkspace())
   const step = result.examples[0]?.steps[0]
   if (!step) throw new Error('no planned step')
   const outer = step.paramSpans[0]
@@ -422,7 +423,7 @@ Some interrupting prose paragraph.
 | name | age |
 |------|-----|
 | Bob  | 30  |`
-  const result = plan(parse('o.md', source), r)
+  const result = plan(parse('o.md', source), r, emptyWorkspace())
   expect(result.diagnostics).toHaveLength(0)
 })
 
@@ -442,7 +443,7 @@ each row lists the dice, the category and the score:
 | dice          | category   | score |
 | ------------- | ---------- | ----- |
 | 3, 3, 3, 4, 4 | full house | 17    |`
-  const result = plan(parse('y.md', source), r)
+  const result = plan(parse('y.md', source), r, emptyWorkspace())
   const checks = result.examples[0]?.rowChecks
   if (!checks) throw new Error('no rowChecks')
   expect(checks.map((c) => c.column)).toEqual(['dice', 'category', 'score'])
@@ -461,7 +462,7 @@ test('an `error` fence marks the example expectedOutcome=fail with a message sub
     handler: () => {},
   })
   const src = '# Division\n\nI divide 1 by 0.\n\n```error\ndivision by zero\n```\n'
-  const ex = plan(parse('e.md', src), r).examples[0]
+  const ex = plan(parse('e.md', src), r, emptyWorkspace()).examples[0]
   expect(ex?.expectedOutcome).toBe('fail')
   expect(ex?.expectedErrorMessage).toBe('division by zero')
   // The error fence must NOT become a docString attachment on the step.
@@ -476,7 +477,7 @@ test('no `error` fence leaves expectedOutcome undefined', () => {
     kind: 'stimulus',
     handler: () => {},
   })
-  const ex = plan(parse('e.md', '# Division\n\nI divide 1 by 1.'), r).examples[0]
+  const ex = plan(parse('e.md', '# Division\n\nI divide 1 by 1.'), r, emptyWorkspace()).examples[0]
   expect(ex?.expectedOutcome).toBeUndefined()
 })
 
@@ -490,7 +491,7 @@ test('an `error` fence with no matching step emits an error-fence-without-step d
     handler: () => {},
   })
   const src = '# Nope\n\nThis prose matches nothing.\n\n```error\nboom\n```\n'
-  const result = plan(parse('e.md', src), r)
+  const result = plan(parse('e.md', src), r, emptyWorkspace())
   expect(result.examples).toHaveLength(0)
   expect(result.diagnostics).toHaveLength(1)
   expect(result.diagnostics[0]?.code).toBe('error-fence-without-step')
@@ -513,7 +514,7 @@ test('an `error` fence on an ambiguous example emits both diagnostics', () => {
     handler: () => {},
   })
   const src = '# Ambiguous\n\nI divide 1 by 0.\n\n```error\nboom\n```\n'
-  const result = plan(parse('e.md', src), r)
+  const result = plan(parse('e.md', src), r, emptyWorkspace())
   const codes = result.diagnostics.map((d) => d.code).sort()
   expect(codes).toEqual(['ambiguous-match', 'error-fence-without-step'])
 })
@@ -533,7 +534,7 @@ the payload is:
 \`\`\`json
 { "ok": true }
 \`\`\``
-  const result = plan(parse('d.md', source), r)
+  const result = plan(parse('d.md', source), r, emptyWorkspace())
   const ds = result.examples[0]?.steps[0]?.docString
   if (!ds) throw new Error('no docString')
   expect(ds.content).toBe('{ "ok": true }\n')
@@ -545,7 +546,7 @@ the payload is:
 
 test('consecutive matching paragraphs with no delimiter merge into one example', () => {
   const source = 'I have 100 in my account.\n\nI withdraw 40.\n\nI should have 60 left.'
-  const result = plan(parse('m.md', source), reg())
+  const result = plan(parse('m.md', source), reg(), emptyWorkspace())
   expect(result.examples).toHaveLength(1)
   expect(result.examples[0]?.steps.map((s) => s.text)).toEqual([
     'I have 100 in my account',
@@ -558,7 +559,7 @@ test('consecutive matching paragraphs with no delimiter merge into one example',
 
 test('a thematic break (---) between matching paragraphs splits them into two examples', () => {
   const source = 'I have 100 in my account.\n\n---\n\nI withdraw 40.'
-  const result = plan(parse('h.md', source), reg())
+  const result = plan(parse('h.md', source), reg(), emptyWorkspace())
   expect(result.examples).toHaveLength(2)
   expect(result.examples.map((e) => e.steps.map((s) => s.text))).toEqual([
     ['I have 100 in my account'],
@@ -568,14 +569,14 @@ test('a thematic break (---) between matching paragraphs splits them into two ex
 
 test('a heading between matching paragraphs splits them into two examples', () => {
   const source = 'I have 100 in my account.\n\n## Next\n\nI withdraw 40.'
-  const result = plan(parse('hd.md', source), reg())
+  const result = plan(parse('hd.md', source), reg(), emptyWorkspace())
   expect(result.examples).toHaveLength(2)
   expect(result.examples[1]?.scopeStack).toEqual(['Next'])
 })
 
 test('a non-matching paragraph (prose) between matching paragraphs splits the example', () => {
   const source = 'I have 100 in my account.\n\nJust explaining what happens next.\n\nI withdraw 40.'
-  const result = plan(parse('p.md', source), reg())
+  const result = plan(parse('p.md', source), reg(), emptyWorkspace())
   expect(result.examples).toHaveLength(2)
   expect(result.examples.map((e) => e.steps.map((s) => s.text))).toEqual([
     ['I have 100 in my account'],
@@ -585,7 +586,7 @@ test('a non-matching paragraph (prose) between matching paragraphs splits the ex
 
 test('leading and trailing prose does not merge into an example', () => {
   const source = 'A preamble that matches nothing.\n\nI withdraw 40.\n\nA closing remark.'
-  const result = plan(parse('pp.md', source), reg())
+  const result = plan(parse('pp.md', source), reg(), emptyWorkspace())
   expect(result.examples).toHaveLength(1)
   expect(result.examples[0]?.steps.map((s) => s.text)).toEqual(['I withdraw 40'])
 })
@@ -617,7 +618,7 @@ And the following assets have been imported:
 | name  |
 | ----- |
 | Moose |`
-  const result = plan(parse('basket.md', source), r)
+  const result = plan(parse('basket.md', source), r, emptyWorkspace())
   expect(result.examples).toHaveLength(1)
   const ex = result.examples[0]
   expect(ex?.steps).toHaveLength(2)

@@ -1,0 +1,32 @@
+{
+  "examples": [
+    {
+      "name": "I shelve 3 books. The shelf holds 3 books",
+      "outcome": "pass",
+      "steps": [
+        {
+          "contextKey": {
+            "exampleName": "I shelve 3 books. The shelf holds 3 books",
+            "stepFile": "library.steps"
+          },
+          "exampleName": "I shelve 3 books. The shelf holds 3 books",
+          "matchedExpression": "I shelve {int} books",
+          "ordinal": 1,
+          "outcome": "pass",
+          "stepText": "I shelve 3 books"
+        },
+        {
+          "contextKey": {
+            "exampleName": "I shelve 3 books. The shelf holds 3 books",
+            "stepFile": "library.steps"
+          },
+          "exampleName": "I shelve 3 books. The shelf holds 3 books",
+          "matchedExpression": "The shelf holds {int} books",
+          "ordinal": 2,
+          "outcome": "pass",
+          "stepText": "The shelf holds 3 books"
+        }
+      ]
+    }
+  ]
+}

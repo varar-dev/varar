@@ -1,0 +1,21 @@
+{
+  "parameterTypes": [],
+  "steps": [
+    {
+      "expression": "I shelve {int} books",
+      "parameterTypeNames": [
+        "int"
+      ]
+    },
+    {
+      "expression": "I borrow a book",
+      "parameterTypeNames": []
+    },
+    {
+      "expression": "The shelf holds {int} books",
+      "parameterTypeNames": [
+        "int"
+      ]
+    }
+  ]
+}

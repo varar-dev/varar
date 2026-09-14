@@ -15,6 +15,7 @@ from varar_core.execute import (
 from varar_core.parse import parse
 from varar_core.plan import plan
 from varar_core.registry import Registry, add_step, create_registry, define_parameter_type
+from varar_core.reference import empty_workspace
 
 
 # ---------------------------------------------------------------------------
@@ -82,7 +83,7 @@ def test_execute_plan_calls_sink_example_for_each_planned_example() -> None:
         kind="stimulus",
         handler=lambda *_: None,
     )
-    p = plan(parse("e.md", "# A\n\nGiven I have 5 cukes\n\n# B\n\nGiven I have 9 cukes"), r)
+    p = plan(parse("e.md", "# A\n\nGiven I have 5 cukes\n\n# B\n\nGiven I have 9 cukes"), r, empty_workspace())
     names: list[str] = []
     execute_plan(p, ExecutePorts(sink=_make_name_sink(names), reporter=_noop_reporter()))
     assert names == ["Given I have 5 cukes", "Given I have 9 cukes"]
@@ -107,7 +108,7 @@ def test_execute_plan_reports_all_diagnostics_through_reporter() -> None:
         kind="stimulus",
         handler=lambda *_: None,
     )
-    p = plan(parse("m.md", "# A\n\nGiven I have 5 cukes"), r)
+    p = plan(parse("m.md", "# A\n\nGiven I have 5 cukes"), r, empty_workspace())
     got: list[Any] = []
 
     class _R:
@@ -140,7 +141,7 @@ def test_sink_example_run_callback_executes_step_handlers_in_order() -> None:
         kind="sensor",
         handler=lambda _ctx, n: (calls.append(f"check:{n}"), n)[1],
     )
-    p = plan(parse("e.md", "# Adding\n\nI add 5. I should have 5."), r)
+    p = plan(parse("e.md", "# Adding\n\nI add 5. I should have 5."), r, empty_workspace())
     run = _capture_run(p)
     run()
     assert calls == ["add:5", "check:5"]
@@ -160,7 +161,7 @@ def test_execute_plan_augments_thrown_error_with_md_frame() -> None:
         kind="stimulus",
         handler=_thrower,
     )
-    p = plan(parse("e.md", "# A\n\nI throw"), r2)
+    p = plan(parse("e.md", "# A\n\nI throw"), r2, empty_workspace())
     run = _capture_run(p)
     captured: list[Exception] = []
     try:
@@ -186,7 +187,7 @@ def test_execute_plan_invokes_create_context_once_per_example() -> None:
         kind="stimulus",
         handler=lambda ctx: ctx_seen.append(ctx),
     )
-    p = plan(parse("e.md", "# A\n\nI record ctx\n\n# B\n\nI record ctx"), r)
+    p = plan(parse("e.md", "# A\n\nI record ctx\n\n# B\n\nI record ctx"), r, empty_workspace())
     calls = [0]
     runs: list[Any] = []
 
@@ -225,7 +226,7 @@ def test_execute_plan_appends_data_table_as_last_handler_arg() -> None:
         "| title  | author  |\n|--------|---------|"
         "\n| Lolita | Nabokov |\n| Anna   | Tolstoy |\n"
     )
-    p = plan(parse("l.md", source), r)
+    p = plan(parse("l.md", source), r, empty_workspace())
     run = _capture_run(p)
     run()
     assert len(captured) == 1
@@ -250,7 +251,7 @@ def test_execute_plan_appends_docstring_as_last_handler_arg() -> None:
         handler=lambda _ctx, *args: captured.extend([args]),
     )
     source = '# Library\n\nthe receipt is:\n\n```json\n{"ok": true}\n```\n'
-    p = plan(parse("l.md", source), r)
+    p = plan(parse("l.md", source), r, empty_workspace())
     run = _capture_run(p)
     run()
     assert list(captured[0]) == ['{"ok": true}\n']
@@ -274,7 +275,7 @@ def test_execute_plan_runs_header_bound_table_once_per_row() -> None:
         "| 3, 3, 3, 4, 4 | full house | 17    |\n"
         "| 3, 3, 3, 3, 3 | Yahtzee    | 50    |"
     )
-    p = plan(parse("y.md", source), r)
+    p = plan(parse("y.md", source), r, empty_workspace())
     named: list[Any] = []
 
     class _S:
@@ -317,7 +318,7 @@ def test_failing_header_bound_row_points_stack_frame_at_row_line() -> None:
         "| 3, 3, 3, 4, 4 | full house | 17    |\n"
         "| 3, 3, 3, 3, 3 | Yahtzee    | 50    |"
     )
-    p = plan(parse("y.md", source), r)
+    p = plan(parse("y.md", source), r, empty_workspace())
     runs: list[Any] = []
 
     class _S:
@@ -358,7 +359,7 @@ def test_returning_header_bound_row_mismatch_raises_cell_mismatch_error() -> Non
         "| 3, 3, 3, 4, 4 | full house | 17    |\n"
         "| 3, 3, 3, 3, 3 | Yahtzee    | 50    |"
     )
-    p = plan(parse("y.md", source), r)
+    p = plan(parse("y.md", source), r, empty_workspace())
     runs: list[Any] = []
 
     class _S:
@@ -402,7 +403,7 @@ def test_returning_header_bound_row_that_matches_passes() -> None:
         "| ------------- | ---------- | ----- |\n"
         "| 3, 3, 3, 4, 4 | full house | 17    |"
     )
-    p = plan(parse("y.md", source), r)
+    p = plan(parse("y.md", source), r, empty_workspace())
     run = _capture_run(p)
     run()  # should not raise
 
@@ -417,7 +418,7 @@ DOCSTRING_DOC = "# T\n\nthe greeting is:\n\n```text\nHello, world!\n```"
 
 
 def _runs_for(source: str, reg: Registry) -> list[Any]:
-    p = plan(parse("w.md", source), reg)
+    p = plan(parse("w.md", source), reg, empty_workspace())
     runs: list[Any] = []
 
     class _S:
@@ -561,7 +562,7 @@ def test_execute_plan_passes_each_example_deduped_step_lines_via_info() -> None:
         handler=lambda *_: None,
     )
     source = "# T\n\nI have 5 cukes.\nI eat 2 cukes.\n"
-    p = plan(parse("t.md", source), r)
+    p = plan(parse("t.md", source), r, empty_workspace())
 
     seen: list[dict] = []
 
@@ -595,7 +596,7 @@ def test_expected_failure_example_a_thrown_step_makes_run_resolve() -> None:
         handler=_handler,
     )
     src = "# D\n\nI divide 1 by 0.\n\n```error\ndivision by zero\n```\n"
-    run = _capture_run(plan(parse("e.md", src), r))
+    run = _capture_run(plan(parse("e.md", src), r, empty_workspace()))
     run()  # should not raise
 
 
@@ -610,7 +611,7 @@ def test_expected_failure_no_throw_makes_run_reject_with_unexpected_pass_error()
         handler=lambda *_: None,
     )
     src = "# D\n\nI divide 1 by 1.\n\n```error\n```\n"
-    run = _capture_run(plan(parse("e.md", src), r))
+    run = _capture_run(plan(parse("e.md", src), r, empty_workspace()))
     with pytest.raises(UnexpectedPassError):
         run()
 
@@ -630,7 +631,7 @@ def test_expected_failure_with_message_substring_mismatch_rejects_with_real_erro
         handler=_handler,
     )
     src = "# D\n\nI divide 1 by 0.\n\n```error\ndivision by zero\n```\n"
-    run = _capture_run(plan(parse("e.md", src), r))
+    run = _capture_run(plan(parse("e.md", src), r, empty_workspace()))
     with pytest.raises(RuntimeError, match="boom"):
         run()
 
@@ -651,7 +652,7 @@ def test_observer_receives_pass_observation_per_executed_step() -> None:
         def step(self, o: StepObservation) -> None:
             obs.append(o)
 
-    run = _capture_run(plan(parse("e.md", "# A\n\nI add 5."), r), _Obs())
+    run = _capture_run(plan(parse("e.md", "# A\n\nI add 5."), r, empty_workspace()), _Obs())
     run()
     assert len(obs) == 1
     assert obs[0] == StepObservation(
@@ -683,7 +684,7 @@ def test_observer_receives_fail_observation_when_a_step_throws() -> None:
         def step(self, o: StepObservation) -> None:
             obs.append(o)
 
-    run = _capture_run(plan(parse("e.md", "# A\n\nI blow up."), r), _Obs())
+    run = _capture_run(plan(parse("e.md", "# A\n\nI blow up."), r, empty_workspace()), _Obs())
     try:
         run()
     except Exception:
@@ -708,7 +709,7 @@ def _run_capturing_error(
     """Run plan and return (ctx_seen_list, caught_error_holder)."""
     registry = register(create_registry())
     doc = parse("x.md", source)
-    p = plan(doc, registry)
+    p = plan(doc, registry, empty_workspace())
     caught: list[Any] = [None]
 
     class _S:
@@ -909,7 +910,7 @@ def _run_one(
     """Run plan and return caught-error holder."""
     registry = register(create_registry())
     doc = parse("x.md", source)
-    p = plan(doc, registry)
+    p = plan(doc, registry, empty_workspace())
     caught: list[Any] = [None]
 
     class _S:
@@ -1244,7 +1245,7 @@ def test_async_def_handlers_are_driven_to_completion() -> None:
         kind="sensor",
         handler=_async_sensor,
     )
-    p = plan(parse("a.md", "# Async\n\nset count to 5. count is 5.\n"), r)
+    p = plan(parse("a.md", "# Async\n\nset count to 5. count is 5.\n"), r, empty_workspace())
     run = _capture_run(p)
     run()  # must not raise
     assert seen == [5], "async sensor was not driven to completion or state was not merged"

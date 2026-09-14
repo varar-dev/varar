@@ -18,6 +18,16 @@ module Varar
 
     corpus = corpus_dir
 
+    # A bundle is one oath (example.md) plus, for a bundle that exercises
+    # reference blocks (ADR 0016), the other oaths it links to — every other
+    # `.md` in the bundle directory. They are parsed under their bare file
+    # names, so `./shared.md` resolves the same way in every port.
+    def bundle_docs(dir)
+      Dir.glob(File.join(dir, '*.md')).map do |path|
+        Core::Parse.parse(File.basename(path), File.read(path, encoding: 'UTF-8'))
+      end
+    end
+
     Dir.children(corpus).sort.each do |bundle|
       golden = File.join(corpus, bundle, 'golden', 'plan.json')
       steps_rb = Dir.glob(File.join(corpus, bundle, '*.steps.rb')).first
@@ -29,9 +39,9 @@ module Varar
         RegistryGlue.reset_builder
         load steps_rb
         registry = RegistryGlue.build_registry
-        source = File.read(File.join(corpus, bundle, 'example.md'), encoding: 'UTF-8')
-        doc = Core::Parse.parse('example.md', source)
-        plan = Core::Plan.plan(doc, registry)
+        docs = bundle_docs(File.join(corpus, bundle))
+        doc = docs.find { |d| d.path == 'example.md' }
+        plan = Core::Plan.plan(doc, registry, Core::Reference.build_workspace(docs))
         actual = Core::Conformance.to_plan_artifact(plan)
         expect(actual).to eq(JSON.parse(File.read(golden, encoding: 'UTF-8')))
       end

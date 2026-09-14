@@ -38,6 +38,11 @@ or fix a bug, you must:
 5. When the suite is green and you believe the feature is complete, stop
    and summarise what you changed. Do not refactor unrelated code.
 
+When several examples share a world state, write it once under its own
+heading and link to it — but keep the chain shallow: one level, two at the
+outside. If setup repeats because it is one idea spelled out in several
+sentences, write the missing step instead of sharing the sentences.
+
 The oath is the contract. If you cannot satisfy the oath, surface the
 disagreement instead of changing the oath to match your implementation.
 ```

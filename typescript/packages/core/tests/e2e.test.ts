@@ -1,5 +1,6 @@
 import { expect, test } from 'vitest'
 import { addStep, createRegistry, parse, plan } from '../src/index.ts'
+import { emptyWorkspace } from '../src/reference.ts'
 
 test('end-to-end: a complete BDD file with headings, prose, list, table, and fence', () => {
   let r = createRegistry()
@@ -53,7 +54,7 @@ When I send the payload:
 { "action": "import" }
 \`\`\``
 
-  const result = plan(parse('e.md', source), r)
+  const result = plan(parse('e.md', source), r, emptyWorkspace())
   expect(result.diagnostics).toHaveLength(0)
   // 3 paragraphs across 2 headings → 2 examples (ADR 0012):
   //   1. "Withdrawing cash" scope, one paragraph with all 3 banking steps

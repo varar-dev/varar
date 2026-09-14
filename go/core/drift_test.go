@@ -38,7 +38,7 @@ func romanReg(withStep bool) Registry {
 }
 
 func planOf(source string, r Registry) ExecutionPlan {
-	return Plan(Parse("w.md", source), r)
+	return Plan(Parse("w.md", source), r, EmptyWorkspace())
 }
 
 func bare(drifts []Drifted) []string {
@@ -176,7 +176,7 @@ func depositWithdrawReg(t *testing.T, withDeposit bool) Registry {
 func TestMergedExampleParagraphsAreEachLive(t *testing.T) {
 	source := "I deposit 100.\n\nI withdraw 40."
 	doc := Parse("w.md", source)
-	plan := Plan(doc, depositWithdrawReg(t, true))
+	plan := Plan(doc, depositWithdrawReg(t, true), EmptyWorkspace())
 	// One planned example (the two paragraphs merged), but two live entries.
 	if len(plan.Examples) != 1 {
 		t.Fatalf("expected 1 planned example, got %d", len(plan.Examples))
@@ -191,10 +191,10 @@ func TestMergedExampleParagraphsAreEachLive(t *testing.T) {
 func TestDeletingOneStepOfMergedExampleDriftsOnlyNowProseParagraph(t *testing.T) {
 	source := "I deposit 100.\n\nI withdraw 40."
 	doc := Parse("w.md", source)
-	baseline := DeriveOathBaseline(source, doc, Plan(doc, depositWithdrawReg(t, true)))
+	baseline := DeriveOathBaseline(source, doc, Plan(doc, depositWithdrawReg(t, true), EmptyWorkspace()))
 	// The deposit step is gone: its paragraph becomes prose, splitting the
 	// example. The withdraw paragraph is still live; the deposit one drifts.
-	got := bare(DetectDrift(&baseline, doc, Plan(doc, depositWithdrawReg(t, false))))
+	got := bare(DetectDrift(&baseline, doc, Plan(doc, depositWithdrawReg(t, false), EmptyWorkspace())))
 	if !reflect.DeepEqual(got, []string{"I deposit 100@1"}) {
 		t.Errorf("got %v", got)
 	}
@@ -204,7 +204,7 @@ const roman = "Each row gives a decimal and a roman number:\n\n| decimal | roman
 
 func TestHeaderBoundRecordsBindingOnce(t *testing.T) {
 	doc := Parse("r.md", roman)
-	got := LiveExamples(doc, Plan(doc, romanReg(true)))
+	got := LiveExamples(doc, Plan(doc, romanReg(true), EmptyWorkspace()))
 	want := []BaselineExample{{Name: "Each row gives a decimal and a roman number:", Line: 1}}
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("got %v, want %v", got, want)
@@ -213,8 +213,8 @@ func TestHeaderBoundRecordsBindingOnce(t *testing.T) {
 
 func TestHeaderBoundBindingThatStopsMatchingDrifts(t *testing.T) {
 	doc := Parse("r.md", roman)
-	baseline := DeriveOathBaseline(roman, doc, Plan(doc, romanReg(true)))
-	got := bare(DetectDrift(&baseline, doc, Plan(doc, romanReg(false))))
+	baseline := DeriveOathBaseline(roman, doc, Plan(doc, romanReg(true), EmptyWorkspace()))
+	got := bare(DetectDrift(&baseline, doc, Plan(doc, romanReg(false), EmptyWorkspace())))
 	if !reflect.DeepEqual(got, []string{"Each row gives a decimal and a roman number:@1"}) {
 		t.Errorf("got %v", got)
 	}
@@ -305,7 +305,7 @@ func TestDriftMessageNamesTheParagraph(t *testing.T) {
 func lockWithStalePath() string {
 	source := "I withdraw 40."
 	doc := Parse("w.md", source)
-	baseline := DeriveOathBaseline(source, doc, Plan(doc, reg(true)))
+	baseline := DeriveOathBaseline(source, doc, Plan(doc, reg(true), EmptyWorkspace()))
 	return StringifyLockFile(LockFile{
 		Version: 2,
 		Oaths:   map[string]OathBaseline{"varar/w.md": baseline, "w.md": baseline},

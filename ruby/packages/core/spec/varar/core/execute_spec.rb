@@ -14,7 +14,7 @@ module Varar
       def run(source, register, create_context)
         registry = register.call(Registries.create_registry)
         doc = Parse.parse('example.md', source)
-        execution = Plan.plan(doc, registry)
+        execution = Plan.plan(doc, registry, Reference.empty_workspace)
         caught = nil
         queued = Execute.collect_examples(execution, create_context: create_context)
         queued.each do |q|

@@ -7,6 +7,7 @@ use varar_core::drift::{BaselineStore, reconcile_drift};
 use varar_core::handler::Handler;
 use varar_core::parse::parse;
 use varar_core::plan::plan;
+use varar_core::reference::empty_workspace;
 use varar_core::registry::{add_step, create_registry};
 use varar_core::step_kind::StepKind;
 use varar_runner::discovery::glob_to_regex;
@@ -137,7 +138,7 @@ fn baseline_store_round_trips_and_reconcile_writes_lock() {
     .unwrap();
     let source = "# Hi\n\nI greet \"world\".";
     let doc = parse("hi.md", source);
-    let execution = plan(&doc, &registry);
+    let execution = plan(&doc, &registry, &empty_workspace());
 
     // Clean run: no drift, and the baseline is written.
     let drifts = reconcile_drift(&mut store, "hi.md", source, &doc, &execution, false);
