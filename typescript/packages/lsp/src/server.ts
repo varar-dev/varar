@@ -176,9 +176,11 @@ export function registerHandlers(
   async function publishFor(uri: string): Promise<void> {
     if (!store) return
     const parse = toParseDiagnostics(uri)
+    // A URI can be the subject of several results: its own, plus one per oath
+    // that referenced a section of it (ADR 0016).
+    const relevant = runResults?.resultsFor(uri) ?? []
     let run: LspDiagnostic[] = []
-    const results = runResults?.get(uri)
-    if (results) {
+    if (relevant.length > 0) {
       let source = documents.get(uri)?.getText()
       if (source === undefined) {
         try {
@@ -187,7 +189,10 @@ export function registerHandlers(
           source = undefined
         }
       }
-      if (source !== undefined) run = runLspDiagnostics(results, source)
+      if (source !== undefined) {
+        const text = source
+        run = relevant.flatMap((r) => runLspDiagnostics(r.results, text, r.forDocument))
+      }
     }
     void connection.sendDiagnostics({ uri, diagnostics: [...parse, ...run] as Diagnostic[] })
   }

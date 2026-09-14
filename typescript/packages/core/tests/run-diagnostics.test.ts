@@ -4,7 +4,7 @@ import type { OathResults } from '../src/result.ts'
 import { runResultDiagnostics } from '../src/run-diagnostics.ts'
 
 function results(source: string, examples: OathResults['examples']): OathResults {
-  return { version: 1, oathPath: 's.md', sourceHash: hashSource(source), examples }
+  return { version: 2, oathPath: 's.md', sourceHash: hashSource(source), examples }
 }
 
 test('cell mismatch → one diagnostic per cell with expected/actual message', () => {
@@ -117,7 +117,7 @@ test('cells win over the anchor — a mismatched cell is more precise than its s
 test('stale sourceHash → no diagnostics', () => {
   const source = 'x 6 y'
   const r: OathResults = {
-    version: 1,
+    version: 2,
     oathPath: 's.md',
     sourceHash: 'fnv1a:00000000',
     examples: [
@@ -136,4 +136,39 @@ test('all-passed results → no diagnostics', () => {
   const source = 'whatever'
   const r = results(source, [{ name: 'ok', status: 'passed', lines: [1] }])
   expect(runResultDiagnostics(r, source)).toEqual([])
+})
+
+// ADR 0016: a failure belongs to exactly one document — the oath, or the one a
+// reference block spliced its failing step in from.
+test('a spliced failure is projected onto its own document, not the running oath', () => {
+  const shared = 'I shelve 3 books'
+  const results: OathResults = {
+    version: 2,
+    oathPath: 'varar/fees.md',
+    sourceHash: hashSource('the shelf holds 2 books'),
+    documents: [{ path: 'varar/shared.md', sourceHash: hashSource(shared) }],
+    examples: [
+      {
+        name: 'x',
+        status: 'failed',
+        lines: [1],
+        failure: {
+          line: 1,
+          message: 'boom',
+          stack: 's',
+          anchor: { from: 2, to: 8 },
+          docPath: 'varar/shared.md',
+        },
+      },
+    ],
+  }
+
+  expect(runResultDiagnostics(results, 'the shelf holds 2 books')).toEqual([])
+  expect(runResultDiagnostics(results, shared, 'varar/shared.md')).toEqual([
+    { from: 2, to: 8, message: 'boom' },
+  ])
+  // The document moved on since the run.
+  expect(runResultDiagnostics(results, 'I shelve 4 books', 'varar/shared.md')).toEqual([])
+  // No such document in this result.
+  expect(runResultDiagnostics(results, shared, 'varar/other.md')).toEqual([])
 })

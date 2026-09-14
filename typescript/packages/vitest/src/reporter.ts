@@ -16,7 +16,7 @@ import {
   writeOathResults,
 } from '@varar/runner'
 import type { Reporter, TestModule } from 'vitest/node'
-import { VARAR_BASELINE_META, VARAR_CONSUMED_META } from './runtime.ts'
+import { VARAR_BASELINE_META, VARAR_CONSUMED_META, VARAR_DOCUMENTS_META } from './runtime.ts'
 
 // Structural shape of the slice of vitest's TestModule API the collector reads.
 // `meta()` is typed `unknown` so both vitest's real `TestModule` (whose
@@ -79,6 +79,22 @@ export function collectBaselines(
   return byFile
 }
 
+// The referenced documents each oath's steps were spliced in from (ADR 0016),
+// parked by runtime.ts on the same channel as the baseline. Their hashes go in
+// the run result so a consumer can tell a stale failure from a live one.
+export function collectDocuments(
+  testModules: ReadonlyArray<BaselineModuleNode>,
+): ReadonlyMap<string, ReadonlyMap<string, string>> {
+  const byFile = new Map<string, ReadonlyMap<string, string>>()
+  for (const m of testModules) {
+    const documents = (m.meta() as Record<string, unknown> | null | undefined)?.[
+      VARAR_DOCUMENTS_META
+    ] as Record<string, string> | undefined
+    if (documents) byFile.set(m.moduleId, new Map(Object.entries(documents)))
+  }
+  return byFile
+}
+
 // Fold this run's derived baselines into the committed lock. Entries for oaths
 // that did not run are carried over untouched — vitest runs are routinely
 // filtered (`vitest run varar/library.md`), and a filtered run must not shrink
@@ -120,11 +136,17 @@ export class VararResultsReporter implements Reporter {
     this.writeStderr = options.writeStderr ?? ((s) => void process.stderr.write(s))
   }
 
-  private writeResults(byFile: ReadonlyMap<string, ReadonlyArray<ExampleResult>>): void {
+  private writeResults(
+    byFile: ReadonlyMap<string, ReadonlyArray<ExampleResult>>,
+    documentsByFile: ReadonlyMap<string, ReadonlyMap<string, string>>,
+  ): void {
     for (const [filepath, examples] of byFile) {
       const oathPath = toOathPath(filepath, this.cwd)
       const source = readFileSync(filepath, 'utf8')
-      writeOathResults(this.cwd, buildOathResults(oathPath, source, examples))
+      writeOathResults(
+        this.cwd,
+        buildOathResults(oathPath, source, examples, documentsByFile.get(filepath)),
+      )
     }
   }
 
@@ -168,7 +190,7 @@ export class VararResultsReporter implements Reporter {
   // `BaselineModuleNode` the pure collectors consume.
   async onTestRunEnd(testModules: ReadonlyArray<TestModule> = []): Promise<void> {
     const byFile = collectFromModules(testModules)
-    this.writeResults(byFile)
+    this.writeResults(byFile, collectDocuments(testModules))
     await this.writeBaselines(collectBaselines(testModules), byFile.size > 0)
   }
 }

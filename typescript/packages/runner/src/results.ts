@@ -43,11 +43,21 @@ export function buildOathResults(
   oathPath: string,
   source: string,
   examples: ReadonlyArray<ExampleResult>,
+  // The OTHER documents this run's steps came from — the oaths a reference
+  // block pulled steps in from (ADR 0016), as `path → source`. Their hashes go
+  // in the payload so a consumer can tell a stale failure from a live one, the
+  // same way `sourceHash` does for the oath itself. Empty in a project that
+  // uses no reference blocks.
+  referencedSources: ReadonlyMap<string, string> = new Map(),
 ): OathResults {
+  const documents = [...referencedSources]
+    .map(([path, referencedSource]) => ({ path, sourceHash: hashSource(referencedSource) }))
+    .sort((a, b) => a.path.localeCompare(b.path))
   return {
-    version: 1,
+    version: 2,
     oathPath,
     sourceHash: hashSource(source),
+    ...(documents.length > 0 ? { documents } : {}),
     examples: documentOrder(examples),
   }
 }

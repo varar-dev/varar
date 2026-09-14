@@ -12,8 +12,12 @@ export type LspDiagnostic = {
 // Pure: OathResults + current source → LSP diagnostics (0-based positions).
 // Reuses the core projection; converts each offset range via spanFromOffsets
 // (1-based span → 0-based LSP), matching the existing parse-diagnostic mapping.
-export function runLspDiagnostics(results: OathResults, source: string): LspDiagnostic[] {
-  return runResultDiagnostics(results, source).map((d) => {
+export function runLspDiagnostics(
+  results: OathResults,
+  source: string,
+  forDocument?: string,
+): LspDiagnostic[] {
+  return runResultDiagnostics(results, source, forDocument).map((d) => {
     const span = spanFromOffsets(source, d.from, d.to)
     return {
       severity: 1, // Error
@@ -31,7 +35,7 @@ function isOathResults(v: unknown): v is OathResults {
   if (typeof v !== 'object' || v === null) return false
   const o = v as Record<string, unknown>
   return (
-    o.version === 1 &&
+    (o.version === 1 || o.version === 2) &&
     typeof o.oathPath === 'string' &&
     typeof o.sourceHash === 'string' &&
     Array.isArray(o.examples)
@@ -45,6 +49,15 @@ export type RunResultsStore = {
   // Forget a .varar json (on delete). Returns the oath URI it had mapped, or null.
   remove(varJsonPath: string): string | null
   get(oathUri: string): OathResults | undefined
+  // Every result that has something to say about this URI: the oath's own
+  // result, plus — for a shared oath whose sections other oaths reference (ADR
+  // 0016) — each referencing oath's result, tagged with the document path to
+  // project. A shared oath is not the subject of any result file of its own, so
+  // without this its failures would never reach the editor.
+  resultsFor(uri: string): ReadonlyArray<{
+    readonly results: OathResults
+    readonly forDocument?: string
+  }>
   oathUris(): ReadonlyArray<string>
 }
 
@@ -52,6 +65,7 @@ export function createRunResultsStore(rootUri: string): RunResultsStore {
   const root = rootUri.replace(/\/$/, '')
   const byUri = new Map<string, OathResults>()
   const uriByPath = new Map<string, string>() // varJsonPath → oathUri, so deletes resolve
+  const uriFor = (oathPath: string) => `${root}/${oathPath}`
   return {
     ingest(varJsonPath, content) {
       let parsed: unknown
@@ -61,7 +75,7 @@ export function createRunResultsStore(rootUri: string): RunResultsStore {
         return null
       }
       if (!isOathResults(parsed)) return null
-      const oathUri = `${root}/${parsed.oathPath}`
+      const oathUri = uriFor(parsed.oathPath)
       byUri.set(oathUri, parsed)
       uriByPath.set(varJsonPath, oathUri)
       return oathUri
@@ -74,6 +88,24 @@ export function createRunResultsStore(rootUri: string): RunResultsStore {
       return oathUri
     },
     get: (oathUri) => byUri.get(oathUri),
-    oathUris: () => [...byUri.keys()],
+    resultsFor(uri) {
+      const out: Array<{ results: OathResults; forDocument?: string }> = []
+      const own = byUri.get(uri)
+      if (own) out.push({ results: own })
+      for (const results of byUri.values()) {
+        for (const doc of results.documents ?? []) {
+          if (uriFor(doc.path) === uri) out.push({ results, forDocument: doc.path })
+        }
+      }
+      return out
+    },
+    // Referenced documents too: a run that failed inside a shared section must
+    // light that file up, and a later clean run must clear it.
+    oathUris: () => [
+      ...new Set([
+        ...byUri.keys(),
+        ...[...byUri.values()].flatMap((r) => (r.documents ?? []).map((d) => uriFor(d.path))),
+      ]),
+    ],
   }
 }

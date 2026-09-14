@@ -1,5 +1,5 @@
 import { isCellMismatchError } from './cell-diff.ts'
-import { readFailureAnchor } from './failure-anchor.ts'
+import { readFailureAnchor, readFailureDocPath } from './failure-anchor.ts'
 import type { CellFailure, ExampleResult } from './result.ts'
 
 // Recover the 1-based failing line from the `<oathPath>:line:col` frame
@@ -35,11 +35,17 @@ export function toFailure(
   // error never passed through a step — then `line` is all a renderer gets.
   const anchor = readFailureAnchor(error)
 
+  // The failing step may have been spliced in from another oath (ADR 0016). Its
+  // line lives in THAT document's stack frame, and every offset in this payload
+  // is relative to it.
+  const docPath = readFailureDocPath(error)
+
   return {
-    line: failingLine(stack, oathPath) ?? fallbackLine,
+    line: failingLine(stack, docPath ?? oathPath) ?? fallbackLine,
     message,
     stack,
     ...(cells && cells.length > 0 ? { cells } : {}),
     ...(anchor ? { anchor: { from: anchor.startOffset, to: anchor.endOffset } } : {}),
+    ...(docPath !== undefined ? { docPath } : {}),
   }
 }

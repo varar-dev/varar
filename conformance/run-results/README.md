@@ -25,12 +25,22 @@ reads the same payload.
 
 ## The value every port builds
 
-Three examples, one per branch of the writer:
+Four examples, one per branch of the writer:
 
 1. **passed** — no `failure` key at all.
 2. **failed with a mismatch** — `cells` and `anchor` both present, a `£` in the
    name and a `\n` in the message.
 3. **failed by throwing** — `failure` present, `cells` and `anchor` both absent.
+4. **failed inside a referenced section** (ADR 0016) — `failure.docPath` names
+   the oath the failing step was *written* in, and every offset in that failure
+   (`line`, `cells`, `anchor`) is into **that** document, not this one. Its hash
+   is the `documents` entry at the top level. `lines` holds only this oath's own
+   lines: a spliced step contributes none, because its line is not in this file.
+
+That last one is the reason for `version: 2`. A consumer that places a failure
+in the oath named by `oathPath` without checking `docPath` will underline
+whatever text happens to sit at those offsets — which is why the field is
+pinned here rather than left to each port.
 
 `stack` is fixed to `<stack>` here. On disk it is runtime-shaped (a V8 stack, a
 JVM trace, a rendered Rust location) and no consumer parses it — but it is part

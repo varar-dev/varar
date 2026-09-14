@@ -1,6 +1,6 @@
 import { CellMismatchError, compareRow, compareTable, ReturnShapeError } from './cell-diff.ts'
 import { compareDocString } from './doc-string-diff.ts'
-import { attachFailureAnchor, failureAnchor } from './failure-anchor.ts'
+import { attachFailureAnchor, attachFailureDocPath, failureAnchor } from './failure-anchor.ts'
 import { compareParams } from './param-diff.ts'
 import type { ExecutionPlan, PlannedStep } from './plan.ts'
 import type { Reporter, TestSink } from './ports.ts'
@@ -275,9 +275,15 @@ function augmentStack(err: unknown, step: PlannedStep, oathPath: string): unknow
   // the failing step rather than its whole line.
   const anchor = failureAnchor(err, step.matchSpan)
   attachFailureAnchor(err, anchor)
+  // A step spliced in by a reference block has spans in the document it was
+  // WRITTEN in, so both the stack frame and the payload must name that file —
+  // otherwise the frame points an editor at the running oath's line N, which is
+  // some other sentence entirely.
+  if (step.docPath !== undefined) attachFailureDocPath(err, step.docPath)
+  const sourcePath = step.docPath ?? oathPath
   if (!(err instanceof Error) || typeof err.stack !== 'string') return err
   const label = step.text.length > 60 ? `${step.text.slice(0, 60)}…` : step.text
-  const frame = `    at ${label} (${oathPath}:${anchor.startLine}:${anchor.startCol})`
+  const frame = `    at ${label} (${sourcePath}:${anchor.startLine}:${anchor.startCol})`
   const lines = err.stack.split('\n')
   // Find the first existing stack frame (the handler's `.ts` line) and insert
   // immediately after it. If the error has no frames, fall back to position 1.

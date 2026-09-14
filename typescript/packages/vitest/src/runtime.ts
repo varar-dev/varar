@@ -48,6 +48,10 @@ export type CollectPorts = {
 // freshly derived baseline rather than reusing a stale one.
 const pendingBaselines = new Map<string, OathBaseline>()
 
+// The referenced documents this oath's steps came from, parked beside the
+// baseline and attached on the same channel.
+const pendingDocuments = new Map<string, Readonly<Record<string, string>>>()
+
 // The key the file-level task meta carries the derived baseline under. The
 // reporter reads it back through vitest's TestModule.meta().
 export const VARAR_BASELINE_META = 'vararBaseline'
@@ -59,9 +63,17 @@ export const VARAR_BASELINE_META = 'vararBaseline'
 // section was consumed.
 export const VARAR_CONSUMED_META = 'vararConsumed'
 
+// The sources of every OTHER oath this one's steps were spliced in from (ADR
+// 0016), parked on the file's task meta for the reporter to hash into the run
+// result's `documents`. Absent when nothing was spliced in.
+export const VARAR_DOCUMENTS_META = 'vararDocuments'
+
 export type CollectedExample = {
   readonly name: string
   // Unique source lines of the example's matched steps, for the reporter.
+  // Lines in THIS oath. A step a reference block spliced in from another oath
+  // (ADR 0016) contributes none: its line belongs to that document, and a
+  // line-wash renderer would otherwise decorate an unrelated sentence here.
   readonly lines: ReadonlyArray<number>
   readonly run: () => void | Promise<void>
 }
@@ -83,7 +95,21 @@ export function collectVararExamples(
       }),
   }
   const registry = buildRegistry()
-  const p = planOath(path, source, registry, runtimeWorkspace(path, source, ports))
+  const workspace = runtimeWorkspace(path, source, ports)
+  const p = planOath(path, source, registry, workspace)
+  // Hashes for the documents this oath spliced steps in from go in the run
+  // result, so a consumer can tell a stale failure from a live one.
+  const spliced = new Set(
+    p.examples.flatMap((ex) => ex.steps.map((s) => s.docPath).filter((d) => d !== undefined)),
+  )
+  if (spliced.size > 0) {
+    pendingDocuments.set(
+      path,
+      Object.fromEntries(
+        [...spliced].map((docPath) => [docPath, workspace.docs.get(docPath)?.source ?? '']),
+      ),
+    )
+  }
   // Drift reconciliation, split across the process boundary. Detection happens
   // HERE, against the runtime plan — the same plan every other port reconciles
   // from (RSpec at describe time, JUnit in its selector resolver). A paragraph
@@ -101,7 +127,11 @@ export function collectVararExamples(
   if (drifts.length === 0) pendingBaselines.set(path, deriveOathBaseline(source, p.doc, p))
   const examples = examplesWithRuns(p, contextFactory(), reporter).map(({ example, run }) => ({
     name: example.name,
-    lines: [...new Set(example.steps.map((s) => s.matchSpan.startLine))],
+    lines: [
+      ...new Set(
+        example.steps.filter((s) => s.docPath === undefined).map((s) => s.matchSpan.startLine),
+      ),
+    ],
     run,
   }))
   if (ports.expectedCount !== undefined && examples.length !== ports.expectedCount) {
@@ -133,6 +163,8 @@ type TaskContext = {
 function attachBaseline(ctx: TaskContext, path: string): void {
   const fileMeta = ctx.task.file?.meta
   if (!fileMeta) return
+  const documents = pendingDocuments.get(path)
+  if (documents && Object.keys(documents).length > 0) fileMeta[VARAR_DOCUMENTS_META] = documents
   const baseline = pendingBaselines.get(path)
   if (!baseline) return
   pendingBaselines.delete(path)
