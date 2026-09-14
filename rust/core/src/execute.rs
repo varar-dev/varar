@@ -321,9 +321,16 @@ fn attach_location(error: StepError, step: &PlannedStep, oath_path: &str) -> Ste
     let label = truncate_label(&step.text);
     StepFailure {
         error,
+        // A step a reference block spliced in (ADR 0016) has spans in the
+        // document it was WRITTEN in, so the location must name that file —
+        // otherwise a renderer points at the running oath's line N, which is
+        // some other sentence entirely.
         location: Some(FailureLocation {
             label,
-            path: oath_path.to_string(),
+            path: step
+                .doc_path
+                .clone()
+                .unwrap_or_else(|| oath_path.to_string()),
             line: anchor.start_line,
             anchor: AnchorRange {
                 from: anchor.start_offset,
