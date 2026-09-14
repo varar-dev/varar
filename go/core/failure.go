@@ -93,13 +93,21 @@ func bareFailure(error StepError) StepFailure {
 func ToFailure(failure StepFailure, oathPath string, fallbackLine int) ExampleFailure {
 	line := fallbackLine
 	var anchor *AnchorRange
-	if here := failure.Location; here != nil && here.Path == oathPath {
+	// The location's path is the oath, or — for a step a reference block
+	// spliced in (ADR 0016) — the document that step was written in. Either way
+	// its line and anchor are the precise ones; docPath says which file they
+	// address.
+	var docPath string
+	if here := failure.Location; here != nil {
 		line = here.Line
 		// The executor recorded the anchor with the location, so this is the
 		// failing step's span (or the first mismatched cell's) — what a renderer
 		// underlines instead of the whole line.
 		a := here.Anchor
 		anchor = &a
+		if here.Path != oathPath {
+			docPath = here.Path
+		}
 	}
 
 	var cells []CellFailure
@@ -117,6 +125,7 @@ func ToFailure(failure StepFailure, oathPath string, fallbackLine int) ExampleFa
 		Stack:   renderStack(failure),
 		Cells:   cells,
 		Anchor:  anchor,
+		DocPath: docPath,
 	}
 }
 

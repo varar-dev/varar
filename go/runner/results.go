@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"sort"
 
 	"github.com/varar-dev/varar/go/core"
 )
@@ -71,20 +72,38 @@ type Results struct {
 	order    []string
 	sources  map[string]string
 	examples map[string][]core.ExampleResult
+	// Per oath: the other documents its steps were spliced in from (ADR 0016),
+	// as path→source.
+	documents map[string]map[string]string
 }
 
 // NewResults is an empty collector.
 func NewResults() *Results {
-	return &Results{sources: map[string]string{}, examples: map[string][]core.ExampleResult{}}
+	return &Results{
+		sources:   map[string]string{},
+		examples:  map[string][]core.ExampleResult{},
+		documents: map[string]map[string]string{},
+	}
 }
 
-// Record accumulates one example's outcome.
-func (r *Results) Record(oathPath, source string, result core.ExampleResult) {
+// Record accumulates one example's outcome. referencedSources carries the OTHER
+// documents this oath's steps were spliced in from (ADR 0016), as path→source;
+// their hashes go in the payload so a consumer can tell a stale failure from a
+// live one. Nil in a project that uses no reference blocks.
+func (r *Results) Record(oathPath, source string, result core.ExampleResult, referencedSources map[string]string) {
 	if _, seen := r.sources[oathPath]; !seen {
 		r.order = append(r.order, oathPath)
 	}
 	r.sources[oathPath] = source
 	r.examples[oathPath] = append(r.examples[oathPath], result)
+	if len(referencedSources) > 0 {
+		if r.documents[oathPath] == nil {
+			r.documents[oathPath] = map[string]string{}
+		}
+		for path, text := range referencedSources {
+			r.documents[oathPath][path] = text
+		}
+	}
 }
 
 // FlushAll writes every oath held, and forgets them. Write errors are ignored
@@ -96,14 +115,21 @@ func (r *Results) FlushAll(root string) {
 		if len(examples) == 0 {
 			continue
 		}
+		var documents []core.ReferencedDocument
+		for path, text := range r.documents[oathPath] {
+			documents = append(documents, core.ReferencedDocument{Path: path, SourceHash: core.HashSource(text)})
+		}
+		sort.Slice(documents, func(i, j int) bool { return documents[i].Path < documents[j].Path })
 		_, _ = WriteOathResults(root, core.OathResults{
-			Version:    1,
+			Version:    2,
 			OathPath:   oathPath,
 			SourceHash: core.HashSource(r.sources[oathPath]),
+			Documents:  documents,
 			Examples:   examples,
 		})
 	}
 	r.order = nil
 	r.sources = map[string]string{}
 	r.examples = map[string][]core.ExampleResult{}
+	r.documents = map[string]map[string]string{}
 }

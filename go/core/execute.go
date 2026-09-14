@@ -233,11 +233,19 @@ func tableRows(table Table) Value {
 
 func attachLocation(error StepError, step PlannedStep, oathPath string) StepFailure {
 	a := anchor(error, step.MatchSpan)
+	// A step a reference block spliced in (ADR 0016) has spans in the document
+	// it was WRITTEN in, so the location must name that file — otherwise a
+	// renderer points at the running oath's line N, which is some other
+	// sentence entirely.
+	path := oathPath
+	if step.DocPath != "" {
+		path = step.DocPath
+	}
 	return StepFailure{
 		Error: error,
 		Location: &FailureLocation{
 			Label:  truncateLabel(step.Text),
-			Path:   oathPath,
+			Path:   path,
 			Line:   a.StartLine,
 			Anchor: AnchorRange{From: a.StartOffset, To: a.EndOffset},
 		},
