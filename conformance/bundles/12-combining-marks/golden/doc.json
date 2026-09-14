@@ -36,6 +36,34 @@
       }
     }
   ],
+  "headings": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "span": {
+        "endCol": 16,
+        "endLine": 1,
+        "endOffset": 15,
+        "startCol": 1,
+        "startLine": 1,
+        "startOffset": 0
+      },
+      "text": "🎉 Café World"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "span": {
+        "endCol": 34,
+        "endLine": 3,
+        "endOffset": 50,
+        "startCol": 1,
+        "startLine": 3,
+        "startOffset": 17
+      },
+      "text": "It greets with combining marks"
+    }
+  ],
   "orphanAttachments": [],
   "path": "example.md"
 }

@@ -114,6 +114,22 @@ module Varar
         expect(result.diagnostics[0].code).to eq('ambiguous-match')
         expect(result.examples).to be_empty
       end
+
+      # A reference whose anchor names two headings in the target could mean
+      # either section: one ambiguous-anchor diagnostic, no splice, and no
+      # reference-empty on top of it (ADR 0016).
+      it 'reports a reference whose anchor names two headings as ambiguous-anchor' do
+        shared = Parse.parse('shared.md',
+                             "## Funded\n\nI have 100 in my account.\n\n## Funded\n\nI have 5 in my account.")
+        main = Parse.parse('m.md', "[Funded](./shared.md#funded)\n\nI withdraw 40.")
+        result = described_class.plan(main, account_reg, Reference.build_workspace([shared, main]))
+        expect(result.diagnostics.map(&:code)).to eq(['ambiguous-anchor'])
+        expect(result.diagnostics[0].message).to eq(
+          %(Reference to "Funded" is ambiguous: "shared.md" has 2 headings with the anchor "#funded" ) +
+          "(lines 1, 5).\nRename the headings so each has an anchor of its own."
+        )
+        expect(result.examples.map { |ex| step_texts(ex) }).to eq([['I withdraw 40']])
+      end
     end
   end
 end

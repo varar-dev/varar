@@ -70,6 +70,34 @@
       }
     }
   ],
+  "headings": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "span": {
+        "endCol": 29,
+        "endLine": 1,
+        "endOffset": 28,
+        "startCol": 1,
+        "startLine": 1,
+        "startOffset": 0
+      },
+      "text": "Stimulus state replacement"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "span": {
+        "endCol": 68,
+        "endLine": 6,
+        "endOffset": 232,
+        "startCol": 1,
+        "startLine": 6,
+        "startOffset": 165
+      },
+      "text": "A stimulus return replaces the state rather than merging into it"
+    }
+  ],
   "orphanAttachments": [],
   "path": "example.md"
 }

@@ -57,6 +57,34 @@
       }
     }
   ],
+  "headings": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "span": {
+        "endCol": 7,
+        "endLine": 1,
+        "endOffset": 6,
+        "startCol": 1,
+        "startLine": 1,
+        "startOffset": 0
+      },
+      "text": "Echo"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "span": {
+        "endCol": 28,
+        "endLine": 3,
+        "endOffset": 35,
+        "startCol": 1,
+        "startLine": 3,
+        "startOffset": 8
+      },
+      "text": "It echoes the doc string"
+    }
+  ],
   "orphanAttachments": [],
   "path": "example.md"
 }

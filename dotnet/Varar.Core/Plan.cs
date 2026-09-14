@@ -280,6 +280,23 @@ public static class Plan
             return [];
         }
 
+        // An anchor that names two headings could mean either section, so it means neither. A
+        // whole-file reference (empty slug) names no heading and is never ambiguous.
+        if (reference.Slug.Length > 0)
+        {
+            var named = target.Headings.Where(h => Reference_.Slugify(h.Text) == reference.Slug).ToList();
+            if (named.Count > 1)
+            {
+                diagnostics.Add(Varar.Core.Diagnostics.AmbiguousAnchor(
+                    reference.Text,
+                    reference.Path,
+                    reference.Slug,
+                    named.Select(h => h.Span.StartLine),
+                    unit.Span));
+                return [];
+            }
+        }
+
         var result = new List<StepsUnit>();
         foreach (var candidate in Reference_.SectionCandidates(target, reference.Slug))
         {

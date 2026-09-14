@@ -71,6 +71,34 @@
       }
     }
   ],
+  "headings": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "span": {
+        "endCol": 12,
+        "endLine": 1,
+        "endOffset": 11,
+        "startCol": 1,
+        "startLine": 1,
+        "startOffset": 0
+      },
+      "text": "Late fees"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "span": {
+        "endCol": 20,
+        "endLine": 3,
+        "endOffset": 32,
+        "startCol": 1,
+        "startLine": 3,
+        "startOffset": 13
+      },
+      "text": "Shelf invariants"
+    }
+  ],
   "orphanAttachments": [],
   "path": "example.md"
 }

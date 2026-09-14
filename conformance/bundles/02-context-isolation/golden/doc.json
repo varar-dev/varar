@@ -71,6 +71,47 @@
       }
     }
   ],
+  "headings": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "span": {
+        "endCol": 10,
+        "endLine": 1,
+        "endOffset": 9,
+        "startCol": 1,
+        "startLine": 1,
+        "startOffset": 0
+      },
+      "text": "Counter"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "span": {
+        "endCol": 30,
+        "endLine": 3,
+        "endOffset": 40,
+        "startCol": 1,
+        "startLine": 3,
+        "startOffset": 11
+      },
+      "text": "First example starts fresh"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "span": {
+        "endCol": 31,
+        "endLine": 7,
+        "endOffset": 102,
+        "startCol": 1,
+        "startLine": 7,
+        "startOffset": 72
+      },
+      "text": "Second example starts fresh"
+    }
+  ],
   "orphanAttachments": [],
   "path": "example.md"
 }

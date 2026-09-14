@@ -19,6 +19,7 @@ DiagnosticCode = Literal[
     "reference-not-found",
     "reference-empty",
     "reference-cycle",
+    "ambiguous-anchor",
 ]
 
 
@@ -116,6 +117,25 @@ def reference_empty(text: str, path: str, slug: str, span: Span) -> Diagnostic:
             f'Reference to "{text}" resolves to "{where}", which contributes no steps.\n'
             "Check the heading the anchor names, and that its section contains a matching "
             "paragraph."
+        ),
+        span=span,
+    )
+
+
+def ambiguous_anchor(
+    text: str, path: str, slug: str, heading_lines: tuple[int, ...], span: Span
+) -> Diagnostic:
+    """Two headings in the referenced document slug to the same anchor, so the
+    reference could mean either section. GitHub would suffix the second one
+    (`#slug-1`); Varar refuses to guess and asks for distinct headings."""
+    lines = ", ".join(str(line) for line in heading_lines)
+    return Diagnostic(
+        severity="error",
+        code="ambiguous-anchor",
+        message=(
+            f'Reference to "{text}" is ambiguous: "{path}" has {len(heading_lines)} headings '
+            f'with the anchor "#{slug}" (lines {lines}).\n'
+            "Rename the headings so each has an anchor of its own."
         ),
         span=span,
     )

@@ -1,7 +1,7 @@
 //! Groups the flat scanner output into [`Example`]s, tracking a heading scope
 //! stack — port of `structurer.ts` / `Structurer.java`.
 
-use crate::ast::{Block, Doc, Example, TableOrFence};
+use crate::ast::{Block, Doc, Example, Heading, TableOrFence};
 use crate::span::Span;
 
 /// Groups `blocks` (scanned from `source`) into a [`Doc`].
@@ -14,6 +14,7 @@ use crate::span::Span;
 pub fn structure(path: &str, source: &str, blocks: Vec<Block>) -> Doc {
     let mut examples: Vec<Example> = Vec::new();
     let mut orphan_attachments: Vec<TableOrFence> = Vec::new();
+    let mut headings: Vec<Heading> = Vec::new();
     let mut scope_stack: Vec<(usize, String)> = Vec::new();
     let mut last_example_idx: Option<usize> = None;
     let mut attachment_open = false;
@@ -30,6 +31,7 @@ pub fn structure(path: &str, source: &str, blocks: Vec<Block>) -> Doc {
                     scope_stack.pop();
                 }
                 scope_stack.push((heading.level, heading.text.clone()));
+                headings.push(heading.clone());
                 attachment_open = false;
                 delimiter_pending = true;
             }
@@ -79,6 +81,7 @@ pub fn structure(path: &str, source: &str, blocks: Vec<Block>) -> Doc {
         source: source.to_string(),
         examples,
         orphan_attachments,
+        headings,
     }
 }
 

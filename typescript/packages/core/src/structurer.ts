@@ -1,4 +1,4 @@
-import type { Block, Doc, Example, Fence, Table } from './ast.ts'
+import type { Block, Doc, Example, Fence, Heading, Table } from './ast.ts'
 import { spanFromOffsets } from './span.ts'
 
 // Every paragraph / list item / blockquote becomes a candidate example. The
@@ -18,6 +18,7 @@ import { spanFromOffsets } from './span.ts'
 export function structure(path: string, source: string, blocks: ReadonlyArray<Block>): Doc {
   const examples: Example[] = []
   const orphanAttachments: (Table | Fence)[] = []
+  const headings: Heading[] = []
   const scopeStack: { level: number; text: string }[] = []
   let lastExampleIdx = -1
   let attachmentOpen = false
@@ -29,6 +30,7 @@ export function structure(path: string, source: string, blocks: ReadonlyArray<Bl
   for (const block of blocks) {
     switch (block.kind) {
       case 'heading': {
+        headings.push(block)
         // Pop deeper-or-equal-level entries before pushing the new heading.
         while (
           scopeStack.length > 0 &&
@@ -76,5 +78,5 @@ export function structure(path: string, source: string, blocks: ReadonlyArray<Bl
     }
   }
 
-  return { path, source, examples, orphanAttachments }
+  return { path, source, examples, orphanAttachments, headings }
 }

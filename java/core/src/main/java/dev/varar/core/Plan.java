@@ -339,6 +339,17 @@ public final class Plan {
             diagnostics.add(Diagnostics.referenceNotFound(unit.span()));
             return List.of();
         }
+        // A whole-file reference (empty slug) is never ambiguous; a section reference is when more
+        // than one heading in the target slugifies to the anchor it names.
+        if (!ref.slug().isEmpty()) {
+            long named = target.headings().stream()
+                    .filter(h -> Reference.slugify(h.text()).equals(ref.slug()))
+                    .count();
+            if (named > 1) {
+                diagnostics.add(Diagnostics.ambiguousAnchor(unit.span()));
+                return List.of();
+            }
+        }
         List<String> deeper = new ArrayList<>(chain);
         deeper.add(key);
         List<StepsUnit> out = new ArrayList<>();

@@ -26,6 +26,21 @@ class StructurerTest {
     }
 
     @Test
+    void everyHeadingIsRecordedInSourceOrderWithItsScannedSpan() {
+        String source = "# Outer\n\n## Inner\n\nA step.\n\n## Inner\n";
+        List<Ast.Block> blocks = Scanner.scan(source);
+        Doc doc = Structurer.structure("test.md", source, blocks);
+        assertEquals(3, doc.headings().size());
+        assertEquals(
+                List.of(1, 2, 2),
+                doc.headings().stream().map(Ast.Heading::level).toList());
+        assertEquals(
+                List.of("Outer", "Inner", "Inner"),
+                doc.headings().stream().map(Ast.Heading::text).toList());
+        assertEquals(blocks.get(0), doc.headings().get(0));
+    }
+
+    @Test
     void twoParagraphsUnderTheSameHeadingEachBecomeASeparateExample() {
         String source = "## Example\n\nFirst paragraph.\n\nSecond paragraph.";
         Doc doc = Structurer.structure("test.md", source, Scanner.scan(source));

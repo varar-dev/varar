@@ -26,10 +26,15 @@ func ToDocArtifact(doc Doc) Value {
 	for i, o := range doc.OrphanAttachments {
 		orphans[i] = tableOrFenceValue(o)
 	}
+	headings := make([]Value, len(doc.Headings))
+	for i, h := range doc.Headings {
+		headings[i] = headingValue(h)
+	}
 	return obj(
 		kv("path", StrValue(doc.Path)),
 		kv("examples", ListOf(examples)),
 		kv("orphanAttachments", ListOf(orphans)),
+		kv("headings", ListOf(headings)),
 	)
 }
 
@@ -497,6 +502,8 @@ func diagnosticCodeString(code DiagnosticCode) string {
 		return "reference-empty"
 	case CodeReferenceCycle:
 		return "reference-cycle"
+	case CodeAmbiguousAnchor:
+		return "ambiguous-anchor"
 	}
 	return ""
 }

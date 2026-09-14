@@ -19,10 +19,12 @@ pub enum DiagnosticCode {
     ErrorFenceWithoutStep,
     Drift,
     /// Reference blocks (ADR 0016): a link that resolves to no oath, to a
-    /// section with no steps, or to a chain that reaches itself.
+    /// section with no steps, to a chain that reaches itself, or to an anchor
+    /// that names more than one heading.
     ReferenceNotFound,
     ReferenceEmpty,
     ReferenceCycle,
+    AmbiguousAnchor,
 }
 
 /// One diagnostic: its code, severity, and the source span it points at.
@@ -77,6 +79,17 @@ pub fn reference_empty(span: Span) -> Diagnostic {
 pub fn reference_cycle(span: Span) -> Diagnostic {
     Diagnostic {
         code: DiagnosticCode::ReferenceCycle,
+        severity: Severity::Error,
+        span,
+    }
+}
+
+/// The anchor names more than one heading in the target document (two headings
+/// slugify identically), so the reference could mean either section. Reported
+/// rather than guessed: rename the headings so each has an anchor of its own.
+pub fn ambiguous_anchor(span: Span) -> Diagnostic {
+    Diagnostic {
+        code: DiagnosticCode::AmbiguousAnchor,
         severity: Severity::Error,
         span,
     }

@@ -54,6 +54,7 @@ pub fn to_doc_artifact(doc: &Doc) -> Value {
             "orphanAttachments",
             Value::List(doc.orphan_attachments.iter().map(table_or_fence).collect()),
         ),
+        ("headings", Value::List(doc.headings.iter().map(heading).collect())),
     ])
 }
 
@@ -334,6 +335,7 @@ fn diagnostic_code(code: DiagnosticCode) -> &'static str {
         DiagnosticCode::ReferenceNotFound => "reference-not-found",
         DiagnosticCode::ReferenceEmpty => "reference-empty",
         DiagnosticCode::ReferenceCycle => "reference-cycle",
+        DiagnosticCode::AmbiguousAnchor => "ambiguous-anchor",
     }
 }
 

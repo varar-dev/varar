@@ -145,13 +145,17 @@ class AstTest {
         Ast.Example example = new Ast.Example(List.of(), SPAN, List.of(new Ast.ThematicBreak(SPAN)), true);
         List<Ast.Example> examples = new ArrayList<>(List.of(example));
         List<Ast.TableOrFence> orphanAttachments = new ArrayList<>(List.of(new Ast.Fence(SPAN, "", "", SPAN)));
-        Ast.Doc doc = new Ast.Doc("oath.md", "# Title", examples, orphanAttachments);
+        Ast.Heading heading = new Ast.Heading(1, "Title", SPAN);
+        List<Ast.Heading> headings = new ArrayList<>(List.of(heading));
+        Ast.Doc doc = new Ast.Doc("oath.md", "# Title", examples, orphanAttachments, headings);
 
         assertEquals("oath.md", doc.path());
         assertEquals("# Title", doc.source());
         assertEquals(1, doc.examples().size());
         assertEquals(1, doc.orphanAttachments().size());
+        assertEquals(List.of(heading), doc.headings());
         assertThrows(UnsupportedOperationException.class, () -> doc.examples().add(example));
+        assertThrows(UnsupportedOperationException.class, () -> doc.headings().add(heading));
         assertThrows(
                 UnsupportedOperationException.class,
                 () -> doc.orphanAttachments().add(new Ast.Fence(SPAN, "", "", SPAN)));

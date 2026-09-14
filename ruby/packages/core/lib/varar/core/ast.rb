@@ -46,6 +46,9 @@ module Varar
     # one example. See ADR 0012.
     Example = Data.define(:scope_stack, :span, :body, :preceded_by_delimiter)
 
-    Doc = Data.define(:path, :source, :examples, :orphan_attachments)
+    # +headings+ is every heading in the document in source order — the same
+    # Heading values the scanner produced. The planner uses it to tell whether
+    # a reference anchor names one section or several (ADR 0016).
+    Doc = Data.define(:path, :source, :examples, :orphan_attachments, :headings)
   end
 end

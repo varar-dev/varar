@@ -36,6 +36,34 @@
       }
     }
   ],
+  "headings": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "span": {
+        "endCol": 25,
+        "endLine": 1,
+        "endOffset": 24,
+        "startCol": 1,
+        "startLine": 1,
+        "startOffset": 0
+      },
+      "text": "Custom parameter types"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "span": {
+        "endCol": 20,
+        "endLine": 3,
+        "endOffset": 45,
+        "startCol": 1,
+        "startLine": 3,
+        "startOffset": 26
+      },
+      "text": "Flying to London"
+    }
+  ],
   "orphanAttachments": [],
   "path": "example.md"
 }

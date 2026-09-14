@@ -16,6 +16,7 @@ export type DiagnosticCode =
   | 'reference-not-found'
   | 'reference-empty'
   | 'reference-cycle'
+  | 'ambiguous-anchor'
 
 export type Candidate = {
   readonly expression: string
@@ -118,6 +119,30 @@ export function referenceCycle(input: {
     severity: 'error',
     code: 'reference-cycle',
     message: `Reference cycle: ${input.chain.join(' → ')}.`,
+    span: input.span,
+  }
+}
+
+// The anchor a reference names belongs to more than one heading in the target
+// file. GitHub would give the second a numeric suffix (`#setup-1`); sections
+// here resolve through the scope stack, which cannot tell the two apart, so
+// the reference is refused rather than splicing both in. Fails the run, like
+// the other reference errors.
+export function ambiguousAnchor(input: {
+  readonly text: string
+  readonly path: string
+  readonly slug: string
+  readonly headingLines: ReadonlyArray<number>
+  readonly span: Span
+}): Diagnostic {
+  return {
+    severity: 'error',
+    code: 'ambiguous-anchor',
+    message:
+      `Reference to "${input.text}" is ambiguous: "${input.path}" has ` +
+      `${input.headingLines.length} headings with the anchor "#${input.slug}" ` +
+      `(lines ${input.headingLines.join(', ')}).\n` +
+      'Rename the headings so each has an anchor of its own.',
     span: input.span,
   }
 }

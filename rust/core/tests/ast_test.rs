@@ -186,9 +186,11 @@ fn doc_exposes_fields() {
         source: "# Title".to_string(),
         examples: vec![example],
         orphan_attachments: vec![orphan],
+        headings: vec![],
     };
     assert_eq!("oath.md", doc.path);
     assert_eq!("# Title", doc.source);
     assert_eq!(1, doc.examples.len());
     assert_eq!(1, doc.orphan_attachments.len());
+    assert!(doc.headings.is_empty());
 }

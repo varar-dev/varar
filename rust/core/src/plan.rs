@@ -6,8 +6,8 @@
 use crate::ast::{Block, Doc, Fence, Row, SegmentOffset, Table};
 use crate::cell_diff::RowCheck;
 use crate::diagnostics::{
-    Diagnostic, ambiguous_match, error_fence_without_step, reference_cycle, reference_empty,
-    reference_not_found,
+    Diagnostic, ambiguous_anchor, ambiguous_match, error_fence_without_step, reference_cycle,
+    reference_empty, reference_not_found,
 };
 use crate::matcher::{Hit, ParamSpan, ResolvedSteps, find_hits, resolve_hits};
 use crate::offsets::{java_trim, utf16_len};
@@ -303,6 +303,20 @@ fn resolve_reference(
         diagnostics.push(reference_not_found(unit.span));
         return Vec::new();
     };
+    // Two headings that slugify identically make the anchor name two sections;
+    // that is reported, not guessed, and it is not `reference-empty`. A
+    // whole-file reference (empty slug) names the document, never a heading.
+    if !unit.reference.slug.is_empty() {
+        let named = target
+            .headings
+            .iter()
+            .filter(|h| slugify(&h.text) == unit.reference.slug)
+            .count();
+        if named > 1 {
+            diagnostics.push(ambiguous_anchor(unit.span));
+            return Vec::new();
+        }
+    }
     let mut out: Vec<StepsUnit> = Vec::new();
     let mut deeper: Vec<String> = chain.to_vec();
     deeper.push(key);

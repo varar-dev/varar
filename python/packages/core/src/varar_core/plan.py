@@ -17,6 +17,7 @@ from varar_core.diagnostics import (
     AmbiguousInput,
     Candidate,
     Diagnostic,
+    ambiguous_anchor,
     ambiguous_match,
     error_fence_without_step,
     reference_cycle,
@@ -517,6 +518,21 @@ def _resolve_reference(
     if target is None:
         diagnostics.append(reference_not_found(ref.text, ref.path, unit.span))
         return ()
+    # An anchor that names two headings could mean either section: refuse to
+    # guess. A whole-file reference has no anchor, so it is never ambiguous.
+    if ref.slug != "":
+        named = tuple(h for h in target.headings if slugify(h.text) == ref.slug)
+        if len(named) > 1:
+            diagnostics.append(
+                ambiguous_anchor(
+                    ref.text,
+                    ref.path,
+                    ref.slug,
+                    tuple(h.span.start_line for h in named),  # type: ignore[union-attr]
+                    unit.span,
+                )
+            )
+            return ()
     out: list[_StepsUnit] = []
     for candidate in section_candidates(target, ref.slug):
         planned = _plan_candidate(candidate, target, registry, diagnostics)

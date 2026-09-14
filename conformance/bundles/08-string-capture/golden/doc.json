@@ -36,6 +36,34 @@
       }
     }
   ],
+  "headings": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "span": {
+        "endCol": 11,
+        "endLine": 1,
+        "endOffset": 10,
+        "startCol": 1,
+        "startLine": 1,
+        "startOffset": 0
+      },
+      "text": "Greeting"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "span": {
+        "endCol": 31,
+        "endLine": 3,
+        "endOffset": 42,
+        "startCol": 1,
+        "startLine": 3,
+        "startOffset": 12
+      },
+      "text": "It captures a quoted string"
+    }
+  ],
   "orphanAttachments": [],
   "path": "example.md"
 }

@@ -68,6 +68,8 @@ mod b19;
 mod b20;
 #[path = "../../../conformance/bundles/21-reference-consumed/library.steps.rs"]
 mod b21;
+#[path = "../../../conformance/bundles/22-reference-ambiguous-anchor/library.steps.rs"]
+mod b22;
 #[path = "../../../conformance/bundles/23-reference-only-example/library.steps.rs"]
 mod b23;
 
@@ -110,6 +112,7 @@ fn fixture(bundle: &str) -> (Registry, ContextFactory) {
         "20-reference-splice" => bundle!(b20),
         "21-reference-consumed" => bundle!(b21),
         "23-reference-only-example" => bundle!(b23),
+        "22-reference-ambiguous-anchor" => bundle!(b22),
         other => panic!("no Rust step fixture for bundle {other}"),
     }
 }

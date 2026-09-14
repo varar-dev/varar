@@ -26,6 +26,7 @@ framework's own runner.
 | --- | --- | --- |
 | `ambiguous-match` | error | Two or more step definitions match one sentence. Varar refuses to guess, so the example cannot run. |
 | `error-fence-without-step` | error | An [expected-to-fail](/reference/examples/#expected-to-fail-examples) `error` fence sits on an example with no step to produce that failure. |
+| `reference-not-found`, `reference-empty`, `reference-cycle`, `ambiguous-anchor` | error | A [reference block](/reference/examples/#reference-blocks) that resolves to no oath, to no steps, back to itself, or to an anchor two headings share. The same errors fail a run; lint reports them without running anything. |
 | `orphan-step` | warning | A step definition no sentence in any oath matches — dead code, usually the far half of a rename. |
 
 Because lint loads your step files to build that registry, anything that stops

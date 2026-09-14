@@ -1,6 +1,7 @@
 import type { Block, Doc, Fence, SegmentOffset, Table } from './ast.ts'
 import type { RowCheck } from './cell-diff.ts'
 import {
+  ambiguousAnchor,
   ambiguousMatch,
   type Diagnostic,
   errorFenceWithoutStep,
@@ -212,6 +213,26 @@ function resolveReference(
       referenceNotFound({ text: reference.text, path: reference.path, span: unit.span }),
     )
     return []
+  }
+  // The anchor must name exactly one heading. Two headings that slug
+  // identically (`## Setup` twice — GitHub's `#setup` and `#setup-1`) are
+  // indistinguishable to the scope-stack rule below, which would splice both
+  // sections in; that is an error, not a guess. A whole-file reference names
+  // no heading, so it cannot be ambiguous.
+  if (reference.slug !== '') {
+    const named = target.headings.filter((h) => slugOf(h.text) === reference.slug)
+    if (named.length > 1) {
+      diagnostics.push(
+        ambiguousAnchor({
+          text: reference.text,
+          path: reference.path,
+          slug: reference.slug,
+          headingLines: named.map((h) => h.span.startLine),
+          span: unit.span,
+        }),
+      )
+      return []
+    }
   }
   const out: Array<Extract<CandidateUnit, { kind: 'steps' }>> = []
   for (const candidate of sectionCandidates(target, reference.slug)) {

@@ -176,7 +176,8 @@ public static class Conformance
     public static Value ToDocArtifact(Doc doc) => Map(
         ("path", Value.Of(doc.Path)),
         ("examples", List(doc.Examples, ExampleValue)),
-        ("orphanAttachments", List(doc.OrphanAttachments, BlockValue)));
+        ("orphanAttachments", List(doc.OrphanAttachments, BlockValue)),
+        ("headings", List(doc.Headings, h => BlockValue(h))));
 
     private static Value ExampleValue(Example example) => Map(
         ("scopeStack", Value.List(example.ScopeStack.Select(Value.Of))),

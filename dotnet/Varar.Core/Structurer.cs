@@ -20,6 +20,7 @@ public static class Structurer
     {
         var examples = new List<Example>();
         var orphanAttachments = ImmutableArray.CreateBuilder<Block>();
+        var headings = ImmutableArray.CreateBuilder<Heading>();
         var scopeStack = new List<(int Level, string Text)>();
         int lastExampleIdx = -1;
         bool attachmentOpen = false;
@@ -34,6 +35,7 @@ public static class Structurer
             switch (block)
             {
                 case Heading heading:
+                    headings.Add(heading);
                     while (scopeStack.Count > 0 && scopeStack[^1].Level >= heading.Level)
                     {
                         scopeStack.RemoveAt(scopeStack.Count - 1);
@@ -77,6 +79,6 @@ public static class Structurer
             }
         }
 
-        return new Doc(path, source, [.. examples], orphanAttachments.ToImmutable());
+        return new Doc(path, source, [.. examples], orphanAttachments.ToImmutable(), headings.ToImmutable());
     }
 }

@@ -98,3 +98,15 @@ def test_preceded_by_delimiter_marks_candidates_after_heading_or_thematic_break(
         True,  # after `---`
         True,  # after a heading
     ]
+
+
+def test_records_every_heading_in_source_order() -> None:
+    source = "# Outer\n\nbody one\n\n## Inner\n\nbody two\n\n## Inner\n"
+    doc = structure("test.md", source, scan(source))
+    assert [(h.level, h.text, h.span.start_line) for h in doc.headings] == [
+        (1, "Outer", 1),
+        (2, "Inner", 5),
+        (2, "Inner", 9),
+    ]
+    # The same block objects the scanner produced — not copies.
+    assert all(h.kind == "heading" for h in doc.headings)

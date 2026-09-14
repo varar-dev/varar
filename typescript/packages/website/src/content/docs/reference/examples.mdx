@@ -128,12 +128,23 @@ reference also works in the middle of an example (a shared act) and at its end
 (shared assertions) — see
 [Share setup between examples](/how-to/share-setup-between-examples/).
 
-Three rules follow:
+Six rules follow:
 
 - **A referenced section stops being a standalone example.** It runs where it is
   referenced, once per referencing example.
-- **The referring example keeps its own name** — its first matching paragraph,
-  not the section it pulls in.
+- **The referring example keeps its own name and headings** — its first
+  matching paragraph, and its own place in the document outline. The referenced
+  section's heading serves only as the anchor and the link text; its own
+  heading chain is not carried into the report.
+- **Spliced steps read as if written in place.** A report lists them in the
+  referencing example, flat, in the order they ran. What records where a step
+  came from is the [run result](/reference/run-results/): a failure inside a
+  shared section names the document it was written in.
+- **The same section referenced twice runs twice.** Two references are two
+  splices — "the nightly batch runs" twice is a real scenario, not a mistake.
+- **A whole-file reference means the whole file.** `[Setup](./shared/setup.md)`
+  splices every section in that oath, so its meaning changes when the file
+  grows a second section. Link to an anchor when the file has more than one.
 - **References nest to any depth.** Depth is a style question Varar does not
   enforce; a cycle is an error.
 
@@ -144,6 +155,11 @@ Four authoring mistakes fail the run rather than degrading to prose:
 | `reference-not-found` | The target is not an oath in this workspace (wrong path, or not matched by the `docs` globs). |
 | `reference-empty` | The document exists but the section contributes no steps — a mistyped anchor, or a section that is pure prose. |
 | `reference-cycle` | A chain of references reaches a section already on it. Reported with the whole chain. |
+| `ambiguous-anchor` | The anchor names two or more headings in the target file (`## Setup` twice — GitHub would call the second `#setup-1`). Reported with the headings' line numbers; give each heading an anchor of its own. Nothing is spliced in until it is. |
+
+All four sit on the reference block, in the oath that made it, so they surface
+in the [editor](/reference/editor-support/) and in [`varar lint`](/reference/lint/)
+exactly where the fix goes.
 
 A dangling reference is deliberately *not* [drift](#drift-detection): drift is
 "this used to match and now reads as prose", which needs an acknowledgment
@@ -339,6 +355,16 @@ The distinction is deliberate:
 - A paragraph that **never** matched is **prose** — ignored, no ceremony.
 - A paragraph that **stops** matching is **drift** — surfaced, and held until you
   explicitly accept it.
+
+One asymmetry is worth knowing. A section another oath
+[references](#reference-blocks) plans no example in its own file, so its
+paragraphs are not in the baseline at all: the file's entry records only that
+it was discovered. If a step definition stops matching a shared paragraph, the
+run still fails — as `reference-empty`, once, at the reference that depends on
+it — rather than as drift at the section. That is the intended signal, and it
+has one consequence: delete every reference to a section and it becomes an
+ordinary example again with no baseline history, so it is treated as new, not
+restored.
 
 ### The baseline file
 

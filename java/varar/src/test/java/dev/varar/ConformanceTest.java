@@ -138,6 +138,7 @@ class ConformanceTest {
             case "20-reference-splice" -> new dev.varar.conformance.bundle20.LibrarySteps();
             case "21-reference-consumed" -> new dev.varar.conformance.bundle21.LibrarySteps();
             case "23-reference-only-example" -> new dev.varar.conformance.bundle23.LibrarySteps();
+            case "22-reference-ambiguous-anchor" -> new dev.varar.conformance.bundle22.LibrarySteps();
             default -> throw new IllegalStateException("No Java step fixture registered for bundle " + bundleName);
         };
     }

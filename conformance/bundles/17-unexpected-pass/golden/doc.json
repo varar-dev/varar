@@ -91,6 +91,34 @@
       }
     }
   ],
+  "headings": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "span": {
+        "endCol": 18,
+        "endLine": 1,
+        "endOffset": 17,
+        "startCol": 1,
+        "startLine": 1,
+        "startOffset": 0
+      },
+      "text": "Unexpected pass"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "span": {
+        "endCol": 58,
+        "endLine": 7,
+        "endOffset": 252,
+        "startCol": 1,
+        "startLine": 7,
+        "startOffset": 195
+      },
+      "text": "An example expected to fail, that passes, is a failure"
+    }
+  ],
   "orphanAttachments": [],
   "path": "example.md"
 }

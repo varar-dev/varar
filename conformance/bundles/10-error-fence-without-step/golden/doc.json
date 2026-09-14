@@ -56,6 +56,21 @@
       }
     }
   ],
+  "headings": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "span": {
+        "endCol": 7,
+        "endLine": 1,
+        "endOffset": 6,
+        "startCol": 1,
+        "startLine": 1,
+        "startOffset": 0
+      },
+      "text": "Nope"
+    }
+  ],
   "orphanAttachments": [],
   "path": "example.md"
 }

@@ -104,7 +104,8 @@ module Varar
         {
           'path' => doc.path,
           'examples' => doc.examples.map { |ex| example_hash(ex) },
-          'orphanAttachments' => doc.orphan_attachments.map { |b| block_hash(b) }
+          'orphanAttachments' => doc.orphan_attachments.map { |b| block_hash(b) },
+          'headings' => doc.headings.map { |h| block_hash(h) }
         }
       end
 

@@ -122,6 +122,34 @@
       }
     }
   ],
+  "headings": [
+    {
+      "kind": "heading",
+      "level": 1,
+      "span": {
+        "endCol": 17,
+        "endLine": 1,
+        "endOffset": 16,
+        "startCol": 1,
+        "startLine": 1,
+        "startOffset": 0
+      },
+      "text": "😀 Emoji World"
+    },
+    {
+      "kind": "heading",
+      "level": 2,
+      "span": {
+        "endCol": 28,
+        "endLine": 3,
+        "endOffset": 45,
+        "startCol": 1,
+        "startLine": 3,
+        "startOffset": 18
+      },
+      "text": "It greets after an emoji"
+    }
+  ],
   "orphanAttachments": [],
   "path": "example.md"
 }

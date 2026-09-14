@@ -87,12 +87,19 @@ public sealed record Example(
     ImmutableArray<Block> Body,
     bool PrecededByDelimiter);
 
-/// <summary>The parsed document. <c>Source</c> is kept for the runner but not projected to doc.json.</summary>
+/// <summary>
+/// The parsed document. <c>Source</c> is kept for the runner but not projected to doc.json.
+/// <c>Headings</c> is every heading in the document, in order: the outline a reference block's
+/// anchor is resolved against (ADR 0016). Candidates still carry the chain above them in
+/// <c>ScopeStack</c>; this is the list itself, so the planner can tell that two headings slug
+/// identically — which the chain cannot.
+/// </summary>
 public sealed record Doc(
     string Path,
     string Source,
     ImmutableArray<Example> Examples,
-    ImmutableArray<Block> OrphanAttachments);
+    ImmutableArray<Block> OrphanAttachments,
+    ImmutableArray<Heading> Headings);
 
 /// <summary>A raw source line: its text and source offsets.</summary>
 public sealed record RawLine(string Text, int StartOffset, int EndOffset);

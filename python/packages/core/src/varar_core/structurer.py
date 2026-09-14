@@ -14,6 +14,7 @@ from varar_core.ast import (
     Block,
     Example,
     Fence,
+    Heading,
     Table,
     Doc,
 )
@@ -24,6 +25,7 @@ def structure(path: str, source: str, blocks: tuple[Block, ...]) -> Doc:
     """Group *blocks* into Examples, scoped by headings, with orphan attachments."""
     examples: list[Example] = []
     orphan_attachments: list[Table | Fence] = []
+    headings: list[Heading] = []
     scope_stack: list[tuple[int, str]] = []  # (level, text)
     last_example_idx = -1
     attachment_open = False
@@ -36,6 +38,7 @@ def structure(path: str, source: str, blocks: tuple[Block, ...]) -> Doc:
         kind = block.kind
 
         if kind == "heading":
+            headings.append(block)  # type: ignore[arg-type]
             # Pop deeper-or-equal-level entries before pushing the new heading.
             while scope_stack and scope_stack[-1][0] >= block.level:  # type: ignore[union-attr]
                 scope_stack.pop()
@@ -82,4 +85,5 @@ def structure(path: str, source: str, blocks: tuple[Block, ...]) -> Doc:
         source=source,
         examples=tuple(examples),
         orphan_attachments=tuple(orphan_attachments),
+        headings=tuple(headings),
     )

@@ -4,7 +4,7 @@ from __future__ import annotations
 from varar_core.parse import parse
 from varar_core.plan import plan
 from varar_core.registry import add_step, create_registry
-from varar_core.reference import empty_workspace
+from varar_core.reference import build_workspace, empty_workspace
 
 
 def _noop(*_args: object, **_kwargs: object) -> None:
@@ -449,3 +449,55 @@ def test_a_reference_mid_example_extends_the_example_to_the_reference_block_not_
     assert main[ex.span.start_offset : ex.span.end_offset] == (
         "I withdraw 40.\n\n[Fees are enabled](./shared.md#fees-are-enabled)"
     )
+
+
+def _library_registry():
+    r = create_registry()
+    for line, expression in enumerate(("I shelve {int} books", "I borrow a book"), start=1):
+        r = add_step(
+            r,
+            expression=expression,
+            expression_source_file="library.steps.py",
+            expression_source_line=line,
+            kind="stimulus",
+            handler=lambda *_: None,
+        )
+    return r
+
+
+def test_reference_whose_anchor_names_two_headings_is_ambiguous() -> None:
+    shared = parse(
+        "shared.md",
+        "# Shared\n\n## A stocked library\n\nI shelve 3 books.\n\n## A stocked library\n\nI shelve 5 books.\n",
+    )
+    host = parse(
+        "example.md",
+        "# Late fees\n\n[A stocked library](./shared.md#a-stocked-library)\n\nI borrow a book.\n",
+    )
+    result = plan(host, _library_registry(), build_workspace((shared, host)))
+    assert [d.code for d in result.diagnostics] == ["ambiguous-anchor"]
+    d = result.diagnostics[0]
+    assert d.severity == "error"
+    assert d.span == host.examples[0].span
+    assert d.message == (
+        'Reference to "A stocked library" is ambiguous: "shared.md" has 2 headings '
+        'with the anchor "#a-stocked-library" (lines 3, 7).\n'
+        "Rename the headings so each has an anchor of its own."
+    )
+    # The reference contributes nothing; the host's own step still plans.
+    assert [ex.name for ex in result.examples] == ["I borrow a book"]
+
+
+def test_whole_file_reference_is_never_ambiguous() -> None:
+    shared = parse(
+        "shared.md",
+        "## A stocked library\n\nI shelve 3 books.\n\n## A stocked library\n\nI shelve 5 books.\n",
+    )
+    host = parse("example.md", "# Late fees\n\n[Setup](./shared.md)\n\nI borrow a book.\n")
+    result = plan(host, _library_registry(), build_workspace((shared, host)))
+    assert result.diagnostics == ()
+    assert [s.text for s in result.examples[0].steps] == [
+        "I shelve 3 books",
+        "I shelve 5 books",
+        "I borrow a book",
+    ]

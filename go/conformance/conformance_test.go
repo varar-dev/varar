@@ -38,6 +38,7 @@ import (
 	b19 "github.com/varar-dev/varar/go/conformance/b19"
 	b20 "github.com/varar-dev/varar/go/conformance/b20"
 	b21 "github.com/varar-dev/varar/go/conformance/b21"
+	b22 "github.com/varar-dev/varar/go/conformance/b22"
 	b23 "github.com/varar-dev/varar/go/conformance/b23"
 )
 
@@ -69,6 +70,7 @@ var fixtures = map[string]fixture{
 	"20-reference-splice":           {b20.Register, b20.State},
 	"21-reference-consumed":         {b21.Register, b21.State},
 	"23-reference-only-example":     {b23.Register, b23.State},
+	"22-reference-ambiguous-anchor": {b22.Register, b22.State},
 }
 
 func bundlesDir() string { return filepath.Join("..", "..", "conformance", "bundles") }
