@@ -78,13 +78,21 @@ module Varar
       end
 
       # POSIX path arithmetic on oath paths (always '/'-separated, relative to
-      # the workspace root). The core may not touch the filesystem.
+      # the workspace root). The core may not touch the filesystem. A link that
+      # climbs above the root keeps its leading `../`, as the oath-path
+      # convention does for an oath outside the root.
       def join_posix(dir, rel)
         segments = dir.empty? ? [] : dir.split('/')
         rel.split('/').each do |segment|
           next if segment.empty? || segment == '.'
 
-          segment == '..' ? segments.pop : segments << segment
+          if segment != '..'
+            segments << segment
+          elsif !segments.empty? && segments.last != '..'
+            segments.pop
+          else
+            segments << '..'
+          end
         end
         segments.join('/')
       end

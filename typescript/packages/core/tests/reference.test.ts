@@ -254,3 +254,65 @@ test('slugs follow GitHub: inline markup dropped, punctuation stripped', () => {
   expect(slugify('Fees, VAT & rounding!')).toBe('fees-vat--rounding')
   expect(slugify('`code` spans')).toBe('code-spans')
 })
+
+test('an example a reference opens is placed at the reference block, under the referring document’s headings', () => {
+  // The spliced steps keep their spans in shared.md; the EXAMPLE lives in
+  // fees.md. Its span used to be built from the section's offsets read against
+  // fees.md's source, which put it at an unrelated line.
+  const main = `# Late fees
+
+[A stocked library](./shared.md#a-stocked-library)
+
+Maya borrows "Emma".
+`
+  const { main: planned } = planWith(main)
+  const ex = planned.examples[0]!
+  expect(ex.scopeStack).toEqual(['Late fees'])
+  expect(ex.span.startLine).toBe(3)
+  expect(ex.span.startCol).toBe(1)
+  expect(ex.span.endLine).toBe(5)
+  expect(main.slice(ex.span.startOffset, ex.span.endOffset)).toBe(
+    '[A stocked library](./shared.md#a-stocked-library)\n\nMaya borrows "Emma".',
+  )
+})
+
+test('an example that is nothing but a reference spans the reference block and keeps the host headings', () => {
+  const main = `# Late fees
+
+## Invariants
+
+[Fees are enabled](./shared.md#fees-are-enabled)
+`
+  const { main: planned } = planWith(main)
+  expect(planned.examples).toHaveLength(1)
+  const ex = planned.examples[0]!
+  expect(ex.steps.map((s) => s.text)).toEqual(['Fees are enabled'])
+  expect(ex.scopeStack).toEqual(['Late fees', 'Invariants'])
+  expect(main.slice(ex.span.startOffset, ex.span.endOffset)).toBe(
+    '[Fees are enabled](./shared.md#fees-are-enabled)',
+  )
+})
+
+test('a reference mid-example extends the example to the reference block, not into the other file', () => {
+  const main = `# Late fees
+
+Maya borrows "Emma".
+
+[Fees are enabled](./shared.md#fees-are-enabled)
+`
+  const { main: planned } = planWith(main)
+  const ex = planned.examples[0]!
+  expect(ex.steps.map((s) => s.text)).toEqual(['Maya borrows "Emma"', 'Fees are enabled'])
+  expect(main.slice(ex.span.startOffset, ex.span.endOffset)).toBe(
+    'Maya borrows "Emma".\n\n[Fees are enabled](./shared.md#fees-are-enabled)',
+  )
+})
+
+test('a link that climbs above the workspace root keeps its leading ../', () => {
+  // toOathPath keeps `../` for an oath outside the root; the resolver must too,
+  // or `../../shared/b.md` from `varar/a.md` would land on `shared/b.md`.
+  const doc = parse('varar/a.md', '[Up](../../shared/b.md#setup)\n')
+  expect(references(doc)[0]?.path).toBe('../shared/b.md')
+  const deeper = parse('../outside/a.md', '[Up](../b.md)\n')
+  expect(references(deeper)[0]?.path).toBe('../b.md')
+})

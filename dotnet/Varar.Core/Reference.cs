@@ -126,16 +126,19 @@ public static partial class Reference_
                 continue;
             }
 
-            if (segment == "..")
+            if (segment != "..")
             {
-                if (segments.Count > 0)
-                {
-                    segments.RemoveAt(segments.Count - 1);
-                }
+                segments.Add(segment);
+            }
+            else if (segments.Count > 0 && segments[^1] != "..")
+            {
+                segments.RemoveAt(segments.Count - 1);
             }
             else
             {
-                segments.Add(segment);
+                // Above the workspace root: keep the leading `../`, as the oath-path convention
+                // does for an oath outside the root.
+                segments.Add("..");
             }
         }
 

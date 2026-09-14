@@ -90,11 +90,15 @@ def join_posix(directory: str, rel: str) -> str:
     for segment in rel.split("/"):
         if segment in ("", "."):
             continue
-        if segment == "..":
-            if segments:
-                segments.pop()
-        else:
+        if segment != "..":
             segments.append(segment)
+        # A `..` with nothing left to climb out of stays: an oath above the
+        # workspace root is addressed as `../shared/b.md` (to_oath_path keeps
+        # the leading `../` too), and clamping it would point at the wrong file.
+        elif segments and segments[-1] != "..":
+            segments.pop()
+        else:
+            segments.append("..")
     return "/".join(segments)
 
 

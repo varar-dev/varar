@@ -85,8 +85,12 @@ export function joinPosix(dir: string, rel: string): string {
   const segments = dir === '' ? [] : dir.split('/')
   for (const segment of rel.split('/')) {
     if (segment === '' || segment === '.') continue
-    if (segment === '..') segments.pop()
-    else segments.push(segment)
+    if (segment !== '..') segments.push(segment)
+    // A `..` with nothing left to climb out of stays: an oath above the
+    // workspace root is addressed as `../shared/b.md` (toOathPath keeps the
+    // leading `../` too), and clamping it would point at the wrong file.
+    else if (segments.length > 0 && segments[segments.length - 1] !== '..') segments.pop()
+    else segments.push('..')
   }
   return segments.join('/')
 }

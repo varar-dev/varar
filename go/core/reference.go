@@ -116,8 +116,13 @@ func JoinPosix(dir, rel string) string {
 		case "", ".":
 			continue
 		case "..":
-			if len(segments) > 0 {
+			// Climbing above the workspace root keeps the leading "../": the
+			// oath-path convention spells an oath outside the root that way,
+			// so the resolver must produce the same spelling.
+			if len(segments) > 0 && segments[len(segments)-1] != ".." {
 				segments = segments[:len(segments)-1]
+			} else {
+				segments = append(segments, "..")
 			}
 		default:
 			segments = append(segments, segment)

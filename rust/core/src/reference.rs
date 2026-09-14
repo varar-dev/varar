@@ -117,9 +117,15 @@ pub fn join_posix(dir: &str, rel: &str) -> String {
     for segment in rel.split('/') {
         match segment {
             "" | "." => continue,
-            ".." => {
-                segments.pop();
-            }
+            // Climbing above the workspace root keeps its leading `..`: the
+            // oath-path convention deliberately spells an oath outside the root
+            // as `../x.md`, so the resolver must produce the same spelling.
+            ".." => match segments.last() {
+                Some(&"..") | None => segments.push(".."),
+                Some(_) => {
+                    segments.pop();
+                }
+            },
             other => segments.push(other),
         }
     }

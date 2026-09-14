@@ -110,10 +110,15 @@ public final class Reference {
         }
         for (String segment : rel.split("/")) {
             if (segment.isEmpty() || segment.equals(".")) continue;
-            if (segment.equals("..")) {
-                if (!segments.isEmpty()) segments.remove(segments.size() - 1);
-            } else {
+            if (!segment.equals("..")) {
                 segments.add(segment);
+            } else if (!segments.isEmpty() && !segments.get(segments.size() - 1).equals("..")) {
+                segments.remove(segments.size() - 1);
+            } else {
+                // A `..` with nothing left to climb out of stays: an oath above the workspace root
+                // is addressed as `../shared/b.md` (the oath-path convention keeps the leading
+                // `../` too), and clamping it would point at the wrong file.
+                segments.add("..");
             }
         }
         return String.join("/", segments);
