@@ -62,10 +62,6 @@
       "sourceHash": "fnv1a:a0e53ea6",
       "examples": [
         {
-          "name": "Both examples below start from the same borrowed book. Rather than repeating it, each one links to the section that describes it — the link renders on GitHub, and clicking it takes you to the world state being assumed",
-          "line": 3
-        },
-        {
           "name": "[An overdue loan](./shared/an-overdue-loan.md#an-overdue-loan)",
           "line": 9
         },

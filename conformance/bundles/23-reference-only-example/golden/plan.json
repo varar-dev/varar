@@ -1,0 +1,81 @@
+{
+  "diagnostics": [],
+  "examples": [
+    {
+      "expectedOutcome": "pass",
+      "name": "I shelve 3 books. The shelf holds 3 books",
+      "scopeStack": [
+        "Late fees",
+        "Shelf invariants"
+      ],
+      "span": {
+        "endCol": 51,
+        "endLine": 8,
+        "endOffset": 238,
+        "startCol": 1,
+        "startLine": 8,
+        "startOffset": 188
+      },
+      "steps": [
+        {
+          "args": [
+            {
+              "parameterType": "int",
+              "value": "3"
+            }
+          ],
+          "docPath": "shared.md",
+          "matchSpan": {
+            "endCol": 17,
+            "endLine": 5,
+            "endOffset": 61,
+            "startCol": 1,
+            "startLine": 5,
+            "startOffset": 45
+          },
+          "matchedExpression": "I shelve {int} books",
+          "paramSpans": [
+            {
+              "endCol": 11,
+              "endLine": 5,
+              "endOffset": 55,
+              "startCol": 10,
+              "startLine": 5,
+              "startOffset": 54
+            }
+          ],
+          "text": "I shelve 3 books"
+        },
+        {
+          "args": [
+            {
+              "parameterType": "int",
+              "value": "3"
+            }
+          ],
+          "docPath": "shared.md",
+          "matchSpan": {
+            "endCol": 42,
+            "endLine": 5,
+            "endOffset": 86,
+            "startCol": 19,
+            "startLine": 5,
+            "startOffset": 63
+          },
+          "matchedExpression": "The shelf holds {int} books",
+          "paramSpans": [
+            {
+              "endCol": 36,
+              "endLine": 5,
+              "endOffset": 80,
+              "startCol": 35,
+              "startLine": 5,
+              "startOffset": 79
+            }
+          ],
+          "text": "The shelf holds 3 books"
+        }
+      ]
+    }
+  ]
+}

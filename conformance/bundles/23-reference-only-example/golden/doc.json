@@ -1,0 +1,76 @@
+{
+  "examples": [
+    {
+      "body": [
+        {
+          "kind": "paragraph",
+          "segmentMap": [
+            {
+              "sourceOffset": 34,
+              "textOffset": 0
+            }
+          ],
+          "span": {
+            "endCol": 75,
+            "endLine": 6,
+            "endOffset": 186,
+            "startCol": 1,
+            "startLine": 5,
+            "startOffset": 34
+          },
+          "text": "An example that is nothing but a reference. It belongs to THIS document — its\nheadings, its span — and only its steps come from the section it links to."
+        }
+      ],
+      "precededByDelimiter": true,
+      "scopeStack": [
+        "Late fees",
+        "Shelf invariants"
+      ],
+      "span": {
+        "endCol": 75,
+        "endLine": 6,
+        "endOffset": 186,
+        "startCol": 1,
+        "startLine": 5,
+        "startOffset": 34
+      }
+    },
+    {
+      "body": [
+        {
+          "kind": "paragraph",
+          "segmentMap": [
+            {
+              "sourceOffset": 188,
+              "textOffset": 0
+            }
+          ],
+          "span": {
+            "endCol": 51,
+            "endLine": 8,
+            "endOffset": 238,
+            "startCol": 1,
+            "startLine": 8,
+            "startOffset": 188
+          },
+          "text": "[A stocked library](./shared.md#a-stocked-library)"
+        }
+      ],
+      "precededByDelimiter": false,
+      "scopeStack": [
+        "Late fees",
+        "Shelf invariants"
+      ],
+      "span": {
+        "endCol": 51,
+        "endLine": 8,
+        "endOffset": 238,
+        "startCol": 1,
+        "startLine": 8,
+        "startOffset": 188
+      }
+    }
+  ],
+  "orphanAttachments": [],
+  "path": "example.md"
+}

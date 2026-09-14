@@ -34,6 +34,7 @@ public static class ConformanceFixtures
             ["19-emphasis-parameter"] = Corpus.B19.MentionSteps.Register,
             ["20-reference-splice"] = Corpus.B20.LibrarySteps.Register,
             ["21-reference-consumed"] = Corpus.B21.LibrarySteps.Register,
+            ["23-reference-only-example"] = Corpus.B23.LibrarySteps.Register,
         };
 
     /// <summary>Locate the shared corpus directory by walking up from the test binary.</summary>
@@ -105,6 +106,7 @@ public static class ConformanceFixtures
             ["19-emphasis-parameter"] = Corpus.B19.MentionSteps.State,
             ["20-reference-splice"] = Corpus.B20.LibrarySteps.State,
             ["21-reference-consumed"] = Corpus.B21.LibrarySteps.State,
+            ["23-reference-only-example"] = Corpus.B23.LibrarySteps.State,
         };
 
     /// <summary>The bundle's initial-state factory, or a loud failure if none is wired.</summary>

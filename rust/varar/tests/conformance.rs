@@ -68,6 +68,8 @@ mod b19;
 mod b20;
 #[path = "../../../conformance/bundles/21-reference-consumed/library.steps.rs"]
 mod b21;
+#[path = "../../../conformance/bundles/23-reference-only-example/library.steps.rs"]
+mod b23;
 
 // Each bundle now has its OWN context type, so the fixtures cannot share one
 // function-pointer type. This macro erases that difference: it builds the
@@ -107,6 +109,7 @@ fn fixture(bundle: &str) -> (Registry, ContextFactory) {
         "19-emphasis-parameter" => bundle!(b19),
         "20-reference-splice" => bundle!(b20),
         "21-reference-consumed" => bundle!(b21),
+        "23-reference-only-example" => bundle!(b23),
         other => panic!("no Rust step fixture for bundle {other}"),
     }
 }

@@ -123,10 +123,10 @@ pub fn plan(doc: &Doc, registry: &Registry, workspace: &OathWorkspace) -> Execut
                     resolve_reference(&unit, doc, registry, workspace, &mut diagnostics, &[]);
                 for (i, spliced) in resolved.into_iter().enumerate() {
                     let mergeable = open.is_some() && (i > 0 || !preceded);
-                    if mergeable {
-                        if let Some(m) = open.as_mut() {
-                            merge_into(m, spliced, true);
-                        }
+                    let current = if mergeable {
+                        let m = open.as_mut().expect("an example is open");
+                        merge_into(m, spliced, true);
+                        m
                     } else {
                         if let Some(m) = open.take() {
                             examples.push(finish_merged(m, source));
@@ -134,10 +134,18 @@ pub fn plan(doc: &Doc, registry: &Registry, workspace: &OathWorkspace) -> Execut
                         let mut fresh = start_merged(spliced);
                         // An example that OPENS with a reference is named by
                         // its own first matching paragraph, not by the section
-                        // it pulls in.
+                        // it pulls in — and it sits under THIS document's
+                        // headings, starting at the reference block.
                         fresh.name_from_reference = true;
-                        open = Some(fresh);
-                    }
+                        fresh.scope_stack = unit.scope_stack.clone();
+                        fresh.start_offset = unit.span.start_offset;
+                        open.insert(fresh)
+                    };
+                    // A spliced unit's span is in the referenced document; the
+                    // example's span is in this one. It ends at the reference
+                    // block until a later paragraph of the example's own
+                    // extends it.
+                    current.end_offset = unit.span.end_offset;
                 }
             }
             CandidateUnit::Steps(unit) => {
@@ -205,6 +213,9 @@ struct ReferenceUnit {
     reference: Reference,
     preceded_by_delimiter: bool,
     span: Span,
+    /// The referring document's headings at the reference block: an example
+    /// the block opens sits under THESE, not the referenced section's.
+    scope_stack: Vec<String>,
 }
 
 struct StepsUnit {
@@ -352,6 +363,7 @@ fn plan_candidate(
                 reference,
                 preceded_by_delimiter: ex.preceded_by_delimiter,
                 span: ex.span,
+                scope_stack: ex.scope_stack.clone(),
             });
         }
     }

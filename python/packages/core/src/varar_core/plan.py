@@ -316,6 +316,9 @@ class _ReferenceUnit:
 
     reference: Reference
     preceded_by_delimiter: bool
+    # The referring document's own heading chain and the block's own span: an
+    # example this reference opens belongs here, not to the section.
+    scope_stack: tuple[str, ...]
     span: Span
 
 
@@ -449,14 +452,25 @@ def plan(doc: Doc, registry: Registry, workspace: OathWorkspace) -> ExecutionPla
             # section of several paragraphs stays one example.
             resolved = _resolve_reference(unit, doc, registry, workspace, diagnostics, ())
             for i, spliced in enumerate(resolved):
+                current: _MergedExample
                 if open_ex is not None and (i > 0 or not unit.preceded_by_delimiter):
                     _merge_into(open_ex, spliced, from_reference=True)
+                    current = open_ex
                 else:
                     flush()
-                    open_ex = _start_merged(spliced)
+                    current = _start_merged(spliced)
                     # An example that OPENS with a reference is named by its own
-                    # first matching paragraph, not by the section it pulls in.
-                    open_ex.name_from_reference = True
+                    # first matching paragraph, not by the section it pulls in —
+                    # and it sits under THIS document's headings, not the
+                    # section's.
+                    current.name_from_reference = True
+                    current.scope_stack = unit.scope_stack
+                    current.start_offset = unit.span.start_offset
+                    open_ex = current
+                # A spliced unit's span is in the referenced document; the
+                # example's span is in this one. It ends at the reference block
+                # until a later paragraph of the example's own extends it.
+                current.end_offset = unit.span.end_offset
             continue
         if not unit.matched:
             # Prose paragraph — a delimiter. Drop it and end the open example.
@@ -554,6 +568,7 @@ def _plan_candidate(
             return _ReferenceUnit(
                 reference=ref,
                 preceded_by_delimiter=ex.preceded_by_delimiter,
+                scope_stack=ex.scope_stack,
                 span=ex.span,
             )
 

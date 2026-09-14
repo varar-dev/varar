@@ -27,6 +27,7 @@ import dev.varar.kotlin.conformance.bundle18.steps as bundle18Steps
 import dev.varar.kotlin.conformance.bundle19.steps as bundle19Steps
 import dev.varar.kotlin.conformance.bundle20.steps as bundle20Steps
 import dev.varar.kotlin.conformance.bundle21.steps as bundle21Steps
+import dev.varar.kotlin.conformance.bundle23.steps as bundle23Steps
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
@@ -160,6 +161,7 @@ class ConformanceTest {
                 "19-emphasis-parameter" -> bundle19Steps
                 "20-reference-splice" -> bundle20Steps
                 "21-reference-consumed" -> bundle21Steps
+                "23-reference-only-example" -> bundle23Steps
                 else ->
                     throw IllegalStateException(
                         "No Kotlin step fixture registered for bundle $bundleName"

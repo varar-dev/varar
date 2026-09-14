@@ -155,15 +155,25 @@ public final class Plan {
                 List<StepsUnit> resolved = resolveReference(ru, doc, registry, workspace, diagnostics, List.of());
                 for (int i = 0; i < resolved.size(); i++) {
                     StepsUnit spliced = resolved.get(i);
+                    MergedExample current;
                     if (open != null && (i > 0 || !ru.precededByDelimiter())) {
                         mergeInto(open, spliced, true);
+                        current = open;
                     } else {
                         if (open != null) examples.add(finishMerged(open, doc.source()));
-                        open = startMerged(spliced);
+                        current = startMerged(spliced);
                         // An example that OPENS with a reference is named by its own first matching
-                        // paragraph, not by the section it pulls in.
-                        open.nameFromReference = true;
+                        // paragraph, not by the section it pulls in — and it sits under THIS
+                        // document's headings, not the section's.
+                        current.nameFromReference = true;
+                        current.scopeStack = ru.scopeStack();
+                        current.startOffset = ru.span().startOffset();
+                        open = current;
                     }
+                    // A spliced unit's span is in the referenced document; the example's span is in
+                    // this one. It ends at the reference block until a later paragraph of the
+                    // example's own extends it.
+                    current.endOffset = ru.span().endOffset();
                 }
                 continue;
             }
@@ -200,9 +210,12 @@ public final class Plan {
 
     /**
      * A reference block: its whole text is a link to an oath section, whose steps are spliced in
-     * here (ADR 0016). Never prose, so it does not close the open example.
+     * here (ADR 0016). Never prose, so it does not close the open example. Carries the referring
+     * document's own heading chain and the block's own span: an example this reference opens
+     * belongs here, not to the section.
      */
-    private record ReferenceUnit(Reference.Ref reference, boolean precededByDelimiter, Span span)
+    private record ReferenceUnit(
+            Reference.Ref reference, boolean precededByDelimiter, List<String> scopeStack, Span span)
             implements CandidateUnit {}
 
     /** A header-bound table candidate — standalone, one planned example per data row. */
@@ -374,7 +387,7 @@ public final class Plan {
             if (primaryText != null) {
                 Reference.Ref ref = Reference.referenceOf(primaryText, doc.path());
                 if (ref != null) {
-                    return new ReferenceUnit(ref, ex.precededByDelimiter(), ex.span());
+                    return new ReferenceUnit(ref, ex.precededByDelimiter(), ex.scopeStack(), ex.span());
                 }
             }
         }

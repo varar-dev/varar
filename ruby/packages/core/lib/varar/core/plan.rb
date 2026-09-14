@@ -50,8 +50,9 @@ module Varar
       HeaderBoundUnit = Data.define(:rows)
       # A reference block: its whole text is a link to an oath section, whose
       # steps are spliced in here (ADR 0016). Never prose, so it does not close
-      # the open example.
-      ReferenceUnit = Data.define(:reference, :preceded_by_delimiter, :span)
+      # the open example. Its span and scope stack are the referring
+      # document's: the example it opens lives here, not in the section.
+      ReferenceUnit = Data.define(:reference, :preceded_by_delimiter, :span, :scope_stack)
       StepsUnit = Data.define(:matched, :preceded_by_delimiter, :name, :scope_stack, :span, :steps,
                               :expected_outcome, :expected_error_message)
 
@@ -111,9 +112,16 @@ module Varar
                 flush.call
                 open = start_merged(spliced)
                 # An example that OPENS with a reference is named by its own
-                # first matching paragraph, not by the section it pulls in.
+                # first matching paragraph, not by the section it pulls in, and
+                # it sits under THIS document's headings, not the section's.
                 open.name_from_reference = true
+                open.scope_stack = unit.scope_stack
+                open.start_offset = unit.span.start_offset
               end
+              # A spliced unit's span is in the referenced document; the
+              # example's span is in this one. It ends at the reference block
+              # until a later paragraph of the example's own extends it.
+              open.end_offset = unit.span.end_offset
             end
             next
           end
@@ -225,7 +233,7 @@ module Varar
           ref = Reference.reference_of(primary.text, doc.path)
           if ref
             return ReferenceUnit.new(reference: ref, preceded_by_delimiter: ex.preceded_by_delimiter,
-                                     span: ex.span)
+                                     span: ex.span, scope_stack: ex.scope_stack)
           end
         end
 

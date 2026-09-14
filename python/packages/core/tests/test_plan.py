@@ -386,3 +386,66 @@ def test_multi_table_shape_two_tables_in_one_example_survive_blank_lines() -> No
     assert len(ex.steps[0].data_table.rows) == 1
     assert ex.steps[1].data_table is not None
     assert len(ex.steps[1].data_table.rows) == 1
+
+
+# ---------------------------------------------------------------------------
+# Reference blocks (ADR 0016): the example an opening reference starts belongs
+# to the REFERRING document — its span and its headings — while the spliced
+# steps keep their spans in the referenced one.
+# ---------------------------------------------------------------------------
+
+_SHARED = """# Shared world states
+
+## Fees are enabled
+
+Fees are enabled.
+
+## A stocked library
+
+I have 100 in my account.
+"""
+
+
+def _plan_with(main: str):
+    from varar_core.reference import build_workspace
+
+    r = _reg()
+    r = add_step(r, expression="Fees are enabled", expression_source_file="steps.ts", expression_source_line=4, handler=_noop, kind="stimulus")
+    main_doc = parse("fees.md", main)
+    workspace = build_workspace([main_doc, parse("shared.md", _SHARED)])
+    return plan(main_doc, r, workspace)
+
+
+def test_an_example_a_reference_opens_is_placed_at_the_reference_block_under_the_referring_headings() -> None:
+    main = "# Late fees\n\n[A stocked library](./shared.md#a-stocked-library)\n\nI withdraw 40.\n"
+    planned = _plan_with(main)
+    assert planned.diagnostics == ()
+    ex = planned.examples[0]
+    assert [s.text for s in ex.steps] == ["I have 100 in my account", "I withdraw 40"]
+    assert ex.scope_stack == ("Late fees",)
+    assert (ex.span.start_line, ex.span.start_col, ex.span.end_line) == (3, 1, 5)
+    assert main[ex.span.start_offset : ex.span.end_offset] == (
+        "[A stocked library](./shared.md#a-stocked-library)\n\nI withdraw 40."
+    )
+
+
+def test_an_example_that_is_nothing_but_a_reference_spans_the_reference_block_and_keeps_host_headings() -> None:
+    main = "# Late fees\n\n## Invariants\n\n[Fees are enabled](./shared.md#fees-are-enabled)\n"
+    planned = _plan_with(main)
+    assert len(planned.examples) == 1
+    ex = planned.examples[0]
+    assert [s.text for s in ex.steps] == ["Fees are enabled"]
+    assert ex.scope_stack == ("Late fees", "Invariants")
+    assert main[ex.span.start_offset : ex.span.end_offset] == (
+        "[Fees are enabled](./shared.md#fees-are-enabled)"
+    )
+
+
+def test_a_reference_mid_example_extends_the_example_to_the_reference_block_not_into_the_other_file() -> None:
+    main = "# Late fees\n\nI withdraw 40.\n\n[Fees are enabled](./shared.md#fees-are-enabled)\n"
+    planned = _plan_with(main)
+    ex = planned.examples[0]
+    assert [s.text for s in ex.steps] == ["I withdraw 40", "Fees are enabled"]
+    assert main[ex.span.start_offset : ex.span.end_offset] == (
+        "I withdraw 40.\n\n[Fees are enabled](./shared.md#fees-are-enabled)"
+    )

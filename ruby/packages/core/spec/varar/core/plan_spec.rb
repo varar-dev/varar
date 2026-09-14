@@ -74,6 +74,35 @@ module Varar
         expect(step_texts(result.examples[0])).to eq(['I have 100 in my account', 'I withdraw 40'])
       end
 
+      # An example a reference block opens belongs to the referring document
+      # (ADR 0016): its span is the reference block, its headings are this
+      # document's, and only its steps come from the section it links to.
+      it 'places an example opened by a reference block in the referring document' do
+        shared = Parse.parse('shared.md', "# Shared\n\n## Setup\n\nI have 100 in my account.\n")
+        source = "# Fees\n\n## Overdraft\n\n[Setup](./shared.md#setup)\n\nI withdraw 40.\n"
+        doc = Parse.parse('fees.md', source)
+        plan = described_class.plan(doc, account_reg, Reference.build_workspace([shared, doc]))
+        expect(plan.diagnostics).to be_empty
+        expect(plan.examples.length).to eq(1)
+        example = plan.examples[0]
+        expect(step_texts(example)).to eq(['I have 100 in my account', 'I withdraw 40'])
+        expect(example.scope_stack).to eq(%w[Fees Overdraft])
+        expect(source[example.span.start_offset...example.span.end_offset])
+          .to eq("[Setup](./shared.md#setup)\n\nI withdraw 40.")
+      end
+
+      it 'ends an example that is nothing but a reference at the reference block' do
+        shared = Parse.parse('shared.md', "# Shared\n\n## Setup\n\nI have 100 in my account.\n")
+        source = "# Fees\n\n## Overdraft\n\n[Setup](./shared.md#setup)\n"
+        doc = Parse.parse('fees.md', source)
+        plan = described_class.plan(doc, account_reg, Reference.build_workspace([shared, doc]))
+        example = plan.examples[0]
+        expect(example.name).to eq('I have 100 in my account')
+        expect(example.scope_stack).to eq(%w[Fees Overdraft])
+        expect(source[example.span.start_offset...example.span.end_offset]).to eq('[Setup](./shared.md#setup)')
+        expect(example.steps.map(&:doc_path)).to eq(['shared.md'])
+      end
+
       it 'drops an ambiguous candidate: a diagnostic, not an example' do
         r = Registries.create_registry
         r = Registries.add_step(r, expression: 'I have {int} cukes', expression_source_file: 'a.rb',

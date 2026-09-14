@@ -142,16 +142,26 @@ export function plan(
         // Only the reference block itself is subject to the delimiter rule.
         // Everything it splices in belongs to the same sequence, so a section
         // of several paragraphs stays one example rather than fragmenting.
+        let current: MergedExample
         if (open && (i > 0 || !unit.precededByDelimiter)) {
           mergeInto(open, spliced, true)
+          current = open
         } else {
           flush()
-          open = startMerged(spliced)
+          current = startMerged(spliced)
           // An example that OPENS with a reference is named by its own first
           // matching paragraph, not by the section it pulls in — otherwise
-          // every example under a shared setup carries the same name.
-          if (open) open.nameFromReference = true
+          // every example under a shared setup carries the same name — and it
+          // sits under THIS document's headings, not the section's.
+          current.nameFromReference = true
+          current.scopeStack = unit.scopeStack
+          current.startOffset = unit.span.startOffset
+          open = current
         }
+        // A spliced unit's span is in the referenced document; the example's
+        // span is in this one. It ends at the reference block until a later
+        // paragraph of the example's own extends it.
+        current.endOffset = unit.span.endOffset
       })
       continue
     }
@@ -269,6 +279,9 @@ type CandidateUnit =
       readonly kind: 'reference'
       readonly reference: Reference
       readonly precededByDelimiter: boolean
+      // The referring document's own heading chain and the block's own span:
+      // an example this reference opens belongs here, not to the section.
+      readonly scopeStack: ReadonlyArray<string>
       readonly span: Span
     }
   | {
@@ -347,6 +360,7 @@ function planCandidate(
         kind: 'reference',
         reference,
         precededByDelimiter: ex.precededByDelimiter,
+        scopeStack: ex.scopeStack,
         span: ex.span,
       }
     }

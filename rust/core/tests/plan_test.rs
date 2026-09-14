@@ -1,6 +1,6 @@
 //! Port of `PlanTest.java` / `plan.test.ts`.
 
-use varar_core::reference::empty_workspace;
+use varar_core::reference::{build_workspace, empty_workspace};
 mod common;
 
 use common::vmap;
@@ -488,4 +488,45 @@ fn the_multi_table_shape_two_tables_in_one_example_survive_blank_lines() {
     assert_eq!(2, ex.steps.len());
     assert_eq!(1, ex.steps[0].data_table.as_ref().unwrap().rows.len());
     assert_eq!(1, ex.steps[1].data_table.as_ref().unwrap().rows.len());
+}
+
+#[test]
+fn an_example_a_reference_block_opens_belongs_to_the_referring_document() {
+    let r = create_registry();
+    let r = step(&r, "I shelve {int} books", "s.ts", 1);
+    let r = step(&r, "I borrow a book", "s.ts", 2);
+    let shared = parse("varar/shared.md", "# Shared\n\n## Setup\n\nI shelve 3 books.");
+    let source = "# Late fees\n\n## Shelf invariants\n\nProse.\n\n[Setup](./shared.md#setup)";
+    let doc = parse("varar/a.md", source);
+    let workspace = build_workspace(&[shared, doc.clone()]);
+    let result = plan(&doc, &r, &workspace);
+    assert_eq!(0, result.diagnostics.len());
+    assert_eq!(1, result.examples.len());
+    let ex = &result.examples[0];
+    // Its span is the reference block in THIS document, not the spliced
+    // paragraph's span in the referenced one.
+    assert_eq!("[Setup](./shared.md#setup)", &source[ex.span.start_offset..ex.span.end_offset]);
+    assert_eq!(vec!["Late fees".to_string(), "Shelf invariants".to_string()], ex.scope_stack);
+    assert_eq!(vec!["I shelve 3 books".to_string()], step_texts(ex));
+    assert_eq!(Some("varar/shared.md"), ex.steps[0].doc_path.as_deref());
+}
+
+#[test]
+fn a_paragraph_of_the_examples_own_extends_the_span_past_the_reference_block() {
+    let r = create_registry();
+    let r = step(&r, "I shelve {int} books", "s.ts", 1);
+    let r = step(&r, "I borrow a book", "s.ts", 2);
+    let shared = parse("varar/shared.md", "# Shared\n\n## Setup\n\nI shelve 3 books.");
+    let source = "# Late fees\n\n[Setup](./shared.md#setup)\n\nI borrow a book.";
+    let doc = parse("varar/a.md", source);
+    let workspace = build_workspace(&[shared, doc.clone()]);
+    let result = plan(&doc, &r, &workspace);
+    assert_eq!(1, result.examples.len());
+    let ex = &result.examples[0];
+    assert_eq!(
+        "[Setup](./shared.md#setup)\n\nI borrow a book.",
+        &source[ex.span.start_offset..ex.span.end_offset]
+    );
+    assert_eq!("I borrow a book", ex.name);
+    assert_eq!(vec!["Late fees".to_string()], ex.scope_stack);
 }

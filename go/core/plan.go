@@ -120,16 +120,27 @@ func Plan(doc Doc, registry Registry, workspace OathWorkspace) ExecutionPlan {
 			// everything it splices in belongs to the same sequence, so a
 			// section of several paragraphs stays one example.
 			for i, spliced := range resolveReference(unit, doc, registry, workspace, &diagnostics, nil) {
+				var current *mergedExample
 				if open != nil && (i > 0 || !unit.precededByDelimiter) {
 					mergeInto(open, spliced, true)
+					current = open
 				} else {
 					flush()
-					open = startMerged(spliced)
+					current = startMerged(spliced)
 					// An example that OPENS with a reference is named by its
 					// own first matching paragraph, not by the section it
-					// pulls in.
-					open.nameFromReference = true
+					// pulls in — and it sits under THIS document's headings,
+					// not the section's.
+					current.nameFromReference = true
+					current.scopeStack = unit.scopeStack
+					current.startOffset = unit.span.StartOffset
+					open = current
 				}
+				// A spliced unit's span is in the referenced document; the
+				// example's span is in this one. It ends at the reference
+				// block until a later paragraph of the example's own extends
+				// it.
+				current.endOffset = unit.span.EndOffset
 			}
 			continue
 		}
@@ -323,6 +334,7 @@ func planCandidate(ex Example, doc Doc, registry Registry, diagnostics *[]Diagno
 			return candidateUnit{
 				reference:           ref,
 				precededByDelimiter: ex.PrecededByDelimiter,
+				scopeStack:          ex.ScopeStack,
 				span:                ex.Span,
 			}
 		}

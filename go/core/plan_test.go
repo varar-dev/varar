@@ -172,3 +172,61 @@ func TestMultiTableShapeSurvivesBlankLines(t *testing.T) {
 		t.Errorf("step 1 table rows unexpected")
 	}
 }
+
+// An example a reference block opens belongs to the referring document (ADR
+// 0016): its span is the reference block in THIS source (extended by any later
+// paragraph of its own), and it sits under this document's headings — never
+// the referenced section's.
+func TestReferenceOpenedExampleBelongsToReferringDocument(t *testing.T) {
+	shared := Parse("shared.md", "# Setup\n\n## Funded\n\nI have 100 in my account.\n\nI withdraw 40.")
+	refBlock := "[Funded](./shared.md#funded)"
+	main := Parse("main.md", "# Late fees\n\n## Balance\n\nSome prose.\n\n"+refBlock+"\n\nI should have 60 left.")
+	ws := BuildWorkspace([]Doc{shared, main})
+	result := Plan(main, bankReg(t), ws)
+	if len(result.Diagnostics) != 0 {
+		t.Fatalf("unexpected diagnostics: %+v", result.Diagnostics)
+	}
+	if len(result.Examples) != 1 {
+		t.Fatalf("expected 1 example, got %d", len(result.Examples))
+	}
+	ex := result.Examples[0]
+	wantSteps := []string{"I have 100 in my account", "I withdraw 40", "I should have 60 left"}
+	if got := stepTexts(ex); !reflect.DeepEqual(got, wantSteps) {
+		t.Errorf("steps got %v, want %v", got, wantSteps)
+	}
+	if ex.Name != "I should have 60 left" {
+		t.Errorf("name got %q, want the example's own first matching paragraph", ex.Name)
+	}
+	if want := []string{"Late fees", "Balance"}; !reflect.DeepEqual(ex.ScopeStack, want) {
+		t.Errorf("scopeStack got %v, want %v (the referring document's)", ex.ScopeStack, want)
+	}
+	got := main.Source[ex.Span.StartOffset:ex.Span.EndOffset]
+	if want := refBlock + "\n\nI should have 60 left."; got != want {
+		t.Errorf("span slices %q, want %q", got, want)
+	}
+	for _, s := range ex.Steps[:2] {
+		if s.DocPath != "shared.md" {
+			t.Errorf("spliced step %q docPath got %q, want shared.md", s.Text, s.DocPath)
+		}
+	}
+}
+
+func TestReferenceOnlyExampleSpansTheReferenceBlock(t *testing.T) {
+	shared := Parse("shared.md", "# Funded\n\nI have 100 in my account.")
+	refBlock := "[Funded](./shared.md#funded)"
+	main := Parse("main.md", "# Late fees\n\nSome prose.\n\n"+refBlock+"\n\nMore prose.")
+	result := Plan(main, bankReg(t), BuildWorkspace([]Doc{shared, main}))
+	if len(result.Examples) != 1 {
+		t.Fatalf("expected 1 example, got %d", len(result.Examples))
+	}
+	ex := result.Examples[0]
+	if got := main.Source[ex.Span.StartOffset:ex.Span.EndOffset]; got != refBlock {
+		t.Errorf("span slices %q, want %q", got, refBlock)
+	}
+	if want := []string{"Late fees"}; !reflect.DeepEqual(ex.ScopeStack, want) {
+		t.Errorf("scopeStack got %v, want %v", ex.ScopeStack, want)
+	}
+	if ex.Name != "I have 100 in my account" {
+		t.Errorf("name got %q", ex.Name)
+	}
+}

@@ -102,19 +102,30 @@ public static class Plan
                         var resolved = ResolveReference(ru, doc, registry, workspace, diagnostics, []);
                         for (int i = 0; i < resolved.Count; i++)
                         {
+                            MergedExample current;
                             if (open is not null && (i > 0 || !ru.PrecededByDelimiter))
                             {
                                 MergeInto(open, resolved[i], fromReference: true);
+                                current = open;
                             }
                             else
                             {
                                 Flush();
-                                open = StartMerged(resolved[i]);
+                                current = StartMerged(resolved[i]);
 
                                 // An example that OPENS with a reference is named by its own first
-                                // matching paragraph, not by the section it pulls in.
-                                open.NameFromReference = true;
+                                // matching paragraph, not by the section it pulls in, and it sits
+                                // under THIS document's headings, not the section's.
+                                current.NameFromReference = true;
+                                current.ScopeStack = ru.ScopeStack;
+                                current.StartOffset = ru.Span.StartOffset;
+                                open = current;
                             }
+
+                            // A spliced unit's span is in the referenced document; the example's
+                            // span is in this one. It ends at the reference block until a later
+                            // paragraph of the example's own extends it.
+                            current.EndOffset = ru.Span.EndOffset;
                         }
 
                         break;
@@ -151,7 +162,7 @@ public static class Plan
 
         public required ImmutableArray<string> ScopeStack { get; set; }
 
-        public required int StartOffset { get; init; }
+        public required int StartOffset { get; set; }
 
         public required int EndOffset { get; set; }
 
@@ -178,7 +189,8 @@ public static class Plan
     private sealed record ReferenceUnit(
         Reference Reference,
         bool PrecededByDelimiter,
-        Span Span) : CandidateUnit;
+        Span Span,
+        ImmutableArray<string> ScopeStack) : CandidateUnit;
 
     private sealed record StepsUnit(
         bool Matched,
@@ -314,7 +326,7 @@ public static class Plan
             && Reference_.TextOf(ex.Body[0]) is { } primaryText
             && Reference_.ReferenceOf(primaryText, doc.Path) is { } reference)
         {
-            return new ReferenceUnit(reference, ex.PrecededByDelimiter, ex.Span);
+            return new ReferenceUnit(reference, ex.PrecededByDelimiter, ex.Span, ex.ScopeStack);
         }
 
         bool hadAmbiguous = false;
