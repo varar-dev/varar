@@ -6,9 +6,12 @@ import dev.varar.core.Result;
 import dev.varar.runner.Results;
 import dev.varar.runner.Run;
 import dev.varar.runner.StepLoader;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import org.junit.platform.engine.TestSource;
 import org.junit.platform.engine.UniqueId;
 import org.junit.platform.engine.reporting.ReportEntry;
@@ -77,7 +80,26 @@ final class OathFileDescriptor extends AbstractTestDescriptor implements Node<Oa
 
     /** Records one example's outcome, for {@link #after} to persist. */
     void recordResult(Result.ExampleResult result) {
-        results.record(oathPath, content, result);
+        results.record(oathPath, content, result, referencedSources());
+    }
+
+    /**
+     * The source of every oath this plan's steps were spliced in from (ADR 0016). Their hashes go
+     * in the run record, so a consumer can tell a stale failure from a live one.
+     */
+    private Map<String, String> referencedSources() {
+        Map<String, String> out = new TreeMap<>();
+        for (Plan.PlannedExample example : plan.examples()) {
+            for (Plan.PlannedStep step : example.steps()) {
+                if (step.docPath() == null) continue;
+                try {
+                    out.put(step.docPath(), Files.readString(root.resolve(step.docPath())));
+                } catch (IOException e) {
+                    // A file that vanished since the run contributes nothing.
+                }
+            }
+        }
+        return out;
     }
 
     @Override

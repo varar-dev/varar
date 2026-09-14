@@ -496,7 +496,12 @@ public final class Execute {
         // that's what lets a renderer underline the failing step, not its whole line.
         Span anchor = FailureAnchor.anchor(err, step.matchSpan());
         FailureAnchor.attach(err, anchor);
-        StackTraceElement synthetic = new StackTraceElement("Step", label, oathPath, anchor.startLine());
+        // A step a reference block spliced in has spans in the document it was WRITTEN in (ADR
+        // 0016), so both the synthetic frame and the payload must name that file — otherwise the
+        // frame points an editor at the running oath's line N, which is some other sentence.
+        if (step.docPath() != null) FailureAnchor.attachDocPath(err, step.docPath());
+        String sourcePath = step.docPath() != null ? step.docPath() : oathPath;
+        StackTraceElement synthetic = new StackTraceElement("Step", label, sourcePath, anchor.startLine());
         StackTraceElement[] original = err.getStackTrace();
         StackTraceElement[] augmented = new StackTraceElement[original.length + 1];
         augmented[0] = synthetic;

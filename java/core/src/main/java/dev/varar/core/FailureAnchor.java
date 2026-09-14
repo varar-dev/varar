@@ -42,4 +42,18 @@ final class FailureAnchor {
     static Span attached(Throwable error) {
         return error == null ? null : ATTACHED.get(error);
     }
+
+    /**
+     * The document the anchor's offsets belong to, for a step a reference block spliced in from
+     * another oath (ADR 0016). Travels the same way and for the same reason as the anchor.
+     */
+    private static final Map<Throwable, String> DOC_PATHS = Collections.synchronizedMap(new WeakHashMap<>());
+
+    static void attachDocPath(Throwable error, String docPath) {
+        if (error != null) DOC_PATHS.put(error, docPath);
+    }
+
+    static String attachedDocPath(Throwable error) {
+        return error == null ? null : DOC_PATHS.get(error);
+    }
 }
