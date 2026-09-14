@@ -12,7 +12,7 @@ module Varar
   #   require "varar/minitest"
   #   Varar::Minitest.generate_tests
   module Minitest
-    VERSION = '0.8.0'
+    VERSION = '0.8.1'
 
     module_function
 

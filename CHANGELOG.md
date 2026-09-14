@@ -9,6 +9,61 @@ This file is generated from conventional commit messages by
 [git-cliff](https://git-cliff.org) — do not edit it by hand. It is written at
 release time by `make prepare`; preview the next release with `make changelog`.
 
+## [0.8.1] - 2026-09-14
+
+### TypeScript (npm)
+
+- Added: Reuse setup between examples by linking to a section
+- Added: A step spliced in from another oath keeps that oath's identity
+- Fixed: A failure inside a referenced section lands in the document it was written in
+- Fixed: **vitest:** Referenced-document hashes are attached once per collection, not carried over
+
+### Python (PyPI)
+
+- Added: Reuse setup between examples by linking to a section
+- Fixed: A failure inside a referenced section lands in the document it was written in
+
+### Java & Kotlin (Maven Central)
+
+- Added: Reuse setup between examples by linking to a section
+- Fixed: A failure inside a referenced section lands in the document it was written in
+- Fixed: **junit:** Referenced oath sources are read once per file, not once per example
+
+### Ruby (RubyGems)
+
+- Added: Reuse setup between examples by linking to a section
+- Fixed: A failure inside a referenced section lands in the document it was written in
+
+### Rust (crates.io)
+
+- Added: Reuse setup between examples by linking to a section
+- Fixed: A failure inside a referenced section lands in the document it was written in
+
+### C# / .NET (NuGet)
+
+- Added: Reuse setup between examples by linking to a section
+- Fixed: A failure inside a referenced section lands in the document it was written in
+
+### Go (Go modules)
+
+- Added: Reuse setup between examples by linking to a section
+- Fixed: A failure inside a referenced section lands in the document it was written in
+
+### VS Code extension (Marketplace & Open VSX)
+
+- Added: Go-to-definition and hover on a reference block
+- Fixed: The language server writes edits through in order
+- Fixed: A spliced step is highlighted in the oath it was written in
+- Fixed: A changed run result republishes every document it speaks for
+- Performance: The language server reindexes once per typing burst, not per keystroke
+
+### Specification (all ports)
+
+- Added: A reference whose anchor names two headings fails the run as ambiguous-anchor
+- Fixed: An oath's doc.path is its workspace-relative POSIX path in every port
+- Fixed: An example a reference block opens is placed at the reference block, under its own headings
+- Fixed: A reference to an oath above the workspace root keeps its leading ../
+
 ## [0.8.0] - 2026-09-07
 
 ### TypeScript (npm)
@@ -70,6 +125,7 @@ for you. `renderFailure` is no longer exported from @varar/runner.
 ### VS Code extension (Marketplace & Open VSX)
 
 - Added: Publish the extension to the VS Code Marketplace
+- Fixed: Lower the extension's VS Code floor to 1.91 so it installs on Cursor
 
 ### Specification (all ports)
 
