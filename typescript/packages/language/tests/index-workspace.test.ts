@@ -154,3 +154,33 @@ test('a plain (non-header-bound) match carries no headerCellRanges', () => {
   })
   expect(idx.matches[0]?.headerCellRanges).toBeUndefined()
 })
+
+test('a spliced step is a match in the oath it was written in, once, however many oaths reference it', () => {
+  // Its ranges address shared.md, and the editor finds matches by path — so a
+  // match labelled with the referring oath would paint shared.md's offsets
+  // onto fees.md. Two referrers plan the section twice; the site is one.
+  const idx = build({
+    stepFiles: [
+      {
+        path: '/abs/steps.ts',
+        source: `stimulus('I shelve {int} books', () => {})\nstimulus('I borrow a book', () => {})\n`,
+      },
+    ],
+    oathFiles: [
+      { path: '/abs/varar/shared.md', source: '# Shared\n\n## Stocked\n\nI shelve 3 books.\n' },
+      {
+        path: '/abs/varar/fees.md',
+        source: '# Fees\n\n[Stocked](./shared.md#stocked)\n\nI borrow a book.\n',
+      },
+      {
+        path: '/abs/varar/holds.md',
+        source: '# Holds\n\n[Stocked](./shared.md#stocked)\n\nI borrow a book.\n',
+      },
+    ],
+  })
+  const shelve = idx.matches.filter((m) => m.stepDef.expression === 'I shelve {int} books')
+  expect(shelve).toHaveLength(1)
+  expect(shelve[0]?.oathPath).toBe('/abs/varar/shared.md')
+  expect(shelve[0]?.range.start.line).toBe(5)
+  expect(idx.matches.filter((m) => m.oathPath === '/abs/varar/fees.md')).toHaveLength(1)
+})

@@ -169,6 +169,7 @@ export function buildWorkspaceIndex(input: WorkspaceInput, cache?: IndexCache): 
   }
 
   const matches: MatchRef[] = []
+  const seenMatches = new Set<string>()
   const diagnostics: DiagnosticRef[] = []
   const oaths = new Map<string, PlannedOath>()
 
@@ -207,7 +208,7 @@ export function buildWorkspaceIndex(input: WorkspaceInput, cache?: IndexCache): 
     const cached = cache?.plans.get(planKey)
     if (cached) {
       oaths.set(file.path, cached)
-      matches.push(...cached.matches)
+      addMatches(cached.matches)
       diagnostics.push(...cached.diagnostics)
       continue
     }
@@ -247,7 +248,11 @@ export function buildWorkspaceIndex(input: WorkspaceInput, cache?: IndexCache): 
         )
         if (!def) continue
         fileMatches.push({
-          oathPath: file.path,
+          // A step a reference block spliced in from another oath (ADR 0016)
+          // is labelled with THAT oath: its ranges address that file, and the
+          // editor looks matches up by path to highlight them and to build
+          // the URI it navigates to.
+          oathPath: step.docPath ?? file.path,
           range: toRange(step.matchSpan),
           // Highlight only the value passed to the handler (inner capture
           // group); paramValues keeps the full notation for rename.
@@ -276,11 +281,30 @@ export function buildWorkspaceIndex(input: WorkspaceInput, cache?: IndexCache): 
     }
     cache?.plans.set(planKey, planned)
     oaths.set(file.path, planned)
-    matches.push(...fileMatches)
+    addMatches(fileMatches)
     diagnostics.push(...fileDiagnostics)
   }
 
   return { stepDefs, matches, diagnostics, registry, workspace, oaths }
+
+  // A section two oaths reference is planned once per referrer, so its matches
+  // arrive once per referrer too. The site is the same; keep one.
+  function addMatches(list: ReadonlyArray<MatchRef>): void {
+    for (const m of list) {
+      const key = [
+        m.oathPath,
+        m.range.start.line,
+        m.range.start.character,
+        m.range.end.line,
+        m.range.end.character,
+        m.stepDef.file,
+        m.stepDef.expression,
+      ].join(' ')
+      if (seenMatches.has(key)) continue
+      seenMatches.add(key)
+      matches.push(m)
+    }
+  }
 }
 
 type SpanLike = {
