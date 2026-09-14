@@ -97,6 +97,19 @@ def pytest_unconfigure(config: pytest.Config) -> None:
     _STASH.pop(id(config), None)
 
 
+def _referenced_sources(execution_plan, workspace) -> dict[str, str]:
+    """The sources of every oath this one's steps were spliced in from (ADR
+    0016). Their hashes go in the run record, so a consumer can tell a stale
+    failure from a live one."""
+    paths = {
+        step.doc_path
+        for example in execution_plan.examples
+        for step in example.steps
+        if step.doc_path is not None
+    }
+    return {p: doc.source for p in paths if (doc := workspace.docs.get(p)) is not None}
+
+
 def _oath_path(path: Path, root: Path) -> str:
     """The oath's POSIX path relative to the workspace root — its identity in
     varar.lock.json and in .varar/<oath_path>.json alike."""
@@ -140,6 +153,7 @@ class OathFile(pytest.File):
                 source=source,
                 oath_path=_oath_path(self.path, root),
                 results=results,
+                referenced_sources=_referenced_sources(execution_plan, workspace),
             )
 
         # Reconcile drift against varar.lock.json: a clean run records/updates the
@@ -183,13 +197,18 @@ class DriftItem(pytest.Item):
 
 
 class OathItem(pytest.Item):
-    def __init__(self, *, example, run, source, oath_path, results, **kw):
+    def __init__(
+        self, *, example, run, source, oath_path, results, referenced_sources=None, **kw
+    ):
         super().__init__(**kw)
         self._example = example
         self._run = run
         self._source = source
         self._oath_path = oath_path
         self._results = results
+        # The OTHER documents this example's steps were spliced in from (ADR
+        # 0016), so the run record can hash them.
+        self._referenced_sources = referenced_sources or {}
         self._token = None
 
     def setup(self) -> None:
@@ -207,7 +226,16 @@ class OathItem(pytest.Item):
         # in hand — pytest's report carries only rendered text by the time the
         # session ends, and to_failure needs the exception itself to read the
         # anchor the executor attached to it.
-        lines = tuple(dict.fromkeys(s.match_span.start_line for s in self._example.steps))
+        # Lines in THIS oath. A step a reference block spliced in from another
+        # oath (ADR 0016) contributes none: its line belongs to that document,
+        # and a line-wash renderer would decorate an unrelated sentence here.
+        lines = tuple(
+            dict.fromkeys(
+                s.match_span.start_line
+                for s in self._example.steps
+                if s.doc_path is None
+            )
+        )
         try:
             self._run()
         except BaseException as error:
@@ -220,12 +248,14 @@ class OathItem(pytest.Item):
                     lines=lines,
                     failure=to_failure(error, self._oath_path, lines[0] if lines else 0),
                 ),
+                self._referenced_sources,
             )
             raise
         self._results.record(
             self._oath_path,
             self._source,
             ExampleResult(name=self._example.name, status="passed", lines=lines),
+            self._referenced_sources,
         )
 
     def teardown(self) -> None:

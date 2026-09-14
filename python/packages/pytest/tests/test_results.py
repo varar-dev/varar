@@ -44,7 +44,7 @@ def test_a_passing_run_writes_the_oath_result(pytester):
     pytester.runpytest("-q").assert_outcomes(passed=1)
 
     results = _results(pytester)
-    assert results["version"] == 1
+    assert results["version"] == 2
     assert results["oathPath"] == "features/vault.md"
     assert results["sourceHash"].startswith("fnv1a:")
     assert [(e["status"], e["lines"]) for e in results["examples"]] == [("passed", [3])]

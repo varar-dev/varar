@@ -42,3 +42,24 @@ def read_failure_anchor(error: object) -> Span | None:
     """The anchor the executor attached, or None if there is none."""
     anchor = getattr(error, _ANCHOR_ATTR, None)
     return anchor if isinstance(anchor, Span) else None
+
+
+# The document the anchor's offsets belong to, for a step a reference block
+# spliced in from another oath (ADR 0016). Travels the same way and for the same
+# reason as the anchor: the executor knows the step, and whoever builds the
+# failure payload sees only the error.
+_DOC_PATH_ATTR = "__varar_failure_doc_path__"
+
+
+def attach_failure_doc_path(error: object, doc_path: str) -> None:
+    """Record on the error itself which document its offsets are into."""
+    try:
+        setattr(error, _DOC_PATH_ATTR, doc_path)
+    except (AttributeError, TypeError):
+        pass
+
+
+def read_failure_doc_path(error: object) -> str | None:
+    """The document path the executor attached, or None for the oath's own."""
+    doc_path = getattr(error, _DOC_PATH_ATTR, None)
+    return doc_path if isinstance(doc_path, str) else None

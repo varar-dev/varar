@@ -12,7 +12,7 @@ import json
 from pathlib import Path
 
 from varar_core.hash import hash_source
-from varar_core.result import ExampleResult, OathResults, to_wire
+from varar_core.result import ExampleResult, OathResults, ReferencedDocument, to_wire
 
 
 def result_file_path(root: Path, oath_path: str) -> Path:
@@ -57,19 +57,35 @@ class ResultsCollector:
     def __init__(self) -> None:
         self._sources: dict[str, str] = {}
         self._examples: dict[str, list[ExampleResult]] = {}
+        # Per oath: the OTHER documents its steps were spliced in from (ADR
+        # 0016), as path -> source. Their hashes go in the payload so a consumer
+        # can tell a stale failure from a live one.
+        self._documents: dict[str, dict[str, str]] = {}
 
-    def record(self, oath_path: str, source: str, result: ExampleResult) -> None:
+    def record(
+        self,
+        oath_path: str,
+        source: str,
+        result: ExampleResult,
+        referenced_sources: dict[str, str] | None = None,
+    ) -> None:
         self._sources[oath_path] = source
         self._examples.setdefault(oath_path, []).append(result)
+        if referenced_sources:
+            self._documents.setdefault(oath_path, {}).update(referenced_sources)
 
     def write_all(self, root: Path) -> list[Path]:
         written = []
         for oath_path, examples in self._examples.items():
             results = OathResults(
-                version=1,
+                version=2,
                 oath_path=oath_path,
                 source_hash=hash_source(self._sources[oath_path]),
                 examples=tuple(sorted(examples, key=_document_order)),
+                documents=tuple(
+                    ReferencedDocument(path=path, source_hash=hash_source(text))
+                    for path, text in sorted(self._documents.get(oath_path, {}).items())
+                ),
             )
             written.append(write_oath_results(root, results))
         return written

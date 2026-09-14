@@ -22,7 +22,11 @@ from varar_core.cell_diff import (
     compare_table,
 )
 from varar_core.doc_string_diff import compare_doc_string
-from varar_core.failure_anchor import attach_failure_anchor, failure_anchor
+from varar_core.failure_anchor import (
+    attach_failure_anchor,
+    attach_failure_doc_path,
+    failure_anchor,
+)
 from varar_core.param_diff import compare_params
 from varar_core.plan import ExecutionPlan, PlannedStep
 from varar_core.span import utf16_slice
@@ -400,9 +404,16 @@ def _augment_stack(err: Exception, step: PlannedStep, oath_path: str) -> Excepti
     # the failing step rather than its whole line.
     anchor = failure_anchor(err, step.match_span)
     attach_failure_anchor(err, anchor)
+    # A step spliced in by a reference block has spans in the document it was
+    # WRITTEN in, so both the note and the payload must name that file —
+    # otherwise the note points an editor at the running oath's line N, which is
+    # some other sentence entirely.
+    if step.doc_path is not None:
+        attach_failure_doc_path(err, step.doc_path)
+    source_path = step.doc_path or oath_path
     if not isinstance(err, Exception):
         return err  # type: ignore[return-value]
     label = step.text[:60] + "…" if len(step.text) > 60 else step.text
-    frame = f"    at {label} ({oath_path}:{anchor.start_line}:{anchor.start_col})"
+    frame = f"    at {label} ({source_path}:{anchor.start_line}:{anchor.start_col})"
     err.add_note(frame)
     return err

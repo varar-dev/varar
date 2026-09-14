@@ -9,7 +9,7 @@ import re
 from typing import Any
 
 from varar_core.cell_diff import is_cell_mismatch_error
-from varar_core.failure_anchor import read_failure_anchor
+from varar_core.failure_anchor import read_failure_anchor, read_failure_doc_path
 from varar_core.result import AnchorRange, CellFailure, ExampleFailure
 
 
@@ -54,7 +54,11 @@ def to_failure(
         if failing:
             cells = failing
 
-    line = _failing_line(stack, oath_path) if stack else None
+    # The failing step may have been spliced in from another oath (ADR 0016).
+    # Its line lives in THAT document's stack frame, and every offset in this
+    # payload is relative to it.
+    doc_path = read_failure_doc_path(error)
+    line = _failing_line(stack, doc_path or oath_path) if stack else None
 
     # execute_plan attached the anchor when it caught the error, so this is the
     # failing step's span (or the first mismatched cell's). Absent only when the
@@ -71,4 +75,5 @@ def to_failure(
             if anchor is None
             else AnchorRange(from_=anchor.start_offset, to=anchor.end_offset)
         ),
+        doc_path=doc_path,
     )
