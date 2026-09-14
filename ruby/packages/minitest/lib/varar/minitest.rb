@@ -49,6 +49,16 @@ module Varar
     # Whether a section is a standalone example depends on whether another oath
     # references it, which is whole-project knowledge (ADR 0016). Built from the
     # config globs — the full set, for the same reason baseline pruning is.
+    # The sources of every oath this plan's steps were spliced in from (ADR
+    # 0016). Their hashes go in the run record, so a consumer can tell a stale
+    # failure from a live one.
+    def referenced_sources(plan, workspace)
+      plan.examples.flat_map { |ex| ex.steps.map(&:doc_path) }.compact.uniq.each_with_object({}) do |path, out|
+        doc = workspace.docs[path]
+        out[path] = doc.source if doc
+      end
+    end
+
     def project_workspace(oaths, root)
       docs = oaths.filter_map do |path|
         Core::Parse.parse(Runner.rel_posix(path, root), File.read(path, encoding: 'UTF-8'))
@@ -65,6 +75,7 @@ module Varar
       # so a relative reference resolves alike and two same-named oaths in
       # different directories stay distinct (ADR 0016).
       plan = Runner.plan_oath(rel, source, loaded.registry, workspace)
+      referenced = referenced_sources(plan, workspace)
       pairs = Runner.examples_with_runs(plan, loaded.create_context, Runner::RecordingReporter.new)
 
       klass = Class.new(::Minitest::Test)
@@ -75,7 +86,9 @@ module Varar
         idx = seen[stem]
         seen[stem] += 1
         method_name = idx.zero? ? "test_#{stem}" : "test_#{stem}_#{idx}"
-        lines = example.steps.map { |step| step.match_span.start_line }.uniq
+        # Lines in THIS oath: a step a reference block spliced in from another
+        # oath (ADR 0016) contributes none, since its line is not in this file.
+        lines = example.steps.reject(&:doc_path).map { |step| step.match_span.start_line }.uniq
         klass.define_method(method_name) do
           run.call
         rescue StandardError => e
@@ -84,14 +97,14 @@ module Varar
           results.record(rel, source, Core::ExampleResult.new(
                                         name: example.name, status: 'failed', lines: lines,
                                         failure: Core::Failures.to_failure(e, rel, lines.first || 0)
-                                      ))
+                                      ), referenced)
           raise ::Minitest::Assertion, Runner.render_failure(e, source, rel) if Minitest.var_diff_error?(e)
 
           raise
         else
           results.record(rel, source, Core::ExampleResult.new(
                                         name: example.name, status: 'passed', lines: lines, failure: nil
-                                      ))
+                                      ), referenced)
         end
       end
 

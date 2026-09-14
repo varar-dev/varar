@@ -17,9 +17,12 @@ module Varar
 
       let(:results) do
         OathResults.new(
-          version: 1,
+          version: 2,
           oath_path: 'varar/library.md',
           source_hash: 'fnv1a:1622dfca',
+          documents: [
+            ReferencedDocument.new(path: 'varar/shared/loans.md', source_hash: 'fnv1a:2f0e1d3c')
+          ],
           examples: [
             ExampleResult.new(
               name: 'Maya borrowed *Emma*, due back on June 1, 2026',
@@ -41,6 +44,19 @@ module Varar
               status: 'failed', lines: [8, 9],
               failure: ExampleFailure.new(
                 line: 9, message: 'expected the library to refuse', stack: '<stack>'
+              )
+            ),
+            # A failure inside a section this oath referenced (ADR 0016): every
+            # offset is into varar/shared/loans.md, named by doc_path and hashed
+            # in documents. lines holds only this oath's own lines.
+            ExampleResult.new(
+              name: 'An overdue loan blocks a new one',
+              status: 'failed', lines: [20],
+              failure: ExampleFailure.new(
+                line: 6, message: 'expected 3 but was 2', stack: '<stack>',
+                cells: [CellFailure.new(from: 41, to: 42, actual: '2')],
+                anchor: AnchorRange.new(from: 41, to: 42),
+                doc_path: 'varar/shared/loans.md'
               )
             )
           ]

@@ -21,8 +21,11 @@ module Varar
     # nil when they do not apply, and serialize as absent (not null), so a
     # reader that predates them still parses the file. `stack` is deliberately
     # runtime-shaped — no consumer parses it.
-    ExampleFailure = Data.define(:line, :message, :stack, :cells, :anchor) do
-      def initialize(line:, message:, stack:, cells: nil, anchor: nil)
+    # `doc_path` is the document `line`, `cells` and `anchor` are offsets INTO.
+    # nil — the overwhelming majority — means the oath itself; set only for a
+    # step a reference block spliced in from another oath (ADR 0016).
+    ExampleFailure = Data.define(:line, :message, :stack, :cells, :anchor, :doc_path) do
+      def initialize(line:, message:, stack:, cells: nil, anchor: nil, doc_path: nil)
         super
       end
     end
@@ -39,7 +42,15 @@ module Varar
     # separators and is relative to the workspace root; `source_hash` is
     # Hashing.hash_source over the oath as it was run, so a reader can tell
     # whether the offsets still apply to the buffer in front of it.
-    OathResults = Data.define(:version, :oath_path, :source_hash, :examples)
+    # An oath other than this one that contributed steps to the run, with its
+    # source hash as run (ADR 0016).
+    ReferencedDocument = Data.define(:path, :source_hash)
+
+    OathResults = Data.define(:version, :oath_path, :source_hash, :examples, :documents) do
+      def initialize(version:, oath_path:, source_hash:, examples:, documents: [])
+        super
+      end
+    end
 
     # Projection of OathResults onto the JSON shape of .varar/<oath_path>.json.
     #
@@ -51,12 +62,16 @@ module Varar
       module_function
 
       def to_wire(results)
-        {
+        out = {
           'version' => results.version,
           'oathPath' => results.oath_path,
-          'sourceHash' => results.source_hash,
-          'examples' => results.examples.map { |e| example_to_wire(e) }
+          'sourceHash' => results.source_hash
         }
+        unless results.documents.empty?
+          out['documents'] = results.documents.map { |d| { 'path' => d.path, 'sourceHash' => d.source_hash } }
+        end
+        out['examples'] = results.examples.map { |e| example_to_wire(e) }
+        out
       end
 
       def example_to_wire(example)
@@ -71,6 +86,7 @@ module Varar
           out['cells'] = failure.cells.map { |c| { 'from' => c.from, 'to' => c.to, 'actual' => c.actual } }
         end
         out['anchor'] = { 'from' => failure.anchor.from, 'to' => failure.anchor.to } if failure.anchor
+        out['docPath'] = failure.doc_path if failure.doc_path
         out
       end
     end

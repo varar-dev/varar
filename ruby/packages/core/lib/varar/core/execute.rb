@@ -205,6 +205,10 @@ module Varar
       # so a renderer underlines the step and not its whole line.
       def augment_stack(error, step, _var_path)
         FailureAnchor.attach_anchor(error, FailureAnchor.failure_anchor(error, step.match_span))
+        # A step spliced in by a reference block has spans in the document it
+        # was WRITTEN in, so the payload must name that file — otherwise a
+        # renderer points at the running oath's line N, some other sentence.
+        FailureAnchor.attach_doc_path(error, step.doc_path) if step.doc_path
         error
       end
     end
