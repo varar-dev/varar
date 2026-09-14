@@ -35,4 +35,21 @@ public static class FailureAnchor
 
     /// <summary>The anchor the executor attached, or <c>null</c> if there is none.</summary>
     public static Span? Attached(Exception? error) => error?.Data[AnchorKey] as Span;
+
+    private const string DocPathKey = "varar.failureDocPath";
+
+    /// <summary>
+    /// Records the document the anchor's offsets belong to, for a step a reference block spliced in
+    /// from another oath (ADR 0016). Travels the same way and for the same reason as the anchor:
+    /// the executor knows the step, and whoever builds the failure payload sees only the error.
+    /// </summary>
+    public static void AttachDocPath(Exception? error, string docPath)
+    {
+        if (error is not null)
+        {
+            error.Data[DocPathKey] = docPath;
+        }
+    }
+
+    public static string? AttachedDocPath(Exception? error) => error?.Data[DocPathKey] as string;
 }

@@ -189,6 +189,7 @@ internal static class VararAdapter
 
             var registry = workspace.Registry;
             var planCache = new Dictionary<string, ExecutionPlan>(StringComparer.Ordinal);
+            OathWorkspace? oathWorkspace = null;
             // Run results for the language server (ADR 0014). VSTest reports test by test with no
             // end-of-run hook, so results accumulate here and are written once this source's
             // test cases are done.
@@ -226,18 +227,30 @@ internal static class VararAdapter
                 var result = new TestResult(testCase);
                 try
                 {
+                    // Built once per run: whether a section is a standalone example depends on
+                    // whether another oath references it (ADR 0016).
+                    oathWorkspace ??= ProjectWorkspace(
+                        Discovery.FindOaths(workspace.Config, workspace.Root), workspace.Root);
                     if (!planCache.TryGetValue(oathPath, out var plan))
                     {
                         plan = RunnerApi.PlanOath(
                             oathPath,
                             File.ReadAllText(Path.Combine(workspace.Root, oathPath)),
                             workspace.Registry,
-                            ProjectWorkspace(Discovery.FindOaths(workspace.Config, workspace.Root), workspace.Root));
+                            oathWorkspace);
                         planCache[oathPath] = plan;
                     }
 
                     var example = plan.Examples[index];
-                    var lines = example.Steps.Select(step => step.MatchSpan.StartLine).Distinct().ToImmutableArray();
+                    // Lines in THIS oath. A step a reference block spliced in from another oath
+                    // (ADR 0016) contributes none: its line belongs to that document, and a
+                    // line-wash renderer would decorate an unrelated sentence here.
+                    var lines = example.Steps
+                        .Where(step => step.DocPath is null)
+                        .Select(step => step.MatchSpan.StartLine)
+                        .Distinct()
+                        .ToImmutableArray();
+                    var referenced = ReferencedSources(plan, oathWorkspace);
                     var source = sourceCache.TryGetValue(oathPath, out var cached)
                         ? cached
                         : sourceCache[oathPath] = File.ReadAllText(Path.Combine(workspace.Root, oathPath));
@@ -246,7 +259,11 @@ internal static class VararAdapter
                     if (failure is null)
                     {
                         result.Outcome = TestOutcome.Passed;
-                        results.Record(oathPath, source, new ExampleResult(example.Name, ExampleStatus.Passed, lines));
+                        results.Record(
+                            oathPath,
+                            source,
+                            new ExampleResult(example.Name, ExampleStatus.Passed, lines),
+                            referenced);
                     }
                     else
                     {
@@ -261,7 +278,8 @@ internal static class VararAdapter
                                 example.Name,
                                 ExampleStatus.Failed,
                                 lines,
-                                Failures.ToFailure(failure, oathPath, lines.Length > 0 ? lines[0] : 0)));
+                                Failures.ToFailure(failure, oathPath, lines.Length > 0 ? lines[0] : 0)),
+                            referenced);
                     }
                 }
                 catch (Exception e)
@@ -279,6 +297,26 @@ internal static class VararAdapter
     }
 
     /// <summary>The built test assembly plus its workspace root (nearest <c>varar.config.json</c>) and registry.</summary>
+    /// <summary>
+    /// The source of every oath this plan's steps were spliced in from (ADR 0016). Their hashes go
+    /// in the run record, so a consumer can tell a stale failure from a live one.
+    /// </summary>
+    private static IReadOnlyDictionary<string, string> ReferencedSources(
+        ExecutionPlan plan,
+        OathWorkspace workspace)
+    {
+        var out_ = new Dictionary<string, string>(StringComparer.Ordinal);
+        foreach (var step in plan.Examples.SelectMany(e => e.Steps))
+        {
+            if (step.DocPath is not null && workspace.Docs.TryGetValue(step.DocPath, out var doc))
+            {
+                out_[step.DocPath] = doc.Source;
+            }
+        }
+
+        return out_;
+    }
+
     /// <summary>
     /// Parses every discovered oath so references resolve and consumed sections are recognised
     /// (ADR 0016). Parsing runs no step code, so this is cheap.

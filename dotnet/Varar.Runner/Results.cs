@@ -17,6 +17,10 @@ public sealed class Results
     private readonly Dictionary<string, string> sources = new(StringComparer.Ordinal);
     private readonly Dictionary<string, List<ExampleResult>> examples = new(StringComparer.Ordinal);
 
+    // Per oath: the other documents its steps were spliced in from (ADR 0016), as path → source.
+    private readonly Dictionary<string, Dictionary<string, string>> documents =
+        new(StringComparer.Ordinal);
+
     /// <summary><c>&lt;root&gt;/.varar/&lt;oathPath&gt;.json</c> — the file the LSP watches.</summary>
     public static string ResultFilePath(string root, string oathPath) =>
         Path.Combine(root, ".varar", oathPath.Replace('/', Path.DirectorySeparatorChar) + ".json");
@@ -33,10 +37,33 @@ public sealed class Results
         return out_;
     }
 
-    /// <summary>Accumulates one example's outcome; the oath is written once its examples are in.</summary>
-    public void Record(string oathPath, string source, ExampleResult result)
+    /// <summary>
+    /// Accumulates one example's outcome; the oath is written once its examples are in.
+    /// <paramref name="referencedSources"/> carries the OTHER documents this oath's steps were
+    /// spliced in from (ADR 0016), as path → source; their hashes go in the payload so a consumer
+    /// can tell a stale failure from a live one.
+    /// </summary>
+    public void Record(
+        string oathPath,
+        string source,
+        ExampleResult result,
+        IReadOnlyDictionary<string, string>? referencedSources = null)
     {
         sources[oathPath] = source;
+        if (referencedSources is { Count: > 0 })
+        {
+            if (!documents.TryGetValue(oathPath, out var docs))
+            {
+                docs = [];
+                documents[oathPath] = docs;
+            }
+
+            foreach (var (path, text) in referencedSources)
+            {
+                docs[path] = text;
+            }
+        }
+
         if (!examples.TryGetValue(oathPath, out var recorded))
         {
             recorded = [];
@@ -54,11 +81,22 @@ public sealed class Results
     {
         foreach (var (oathPath, recorded) in examples.ToList())
         {
+            var docs = documents.TryGetValue(oathPath, out var held)
+                ? held.OrderBy(d => d.Key, StringComparer.Ordinal)
+                    .Select(d => new ReferencedDocument(d.Key, Hash.HashSource(d.Value)))
+                    .ToImmutableArray()
+                : [];
             Write(
                 root,
-                new OathResults(1, oathPath, Hash.HashSource(sources[oathPath]), [.. recorded]));
+                new OathResults(
+                    2,
+                    oathPath,
+                    Hash.HashSource(sources[oathPath]),
+                    [.. recorded],
+                    docs));
         }
 
         examples.Clear();
+        documents.Clear();
     }
 }

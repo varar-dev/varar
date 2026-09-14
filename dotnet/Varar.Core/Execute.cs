@@ -91,6 +91,13 @@ public static class Execute
                 // failing step's span (or the first mismatched cell's), which Failures.ToFailure
                 // reads back so a renderer underlines the step and not its whole line.
                 FailureAnchor.Attach(err, FailureAnchor.Anchor(err, step.MatchSpan));
+                // A step a reference block spliced in has spans in the document it was WRITTEN in
+                // (ADR 0016), so the payload must name that file.
+                if (step.DocPath is not null)
+                {
+                    FailureAnchor.AttachDocPath(err, step.DocPath);
+                }
+
                 observations.Add(new StepObservation(i + 1, "fail", err));
                 thrown = err;
                 break;
@@ -110,6 +117,11 @@ public static class Execute
             {
                 var err = rowError ?? new CellMismatchError(bad);
                 FailureAnchor.Attach(err, FailureAnchor.Anchor(err, steps[^1].MatchSpan));
+                if (steps[^1].DocPath is not null)
+                {
+                    FailureAnchor.AttachDocPath(err, steps[^1].DocPath!);
+                }
+
                 observations.Add(new StepObservation(steps.Length, "fail", err));
                 thrown = err;
             }

@@ -43,6 +43,9 @@ public static class Failures
             Message: error.Message,
             Stack: error.StackTrace ?? error.Message,
             Cells: cells,
-            Anchor: anchor is null ? null : new AnchorRange(anchor.StartOffset, anchor.EndOffset));
+            Anchor: anchor is null ? null : new AnchorRange(anchor.StartOffset, anchor.EndOffset),
+            // The failing step may have been spliced in from another oath (ADR 0016); every offset
+            // above is then relative to THAT document.
+            DocPath: FailureAnchor.AttachedDocPath(error));
     }
 }
