@@ -42,7 +42,7 @@ And the thesis this plan builds on: **specs and user stories are inputs to
 development; features and documentation are its outputs.** Seb Rose makes the
 argument in [User stories and BDD, part 4: features are not
 stories](https://cucumber.io/blog/bdd/user-stories-and-bdd-features-are-not-stories/)
-(cucumber.io, December 2019; reprinted in ACCU Overload 184, December 2024):
+(cucumber.io, 30 January 2020; reprinted in ACCU Overload 184, December 2024):
 a story is a placeholder for a conversation, and like a tube of toothpaste or
 a pack of stickies its value is used up by being used. Once a feature ships,
 nobody cares how it was sliced into stories; what remains is what was
