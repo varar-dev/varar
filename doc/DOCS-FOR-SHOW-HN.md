@@ -21,7 +21,7 @@ findings that matter for the docs:
 2. **Every remedy on offer is an LLM judging code against prose.** OpenSpec's
    `/opsx:verify`, a daily "observer agent", a bidirectional LLM assessment.
    Nobody proposed a mechanical check. Nobody mentioned executable
-   documentation, doctest, BDD, Cucumber or Gherkin — the category is not in
+   documentation, BDD, Cucumber or Gherkin — the category is not in
    their vocabulary, for better and for worse.
 3. **The wish is a contract that gets evaluated after implementation.** "Shared
    documents that serve as a contract that then gets evaluated
@@ -88,11 +88,13 @@ the sharpest hostility in the thread, and the answer already exists in
 `test-anatomy` and `varar-for-cucumber-users`; it needs to be on the landing
 page and in its own explanation. (Answers finding 4.)
 
-**M5. Lineage: doctest and expect tests first, Cucumber owned openly.** HN
-receives "Markdown-based test suite" warmly through the lens of doctest, Cram
-and inline snapshots. Lead with that lineage. Then own Cucumber in one
-sentence, as its creator, with what was kept and what was dropped. Never let a
-commenter be the one to surface it. (Answers the lineage risk.)
+**M5. Own the Cucumber lineage, in one sentence, first.** State it as its
+creator: what was kept (concrete examples, expressions), what was dropped
+(Gherkin, keywords, assertions in step bodies, a separate runner), what was
+added (the value in the prose is the assertion; a paragraph that stops being
+checked fails the run). Never let a commenter be the one to surface it, and
+never claim kinship with tools that were not an influence. (Answers the
+lineage risk.)
 
 **M6. Show the evidence.** Dogfooding (the repo's own oaths run in CI), the
 conformance corpus across eight ports, the adapter smoke contract that fails a
@@ -376,7 +378,7 @@ can land during the week after.
   kept (concrete examples, expressions); what was dropped (Gherkin, keywords,
   assertions in step bodies, a separate runner); what was added (the value in
   the prose is the assertion; a paragraph that stops being checked fails the
-  run). Then the doctest lineage in one line. Then the "small by design" line.
+  run). Then the "small by design" line.
 - **Answers to keep ready:** "why not an LLM judge" (E2), "how many of these
   do I write" (E3), "does it replace OpenSpec" (E4, no, it composes), "what
   about steps being a second implementation" (`thin-steps`), "why call it an
