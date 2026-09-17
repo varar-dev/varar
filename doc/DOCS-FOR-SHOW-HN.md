@@ -39,15 +39,18 @@ findings that matter for the docs:
    language of the first (SHALL, requirement IDs, delta merges).
 
 And the thesis this plan builds on: **specs and user stories are inputs to
-development; features and documentation are its outputs.** The manual outlives
-the brief. People who buy a washing machine want the manual, not the
-instructions the engineers were given. Varar keeps the manual honest. It can be
-written before the code (that is the how-to for driving a feature), but what
-persists, what a reader opens, and what the runner checks is the manual.
-
-> Attribute the washing-machine framing before it goes on the site — it comes
-> from the BDD community (Matt Wynne, Seb Rose, or Gojko Adzic's "living
-> documentation"); confirm the source.
+development; features and documentation are its outputs.** Seb Rose makes the
+argument in [User stories and BDD, part 4: features are not
+stories](https://cucumber.io/blog/bdd/user-stories-and-bdd-features-are-not-stories/)
+(cucumber.io, December 2019; reprinted in ACCU Overload 184, December 2024):
+a story is a placeholder for a conversation, and like a tube of toothpaste or
+a pack of stickies its value is used up by being used. Once a feature ships,
+nobody cares how it was sliced into stories; what remains is what was
+delivered, and the documentation that describes it. The manual outlives the
+brief: someone who buys an appliance wants the manual, not the instructions the
+engineers were given. Varar keeps the manual honest. It can be written before
+the code (that is the how-to for driving a feature), but what persists, what a
+reader opens, and what the runner checks is the manual.
 
 ## 2. Messaging decisions
 
@@ -250,8 +253,9 @@ becomes the "oath" row plus one paragraph on the name.
 
 ### E1. Explanation: Documentation is the output
 
-The thesis of section 1, as a page. Inputs and outputs of development; the
-washing machine; why the manual is the artefact worth keeping honest; why
+The thesis of section 1, as a page. Inputs and outputs of development, citing
+Seb Rose's "features are not stories"; the appliance manual versus the
+engineers' brief; why the manual is the artefact worth keeping honest; why
 Varar checks documentation and manages no proposals, tasks or deltas; how an
 oath written before the code is still the manual, not the brief. Becomes the
 first page under "Understanding Varar". Carries M1.
