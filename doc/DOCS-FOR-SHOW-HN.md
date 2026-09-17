@@ -179,7 +179,7 @@ content to the quadrant it belongs in; "rewrite" changes the page's job.
 | `no-theatre` | explanation | fix | Best page for this audience. Add M3 explicitly (the LLM-judge contrast). Replace "every specification practice" with "every documentation practice" (M1). Link from the landing page. |
 | `varar-for-cucumber-users` | explanation + how-to | split | The "Migrating from Cucumber" section is a how-to (H4). The rest stays and gains the M5 framing at the top: kept, dropped, and why. |
 | `reuse` | explanation (draft) | keep | Ships with its feature. |
-| *(missing)* | explanation | **new** | Documentation is the output (E1). |
+| *(missing)* | explanation | **new** | How the sausage is made, and what's on the menu (E1). |
 | *(missing)* | explanation | **new** | Two kinds of rot (E2). |
 | *(missing)* | explanation | **new** | An oath is small (E3). |
 | *(missing)* | explanation | **new** | Varar and spec-driven development (E4). |
@@ -251,14 +251,57 @@ header-bound table, doc string, reference block, drift, baseline, run result.
 One line each, linking to the page that owns the term. The `oaths` stub
 becomes the "oath" row plus one paragraph on the name.
 
-### E1. Explanation: Documentation is the output
+### E1. Explanation: How the sausage is made, and what's on the menu
 
-The thesis of section 1, as a page. Inputs and outputs of development, citing
-Seb Rose's "features are not stories"; the appliance manual versus the
-engineers' brief; why the manual is the artefact worth keeping honest; why
-Varar checks documentation and manages no proposals, tasks or deltas; how an
-oath written before the code is still the manual, not the brief. Becomes the
-first page under "Understanding Varar". Carries M1.
+The thesis of section 1, as a page. Becomes the first page under
+"Understanding Varar". Carries M1, and does M2's job in its last paragraph.
+Draft below; the kitchen is the one analogy carried through, with the map and
+the dishwasher as quick nods that it generalises. Do not add a table of
+analogies to the page.
+
+> ## How the sausage is made, and what's on the menu
+>
+> A kitchen runs on inputs: tonight's prep list, the supplier's order, the
+> recipe the chef keeps adjusting. How the sausage is made matters, and the
+> recipe may be read every night for years. But it serves one activity,
+> cooking. The menu serves another, ordering. It is the document the customer
+> reads, and the one they hold the restaurant to. Tomorrow the kitchen makes
+> omelettes, then pizza with sausage on it; the recipes multiply and change,
+> and the menu stays one page.
+>
+> It is not a kitchen thing. A map matters on the way and not after you
+> arrive. The dishwasher's assembly instructions matter to the engineer and
+> not to the person loading it. Every activity has documents for the doing and
+> documents for the done, and only the second kind has to stay true.
+>
+> Software has the same two kinds of document. Stories, proposals, task lists
+> and this morning's prompt to the agent serve building. Seb Rose puts it
+> plainly in [Features are not
+> stories](https://cucumber.io/blog/bdd/user-stories-and-bdd-features-are-not-stories/):
+> "Stories helped us decide what we want (and how to deliver it). Features
+> document what we've got." A story is spent by being delivered, "like a tube
+> of toothpaste". Agentic coding sharpens that: an agent consumes a spec in an
+> afternoon, and the next spec is already different.
+>
+> An oath serves using. It describes how the system behaves now, in the
+> reader's language, with concrete examples, and it stays useful for as long
+> as the behaviour exists. Its risk is the menu's risk: listing a dish the
+> kitchen no longer makes. So Varar treats every oath as a claim and checks it
+> on every test run.
+>
+> The relationship runs one way. A story's concrete example becomes a
+> paragraph in the oath for that behaviour, and the story has done its job.
+> Trying to keep a spec "in sync" afterwards is a fool's errand: once the code
+> is written you don't need the spec, and nothing can check it anyway. An oath
+> expires only when the behaviour does. Then you delete the paragraph, in a
+> diff someone reviews. If it stops being checked by accident instead, the run
+> fails until someone says so. A menu can lose a dish. It cannot quietly stop
+> being a menu.
+
+Quotes are verbatim from the post (30 January 2020). The line "Useful
+documentation describes how the system behaves now, not the history of how it
+evolved" from the same post belongs on the drift pages (R1, E2), where it
+separates Varar's drift from the thread's "spec drift".
 
 ### E2. Explanation: Two kinds of rot
 
@@ -336,7 +379,7 @@ Reference
   varar lint
   Example projects
 Understanding Varar
-  Documentation is the output                 (E1)
+  How the sausage is made, and what's on the menu (E1)
   Two kinds of rot                            (E2)
   Oaths that can't be theatre
   An oath is small                            (E3)
